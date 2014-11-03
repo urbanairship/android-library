@@ -1,0 +1,500 @@
+Android ChangeLog
+=================
+
+Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
+
+Version 5.1.0 - November 3, 2014
+================================
+ - Advanced notification support through the Push API, including support for Android Wear and styles.
+ - Added setter on provided notification factories to set the notification accent color for Android Lollipop.
+ - Includes enhanced security in the Urban Airship Javascript interface by providing a URL whitelist.
+ - The aar package now includes a consumer proguard file for required Urban Airship proguard rules.
+ - Updated interactive notification icons to material design icons provided by Google from
+   http://google.github.io/material-design-icons/.
+ - The default notification flags are no longer applied after the notification factory. Instead, they are
+   now expected to be set in the factory.
+
+ Samples
+ -------
+ - Fixed the CoreReceiver priority in AndroidManifest.xml for Push Sample and Rich Push Sample by
+   moving the priority from the receiver to the receiver's intent filter.
+ - Rich Push Sample has been updated with material design and simplified navigation.
+
+Version 5.0.3 - October 23, 2014
+================================
+ - Removed "allowBackup" from the libraries application manifest entry to avoid merge conflicts with
+ the Android manifest merger.
+
+Version 5.0.2 - October 21, 2014
+================================
+ - Fix issue with running actions through the JavaScript native bridge from the "ualibraryready" event.
+ - Fix issue with landing page not displaying on top of the launcher activity.
+
+Version 5.0.1 - October 8, 2014
+===============================
+ - Fix issue with channel not creating when missing Google Play Services for GCM registration.
+ - Fix issue with the Urban Airship Javascript interface not loading for custom web views that extend
+   UAWebView.
+
+Version 5.0.0 - October 1, 2014
+===============================
+
+New Features
+------------
+ - Unified support for both GCM (Google) and ADM (Amazon) transports.
+ - Includes support for interactive notifications. Includes more than 25 built-in
+   interactive notification sets, including button resources for 9 languages.
+   Additional/replacement localization strings may be added to built-in actions.
+ - Includes a new action for social sharing that can be called from pushes or web views.
+ - Includes support for defining custom events in our reporting system.
+ - Rewritten location module with a simplified API and support for Google's Fused
+   location provider.
+ - Support for asynchronous takeoff and access to the Urban Airship Library to avoid
+   blocking the main thread.
+ - Introduced a new device identifier, the Channel ID, which will replace APIDs as the push address
+   in Urban Airship API calls.
+ - Includes support for registering multiple GCM sender Ids. Only the main GCM sender
+   ID's messages will be handled by Urban Airship. The rest will be ignored.
+ - Simplified push integration. The push intent receiver is now optional and the library
+   supports automatically launching the application if the push intent receiver is not
+   set or does not handle the open notification broadcasts.
+ - A new default notification factory that uses the Big Text notification style.
+ - User notifications can be disabled without disabling push. This allows the application
+   to still be messaged when notifications are disabled.
+ - The push broadcasts for push received, push opened, and registration events have
+   been updated. A base broadcast receiver 'BaseIntentReceiver' can be extended
+   to parse the intents and provide convenient listener style callbacks.
+ - It is no longer necessary to check for Urban Airship Actions when deciding to
+   launch the application in the push intent receiver.
+
+Packaging Changes
+-----------------
+ - Urban Airship library is now a library project with resources. Eclipse users will
+   have to import the library as a project and reference it in the projects settings. An
+   aar package is provided for Android Studio users.
+ - The library now depends on the latest version of the v4 support library.
+ - GCM and Fused location depends on the Google Play Services library.
+
+Sample Changes
+--------------
+ - Samples now set up to work with both GCM (Google) and ADM (Amazon).
+
+
+Amazon Only - Version 4.0.0 - July 14, 2014
+===========================================
+ - Initial Amazon release.
+
+Version 4.0.4 - August 5, 2014
+==============================
+ - Fix regression in 4.0.3 that broke webview actions for devices running API 17 or higher.
+
+Version 4.0.3 - July 21, 2014
+=============================
+ - Add if-modified-since header and accept 304 not modified responses for Rich Application message listing.
+ - Remove any usage of addJavascriptInterface for Android devices older than API 17 to prevent abuse of upstream security issue CVE-2012-6636.
+
+Samples Changes:
+ - Updated to use the latest Android Gradle plugin and build tools.
+
+Version 4.0.2 - April 30, 2014
+==============================
+ - Fix NPE when defining a Landing Page Activity with no meta data elements.
+ - Fix location security issue where all location data was broadcasted with
+   implicit intents. Thank you to Yu-Cheng Lin for reporting this issue.
+ - Added ability to set the intent receiver for location updates on UALocationManager.
+
+Push Sample Changes:
+ - Use local broadcast receiver from the support package to broadcast intents to
+ the application.
+
+Version 4.0.1 - March 26, 2014
+==============================
+- Fix possible rich push user token corruption.
+
+Version 4.0.0 - March 25, 2014
+==============================
+- Added Urban Airship Actions framework - a generic framework that provides a convenient way to
+automatically perform tasks by name in response to push notifications, Rich App Page interactions and JavaScript.
+- Added UAWebViewClient class to be used with RichPushMessageWebView and LandingPageWebView to
+provide proper auth and inject the javascript bridge.
+- Renamed RichPushMessageView to RichPushMessageWebView.
+- Removed ability to set a custom Rich Push Javascript Interface and namespace through RichPushManager.
+- Removed RichPushMessageJavascriptInteface and RichPushMesssageJavascript in favor of the new UAJavascriptInterface.
+
+- Deprecated "urbanairship" Javascript namespace.  iOS and Android now both use the common namespace "UAirship".
+- Deprecated Javascript interface methods isMessageRead, markMessageRead, markMessageUnread,
+navigateTo, getViewWidth, getViewHeight, and getDeviceOrientation.
+
+Rich Push Sample Changes:
+ - Updated AndroidManifest.xml for Actions.
+ - Added custom Landing Page layout and styles.
+ - Added MessagePagerFragment to display Rich Application Pages in a view pager.
+ - Refactored inbox sample code to move most of the logic to fragments.
+ - Added deep linking.
+
+Push Sample Changes:
+ - Updated AndroidManifest.xml for Actions.
+ - Added deep linking.
+
+Version 3.3.2 - March 7, 2014 - Internal Release
+================================================
+- Use nondestructive User api requests.  Allows multiple device tokens and APIDS
+to share a single user.
+- Deprecated RichPushUser getApids, setApids, addApids.
+
+Version 3.3.1 - February 24, 2014
+=================================
+- Persist Urban Airship push ids to help prevent duplicate pushes.
+- Fix analytics crash when using autopilot with background location.
+
+Version 3.3.0 - January 15, 2014
+================================
+- For rich push enabled apps, automatically refresh rich push messages when the application is foregrounded.
+- Remove unused RichPushManager listener callbacks.
+- Prevent multiple APID registration when database read and write failures occur.
+
+Sample changes:
+- Remove action bar sherlock dependency, replaced with AppCompat in the android support v7 library.
+- Added calls to the webkit's onPause/onResume methods for api >= 11 when displaying a rich push message.
+- Android Gradle plugin support (Gradle 1.9 with the plugin 0.7.0).
+
+Version 3.2.3 - December 19, 2013
+=================================
+- Fix possible NPE when the rich push service unexpectedly die.
+- Fix a possible crash in the content resolver when it throws an unexpected runtime exception.
+
+Version 3.2.2 - December 4, 2013
+================================
+- Exposes UA push identifiers to the application in the push receiver and notification builder.
+
+Version 3.2.1 - November 18, 2013
+================================
+- Fixed database exception crash when uploading analytics in multi-process applications.
+
+Version 3.2.0 - October 31, 2013
+================================
+- Added support for server side expired Rich Push Messages.
+- Added support for setting contentIntent on a notification through the notification builder.
+- Added process manifest validation for Urban Airship services and receivers.
+- Added pre-authorization headers when displaying rich push messages through the RichPushMessageView.
+- Added wake lock expiration to ensure wake locks do not wake the app indefinitely.
+- Fix permission crash when using location with permission ACCESS_COARSE_LOCATION.
+
+Version 3.1.0 - July 31, 2013
+=============================
+- Removed tags and alias from rich push user. Tags and aliases are now only set on the APID.
+- QuietTimePickerPreference now respects the system/locale settings in UI components.
+- Rich push inbox style notification now respects quiet time, vibrate, and sound preferences.
+- Updated third party license.
+- Updated copyrights.
+- Built-in methods for JavaScript embedded in rich push messages:
+  - Added getMessageSentDateMS that returns the unix epoch time in milliseconds.
+  - Added seconds to getMessageSentDate to return format "yyyy-MM-dd HH:mm:ss.SSSZ".
+
+Version 3.0.0 - June 10, 2013
+=============================
+- Rich Push Inbox no longer implements or exposes any cursors.
+- Added warnings when running on BlackBerry.
+- Added default Android preferences for push, location, vibration, quiet time and sound.
+- Added RichPushMessageView to easily display rich push message for API level >= 5.
+- Removed Helium and hybrid push transportations. Only GCM is supported.
+- Removed Push Worker Service.
+
+- Fixed Rich Push crash at first start when the device has no internet.
+- Fixed activity instrumentation warnings when analytics is disabled.
+- Fixed crash in location service when the network provider is missing.
+- Fixed security exception crash when registering with GCM.
+- Fixed javascript bridge on devices targetting API 17 because of missing annotation.
+
+Rich Push Sample changes:
+- New preferences screen using built-in Android preferences
+  - Added Advanced Settings: APID, UserID, Set Alias, Add Tags
+- Updated the Home and Inbox layouts
+- Removed the cursor adapter
+- Added a Home screen and key guard Inbox widget
+- Added a custom Inbox style notification builder
+- Added automated ui tests
+
+Push Sample changes:
+- Added extra preferences screen using built-in Android preferences
+
+Version 2.1.4 - April 4, 2013
+=================================
+- Fixed crash when switching rapidly between message and inbox views for RichPushSample.
+- Fixed crash in phone layout whenever a message is opened from a push notification for RichPushSample.
+- Add ActivityLifecycleCallbacks to record session events and warn devs for incomplete implementation.
+  Make instrumentation activities in API 14 (Ice Cream Sandwich) optional.
+  Added 'minimumSdkVersion' parameter in airshipconfig.properties file. This value is used for detecting
+  incomplete activity instrumentation.
+
+Version 2.1.3 - March 22, 2013
+=================================
+- Use application package name instead of app name for user-agent creation.
+- Fixed crash in inbox view running on a non-paned (phone) view for RichPushSample.
+- Added validation for integer values in .properties files
+- Added a foreground location enabled preference. If the background location enabled preference is true,
+  then the foreground location enabled is implicitly enabled. Added foreground location enabled checkbox
+  to the Push Sample app.
+- Modified recordCurrentLocation() and recordCurrentLocation(criteria) methods to handle the binding
+  to the LocationService if it has not been bound already. This will save devs some trouble when
+  they just want to record the current location without binding to the service.
+- Updated README and documentation with correct links and updated config options.
+- Replaced deprecated 'horizontalAccuracy' location configuration property with 'accuracy'.
+- Updated sample config files to use strings for properties mapped to system constants..
+- Updated sample apps to use the default Android Proguard config file.
+
+Version 2.1.2 - February 15, 2013
+=================================
+- Fix for push opt-out analytics
+
+Version 2.1.1 - February 14, 2013
+=================================
+- Now with Rich Push
+- Property files now allow strings in addition to integer values for properties mapped to system constants
+
+Version 2.1.0 - February 7, 2013
+================================
+- Moved In-App Purchase code from the library to the IAP Sample.
+
+Version 2.0.5 - January 29, 2013
+================================
+- Fixed incorrect location parameter handling (min update intervals)
+- Stop the PushService after GCM registration is complete and all
+  additional work has been passed to worker services.
+- Updated internal test suite
+
+Version 2.0.4 - January 2, 2013
+===============================
+- Fixed ExceptionInInitializerError that could arise on firstrun
+  using Helium transport
+- Sample app PushPreferencesActivity no longer accesses location-related
+  preferences if location is not enabled
+
+Version 2.0.3 - December 12, 2012
+=================================
+- Fixed miscellaneous crashes based on submitted crash reports.
+- Format locations in a locale-independent manner.
+- Reset the GCM registration ID when the package is replaced (requires addition of
+  a PACKAGE_REPLACED filter on GCMPushReceiver).
+- Manifest validation is now only performed in development mode.
+- Limit API re-registrations (no delta) to once every 24H.
+- Applications can now optionally defer calling takeOff with a new 'Autopilot' feature.
+  If you have access to the Application class, it is best to continue calling takeOff()
+  there, but if you do not (e.g., in an AIR app), this feature will allow your app
+  to delegate the takeOff to a class declared in the manifest.
+- The library will no longer stop the PushService on shutdown if the transport is GCM (not necessary).
+
+Version 2.0.2 - November 13, 2012
+=================================
+- Added checks for duplicate messages based on the UA canonical push ID
+
+Version 2.0.1 - October 31, 2012
+===============================+
+- Fixed a crash issue during push receipt.
+
+Version 2.0.0 RC2 - October 12, 2012
+====================================
+- Run all GCM registrations in a worker service
+- Added validation for new manifest requirements
+
+Version 2.0.0 RC1 - October 1, 2012
+===============================
+- Added GCM support and removed C2DM support
+- Added Rich Push support
+- Replaced use of Android shared preferences with a SQL-backed provider. This was done to address
+  data corruption issues seen in multi-process applications.
+- The library will now print the application's APID to the console even if logging is turned down.
+  This allows developers to expose the APID for debugging without logging any other UA information.
+- FIX: Addressed an issue with UA API call retries
+- Moved the event reporting uploads to an intent service. This will allow developers to decide which
+  process will be used for event uploads.
+- FIX: The library will no longer attempt to register with the API if a Helium connection cannot be
+  established.
+
+Version 1.1.6 - August 29, 2012
+===============================
+- Catch all exceptions (even unchecked ones) in the Helium connection loop. This is designed to help
+  mitigate OS and Carrier/MFR mod bugs like the one addressed in 1.1.5 and an IllegalArgumentException
+  reported by a customer that was originating in a low-level OS component.
+
+Version 1.1.5 - August 22, 2012
+===============================
+- FIXED: Addressed crash in java.net.NetworkInterface. Library will explicitly catch a
+  NullPointerException caused by ICS bug. See http://code.google.com/p/android/issues/detail?id=33661
+
+Version 1.1.4 - July 31, 2012
+=============================
+- FIXED: Reset backoffTime after successful C2DM registration
+- FIXED: Updated the copyright for 2012
+- FIXED: Removed logging of app secret in takeOff
+- Moved log levels to airshipconfig.properties
+- Added a User-Agent to the httpclient
+- Added handling for the new boolean return from EmbeddedPushManager.init()
+- Added logic to handle when no location providers are available.
+- Wrapped db calls in EventDataManager so sqliteexception's won't kill apps.
+- Added the application package name to implicitly broadcasted actions.
+
+Version 1.1.3 - May 4, 2012
+===========================
+- FIXED: issue with location event payload
+
+Version 1.1.2 - May 1, 2012
+===========================
+- FIXED: incorrect handling of minimum updated time in location preferences
+- FIXED: unnecessary starting of location service
+- Updated target SDK level of sample apps to API level 9 to address ICS
+  notification background rendering issues
+
+Version 1.1.1 - April 11, 2012
+=============================
+- FIXED: Issues with background location
+- FIXED: Issues with no location providers enabled
+- Sample App updates
+
+Version 1.1.0 - April 3, 2012
+=============================
+- Added location collection for Push to Location
+- FIXED: C2DM null APIDs will now be regenerated
+- FIXED: C2DM deregistration race condition is resolved
+
+Version 1.0.9 - March 1, 2012
+=================================
+- FIXED: Character encoding bug preventing push registration with Unicode tags
+
+Version 1.0.8 - February 16, 2012
+=================================
+- FIXED: Hybrid mode now works on the Kindle Fire
+- FIXED: Retry inserts to analytics DB when write fails due to DB lock
+- FIXED: Connectivity issues following device sleep
+- FIXED: Default to a maximum of 40 notifications (from 100). Android allows a given app to post up to 50.
+- Added additional analytics data points
+- Added a note to the "Holding Pattern" error to indicate that it can occur during scheduled maintenance.
+- Added an option to wake a wifi-only device periodically to receive notifications
+
+Version 1.0.7 - December 15, 2011
+=================================
+- FIXED: Crash occurring when UA API registrations were disabled
+
+Version 1.0.6 - December 14, 2011
+=================================
+- FIXED: Cached Helium server list is no longer removed when the connection is destroyed
+- FIXED: Helium connections dropped due to network reachability issues will no longer invalidate the server
+- Improved reconnection logic when Android sends multiple connectivity intents
+- The Helium server cache TTL is now configurable by the server
+- Added a short 3 sec delay after server lookup to allow server-side state to propagate
+- Use elapsed realtime clock for heartbeat timer rather than the wall clock
+
+Version 1.0.5
+=============
+- Improved socket keepalive logic
+
+Version 1.0.4
+=============
+- StrictMode compatibility for analytics events and com.urbanairship.restcient.*
+- Fixed incomptibility between Request.executeAsync and API level 11+
+- Improved InventoryAdapter and Drawable caching in IAPSample
+- Fixed AsyncImageLoader OutOfMemoryException issue
+- New PushManager.getApid convenience method
+- Disabling push results in a call to DELETE an existing APID on go.urbanairship.com
+- Improved C2DM registration handling
+
+Version 1.0.3
+=============
+- Fixed an issue preventing immediate connections to Helium when re-enabling push notifications
+
+Version 1.0.2
+=============
+
+- Improved Helium connectivity
+- Added push expiration handling
+- Added additional key and secret validation
+- PushService now stops when push is disabled
+- Added helpful logging, removed unhelpful logging
+
+Version 1.0.1
+=============
+
+New Features
+------------
+- Manifest validation for both IAP and Push reports permission, receiver and service
+  misconfiguration in the log
+- AirshipConfigOptions validation now reports specific errors in the log
+
+Push Changes
+------------
+- Explicitly log errors when PushService is started before UAirship.takeOff has been called.
+- Documented and deprecated PushManager.EXTRA_STRING_EXTRA. Push extras should be sent as a
+  Map<String,String>
+- Sample app now iterates through the extras instead of using EXTRA_STRING_EXTRA
+- Fixed NullPointerException occurring when a user opened a notification when an intent receiver
+  had not been registered with PushManager
+- Helium now explicitly reports when connections are denied due to billing status
+- Aliases can now be removed by passing null to PushManager.setAlias()
+- ACTION_REGISTATION_FINISHED is now called only after the APID is valid and can receive pushes
+- BasicPushNotificationBuilder and CustomPushNotificationBuilder now ignore pushes where the alert
+  payload is null or empty. To override this behavior, provide your own implementation of
+  PushNotificationBuilder.
+
+IAP Changes
+-----------
+- Moved IMarketBillingService from the JAR to the sample project (requires projects to include
+  IMarketBillingService.aidl in their source tree)
+- Repackaged all Google billing code to prevent conflicts (no action required)
+- Use Product ID instead of product name for download location
+- IAP download paths are now sanitized to prevent write failure on SD cards
+- Purchased products can now be restored at any time
+
+Version 1.0.0
+=============
+
+New Features
+------------
+- Added Push Settings UI to PushSample
+- Devices can now switch from C2DM to Helium
+
+Bug Fixes
+---------
+- Properly handle C2DM failures in devices with an API Level < 8
+- Ignore C2DM registration intents if the current transport type
+  does not use C2DM
+- Properly deregister a device from C2DM if push is disabled
+- Fixed a Helium push NPE if UA servers refuse connections
+
+Other Changes
+-------------
+- Cleaned up logging
+- Replaced various broadcast receivers with com.urbanairship.CoreReceiver (this requires
+  a Manifext.xml change as the CoreReceiver package changed)
+- Added Status Bar icon field to CustomNotificationBuilder
+- Added C2DM Ping capability (invisible push for audience counting)
+- Updated sample projects with improved layouts and explicit Honeycomb compatibility
+
+
+Version 0.9.1
+=============
+
+New Features
+------------
+- C2DM Support
+- Reports Support
+- Built in APID Tagging and Alias support
+
+Bug Fixes
+---------
+- Fixed asynchronous image loading issue in the InventoryAdapter class in StoreFront sample
+- Notification builders can now return null if a notification should not be displayed
+- Sending a notification with an empty alert field prevents the notification from being
+  displayed by the default notification builders
+
+Other Changes
+-------------
+- Combined Push/IAP HTTP clients in the rest client package
+- IAP Sorting updates
+- EmbeddedPushService is now called PushService (to accommodate C2DM). A manifest change is
+  required
+- Analytics/Reporting push received proxy broadcast handler must be registered in
+  AndroidManifest.xml
+- In your implementation of the custom push/registration IntentReceiver,
+  PushManager.ACTION_NOTIFICATION_OPENED_BASE should now be
+  PushManager.ACTION_NOTIFICATION_OPENED
+- The REGISTRATION_FINISHED action now has C2DM-specific extras

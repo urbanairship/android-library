@@ -1,0 +1,4 @@
+
+[submodule "samples"]
+	path = samples
+	url = git@github.com:urbanairship/android-samples-dev.git

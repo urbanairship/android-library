@@ -1,0 +1,106 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.13.+'
+        classpath 'org.robolectric:robolectric-gradle-plugin:0.13.+'
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'robolectric'
+
+
+repositories {
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.0.2"
+
+
+    lintOptions {
+        ignore 'GradleDependency'
+    }
+
+    defaultConfig {
+        minSdkVersion 6
+        targetSdkVersion 21
+
+        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${airshipVersion}\""
+
+        consumerProguardFiles 'consumer-proguard.txt'
+    }
+
+    sourceSets {
+        androidTest.setRoot("src/test")
+    }
+}
+
+
+
+robolectric {
+    // configure the set of classes for JUnit tests
+    include '**/*Test.class'
+
+    // configure max heap size of the test JVM
+    maxHeapSize = '2048m'
+
+    // configure the test JVM arguments
+    jvmArgs '-XX:MaxPermSize=512m', '-XX:-UseSplitVerifier'
+
+    // configure whether failing tests should fail the build
+    ignoreFailures true
+
+    // use afterTest to listen to the test execution results
+    afterTest { descriptor, result ->
+        println "Executing test for ${descriptor.name} with result: ${result.resultType}"
+    }
+}
+
+android.libraryVariants.all { variant ->
+    // work around for provided dependencies as jars being included in the exploded aar
+    variant.packageLibrary.exclude('libs/amazon-device-messaging-1.0.1.jar')
+}
+
+dependencies {
+    androidTestCompile 'junit:junit:4.10', 'org.mockito:mockito-core:1.9.5'
+    androidTestCompile('org.robolectric:robolectric:2.3') {
+        exclude module: 'classworlds'
+        exclude module: 'maven-artifact'
+        exclude module: 'maven-artifact-manager'
+        exclude module: 'maven-error-diagnostics'
+        exclude module: 'maven-model'
+        exclude module: 'maven-plugin-registry'
+        exclude module: 'maven-profile'
+        exclude module: 'maven-project'
+        exclude module: 'maven-settings'
+        exclude module: 'nekohtml'
+        exclude module: 'plexus-container-default'
+        exclude module: 'plexus-interpolation'
+        exclude module: 'plexus-utils'
+        exclude module: 'wagon-file'
+        exclude module: 'wagon-http-lightweight'
+        exclude module: 'wagon-http-shared'
+        exclude module: 'wagon-provider-api'
+        exclude group: 'com.android.support', module: 'support-v4'
+    }
+    androidTestCompile 'com.squareup:fest-android:1.0.+@aar'
+
+    provided 'com.google.android.gms:play-services:6.1.+'
+    provided files('libs/amazon-device-messaging-1.0.1.jar')
+
+    compile 'com.android.support:support-v4:21.+'
+}
+
+//generates NativeBridge.java
+task templatizeNativeBridge(type: Exec) {
+    commandLine 'src/main/js/templatize'
+}
+
+project.afterEvaluate {
+    prepareDebugDependencies.dependsOn("templatizeNativeBridge")
+    prepareReleaseDependencies.dependsOn("templatizeNativeBridge")
+}

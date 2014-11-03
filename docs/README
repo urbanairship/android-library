@@ -1,0 +1,8 @@
+Copy docs.properties.sample to docs.properties and adjust it to your SDK/path structure
+
+
+Gradle Tasks (from ant):
+-----------------------
+
+build
+  Build doclava (pretty) docs

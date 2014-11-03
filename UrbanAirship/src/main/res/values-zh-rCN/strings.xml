@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">是</string>
+    <string name="ua_notification_button_no">否</string>
+    <string name="ua_notification_button_shop_now">现在就出手吧！</string>
+    <string name="ua_notification_button_buy_now">立刻购买</string>
+    <string name="ua_notification_button_follow">关注</string>
+    <string name="ua_notification_button_unfollow">取消关注</string>
+    <string name="ua_notification_button_opt_in">参加</string>
+    <string name="ua_notification_button_opt_out">不参加</string>
+    <string name="ua_notification_button_remind">稍后提醒我</string>
+    <string name="ua_notification_button_share">分享</string>
+    <string name="ua_notification_button_accept">接受</string>
+    <string name="ua_notification_button_decline">拒绝</string>
+    <string name="ua_notification_button_download">下载</string>
+    <string name="ua_notification_button_more_like">更多类似</string>
+    <string name="ua_notification_button_less_like">更少类似</string>
+    <string name="ua_notification_button_like">喜欢</string>
+    <string name="ua_notification_button_dislike">不喜欢</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">分享</string>
+</resources>

@@ -1,0 +1,119 @@
+/*
+Copyright 2009-2014 Urban Airship Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package com.urbanairship.push;
+
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+/**
+ * A high level abstraction for performing Channel API creation and updates.
+ */
+class ChannelAPIClient {
+
+    static final String CHANNEL_CREATION_PATH = "api/channels/";
+
+    protected URL creationURL;
+    private RequestFactory requestFactory;
+
+    ChannelAPIClient() {
+        this(new RequestFactory());
+    }
+
+    ChannelAPIClient(RequestFactory requestFactory) {
+        this.requestFactory = requestFactory;
+
+        String urlString = UAirship.shared().getAirshipConfigOptions().hostURL + CHANNEL_CREATION_PATH;
+        try {
+            this.creationURL = new URL(urlString);
+        } catch (MalformedURLException e) {
+            this.creationURL = null;
+            Logger.error("Invalid hostURL", e);
+        }
+    }
+
+    /**
+     * Create the Channel ID
+     *
+     * @param channelPayload An instance of ChannelRegistrationPayload
+     * @return channelResponse or null if an error occurred
+     */
+    ChannelResponse createChannelWithPayload(ChannelRegistrationPayload channelPayload) {
+        String payload = channelPayload.asJSON().toString();
+        Logger.verbose("Creating channel with payload: " + payload);
+        return requestWithPayload(creationURL, "POST", payload);
+    }
+
+    /**
+     * Update the Channel ID
+     *
+     * @param channelLocation The location of the channel as a URL
+     * @param channelPayload An instance of ChannelRegistrationPayload
+     * @return channelResponse or null if an error occurred
+     */
+    ChannelResponse updateChannelWithPayload(URL channelLocation, ChannelRegistrationPayload channelPayload) {
+        if (channelLocation == null) {
+            Logger.error("Unable to update a channel with a null channel location.");
+            return null;
+        }
+
+        String payload = channelPayload.asJSON().toString();
+        Logger.verbose("Updating channel with payload: " + payload);
+        return requestWithPayload(channelLocation, "PUT", payload);
+    }
+
+    /**
+     * Sends the channel creation or update request
+     *
+     * @param url The specified URL to send the request to.
+     * @param requestMethod String representing the request method to use.
+     * @param jsonPayload JSON payload as a string
+     * @return channelResponse or null if an error occurred
+     */
+    private ChannelResponse requestWithPayload(URL url, String requestMethod, String jsonPayload) {
+        String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
+        String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
+
+        Response response = requestFactory.createRequest(requestMethod, url)
+                                          .setCredentials(appKey, appSecret)
+                                          .setRequestBody(jsonPayload, "application/json")
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .execute();
+
+        if (response == null) {
+            Logger.error("Failed to receive channel response.");
+            return null;
+        }
+
+        Logger.info("Received channel response: " + response);
+
+        return new ChannelResponse(response);
+    }
+}

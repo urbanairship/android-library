@@ -1,0 +1,129 @@
+import java.text.SimpleDateFormat
+
+def gitRevision(dir) {
+    try {
+        def output = new ByteArrayOutputStream()
+        exec {
+            workingDir dir
+            commandLine 'git', 'log', '-n', "1", "--format='%h'"
+            standardOutput = output
+        }
+        return output.toString().trim()
+    } catch (e) {
+        return "unknown"
+    }
+}
+
+def timeStamp() {
+    def df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+    df.setTimeZone(TimeZone.getTimeZone("UTC"))
+    return df.format(new Date())
+}
+
+task cleanPackageUrbanAirshipRelease(type: Delete) {
+    delete "$buildDir/ua-staging", "$buildDir/ua-package"
+}
+
+task packageUrbanAirshipRelease << {
+    // Unpacked library
+    copy {
+        println "Staging library."
+        from zipTree(file("${project.findProject('UrbanAirship').buildDir}/outputs/aar/UrbanAirship-release.aar"))
+        into file("$buildDir/ua-staging/urbanairship-lib")
+        rename "classes.jar", "libs/urbanairship-lib-${airshipVersion}.jar"
+        exclude "R.txt", "assets", "aidl"
+    }
+
+    // Eclipse project.properties file
+    File propertiesFile = file("$buildDir/ua-staging/urbanairship-lib/project.properties")
+    propertiesFile.text = "target=android-${project.findProject('UrbanAirship').android.defaultConfig.targetSdkVersion.mApiLevel}\n"
+    propertiesFile.text += "android.library=true"
+
+    // Library as AAR
+    copy {
+        println "Staging library aar."
+        from "${project.findProject('UrbanAirship').buildDir}/outputs/aar/UrbanAirship-release.aar"
+        into "$buildDir/ua-staging"
+        rename "UrbanAirship-release.aar", "urbanairship-lib-${airshipVersion}.aar"
+    }
+
+    // Samples
+    project.findProject(":samples").subprojects.findAll { sample ->
+        println "Staging sample: ${sample.getName()}"
+
+        copy {
+            from sample.getProjectDir()
+            into file("$buildDir/ua-staging/samples/${sample.getName()}")
+            exclude "build", "**/*.iml", "**/api_key.txt", "**/.DS_STORE", "**/airshipconfig.properties",
+                    "**/airshipconfig.properties.sample", "lint.xml", "**.sample"
+        }
+
+        copy {
+            from new File(sample.getProjectDir(), "assets/airshipconfig.properties.sample")
+            into file("$buildDir/ua-staging/samples/${sample.getName()}/assets")
+            rename "airshipconfig.properties.sample", "airshipconfig.properties"
+        }
+
+        // aar
+        copy {
+            from "$buildDir/ua-staging/urbanairship-lib-${airshipVersion}.aar"
+            into file("$buildDir/ua-staging/samples/${sample.getName()}/aars")
+        }
+    }
+
+    // Gradle files for samples
+    copy {
+        println "Staging Gradle files for samples."
+        from project.findProject(":samples").getProjectDir()
+        into file("$buildDir/ua-staging/samples")
+        include "gradle/**", "gradlew", "gradlew.bat", "settings.gradle", "build.gradle"
+    }
+
+    // Readme, license and change log
+    copy {
+        println "Staging readme, license, and change log."
+        from project.getProjectDir()
+        into file("$buildDir/ua-staging")
+        include "README", "LICENSE", "CHANGELOG"
+    }
+
+    // Docs
+    copy {
+        println "Staging docs."
+        from "${project.findProject(":docs").getBuildDir()}/output"
+        into "$buildDir/ua-staging/javadocs"
+    }
+
+    // Build info file
+    File buildInfo = file("$buildDir/ua-staging/BUILD_INFO")
+    buildInfo.text = "Urban Airship SDK v${airshipVersion} \n\n"
+    buildInfo.text += "Build time: ${timeStamp()} \n"
+    buildInfo.text += "SDK commit: ${gitRevision(".")} \n"
+    buildInfo.text += "Samples commit: ${gitRevision("samples")} \n"
+    buildInfo.text += "Java: ${JavaVersion.current()}"
+
+    // Add any additional build info
+    File additionalBuildInfo = file("${project.getProjectDir()}/BUILD_INFO")
+    if (additionalBuildInfo.exists()) {
+        buildInfo.text += "\n"
+        buildInfo.text += additionalBuildInfo.text
+    }
+
+
+    // Pack it up.
+    task("zipRelease", type: Zip) {
+        println "Creating package zip."
+        destinationDir file("$buildDir/ua-package")
+        from file("$buildDir/ua-staging")
+        include "**/*"
+        archiveName "ua-android-lib-${airshipVersion}.zip"
+    }.execute()
+}
+
+packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'UrbanAirship:build', 'docs:build')
+
+task continuousIntegration
+continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', ':UrbanAirship:build',
+        'docs:build', ':UrbanAirship:test', 'packageUrbanAirshipRelease')
+
+

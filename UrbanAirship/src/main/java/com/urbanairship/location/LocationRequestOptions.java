@@ -1,0 +1,302 @@
+/*
+Copyright 2009-2014 Urban Airship Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package com.urbanairship.location;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * High level location requirements to be used for UALocationManager and service.
+ * <p/>
+ * The class is modeled after the LocationRequest for the Fused Location Provider,
+ * but only supports a subset of the options.
+ */
+public class LocationRequestOptions {
+
+    /**
+     * Default minDistance in meters - 800 meters.
+     */
+    public static float DEFAULT_UPDATE_INTERVAL_METERS = 800;
+
+    /**
+     * Default minTime in milliseconds - 5 mins.
+     */
+    public static long DEFAULT_UPDATE_INTERVAL_MILLISECONDS = 5 * 60 * 1000;
+
+    /**
+     * Default priority - PRIORITY_BALANCED_POWER_ACCURACY.
+     */
+    public static int DEFAULT_REQUEST_PRIORITY = LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
+
+    /**
+     * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
+     * to request highest level of accuracy.
+     * <p/>
+     * When used with the fused location provider it will request the highest
+     * level of accuracy available.
+     * <p/>
+     * When used with standard android location it will use Criteria.ACCURACY_FINE
+     * and Criteria.POWER_HIGH.
+     */
+    public static final int PRIORITY_HIGH_ACCURACY = 1;
+
+    /**
+     * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
+     * to request balanced power and accuracy.
+     * <p/>
+     * When used with the fused location provider it will use "block" level
+     * accuracy, about 100 meter accuracy.
+     * <p/>
+     * When used with standard android location it will use Criteria.ACCURACY_COARSE
+     * and Criteria.POWER_MEDIUM.
+     */
+    public static final int PRIORITY_BALANCED_POWER_ACCURACY = 2;
+
+    /**
+     * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
+     * to request low power location updates.
+     * <p/>
+     * When used with the fused location provider it will use "city" level
+     * accuracy, about 10km accuracy.
+     * <p/>
+     * When used with standard android location it will use Criteria.ACCURACY_COARSE
+     * and Criteria.POWER_LOW.
+     */
+    public static final int PRIORITY_LOW_POWER = 3;
+
+    /**
+     * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
+     * to request location that requires no extra power consumption.
+     * <p/>
+     * Warning: When used with the standard android location it will only use
+     * the PASSIVE provider if available.  The passive provider requires ACCESS_FINE_LOCATION
+     * permission.  If either the provider is missing or missing permissions location
+     * will not be gathered.
+     */
+    public static final int PRIORITY_NO_POWER = 4;
+
+    private int priority;
+    private long minTime;
+    private float minDistance;
+
+    /**
+     * Default constructor.
+     * <p/>
+     * The priority can only be one of the constants PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY,
+     * PRIORITY_LOW_POWER, or PRIORITY_NO_POWER provided by the class.  The minDistance
+     * and minTime must be greater or equal to 0.
+     *
+     * @param priority The priority of the request.
+     * @param minDistance Minimum distance of meters between location updates.
+     * @param minTime Minimum time between location updates in milliseconds.
+     * @throws java.lang.IllegalArgumentException if the priority is not a valid constant, or if
+     * minDistance or minTime are below 0.
+     */
+    private LocationRequestOptions(int priority, float minDistance, long minTime) {
+
+        verifyPriority(priority);
+        verifyMinDistance(minDistance);
+        verifyMinTime(minTime);
+
+
+        this.priority = priority;
+        this.minDistance = minDistance;
+        this.minTime = minTime;
+    }
+
+    /**
+     * Creates default request options with {@link #DEFAULT_REQUEST_PRIORITY},
+     * {@link #DEFAULT_UPDATE_INTERVAL_MILLISECONDS}, and
+     * {@link #DEFAULT_UPDATE_INTERVAL_METERS}.
+     *
+     * @return Default location request options.
+     */
+    public static LocationRequestOptions createDefaultOptions() {
+        return new LocationRequestOptions(
+                DEFAULT_REQUEST_PRIORITY,
+                DEFAULT_UPDATE_INTERVAL_METERS,
+                DEFAULT_UPDATE_INTERVAL_MILLISECONDS);
+    }
+
+
+    /**
+     * The priority of the request.
+     *
+     * @return The priority of the request.
+     */
+    public int getPriority() {
+        return priority;
+    }
+
+    /**
+     * The minimum time in milliseconds between location updates in milliseconds.
+     *
+     * @return The desired interval for location updates in milliseconds.
+     */
+    public long getMinTime() {
+        return minTime;
+    }
+
+    /**
+     * The minimum distance of meters between location updates.
+     *
+     * @return The minimum distance of meters between location updates.
+     */
+    public float getMinDistance() {
+        return minDistance;
+    }
+
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("LocationRequestOptions: Priority ")
+                .append(priority)
+                .append(" minTime ")
+                .append(minTime)
+                .append(" minDistance ")
+                .append(minDistance)
+                .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof LocationRequestOptions)) {
+            return false;
+        }
+
+        LocationRequestOptions other = (LocationRequestOptions) o;
+        return other.priority == priority &&
+                other.minTime == minTime &&
+                other.minDistance == minDistance;
+    }
+
+    /**
+     * Verifies that the minTime is valid.
+     *
+     * @param minTime The value to verify.
+     */
+    private static void verifyMinTime(long minTime) {
+        if (minTime < 0) {
+            throw new IllegalArgumentException("minTime must be greater or equal to 0");
+        }
+    }
+
+    /**
+     * Verifies that the minDistance is valid.
+     *
+     * @param minDistance The value to verify.
+     */
+    private static void verifyMinDistance(float minDistance) {
+        if (minDistance < 0) {
+            throw new IllegalArgumentException("minDistance must be greater or equal to 0");
+        }
+    }
+
+    /**
+     * Verifies the priority is valid.
+     *
+     * @param priority The value to verify.
+     */
+    private static void verifyPriority(int priority) {
+        switch (priority) {
+            case PRIORITY_BALANCED_POWER_ACCURACY:
+            case PRIORITY_HIGH_ACCURACY:
+            case PRIORITY_LOW_POWER:
+            case PRIORITY_NO_POWER:
+                break;
+            default:
+                throw new IllegalArgumentException("Priority can only be either " +
+                        "PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, " +
+                        "PRIORITY_LOW_POWER, or PRIORITY_NO_POWER");
+        }
+    }
+
+    /**
+     * Builder to construct LocationRequestOptions.
+     */
+    public static class Builder {
+        private long minTime = DEFAULT_UPDATE_INTERVAL_MILLISECONDS;
+        private float minDistance = DEFAULT_UPDATE_INTERVAL_METERS;
+        private int priority = DEFAULT_REQUEST_PRIORITY;
+
+
+        /**
+         * Sets the min time between location updates.
+         * <p/>
+         * Defaults to {@value #DEFAULT_UPDATE_INTERVAL_MILLISECONDS}
+         *
+         * @param time The duration.
+         * @param unit The unit of duration.
+         * @return The builder.
+         * @throws IllegalArgumentException if time is less than 0.
+         */
+        public Builder setMinTime(long time, TimeUnit unit) {
+            verifyMinTime(unit.toMillis(time));
+            minTime = unit.toMillis(time);
+            return this;
+        }
+
+        /**
+         * Sets the min distance between location updates.
+         * <p/>
+         * Defaults to {@value #DEFAULT_UPDATE_INTERVAL_METERS}
+         *
+         * @param meters The distance in meters.
+         * @return The builder.
+         * @throws IllegalArgumentException if distance is less than 0.
+         */
+        public Builder setMinDistance(float meters) {
+            verifyMinDistance(meters);
+            minDistance = meters;
+            return this;
+        }
+
+        /**
+         * Sets the priority of the location request.
+         * <p/>
+         * Defaults to {@value #DEFAULT_REQUEST_PRIORITY}
+         *
+         * @param priority The priority.
+         * @return The builder.
+         * @throws IllegalArgumentException if priority is not PRIORITY_HIGH_ACCURACY,
+         * PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, or PRIORITY_NO_POWER.
+         */
+        public Builder setPriority(int priority) {
+            verifyPriority(priority);
+            this.priority = priority;
+            return this;
+        }
+
+        /**
+         * Creates the location request.
+         *
+         * @return The new location request option.
+         */
+        public LocationRequestOptions create() {
+            return new LocationRequestOptions(priority, minDistance, minTime);
+        }
+    }
+}

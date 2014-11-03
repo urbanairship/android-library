@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Sí</string>
+    <string name="ua_notification_button_no">No</string>
+    <string name="ua_notification_button_shop_now">Obtener ahora</string>
+    <string name="ua_notification_button_buy_now">Comprar ahora</string>
+    <string name="ua_notification_button_follow">Seguir</string>
+    <string name="ua_notification_button_unfollow">Dejar de seguir</string>
+    <string name="ua_notification_button_opt_in">Acepto</string>
+    <string name="ua_notification_button_opt_out">No acepto</string>
+    <string name="ua_notification_button_remind">Recordármelo más tarde</string>
+    <string name="ua_notification_button_share">Compartir</string>
+    <string name="ua_notification_button_accept">Aceptar</string>
+    <string name="ua_notification_button_decline">Rechazar</string>
+    <string name="ua_notification_button_download">Descargar</string>
+    <string name="ua_notification_button_more_like">Más como éste</string>
+    <string name="ua_notification_button_less_like">Menos como éste</string>
+    <string name="ua_notification_button_like">Me gusta</string>
+    <string name="ua_notification_button_dislike">No me gusta</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Compartir</string>
+</resources>
