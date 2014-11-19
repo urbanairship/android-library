@@ -399,7 +399,7 @@ public class PushService extends IntentService {
 
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
-                if (!PlayServicesUtils.isGooglePlayServicesDependencyAvailable()) {
+                if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
                     Logger.info("Unable to start registration. Google Play services unavailable.");
                     performChannelRegistration();
                 } else {

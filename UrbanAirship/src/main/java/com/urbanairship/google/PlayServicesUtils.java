@@ -57,6 +57,8 @@ public class PlayServicesUtils {
 
 
     private static Boolean isGooglePlayServicesDependencyAvailable;
+    private static Boolean isGoogleCloudMessagingDependencyAvailable;
+    private static Boolean isFusedLocationDependencyAvailable;
 
 
     /**
@@ -127,22 +129,65 @@ public class PlayServicesUtils {
      * @return <code>true</code> if available, otherwise <code>false</code>.
      */
     public static boolean isGooglePlayServicesDependencyAvailable() {
-        if (isGooglePlayServicesDependencyAvailable != null) {
-            return isGooglePlayServicesDependencyAvailable;
-        }
-
-        if (Build.VERSION.SDK_INT < 8) {
-            isGooglePlayServicesDependencyAvailable = false;
-        } else {
-            try {
-                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-                isGooglePlayServicesDependencyAvailable = true;
-            } catch (ClassNotFoundException e) {
+        if (isGooglePlayServicesDependencyAvailable == null) {
+            if (Build.VERSION.SDK_INT < 8) {
                 isGooglePlayServicesDependencyAvailable = false;
+            } else {
+                // Play Services
+                try {
+                    Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
+                    isGooglePlayServicesDependencyAvailable = true;
+                } catch (ClassNotFoundException e) {
+                    isGooglePlayServicesDependencyAvailable = false;
+                }
             }
         }
 
         return isGooglePlayServicesDependencyAvailable;
+    }
+
+    /**
+     * Checks if Google Play services dependency is available for GCM.
+     *
+     * @return <code>true</code> if available, otherwise <code>false</code>.
+     */
+    public static boolean isGoogleCloudMessagingDependencyAvailable() {
+        if (isGoogleCloudMessagingDependencyAvailable == null) {
+            if (!isGooglePlayServicesDependencyAvailable()) {
+                isGoogleCloudMessagingDependencyAvailable = false;
+            } else {
+                try {
+                    Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
+                    isGoogleCloudMessagingDependencyAvailable = true;
+                } catch (ClassNotFoundException e) {
+                    isGoogleCloudMessagingDependencyAvailable = false;
+                }
+            }
+        }
+
+        return isGoogleCloudMessagingDependencyAvailable;
+    }
+
+    /**
+     * Checks if Google Play services dependency is available for Fused Location.
+     *
+     * @return <code>true</code> if available, otherwise <code>false</code>.
+     */
+    public static boolean isFusedLocationDepdendencyAvailable() {
+        if (isFusedLocationDependencyAvailable == null) {
+            if (!isGooglePlayServicesDependencyAvailable()) {
+                isFusedLocationDependencyAvailable = false;
+            } else {
+                try {
+                    Class.forName("com.google.android.gms.location.LocationServices");
+                    isFusedLocationDependencyAvailable = true;
+                } catch (ClassNotFoundException e) {
+                    isFusedLocationDependencyAvailable = false;
+                }
+            }
+        }
+
+        return isFusedLocationDependencyAvailable;
     }
 
     /**
