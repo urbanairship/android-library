@@ -49,20 +49,27 @@ public class GCMPushReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            final PendingResult pendingResult = goAsync();
-            pendingResult.setResultCode(Activity.RESULT_OK);
-
-            UAirship.shared(new UAirship.OnReadyCallback() {
-                @Override
-                public void onAirshipReady(UAirship airship) {
-                    handleIncomingMessage(context, intent, airship.getAirshipConfigOptions());
-                    pendingResult.finish();
+        if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
+            if (Build.VERSION.SDK_INT >= 11) {
+                final PendingResult pendingResult = goAsync();
+                if (isOrderedBroadcast()) {
+                    pendingResult.setResultCode(Activity.RESULT_OK);
                 }
-            });
-        } else {
-            handleIncomingMessage(context, intent, UAirship.shared().getAirshipConfigOptions());
-            setResultCode(Activity.RESULT_OK);
+
+                UAirship.shared(new UAirship.OnReadyCallback() {
+                    @Override
+                    public void onAirshipReady(UAirship airship) {
+                        handleGCMReceived(context, intent, airship.getAirshipConfigOptions());
+                        pendingResult.finish();
+                    }
+                });
+            } else {
+                handleGCMReceived(context, intent, UAirship.shared().getAirshipConfigOptions());
+
+                if (isOrderedBroadcast()) {
+                    setResultCode(Activity.RESULT_OK);
+                }
+            }
         }
     }
 
@@ -72,25 +79,23 @@ public class GCMPushReceiver extends BroadcastReceiver {
      * @param intent The incoming intent.
      * @param options THe application config options.
      */
-    private void handleIncomingMessage(Context context, Intent intent, AirshipConfigOptions options) {
+    private void handleGCMReceived(Context context, Intent intent, AirshipConfigOptions options) {
         String sender = intent.getStringExtra("from");
         if (sender != null && !sender.equals(options.gcmSender)) {
             Logger.info("Ignoring GCM message from sender: " + sender);
             return;
         }
 
-        if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
-            if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(intent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
-                Logger.info("GCM deleted " + intent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
-            } else {
-                Logger.info("Received push from GCM.");
+        if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(intent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
+            Logger.info("GCM deleted " + intent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
+        } else {
+            Logger.info("Received push from GCM.");
 
-                // Deliver message to push service
-                Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
-                        .putExtras(intent.getExtras());
+            // Deliver message to push service
+            Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+                    .putExtras(intent.getExtras());
 
-                PushService.startServiceWithWakeLock(context, pushIntent);
-            }
+            PushService.startServiceWithWakeLock(context, pushIntent);
         }
     }
 }
