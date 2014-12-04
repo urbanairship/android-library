@@ -41,7 +41,7 @@ task packageUrbanAirshipRelease << {
 
     // Library as AAR
     copy {
-        println "Staging library aar."
+        println "Staging aar."
         from "${project.findProject('UrbanAirship').buildDir}/outputs/aar/UrbanAirship-release.aar"
         into "$buildDir/ua-staging"
         rename "UrbanAirship-release.aar", "urbanairship-lib-${airshipVersion}.aar"
@@ -49,7 +49,7 @@ task packageUrbanAirshipRelease << {
 
     // Samples
     project.findProject(":samples").subprojects.findAll { sample ->
-        println "Staging sample: ${sample.getName()}"
+        println "Staging ${sample.getName()}"
 
         copy {
             from sample.getProjectDir()
@@ -71,17 +71,17 @@ task packageUrbanAirshipRelease << {
         }
     }
 
-    // Gradle files for samples
+    // Samples gradle files and README
     copy {
-        println "Staging Gradle files for samples."
+        println "Staging Gradle files and README for samples."
         from project.findProject(":samples").getProjectDir()
         into file("$buildDir/ua-staging/samples")
-        include "gradle/**", "gradlew", "gradlew.bat", "settings.gradle", "build.gradle"
+        include "gradle/**", "gradlew", "gradlew.bat", "settings.gradle", "build.gradle", "README.md"
     }
 
-    // Readme, license and change log
+    // README, LICENSE, and CHANGELOG
     copy {
-        println "Staging readme, license, and change log."
+        println "Staging README, LICENSE, and CHANGELOG."
         from project.getProjectDir()
         into file("$buildDir/ua-staging")
         include "README", "LICENSE", "CHANGELOG"
