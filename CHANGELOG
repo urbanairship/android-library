@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 5.1.1 - December 8, 2014
+================================
+ - Fixed GCMPushReceiver crash when receiving unordered broadcasts due to a misconfigured AndroidManifest.xml.
+ - Updated samples to the latest Android gradle plugin 1.0.0-rc4.
+
 Version 5.1.0 - November 3, 2014
 ================================
  - Advanced notification support through the Push API, including support for Android Wear and styles.
