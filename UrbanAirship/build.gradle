@@ -3,8 +3,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.13.+'
-        classpath 'org.robolectric:robolectric-gradle-plugin:0.13.+'
+        classpath 'com.android.tools.build:gradle:1.0.0-rc3'
+        classpath 'org.robolectric:robolectric-gradle-plugin:0.14.+'
     }
 }
 
@@ -18,7 +18,7 @@ repositories {
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.0.2"
+    buildToolsVersion "21.1.1"
 
 
     lintOptions {
@@ -39,8 +39,6 @@ android {
     }
 }
 
-
-
 robolectric {
     // configure the set of classes for JUnit tests
     include '**/*Test.class'
@@ -60,9 +58,12 @@ robolectric {
     }
 }
 
+// work around for provided dependencies as jars being included in the exploded aar
+// https://code.google.com/p/android/issues/detail?id=69737
 android.libraryVariants.all { variant ->
-    // work around for provided dependencies as jars being included in the exploded aar
-    variant.packageLibrary.exclude('libs/amazon-device-messaging-1.0.1.jar')
+    variant.outputs.each { output ->
+        output.packageLibrary.exclude('libs/amazon-device-messaging-1.0.1.jar')
+    }
 }
 
 dependencies {
