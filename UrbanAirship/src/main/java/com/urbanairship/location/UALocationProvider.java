@@ -53,7 +53,7 @@ class UALocationProvider {
      * @param context The application context.
      */
     public UALocationProvider(Context context) {
-        if (PlayServicesUtils.isGooglePlayServicesDependencyAvailable()) {
+        if (PlayServicesUtils.isFusedLocationDepdendencyAvailable()) {
             adapters.add(new FusedLocationAdapter(context));
         }
 
