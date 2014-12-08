@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 5.1.2 - December 8, 2014
+================================
+ - Fix crash when building against Google Play Services 6.5 without the location APIs.
+ - Updated samples to the latest Android gradle plugin 1.0.0.
+
 Version 5.1.1 - December 8, 2014
 ================================
  - Fixed GCMPushReceiver crash when receiving unordered broadcasts due to a misconfigured AndroidManifest.xml.
