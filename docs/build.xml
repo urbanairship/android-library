@@ -30,7 +30,6 @@
                        replace="${airshipVersion}"/>
 
         <javadoc
-            access="public"
             author="false"
             classpath="${sdk.dir}/platforms/android-20/android.jar"
             bootclasspath="${java.home}/lib/rt.jar"
