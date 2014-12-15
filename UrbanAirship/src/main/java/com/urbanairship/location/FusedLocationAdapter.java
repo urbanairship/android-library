@@ -35,17 +35,31 @@ class FusedLocationAdapter implements LocationAdapter {
 
     @Override
     public PendingResult<Location> requestSingleLocation(LocationRequestOptions options) {
+        if (client == null || !client.isConnected()) {
+            Logger.debug("Fused location adapter is not connected. Unable to request single location.");
+            return null;
+        }
         return new SingleLocationRequest(options);
     }
 
     @Override
     public void cancelLocationUpdates(PendingIntent intent) {
+        if (client == null || !client.isConnected()) {
+            Logger.debug("Fused location adapter is not connected. Unable to cancel location updates.");
+            return;
+        }
+
         Logger.verbose("Fused location canceling updates.");
         LocationServices.FusedLocationApi.removeLocationUpdates(client, intent);
     }
 
     @Override
     public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent) {
+        if (client == null || !client.isConnected()) {
+            Logger.debug("Fused location adapter is not connected. Unable to request location updates.");
+            return;
+        }
+
         Logger.verbose("Fused location requesting updates.");
         LocationRequest locationRequest = createLocationRequest(options);
         LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, intent);
@@ -54,7 +68,6 @@ class FusedLocationAdapter implements LocationAdapter {
     @Override
     public boolean connect() {
         final Semaphore semaphore = new Semaphore(0);
-
 
         try {
             int playServicesStatus = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
@@ -67,7 +80,6 @@ class FusedLocationAdapter implements LocationAdapter {
             Logger.debug("Google Play services is currently unavailable, unable to connect for fused location. " + e.getMessage());
             return false;
         }
-
 
         client = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
@@ -87,7 +99,6 @@ class FusedLocationAdapter implements LocationAdapter {
                     @Override
                     public void onConnectionFailed(ConnectionResult connectionResult) {
                         Logger.verbose("Google Play services failed to connect for fused location.");
-                        client = null;
                         semaphore.release();
                     }
                 })
@@ -110,7 +121,6 @@ class FusedLocationAdapter implements LocationAdapter {
     public void disconnect() {
         if (client != null) {
             client.disconnect();
-            client = null;
         }
     }
 
