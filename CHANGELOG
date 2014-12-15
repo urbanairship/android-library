@@ -3,6 +3,13 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 5.1.3 - December 15, 2014
+=================================
+ - Fixed crash that occurred when the fused location provider failed to connect. Applications with the UA
+   location service in their manifest were potentially impacted.
+ - Added workaround for an Ice Cream Sandwich issue (https://code.google.com/p/android/issues/detail?id=20915)
+   in which the AsyncTask would be initialized on the wrong thread and throw a RuntimeException.
+
 Version 5.1.2 - December 8, 2014
 ================================
  - Fix crash when building against Google Play Services 6.5 without the location APIs.
