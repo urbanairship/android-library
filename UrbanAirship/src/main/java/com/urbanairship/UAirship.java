@@ -243,10 +243,26 @@ public class UAirship {
             throw new IllegalArgumentException("Application argument must not be null");
         }
 
+        if (Looper.myLooper() != null && Looper.getMainLooper() == Looper.myLooper()) {
+            // Workaround for https://code.google.com/p/android/issues/detail?id=20915.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                try {
+                    Class.forName("android.os.AsyncTask");
+                } catch (ClassNotFoundException e) {
+                    Logger.error("AsyncTask workaround failed.", e);
+                }
+            }
+
+        } else  {
+            // In 6.0, we should throw an illegal state exception.
+            // throw new IllegalStateException("takeOff() must be called on the main thread!");
+            Logger.error("takeOff() must be called on the main thread!");
+        }
+
         synchronized (airshipLock) {
             // airships only take off once!!
             if (isFlying || isTakingOff) {
-                Logger.error("You can only call UAirship.isTakingOff once.");
+                Logger.error("You can only call takeOff() once.");
                 return;
             }
 
