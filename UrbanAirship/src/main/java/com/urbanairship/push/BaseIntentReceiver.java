@@ -80,14 +80,19 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         Logger.debug("Received intent with action: " + action);
 
-        if (PushManager.ACTION_PUSH_RECEIVED.equals(action)) {
-            handlePushReceived(context, intent);
-        } else if (PushManager.ACTION_NOTIFICATION_OPENED.equals(action)) {
-            handlePushOpened(context, intent);
-        } else if (PushManager.ACTION_CHANNEL_UPDATED.equals(action)) {
-            handleRegistrationIntent(context, intent);
-        } else if (PushManager.ACTION_NOTIFICATION_DISMISSED.equals(action)) {
-            handleDismissedIntent(context, intent);
+        switch (action) {
+            case PushManager.ACTION_PUSH_RECEIVED:
+                handlePushReceived(context, intent);
+                break;
+            case PushManager.ACTION_NOTIFICATION_OPENED:
+                handlePushOpened(context, intent);
+                break;
+            case PushManager.ACTION_CHANNEL_UPDATED:
+                handleRegistrationIntent(context, intent);
+                break;
+            case PushManager.ACTION_NOTIFICATION_DISMISSED:
+                handleDismissedIntent(context, intent);
+                break;
         }
     }
 

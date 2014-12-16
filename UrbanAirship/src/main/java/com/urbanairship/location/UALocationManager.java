@@ -63,7 +63,7 @@ public class UALocationManager extends BaseManager {
     private boolean isSubscribed;
 
     private int nextSingleLocationRequestId = 1;
-    private SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<SingleLocationRequest>();
+    private SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
 
     LocationPreferences preferences;
 
@@ -71,7 +71,7 @@ public class UALocationManager extends BaseManager {
     /**
      * List of location listeners.
      */
-    private List<LocationListener> locationListeners = new ArrayList<LocationListener>();
+    private List<LocationListener> locationListeners = new ArrayList<>();
 
     /**
      * Handles connections to the location service.

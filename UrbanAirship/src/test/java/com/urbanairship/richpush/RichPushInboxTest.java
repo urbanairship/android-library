@@ -73,7 +73,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      */
     @Test
     public void testMarkMessagesDeleted() throws JSONException, InterruptedException {
-        HashSet<String> deletedIds = new HashSet<String>();
+        HashSet<String> deletedIds = new HashSet<>();
         deletedIds.add("1_message_id");
         deletedIds.add("3_message_id");
         deletedIds.add("6_message_id");
@@ -102,7 +102,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      */
     @Test
     public void testMarkMessagesRead() throws InterruptedException {
-        HashSet<String> markedReadIds = new HashSet<String>();
+        HashSet<String> markedReadIds = new HashSet<>();
         markedReadIds.add("1_message_id");
         markedReadIds.add("3_message_id");
         markedReadIds.add("6_message_id");
@@ -140,7 +140,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      */
     @Test
     public void testMarkMessagesUnread() throws InterruptedException {
-        HashSet<String> messageIds = new HashSet<String>();
+        HashSet<String> messageIds = new HashSet<>();
         messageIds.add("1_message_id");
         messageIds.add("3_message_id");
         messageIds.add("6_message_id");
@@ -174,7 +174,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      * @return A map of rich push messages
      */
     private Map<String, RichPushMessage> createIdToMessageMap(List<RichPushMessage> messages) {
-        Map<String, RichPushMessage> messageMap = new HashMap<String, RichPushMessage>();
+        Map<String, RichPushMessage> messageMap = new HashMap<>();
 
         for (RichPushMessage message : messages) {
             messageMap.put(message.getMessageId(), message);

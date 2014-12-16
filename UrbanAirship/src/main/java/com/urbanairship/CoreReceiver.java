@@ -49,14 +49,19 @@ public class CoreReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
-        if (PushManager.ACTION_NOTIFICATION_OPENED_PROXY.equals(intent.getAction())) {
-            handleNotificationOpenedProxy(context, intent);
-        } else if (PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY.equals(intent.getAction())) {
-            handleNotificationButtonOpenedProxy(context, intent);
-        } else if (PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY.equals(intent.getAction())) {
-            handleNotificationDismissedProxy(context, intent);
-        } else if (PushManager.ACTION_NOTIFICATION_OPENED.equals(intent.getAction())) {
-            handleNotificationOpened(context, intent);
+        switch (intent.getAction()) {
+            case PushManager.ACTION_NOTIFICATION_OPENED_PROXY:
+                handleNotificationOpenedProxy(context, intent);
+                break;
+            case PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY:
+                handleNotificationButtonOpenedProxy(context, intent);
+                break;
+            case PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY:
+                handleNotificationDismissedProxy(context, intent);
+                break;
+            case PushManager.ACTION_NOTIFICATION_OPENED:
+                handleNotificationOpened(context, intent);
+                break;
         }
     }
 

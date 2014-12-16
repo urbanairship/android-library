@@ -311,7 +311,7 @@ public abstract class DataManager {
      */
     public List<ContentValues> bulkInsert(String table, ContentValues[] values) {
         SQLiteDatabase db = getWritableDatabase();
-        List<ContentValues> inserted = new ArrayList<ContentValues>();
+        List<ContentValues> inserted = new ArrayList<>();
         if (db == null) {
             return inserted;
         }
@@ -320,9 +320,9 @@ public abstract class DataManager {
         SQLiteStatement statement = getInsertStatement(table, db);
 
         try {
-            for (int i = 0; i < values.length; i++) {
-                if (tryExecuteStatement(statement, values[i])) {
-                    inserted.add(values[i]);
+            for (ContentValues value : values) {
+                if (tryExecuteStatement(statement, value)) {
+                    inserted.add(value);
                 }
             }
 

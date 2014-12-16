@@ -79,7 +79,7 @@ public class ActionArguments {
         this.situation = situation;
 
         if (metadata != null) {
-            this.metadata = new HashMap<String, Object>(metadata);
+            this.metadata = new HashMap<>(metadata);
         }
     }
 
@@ -155,7 +155,7 @@ public class ActionArguments {
      */
     public static class Builder {
         private Situation situation = Situation.MANUAL_INVOCATION;
-        private Map<String, Object> metadata = new HashMap<String, Object>();
+        private Map<String, Object> metadata = new HashMap<>();
         private Object value;
 
         /**

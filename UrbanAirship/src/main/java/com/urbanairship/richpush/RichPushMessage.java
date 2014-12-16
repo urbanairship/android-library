@@ -267,7 +267,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (this.unreadClient) {
             unreadClient = false;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().markMessagesRead(set);
             }
@@ -281,7 +281,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (!this.unreadClient) {
             unreadClient = true;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().markMessagesUnread(set);
             }
@@ -295,7 +295,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (!this.deleted) {
             deleted = true;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().deleteMessages(set);
             }

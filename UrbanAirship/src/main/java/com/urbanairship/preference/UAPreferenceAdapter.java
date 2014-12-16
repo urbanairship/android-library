@@ -58,7 +58,7 @@ public class UAPreferenceAdapter {
      */
     private static int CHANNEL_ID_RETRY_DELAY = 1000;
 
-    private Map<UAPreference.PreferenceType, Object> preferences = new HashMap<UAPreference.PreferenceType, Object>();
+    private Map<UAPreference.PreferenceType, Object> preferences = new HashMap<>();
     private int channelIdRetryCount = 0;
 
     /**

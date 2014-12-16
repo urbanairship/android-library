@@ -325,7 +325,7 @@ class ChannelRegistrationPayload {
 
             if (channelJSON.has(TAGS_KEY)) {
                 JSONArray tagsJSON = channelJSON.getJSONArray(TAGS_KEY);
-                tags = new HashSet<String>();
+                tags = new HashSet<>();
                 for (int i = 0; i < tagsJSON.length(); i++) {
                     tags.add(tagsJSON.getString(i));
                 }

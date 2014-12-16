@@ -52,10 +52,10 @@ import java.util.concurrent.Executors;
 public class RichPushInbox {
 
     private static final SentAtRichPushMessageComparator richPushMessageComparator = new SentAtRichPushMessageComparator();
-    private final List<String> pendingDeletionMessageIds = new ArrayList<String>();
+    private final List<String> pendingDeletionMessageIds = new ArrayList<>();
 
 
-    private List<Listener> listeners = new ArrayList<Listener>();
+    private List<Listener> listeners = new ArrayList<>();
     private RichPushMessageCache messageCache = new RichPushMessageCache();
     private RichPushResolver richPushResolver;
 
@@ -279,7 +279,7 @@ public class RichPushInbox {
      * Updates the richMessageCache from the database.
      */
     private void updateCacheFromDB() {
-        List<String> deletedIds = new ArrayList<String>(pendingDeletionMessageIds);
+        List<String> deletedIds = new ArrayList<>(pendingDeletionMessageIds);
         Cursor inboxCursor = richPushResolver.getAllMessages();
 
         if (inboxCursor == null) {

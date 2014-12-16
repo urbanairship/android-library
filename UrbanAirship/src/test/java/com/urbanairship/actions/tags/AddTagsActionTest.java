@@ -60,7 +60,7 @@ public class AddTagsActionTest {
      */
     @Test
     public void testPerform() {
-        Set<String> existingTags = new HashSet<String>();
+        Set<String> existingTags = new HashSet<>();
         existingTags.add("tagOne");
         existingTags.add("tagTwo");
 
@@ -72,7 +72,7 @@ public class AddTagsActionTest {
         assertNull("Add tags action should return null", result.getValue());
 
         // Verify we have original tags plus the added tagThree
-        Set<String> expectedTags = new HashSet<String>(existingTags);
+        Set<String> expectedTags = new HashSet<>(existingTags);
         expectedTags.add("tagThree");
         verify(pushManager).setTags(expectedTags);
     }

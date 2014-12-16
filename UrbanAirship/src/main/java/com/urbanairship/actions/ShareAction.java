@@ -96,11 +96,11 @@ public class ShareAction extends Action {
                 .putExtra(Intent.EXTRA_TEXT, (String) arguments.getValue());
 
 
-        List<Intent> intentList = new ArrayList<Intent>();
+        List<Intent> intentList = new ArrayList<>();
         List<ResolveInfo> resolveInfoList = UAirship.getPackageManager().queryIntentActivities(sharingIntent, 0);
 
         // Used to prevent multiple entries of the same package from showing in the list
-        List<String> packages = new ArrayList<String>();
+        List<String> packages = new ArrayList<>();
 
         for (int j = 0; j < resolveInfoList.size(); j++) {
             ResolveInfo resolveInfo = resolveInfoList.get(j);

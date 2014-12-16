@@ -155,7 +155,7 @@ class EventDataManager extends DataManager {
      * @return Map of event id to event data
      */
     public Map<String, String> getEvents(int count) {
-        HashMap<String, String> events = new HashMap<String, String>(count);
+        HashMap<String, String> events = new HashMap<>(count);
 
         String[] columns = new String[] {
                 Events.COLUMN_NAME_EVENT_ID,

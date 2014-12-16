@@ -114,7 +114,7 @@ public class PushService extends IntentService {
      */
     static final String EXTRA_BACK_OFF = "com.urbanairship.push.EXTRA_BACK_OFF";
 
-    private static final SparseArray<WakeLock> wakeLocks = new SparseArray<WakeLock>();
+    private static final SparseArray<WakeLock> wakeLocks = new SparseArray<>();
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
 
@@ -161,18 +161,25 @@ public class PushService extends IntentService {
         intent.removeExtra(EXTRA_WAKE_LOCK_ID);
 
         try {
-            if (ACTION_PUSH_RECEIVED.equals(action)) {
-                onPushReceived(intent);
-            } else if (ACTION_PUSH_REGISTRATION_FINISHED.equals(action)) {
-                onPushRegistrationFinished();
-            } else if (ACTION_UPDATE_REGISTRATION.equals(action)) {
-                onUpdateRegistration();
-            } else if (ACTION_START_REGISTRATION.equals(action)) {
-                onStartRegistration();
-            } else if (ACTION_RETRY_CHANNEL_REGISTRATION.equals(action)) {
-                onRetryChannelRegistration(intent);
-            } else if (ACTION_RETRY_PUSH_REGISTRATION.equals(action)) {
-                onRetryPushRegistration(intent);
+            switch (action) {
+                case ACTION_PUSH_RECEIVED:
+                    onPushReceived(intent);
+                    break;
+                case ACTION_PUSH_REGISTRATION_FINISHED:
+                    onPushRegistrationFinished();
+                    break;
+                case ACTION_UPDATE_REGISTRATION:
+                    onUpdateRegistration();
+                    break;
+                case ACTION_START_REGISTRATION:
+                    onStartRegistration();
+                    break;
+                case ACTION_RETRY_CHANNEL_REGISTRATION:
+                    onRetryChannelRegistration(intent);
+                    break;
+                case ACTION_RETRY_PUSH_REGISTRATION:
+                    onRetryPushRegistration(intent);
+                    break;
             }
         } finally {
             if (wakeLockId >= 0) {

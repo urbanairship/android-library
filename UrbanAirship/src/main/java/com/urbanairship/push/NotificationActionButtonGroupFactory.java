@@ -35,7 +35,7 @@ import java.util.Map;
 class NotificationActionButtonGroupFactory {
 
     static Map<String, NotificationActionButtonGroup> createUrbanAirshipGroups() {
-        Map<String, NotificationActionButtonGroup> groups = new HashMap<String, NotificationActionButtonGroup>();
+        Map<String, NotificationActionButtonGroup> groups = new HashMap<>();
 
         groups.put("ua_yes_no_foreground", new NotificationActionButtonGroup.Builder()
                 .addNotificationActionButton(new NotificationActionButton.Builder("yes")

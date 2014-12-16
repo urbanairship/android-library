@@ -138,8 +138,8 @@ public class LocationService extends Service {
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
 
-    private Set<Messenger> subscribedClients = new HashSet<Messenger>();
-    private HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<Messenger, SparseArray<PendingResult<Location>>>();
+    private Set<Messenger> subscribedClients = new HashSet<>();
+    private HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
 
     private Messenger messenger;
 
@@ -211,12 +211,16 @@ public class LocationService extends Service {
         String action = intent == null ? null : intent.getAction();
         Logger.verbose("Location service received intent action: " + action);
 
-        if (ACTION_START_UPDATES.equals(action)) {
-            onStartLocationUpdates();
-        } else if (ACTION_STOP_UPDATES.equals(action)) {
-            onStopLocationUpdates();
-        } else if (ACTION_LOCATION_UPDATE.equals(action)) {
-            onLocationUpdate(intent);
+        switch (action) {
+            case ACTION_START_UPDATES:
+                onStartLocationUpdates();
+                break;
+            case ACTION_STOP_UPDATES:
+                onStopLocationUpdates();
+                break;
+            case ACTION_LOCATION_UPDATE:
+                onLocationUpdate(intent);
+                break;
         }
     }
 
@@ -360,7 +364,7 @@ public class LocationService extends Service {
 
             UAirship.shared().getAnalytics().recordLocation(location, updateOptions, LocationEvent.UpdateType.CONTINUOUS);
 
-            List<Messenger> clientCopy = new ArrayList<Messenger>(subscribedClients);
+            List<Messenger> clientCopy = new ArrayList<>(subscribedClients);
             for (Messenger client : clientCopy) {
                 if (!sendClientMessage(client, MSG_NEW_LOCATION_UPDATE, 0, location)) {
                     // Client died or is unable to receive messages, remove it

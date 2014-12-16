@@ -99,7 +99,7 @@ public class LandingPageWebView extends UAWebView {
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(options.getAppKey(), options.getAppSecret());
             Header credentialHeader = BasicScheme.authenticate(credentials, "UTF-8", false);
 
-            HashMap<String, String> headers = new HashMap<String, String>();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put(credentialHeader.getName(), credentialHeader.getValue());
 
             super.loadUrl(url, headers);

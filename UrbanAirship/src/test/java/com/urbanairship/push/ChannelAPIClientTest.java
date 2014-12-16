@@ -63,7 +63,7 @@ public class ChannelAPIClientTest {
     public void testCreateChannelSucceedsRequest() throws Exception {
         String channelLocation = "https://go.urbanairship.com/api/channels/someChannelId";
 
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
         headers.put("Location", Arrays.asList(new String[] { channelLocation }));
 
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
@@ -89,7 +89,7 @@ public class ChannelAPIClientTest {
      */
     @Test
     public void testCreateChannelFailsRequest() throws Exception {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                 .setResponseHeaders(headers)
@@ -109,7 +109,7 @@ public class ChannelAPIClientTest {
      */
     @Test
     public void testUpdateChannelSucceedsRequest() throws Exception {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
                 .setResponseHeaders(headers)
@@ -130,7 +130,7 @@ public class ChannelAPIClientTest {
      */
     @Test
     public void testUpdateChannelFailsRequest() throws Exception {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
 
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_NOT_IMPLEMENTED)
                 .setResponseHeaders(headers)

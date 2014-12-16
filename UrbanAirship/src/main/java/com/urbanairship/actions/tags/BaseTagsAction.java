@@ -68,13 +68,13 @@ public abstract class BaseTagsAction extends Action {
         }
 
         if (value instanceof String) {
-            Set<String> tags = new HashSet<String>();
+            Set<String> tags = new HashSet<>();
             tags.add(String.valueOf(arguments.getValue()));
             return tags;
         }
 
         if (value instanceof Collection) {
-            Set<String> tags = new HashSet<String>();
+            Set<String> tags = new HashSet<>();
 
             for (Object tag : (Collection) value) {
                 tags.add(String.valueOf(tag));

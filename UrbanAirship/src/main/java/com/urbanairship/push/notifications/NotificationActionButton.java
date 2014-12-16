@@ -118,7 +118,7 @@ public class NotificationActionButton {
             return null;
         }
 
-        return new ArrayList<LocalizableRemoteInput>(remoteInputs);
+        return new ArrayList<>(remoteInputs);
     }
 
     /**
@@ -237,7 +237,7 @@ public class NotificationActionButton {
          */
         public Builder addRemoteInput(LocalizableRemoteInput remoteInput) {
             if (remoteInputs == null) {
-                remoteInputs = new ArrayList<LocalizableRemoteInput>();
+                remoteInputs = new ArrayList<>();
             }
             remoteInputs.add(remoteInput);
             return this;
@@ -251,7 +251,7 @@ public class NotificationActionButton {
          */
         public Builder extend(NotificationCompat.Action.Extender extender) {
             if (extenders == null) {
-                extenders = new ArrayList<NotificationCompat.Action.Extender>();
+                extenders = new ArrayList<>();
             }
             extenders.add(extender);
             return this;

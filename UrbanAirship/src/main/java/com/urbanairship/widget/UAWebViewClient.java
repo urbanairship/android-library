@@ -125,7 +125,7 @@ public class UAWebViewClient extends WebViewClient {
 
     private ActionRunner actionRunner;
 
-    private Map<String, Credentials> authRequestCredentials = new HashMap<String, Credentials>();
+    private Map<String, Credentials> authRequestCredentials = new HashMap<>();
 
     public UAWebViewClient() {
         this(ActionRunner.shared());
@@ -253,7 +253,7 @@ public class UAWebViewClient extends WebViewClient {
      */
     private Map<String, List<ActionArguments>> decodeActionArguments (Map<String, List<String>> actions, RichPushMessage message, boolean basicEncoding) {
         HashMap<String, List<ActionArguments>> decodedActions = new HashMap();
-        List<ActionArguments> decodedActionArguments = new ArrayList<ActionArguments>();
+        List<ActionArguments> decodedActionArguments = new ArrayList<>();
 
         for (String actionName : actions.keySet()) {
             List<String> args = actions.get(actionName);
@@ -287,7 +287,7 @@ public class UAWebViewClient extends WebViewClient {
                 }
             }
 
-            decodedActions.put(actionName, new ArrayList<ActionArguments>(decodedActionArguments));
+            decodedActions.put(actionName, new ArrayList<>(decodedActionArguments));
             decodedActionArguments.clear();
         }
 

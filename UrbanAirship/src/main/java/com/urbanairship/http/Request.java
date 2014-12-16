@@ -77,7 +77,7 @@ public class Request {
         this.requestMethod = requestMethod;
         this.url = url;
 
-        responseProperties = new HashMap<String, String>();
+        responseProperties = new HashMap<>();
         responseProperties.put("User-Agent", getUrbanAirshipUserAgent());
     }
 

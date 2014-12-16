@@ -225,7 +225,7 @@ public class LandingPageAction extends Action {
             Object cache = map.get(CACHE_ON_RECEIVE_KEY);
 
             if (cache != null && cache instanceof Boolean) {
-                return ((Boolean) cache).booleanValue();
+                return (Boolean) cache;
             }
         }
 

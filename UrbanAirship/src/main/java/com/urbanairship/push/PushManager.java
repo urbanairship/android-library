@@ -194,7 +194,7 @@ public class PushManager extends BaseManager {
 
     //singleton stuff
     private NotificationFactory notificationFactory;
-    private Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<String, NotificationActionButtonGroup>();
+    private Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean deviceTagsEnabled = true;
 
     PushPreferences preferences;
@@ -499,7 +499,7 @@ public class PushManager extends BaseManager {
             return null;
         }
 
-        Set<String> normalizedTags = new HashSet<String>();
+        Set<String> normalizedTags = new HashSet<>();
 
         for (String tag : tags) {
             if (tag == null) {

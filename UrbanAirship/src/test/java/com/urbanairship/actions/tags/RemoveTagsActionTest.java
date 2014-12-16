@@ -62,7 +62,7 @@ public class RemoveTagsActionTest {
      */
     @Test
     public void testPerform() {
-        Set<String> existingTags = new HashSet<String>();
+        Set<String> existingTags = new HashSet<>();
         existingTags.add("tagOne");
         existingTags.add("tagTwo");
 
@@ -76,7 +76,7 @@ public class RemoveTagsActionTest {
         assertNull("Remove tags action should return null", result.getValue());
 
         // Verify we only have tagTwo
-        Set<String> expectedTags = new HashSet<String>();
+        Set<String> expectedTags = new HashSet<>();
         expectedTags.add("tagTwo");
         verify(pushManager).setTags(expectedTags);
     }

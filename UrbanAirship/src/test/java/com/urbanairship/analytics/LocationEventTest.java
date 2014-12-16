@@ -93,7 +93,7 @@ public class LocationEventTest {
     public void testNotificationTypes() throws JSONException {
         JSONObject data = event.getEventData();
         JSONArray typesJSON = (JSONArray) data.get(Event.NOTIFICATION_TYPES_KEY);
-        ArrayList<String> typesList = new ArrayList<String>();
+        ArrayList<String> typesList = new ArrayList<>();
         for (int i = 0; i < typesJSON.length(); i++) {
             typesList.add((String) typesJSON.get(i));
         }

@@ -63,7 +63,7 @@ public class RichPushManager extends BaseManager {
     // Number of refresh message requests currently in flight.
     private AtomicInteger refreshMessageRequestCount = new AtomicInteger();
 
-    private List<Listener> listeners = new ArrayList<Listener>();
+    private List<Listener> listeners = new ArrayList<>();
 
     private BroadcastReceiver foregroundReceiver;
 
@@ -315,7 +315,7 @@ public class RichPushManager extends BaseManager {
      */
     private List<Listener> getListeners() {
         synchronized (listeners) {
-            return new ArrayList<Listener>(listeners);
+            return new ArrayList<>(listeners);
         }
     }
 

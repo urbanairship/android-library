@@ -387,7 +387,7 @@ class PushPreferences {
     Set<String> getTags() {
 
         //returns an empty set if no serialized tags are found
-        Set<String> tags = new HashSet<String>();
+        Set<String> tags = new HashSet<>();
 
         String serializedTags = preferenceDataStore.getString(TAGS_KEY, "[]");
 
@@ -663,7 +663,7 @@ class PushPreferences {
      * @return A list of canonical IDs.
      */
     List<String> getCanonicalIds() {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         String idString = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null);
 
         if (idString != null) {
@@ -707,7 +707,7 @@ class PushPreferences {
      * @return The registered sender IDs.
      */
     Set<String> getRegisteredGcmSenderIds() {
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new HashSet<>();
         String idString = preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);
 
         if (idString != null) {

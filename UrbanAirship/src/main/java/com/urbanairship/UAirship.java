@@ -183,7 +183,7 @@ public class UAirship {
                 cancelableOperation.run();
             } else {
                 if (pendingAirshipRequests == null) {
-                    pendingAirshipRequests = new ArrayList<CancelableOperation>();
+                    pendingAirshipRequests = new ArrayList<>();
                 }
                 pendingAirshipRequests.add(cancelableOperation);
             }
@@ -353,7 +353,7 @@ public class UAirship {
 
             // Fire any pendingAirshipRequests
             if (pendingAirshipRequests != null) {
-                List<CancelableOperation> pendingRequests = new ArrayList<CancelableOperation>(pendingAirshipRequests);
+                List<CancelableOperation> pendingRequests = new ArrayList<>(pendingAirshipRequests);
                 for (Runnable pendingRequest : pendingRequests) {
                     pendingRequest.run();
                 }

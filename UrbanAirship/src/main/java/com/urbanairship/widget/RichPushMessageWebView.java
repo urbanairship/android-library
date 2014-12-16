@@ -103,7 +103,7 @@ public class RichPushMessageWebView extends UAWebView {
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user.getId(), user.getPassword());
             Header credentialHeader = BasicScheme.authenticate(credentials, "UTF-8", false);
 
-            HashMap<String, String> headers = new HashMap<String, String>();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put(credentialHeader.getName(), credentialHeader.getValue());
 
             loadUrl(message.getMessageBodyUrl(), headers);

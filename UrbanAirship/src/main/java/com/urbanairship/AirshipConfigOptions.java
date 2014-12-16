@@ -349,12 +349,10 @@ public class AirshipConfigOptions {
             } else {
                 field.set(this, propertyValue.trim());
             }
-        } catch (IllegalAccessException accessException) {
-            Logger.error("Unable to set field '" + field.getName() + "' because the field is not visible.", accessException);
-        } catch (IllegalArgumentException iae) {
-            Logger.error("Unable to set field '" + field.getName() + "' due invalid configuration value.", iae);
-        } catch (ClassNotFoundException cnfe) {
-            Logger.error("Unable to set field '" + field.getName() + "' due invalid configuration value.", cnfe);
+        } catch (IllegalAccessException e) {
+            Logger.error("Unable to set field '" + field.getName() + "' because the field is not visible.", e);
+        } catch (IllegalArgumentException | ClassNotFoundException e) {
+            Logger.error("Unable to set field '" + field.getName() + "' due invalid configuration value.", e);
         }
     }
 
@@ -511,7 +509,7 @@ public class AirshipConfigOptions {
      * @return The set of sender ids.
      */
     public Set<String> getGCMSenderIds() {
-        Set<String> senderIds = new HashSet<String>();
+        Set<String> senderIds = new HashSet<>();
 
         if (!UAStringUtil.isEmpty(gcmSender)) {
             senderIds.add(gcmSender);

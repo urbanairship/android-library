@@ -125,15 +125,13 @@ public class AirshipConfigOptionsTest {
     @Test
     public void testPropertyNameAnnotation() {
         AirshipConfigOptions aco = new AirshipConfigOptions();
-        List<AirshipConfigOptions> options = new ArrayList<AirshipConfigOptions>();
+        List<AirshipConfigOptions> options = new ArrayList<>();
         options.add(aco);
         for (AirshipConfigOptions option : options) {
             option.loadFromProperties(uaContext, optionsTestPropertiesFile);
             Class<?> optionsClass = option.getClass();
             List<Field> fields = Arrays.asList(optionsClass.getFields());
-            ListIterator<Field> fieldsIterator = fields.listIterator();
-            while (fieldsIterator.hasNext()) {
-                Field field = fieldsIterator.next();
+            for (Field field : fields) {
                 if (!(field.getType() instanceof Class)) {
                     PropertyName propertyAnnotation = (PropertyName) field.getAnnotation(PropertyName.class);
                     assertNotNull(propertyAnnotation);

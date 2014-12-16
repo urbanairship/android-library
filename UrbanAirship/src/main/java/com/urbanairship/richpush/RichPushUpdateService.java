@@ -457,8 +457,8 @@ public class RichPushUpdateService extends IntentService {
      * @param serverMessages The messages from the server.
      */
     private void updateInbox(ContentValues[] serverMessages) {
-        List<ContentValues> messagesToInsert = new ArrayList<ContentValues>();
-        HashSet<String> serverMessageIds = new HashSet<String>();
+        List<ContentValues> messagesToInsert = new ArrayList<>();
+        HashSet<String> serverMessageIds = new HashSet<>();
 
         for (ContentValues message : serverMessages) {
             String messageId = message.getAsString("message_id");
@@ -492,7 +492,7 @@ public class RichPushUpdateService extends IntentService {
             return null;
         }
 
-        Set<String> ids = new HashSet<String>(cursor.getCount());
+        Set<String> ids = new HashSet<>(cursor.getCount());
 
         int messageIdIndex = -1;
         while (cursor.moveToNext()) {

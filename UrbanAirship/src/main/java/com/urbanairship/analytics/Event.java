@@ -158,7 +158,7 @@ public abstract class Event {
      */
     public ArrayList<String> getNotificationTypes() {
 
-        ArrayList<String> notificationTypes = new ArrayList<String>();
+        ArrayList<String> notificationTypes = new ArrayList<>();
         PushManager pushManager = UAirship.shared().getPushManager();
 
         if (pushManager.isPushEnabled()) {
