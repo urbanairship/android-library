@@ -49,7 +49,7 @@ public final class ActionRegistry {
 
     private final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
 
-    private Map<String, Entry> actionMap = new HashMap<>();
+    private final Map<String, Entry> actionMap = new HashMap<>();
 
     private static ActionRegistry instance = new ActionRegistry();
 
@@ -233,7 +233,7 @@ public final class ActionRegistry {
      * An entry in the action registry.
      */
     public final static class Entry {
-        private List<String> names;
+        private final List<String> names;
         private Action defaultAction;
         private Predicate<ActionArguments> predicate;
 

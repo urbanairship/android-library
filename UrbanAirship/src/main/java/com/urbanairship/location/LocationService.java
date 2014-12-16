@@ -139,7 +139,7 @@ public class LocationService extends Service {
 
 
     private Set<Messenger> subscribedClients = new HashSet<>();
-    private HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
+    private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
 
     private Messenger messenger;
 
@@ -317,7 +317,7 @@ public class LocationService extends Service {
      * @param intent The received intent.
      */
     private void onLocationUpdate(Intent intent) {
-        if (!UALocationManager.shared().isLocationUpdatesNeeded() || areUpdatesStopped) {
+        if (!UAirship.shared().getLocationManager().isLocationUpdatesNeeded() || areUpdatesStopped) {
             // Location is disabled and will be stopped in another intent.
             return;
         }
@@ -344,7 +344,7 @@ public class LocationService extends Service {
             Logger.info("Location service will restart location updates. " +
                     "One of the location providers was enabled or disabled.");
 
-            LocationRequestOptions options = UALocationManager.shared().getLocationRequestOptions();
+            LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
             PendingIntent pendingIntent = createLocationUpdateIntent(options);
 
             locationProvider.connect();
@@ -378,7 +378,7 @@ public class LocationService extends Service {
      * Called when an intent is received with action ACTION_START_UPDATES.
      */
     private void onStartLocationUpdates() {
-        LocationRequestOptions options = UALocationManager.shared().getLocationRequestOptions();
+        LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
 
         /*
          * Canceling and starting location updates causes the provider to request

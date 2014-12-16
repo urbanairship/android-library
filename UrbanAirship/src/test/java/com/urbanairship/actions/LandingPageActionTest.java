@@ -139,7 +139,7 @@ public class LandingPageActionTest {
                     LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION, intent.getAction());
 
             assertEquals("Invalid intent flags for situation " + situation,
-                    Intent.FLAG_ACTIVITY_NEW_TASK | intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
+                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
 
             assertEquals("Wrong intent data for situation " + situation,
                     expectedIntentData, intent.getDataString());

@@ -423,7 +423,6 @@ class PushPreferences {
     void setTags(Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             preferenceDataStore.put(TAGS_KEY, null);
-            return;
         } else {
             JSONArray jsonTags = new JSONArray(tags);
             preferenceDataStore.put(TAGS_KEY, jsonTags.toString());

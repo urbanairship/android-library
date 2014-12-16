@@ -91,24 +91,17 @@ public class LandingPageActivity extends Activity {
     public static final String LANDING_PAGE_VIEW_KEY = "com.urbanairship.action.LANDING_PAGE_VIEW";
 
     /**
-     * Metadata extra to specify the parent activity for older api versions.
-     */
-    public static final String PARENT_ACTIVITY_KEY = "android.support.PARENT_ACTIVITY";
-
-    /**
      * Metadata extra to specify the web view's background color when displaying landing pages.
      */
     public static final String LANDING_PAGE_BACKGROUND_COLOR = "com.urbanairship.LANDING_PAGE_BACKGROUND_COLOR";
 
     private static final long LANDING_PAGE_RETRY_DELAY_MS = 20000; // 20 seconds
 
-    private ActivityInfo info;
     private LandingPageWebView webView;
     private Integer error = null;
     private int webViewBackgroundColor = -1;
     private Handler handler;
     private String url;
-
 
     @SuppressLint("NewApi")
     @Override
@@ -126,7 +119,7 @@ public class LandingPageActivity extends Activity {
             return;
         }
 
-        info = ManifestUtils.getActivityInfo(getClass());
+        ActivityInfo info = ManifestUtils.getActivityInfo(getClass());
         Bundle metadata = info.metaData == null ? new Bundle() : info.metaData;
 
         webViewBackgroundColor = metadata.getInt(LANDING_PAGE_BACKGROUND_COLOR, -1);

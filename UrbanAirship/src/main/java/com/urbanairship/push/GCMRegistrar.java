@@ -61,7 +61,7 @@ class GCMRegistrar {
 
 
         Set<String> senderIds = UAirship.shared().getAirshipConfigOptions().getGCMSenderIds();
-        Set<String> registeredGcmSenderIds = PushManager.shared().getPreferences().getRegisteredGcmSenderIds();
+        Set<String> registeredGcmSenderIds = UAirship.shared().getPushManager().getPreferences().getRegisteredGcmSenderIds();
 
         // Unregister if we have different registered sender ids
         if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {

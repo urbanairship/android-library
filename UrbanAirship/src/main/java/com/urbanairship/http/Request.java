@@ -254,7 +254,7 @@ public class Request {
         try {
             String inputLine;
             while ((inputLine = br.readLine()) != null) {
-                sb.append(inputLine + "\n");
+                sb.append(inputLine).append("\n");
             }
             br.close();
         } finally {

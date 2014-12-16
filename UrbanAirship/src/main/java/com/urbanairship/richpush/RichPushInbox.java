@@ -55,8 +55,8 @@ public class RichPushInbox {
     private final List<String> pendingDeletionMessageIds = new ArrayList<>();
 
 
-    private List<Listener> listeners = new ArrayList<>();
-    private RichPushMessageCache messageCache = new RichPushMessageCache();
+    private final List<Listener> listeners = new ArrayList<>();
+    private final RichPushMessageCache messageCache = new RichPushMessageCache();
     private RichPushResolver richPushResolver;
 
     ExecutorService executor = Executors.newSingleThreadExecutor();

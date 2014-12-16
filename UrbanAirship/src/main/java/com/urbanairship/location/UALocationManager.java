@@ -63,7 +63,7 @@ public class UALocationManager extends BaseManager {
     private boolean isSubscribed;
 
     private int nextSingleLocationRequestId = 1;
-    private SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
+    private final SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
 
     LocationPreferences preferences;
 
@@ -71,7 +71,7 @@ public class UALocationManager extends BaseManager {
     /**
      * List of location listeners.
      */
-    private List<LocationListener> locationListeners = new ArrayList<>();
+    private final List<LocationListener> locationListeners = new ArrayList<>();
 
     /**
      * Handles connections to the location service.
@@ -307,10 +307,7 @@ public class UALocationManager extends BaseManager {
      * otherwise <code>false</code>.
      */
     boolean isLocationUpdatesNeeded() {
-        if (!isLocationUpdatesEnabled()) {
-            return false;
-        }
-        return isBackgroundLocationAllowed() || isAppForegrounded();
+        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || isAppForegrounded());
     }
 
 
@@ -482,7 +479,7 @@ public class UALocationManager extends BaseManager {
 
         @Override
         public void handleMessage(Message msg) {
-            UALocationManager manager = shared();
+            UALocationManager manager = UAirship.shared().getLocationManager();
 
             switch (msg.what) {
                 case LocationService.MSG_NEW_LOCATION_UPDATE:

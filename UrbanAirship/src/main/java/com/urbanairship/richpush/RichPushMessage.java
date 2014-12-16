@@ -243,10 +243,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @return <code>true</code> if expired, otherwise <code>false</code>.
      */
     public boolean isExpired() {
-        if (expirationMS == null) {
-            return false;
-        }
-        return System.currentTimeMillis() >= expirationMS;
+        return expirationMS != null && System.currentTimeMillis() >= expirationMS;
     }
 
     /**

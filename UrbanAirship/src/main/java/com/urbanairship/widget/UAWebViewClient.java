@@ -252,7 +252,7 @@ public class UAWebViewClient extends WebViewClient {
      * @return A map of action arguments under action name strings or returns null if decoding error occurs.
      */
     private Map<String, List<ActionArguments>> decodeActionArguments (Map<String, List<String>> actions, RichPushMessage message, boolean basicEncoding) {
-        HashMap<String, List<ActionArguments>> decodedActions = new HashMap();
+        HashMap<String, List<ActionArguments>> decodedActions = new HashMap<>();
         List<ActionArguments> decodedActionArguments = new ArrayList<>();
 
         for (String actionName : actions.keySet()) {
@@ -350,7 +350,7 @@ public class UAWebViewClient extends WebViewClient {
     }
 
     @Override
-    @SuppressLint("NewAPI")
+    @SuppressLint({ "NewAPI", "AddJavascriptInterface" })
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         if (view == null) {
             return;
@@ -365,8 +365,6 @@ public class UAWebViewClient extends WebViewClient {
             Logger.warn( url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
             return;
         }
-
-
 
         if (Build.VERSION.SDK_INT >= 17) {
             if (view instanceof RichPushMessageWebView) {
@@ -384,11 +382,8 @@ public class UAWebViewClient extends WebViewClient {
      * @return <code>true</code> if the URL is white listed, otherwise <code>false</code>.
      */
     private boolean isWhiteListed(String url) {
-        if (!UAirship.shared().getWhitelist().isWhitelisted(url)) {
-            return false;
-        }
+        return UAirship.shared().getWhitelist().isWhitelisted(url);
 
-        return true;
     }
 
     @Override

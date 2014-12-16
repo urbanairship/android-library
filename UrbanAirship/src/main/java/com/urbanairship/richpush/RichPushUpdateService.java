@@ -428,8 +428,7 @@ public class RichPushUpdateService extends IntentService {
     }
 
     private String formatUrl(String urlFormat, String[] urlParams) {
-        StringBuilder builder = new StringBuilder(this.getHostUrl()).append(String.format(urlFormat, (Object[]) urlParams));
-        return builder.toString();
+        return this.getHostUrl() + String.format(urlFormat, (Object[]) urlParams);
     }
 
 

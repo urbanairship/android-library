@@ -46,7 +46,7 @@ public class EventTest {
             JSONObject jsonObject = new JSONObject();
             try {
                 jsonObject.putOpt("some key", "some value");
-            } catch (JSONException e) {
+            } catch (JSONException ignored) {
 
             }
             return jsonObject;

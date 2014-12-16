@@ -318,7 +318,7 @@ public class AirshipConfigOptions {
      */
     private String getPropertyValue(Field field, Properties properties) {
         String propertyValue = null;
-        PropertyName propertyAnnotation = (PropertyName) field.getAnnotation(PropertyName.class);
+        PropertyName propertyAnnotation = field.getAnnotation(PropertyName.class);
 
         if (propertyAnnotation != null) {
             propertyValue = properties.getProperty(propertyAnnotation.name());
@@ -371,7 +371,7 @@ public class AirshipConfigOptions {
         try {
             return Integer.valueOf(value);
         } catch (NumberFormatException nfe) {
-            ConstantClass classAnnotation = (ConstantClass) field.getAnnotation(ConstantClass.class);
+            ConstantClass classAnnotation = field.getAnnotation(ConstantClass.class);
 
             if (classAnnotation == null) {
                 throw new IllegalArgumentException("The field '" + field.getName() + "' has a type mismatch or missing annotation.");

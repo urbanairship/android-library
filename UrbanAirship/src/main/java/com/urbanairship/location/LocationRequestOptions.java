@@ -171,14 +171,7 @@ public class LocationRequestOptions {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("LocationRequestOptions: Priority ")
-                .append(priority)
-                .append(" minTime ")
-                .append(minTime)
-                .append(" minDistance ")
-                .append(minDistance)
-                .toString();
+        return "LocationRequestOptions: Priority " + priority + " minTime " + minTime + " minDistance " + minDistance;
     }
 
     @Override

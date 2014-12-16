@@ -248,7 +248,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
     /**
      * Set the accent color used in the notification.
      *
-     * @param accentColor
+     * @param accentColor The accent color of the main notification icon.
      */
     public void setColor(int accentColor) {
         this.accentColor = accentColor;
