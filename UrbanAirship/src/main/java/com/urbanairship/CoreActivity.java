@@ -44,6 +44,8 @@ public class CoreActivity extends Activity {
         Intent intent = getIntent();
 
         if (intent != null) {
+            Logger.verbose("CoreActivity - Received intent: " + intent.getAction());
+
             if (PushManager.ACTION_NOTIFICATION_OPENED_PROXY.equals(intent.getAction())) {
                 CoreReceiver.handleNotificationOpenedProxy(this, intent);
             } else if (PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY.equals(intent.getAction())) {

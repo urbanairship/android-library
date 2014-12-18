@@ -314,15 +314,15 @@ public final class PreferenceDataStore {
      * @param shareName The shared preferences share name.
      */
     private void migratePreferencesFromFileToDb(Context context, String shareName) {
-        Logger.verbose("Migrating " + shareName);
+        Logger.verbose("PreferenceDataStore - Migrating " + shareName);
         SharedPreferences prefs = context.getSharedPreferences(shareName, MODE_MULTI_PROCESS);
 
         Map<String, ?> prefsMap = prefs.getAll();
-        Logger.verbose("Found " + prefsMap.size() + " preferences to migrate.");
+        Logger.verbose("PreferenceDataStore - Found " + prefsMap.size() + " preferences to migrate.");
 
         if (prefsMap.size() > 0) {
             for (Map.Entry<String, ?> entry : prefsMap.entrySet()) {
-                Logger.verbose("Adding " + entry.getKey() + ":" + entry.getValue() + " to the insert.");
+                Logger.verbose("PreferenceDataStore - Adding " + entry.getKey() + ":" + entry.getValue() + " to the insert.");
 
                 synchronized (preferences) {
                     Preference preference = new Preference(entry.getKey(), String.valueOf(entry.getValue()));
@@ -330,7 +330,7 @@ public final class PreferenceDataStore {
                 }
             }
 
-            Logger.verbose("Migration finished, deleting " + shareName);
+            Logger.verbose("PreferenceDataStore - Migration finished, deleting " + shareName);
             prefs.edit().clear().commit();
         }
     }
@@ -423,11 +423,11 @@ public final class PreferenceDataStore {
         private boolean writeValue(String value) {
             synchronized (this) {
                 if (value == null) {
-                    Logger.verbose("Removing preference: " + key);
+                    Logger.verbose("PreferenceDataStore - Removing preference: " + key);
                     return resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(), WHERE_CLAUSE_KEY,
                             new String[] { key }) >= 0;
                 } else {
-                    Logger.verbose("Saving preference: " + key + " value: " + value);
+                    Logger.verbose("PreferenceDataStore - Saving preference: " + key + " value: " + value);
                     ContentValues values = new ContentValues();
                     values.put(PreferencesDataManager.COLUMN_NAME_KEY, key);
                     values.put(PreferencesDataManager.COLUMN_NAME_VALUE, value);
@@ -451,7 +451,7 @@ public final class PreferenceDataStore {
                 if (cursor != null) {
                     setValue(cursor.moveToFirst() ? cursor.getString(0) : null);
                 } else {
-                    Logger.warn("Unable to get preference " + key + " from" +
+                    Logger.debug("PreferenceDataStore - Unable to get preference " + key + " from" +
                             " database. Falling back to cached value.");
                 }
             } finally {
@@ -471,7 +471,7 @@ public final class PreferenceDataStore {
                 public void onChange(boolean selfChange) {
                     super.onChange(selfChange);
 
-                    Logger.verbose("Preference updated:" + Preference.this.key);
+                    Logger.verbose("PreferenceDataStore - Preference updated:" + Preference.this.key);
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {

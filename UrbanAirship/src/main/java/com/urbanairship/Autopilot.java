@@ -36,7 +36,7 @@ public abstract class Autopilot {
      */
     public static final String AUTOPILOT_MANIFEST_KEY = "com.urbanairship.autopilot";
 
-    private static final String TAG = "UA AP";
+    private static final String TAG = "Urban Airship Autopilot";
 
 
     /**

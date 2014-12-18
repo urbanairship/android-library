@@ -81,8 +81,8 @@ public class InteractiveNotificationEvent extends Event {
             data.put(BUTTON_ID_KEY, buttonId);
             data.put(BUTTON_DESCRIPTION_KEY, buttonDescription);
             data.put(FOREGROUND_KEY, isForeground);
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+        } catch (JSONException e) {
+            Logger.error("InteractiveNotificationEvent - Error constructing JSON data.", e);
         }
 
         return data;

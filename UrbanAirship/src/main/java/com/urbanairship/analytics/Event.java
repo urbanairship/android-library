@@ -129,7 +129,7 @@ public abstract class Event {
             object.put(TIME_KEY, time);
             object.put(DATA_KEY, data);
         } catch (JSONException e) {
-            Logger.error("Error constructing JSON " + getType() + " representation");
+            Logger.error("Event - Error constructing JSON " + getType() + " representation.", e);
             return null;
         }
 

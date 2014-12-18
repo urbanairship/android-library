@@ -332,7 +332,7 @@ public class RichPushInbox {
         try {
             return RichPushMessage.messageFromCursor(cursor);
         } catch (JSONException e) {
-            Logger.error(e);
+            Logger.error("Failed to parse message from the database.", e);
         }
         return null;
     }

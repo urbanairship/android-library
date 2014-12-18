@@ -121,10 +121,9 @@ public class Analytics {
 
         String server = options.analyticsServer;
         if (analyticsEnabled && UAStringUtil.isEmpty(server)) {
-            Logger.error("Unable to send analytics to an empty server. Disabling analytics.");
+            Logger.error("Analytics server URL in AirshipConfigOptions has been overridden by an empty or null string. Disabling analytics.");
             analyticsEnabled = false;
         }
-
 
         this.activityMonitor = activityMonitor;
         this.activityMonitor.setListener(new ActivityMonitor.Listener() {
@@ -274,7 +273,7 @@ public class Analytics {
 
         String eventPayload = event.createEventPayload(sessionId);
         if (eventPayload == null) {
-            Logger.error("Failed to add event " + event.getType());
+            Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
         Context ctx = UAirship.getApplicationContext();
@@ -290,7 +289,7 @@ public class Analytics {
         if (ctx.startService(i) == null) {
             Logger.warn("Unable to start analytics service. Check that the event service is added to the manifest.");
         } else {
-            Logger.debug("Added " + event.getType() + ": " + eventPayload);
+            Logger.debug("Analytics - Added " + event.getType() + ": " + eventPayload);
         }
     }
 
@@ -347,7 +346,7 @@ public class Analytics {
      * @hide
      */
     public void setConversionSendId(String sendId) {
-        Logger.debug("Setting conversion send id: " + sendId);
+        Logger.debug("Analytics - Setting conversion send ID: " + sendId);
         this.conversionSendId = sendId;
     }
 
@@ -432,6 +431,6 @@ public class Analytics {
      */
     void startNewSession() {
         sessionId = UUID.randomUUID().toString();
-        Logger.verbose("New session: " + sessionId);
+        Logger.debug("Analytics - New session: " + sessionId);
     }
 }

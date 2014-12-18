@@ -503,7 +503,7 @@ public class PushManager extends BaseManager {
 
         for (String tag : tags) {
             if (tag == null) {
-                Logger.error("Null tag was removed from set.");
+                Logger.debug("PushManager - Null tag was removed from set.");
                 continue;
             }
 
@@ -823,17 +823,17 @@ public class PushManager extends BaseManager {
         ActionService.runActionsPayload(UAirship.getApplicationContext(), message.getActionsPayload(), Situation.PUSH_RECEIVED, message);
 
         if (message.isPing()) {
-            Logger.verbose("Received UA Ping");
+            Logger.verbose("PushManager - Received UA Ping");
             return;
         }
 
         if (message.isExpired()) {
-            Logger.debug("Notification expired, ignoring.");
+            Logger.debug("PushManager - Notification expired, ignoring.");
             return;
         }
 
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
-            Logger.debug("Received a Rich Push.");
+            Logger.debug("PushManager - Received a Rich Push.");
             refreshRichPushMessages();
         }
 
@@ -966,7 +966,7 @@ public class PushManager extends BaseManager {
             notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
             notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
-            Logger.debug("Posting notification " + notification + " with id " + notificationId);
+            Logger.info("Posting notification " + notification + " with ID " + notificationId);
             notificationManager.notify(notificationId, notification);
 
             return notificationId;

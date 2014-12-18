@@ -69,7 +69,7 @@ public class ActionActivity extends Activity {
         Intent intent = getIntent();
 
         if (intent == null) {
-            Logger.warn("Started Action Activity with null intent");
+            Logger.warn("ActionActivity - Started with null intent");
             finish();
             return;
         }
@@ -80,7 +80,7 @@ public class ActionActivity extends Activity {
                 actionResultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
                 startActivityForResult(startActivityIntent, ++requestCode);
             } else {
-                Logger.warn("Action activity started without START_ACTIVITY_INTENT_EXTRA extra.");
+                Logger.warn("ActionActivity - Started without START_ACTIVITY_INTENT_EXTRA extra.");
                 finish();
             }
         }

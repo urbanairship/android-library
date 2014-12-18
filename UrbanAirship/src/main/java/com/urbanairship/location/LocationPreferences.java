@@ -129,7 +129,7 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
                 jsonObject.put("minTime", options.getMinTime());
                 preferenceDataStore.put(LOCATION_OPTIONS, jsonObject.toString());
             } catch (JSONException e) {
-                Logger.error("Failed saving LocationRequestOptions as JSON: " + e.getMessage());
+                Logger.error("LocationPreferences - Failed saving LocationRequestOptions as JSON: " + e.getMessage());
             }
         }
     }
@@ -151,9 +151,9 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
                         .setPriority(jsonObject.getInt("priority"))
                         .create();
             } catch (JSONException e) {
-                Logger.error("Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error("LocationPreferences - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
             } catch (IllegalArgumentException e) {
-                Logger.error("Invalid LocationRequestOptions from JSON: " + e.getMessage());
+                Logger.error("LocationPreferences - Invalid LocationRequestOptions from JSON: " + e.getMessage());
             }
         }
 

@@ -397,7 +397,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          */
         void notifyDatabaseChange(Context context, String[] ids, String action) {
             Uri newUri = Uri.withAppendedPath(contentUri, UAStringUtil.join(Arrays.asList(ids), KEYS_DELIMITER) + "/" + action);
-            Logger.verbose("Notifying of change to " + newUri.toString());
+            Logger.verbose("UrbanAirshipProvider - Notifying of change to " + newUri.toString());
             context.getContentResolver().notifyChange(newUri, null);
         }
 

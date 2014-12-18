@@ -77,8 +77,8 @@ class AppForegroundEvent extends Event {
             data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
             data.put(PUSH_ENABLED_KEY, UAirship.shared().getPushManager().isPushEnabled());
             data.put(LAST_SEND_ID_KEY, UAirship.shared().getPushManager().getLastReceivedSendId());
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+        } catch (JSONException e) {
+            Logger.error("AppForegroundEvent - Error constructing JSON data.", e);
         }
 
         return data;

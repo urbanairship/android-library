@@ -150,11 +150,12 @@ public class PushService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Logger.verbose("Push service started with intent: " + intent);
-
         if (intent == null) {
             return;
         }
+
+        Logger.verbose("PushService - Received intent: " + intent.getAction());
+
 
         String action = intent.getAction();
         int wakeLockId = intent.getIntExtra(EXTRA_WAKE_LOCK_ID, -1);
@@ -224,7 +225,7 @@ public class PushService extends IntentService {
      */
     private void onUpdateRegistration() {
         if (isPushRegistering) {
-            Logger.verbose("Push registration in progress, skipping registration update.");
+            Logger.verbose("PushService - Push registration in progress, skipping registration update.");
             return;
         }
 
@@ -320,9 +321,10 @@ public class PushService extends IntentService {
             channelRegistrationBackOff = calculateNextBackOff(channelRegistrationBackOff);
             scheduleRetry(ACTION_RETRY_CHANNEL_REGISTRATION, channelRegistrationBackOff);
         } else if (response.getStatus() == HttpURLConnection.HTTP_OK || response.getStatus() == HttpURLConnection.HTTP_CREATED) {
-            Logger.info("Channel creation succeeded with status: " + response.getStatus());
 
             if (!UAStringUtil.isEmpty(response.getChannelLocation()) && !UAStringUtil.isEmpty(response.getChannelId())) {
+                Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + response.getChannelId());
+
                 // Set the last registration payload and time then notify registration succeeded
                 pushManager.setChannel(response.getChannelId(), response.getChannelLocation());
                 pushPreferences.setLastRegistrationPayload(payload);
@@ -348,13 +350,13 @@ public class PushService extends IntentService {
      * Performs channel registration. Will either result in updating or creating a channel.
      */
     private void performChannelRegistration() {
-        Logger.verbose("Performing channel registration.");
+        Logger.verbose("PushService - Performing channel registration.");
         PushManager pushManager = UAirship.shared().getPushManager();
         PushPreferences pushPreferences = pushManager.getPreferences();
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("Channel already up to date.");
+            Logger.verbose("PushService - Channel already up to date.");
             return;
         }
 
@@ -375,7 +377,7 @@ public class PushService extends IntentService {
      * @param delay The delay in milliseconds.
      */
     private void scheduleRetry(String action, long delay) {
-        Logger.info("Rescheduling push service " + action + " in " + delay + " milliseconds.");
+        Logger.debug("PushService - Rescheduling " + action + " in " + delay + " milliseconds.");
 
         Intent intent = new Intent(getApplicationContext(), PushService.class)
                 .setAction(action)
@@ -484,10 +486,10 @@ public class PushService extends IntentService {
         PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
 
         if (UAirship.getPackageInfo().versionCode != pushPreferences.getAppVersionCode()) {
-            Logger.verbose("Version code changed to " + UAirship.getPackageInfo().versionCode + ". Push re-registration required.");
+            Logger.verbose("PushService - Version code changed to " + UAirship.getPackageInfo().versionCode + ". Push re-registration required.");
             return true;
         } else if (!PushManager.getSecureId(getApplicationContext()).equals(pushPreferences.getDeviceId())) {
-            Logger.verbose("Device ID changed. Push re-registration required.");
+            Logger.verbose("PushService - Device ID changed. Push re-registration required.");
             return true;
         }
 
@@ -501,11 +503,11 @@ public class PushService extends IntentService {
 
                 // Unregister if we have different registered sender ids
                 if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {
-                    Logger.verbose("GCM sender IDs changed. Push re-registration required.");
+                    Logger.verbose("PushService - GCM sender IDs changed. Push re-registration required.");
                     return true;
                 }
 
-                Logger.verbose("GCM already registered with ID: " + pushPreferences.getGcmId());
+                Logger.verbose("PushService - GCM already registered with ID: " + pushPreferences.getGcmId());
                 return false;
 
             case UAirship.AMAZON_PLATFORM:
@@ -513,7 +515,7 @@ public class PushService extends IntentService {
                     return true;
                 }
 
-                Logger.verbose("ADM already registered with ID: " + pushPreferences.getAdmId());
+                Logger.verbose("PushService - ADM already registered with ID: " + pushPreferences.getAdmId());
                 return false;
         }
 
@@ -557,7 +559,6 @@ public class PushService extends IntentService {
      * @param intent The intent to start the service.
      */
     static void startServiceWithWakeLock(final Context context, Intent intent) {
-        Logger.debug("PushService startService");
         intent.setClass(context, PushService.class);
 
         // Acquire a wake lock and add the id to the intent
@@ -572,6 +573,8 @@ public class PushService extends IntentService {
      * @param wakeLockId The id of the wake lock to release.
      */
     private static synchronized void releaseWakeLock(int wakeLockId) {
+        Logger.verbose("PushService - Releasing wake lock: " + wakeLockId);
+
         WakeLock wakeLock = wakeLocks.get(wakeLockId);
 
         if (wakeLock != null) {
@@ -597,6 +600,9 @@ public class PushService extends IntentService {
         wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
 
         wakeLocks.append(++nextWakeLockID, wakeLock);
+
+        Logger.verbose("PushService - Acquired wake lock: " + nextWakeLockID);
+
         return nextWakeLockID;
     }
 

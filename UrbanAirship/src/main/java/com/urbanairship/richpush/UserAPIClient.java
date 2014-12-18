@@ -83,7 +83,7 @@ class UserAPIClient {
             return null;
         }
 
-        Logger.verbose("Creating Rich Push user with payload: " + userPayload);
+        Logger.verbose("UserAPIClient - Creating Rich Push user with payload: " + userPayload);
         Response response = requestFactory.createRequest("POST", userCreationURL)
                                           .setCredentials(appKey, appSecret)
                                           .setRequestBody(userPayload.toString(), "application/json")
@@ -91,7 +91,7 @@ class UserAPIClient {
                                           .execute();
 
         if (response == null) {
-            Logger.verbose("Failed to receive response for Rich Push user creation.");
+            Logger.verbose("UserAPIClient - Failed to receive response for Rich Push user creation.");
             return null;
         } else if (response.getStatus() == HttpStatus.SC_CREATED) {
             String userId;
@@ -100,12 +100,12 @@ class UserAPIClient {
                 userId = new JSONObject(response.getResponseBody()).getString("user_id");
                 userToken = new JSONObject(response.getResponseBody()).getString("password");
             } catch (JSONException e) {
-                Logger.error("Unable to parse Rich Push user response: " + response);
+                Logger.error("UserAPIClient - Unable to parse Rich Push user response: " + response);
                 return null;
             }
             return new UserResponse(userId, userToken);
         } else {
-            Logger.verbose("Rich Push user creation failed: " + response);
+            Logger.verbose("UserAPIClient - Rich Push user creation failed: " + response);
             return null;
         }
     }
@@ -129,14 +129,14 @@ class UserAPIClient {
             return false;
         }
 
-        Logger.verbose("Updating user with payload: " + userPayload);
+        Logger.verbose("UserAPIClient - Updating user with payload: " + userPayload);
         Response response = requestFactory.createRequest("POST", userUpdateURL)
                                           .setCredentials(userId, userToken)
                                           .setRequestBody(userPayload.toString(), "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("Update Rich Push user response: " + response);
+        Logger.verbose("UserAPIClient - Update Rich Push user response: " + response);
         return response != null && response.getStatus() == HttpStatus.SC_OK;
     }
 
@@ -150,7 +150,7 @@ class UserAPIClient {
      */
     boolean deleteMessages(JSONObject messagePayload, String userId, String userToken) {
         if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
-            Logger.error("Unable to delete messages with a null userId or null userToken.");
+            Logger.error("UserAPIClient - Unable to delete messages with a null userId or null userToken.");
             return false;
         }
 
@@ -159,14 +159,14 @@ class UserAPIClient {
             return false;
         }
 
-        Logger.verbose("Deleting inbox messages with payload: " + messagePayload);
+        Logger.verbose("UserAPIClient - Deleting inbox messages with payload: " + messagePayload);
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
                                           .setCredentials(userId, userToken)
                                           .setRequestBody(messagePayload.toString(), "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("Delete inbox messages response: " + response);
+        Logger.verbose("UserAPIClient - Delete inbox messages response: " + response);
         return response != null && response.getStatus() == HttpStatus.SC_OK;
     }
 
@@ -189,14 +189,14 @@ class UserAPIClient {
             return false;
         }
 
-        Logger.verbose("Marking inbox messages read request with payload: " + messagePayload);
+        Logger.verbose("UserAPIClient - Marking inbox messages read request with payload: " + messagePayload);
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
                                           .setCredentials(userId, userToken)
                                           .setRequestBody(messagePayload.toString(), "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("Mark inbox messages read response: " + response);
+        Logger.verbose("UserAPIClient - Mark inbox messages read response: " + response);
         return response != null && response.getStatus() == HttpStatus.SC_OK;
     }
 
@@ -219,14 +219,14 @@ class UserAPIClient {
             return null;
         }
 
-        Logger.verbose("Fetching inbox messages.");
+        Logger.verbose("UserAPIClient - Fetching inbox messages.");
         Response response = requestFactory.createRequest("GET", getMessagesURL)
                                           .setCredentials(userId, userToken)
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .setIfModifiedSince(ifModifiedSinceMS)
                                           .execute();
 
-        Logger.verbose("Fetch inbox messages response: " + response);
+        Logger.verbose("UserAPIClient - Fetch inbox messages response: " + response);
 
         if (response == null) {
             return null;

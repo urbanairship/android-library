@@ -122,7 +122,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
                 return date.getTime();
             }
         } catch (Exception e) {
-            Logger.error("Couldn't parse message date: " + timeStamp + ", defaulting to:" + defaultValue + ".");
+            Logger.error("RichPushMessage - Couldn't parse message date: " + timeStamp + ", defaulting to: " + defaultValue + ".");
         }
 
         return defaultValue;

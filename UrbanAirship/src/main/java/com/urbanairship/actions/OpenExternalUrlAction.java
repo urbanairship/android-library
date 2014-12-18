@@ -69,7 +69,7 @@ public class OpenExternalUrlAction extends Action {
     public ActionResult perform(String actionName, ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue());
 
-        Logger.info("Opening " + uri);
+        Logger.info("Opening URI: " + uri);
 
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

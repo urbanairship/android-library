@@ -225,7 +225,7 @@ public class Request {
             return responseBuilder.create();
 
         } catch (Exception ex) {
-            Logger.error("Request failed. URL: " + url + " requestMethod: " + requestMethod, ex);
+            Logger.debug("Request - Request failed URL: " + url + " method: " + requestMethod, ex);
             return null;
         } finally {
             if (conn != null) {
