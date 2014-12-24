@@ -196,6 +196,7 @@ public class PushManager extends BaseManager {
     private NotificationFactory notificationFactory;
     private Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean deviceTagsEnabled = true;
+    private NamedUser namedUser;
 
     PushPreferences preferences;
     NotificationManagerCompat notificationManager;
@@ -209,13 +210,14 @@ public class PushManager extends BaseManager {
      * @hide
      */
     public PushManager(Context context, PreferenceDataStore preferenceDataStore) {
-        this(context, new PushPreferences(preferenceDataStore), NotificationManagerCompat.from(context));
+        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore), NotificationManagerCompat.from(context));
     }
 
-    PushManager(Context context, PushPreferences preferences, NotificationManagerCompat notificationManager) {
+    PushManager(Context context, PushPreferences preferences, NamedUser namedUser, NotificationManagerCompat notificationManager) {
         this.notificationManager = notificationManager;
         this.preferences = preferences;
         this.notificationFactory = new DefaultNotificationFactory(context);
+        this.namedUser = namedUser;
 
         if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
@@ -233,6 +235,9 @@ public class PushManager extends BaseManager {
         Intent i = new Intent(UAirship.getApplicationContext(), PushService.class);
         i.setAction(PushService.ACTION_START_REGISTRATION);
         UAirship.getApplicationContext().startService(i);
+
+        // Start named user update
+        this.namedUser.startUpdateService();
     }
 
     /**
@@ -526,6 +531,15 @@ public class PushManager extends BaseManager {
      */
     public String getAlias() {
         return preferences.getAlias();
+    }
+
+    /**
+     * Returns the current named user.
+     *
+     * @return The named user.
+     */
+    public NamedUser getNamedUser() {
+        return namedUser;
     }
 
     /**

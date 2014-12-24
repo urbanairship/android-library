@@ -38,6 +38,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,8 +50,11 @@ public class PushManagerTest {
     Analytics mockAnalytics;
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+    private final String fakeNamedUserId = "fakeNamedUserId";
+
     PushPreferences mockPushPreferences;
     PushManager pushManager;
+    NamedUser mockNamedUser;
 
     private NotificationManagerCompat mockNotificationManager;
     private Notification notification;
@@ -87,12 +91,13 @@ public class PushManagerTest {
                 .build();
 
         mockAnalytics = Mockito.mock(Analytics.class);
-        Mockito.doNothing().when(mockAnalytics).addEvent(Mockito.any(Event.class));
+        Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
         mockPushPreferences = Mockito.mock(PushPreferences.class);
         mockNotificationManager = Mockito.mock(NotificationManagerCompat.class);
 
+        mockNamedUser = Mockito.mock(NamedUser.class);
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
@@ -106,7 +111,7 @@ public class PushManagerTest {
             }
         };
 
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNotificationManager);
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, mockNotificationManager);
         pushManager.setNotificationFactory(notificationFactory);
     }
 
@@ -202,7 +207,7 @@ public class PushManagerTest {
         pushManager.setNotificationFactory(notificationFactory);
         pushManager.deliverPush(pushMessage);
 
-        verify(mockNotificationManager, Mockito.never()).notify(Mockito.anyInt(), Mockito.any(Notification.class));
+        verify(mockNotificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
     }
 
     /**
@@ -1059,5 +1064,14 @@ public class PushManagerTest {
             pushManager.removeNotificationActionButtonGroup(key);
             assertNotNull("Should not be able to remove notification button group with ID: " + key, pushManager.getNotificationActionGroup(key));
         }
+    }
+
+    /**
+     * Test init starts named user update service.
+     */
+    @Test
+    public void testInitStartNamedUserUpdateService() {
+        pushManager.init();
+        verify(mockNamedUser).startUpdateService();
     }
 }
