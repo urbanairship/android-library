@@ -64,12 +64,12 @@ public class RichPushUser {
      */
     boolean setUser(String userId, String userToken) {
         if (!UAStringUtil.isEmpty(userId) && !UAStringUtil.isEmpty(userToken)) {
-            Logger.debug("Setting Rich Push user: " + userId);
+            Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
             preferences.setUserCredentials(userId, userToken);
             setLastMessageRefreshTime(0);
             return true;
         } else {
-            Logger.error("Unable to update user. Missing user ID or token.");
+            Logger.error("RichPushUser - Unable to update user. Missing user ID or token.");
             return false;
         }
     }

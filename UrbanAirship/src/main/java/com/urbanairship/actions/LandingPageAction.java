@@ -195,7 +195,7 @@ public class LandingPageAction extends Action {
             try {
                 id = URLEncoder.encode(uri.getSchemeSpecificPart(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                Logger.warn("Unable to decode " + uri.getSchemeSpecificPart());
+                Logger.warn("LandingPageAction - Unable to decode " + uri.getSchemeSpecificPart());
                 return null;
             }
 
@@ -225,7 +225,7 @@ public class LandingPageAction extends Action {
             Object cache = map.get(CACHE_ON_RECEIVE_KEY);
 
             if (cache != null && cache instanceof Boolean) {
-                return ((Boolean) cache).booleanValue();
+                return (Boolean) cache;
             }
         }
 

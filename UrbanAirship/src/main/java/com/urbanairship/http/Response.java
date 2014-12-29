@@ -71,7 +71,7 @@ public class Response {
             builder.append(responseMessage);
         }
 
-        builder.append(" Status: " + Integer.toString(status));
+        builder.append(" Status: ").append(Integer.toString(status));
 
         return builder.toString();
     }

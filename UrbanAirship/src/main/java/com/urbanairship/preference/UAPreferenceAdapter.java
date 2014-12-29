@@ -32,7 +32,6 @@ import android.preference.PreferenceScreen;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.location.UALocationManager;
 import com.urbanairship.preference.UAPreference.PreferenceType;
 import com.urbanairship.push.PushManager;
 
@@ -50,15 +49,15 @@ public class UAPreferenceAdapter {
      * Maximum times to check for Channel ID value when
      * it should be enabled, yet the Channel ID is not populated
      */
-    private static int CHANNEL_ID_MAX_RETRIES = 4;
+    private final static int CHANNEL_ID_MAX_RETRIES = 4;
 
     /**
      * Delay in milliseconds for each Channel ID retry
      * attempts
      */
-    private static int CHANNEL_ID_RETRY_DELAY = 1000;
+    private final static int CHANNEL_ID_RETRY_DELAY = 1000;
 
-    private Map<UAPreference.PreferenceType, Object> preferences = new HashMap<UAPreference.PreferenceType, Object>();
+    private Map<UAPreference.PreferenceType, Object> preferences = new HashMap<>();
     private int channelIdRetryCount = 0;
 
     /**
@@ -102,10 +101,10 @@ public class UAPreferenceAdapter {
         Object value = null;
         switch (preferenceType) {
             case LOCATION_UPDATES_ENABLED:
-                value = UALocationManager.shared().isLocationUpdatesEnabled();
+                value = airship.getLocationManager().isLocationUpdatesEnabled();
                 break;
             case LOCATION_BACKGROUND_UPDATES_ALLOWED:
-                value = UALocationManager.shared().isBackgroundLocationAllowed();
+                value = airship.getLocationManager().isBackgroundLocationAllowed();
                 break;
             case USER_NOTIFICATIONS_ENABLE:
                 value = airship.getPushManager().getUserNotificationsEnabled();
@@ -152,13 +151,13 @@ public class UAPreferenceAdapter {
 
         switch (preferenceType) {
             case LOCATION_BACKGROUND_UPDATES_ALLOWED:
-                UALocationManager.shared().setBackgroundLocationAllowed((Boolean) value);
+                airship.getLocationManager().setBackgroundLocationAllowed((Boolean) value);
                 break;
             case LOCATION_UPDATES_ENABLED:
-                UALocationManager.shared().setLocationUpdatesEnabled((Boolean) value);
+                airship.getLocationManager().setLocationUpdatesEnabled((Boolean) value);
                 break;
             case USER_NOTIFICATIONS_ENABLE:
-                PushManager.shared().setUserNotificationsEnabled((Boolean) value);
+                airship.getPushManager().setUserNotificationsEnabled((Boolean) value);
                 break;
             case QUIET_TIME_ENABLE:
                 airship.getPushManager().setQuietTimeEnabled((Boolean) value);

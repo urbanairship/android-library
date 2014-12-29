@@ -66,7 +66,7 @@ public class AddTagsAction extends BaseTagsAction {
     @Override
     public ActionResult perform(String actionName, ActionArguments arguments) {
         Set<String> tags = getTags(arguments);
-        Logger.info("Adding tags: " + tags);
+        Logger.info("AddTagsAction - Adding tags: " + tags);
 
         tags.addAll(getPushManager().getTags());
         getPushManager().setTags(tags);

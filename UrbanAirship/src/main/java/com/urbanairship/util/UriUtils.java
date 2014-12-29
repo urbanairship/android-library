@@ -47,7 +47,7 @@ public class UriUtils {
      * @return A map of query parameter name to values
      */
     public static Map<String, List<String>> getQueryParameters(Uri uri) {
-        Map<String, List<String>> parameters = new HashMap<String, List<String>>();
+        Map<String, List<String>> parameters = new HashMap<>();
 
         String query = uri.getEncodedQuery();
 

@@ -46,7 +46,7 @@ public class NotificationActionButtonGroup {
     private final List<NotificationActionButton> actionButtons;
 
     private NotificationActionButtonGroup(List<NotificationActionButton> actionButtons) {
-        this.actionButtons = new ArrayList<NotificationActionButton>(actionButtons);
+        this.actionButtons = new ArrayList<>(actionButtons);
     }
 
     /**
@@ -55,7 +55,7 @@ public class NotificationActionButtonGroup {
      * @return A list of notification actions.
      */
     public List<NotificationActionButton> getNotificationActionButtons() {
-        return new ArrayList<NotificationActionButton>(actionButtons);
+        return new ArrayList<>(actionButtons);
     }
 
     /**
@@ -69,7 +69,7 @@ public class NotificationActionButtonGroup {
      * @return List of Android notification actions.
      */
     List<NotificationCompat.Action> createAndroidActions(Context context, PushMessage message, int notificationId, String actionsPayload) {
-        final List<NotificationCompat.Action> androidActions = new ArrayList<NotificationCompat.Action>();
+        final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
         JSONObject notificationActionJSON = null;
         if (!UAStringUtil.isEmpty(actionsPayload)) {
@@ -94,7 +94,7 @@ public class NotificationActionButtonGroup {
      * Builds the NotificationActionButtonGroup.
      */
     public static class Builder {
-        private final List<NotificationActionButton> actionButtons = new ArrayList<NotificationActionButton>();
+        private final List<NotificationActionButton> actionButtons = new ArrayList<>();
 
         /**
          * Adds a notification action button.

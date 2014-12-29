@@ -48,7 +48,7 @@ class ActivityMonitor {
         AUTO_INSTRUMENTATION
     }
 
-    private SparseArray<ActivityState> activityStates = new SparseArray<ActivityState>();
+    private SparseArray<ActivityState> activityStates = new SparseArray<>();
     private Listener listener;
     private boolean isForeground = false;
     private int minSdkVersion;

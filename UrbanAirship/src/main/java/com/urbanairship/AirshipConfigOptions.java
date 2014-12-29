@@ -108,7 +108,6 @@ public class AirshipConfigOptions {
     @PropertyName(name = "developmentAppSecret")
     public String developmentAppSecret;
 
-
     /**
      * The Urban Airship URL. This will always be set to http://device-api.urbanairship.com/
      */
@@ -158,7 +157,6 @@ public class AirshipConfigOptions {
      */
     @PropertyName(name = "whitelist")
     public String[] whitelist = null;
-
 
     /**
      * Flag indicating whether the application is in production or development.
@@ -275,7 +273,7 @@ public class AirshipConfigOptions {
         //bail if the properties file can't be found
         try {
             if (!Arrays.asList(assetManager.list("")).contains(propertiesFile)) {
-                Logger.verbose("Options - Couldn't find " + propertiesFile);
+                Logger.verbose("AirshipConfigOptions - Couldn't find " + propertiesFile);
                 return;
             }
         } catch (IOException e) {
@@ -305,7 +303,7 @@ public class AirshipConfigOptions {
             }
 
         } catch (IOException ioe) {
-            Logger.error("Error loading properties file " + propertiesFile, ioe);
+            Logger.error("AirshipConfigOptions - Unable to load properties file " + propertiesFile, ioe);
         }
     }
 
@@ -318,11 +316,11 @@ public class AirshipConfigOptions {
      */
     private String getPropertyValue(Field field, Properties properties) {
         String propertyValue = null;
-        PropertyName propertyAnnotation = (PropertyName) field.getAnnotation(PropertyName.class);
+        PropertyName propertyAnnotation = field.getAnnotation(PropertyName.class);
 
         if (propertyAnnotation != null) {
             propertyValue = properties.getProperty(propertyAnnotation.name());
-            Logger.verbose("Found PropertyAnnotation for " + propertyAnnotation.name() + " matching " + field.getName());
+            Logger.verbose("AirshipConfigOptions - Found PropertyAnnotation for " + propertyAnnotation.name() + " matching " + field.getName());
         }
 
         return propertyValue;
@@ -349,12 +347,10 @@ public class AirshipConfigOptions {
             } else {
                 field.set(this, propertyValue.trim());
             }
-        } catch (IllegalAccessException accessException) {
-            Logger.error("Unable to set field '" + field.getName() + "' because the field is not visible.", accessException);
-        } catch (IllegalArgumentException iae) {
-            Logger.error("Unable to set field '" + field.getName() + "' due invalid configuration value.", iae);
-        } catch (ClassNotFoundException cnfe) {
-            Logger.error("Unable to set field '" + field.getName() + "' due invalid configuration value.", cnfe);
+        } catch (IllegalAccessException e) {
+            Logger.error("AirshipConfigOptions - Unable to set field '" + field.getName() + "' because the field is not visible.", e);
+        } catch (IllegalArgumentException | ClassNotFoundException e) {
+            Logger.error("AirshipConfigOptions - Unable to set field '" + field.getName() + "' due to invalid configuration value.", e);
         }
     }
 
@@ -373,7 +369,7 @@ public class AirshipConfigOptions {
         try {
             return Integer.valueOf(value);
         } catch (NumberFormatException nfe) {
-            ConstantClass classAnnotation = (ConstantClass) field.getAnnotation(ConstantClass.class);
+            ConstantClass classAnnotation = field.getAnnotation(ConstantClass.class);
 
             if (classAnnotation == null) {
                 throw new IllegalArgumentException("The field '" + field.getName() + "' has a type mismatch or missing annotation.");
@@ -452,13 +448,13 @@ public class AirshipConfigOptions {
                 }
 
                 if (mutableField != null && !mutableField.isAnnotationPresent(PropertyName.class)) {
-                    Logger.error("The public field '" + mutableField.getName() + "' is missing an annotation");
+                    Logger.error("AirshipConfigOptions - The public field '" + mutableField.getName() + "' is missing an annotation");
                     // This class has been modified, so alert the developer and provide proguard guidance
-                    Logger.error("AirshipConfigOptions appears to be obfuscated. If using Proguard, add the following to your proguard.cfg:");
-                    Logger.error("\t-keepattributes *Annotation*");
+                    Logger.error("AirshipConfigOptions appears to be obfuscated. If using Proguard, add the following to your proguard.cfg: \n" +
+                            "\t-keepattributes *Annotation*");
                 }
 
-            } catch (SecurityException e) {
+            } catch (SecurityException ignored) {
                 //do nothing
             }
         }
@@ -476,9 +472,9 @@ public class AirshipConfigOptions {
         }
 
         if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may decrease battery life.");
+            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may decrease battery life.");
         } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may provide less detailed analytic reports.");
+            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may provide less detailed analytic reports.");
         }
 
         return valid;
@@ -504,14 +500,13 @@ public class AirshipConfigOptions {
         return false;
     }
 
-
     /**
      * Helper method to get the set of GCM sender Ids.
      *
      * @return The set of sender ids.
      */
     public Set<String> getGCMSenderIds() {
-        Set<String> senderIds = new HashSet<String>();
+        Set<String> senderIds = new HashSet<>();
 
         if (!UAStringUtil.isEmpty(gcmSender)) {
             senderIds.add(gcmSender);

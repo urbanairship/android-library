@@ -167,7 +167,7 @@ public class EventDataManagerTest {
         assertEquals(4, dataManager.getEventCount());
 
         // Delete all but id-3
-        assertTrue(dataManager.deleteEvents(new HashSet<String>(Arrays.asList("id-1", "id-2", "id-4"))));
+        assertTrue(dataManager.deleteEvents(new HashSet<>(Arrays.asList("id-1", "id-2", "id-4"))));
 
         assertEquals(1, dataManager.getEventCount());
         assertTrue(dataManager.getEvents(1).containsKey("id-3"));
@@ -179,7 +179,7 @@ public class EventDataManagerTest {
      */
     @Test
     public void testDeleteEventsEmptyDatabase() {
-        assertFalse(dataManager.deleteEvents(new HashSet<String>(Arrays.asList("id", "another-id"))));
+        assertFalse(dataManager.deleteEvents(new HashSet<>(Arrays.asList("id", "another-id"))));
         assertEquals(0, dataManager.getEventCount());
     }
 

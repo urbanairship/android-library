@@ -72,7 +72,7 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
      */
     @Test
     public void testIsRichPushMessageExtras() {
-        Map<String, String> extras = new HashMap<String, String>();
+        Map<String, String> extras = new HashMap<>();
         extras.put("_uamid", "si");
         assertTrue(RichPushManager.isRichPushMessage(extras));
 

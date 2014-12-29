@@ -50,7 +50,7 @@ public class EventResponseTest {
     @Before
     public void setUp() {
         Response response = Mockito.mock(Response.class);
-        responseHeaders = new HashMap<String, List<String>>();
+        responseHeaders = new HashMap<>();
         when(response.getResponseHeaders()).thenReturn(responseHeaders);
 
         eventResponse = new EventResponse(response);
@@ -61,7 +61,7 @@ public class EventResponseTest {
      */
     @Test
     public void testMaxTotalDbSize() {
-        List<String> stringList = new ArrayList<String>();
+        List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
         stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES));
@@ -111,7 +111,7 @@ public class EventResponseTest {
      */
     @Test
     public void testMaxBatchSize() {
-        List<String> stringList = new ArrayList<String>();
+        List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
         stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_SIZE_BYTES));
@@ -161,7 +161,7 @@ public class EventResponseTest {
      */
     @Test
     public void testMaxWait() {
-        List<String> stringList = new ArrayList<String>();
+        List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
         stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_WAIT_MS));
@@ -211,7 +211,7 @@ public class EventResponseTest {
      */
     @Test
     public void testMinBatchInterval() {
-        List<String> stringList = new ArrayList<String>();
+        List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
         stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_INTERVAL_MS));

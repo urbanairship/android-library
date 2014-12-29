@@ -91,24 +91,17 @@ public class LandingPageActivity extends Activity {
     public static final String LANDING_PAGE_VIEW_KEY = "com.urbanairship.action.LANDING_PAGE_VIEW";
 
     /**
-     * Metadata extra to specify the parent activity for older api versions.
-     */
-    public static final String PARENT_ACTIVITY_KEY = "android.support.PARENT_ACTIVITY";
-
-    /**
      * Metadata extra to specify the web view's background color when displaying landing pages.
      */
     public static final String LANDING_PAGE_BACKGROUND_COLOR = "com.urbanairship.LANDING_PAGE_BACKGROUND_COLOR";
 
     private static final long LANDING_PAGE_RETRY_DELAY_MS = 20000; // 20 seconds
 
-    private ActivityInfo info;
     private LandingPageWebView webView;
     private Integer error = null;
     private int webViewBackgroundColor = -1;
     private Handler handler;
     private String url;
-
 
     @SuppressLint("NewApi")
     @Override
@@ -116,17 +109,17 @@ public class LandingPageActivity extends Activity {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
-        Logger.warn("Creating landing page activity.");
+        Logger.debug("Creating landing page activity.");
 
         Intent intent = getIntent();
 
         if (intent == null) {
-            Logger.warn("Started Action Activity with null intent");
+            Logger.warn("LandingPageActivity - Started activity with null intent");
             finish();
             return;
         }
 
-        info = ManifestUtils.getActivityInfo(getClass());
+        ActivityInfo info = ManifestUtils.getActivityInfo(getClass());
         Bundle metadata = info.metaData == null ? new Bundle() : info.metaData;
 
         webViewBackgroundColor = metadata.getInt(LANDING_PAGE_BACKGROUND_COLOR, -1);
@@ -134,7 +127,7 @@ public class LandingPageActivity extends Activity {
         handler = new Handler();
 
         if (UAStringUtil.isEmpty(url)) {
-            Logger.warn("No landing page url to load.");
+            Logger.warn("LandingPageActivity - No landing page url to load.");
             finish();
             return;
         }
@@ -193,13 +186,13 @@ public class LandingPageActivity extends Activity {
                 @Override
                 public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                     if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                        Logger.error("Failed to load landing page " + failingUrl + " with error " + errorCode + " " + description);
+                        Logger.error("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
                         error = errorCode;
                     }
                 }
             });
         } else {
-            Logger.error("A LandingPageWebView with id android.R.id.primary is not defined" +
+            Logger.error("LandingPageActivity - A LandingPageWebView with id android.R.id.primary is not defined" +
                     " in the custom layout.  Unable to show the landing page.");
             finish();
         }
@@ -207,7 +200,7 @@ public class LandingPageActivity extends Activity {
 
     @Override
     public void onNewIntent(Intent intent) {
-        Logger.info("New intent received for landing page activity");
+        Logger.debug("LandingPageActivity - New intent received for landing page");
         restartActivity(intent.getData(), intent.getExtras());
     }
 
@@ -399,7 +392,7 @@ public class LandingPageActivity extends Activity {
      * @param extras The extras bundle.
      */
     private void restartActivity(Uri uri, Bundle extras) {
-        Logger.info("Relaunching activity");
+        Logger.debug("Relaunching activity");
 
         finish();
 

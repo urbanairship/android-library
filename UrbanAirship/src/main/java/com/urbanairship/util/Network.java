@@ -47,7 +47,7 @@ public class Network {
         ConnectivityManager cm = (ConnectivityManager)
                 UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo info = null;
+        NetworkInfo info;
         if (cm != null) {
             info = cm.getActiveNetworkInfo();
         } else {
@@ -55,11 +55,7 @@ public class Network {
             return false;
         }
 
-        if (info == null) {
-            return false;
-        } else {
-            return info.isConnected();
-        }
+        return info != null && info.isConnected();
     }
 }
 

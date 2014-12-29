@@ -92,7 +92,6 @@ public class LocationEvent extends Event {
         updateDistance = updateDist >= 0 ? String.valueOf(updateDist) : "NONE";
         foreground = isForeground ? "true" : "false";
         updateType = type;
-        Logger.info(String.format("New location at lat: %s, long: %s found with provider: %s", latitude, longitude, provider));
     }
 
     @Override
@@ -117,8 +116,8 @@ public class LocationEvent extends Event {
             data.put(V_ACCURACY_KEY, "NONE");
             data.put(FOREGROUND_KEY, foreground);
             data.put(UPDATE_DISTANCE_KEY, updateDistance);
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+        } catch (JSONException e) {
+            Logger.error("LocationEvent - Error constructing JSON data.", e);
         }
 
         return data;

@@ -102,9 +102,13 @@ public class ActionService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Autopilot.automaticTakeOff((Application) getApplicationContext());
 
+
         lastStartId = startId;
 
         if (intent != null && ACTION_RUN_ACTIONS.equals(intent.getAction())) {
+
+            Logger.verbose("ActionService - Received intent: " + intent.getAction() + " startId: " + startId);
+
             String actions = intent.getStringExtra(EXTRA_ACTIONS_PAYLOAD);
             Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
             Bundle pushBundle = intent.getBundleExtra(EXTRA_PUSH_BUNDLE);
@@ -134,7 +138,6 @@ public class ActionService extends Service {
      */
     public static void runActionsPayload(Context context, String payload, Situation situation, PushMessage message) {
         if (UAStringUtil.isEmpty(payload)) {
-            Logger.info("No actions to run in payload.");
             return;
         }
 
@@ -163,12 +166,12 @@ public class ActionService extends Service {
 
     private void runActions(String actionsPayload, Situation situation, PushMessage message) {
         if (situation == null) {
-            Logger.error("Unable to run actions with a null situation");
+            Logger.debug("ActionService - Unable to run actions with a null situation");
             return;
         }
 
         if (UAStringUtil.isEmpty(actionsPayload)) {
-            Logger.info("No actions to run.");
+            Logger.debug("ActionService - No actions to run.");
             return;
         }
 
@@ -176,7 +179,7 @@ public class ActionService extends Service {
         try {
             actionsJSON = new JSONObject(actionsPayload);
         } catch (JSONException e) {
-            Logger.info("Invalid actions payload: " + actionsPayload);
+            Logger.debug("ActionService - Invalid actions payload: " + actionsPayload);
             return;
         }
 

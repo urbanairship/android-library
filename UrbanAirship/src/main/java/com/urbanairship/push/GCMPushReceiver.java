@@ -49,6 +49,8 @@ public class GCMPushReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        Logger.verbose("GCMPushReceiver - Received intent: " + intent.getAction());
+
         if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
             if (Build.VERSION.SDK_INT >= 11) {
                 final PendingResult pendingResult = goAsync();
@@ -89,7 +91,7 @@ public class GCMPushReceiver extends BroadcastReceiver {
         if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(intent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
             Logger.info("GCM deleted " + intent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
         } else {
-            Logger.info("Received push from GCM.");
+            Logger.debug("GCMPushReceiver - Received push: " + intent);
 
             // Deliver message to push service
             Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)

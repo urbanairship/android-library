@@ -75,8 +75,8 @@ public class PushArrivedEvent extends Event {
 
             data.put(CARRIER_KEY, getCarrier());
 
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+        } catch (JSONException e) {
+            Logger.error("PushArrivedEvent - Error constructing JSON data.", e);
         }
 
         return data;

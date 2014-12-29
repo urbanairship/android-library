@@ -183,7 +183,7 @@ public class UAirship {
                 cancelableOperation.run();
             } else {
                 if (pendingAirshipRequests == null) {
-                    pendingAirshipRequests = new ArrayList<CancelableOperation>();
+                    pendingAirshipRequests = new ArrayList<>();
                 }
                 pendingAirshipRequests.add(cancelableOperation);
             }
@@ -237,7 +237,6 @@ public class UAirship {
      * @param readyCallback Optional ready callback.
      */
     public static void takeOff(final Application application, final AirshipConfigOptions options, final OnReadyCallback readyCallback) {
-        Logger.debug("Airship Takeoff!");
         // the context argument is crucial to pretty much everything
         if (application == null) {
             throw new IllegalArgumentException("Application argument must not be null");
@@ -265,6 +264,8 @@ public class UAirship {
                 Logger.error("You can only call takeOff() once.");
                 return;
             }
+
+            Logger.info("Airship taking off!");
 
             isTakingOff = true;
 
@@ -297,9 +298,6 @@ public class UAirship {
             options = AirshipConfigOptions.loadDefaultOptions(application.getApplicationContext());
         }
 
-        Logger.debug("Lib Version: " + getVersion() + " / App key = " + options.getAppKey());
-        Logger.debug("In Production? " + options.inProduction);
-
         if (!options.isValid()) {
             synchronized (airshipLock) {
                 isTakingOff = false;
@@ -314,7 +312,10 @@ public class UAirship {
         // set sane log level based on production flag
         Logger.logLevel = options.getLoggerLevel();
         Logger.TAG = UAirship.getAppName() + " - UALib";
-        Logger.debug("Airship log level: " + Logger.logLevel);
+
+        Logger.info("Airship taking off!");
+        Logger.info("Airship log level: " + Logger.logLevel);
+        Logger.info("UA Version: " + getVersion() + " / App key = " + options.getAppKey() + " Production = " + options.inProduction);
 
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application.getApplicationContext());
         preferenceDataStore.loadAll();
@@ -346,6 +347,8 @@ public class UAirship {
             isFlying = true;
             isTakingOff = false;
 
+            Logger.info("Airship ready!");
+
             // Ready callback for setup
             if (readyCallback != null) {
                 readyCallback.onAirshipReady(sharedAirship);
@@ -353,12 +356,13 @@ public class UAirship {
 
             // Fire any pendingAirshipRequests
             if (pendingAirshipRequests != null) {
-                List<CancelableOperation> pendingRequests = new ArrayList<CancelableOperation>(pendingAirshipRequests);
+                List<CancelableOperation> pendingRequests = new ArrayList<>(pendingAirshipRequests);
                 for (Runnable pendingRequest : pendingRequests) {
                     pendingRequest.run();
                 }
                 pendingAirshipRequests = null;
             }
+
 
             // Notify any blocking shared
             airshipLock.notifyAll();
@@ -430,7 +434,7 @@ public class UAirship {
         try {
             return getPackageManager().getPackageInfo(getPackageName(), 0);
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.info("NameNotFound for: " + getPackageName() + ". Disabling.");
+            Logger.warn("UAirship - Unable to get package info.", e);
             return null;
         }
     }
@@ -630,9 +634,10 @@ public class UAirship {
                 Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
                 platform = AMAZON_PLATFORM;
             } else {
-                Logger.info("Defaulting platform to ANDROID.");
+                Logger.info("Defaulting platform to Android.");
                 platform = ANDROID_PLATFORM;
             }
+
             preferenceDataStore.put(PLATFORM_KEY, platform);
         }
 

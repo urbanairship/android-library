@@ -68,7 +68,7 @@ public class LandingPageActionTest {
         verifyAcceptsArgumentValue(Uri.parse("u:<~@rH7,ASuTABk.~>"), true);
 
         // Payload
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("url", "http://example.com");
         payload.put("cache_on_receive", true);
         verifyAcceptsArgumentValue(payload, true);
@@ -87,7 +87,7 @@ public class LandingPageActionTest {
 
 
         // Empty payload
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<>();
         verifyAcceptsArgumentValue(payload, false);
     }
 
@@ -110,7 +110,7 @@ public class LandingPageActionTest {
         verifyPerform(Uri.parse("u:<~@rH7,ASuTABk.~>"), "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
 
         // Verify basic payload
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("url", "http://example.com");
         verifyPerform(payload, "http://example.com");
 
@@ -139,7 +139,7 @@ public class LandingPageActionTest {
                     LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION, intent.getAction());
 
             assertEquals("Invalid intent flags for situation " + situation,
-                    Intent.FLAG_ACTIVITY_NEW_TASK | intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
+                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
 
             assertEquals("Wrong intent data for situation " + situation,
                     expectedIntentData, intent.getDataString());

@@ -52,11 +52,11 @@ import java.util.concurrent.Executors;
 public class RichPushInbox {
 
     private static final SentAtRichPushMessageComparator richPushMessageComparator = new SentAtRichPushMessageComparator();
-    private final List<String> pendingDeletionMessageIds = new ArrayList<String>();
+    private final List<String> pendingDeletionMessageIds = new ArrayList<>();
 
 
-    private List<Listener> listeners = new ArrayList<Listener>();
-    private RichPushMessageCache messageCache = new RichPushMessageCache();
+    private final List<Listener> listeners = new ArrayList<>();
+    private final RichPushMessageCache messageCache = new RichPushMessageCache();
     private RichPushResolver richPushResolver;
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -279,7 +279,7 @@ public class RichPushInbox {
      * Updates the richMessageCache from the database.
      */
     private void updateCacheFromDB() {
-        List<String> deletedIds = new ArrayList<String>(pendingDeletionMessageIds);
+        List<String> deletedIds = new ArrayList<>(pendingDeletionMessageIds);
         Cursor inboxCursor = richPushResolver.getAllMessages();
 
         if (inboxCursor == null) {
@@ -332,7 +332,7 @@ public class RichPushInbox {
         try {
             return RichPushMessage.messageFromCursor(cursor);
         } catch (JSONException e) {
-            Logger.error(e);
+            Logger.error("Failed to parse message from the database.", e);
         }
         return null;
     }

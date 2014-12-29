@@ -229,7 +229,7 @@ class ChannelRegistrationPayload {
             }
 
         } catch (Exception ex) {
-            Logger.error("Failed to create channel registration payload as json", ex);
+            Logger.error("ChannelRegistrationPayload - Failed to create channel registration payload as json", ex);
         }
 
         return payload;
@@ -325,7 +325,7 @@ class ChannelRegistrationPayload {
 
             if (channelJSON.has(TAGS_KEY)) {
                 JSONArray tagsJSON = channelJSON.getJSONArray(TAGS_KEY);
-                tags = new HashSet<String>();
+                tags = new HashSet<>();
                 for (int i = 0; i < tagsJSON.length(); i++) {
                     tags.add(tagsJSON.getString(i));
                 }
@@ -343,7 +343,7 @@ class ChannelRegistrationPayload {
                        .setApid(getStringFromJSON(identityHintsJSON, APID_KEY));
             }
         } catch (JSONException e) {
-            Logger.warn("Failed to parse payload from JSON.", e);
+            Logger.error("ChannelRegistrationPayload - Failed to parse payload from JSON.", e);
             return null;
         }
 

@@ -64,13 +64,13 @@ public abstract class DataManager {
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.info("Upgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Upgrading database " + name + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
             public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.info("Downgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Downgrading database " + name + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
         };
@@ -114,7 +114,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("Error opening writable database. Retrying...");
+                Logger.error("DataManager - Error opening writable database. Retrying...");
             }
         }
 
@@ -135,7 +135,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("Error opening readable database. Retrying...");
+                Logger.error("DataManager - Error opening readable database. Retrying...");
             }
         }
 
@@ -150,7 +150,7 @@ public abstract class DataManager {
      * @param newVersion Version of the new database
      */
     protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Logger.verbose("onUpgrade not implemented yet.");
+        Logger.debug("DataManager - onUpgrade not implemented yet.");
     }
 
     /**
@@ -311,7 +311,7 @@ public abstract class DataManager {
      */
     public List<ContentValues> bulkInsert(String table, ContentValues[] values) {
         SQLiteDatabase db = getWritableDatabase();
-        List<ContentValues> inserted = new ArrayList<ContentValues>();
+        List<ContentValues> inserted = new ArrayList<>();
         if (db == null) {
             return inserted;
         }
@@ -320,9 +320,9 @@ public abstract class DataManager {
         SQLiteStatement statement = getInsertStatement(table, db);
 
         try {
-            for (int i = 0; i < values.length; i++) {
-                if (tryExecuteStatement(statement, values[i])) {
-                    inserted.add(values[i]);
+            for (ContentValues value : values) {
+                if (tryExecuteStatement(statement, value)) {
+                    inserted.add(value);
                 }
             }
 

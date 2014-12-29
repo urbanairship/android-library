@@ -76,7 +76,7 @@ public class Whitelist {
      */
     private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
-    private List<UriPattern> uriPatterns = new ArrayList<UriPattern>();
+    private List<UriPattern> uriPatterns = new ArrayList<>();
 
     /**
      * Adds an entry to the whitelist for URL matching. Patterns must be defined with the following

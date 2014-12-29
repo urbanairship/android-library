@@ -177,9 +177,9 @@ class RichPushUserPreferences {
 
             return new String(decodedBytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Logger.error("Unable to decode string. " + e.getMessage());
+            Logger.error("RichPushUserPreferences - Unable to decode string. " + e.getMessage());
         } catch (NumberFormatException e) {
-            Logger.error("String contains invalid hex numbers. " + e.getMessage());
+            Logger.error("RichPushUserPreferences - String contains invalid hex numbers. " + e.getMessage());
         }
 
         return null;

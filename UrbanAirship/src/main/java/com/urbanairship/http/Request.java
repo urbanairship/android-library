@@ -77,7 +77,7 @@ public class Request {
         this.requestMethod = requestMethod;
         this.url = url;
 
-        responseProperties = new HashMap<String, String>();
+        responseProperties = new HashMap<>();
         responseProperties.put("User-Agent", getUrbanAirshipUserAgent());
     }
 
@@ -225,7 +225,7 @@ public class Request {
             return responseBuilder.create();
 
         } catch (Exception ex) {
-            Logger.error("Request failed. URL: " + url + " requestMethod: " + requestMethod, ex);
+            Logger.debug("Request - Request failed URL: " + url + " method: " + requestMethod, ex);
             return null;
         } finally {
             if (conn != null) {
@@ -254,7 +254,7 @@ public class Request {
         try {
             String inputLine;
             while ((inputLine = br.readLine()) != null) {
-                sb.append(inputLine + "\n");
+                sb.append(inputLine).append("\n");
             }
             br.close();
         } finally {

@@ -75,15 +75,14 @@ class EventAPIClient {
     public EventResponse sendEvents(Collection<String> events) {
 
         if (events == null || events.size() == 0) {
-            Logger.info("Send failed. No events.");
+            Logger.verbose("EventAPIClient - No events to send.");
             return null;
         }
 
         if (!Network.isConnected()) {
-            Logger.info("No network connectivity available. Postponing analytics event updates.");
+            Logger.verbose("EventAPIClient - No network connectivity available. Unable to send events.");
             return null;
         }
-
 
         JSONArray eventJSON = new JSONArray();
 
@@ -91,17 +90,18 @@ class EventAPIClient {
             try {
                 eventJSON.put(new JSONObject(eventPayload));
             } catch (JSONException e) {
-                Logger.error("Invalid eventPayload: " + e);
+                Logger.error("EventAPIClient - Invalid eventPayload.", e);
             }
         }
 
         String payload = eventJSON.toString();
 
+        String url = UAirship.shared().getAirshipConfigOptions().analyticsServer + "warp9/";
         URL analyticsServerUrl = null;
         try {
-            analyticsServerUrl = new URL(UAirship.shared().getAirshipConfigOptions().analyticsServer + "warp9/");
+            analyticsServerUrl = new URL(url);
         } catch (MalformedURLException e) {
-            Logger.error("Invalid analyticsServer: " + e);
+            Logger.error("EventAPIClient - Invalid analyticsServer: " + url, e);
         }
 
         String deviceFamily;
@@ -155,9 +155,13 @@ class EventAPIClient {
             request.setHeader("X-UA-Push-Address", channelID);
         }
 
-        Logger.debug("Sending analytic events. Request:  " + request.toString() + " Events: " + events);
+        Logger.debug("EventAPIClient - Sending analytic events. Request:  " + request.toString() + " Events: " + events);
 
         Response response = request.execute();
+
+
+        Logger.debug("EventAPIClient - Analytic event send response: " + response);
+
 
         return response == null ? null : new EventResponse(response);
     }

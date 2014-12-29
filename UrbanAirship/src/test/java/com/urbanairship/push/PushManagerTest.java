@@ -403,7 +403,7 @@ public class PushManagerTest {
      */
     @Test
     public void testTags() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add("$xf*\"\"kkfj");
         tags.add("'''''7that'sit\"");
         tags.add("here's,some,comma,separated,stuff");
@@ -439,11 +439,11 @@ public class PushManagerTest {
      */
     @Test
     public void testSetTagsWhiteSpaceTrimmedToEmpty() {
-        HashSet<String> mockTags = new HashSet<String>();
+        HashSet<String> mockTags = new HashSet<>();
         mockTags.add("tag");
         when(mockPushPreferences.getTags()).thenReturn(mockTags);
 
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add(" ");
         pushManager.setTags(tags);
 
@@ -461,7 +461,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsWhiteSpaceTrimmedToValid() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("    whitespace_test_tag    ");
 
@@ -481,11 +481,11 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsOverMaxLength() {
-        HashSet<String> mockTags = new HashSet<String>();
+        HashSet<String> mockTags = new HashSet<>();
         mockTags.add("tag");
         when(mockPushPreferences.getTags()).thenReturn(mockTags);
 
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");
@@ -506,7 +506,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsMaxLength() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[");
@@ -530,11 +530,11 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsZeroLength() {
-        HashSet<String> mockTags = new HashSet<String>();
+        HashSet<String> mockTags = new HashSet<>();
         mockTags.add("tag");
         when(mockPushPreferences.getTags()).thenReturn(mockTags);
 
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add("");
         pushManager.setTags(tags);
 
@@ -552,10 +552,10 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsNullTag() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add(null);
 
-        HashSet<String> mockTags = new HashSet<String>();
+        HashSet<String> mockTags = new HashSet<>();
         mockTags.add("tag");
         when(mockPushPreferences.getTags()).thenReturn(mockTags);
 
@@ -575,7 +575,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsEmptySet() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add("testTag");
         when(mockPushPreferences.getTags()).thenReturn(tags);
 
@@ -594,7 +594,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeTagsMixedTagSet() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
         tags.add("testTag");
         tags.add("");
         when(mockPushPreferences.getTags()).thenReturn(tags);
@@ -615,7 +615,7 @@ public class PushManagerTest {
      */
     @Test
     public void testAliasAndTags() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("a_tag");
 
@@ -643,7 +643,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsWhiteSpaceTrimmedToEmpty() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add(" ");
         //add another test tag to allow updateApid call
@@ -674,7 +674,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsWhiteSpaceTrimmedToValid() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("    whitespace_test_tag    ");
 
@@ -702,7 +702,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsOverMaxLength() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");
@@ -734,7 +734,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsMaxLength() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[");
@@ -766,7 +766,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsZeroLength() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("");
         //add another test tag to allow updateApid call
@@ -797,7 +797,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsNullTag() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add(null);
         //add another test tag to allow updateApid call
@@ -828,7 +828,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeAliasAndTagsEmptySet() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("testTag");
 
@@ -858,7 +858,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeGetTags() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("test_tag");
         when(mockPushPreferences.getTags()).thenReturn(tags);
@@ -872,11 +872,11 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeGetTagsWhiteSpace() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add(" test_tag ");
 
-        HashSet<String> normalizedTags = new HashSet<String>();
+        HashSet<String> normalizedTags = new HashSet<>();
 
         normalizedTags.add("test_tag");
 
@@ -889,7 +889,7 @@ public class PushManagerTest {
      */
     @Test
     public void testNormalizeGetTagsLength() {
-        HashSet<String> tags = new HashSet<String>();
+        HashSet<String> tags = new HashSet<>();
 
         tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");

@@ -123,7 +123,7 @@ public class EventServiceTest {
      */
     @Test
     public void testSendingEvents() {
-        Map<String, String> events = new HashMap<String, String>();
+        Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
 
         // Set up data manager to return 2 count for events.
@@ -180,7 +180,7 @@ public class EventServiceTest {
      */
     @Test
     public void testSendEventsFails() {
-        Map<String, String> events = new HashMap<String, String>();
+        Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
         when(dataManager.getEventCount()).thenReturn(1);
         when(dataManager.getDatabaseSize()).thenReturn(100);
@@ -210,7 +210,7 @@ public class EventServiceTest {
      */
     @Test
     public void testSendEventsBeforeNextSendTime() {
-        Map<String, String> events = new HashMap<String, String>();
+        Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
         when(dataManager.getEventCount()).thenReturn(1);
         when(dataManager.getDatabaseSize()).thenReturn(100);

@@ -16,7 +16,7 @@ public class NativeBridge {
         _BYTES_ 
     };
     
-    private static String source = new String();
+    private static String source;
 
     /**
      * Retrieves the NativeBridge JavaScript source.

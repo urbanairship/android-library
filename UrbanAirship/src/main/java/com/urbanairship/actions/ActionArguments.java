@@ -79,7 +79,7 @@ public class ActionArguments {
         this.situation = situation;
 
         if (metadata != null) {
-            this.metadata = new HashMap<String, Object>(metadata);
+            this.metadata = new HashMap<>(metadata);
         }
     }
 
@@ -100,7 +100,8 @@ public class ActionArguments {
      * @param key The key.
      * @return An object or null.
      */
-    public <T extends Object> T getMetadata(String key) {
+    @SuppressWarnings("unchecked")
+    public <T> T getMetadata(String key) {
         Object value = null;
 
         if (metadata != null) {
@@ -155,7 +156,7 @@ public class ActionArguments {
      */
     public static class Builder {
         private Situation situation = Situation.MANUAL_INVOCATION;
-        private Map<String, Object> metadata = new HashMap<String, Object>();
+        private Map<String, Object> metadata = new HashMap<>();
         private Object value;
 
         /**
@@ -198,8 +199,7 @@ public class ActionArguments {
          * @return The action argument.
          */
         public ActionArguments create() {
-            ActionArguments arguments = new ActionArguments(situation, value, metadata);
-            return arguments;
+            return new ActionArguments(situation, value, metadata);
         }
     }
 }
