@@ -80,13 +80,13 @@ public class UALocationManager extends BaseManager {
 
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
-            Logger.info("Location service connected.");
+            Logger.verbose("Location service connected.");
             UALocationManager.this.onServiceConnected(service);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName className) {
-            Logger.info("Location service disconnected.");
+            Logger.verbose("Location service disconnected.");
             UALocationManager.this.onServiceDisconnected();
         }
     };
@@ -143,7 +143,6 @@ public class UALocationManager extends BaseManager {
                 UAirship.getApplicationContext().registerReceiver(new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        Logger.info("App state changed");
                         updateServiceConnection();
                     }
                 }, filter);
@@ -358,7 +357,7 @@ public class UALocationManager extends BaseManager {
      */
     private synchronized void bindService() {
         if (!isBound) {
-            Logger.info("Binding to location service.");
+            Logger.verbose("UALocationManager - Binding to location service.");
 
 
             Context context = UAirship.getApplicationContext();
@@ -376,7 +375,7 @@ public class UALocationManager extends BaseManager {
      */
     private synchronized void subscribeUpdates() {
         if (!isSubscribed && sendMessage(LocationService.MSG_SUBSCRIBE_UPDATES, 0, null)) {
-            Logger.info("Subscribed to continuous location updates.");
+            Logger.info("Subscribing to continuous location updates.");
             isSubscribed = true;
         }
     }
@@ -386,7 +385,7 @@ public class UALocationManager extends BaseManager {
      */
     private synchronized void unsubscribeUpdates() {
         if (isSubscribed) {
-            Logger.info("Unsubscribed from continuous location updates.");
+            Logger.info("Unsubscribing from continuous location updates.");
             sendMessage(LocationService.MSG_UNSUBSCRIBE_UPDATES, 0, null);
             isSubscribed = false;
 
@@ -402,7 +401,7 @@ public class UALocationManager extends BaseManager {
      */
     private synchronized void unbindService() {
         if (isBound) {
-            Logger.info("Unbinding to location service.");
+            Logger.verbose("UALocationManager - Unbinding to location service.");
 
             UAirship.getApplicationContext().unbindService(serviceConnection);
             isBound = false;
@@ -452,7 +451,7 @@ public class UALocationManager extends BaseManager {
             serviceMessenger.send(message);
             return true;
         } catch (RemoteException e) {
-            Logger.info("Remote exception when sending message to location service");
+            Logger.debug("UALocationManager - Remote exception when sending message to location service");
         }
         return false;
     }

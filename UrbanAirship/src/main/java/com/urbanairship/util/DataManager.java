@@ -64,13 +64,13 @@ public abstract class DataManager {
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.info("Upgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Upgrading database " + name + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
             public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.info("Downgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Downgrading database " + name + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
         };
@@ -114,7 +114,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("Error opening writable database. Retrying...");
+                Logger.error("DataManager - Error opening writable database. Retrying...");
             }
         }
 
@@ -135,7 +135,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("Error opening readable database. Retrying...");
+                Logger.error("DataManager - Error opening readable database. Retrying...");
             }
         }
 
@@ -150,7 +150,7 @@ public abstract class DataManager {
      * @param newVersion Version of the new database
      */
     protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Logger.verbose("onUpgrade not implemented yet.");
+        Logger.debug("DataManager - onUpgrade not implemented yet.");
     }
 
     /**

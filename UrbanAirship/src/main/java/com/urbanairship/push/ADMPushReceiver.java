@@ -43,8 +43,10 @@ public class ADMPushReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        Logger.verbose("ADMPushReceiver - Received intent: " + intent.getAction());
+
         if (ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE.equals(intent.getAction())) {
-            Logger.info("Received push from ADM.");
+            Logger.debug("ADMPushReceiver - Received push: " + intent);
 
             // Deliver message to push service
             Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED).putExtras(intent.getExtras());

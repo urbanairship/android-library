@@ -88,8 +88,6 @@ public class ActionRunner {
             throw new IllegalArgumentException("Unable to run null action");
         }
 
-        Logger.info("Running action: " + action);
-
         final Handler handler = getHandler();
 
         executor.execute(new Runnable() {
@@ -155,7 +153,7 @@ public class ActionRunner {
         if (action == null) {
             throw new IllegalArgumentException("Unable to run null action");
         }
-        Logger.info("Running action: " + action);
+
         return action.run(null, arguments);
     }
 
@@ -172,7 +170,7 @@ public class ActionRunner {
         if (entry == null) {
             return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
         } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
-            Logger.info("Action will not be run. Registry predicate returned false.");
+            Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
             return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
         } else {
             Situation situation = arguments == null ? null : arguments.getSituation();

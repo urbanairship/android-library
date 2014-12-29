@@ -79,7 +79,7 @@ class ActivityState {
     void setStarted(Source source, long startTimeMS) {
         if (source == Source.MANUAL_INSTRUMENTATION) {
             if (manualInstrumentedState == State.STARTED && analyticsEnabled) {
-                Logger.warn("Activity " + activityName + " already added without being removed first. Call UAirship.shared().getAnalytics().activityStopped in every activity's onStop() method.");
+                Logger.warn("Activity " + activityName + " already added without being removed first. Call Analytics.activityStopped(this) in every activity's onStop() method.");
             }
             manualInstrumentedState = State.STARTED;
         } else {
@@ -98,14 +98,14 @@ class ActivityState {
     void setStopped(Source source, long stopTimeMS) {
         if (source == Source.MANUAL_INSTRUMENTATION) {
             if (manualInstrumentedState != State.STARTED && analyticsEnabled) {
-                Logger.warn("Activity " + activityName + " removed without being manually added first. Call UAirship.shared().getAnalytics().activityStarted in every activity's onStart() method.");
+                Logger.warn("Activity " + activityName + " removed without being manually added first. Call Analytics.activityStarted(this) in every activity's onStart() method.");
             } else if (currentSdkVersion >= 14 && autoInstrumentedState == State.NONE && analyticsEnabled) {
                 Logger.warn("Activity " + activityName + " removed in Analytics not during the activity's onStop() method.");
             }
             manualInstrumentedState = State.STOPPED;
         } else {
             if (minSdkVersion < 14 && manualInstrumentedState == State.NONE && analyticsEnabled) {
-                Logger.warn("Activity " + activityName + " was not manually added during onStart(). Call UAirship.shared().getAnalytics().activityStarted in every activity's onStart() method.");
+                Logger.warn("Activity " + activityName + " was not manually added during onStart(). Call Analytics.activityStarted(this) in every activity's onStart() method.");
             }
             autoInstrumentedState = State.STOPPED;
         }

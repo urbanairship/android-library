@@ -31,7 +31,6 @@ import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 
@@ -87,9 +86,7 @@ public class ShareAction extends Action {
 
     @Override
     public ActionResult perform(String actionName, ActionArguments arguments) {
-        Logger.info("Running share action: " + arguments);
         final Context context = UAirship.getApplicationContext();
-
 
         Intent sharingIntent = new Intent(Intent.ACTION_SEND)
                 .setType("text/plain")

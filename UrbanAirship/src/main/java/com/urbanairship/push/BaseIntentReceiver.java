@@ -78,7 +78,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         Autopilot.automaticTakeOff(context);
 
         String action = intent.getAction();
-        Logger.debug("Received intent with action: " + action);
+        Logger.info(this.getClass().getSimpleName() + " - Received intent with action: " + action);
 
         switch (action) {
             case PushManager.ACTION_PUSH_RECEIVED:
@@ -106,7 +106,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
 
         if (pushBundle == null) {
-            Logger.error("Missing push bundle.");
+            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
             return;
         }
 
@@ -131,7 +131,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
 
         if (pushBundle == null) {
-            Logger.error("Missing push bundle.");
+            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
             return;
         }
 
@@ -163,7 +163,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         } else {
             String channel = intent.getStringExtra(PushManager.EXTRA_CHANNEL_ID);
             if (channel == null) {
-                Logger.error("Missing channel registration ID.");
+                Logger.error("BaseIntentReceiver - Intent is missing channel ID for: " + intent.getAction());
                 return;
             }
             onChannelRegistrationSucceeded(context, channel);
@@ -181,7 +181,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         if (pushBundle == null) {
-            Logger.error("Missing push bundle.");
+            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
             return;
         }
 

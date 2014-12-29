@@ -56,13 +56,13 @@ public class BitmapUtils {
      * @throws IOException
      */
     public static Bitmap fetchScaledBitmap(Context context, URL url, int reqWidth, int reqHeight) throws IOException {
-        Logger.verbose("Fetching image from: " + url);
+        Logger.verbose("BitmapUtils - Fetching image from: " + url);
 
         File outputFile = File.createTempFile("ua_", ".temp", context.getCacheDir());
-        Logger.verbose("Created temp file: " + outputFile);
+        Logger.verbose("BitmapUtils - Created temp file: " + outputFile);
 
         if (!downloadFile(url, outputFile)) {
-            Logger.verbose("Failed to fetch image from: " + url);
+            Logger.verbose("BitmapUtils - Failed to fetch image from: " + url);
             return null;
         }
 
@@ -79,12 +79,12 @@ public class BitmapUtils {
         Bitmap bitmap = BitmapFactory.decodeFile(outputFile.getAbsolutePath(), options);
 
         if (outputFile.delete()) {
-            Logger.verbose("Deleted temp file: " + outputFile);
+            Logger.verbose("BitmapUtils - Deleted temp file: " + outputFile);
         } else {
-            Logger.verbose("Failed to delete temp file: " + outputFile);
+            Logger.verbose("BitmapUtils - Failed to delete temp file: " + outputFile);
         }
 
-        Logger.debug(String.format("Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d. SampleSize: %d",
+        Logger.debug(String.format("BitmapUtils - Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d. SampleSize: %d",
                 url, width, height, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight(), options.inSampleSize));
 
         return bitmap;

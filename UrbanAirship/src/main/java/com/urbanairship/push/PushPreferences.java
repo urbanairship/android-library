@@ -120,9 +120,10 @@ class PushPreferences {
         setUserNotificationsEnabled(oldPushEnabled);
 
         if (!oldPushEnabled) {
-            Logger.info("Push is now enabled. You can continue to toggle the opt-in state by" +
+            Logger.info("Push is now enabled. You can continue to toggle the opt-in state by " +
                     "enabling or disabling user notifications");
         }
+
         // set push enabled to true
         setPushEnabled(true);
 
