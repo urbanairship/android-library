@@ -32,11 +32,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * GCMPushReceiver listens for incoming GCM registration responses and messages, then forwards them
@@ -61,12 +60,12 @@ public class GCMPushReceiver extends BroadcastReceiver {
                 UAirship.shared(new UAirship.OnReadyCallback() {
                     @Override
                     public void onAirshipReady(UAirship airship) {
-                        handleGCMReceived(context, intent, airship.getAirshipConfigOptions());
+                        handleGCMReceived(airship, context, intent);
                         pendingResult.finish();
                     }
                 });
             } else {
-                handleGCMReceived(context, intent, UAirship.shared().getAirshipConfigOptions());
+                handleGCMReceived(UAirship.shared(), context, intent);
 
                 if (isOrderedBroadcast()) {
                     setResultCode(Activity.RESULT_OK);
@@ -77,13 +76,23 @@ public class GCMPushReceiver extends BroadcastReceiver {
 
     /**
      * Handles the incoming GCM Message.
+     * @param airship The airship instance.
      * @param context The application context.
      * @param intent The incoming intent.
-     * @param options THe application config options.
      */
-    private void handleGCMReceived(Context context, Intent intent, AirshipConfigOptions options) {
+    private void handleGCMReceived(UAirship airship, Context context, Intent intent) {
+        if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
+            Logger.error("GCMPushReceiver - Received intent from invalid transport acting as GCM.");
+            return;
+        }
+
+        if (UAStringUtil.isEmpty(airship.getPushManager().getGcmId())) {
+            Logger.error("GCMPushReceiver - Received intent from GCM without registering.");
+            return;
+        }
+
         String sender = intent.getStringExtra("from");
-        if (sender != null && !sender.equals(options.gcmSender)) {
+        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
             Logger.info("Ignoring GCM message from sender: " + sender);
             return;
         }
