@@ -27,6 +27,7 @@ package com.urbanairship.widget;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -36,6 +37,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
 
 import java.io.File;
@@ -61,10 +63,7 @@ public class UAWebView extends WebView {
      * @param context A Context object used to access application assets.
      */
     public UAWebView(Context context) {
-        super(context);
-        if (!isInEditMode()) {
-            init();
-        }
+        this(context, null);
     }
 
     /**
@@ -74,9 +73,21 @@ public class UAWebView extends WebView {
      * @param attrs An AttributeSet passed to our parent.
      */
     public UAWebView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+    }
+
+    /**
+     * UAWebView Constructor
+     *
+     * @param context A Context object used to access application assets.
+     * @param attrs An AttributeSet passed to our parent.
+     * @param defStyle The default style resource ID.
+     */
+    public UAWebView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+
         if (!isInEditMode()) {
-            init();
+            init(context, attrs, defStyle, 0);
         }
     }
 
@@ -85,27 +96,51 @@ public class UAWebView extends WebView {
      *
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
-     * @param defStyle The default style resource id.
+     * @param defStyle The default style resource ID.
+     * @param defResStyle A resource identifier of a style resource that supplies default values for
+     * the view, used only if defStyle is 0 or can not be found in the theme. Can be 0 to not
+     * look for defaults.
      */
-    public UAWebView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public UAWebView(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+        super(context, attrs, defStyle, defResStyle);
+
         if (!isInEditMode()) {
-            init();
+            init(context, attrs, defStyle, defResStyle);
         }
     }
 
     /**
      * Helper method that sets the default web view settings for urban airship
      * and calls through to initializeView and populateCustomJavascriptInterfaces.
+     *
+     * @param context A Context object used to access application assets.
+     * @param attrs An AttributeSet passed to our parent.
+     * @param defStyle The default style resource ID.
+     * @param defResStyle A resource identifier of a style resource that supplies default values for
+     * the view, used only if defStyle is 0 or can not be found in the theme. Can be 0 to not
+     * look for defaults.
      */
     @SuppressLint({ "NewApi", "SetJavaScriptEnabled" })
-    void init() {
+    private void init(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         WebSettings settings = getSettings();
 
         if (Build.VERSION.SDK_INT >= 7) {
             settings.setAppCacheEnabled(true);
             settings.setAppCachePath(getCachePath());
             settings.setDomStorageEnabled(true);
+        }
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            if (attrs != null) {
+                TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.UAWebView, defStyle, defResStyle);
+                try {
+                    int mixedContentMode = a.getInteger(R.styleable.UAWebView_mixed_content_mode, WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+                    settings.setMixedContentMode(mixedContentMode);
+                } finally {
+                    a.recycle();
+                }
+            }
         }
 
         settings.setAllowFileAccess(true);
@@ -115,6 +150,7 @@ public class UAWebView extends WebView {
         initializeView();
         populateCustomJavascriptInterfaces();
     }
+
 
     /**
      * Initializes the web view with any default settings.
@@ -196,6 +232,7 @@ public class UAWebView extends WebView {
     /**
      * Called right before data or a URL is passed to the web view to be loaded.
      */
+    @SuppressLint("NewApi")
     private void onPreLoad() {
         if (getWebViewClient() == null) {
             Logger.info("No web view client set, setting a default " +
@@ -220,7 +257,6 @@ public class UAWebView extends WebView {
         return webViewClient;
     }
 
-
     /**
      * Gets the cache directory path. Creates the directories if
      * it does not exist.
@@ -235,7 +271,6 @@ public class UAWebView extends WebView {
 
         return cacheDirectory.getAbsolutePath();
     }
-
 
     /**
      * Set the client authorization request.
@@ -258,5 +293,4 @@ public class UAWebView extends WebView {
             webViewClient.addAuthRequestCredentials(host, username, password);
         }
     }
-
 }
