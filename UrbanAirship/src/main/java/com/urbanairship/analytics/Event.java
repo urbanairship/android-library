@@ -129,7 +129,7 @@ public abstract class Event {
             object.put(TIME_KEY, time);
             object.put(DATA_KEY, data);
         } catch (JSONException e) {
-            Logger.error("Error constructing JSON " + getType() + " representation");
+            Logger.error("Event - Error constructing JSON " + getType() + " representation.", e);
             return null;
         }
 
@@ -158,7 +158,7 @@ public abstract class Event {
      */
     public ArrayList<String> getNotificationTypes() {
 
-        ArrayList<String> notificationTypes = new ArrayList<String>();
+        ArrayList<String> notificationTypes = new ArrayList<>();
         PushManager pushManager = UAirship.shared().getPushManager();
 
         if (pushManager.isPushEnabled()) {

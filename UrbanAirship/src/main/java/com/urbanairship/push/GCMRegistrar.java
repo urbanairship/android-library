@@ -61,16 +61,16 @@ class GCMRegistrar {
 
 
         Set<String> senderIds = UAirship.shared().getAirshipConfigOptions().getGCMSenderIds();
-        Set<String> registeredGcmSenderIds = PushManager.shared().getPreferences().getRegisteredGcmSenderIds();
+        Set<String> registeredGcmSenderIds = UAirship.shared().getPushManager().getPreferences().getRegisteredGcmSenderIds();
 
         // Unregister if we have different registered sender ids
         if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {
-            Logger.debug("Unregistering GCM Sender IDs:  " + registeredGcmSenderIds);
+            Logger.debug("GCMRegistrar - Unregistering GCM Sender IDs:  " + registeredGcmSenderIds);
             gcm.unregister();
         }
 
 
-        Logger.debug("Registering GCM Sender IDs:  " + senderIds);
+        Logger.debug("GCMRegistrar - Registering GCM Sender IDs:  " + senderIds);
         String registrationId = gcm.register(senderIds.toArray(new String[senderIds.size()]));
 
         if (registrationId != null) {
@@ -100,7 +100,7 @@ class GCMRegistrar {
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.error("Unable to register. " + e.getMessage());
+            Logger.error("Unable to register with GCM:  " + e.getMessage());
             return false;
         }
 

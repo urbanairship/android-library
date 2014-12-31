@@ -38,7 +38,7 @@ public class ChannelRegistrationPayloadTest {
 
     @Before
     public void setUp() throws Exception {
-        testTags = new HashSet<String>();
+        testTags = new HashSet<>();
         testTags.add("tagOne");
         testTags.add("tagTwo");
     }
@@ -101,7 +101,7 @@ public class ChannelRegistrationPayloadTest {
      */
     @Test
     public void testAsJsonEmptyTags() throws JSONException {
-        Set<String> emptyTags = new HashSet<String>();
+        Set<String> emptyTags = new HashSet<>();
 
         // Create payload with empty tags
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(testSetTags, emptyTags).build();

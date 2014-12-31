@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricGradleTestRunner.class)
 public class EventAPIClientTest {
 
-    private List<String> events = new ArrayList<String>();
+    private List<String> events = new ArrayList<>();
     private EventAPIClient client;
     private TestRequest testRequest;
 

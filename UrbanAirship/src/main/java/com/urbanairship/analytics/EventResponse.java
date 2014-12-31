@@ -59,10 +59,9 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Total");
             if (headerList != null && headerList.size() > 0) {
-                int constrainValue = UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
                         AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES,
                         AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES);
-                return constrainValue;
             }
         }
         return AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES;
@@ -77,10 +76,9 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Batch");
             if (headerList != null && headerList.size() > 0) {
-                int constrainValue = UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
                         AnalyticsPreferences.MIN_BATCH_SIZE_BYTES,
                         AnalyticsPreferences.MAX_BATCH_SIZE_BYTES);
-                return constrainValue;
             }
         }
         return AnalyticsPreferences.MIN_BATCH_SIZE_BYTES;
@@ -95,10 +93,9 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Wait");
             if (headerList != null && headerList.size() > 0) {
-                int constrainValue = UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
                         AnalyticsPreferences.MIN_WAIT_MS,
                         AnalyticsPreferences.MAX_WAIT_MS);
-                return constrainValue;
             }
         }
         return AnalyticsPreferences.MIN_WAIT_MS;
@@ -113,10 +110,9 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Min-Batch-Interval");
             if (headerList != null && headerList.size() > 0) {
-                int constrainValue = UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
                         AnalyticsPreferences.MIN_BATCH_INTERVAL_MS,
                         AnalyticsPreferences.MAX_BATCH_INTERVAL_MS);
-                return constrainValue;
             }
         }
         return AnalyticsPreferences.MIN_BATCH_INTERVAL_MS;

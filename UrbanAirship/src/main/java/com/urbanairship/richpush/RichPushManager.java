@@ -63,7 +63,7 @@ public class RichPushManager extends BaseManager {
     // Number of refresh message requests currently in flight.
     private AtomicInteger refreshMessageRequestCount = new AtomicInteger();
 
-    private List<Listener> listeners = new ArrayList<Listener>();
+    private final List<Listener> listeners = new ArrayList<>();
 
     private BroadcastReceiver foregroundReceiver;
 
@@ -242,7 +242,7 @@ public class RichPushManager extends BaseManager {
      */
     private void refreshMessages(boolean force, final RefreshMessagesCallback callback) {
         if (isRefreshingMessages() && !force) {
-            Logger.info("Skipping refreshing messages, already refreshing.");
+            Logger.debug("Skipping refresh messages, messages are already refreshing. Callback will not be triggered.");
             return;
         }
 
@@ -296,7 +296,7 @@ public class RichPushManager extends BaseManager {
      * @param receiver The result receiver
      */
     private void startUpdateService(String intentAction, ResultReceiver receiver) {
-        Logger.debug("RichPushManager startUpdateService");
+        Logger.debug("RichPushManager - Starting update service.");
         Context context = UAirship.getApplicationContext();
         Intent intent = new Intent(context, RichPushUpdateService.class);
         intent.setAction(intentAction);
@@ -315,7 +315,7 @@ public class RichPushManager extends BaseManager {
      */
     private List<Listener> getListeners() {
         synchronized (listeners) {
-            return new ArrayList<Listener>(listeners);
+            return new ArrayList<>(listeners);
         }
     }
 
@@ -329,7 +329,7 @@ public class RichPushManager extends BaseManager {
             try {
                 l.onUpdateUser(success);
             } catch (Exception e) {
-                Logger.error("RichPushManager unable to complete onUpdateUser() callback.", e);
+                Logger.error("RichPushManager - Unable to complete onUpdateUser() callback.", e);
             }
         }
     }
@@ -344,7 +344,7 @@ public class RichPushManager extends BaseManager {
             try {
                 l.onUpdateMessages(success);
             } catch (Exception e) {
-                Logger.error("RichPushManager unable to complete onUpdateMessages() callback.", e);
+                Logger.error("RichPushManager - Unable to complete onUpdateMessages() callback.", e);
             }
         }
     }

@@ -66,7 +66,7 @@ public class LocationPreferencesTest {
      */
     @Test
     public void testChangeListener() {
-        final List<String> changedKeys = new ArrayList<String>();
+        final List<String> changedKeys = new ArrayList<>();
         preferences.setListener(new PreferenceDataStore.PreferenceChangeListener() {
             @Override
             public void onPreferenceChange(String key) {

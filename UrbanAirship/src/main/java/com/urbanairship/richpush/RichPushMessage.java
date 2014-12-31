@@ -122,7 +122,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
                 return date.getTime();
             }
         } catch (Exception e) {
-            Logger.error("Couldn't parse message date: " + timeStamp + ", defaulting to:" + defaultValue + ".");
+            Logger.error("RichPushMessage - Couldn't parse message date: " + timeStamp + ", defaulting to: " + defaultValue + ".");
         }
 
         return defaultValue;
@@ -243,10 +243,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * @return <code>true</code> if expired, otherwise <code>false</code>.
      */
     public boolean isExpired() {
-        if (expirationMS == null) {
-            return false;
-        }
-        return System.currentTimeMillis() >= expirationMS;
+        return expirationMS != null && System.currentTimeMillis() >= expirationMS;
     }
 
     /**
@@ -267,7 +264,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (this.unreadClient) {
             unreadClient = false;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().markMessagesRead(set);
             }
@@ -281,7 +278,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (!this.unreadClient) {
             unreadClient = true;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().markMessagesUnread(set);
             }
@@ -295,7 +292,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         if (!this.deleted) {
             deleted = true;
             if (getInbox() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 set.add(messageId);
                 getInbox().deleteMessages(set);
             }

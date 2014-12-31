@@ -138,8 +138,8 @@ public class LocationService extends Service {
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
 
-    private Set<Messenger> subscribedClients = new HashSet<Messenger>();
-    private HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<Messenger, SparseArray<PendingResult<Location>>>();
+    private Set<Messenger> subscribedClients = new HashSet<>();
+    private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
 
     private Messenger messenger;
 
@@ -174,7 +174,7 @@ public class LocationService extends Service {
         locationProvider.disconnect();
         looper.quit();
         super.onDestroy();
-        Logger.verbose("Location service destroyed.");
+        Logger.verbose("LocationService - Service destroyed.");
     }
 
     @Override
@@ -191,7 +191,7 @@ public class LocationService extends Service {
 
         locationProvider = new UALocationProvider(getApplicationContext());
 
-        Logger.verbose("Location service created.");
+        Logger.verbose("LocationService - Service created.");
     }
 
     @Override
@@ -209,14 +209,18 @@ public class LocationService extends Service {
 
     private void onHandleIntent(Intent intent) {
         String action = intent == null ? null : intent.getAction();
-        Logger.verbose("Location service received intent action: " + action);
+        Logger.verbose("LocationService - Received intent with action: " + action);
 
-        if (ACTION_START_UPDATES.equals(action)) {
-            onStartLocationUpdates();
-        } else if (ACTION_STOP_UPDATES.equals(action)) {
-            onStopLocationUpdates();
-        } else if (ACTION_LOCATION_UPDATE.equals(action)) {
-            onLocationUpdate(intent);
+        switch (action) {
+            case ACTION_START_UPDATES:
+                onStartLocationUpdates();
+                break;
+            case ACTION_STOP_UPDATES:
+                onStopLocationUpdates();
+                break;
+            case ACTION_LOCATION_UPDATE:
+                onLocationUpdate(intent);
+                break;
         }
     }
 
@@ -227,7 +231,7 @@ public class LocationService extends Service {
      */
     private void onSubscribeUpdates(Message message) {
         if (message.replyTo != null) {
-            Logger.debug("Location service added client from updates");
+            Logger.debug("LocationService - Client subscribed for updates: " + message.replyTo);
             subscribedClients.add(message.replyTo);
         }
     }
@@ -239,7 +243,7 @@ public class LocationService extends Service {
      */
     private void onUnsubscribeUpdates(Message message) {
         if (subscribedClients.remove(message.replyTo)) {
-            Logger.debug("Location service removed client from updates");
+            Logger.debug("LocationService - Client unsubscribed from updates: " + message.replyTo);
         }
     }
 
@@ -259,8 +263,8 @@ public class LocationService extends Service {
             return;
         }
 
-        Logger.info("Location service requesting single location " +
-                "request for client: " + client + " id: " + requestId);
+        Logger.verbose("LocationService - Single location request for client: " + client + " ID: " + requestId);
+        Logger.info("Requesting single location update with request options: " + options);
 
 
         locationProvider.connect();
@@ -278,8 +282,9 @@ public class LocationService extends Service {
         pendingResult.onResult(new PendingResult.ResultCallback<Location>() {
             @Override
             public void onResult(Location location) {
-                Logger.info("Location service received single location: " + location +
-                        " for client:" + client + " id: " + requestId);
+
+                Logger.verbose("LocationService - Single location received for client: " + client + " ID: " + requestId);
+                Logger.info("Received single location update: " + location);
 
                 UAirship.shared().getAnalytics().recordLocation(location, options, LocationEvent.UpdateType.SINGLE);
 
@@ -302,7 +307,7 @@ public class LocationService extends Service {
 
         PendingResult<Location> pendingResult = removePendingResult(client, requestId);
         if (pendingResult != null) {
-            Logger.info("Location service canceled single request for client: " + client + " id: " + requestId);
+            Logger.debug("LocationService - Canceled single request for client: " + client + " ID: " + requestId);
             pendingResult.cancel();
         }
     }
@@ -313,7 +318,7 @@ public class LocationService extends Service {
      * @param intent The received intent.
      */
     private void onLocationUpdate(Intent intent) {
-        if (!UALocationManager.shared().isLocationUpdatesNeeded() || areUpdatesStopped) {
+        if (!UAirship.shared().getLocationManager().isLocationUpdatesNeeded() || areUpdatesStopped) {
             // Location is disabled and will be stopped in another intent.
             return;
         }
@@ -337,10 +342,10 @@ public class LocationService extends Service {
          * it again so it picks up the best location provider.
          */
         if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
-            Logger.info("Location service will restart location updates. " +
+            Logger.debug("LocationService - Restarting location updates. " +
                     "One of the location providers was enabled or disabled.");
 
-            LocationRequestOptions options = UALocationManager.shared().getLocationRequestOptions();
+            LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
             PendingIntent pendingIntent = createLocationUpdateIntent(options);
 
             locationProvider.connect();
@@ -356,11 +361,11 @@ public class LocationService extends Service {
 
         if (location != null) {
 
-            Logger.verbose("Location service received location update: " + location);
+            Logger.info("Received location update: " + location);
 
             UAirship.shared().getAnalytics().recordLocation(location, updateOptions, LocationEvent.UpdateType.CONTINUOUS);
 
-            List<Messenger> clientCopy = new ArrayList<Messenger>(subscribedClients);
+            List<Messenger> clientCopy = new ArrayList<>(subscribedClients);
             for (Messenger client : clientCopy) {
                 if (!sendClientMessage(client, MSG_NEW_LOCATION_UPDATE, 0, location)) {
                     // Client died or is unable to receive messages, remove it
@@ -374,18 +379,18 @@ public class LocationService extends Service {
      * Called when an intent is received with action ACTION_START_UPDATES.
      */
     private void onStartLocationUpdates() {
-        LocationRequestOptions options = UALocationManager.shared().getLocationRequestOptions();
+        LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
 
         /*
          * Canceling and starting location updates causes the provider to request
          * another fix, so skip requesting it again if we already are requesting.
          */
         if (lastUpdateOptions != null && lastUpdateOptions.equals(options)) {
-            Logger.verbose("Location service updates already started.");
+            Logger.verbose("LocationService - Updates already started.");
             return;
         }
 
-        Logger.info("Location service starting updates.");
+        Logger.debug("LocationService - Starting updates.");
 
         lastUpdateOptions = options;
         areUpdatesStopped = false;
@@ -403,7 +408,7 @@ public class LocationService extends Service {
      */
     private void onStopLocationUpdates() {
         if (!areUpdatesStopped) {
-            Logger.info("Location service stopping updates.");
+            Logger.debug("LocationService - Stopping updates.");
             locationProvider.cancelRequests(createLocationUpdateIntent(null));
             lastUpdateOptions = null;
             areUpdatesStopped = true;
@@ -477,7 +482,7 @@ public class LocationService extends Service {
                     .setMinTime(data.getLong(EXTRA_MIN_TIME), TimeUnit.MILLISECONDS)
                     .create();
         } catch (IllegalArgumentException e) {
-            Logger.error("Invalid LocationRequestOptions from Bundle. " + e.getMessage());
+            Logger.error("LocationService - Invalid LocationRequestOptions from Bundle. " + e.getMessage());
             return null;
         }
     }
@@ -551,7 +556,7 @@ public class LocationService extends Service {
 
         @Override
         public void handleMessage(Message msg) {
-            Logger.verbose("Location service received message: " + msg);
+            Logger.verbose("LocationService - Received message: " + msg);
 
             switch (msg.what) {
                 case MSG_UNSUBSCRIBE_UPDATES:
@@ -571,7 +576,7 @@ public class LocationService extends Service {
                     stopSelf(msg.arg1);
                     break;
                 default:
-                    Logger.error("Unexpected message sent to location service: " + msg);
+                    Logger.error("LocationService - Unexpected message sent to location service: " + msg);
             }
         }
     }

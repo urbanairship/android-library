@@ -25,45 +25,94 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * ADMPushReceiver listens for incoming ADM registration responses and messages.
  */
 public class ADMPushReceiver extends BroadcastReceiver {
 
+    @SuppressLint("NewApi")
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
+        Logger.verbose("ADMPushReceiver - Received intent: " + intent.getAction());
 
-        if (ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE.equals(intent.getAction())) {
-            Logger.info("Received push from ADM.");
-
-            // Deliver message to push service
-            Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED).putExtras(intent.getExtras());
-            PushService.startServiceWithWakeLock(context, pushIntent);
-
-        } else if (intent.getAction().equals(ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT)) {
-            if (intent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
-                Logger.error("ADM error occurred: " + intent.getStringExtra(ADMConstants.LowLevel.EXTRA_ERROR));
-            } else {
-                String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
-                if (registrationID != null) {
-                    Logger.info("ADM registration successful. Registration ID: " + registrationID);
-                    UAirship.shared().getPushManager().setAdmId(registrationID);
-                }
-            }
-
-            Intent finishIntent = new Intent(PushService.ACTION_PUSH_REGISTRATION_FINISHED);
-            PushService.startServiceWithWakeLock(context, finishIntent);
+        if (Build.VERSION.SDK_INT < 15) {
+            Logger.error("ADMPushReceiver - Received intent from ADM transport on an unsupported API version.");
+            return;
         }
+
+        final PendingResult pendingResult = goAsync();
+
+        UAirship.shared(new UAirship.OnReadyCallback() {
+            @Override
+            public void onAirshipReady(UAirship airship) {
+                if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
+                    switch (intent.getAction()) {
+                        case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
+                            handleADMReceivedIntent(airship, context, intent);
+                            break;
+                        case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
+                            handleRegistrationIntent(airship, context, intent);
+                            break;
+                    }
+                } else {
+                    Logger.error("ADMPushReceiver - Received intent from invalid transport acting as ADM.");
+                }
+
+                pendingResult.finish();
+            }
+        });
     }
 
+    /**
+     * Handles ADM registration intent.
+     * @param airship The airship instance.
+     * @param context The application context.
+     * @param intent The registration intent.
+     */
+    private void handleRegistrationIntent(UAirship airship, Context context, Intent intent) {
+        if (intent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
+            Logger.error("ADM error occurred: " + intent.getStringExtra(ADMConstants.LowLevel.EXTRA_ERROR));
+        } else {
+            String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
+            if (registrationID != null) {
+                Logger.info("ADM registration successful. Registration ID: " + registrationID);
+                airship.getPushManager().setAdmId(registrationID);
+            }
+        }
+
+        Intent finishIntent = new Intent(PushService.ACTION_PUSH_REGISTRATION_FINISHED);
+        PushService.startServiceWithWakeLock(context, finishIntent);
+    }
+
+    /**
+     * Handles ADM push intent.
+     * @param airship The airship instance.
+     * @param context The application context.
+     * @param intent The push intent.
+     */
+    private void handleADMReceivedIntent(UAirship airship, Context context, Intent intent) {
+        Logger.debug("ADMPushReceiver - Received push: " + intent);
+
+        if (UAStringUtil.isEmpty(airship.getPushManager().getAdmId())) {
+            Logger.error("ADMPushReceiver - Received intent from ADM without registering.");
+            return;
+        }
+
+        // Deliver message to push service
+        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED).putExtras(intent.getExtras());
+        PushService.startServiceWithWakeLock(context, pushIntent);
+    }
 }

@@ -37,8 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 class RichPushMessageCache {
 
-    private final Map<String, RichPushMessage> unreadMessages = new ConcurrentHashMap<String, RichPushMessage>();
-    private final Map<String, RichPushMessage> readMessages = new ConcurrentHashMap<String, RichPushMessage>();
+    private final Map<String, RichPushMessage> unreadMessages = new ConcurrentHashMap<>();
+    private final Map<String, RichPushMessage> readMessages = new ConcurrentHashMap<>();
 
     /**
      * Adds a RichPushMessage to the cache
@@ -100,7 +100,7 @@ class RichPushMessageCache {
      * @return A new List of messages in the cache
      */
     List<RichPushMessage> getMessages() {
-        List<RichPushMessage> messages = new ArrayList<RichPushMessage>();
+        List<RichPushMessage> messages = new ArrayList<>();
         messages.addAll(unreadMessages.values());
         messages.addAll(readMessages.values());
 
@@ -113,7 +113,7 @@ class RichPushMessageCache {
      * @return A new List of unread messages in the cache
      */
     List<RichPushMessage> getUnreadMessages() {
-        return new ArrayList<RichPushMessage>(unreadMessages.values());
+        return new ArrayList<>(unreadMessages.values());
     }
 
     /**
@@ -122,7 +122,7 @@ class RichPushMessageCache {
      * @return A new List of read messages in the cache
      */
     List<RichPushMessage> getReadMessages() {
-        return new ArrayList<RichPushMessage>(readMessages.values());
+        return new ArrayList<>(readMessages.values());
     }
 
     /**
@@ -136,7 +136,7 @@ class RichPushMessageCache {
     }
 
     Set<String> getMessageIds() {
-        Set<String> messageIds = new HashSet<String>(getMessageCount());
+        Set<String> messageIds = new HashSet<>(getMessageCount());
         messageIds.addAll(readMessages.keySet());
         messageIds.addAll(unreadMessages.keySet());
         return messageIds;

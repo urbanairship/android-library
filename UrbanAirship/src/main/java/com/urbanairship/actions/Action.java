@@ -73,12 +73,14 @@ public abstract class Action {
      * @return The result of the action.
      */
     final ActionResult run(String actionName, ActionArguments arguments) {
+
         try {
             if (arguments == null || !acceptsArguments(arguments)) {
-                Logger.info("Action " + this + " is unable to accept arguments: " + arguments);
+                Logger.debug("Action " + this + " is unable to accept arguments: " + arguments);
                 return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
             }
 
+            Logger.info("Running action: " + this + " name: " + actionName + " arguments: " + arguments);
             onStart(actionName, arguments);
             ActionResult result = perform(actionName, arguments);
             if (result == null) {
@@ -87,7 +89,7 @@ public abstract class Action {
             onFinish(actionName, arguments, result);
             return result;
         } catch (Exception e) {
-            Logger.error("Action failed to run " + this, e);
+            Logger.error("Failed to run action " + this, e);
             return ActionResult.newErrorResult(e);
         }
     }

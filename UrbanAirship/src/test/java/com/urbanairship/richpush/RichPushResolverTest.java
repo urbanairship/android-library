@@ -91,7 +91,7 @@ public class RichPushResolverTest extends RichPushBaseTestCase {
     public void testMarkMessagesRead() {
         this.insertRichPushRows(10, Util.getRichPushMessageJson());
 
-        Set<String> keys = new HashSet<String>();
+        Set<String> keys = new HashSet<>();
         keys.add("1_message_id");
         keys.add("2_message_id");
         keys.add("6_message_id");
@@ -138,7 +138,7 @@ public class RichPushResolverTest extends RichPushBaseTestCase {
     public void testDeleteMessages() {
         this.insertRichPushRows(10, Util.getRichPushMessageJson());
 
-        Set<String> keys = new HashSet<String>();
+        Set<String> keys = new HashSet<>();
         keys.add("1_message_id");
         keys.add("2_message_id");
         keys.add("6_message_id");

@@ -36,7 +36,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.PushManager;
+import com.urbanairship.analytics.Analytics;
 
 /**
  * Activity that handles errors when trying to use Google Play services. Using this
@@ -82,7 +82,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        UAirship.shared().getAnalytics().activityStarted(this);
+        Analytics.activityStarted(this);
 
         if (getSupportFragmentManager().findFragmentByTag(DIALOG_TAG) == null) {
             checkPlayServices();
@@ -92,7 +92,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        UAirship.shared().getAnalytics().activityStopped(this);
+        Analytics.activityStopped(this);
 
         if (isFinishing()) {
             // Check if we still have an error

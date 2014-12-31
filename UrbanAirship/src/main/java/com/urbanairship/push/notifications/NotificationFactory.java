@@ -128,7 +128,7 @@ public abstract class NotificationFactory {
     protected final NotificationCompat.Extender createNotificationActionsExtender(PushMessage message, int notificationId) {
         NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(message.getInteractiveNotificationType());
 
-        final List<NotificationCompat.Action> androidActions = new ArrayList<NotificationCompat.Action>();
+        final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
         if (actionGroup != null) {
             androidActions.addAll(actionGroup.createAndroidActions(getContext(), message, notificationId, message.getInteractiveActionsPayload()));
@@ -228,12 +228,13 @@ public abstract class NotificationFactory {
 
         String type = styleJSON.optString(TYPE_KEY);
 
-        if (BIG_TEXT_KEY.equals(type)) {
-            return createBigTextStyle(styleJSON);
-        } else if (INBOX_KEY.equals(type)) {
-            return createInboxStyle(styleJSON);
-        } else if (BIG_PICTURE_KEY.equals(type)) {
-            return createBigPictureStyle(styleJSON);
+        switch (type) {
+            case BIG_TEXT_KEY:
+                return createBigTextStyle(styleJSON);
+            case INBOX_KEY:
+                return createInboxStyle(styleJSON);
+            case BIG_PICTURE_KEY:
+                return createBigPictureStyle(styleJSON);
         }
 
         return null;

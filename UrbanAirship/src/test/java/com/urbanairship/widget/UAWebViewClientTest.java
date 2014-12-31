@@ -193,13 +193,13 @@ public class UAWebViewClientTest {
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         // First action should decode its json object arg as a map
-        Map<String, Object> expectedMap = new HashMap<String, Object>();
+        Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("key", "value");
         verify(runner).runAction(eq("action"), Mockito.argThat(new ActionArgumentsMatcher(
                 Situation.WEB_VIEW_INVOCATION, expectedMap)));
 
         // Second action should decode its json array as a list
-        List<String> expectedList = new ArrayList<String>();
+        List<String> expectedList = new ArrayList<>();
         expectedList.add("one");
         expectedList.add("two");
         verify(runner).runAction(eq("anotherAction"), Mockito.argThat(new ActionArgumentsMatcher(

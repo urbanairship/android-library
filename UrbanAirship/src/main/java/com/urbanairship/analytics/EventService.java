@@ -107,6 +107,9 @@ public class EventService extends IntentService {
             return;
         }
 
+        Logger.verbose("EventService - Received intent: " + intent.getAction());
+
+
         if (ACTION_ADD.equals(intent.getAction())) {
             addEventFromIntent(intent);
         }
@@ -151,7 +154,7 @@ public class EventService extends IntentService {
         }
 
         if (dataManager.insertEvent(eventType, eventData, eventId, sessionId, eventTimeStamp) <= 0) {
-            Logger.error("Unable to insert event into database.");
+            Logger.error("EventService - Unable to insert event into database.");
         }
 
         //in the case of a location event
@@ -181,7 +184,7 @@ public class EventService extends IntentService {
         final int eventCount = dataManager.getEventCount();
 
         if (eventCount <= 0) {
-            Logger.debug("No events to send. Ending analytics upload.");
+            Logger.debug("EventService - No events to send. Ending analytics upload.");
             return;
         }
 
@@ -195,24 +198,27 @@ public class EventService extends IntentService {
         boolean isSuccess = response != null && response.getStatus() == 200;
 
         if (isSuccess) {
+            Logger.info("Analytic events uploaded succesfully.");
             dataManager.deleteEvents(events.keySet());
             backoffMs = 0;
         } else {
+
             if (backoffMs == 0) {
                 backoffMs = preferences.getMinBatchInterval();
             } else {
                 backoffMs = Math.min(backoffMs * 2, preferences.getMaxWait());
             }
+
+            Logger.debug("Analytic events failed to send. Will retry in " + backoffMs + "ms.");
         }
 
         // If there are still events left, schedule the next send
         if (!isSuccess || eventCount - events.size() > 0) {
-            Logger.verbose("Scheduling next event batch upload.");
+            Logger.debug("EventService - Scheduling next event batch upload.");
             scheduleEventUpload(getNextSendTime());
         }
 
         if (response != null) {
-            Logger.info("Warp 9 response: " + response.getStatus());
             preferences.setMaxTotalDbSize(response.getMaxTotalSize());
             preferences.setMaxBatchSize(response.getMaxBatchSize());
             preferences.setMaxWait(response.getMaxWait());

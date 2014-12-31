@@ -136,8 +136,8 @@ public class CustomEvent extends Event {
                 data.putOpt(LAST_RECEIVED_SEND_ID, UAirship.shared().getPushManager().getLastReceivedSendId());
             }
 
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+        } catch (JSONException e) {
+            Logger.error("CustomEvent - Error constructing JSON data.", e);
         }
 
         return data;

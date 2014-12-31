@@ -72,7 +72,7 @@ public class ActionUtils {
 
         // Build a set of all the action names and any alternative names
         // that the action is registered under
-        Set<String> allActionNames = new HashSet<String>();
+        Set<String> allActionNames = new HashSet<>();
         for (String actionName : actionNames) {
             ActionRegistry.Entry entry = ActionRegistry.shared().getEntry(actionName);
             if (entry != null) {

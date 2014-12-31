@@ -67,16 +67,30 @@ public class LandingPageWebView extends UAWebView {
         super(context, attrs);
     }
 
-
     /**
      * Construct a LandingPageWebView.
      *
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
-     * @param defStyle The default style resource id.
+     * @param defStyle The default style resource ID.
      */
     public LandingPageWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+    }
+
+    /**
+     * UAWebView Constructor
+     *
+     * @param context A Context object used to access application assets.
+     * @param attrs An AttributeSet passed to our parent.
+     * @param defStyle The default style resource ID.
+     * @param defResStyle A resource identifier of a style resource that supplies default values for
+     * the view, used only if defStyle is 0 or can not be found in the theme. Can be 0 to not
+     * look for defaults.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public LandingPageWebView(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+        super(context, attrs, defStyle, defResStyle);
     }
 
     /**
@@ -99,7 +113,7 @@ public class LandingPageWebView extends UAWebView {
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(options.getAppKey(), options.getAppSecret());
             Header credentialHeader = BasicScheme.authenticate(credentials, "UTF-8", false);
 
-            HashMap<String, String> headers = new HashMap<String, String>();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put(credentialHeader.getName(), credentialHeader.getValue());
 
             super.loadUrl(url, headers);

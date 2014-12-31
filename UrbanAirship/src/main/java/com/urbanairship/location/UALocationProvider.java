@@ -43,7 +43,7 @@ import java.util.List;
  */
 class UALocationProvider {
 
-    private List<LocationAdapter> adapters = new ArrayList<LocationAdapter>();
+    private List<LocationAdapter> adapters = new ArrayList<>();
     private LocationAdapter connectedAdapter;
     private boolean isConnected = false;
 
@@ -70,7 +70,7 @@ class UALocationProvider {
      * @param intent The intent to cancel.
      */
     public void cancelRequests(PendingIntent intent) {
-        Logger.debug("Canceling location requests.");
+        Logger.verbose("UALocationProvider - Canceling location requests.");
 
         /*
          * Need to cancel requests on all providers regardless of the current
@@ -78,7 +78,7 @@ class UALocationProvider {
          * and there is no way to determine what provider was used previously.
          */
         for (LocationAdapter adapter : adapters) {
-            Logger.verbose("Canceling location requests for adapter: " + adapter);
+            Logger.verbose("UALocationProvider - Canceling location requests for adapter: " + adapter);
             if (adapter == connectedAdapter) {
                 adapter.cancelLocationUpdates(intent);
             } else if (adapter.connect()) {
@@ -101,11 +101,11 @@ class UALocationProvider {
         }
 
         if (connectedAdapter == null) {
-            Logger.info("Ignoring request, connected adapter unavailable.");
+            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
             return;
         }
 
-        Logger.debug("Requesting location updates: " + options);
+        Logger.verbose("UALocationProvider - Requesting location updates: " + options);
         connectedAdapter.requestLocationUpdates(options, intent);
     }
 
@@ -122,11 +122,11 @@ class UALocationProvider {
         }
 
         if (connectedAdapter == null) {
-            Logger.info("Ignoring request, connected adapter unavailable.");
+            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
             return null;
         }
 
-        Logger.debug("Requesting single location update: " + options);
+        Logger.verbose("UALocationProvider - Requesting single location update: " + options);
         return connectedAdapter.requestSingleLocation(options);
     }
 
@@ -138,16 +138,14 @@ class UALocationProvider {
             return;
         }
 
-        Logger.debug("Connecting to location provider.");
-
         for (LocationAdapter adapter : adapters) {
-            Logger.verbose("Attempting to connect to location adapter: " + adapter);
+            Logger.verbose("UALocationProvider - Attempting to connect to location adapter: " + adapter);
             if (adapter.connect()) {
-                Logger.verbose("Connected to location adapter: " + adapter);
+                Logger.verbose("UALocationProvider - Connected to location adapter: " + adapter);
                 connectedAdapter = adapter;
                 break;
             } else {
-                Logger.verbose("Failed to connect to location adapter: " + adapter);
+                Logger.verbose("UALocationProvider - Failed to connect to location adapter: " + adapter);
             }
         }
 
@@ -162,7 +160,7 @@ class UALocationProvider {
             return;
         }
 
-        Logger.debug("Disconnecting from location provider.");
+        Logger.verbose("UALocationProvider - Disconnecting from location provider.");
 
         if (connectedAdapter != null) {
             connectedAdapter.disconnect();

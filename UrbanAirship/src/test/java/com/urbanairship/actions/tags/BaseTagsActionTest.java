@@ -77,7 +77,7 @@ public class BaseTagsActionTest {
         args = new ActionArguments(Situation.MANUAL_INVOCATION, "[tag1,tag2,tag3]");
         assertTrue("JSON string of tags is an acceptable argument", action.acceptsArguments(args));
 
-        args = new ActionArguments(Situation.MANUAL_INVOCATION, new Integer(1));
+        args = new ActionArguments(Situation.MANUAL_INVOCATION, 1);
         assertFalse("Integer object is invalid arguments", action.acceptsArguments(args));
 
         args = new ActionArguments(Situation.MANUAL_INVOCATION, null);
@@ -111,7 +111,7 @@ public class BaseTagsActionTest {
         assertTrue(tags.contains("tag2"));
         assertTrue(tags.contains("tag3"));
 
-        ActionArguments badArgs = new ActionArguments(null, new Integer(1));
+        ActionArguments badArgs = new ActionArguments(null, 1);
         assertNull(action.getTags(badArgs));
 
         ActionArguments nullArgs = new ActionArguments(null, null);

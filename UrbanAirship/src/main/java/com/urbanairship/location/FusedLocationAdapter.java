@@ -36,7 +36,7 @@ class FusedLocationAdapter implements LocationAdapter {
     @Override
     public PendingResult<Location> requestSingleLocation(LocationRequestOptions options) {
         if (client == null || !client.isConnected()) {
-            Logger.debug("Fused location adapter is not connected. Unable to request single location.");
+            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
             return null;
         }
         return new SingleLocationRequest(options);
@@ -45,22 +45,22 @@ class FusedLocationAdapter implements LocationAdapter {
     @Override
     public void cancelLocationUpdates(PendingIntent intent) {
         if (client == null || !client.isConnected()) {
-            Logger.debug("Fused location adapter is not connected. Unable to cancel location updates.");
+            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to cancel location updates.");
             return;
         }
 
-        Logger.verbose("Fused location canceling updates.");
+        Logger.verbose("FusedLocationAdapter - Canceling updates.");
         LocationServices.FusedLocationApi.removeLocationUpdates(client, intent);
     }
 
     @Override
     public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent) {
         if (client == null || !client.isConnected()) {
-            Logger.debug("Fused location adapter is not connected. Unable to request location updates.");
+            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
             return;
         }
 
-        Logger.verbose("Fused location requesting updates.");
+        Logger.verbose("FusedLocationAdapter - Requesting updates.");
         LocationRequest locationRequest = createLocationRequest(options);
         LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, intent);
     }
@@ -72,12 +72,12 @@ class FusedLocationAdapter implements LocationAdapter {
         try {
             int playServicesStatus = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
-                Logger.debug("Google Play services is currently unavailable, unable to connect for fused location.");
+                Logger.debug("FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location.");
                 return false;
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.debug("Google Play services is currently unavailable, unable to connect for fused location. " + e.getMessage());
+            Logger.debug("FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location. " + e.getMessage());
             return false;
         }
 
@@ -86,19 +86,19 @@ class FusedLocationAdapter implements LocationAdapter {
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle bundle) {
-                        Logger.verbose("Google Play services connected for fused location.");
+                        Logger.verbose("FusedLocationAdapter - Google Play services connected for fused location.");
                         semaphore.release();
                     }
 
                     @Override
                     public void onConnectionSuspended(int i) {
-                        Logger.verbose("Google Play services connection suspended for fused location.");
+                        Logger.verbose("FusedLocationAdapter - Google Play services connection suspended for fused location.");
                     }
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(ConnectionResult connectionResult) {
-                        Logger.verbose("Google Play services failed to connect for fused location.");
+                        Logger.verbose("FusedLocationAdapter - Google Play services failed to connect for fused location.");
                         semaphore.release();
                     }
                 })
@@ -109,7 +109,7 @@ class FusedLocationAdapter implements LocationAdapter {
         try {
             semaphore.acquire();
         } catch (InterruptedException ex) {
-            Logger.error("Exception while connecting to fused location", ex);
+            Logger.error("FusedLocationAdapter - Exception while connecting to fused location", ex);
             client.disconnect();
             return false;
         }
@@ -180,13 +180,13 @@ class FusedLocationAdapter implements LocationAdapter {
                 }
             };
 
-            Logger.verbose("Fused location starting single location request.");
+            Logger.verbose("FusedLocationAdapter - Starting single location request.");
             LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, fusedLocationListener, Looper.myLooper());
         }
 
         @Override
         protected void onCancel() {
-            Logger.verbose("Fused location canceling single location request.");
+            Logger.verbose("FusedLocationAdapter - Canceling single location request.");
             LocationServices.FusedLocationApi.removeLocationUpdates(client, fusedLocationListener);
         }
     }

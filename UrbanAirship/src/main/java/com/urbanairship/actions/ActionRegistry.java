@@ -49,7 +49,7 @@ public final class ActionRegistry {
 
     private final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
 
-    private Map<String, Entry> actionMap = new HashMap<String, Entry>();
+    private final Map<String, Entry> actionMap = new HashMap<>();
 
     private static ActionRegistry instance = new ActionRegistry();
 
@@ -140,7 +140,7 @@ public final class ActionRegistry {
      */
     public Set<Entry> getEntries() {
         synchronized (actionMap) {
-            return new HashSet<Entry>(actionMap.values());
+            return new HashSet<>(actionMap.values());
         }
     }
 
@@ -233,11 +233,11 @@ public final class ActionRegistry {
      * An entry in the action registry.
      */
     public final static class Entry {
-        private List<String> names;
+        private final List<String> names;
         private Action defaultAction;
         private Predicate<ActionArguments> predicate;
 
-        private Map<Situation, Action> situationOverrides = new ConcurrentHashMap<Situation, Action>();
+        private Map<Situation, Action> situationOverrides = new ConcurrentHashMap<>();
 
         /**
          * Entry constructor
@@ -247,7 +247,7 @@ public final class ActionRegistry {
          */
         private Entry(Action action, String[] names) {
             this.defaultAction = action;
-            this.names = new ArrayList<String>(Arrays.asList(names));
+            this.names = new ArrayList<>(Arrays.asList(names));
         }
 
         /**
@@ -333,7 +333,7 @@ public final class ActionRegistry {
          */
         public List<String> getNames() {
             synchronized (names) {
-                return new ArrayList<String>(names);
+                return new ArrayList<>(names);
             }
         }
 

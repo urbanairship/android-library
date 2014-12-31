@@ -109,13 +109,14 @@ public class RichPushUpdateService extends IntentService {
         }
 
         String action = intent.getAction();
+        Logger.verbose("RichPushUpdateService - Received intent: " + action);
+
         final ResultReceiver receiver = intent.getParcelableExtra(EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        Logger.verbose("Starting RichPushUpdateService with action " + action);
 
         if (ACTION_RICH_PUSH_MESSAGES_UPDATE.equals(action)) {
             //note - this should probably send an error result back
             if (!RichPushUser.isCreated()) {
-                Logger.debug("The Rich Push user has not been created, canceling messages update");
+                Logger.debug("RichPushUpdateService - User has not been created, canceling messages update");
                 respond(receiver, false);
             } else {
                 messagesUpdate(receiver);
@@ -228,7 +229,7 @@ public class RichPushUpdateService extends IntentService {
      */
     private boolean updateUser() {
         if (UAStringUtil.isEmpty(UAirship.shared().getPushManager().getChannelId())) {
-            Logger.debug("No Channel. Skipping Rich Push user update.");
+            Logger.debug("RichPushUpdateService - No Channel. Skipping Rich Push user update.");
             return false;
         }
 
@@ -312,7 +313,7 @@ public class RichPushUpdateService extends IntentService {
         Set<String> idsToDelete = getMessageIdsFromCursor(resolver.getDeletedMessages());
 
         if (idsToDelete != null && idsToDelete.size() > 0) {
-            Logger.verbose("Found " + idsToDelete.size() + " messages to delete.");
+            Logger.verbose("RichPushUpdateService - Found " + idsToDelete.size() + " messages to delete.");
 
             // Note: If we can't delete the messages on the server, leave them untouched
             // and we'll get them next time.
@@ -329,7 +330,7 @@ public class RichPushUpdateService extends IntentService {
         Set<String> idsToUpdate = getMessageIdsFromCursor(resolver.getReadUpdatedMessages());
 
         if (idsToUpdate != null && idsToUpdate.size() > 0) {
-            Logger.verbose("Found " + idsToUpdate.size() + " messages to mark read.");
+            Logger.verbose("RichPushUpdateService - Found " + idsToUpdate.size() + " messages to mark read.");
 
             /*
             Note: If we can't mark the messages read on the server, leave them untouched
@@ -357,13 +358,15 @@ public class RichPushUpdateService extends IntentService {
         Logger.info("Refreshing inbox messages.");
 
         if (response == null) {
+            Logger.debug("RichPushUpdateService - Inbox message list request failed.");
             return false;
         }
 
-        Logger.debug("Inbox message list request received: " + response.getStatus());
+        Logger.debug("RichPushUpdateService - Inbox message list request received: " + response.getStatus());
 
         switch (response.getStatus()) {
             case HttpStatus.SC_NOT_MODIFIED:
+                Logger.info("Inbox messages already up-to-date. ");
                 return true;
 
             case HttpStatus.SC_OK:
@@ -428,8 +431,7 @@ public class RichPushUpdateService extends IntentService {
     }
 
     private String formatUrl(String urlFormat, String[] urlParams) {
-        StringBuilder builder = new StringBuilder(this.getHostUrl()).append(String.format(urlFormat, (Object[]) urlParams));
-        return builder.toString();
+        return this.getHostUrl() + String.format(urlFormat, (Object[]) urlParams);
     }
 
 
@@ -457,8 +459,8 @@ public class RichPushUpdateService extends IntentService {
      * @param serverMessages The messages from the server.
      */
     private void updateInbox(ContentValues[] serverMessages) {
-        List<ContentValues> messagesToInsert = new ArrayList<ContentValues>();
-        HashSet<String> serverMessageIds = new HashSet<String>();
+        List<ContentValues> messagesToInsert = new ArrayList<>();
+        HashSet<String> serverMessageIds = new HashSet<>();
 
         for (ContentValues message : serverMessages) {
             String messageId = message.getAsString("message_id");
@@ -492,7 +494,7 @@ public class RichPushUpdateService extends IntentService {
             return null;
         }
 
-        Set<String> ids = new HashSet<String>(cursor.getCount());
+        Set<String> ids = new HashSet<>(cursor.getCount());
 
         int messageIdIndex = -1;
         while (cursor.moveToNext()) {

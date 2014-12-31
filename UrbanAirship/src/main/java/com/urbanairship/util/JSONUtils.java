@@ -46,7 +46,7 @@ public class JSONUtils {
      * @return A map representing the JSONObject
      */
     public static Map<String, Object> convertToMap(JSONObject jsonObject) {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
 
         if (jsonObject == null || jsonObject.length() == 0) {
             return map;
@@ -87,7 +87,7 @@ public class JSONUtils {
      */
     public static List<Object> convertToList(JSONArray jsonArray) {
 
-        List<Object> objects = new ArrayList<Object>(jsonArray.length());
+        List<Object> objects = new ArrayList<>(jsonArray.length());
 
         for (int i = 0; i < jsonArray.length(); i++) {
             if (jsonArray.isNull(i)) {

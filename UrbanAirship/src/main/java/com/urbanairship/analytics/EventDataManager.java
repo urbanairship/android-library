@@ -99,7 +99,7 @@ class EventDataManager extends DataManager {
     @Override
     protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being upgraded
-        Logger.info("Upgrading analytics database from version " + oldVersion + " to "
+        Logger.debug("EventDataManager - Upgrading analytics database from version " + oldVersion + " to "
                 + newVersion + ", which will destroy all old data");
 
         // Kills the table and existing data
@@ -155,7 +155,7 @@ class EventDataManager extends DataManager {
      * @return Map of event id to event data
      */
     public Map<String, String> getEvents(int count) {
-        HashMap<String, String> events = new HashMap<String, String>(count);
+        HashMap<String, String> events = new HashMap<>(count);
 
         String[] columns = new String[] {
                 Events.COLUMN_NAME_EVENT_ID,
@@ -206,7 +206,7 @@ class EventDataManager extends DataManager {
      */
     public boolean deleteEvents(Set<String> eventIds) {
         if (eventIds == null || eventIds.size() == 0) {
-            Logger.verbose("Nothing to delete. Returning.");
+            Logger.verbose("EventDataManager - Nothing to delete. Returning.");
             return false;
         }
 
@@ -238,7 +238,7 @@ class EventDataManager extends DataManager {
         int deleted = delete(Events.TABLE_NAME, Events.COLUMN_NAME_SESSION_ID + " = ?", new String[] { sessionId });
 
         if (deleted > 0) {
-            Logger.info("Deleted " + deleted + " rows with session id " + sessionId);
+            Logger.debug("EventDataManager - Deleted " + deleted + " rows with session ID " + sessionId);
             return true;
         }
 
@@ -256,7 +256,7 @@ class EventDataManager extends DataManager {
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, Events.ASCENDING_SORT_ORDER, "0, 1");
 
         if (cursor == null) {
-            Logger.error("Unable to query database");
+            Logger.error("EventDataManager - Unable to query database.");
             return null;
         }
 
@@ -280,7 +280,7 @@ class EventDataManager extends DataManager {
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, null, null);
 
         if (cursor == null) {
-            Logger.error("Unable to query database");
+            Logger.error("EventDataManager - Unable to query events database.");
             return -1;
         }
 
@@ -304,7 +304,7 @@ class EventDataManager extends DataManager {
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, null, null);
 
         if (cursor == null) {
-            Logger.error("Unable to query database");
+            Logger.error("EventDataManager - Unable to query events database.");
             return -1;
         }
 

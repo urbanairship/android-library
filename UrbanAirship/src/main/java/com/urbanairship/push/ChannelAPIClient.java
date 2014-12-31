@@ -55,7 +55,7 @@ class ChannelAPIClient {
             this.creationURL = new URL(urlString);
         } catch (MalformedURLException e) {
             this.creationURL = null;
-            Logger.error("Invalid hostURL", e);
+            Logger.error("ChannelAPIClient - Invalid hostURL    ", e);
         }
     }
 
@@ -67,7 +67,7 @@ class ChannelAPIClient {
      */
     ChannelResponse createChannelWithPayload(ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.asJSON().toString();
-        Logger.verbose("Creating channel with payload: " + payload);
+        Logger.verbose("ChannelAPIClient - Creating channel with payload: " + payload);
         return requestWithPayload(creationURL, "POST", payload);
     }
 
@@ -80,12 +80,12 @@ class ChannelAPIClient {
      */
     ChannelResponse updateChannelWithPayload(URL channelLocation, ChannelRegistrationPayload channelPayload) {
         if (channelLocation == null) {
-            Logger.error("Unable to update a channel with a null channel location.");
+            Logger.error("ChannelAPIClient - Unable to update a channel with a null channel location.");
             return null;
         }
 
         String payload = channelPayload.asJSON().toString();
-        Logger.verbose("Updating channel with payload: " + payload);
+        Logger.verbose("ChannelAPIClient - Updating channel with payload: " + payload);
         return requestWithPayload(channelLocation, "PUT", payload);
     }
 
@@ -108,12 +108,11 @@ class ChannelAPIClient {
                                           .execute();
 
         if (response == null) {
-            Logger.error("Failed to receive channel response.");
+            Logger.debug("ChannelAPIClient - Failed to receive channel response.");
             return null;
         }
 
-        Logger.info("Received channel response: " + response);
-
+        Logger.verbose("ChannelAPIClient - Received channel response: " + response);
         return new ChannelResponse(response);
     }
 }

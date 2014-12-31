@@ -66,7 +66,7 @@ public class RemoveTagsAction extends BaseTagsAction {
     @Override
     public ActionResult perform(String actionName, ActionArguments arguments) {
         Set<String> tags = getTags(arguments);
-        Logger.info("Removing tags: " + tags);
+        Logger.info("RemoveTagsAction - Removing tags: " + tags);
 
         Set<String> currentTags = getPushManager().getTags();
         currentTags.removeAll(tags);

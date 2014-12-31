@@ -36,7 +36,7 @@ public abstract class Autopilot {
      */
     public static final String AUTOPILOT_MANIFEST_KEY = "com.urbanairship.autopilot";
 
-    private static final String TAG = "UA AP";
+    private static final String TAG = "Urban Airship Autopilot";
 
 
     /**
@@ -46,7 +46,7 @@ public abstract class Autopilot {
      *
      * @param application The application.
      */
-    public static final void automaticTakeOff(Application application) {
+    public static void automaticTakeOff(Application application) {
         if (UAirship.isFlying() || UAirship.isTakingOff()) {
             return;
         }
@@ -108,7 +108,7 @@ public abstract class Autopilot {
      *
      * @param context The application context.
      */
-    public static final void automaticTakeOff(Context context) {
+    public static void automaticTakeOff(Context context) {
         automaticTakeOff((Application) context.getApplicationContext());
     }
 
