@@ -45,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -199,20 +200,30 @@ public class UAJavascriptInterface {
                            final String encodedArguments,
                            final String callbackKey) {
 
-        ActionArguments actionArgs = decodeArguments(encodedArguments);
-        if (actionArgs == null) {
+        Object arg = decodeActionValue(encodedArguments);
+        if (arg == null) {
             Logger.info("Invalid encoded arguments: " + encodedArguments);
             runActionCallback("Unable to decode arguments payload", null, callbackKey);
             return;
         }
 
-        actionRunner.runAction(name, actionArgs, new ActionCompletionCallback() {
-            @Override
-            public void onFinish(ActionResult result) {
-                String errorMessage = createErrorMessageFromResult(name, result);
-                runActionCallback(errorMessage, result.getValue(), callbackKey);
-            }
-        });
+        Map<String, Object> metadata = null;
+        if (message != null) {
+            metadata = new HashMap<>();
+            metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+        }
+
+        actionRunner.run(name)
+                    .setMetadata(metadata)
+                    .setValue(arg)
+                    .setSituation(Situation.WEB_VIEW_INVOCATION)
+                    .execute(new ActionCompletionCallback() {
+                        @Override
+                        public void onFinish(ActionResult result) {
+                            String errorMessage = createErrorMessageFromResult(name, result);
+                            runActionCallback(errorMessage, result.getValue(), callbackKey);
+                        }
+                    });
     }
 
     /**
@@ -262,22 +273,16 @@ public class UAJavascriptInterface {
     }
 
     /**
-     * Decodes the JSON-encoded string representing the action arguments.
+     * Decodes the JSON-encoded string representing the action argument value.
      *
      * @param encodedArguments A JSON-encoded string representing the action arguments.
-     * @return An ActionArguments with Situation.WEB_VIEW_INVOCATION.
+     * @return The action argument's value.
      */
-    private ActionArguments decodeArguments(String encodedArguments) {
+    private Object decodeActionValue(String encodedArguments) {
         try {
             JSONObject argumentsJSON = new JSONObject(encodedArguments);
             Map<String, Object> argumentsMap = JSONUtils.convertToMap(argumentsJSON);
-
-            return new ActionArguments.Builder()
-                    .setValue(argumentsMap.get("value"))
-                    .setSituation(Situation.WEB_VIEW_INVOCATION)
-                    .addMetadata(ActionArguments.RICH_PUSH_METADATA, message)
-                    .create();
-
+            return argumentsMap.get("value");
         } catch (JSONException e) {
             return null;
         }

@@ -27,6 +27,7 @@ import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.push.PushManager;
 
@@ -66,8 +67,8 @@ public class AddTagsActionTest {
 
         when(pushManager.getTags()).thenReturn(existingTags);
 
-        ActionArguments args = new ActionArguments(Situation.WEB_VIEW_INVOCATION, "tagThree");
-        ActionResult result = action.perform(null, args);
+        ActionArguments args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "tagThree");
+        ActionResult result = action.perform(args);
 
         assertNull("Add tags action should return null", result.getValue());
 

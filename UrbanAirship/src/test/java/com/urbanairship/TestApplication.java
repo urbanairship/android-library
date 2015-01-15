@@ -3,12 +3,12 @@ package com.urbanairship;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
-import android.content.Context;
 import android.content.Intent;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.richpush.RichPushManager;
 
 import org.robolectric.Robolectric;
 import org.robolectric.TestLifecycleApplication;
@@ -106,5 +106,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setLocationManager(UALocationManager locationManager) {
         UAirship.shared().locationManager = locationManager;
+    }
+
+    public void setRichPushManager(RichPushManager richPushManager) {
+        UAirship.shared().richPushManager = richPushManager;
     }
 }

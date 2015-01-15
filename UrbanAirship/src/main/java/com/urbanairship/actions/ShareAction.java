@@ -85,7 +85,7 @@ public class ShareAction extends Action {
     }
 
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         final Context context = UAirship.getApplicationContext();
 
         Intent sharingIntent = new Intent(Intent.ACTION_SEND)

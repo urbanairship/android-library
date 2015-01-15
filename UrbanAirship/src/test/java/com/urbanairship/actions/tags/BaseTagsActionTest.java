@@ -28,6 +28,7 @@ package com.urbanairship.actions.tags;
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.Situation;
 
 import org.junit.Before;
@@ -52,7 +53,7 @@ public class BaseTagsActionTest {
     public void setup() {
         action = new BaseTagsAction() {
             @Override
-            public ActionResult perform(String actionName, ActionArguments arguments) {
+            public ActionResult perform(ActionArguments arguments) {
                 return null;
             }
         };
@@ -71,21 +72,21 @@ public class BaseTagsActionTest {
      */
     @Test
     public void testAcceptsArguments() {
-        ActionArguments args = new ActionArguments(Situation.MANUAL_INVOCATION, "tag1");
+        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "tag1");
         assertTrue("Single tag is an acceptable argument", action.acceptsArguments(args));
 
-        args = new ActionArguments(Situation.MANUAL_INVOCATION, "[tag1,tag2,tag3]");
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "[tag1,tag2,tag3]");
         assertTrue("JSON string of tags is an acceptable argument", action.acceptsArguments(args));
 
-        args = new ActionArguments(Situation.MANUAL_INVOCATION, 1);
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, 1);
         assertFalse("Integer object is invalid arguments", action.acceptsArguments(args));
 
-        args = new ActionArguments(Situation.MANUAL_INVOCATION, null);
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null);
         assertFalse(action.acceptsArguments(args));
 
         // Check every accepted situation
         for (Situation situation : acceptedSituations) {
-            args = new ActionArguments(situation, "tag1");
+            args = ActionTestUtils.createArgs(situation, "tag1");
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
@@ -96,13 +97,13 @@ public class BaseTagsActionTest {
      */
     @Test
     public void testGetTags() {
-        ActionArguments singleTagArg = new ActionArguments(Situation.PUSH_OPENED, "tag1");
+        ActionArguments singleTagArg = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "tag1");
         Set<String> tags = action.getTags(singleTagArg);
         assertEquals(1, tags.size());
         assertTrue(tags.contains("tag1"));
 
 
-        ActionArguments collectionArgs = new ActionArguments(Situation.PUSH_RECEIVED,
+        ActionArguments collectionArgs = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED,
                 Arrays.asList("tag1", "tag2", "tag3"));
 
         tags = action.getTags(collectionArgs);
@@ -111,10 +112,10 @@ public class BaseTagsActionTest {
         assertTrue(tags.contains("tag2"));
         assertTrue(tags.contains("tag3"));
 
-        ActionArguments badArgs = new ActionArguments(null, 1);
+        ActionArguments badArgs = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, 1);
         assertNull(action.getTags(badArgs));
 
-        ActionArguments nullArgs = new ActionArguments(null, null);
+        ActionArguments nullArgs = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, null);
         assertNull(action.getTags(nullArgs));
     }
 

@@ -37,7 +37,6 @@ public class TestAction extends Action {
     public boolean performCalled = false;
 
     public ActionArguments runArgs;
-    public String actionName;
 
     private boolean acceptsArguments = false;
 
@@ -51,20 +50,19 @@ public class TestAction extends Action {
     }
 
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
-        performCalled = true;
+    public ActionResult perform(ActionArguments arguments) {
+        this.performCalled = true;
+        this.runArgs = arguments;
         return result;
     }
 
     @Override
-    public void onStart(String actionName, ActionArguments arguments) {
+    public void onStart(ActionArguments arguments) {
         onStartCalled = true;
-        runArgs = arguments;
-        this.actionName = actionName;
     }
 
     @Override
-    public void onFinish(String actionName, ActionArguments arguments, ActionResult result) {
+    public void onFinish(ActionArguments arguments, ActionResult result) {
         onFinishCalled = true;
     }
 
@@ -73,3 +71,4 @@ public class TestAction extends Action {
         return acceptsArguments;
     }
 }
+

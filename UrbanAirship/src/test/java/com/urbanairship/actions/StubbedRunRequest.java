@@ -23,49 +23,42 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.actions.tags;
+package com.urbanairship.actions;
 
-import com.urbanairship.Logger;
-import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionResult;
-
-import java.util.Set;
+import java.util.Map;
 
 /**
- * An action that removes tags.
- * <p/>
- * Accepted situations: all
- * <p/>
- * Accepted argument value types: String for a single tag or Collection of Strings for multiple tags.
- * <p/>
- * Result value: null
- * <p/>
- * Default Registration Names: ^-t, remove_tags_action
- * <p/>
- * Default Registration Predicate: Rejects Situation.PUSH_RECEIVED
+ * Stubbed run request for testing. All methods are overridden to no-op.
  */
-public class RemoveTagsAction extends BaseTagsAction {
+public class StubbedRunRequest extends ActionRunner.RunRequest {
 
-    /**
-     * Default registry name
-     */
-    public static final String DEFAULT_REGISTRY_NAME = "remove_tags_action";
-
-    /**
-     * Default registry short name
-     */
-    public static final String DEFAULT_REGISTRY_SHORT_NAME = "^-t";
+    public StubbedRunRequest() {
+        super((String)null, null, null);
+    }
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
-        Set<String> tags = getTags(arguments);
-        Logger.info("RemoveTagsAction - Removing tags: " + tags);
+    public ActionRunner.RunRequest setValue(Object actionValue) {
+        return this;
+    }
 
-        Set<String> currentTags = getPushManager().getTags();
-        currentTags.removeAll(tags);
+    @Override
+    public ActionRunner.RunRequest setMetadata(Map<String, Object> metadata) {
+        return this;
+    }
 
-        getPushManager().setTags(currentTags);
+    @Override
+    public ActionRunner.RunRequest setSituation(Situation situation) {
+        return this;
+    }
 
+    @Override
+    public ActionResult executeSync() {
         return ActionResult.newEmptyResult();
     }
+
+    @Override
+    public void execute() { }
+
+    @Override
+    public void execute(final ActionCompletionCallback callback) { }
 }

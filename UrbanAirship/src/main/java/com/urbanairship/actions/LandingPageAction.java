@@ -94,15 +94,8 @@ public class LandingPageAction extends Action {
      */
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
-    /**
-     * Performs the landing page action.
-     *
-     * @param actionName The name of the action from the registry.
-     * @param arguments The action arguments.
-     * @return The result of the action.
-     */
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
 
         switch (arguments.getSituation()) {

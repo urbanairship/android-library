@@ -27,6 +27,7 @@ import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
+import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.push.PushManager;
 
@@ -70,8 +71,8 @@ public class RemoveTagsActionTest {
 
 
         // Remove tagOne and tagThree
-        ActionArguments args = new ActionArguments(Situation.PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
-        ActionResult result = action.perform(null, args);
+        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
+        ActionResult result = action.perform(args);
 
         assertNull("Remove tags action should return null", result.getValue());
 

@@ -25,25 +25,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import com.urbanairship.Logger;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Container for the argument data passed to an {@link com.urbanairship.actions.Action}.
- * <p/>
- * Actions that are invoked from a push notification or from Javascript will have
- * its value parsed from JSON with the following rules: JSON Objects as a Map,
- * JSON Arrays as a List, "null" values as <code>null</code>, primitive types (boolean, long,
- * double, etc.) as primitive type object wrappers (Boolean, Long, Double, Integer, etc.),
- * and Everything else as a String.
  */
-public class ActionArguments {
+public final class ActionArguments {
 
     /**
-     * Metadata attached to action arguments when launching from the JavaScript interface with
-     * an associated RichPushMessage. The value is stored as a {@link com.urbanairship.richpush.RichPushMessage}.
+     * Metadata when running an action from the JavaScript interface with an associated RichPushMessage.
+     * The value is stored as a {@link com.urbanairship.richpush.RichPushMessage}.
      */
     public static final String RICH_PUSH_METADATA = "com.urbanairship.RICH_PUSH_METADATA";
 
@@ -53,34 +45,27 @@ public class ActionArguments {
      */
     public static final String PUSH_MESSAGE_METADATA = "com.urbanairship.PUSH_MESSAGE";
 
+    /**
+     * Metadata attached to action arguments when triggering an action from by name.
+     * The value is stored as a String.
+     */
+    public static final String REGISTRY_ACTION_NAME_METADATA = "com.urbanairship.REGISTRY_ACTION_NAME";
+
     private final Situation situation;
-    private Object value;
-    private Map<String, Object> metadata;
+    private final Object value;
+    private final Map<String, Object> metadata;
 
     /**
-     * ActionArguments constructor.
+     * Constructs ActionArguments.
      *
-     * @param situation The situation the action is in.
-     * @param value The argument value.
+     * @param situation The situation. Defaults to {@link Situation#MANUAL_INVOCATION} if null.
+     * @param value The argument's value.
+     * @param metadata The argument's metadata.
      */
-    public ActionArguments(Situation situation, Object value) {
-        this(situation, value, null);
-    }
-
-    /**
-     * ActionArguments constructor.
-     *
-     * @param situation The situation the action is in.
-     * @param value The argument value.
-     * @param metadata Optional meta data for the arguments.
-     */
-    private ActionArguments(Situation situation, Object value, Map<String, Object> metadata) {
+    public ActionArguments(Situation situation, Object value, Map<String, Object> metadata) {
+        this.situation = situation == null ? Situation.MANUAL_INVOCATION : situation;
         this.value = value;
-        this.situation = situation;
-
-        if (metadata != null) {
-            this.metadata = new HashMap<>(metadata);
-        }
+        this.metadata = metadata == null ? new HashMap<String, Object>() : metadata;
     }
 
     /**
@@ -93,34 +78,6 @@ public class ActionArguments {
     }
 
     /**
-     * Gets metadata for the action arguments. Metadata
-     * provides more information about the environment of which
-     * the action was triggered from.
-     *
-     * @param key The key.
-     * @return An object or null.
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T getMetadata(String key) {
-        Object value = null;
-
-        if (metadata != null) {
-            value = metadata.get(key);
-        }
-
-        if (value == null) {
-            return null;
-        }
-
-        try {
-            return (T) value;
-        } catch (ClassCastException e) {
-            Logger.error("Unable to cast action argument value: " + value, e);
-            return null;
-        }
-    }
-
-    /**
      * Retrieves the situation.
      *
      * @return The situation.
@@ -129,77 +86,18 @@ public class ActionArguments {
         return situation;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("ActionArguments { situation: ")
-          .append(situation)
-          .append(", value: ")
-          .append(value)
-          .append(", metadata: {");
-
-        if (metadata != null) {
-            for (String key : metadata.keySet()) {
-                sb.append(" ")
-                  .append(key)
-                  .append(": ")
-                  .append(metadata.get(key));
-            }
-        }
-
-        sb.append(" } }");
-        return sb.toString();
+    /**
+     * Gets the metadata for the action arguments. Metadata provides additional information about the
+     * calling environment.
+     *
+     * @return The arguments metadata.
+     */
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    /**
-     * Action argument builder.
-     */
-    public static class Builder {
-        private Situation situation = Situation.MANUAL_INVOCATION;
-        private Map<String, Object> metadata = new HashMap<>();
-        private Object value;
-
-        /**
-         * Sets the action argument's situation.
-         *
-         * @param situation The situation the action is in.
-         * @return The builder.
-         */
-        public Builder setSituation(Situation situation) {
-            this.situation = situation;
-            return this;
-        }
-
-        /**
-         * Sets the action argument's value.
-         *
-         * @param value The argument value.
-         * @return The builder.
-         */
-        public Builder setValue(Object value) {
-            this.value = value;
-            return this;
-        }
-
-        /**
-         * Adds metadata to action argument.
-         *
-         * @param key The meta data key.
-         * @param value The meta data value.
-         * @return The builder.
-         */
-        public Builder addMetadata(String key, Object value) {
-            metadata.put(key, value);
-            return this;
-        }
-
-        /**
-         * Creates the action argument.
-         *
-         * @return The action argument.
-         */
-        public ActionArguments create() {
-            return new ActionArguments(situation, value, metadata);
-        }
+    @Override
+    public String toString() {
+        return "ActionArguments { situation: " + situation + ", value: " + value + ", metadata: " + metadata + " }";
     }
 }

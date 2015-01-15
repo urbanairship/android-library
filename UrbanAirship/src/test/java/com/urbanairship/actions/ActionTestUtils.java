@@ -25,27 +25,33 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import org.mockito.ArgumentMatcher;
+import java.util.Map;
 
 /**
- * Matches an ActionArgument
+ * Utilities for writing action tests
  */
-public class ActionArgumentsMatcher extends ArgumentMatcher<ActionArguments> {
-    private final Situation situation;
-    private final Object value;
+public class ActionTestUtils {
 
-    public ActionArgumentsMatcher(Situation situation, Object value) {
-        this.situation = situation;
-        this.value = value;
+    /**
+     * Creates an ActionArgument.
+     * @param situation The situation.
+     * @param value The action value.
+     * @return ActionArguments that contain the situation and value.
+     */
+    public static ActionArguments createArgs(Situation situation, Object value) {
+        return createArgs(situation, value, null);
     }
 
-    @Override
-    public boolean matches(Object o) {
-        if (!(o instanceof ActionArguments)) {
-            return false;
-        }
-        ActionArguments args = (ActionArguments) o;
-        return situation == null ? args.getSituation() == null : situation.equals(args.getSituation()) &&
-                                                                         value == null ? args.getValue() == null : value.equals(args.getValue());
+
+    /**
+     * Creates an ActionArgument.
+     * @param situation The situation.
+     * @param value The action value.
+     * @param metadata The metadata.
+     * @return ActionArguments that contain the situation, value, and metadata.
+     */
+    public static ActionArguments createArgs(Situation situation, Object value, Map<String, Object> metadata) {
+        return new ActionArguments(situation, value, metadata);
     }
+
 }

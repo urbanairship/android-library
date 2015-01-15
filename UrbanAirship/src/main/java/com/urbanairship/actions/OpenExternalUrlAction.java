@@ -58,15 +58,8 @@ public class OpenExternalUrlAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^u";
 
-    /**
-     * Performs the open external URL action.
-     *
-     * @param actionName The name of the action from the registry.
-     * @param arguments The action arguments.
-     * @return The result of the action.
-     */
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue());
 
         Logger.info("Opening URI: " + uri);

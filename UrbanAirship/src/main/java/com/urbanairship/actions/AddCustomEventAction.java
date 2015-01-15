@@ -64,7 +64,7 @@ public class AddCustomEventAction extends Action {
 
 
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         Map map = (Map) arguments.getValue();
 
         // Parse the event values from the map
@@ -78,11 +78,12 @@ public class AddCustomEventAction extends Action {
                 .setEventValue(eventValue)
                 .setTransactionId(transactionId)
                 .setInteraction(interactionType, interactionId)
-                .setAttribution(arguments.<PushMessage>getMetadata(ActionArguments.PUSH_MESSAGE_METADATA));
+                .setAttribution((PushMessage) arguments.getMetadata().get(ActionArguments.PUSH_MESSAGE_METADATA));
 
         // Try to fill in the interaction if its not set
         if (interactionId == null && interactionType == null) {
-            RichPushMessage message = arguments.getMetadata(ActionArguments.RICH_PUSH_METADATA);
+            RichPushMessage message = (RichPushMessage) arguments.getMetadata().get(ActionArguments.RICH_PUSH_METADATA);
+
             if (message != null) {
                 eventBuilder.setInteraction(message);
             }

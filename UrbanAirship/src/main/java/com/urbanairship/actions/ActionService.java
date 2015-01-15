@@ -41,6 +41,7 @@ import com.urbanairship.util.UAStringUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -183,32 +184,34 @@ public class ActionService extends Service {
             return;
         }
 
+        Map<String, Object> metadata = null;
+        if (message != null) {
+            metadata = new HashMap<>();
+            metadata.put(ActionArguments.PUSH_MESSAGE_METADATA, message);
+        }
+
         Map<String, Object> actionsMap = JSONUtils.convertToMap(actionsJSON);
 
         for (String actionName : actionsMap.keySet()) {
-
-            ActionArguments arguments = new ActionArguments.Builder()
-                    .setSituation(situation)
-                    .setValue(actionsMap.get(actionName))
-                    .addMetadata(ActionArguments.PUSH_MESSAGE_METADATA, message)
-                    .create();
-
             runningActions++;
 
             // ActionCompletionCallback posts the runnable on the callers handle,
             // so we don't have to worry about any threading issues.  onFinish
             // can safely call stopSelf without worrying about any actions about to
             // run.
-            runner.runAction(actionName, arguments, new ActionCompletionCallback() {
-
-                @Override
-                public void onFinish(ActionResult result) {
-                    runningActions--;
-                    if (runningActions == 0) {
-                        stopSelf(lastStartId);
-                    }
-                }
-            });
+            runner.run(actionName)
+                    .setMetadata(metadata)
+                    .setValue(actionsMap.get(actionName))
+                    .setSituation(situation)
+                    .execute(new ActionCompletionCallback() {
+                        @Override
+                        public void onFinish(ActionResult result) {
+                            runningActions--;
+                            if (runningActions == 0) {
+                                stopSelf(lastStartId);
+                            }
+                        }
+                    });
         }
     }
 }

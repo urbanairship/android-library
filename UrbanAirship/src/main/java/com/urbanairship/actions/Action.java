@@ -68,25 +68,23 @@ public abstract class Action {
      * Performs the action, with pre/post execution calls,
      * if it accepts the provided arguments.
      *
-     * @param actionName The name of the action from the registry.
      * @param arguments The action arguments.
      * @return The result of the action.
      */
-    final ActionResult run(String actionName, ActionArguments arguments) {
-
+    final ActionResult run(ActionArguments arguments) {
         try {
             if (arguments == null || !acceptsArguments(arguments)) {
                 Logger.debug("Action " + this + " is unable to accept arguments: " + arguments);
                 return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
             }
 
-            Logger.info("Running action: " + this + " name: " + actionName + " arguments: " + arguments);
-            onStart(actionName, arguments);
-            ActionResult result = perform(actionName, arguments);
+            Logger.info("Running action: " + this + " arguments: " + arguments);
+            onStart(arguments);
+            ActionResult result = perform(arguments);
             if (result == null) {
                 result = ActionResult.newEmptyResult();
             }
-            onFinish(actionName, arguments, result);
+            onFinish(arguments, result);
             return result;
         } catch (Exception e) {
             Logger.error("Failed to run action " + this, e);
@@ -97,45 +95,39 @@ public abstract class Action {
     /**
      * Called before an action is performed to determine if the
      * the action can accept the arguments.
-     * <p/>
-     * The default implementation accepts any non null action arguments with a non
-     * null situation.
      *
      * @param arguments The action arguments.
      * @return <code>true</code> if the action can perform with the arguments,
      * otherwise <code>false</code>.
      */
     public boolean acceptsArguments(ActionArguments arguments) {
-        return arguments != null && arguments.getSituation() != null;
+        return true;
     }
 
     /**
      * Called before an action is performed.
      *
-     * @param actionName The name of the action from the registry.
      * @param arguments The action arguments.
      */
-    public void onStart(String actionName, ActionArguments arguments) {
+    public void onStart(ActionArguments arguments) {
 
     }
 
     /**
      * Performs the action.
      *
-     * @param actionName The name of the action from the registry.
      * @param arguments The action arguments.
      * @return The result of the action.
      */
-    public abstract ActionResult perform(String actionName, ActionArguments arguments);
+    public abstract ActionResult perform(ActionArguments arguments);
 
     /**
      * Called after the action performs.
      *
-     * @param actionName The name of the action from the registry.
      * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(String actionName, ActionArguments arguments, ActionResult result) {
+    public void onFinish(ActionArguments arguments, ActionResult result) {
 
     }
 
@@ -177,6 +169,7 @@ public abstract class Action {
 
         return result;
     }
+
 
     /**
      * Wraps the result code and data from starting an activity

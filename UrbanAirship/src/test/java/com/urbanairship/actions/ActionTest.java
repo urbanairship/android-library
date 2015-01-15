@@ -36,6 +36,9 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -51,37 +54,44 @@ public class ActionTest {
      */
     @Test
     public void testRun() {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("metadata_key", "metadata_value");
+
         final ActionResult expectedResult = ActionResult.newResult("result");
-        final String originalName = "ACTION!";
-        final ActionArguments originalArguments = new ActionArguments(Situation.MANUAL_INVOCATION, "value");
+        final ActionArguments originalArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", metadata);
+
 
         // Create a test action that verifies the result, handle, and arguments
         // in each method
         TestAction action = new TestAction(true, expectedResult) {
             @Override
-            public ActionResult perform(String name, ActionArguments arguments) {
-                assertEquals("Action name is unexpected", name, originalName);
-
+            public ActionResult perform(ActionArguments arguments) {
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);
 
-                return super.perform(name, arguments);
+                assertEquals("Bundle does not contain the passed in metadata", "metadata_value",
+                        arguments.getMetadata().get("metadata_key"));
+
+                return super.perform(arguments);
             }
 
             @Override
-            public void onStart(String name, ActionArguments arguments) {
-                super.onStart(name, arguments);
-                assertEquals("Action name is unexpected", name, originalName);
+            public void onStart(ActionArguments arguments) {
+                super.onStart(arguments);
+
+                assertEquals("Bundle does not contain the passed in metadata",
+                        arguments.getMetadata().get("metadata_key"), "metadata_value");
 
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);
             }
 
             @Override
-            public void onFinish(String name, ActionArguments arguments, ActionResult result) {
-                super.onFinish(name, arguments, result);
+            public void onFinish(ActionArguments arguments, ActionResult result) {
+                super.onFinish(arguments, result);
 
-                assertEquals("Action name is unexpected", name, originalName);
+                assertEquals("Bundle does not contain the passed in metadata",
+                        arguments.getMetadata().get("metadata_key"), "metadata_value");
 
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);
@@ -92,7 +102,8 @@ public class ActionTest {
         };
 
         // Verify the result is passed back properly
-        ActionResult results = action.run(originalName, originalArguments);
+        ActionResult results = action.run(originalArguments);
+
         assertEquals("Action result is unexpected", expectedResult, results);
         assertEquals("Result should have COMPLETED status",
                 ActionResult.Status.COMPLETED, expectedResult.getStatus());
@@ -112,8 +123,7 @@ public class ActionTest {
         ActionResult performResult = ActionResult.newResult("result");
         TestAction action = new TestAction(false, performResult);
 
-        ActionResult badArgsResult = action.run(null,
-                new ActionArguments(Situation.MANUAL_INVOCATION, "value"));
+        ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value"));
 
         assertNull("Does not accept arguments should return a null result value", badArgsResult.getValue());
 
@@ -135,20 +145,20 @@ public class ActionTest {
      */
     @Test
     public void testRunPerformException() {
-        ActionArguments args = new ActionArguments(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
         ActionResult performResult = ActionResult.newResult("result");
 
         final IllegalStateException exception = new IllegalStateException("oh no!");
 
         TestAction action = new TestAction(true, performResult) {
             @Override
-            public ActionResult perform(String name, ActionArguments arguments) {
-                super.perform(name, arguments);
+            public ActionResult perform(ActionArguments arguments) {
+                super.perform(arguments);
                 throw exception;
             }
         };
 
-        ActionResult result = action.run(null, args);
+        ActionResult result = action.run(args);
 
         assertEquals("Result should pass back exception as the value", exception, result.getException());
         assertNull("Result value should be null", result.getValue());
@@ -165,11 +175,11 @@ public class ActionTest {
      */
     @Test
     public void testRunPerformNullResult() {
-        ActionArguments args = new ActionArguments(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
 
         TestAction action = new TestAction(true, null);
 
-        ActionResult result = action.run(null, args);
+        ActionResult result = action.run(args);
         assertNotNull("Result should never be null", result);
         assertNull("Result should never be null", result.getValue());
         assertEquals("Result should have the COMPLETED status",
@@ -189,14 +199,14 @@ public class ActionTest {
         final Intent activityIntent = new Intent();
         final TestAction action = new TestAction() {
             @Override
-            public ActionResult perform(String actionName, ActionArguments arguments) {
+            public ActionResult perform(ActionArguments arguments) {
                 Action.ActivityResult result = startActivityForResult(activityIntent);
 
                 // Verify the result and data
                 assertEquals("Unexpected result code", expectedCode, result.getResultCode());
                 assertEquals("Unexpected result data", expectedData, result.getIntent());
 
-                return super.perform(actionName, arguments);
+                return super.perform(arguments);
             }
         };
 
@@ -204,7 +214,7 @@ public class ActionTest {
         // for result blocks
         Thread actionThread = new Thread(new Runnable() {
             public void run() {
-                action.run(null, new ActionArguments(Situation.MANUAL_INVOCATION, "arg"));
+                action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "arg"));
             }
         });
         actionThread.start();

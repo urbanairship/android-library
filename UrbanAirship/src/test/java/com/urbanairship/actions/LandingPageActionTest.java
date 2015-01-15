@@ -129,9 +129,9 @@ public class LandingPageActionTest {
         };
 
         for (Situation situation : situations) {
-            ActionArguments args = new ActionArguments(situation, value);
+            ActionArguments args = ActionTestUtils.createArgs(situation, value);
 
-            ActionResult result = action.perform("name", args);
+            ActionResult result = action.perform(args);
             assertNull("Should return null for situation " + situation, result.getValue());
 
             Intent intent = application.getNextStartedActivity();
@@ -157,7 +157,7 @@ public class LandingPageActionTest {
         };
 
         for (Situation situation : situations) {
-            ActionArguments args = new ActionArguments(situation, value);
+            ActionArguments args = ActionTestUtils.createArgs(situation, value);
             if (shouldAccept) {
                 assertTrue("Should accept arguments in situation " + situation,
                         action.acceptsArguments(args));
