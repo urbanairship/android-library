@@ -84,6 +84,7 @@ public class NamedUser {
      * Forces a named user update.
      */
     public void forceUpdate() {
+        Logger.debug("NamedUser - force named user update.");
         updateChangeToken();
         startUpdateService();
     }
@@ -101,7 +102,7 @@ public class NamedUser {
         if (namedUserId != null) {
             id = namedUserId.trim();
             if (UAStringUtil.isEmpty(id) || id.length() > MAX_NAMED_USER_ID_LENGTH) {
-                Logger.error("NamedUser - Failed to set named user ID. " +
+                Logger.error("Failed to set named user ID. " +
                         "The named user ID must be greater than 0 and less than 129 characters.");
                 return;
             }
@@ -110,11 +111,11 @@ public class NamedUser {
         // check if the newly trimmed ID matches with currently stored ID
         boolean isEqual = getId() == null ? id == null : getId().equals(id);
 
-        // if the IDs don't match or ID is set to null and current token is null, then update.
+        // if the IDs don't match or ID is set to null and current token is null (re-install case), then update.
         if (!isEqual || (getId() == null && getCurrentToken() == null)) {
             preferenceDataStore.put(CURRENT_NAMED_USER_ID_KEY, id);
 
-            // Force update by changing the token.
+            // Just update the change token.
             updateChangeToken();
 
             Logger.debug("NamedUser - Start service to update named user.");

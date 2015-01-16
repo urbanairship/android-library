@@ -507,7 +507,7 @@ public class PushService extends IntentService {
         }
 
         if (UAStringUtil.isEmpty(pushManager.getChannelId())) {
-            Logger.info("PushService - The channel ID does not exist. Will retry when channel ID is available.");
+            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
             return;
         }
 
@@ -524,22 +524,22 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
 
-            Logger.error("PushService - Update named user failed, will retry.");
+            Logger.error("Update named user failed, will retry.");
             namedUserBackOff = calculateNextBackOff(namedUserBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
         } else if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-            Logger.info("PushService - Update named user succeeded with status: " + response.getStatus());
+            Logger.info("Update named user succeeded with status: " + response.getStatus());
             // When currentId is null, the disassociate request succeeded so we set the associatedId
             // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
             // the associate request succeeded so we set the associatedId.
             namedUser.setLastUpdatedToken(currentToken);
             namedUserBackOff = 0;
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.error("PushService - Update named user failed with status: " + response.getStatus() +
+            Logger.error("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
             namedUserBackOff = 0;
         } else {
-            Logger.error("PushService - Update named user failed with status: " + response.getStatus());
+            Logger.error("Update named user failed with status: " + response.getStatus());
             namedUserBackOff = 0;
         }
     }
