@@ -22,14 +22,15 @@ import static junit.framework.Assert.assertTrue;
 public class BaseIntentReceiverTest {
 
     Context context;
-    Bundle pushBundle;
+    PushMessage pushMessage;
 
     @Before
     public void setup() {
         context = TestApplication.getApplication();
 
-        pushBundle = new Bundle();
-        pushBundle.putString(PushMessage.EXTRA_ALERT, "ALERT!");
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ALERT, "ALERT!");
+        pushMessage = new PushMessage(bundle);
     }
 
     /**
@@ -101,13 +102,13 @@ public class BaseIntentReceiverTest {
                 super.onPushReceived(context, message, notificationId);
 
                 assertNotNull(context);
-                assertEquals(pushBundle, message.getPushBundle());
+                assertEquals(pushMessage, message);
                 assertEquals(notificationId, 101);
             }
         };
 
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
 
         receiver.onReceive(context, intent);
@@ -128,12 +129,12 @@ public class BaseIntentReceiverTest {
                 super.onBackgroundPushReceived(context, message);
 
                 assertNotNull(context);
-                assertEquals(pushBundle, message.getPushBundle());
+                assertEquals(pushMessage, message);
             }
         };
 
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle);
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage);
 
         receiver.onReceive(context, intent);
 
@@ -167,7 +168,7 @@ public class BaseIntentReceiverTest {
                 super.onNotificationOpened(context, message, notificationId);
 
                 assertNotNull(context);
-                assertEquals(pushBundle, message.getPushBundle());
+                assertEquals(pushMessage, message);
                 assertEquals(notificationId, 100);
 
                 return true;
@@ -175,7 +176,7 @@ public class BaseIntentReceiverTest {
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100);
 
         receiver.onReceive(context, intent);
@@ -195,7 +196,7 @@ public class BaseIntentReceiverTest {
                 super.onNotificationActionOpened(context, message, notificationId, buttonId, isForeground);
 
                 assertNotNull(context);
-                assertEquals(pushBundle, message.getPushBundle());
+                assertEquals(pushMessage, message);
                 assertEquals(notificationId, 100);
                 assertEquals(buttonId, "button id");
                 assertTrue(isForeground);
@@ -205,7 +206,7 @@ public class BaseIntentReceiverTest {
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "button id")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
@@ -241,13 +242,13 @@ public class BaseIntentReceiverTest {
                 super.onNotificationDismissed(context, message, notificationId);
 
                 assertNotNull(context);
-                assertEquals(pushBundle, message.getPushBundle());
+                assertEquals(pushMessage, message);
                 assertEquals(notificationId, 101);
             }
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_DISMISSED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
 
         receiver.onReceive(context, intent);

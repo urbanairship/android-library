@@ -127,7 +127,7 @@ public class PushManagerTest {
 
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push bundle should match.", pushMessage.getPushBundle(), intent.getExtras().get(PushManager.EXTRA_PUSH_BUNDLE));
+        assertEquals("The push messsage should match.", pushMessage, intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
     }
 
@@ -147,9 +147,9 @@ public class PushManagerTest {
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size()-1);
         Bundle extras = i.getExtras();
-        Bundle pushBundle = extras.getBundle(PushManager.EXTRA_PUSH_BUNDLE);
+        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", pushMessage.getCanonicalPushId(), pushBundle.getString(PushMessage.EXTRA_PUSH_ID));
+        assertEquals("Push ID should equal pushMessage ID", pushMessage.getCanonicalPushId(), push.getCanonicalPushId());
         assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
     }
 
@@ -170,9 +170,9 @@ public class PushManagerTest {
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size()-1);
         Bundle extras = i.getExtras();
-        Bundle pushBundle = extras.getBundle(PushManager.EXTRA_PUSH_BUNDLE);
+        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", backgroundMessage.getCanonicalPushId(), pushBundle.getString(PushMessage.EXTRA_PUSH_ID));
+        assertEquals("Push ID should equal pushMessage ID", backgroundMessage.getCanonicalPushId(), push.getCanonicalPushId());
         assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
     }
 

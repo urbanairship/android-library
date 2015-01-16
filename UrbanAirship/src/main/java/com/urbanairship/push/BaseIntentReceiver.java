@@ -28,7 +28,6 @@ package com.urbanairship.push;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -103,14 +102,11 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param intent The push received intent.
      */
     private void handlePushReceived(Context context, Intent intent) {
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
-
-        if (pushBundle == null) {
-            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
-
-        PushMessage message = new PushMessage(pushBundle);
 
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_ID)) {
             int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
@@ -128,14 +124,13 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      */
     private void handlePushOpened(Context context, Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
 
-        if (pushBundle == null) {
-            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
-        PushMessage message = new PushMessage(pushBundle);
         boolean launchedActivity;
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID)) {
             String buttonId = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID);
@@ -177,15 +172,13 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param intent The notification dismissed intent.
      */
     private void handleDismissedIntent(Context context, Intent intent) {
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
-        if (pushBundle == null) {
-            Logger.error("BaseIntentReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
-
-        PushMessage message = new PushMessage(pushBundle);
 
         onNotificationDismissed(context, message, id);
     }

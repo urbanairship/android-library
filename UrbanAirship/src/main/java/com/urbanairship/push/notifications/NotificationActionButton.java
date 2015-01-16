@@ -138,7 +138,7 @@ public class NotificationActionButton {
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, id)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD, actionsPayload)
