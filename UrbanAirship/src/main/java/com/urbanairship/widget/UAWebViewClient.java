@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -213,10 +214,9 @@ public class UAWebViewClient extends WebViewClient {
             return;
         }
 
-        Map<String, Object> metadata = null;
+        Bundle metadata = new Bundle();
         if (message != null) {
-            metadata = new HashMap<>();
-            metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
 
         for (String actionName : arguments.keySet()) {

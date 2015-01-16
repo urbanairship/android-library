@@ -25,7 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import java.util.Map;
+import android.os.Bundle;
 
 /**
  * Utilities for writing action tests
@@ -50,7 +50,7 @@ public class ActionTestUtils {
      * @param metadata The metadata.
      * @return ActionArguments that contain the situation, value, and metadata.
      */
-    public static ActionArguments createArgs(Situation situation, Object value, Map<String, Object> metadata) {
+    public static ActionArguments createArgs(Situation situation, Object value, Bundle metadata) {
         return new ActionArguments(situation, value, metadata);
     }
 

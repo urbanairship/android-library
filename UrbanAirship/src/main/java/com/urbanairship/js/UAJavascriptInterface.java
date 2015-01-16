@@ -27,6 +27,7 @@ package com.urbanairship.js;
 
 import android.annotation.SuppressLint;
 import android.os.Build;
+import android.os.Bundle;
 import android.view.KeyEvent;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -45,7 +46,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -207,10 +207,9 @@ public class UAJavascriptInterface {
             return;
         }
 
-        Map<String, Object> metadata = null;
+        Bundle metadata = new Bundle();
         if (message != null) {
-            metadata = new HashMap<>();
-            metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
 
         actionRunner.run(name)

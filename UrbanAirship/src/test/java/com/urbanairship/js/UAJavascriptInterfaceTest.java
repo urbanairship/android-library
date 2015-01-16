@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.js;
 
 import android.os.Build;
+import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
@@ -49,7 +50,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.Date;
-import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -249,11 +249,11 @@ public class UAJavascriptInterfaceTest {
         verify(runRequest).execute(any(ActionCompletionCallback.class));
         verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
         verify(runRequest).setValue(true);
-        verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Map<String, Object>>() {
+        verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Object o) {
-                Map metadata = (Map) o;
-                return metadata.get(ActionArguments.RICH_PUSH_METADATA).equals(message);
+                Bundle bundle = (Bundle) o;
+                return bundle.get(ActionArguments.RICH_PUSH_ID_METADATA).equals(message.getMessageId());
             }
         }));
     }

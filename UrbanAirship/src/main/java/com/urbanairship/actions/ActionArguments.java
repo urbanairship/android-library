@@ -25,8 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import java.util.HashMap;
-import java.util.Map;
+import android.os.Bundle;
 
 /**
  * Container for the argument data passed to an {@link com.urbanairship.actions.Action}.
@@ -35,9 +34,9 @@ public final class ActionArguments {
 
     /**
      * Metadata when running an action from the JavaScript interface with an associated RichPushMessage.
-     * The value is stored as a {@link com.urbanairship.richpush.RichPushMessage}.
+     * The value is stored as a String.
      */
-    public static final String RICH_PUSH_METADATA = "com.urbanairship.RICH_PUSH_METADATA";
+    public static final String RICH_PUSH_ID_METADATA = "com.urbanairship.RICH_PUSH_ID_METADATA";
 
     /**
      * Metadata attached to action arguments when launching actions from a push message.
@@ -53,7 +52,7 @@ public final class ActionArguments {
 
     private final Situation situation;
     private final Object value;
-    private final Map<String, Object> metadata;
+    private final Bundle metadata;
 
     /**
      * Constructs ActionArguments.
@@ -62,10 +61,10 @@ public final class ActionArguments {
      * @param value The argument's value.
      * @param metadata The argument's metadata.
      */
-    public ActionArguments(Situation situation, Object value, Map<String, Object> metadata) {
+    public ActionArguments(Situation situation, Object value, Bundle metadata) {
         this.situation = situation == null ? Situation.MANUAL_INVOCATION : situation;
         this.value = value;
-        this.metadata = metadata == null ? new HashMap<String, Object>() : metadata;
+        this.metadata = metadata == null ? new Bundle() : new Bundle(metadata);
     }
 
     /**
@@ -92,7 +91,7 @@ public final class ActionArguments {
      *
      * @return The arguments metadata.
      */
-    public Map<String, Object> getMetadata() {
+    public Bundle getMetadata() {
         return metadata;
     }
 

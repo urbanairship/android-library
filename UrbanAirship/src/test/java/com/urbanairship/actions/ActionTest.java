@@ -36,9 +36,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -54,8 +51,8 @@ public class ActionTest {
      */
     @Test
     public void testRun() {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("metadata_key", "metadata_value");
+        Bundle metadata = new Bundle();
+        metadata.putString("metadata_key", "metadata_value");
 
         final ActionResult expectedResult = ActionResult.newResult("result");
         final ActionArguments originalArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", metadata);
@@ -91,7 +88,7 @@ public class ActionTest {
                 super.onFinish(arguments, result);
 
                 assertEquals("Bundle does not contain the passed in metadata",
-                        arguments.getMetadata().get("metadata_key"), "metadata_value");
+                        arguments.getMetadata().getString("metadata_key"), "metadata_value");
 
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);

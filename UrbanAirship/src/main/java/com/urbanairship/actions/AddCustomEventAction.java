@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
@@ -78,11 +79,12 @@ public class AddCustomEventAction extends Action {
                 .setEventValue(eventValue)
                 .setTransactionId(transactionId)
                 .setInteraction(interactionType, interactionId)
-                .setAttribution((PushMessage) arguments.getMetadata().get(ActionArguments.PUSH_MESSAGE_METADATA));
+                .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
 
         // Try to fill in the interaction if its not set
         if (interactionId == null && interactionType == null) {
-            RichPushMessage message = (RichPushMessage) arguments.getMetadata().get(ActionArguments.RICH_PUSH_METADATA);
+            String messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
+            RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
 
             if (message != null) {
                 eventBuilder.setInteraction(message);

@@ -1,5 +1,6 @@
 package com.urbanairship.actions;
 
+import android.os.Bundle;
 import android.os.Looper;
 
 import com.android.internal.util.Predicate;
@@ -14,8 +15,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -266,8 +265,8 @@ public class ActionRunnerTest {
         actionRegistry.registerAction(action, "action!");
 
         // Create metadata
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("so", "meta");
+        Bundle metadata = new Bundle();
+        metadata.putString("so", "meta");
 
         // Run the action by name
         actionRunner.run("action!")
@@ -276,7 +275,7 @@ public class ActionRunnerTest {
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
-        assertEquals("Missing metadata", "meta", action.runArgs.getMetadata().get("so"));
+        assertEquals("Missing metadata", "meta", action.runArgs.getMetadata().getString("so"));
     }
 
     private class TestActionCompletionCallback implements ActionCompletionCallback {

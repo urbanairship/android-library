@@ -25,7 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import java.util.Map;
+import android.os.Bundle;
 
 /**
  * Stubbed run request for testing. All methods are overridden to no-op.
@@ -42,7 +42,7 @@ public class StubbedRunRequest extends ActionRunner.RunRequest {
     }
 
     @Override
-    public ActionRunner.RunRequest setMetadata(Map<String, Object> metadata) {
+    public ActionRunner.RunRequest setMetadata(Bundle metadata) {
         return this;
     }
 
