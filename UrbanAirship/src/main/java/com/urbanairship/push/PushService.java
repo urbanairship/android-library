@@ -359,8 +359,17 @@ public class PushService extends IntentService {
                 pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
                 pushManager.sendRegistrationFinishedBroadcast(true);
 
-                // When we get the channel, start the named user update service
-                pushManager.getNamedUser().startUpdateService();
+                if (response.getStatus() == HttpURLConnection.HTTP_OK) {
+                    // 200 means channel previously existed and a named user may be associated to it.
+                    if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
+                        // If clearNamedUser flag is set to true, then disassociate by setting
+                        // named user ID to null.
+                        pushManager.getNamedUser().setId(null);
+                    }
+                } else {
+                    // When we get the channel, start the named user update service
+                    pushManager.getNamedUser().startUpdateService();
+                }
 
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
@@ -481,22 +490,24 @@ public class PushService extends IntentService {
     private void onUpdateNamedUser() {
         PushManager pushManager = UAirship.shared().getPushManager();
         NamedUser namedUser = pushManager.getNamedUser();
-
         String currentId = namedUser.getId();
-        String associatedId = namedUser.getAssociatedId();
+        String currentToken = namedUser.getCurrentToken();
+        String lastUpdatedToken = namedUser.getLastUpdatedToken();
 
-        if (currentId == null && associatedId == null) {
-            Logger.debug("PushService - Named user already disassociated. Skipping.");
+        if (currentToken == null && lastUpdatedToken == null) {
+            // Skip since no one has set the named user ID. Usually from a new or re-install.
+            Logger.debug("PushService - New or re-install. Skipping.");
             return;
         }
 
-        if (currentId != null && currentId.equals(associatedId)) {
-            Logger.debug("PushService - Named user already associated. Skipping.");
+        if (currentToken != null && currentToken.equals(lastUpdatedToken)) {
+            // Skip since no change has occurred (token remain the same).
+            Logger.debug("PushService - named user already updated. Skipping.");
             return;
         }
 
         if (UAStringUtil.isEmpty(pushManager.getChannelId())) {
-            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
+            Logger.info("PushService - The channel ID does not exist. Will retry when channel ID is available.");
             return;
         }
 
@@ -513,22 +524,22 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
 
-            Logger.error("Update named user failed, will retry.");
+            Logger.error("PushService - Update named user failed, will retry.");
             namedUserBackOff = calculateNextBackOff(namedUserBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
         } else if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-            Logger.info("Update named user succeeded with status: " + response.getStatus());
+            Logger.info("PushService - Update named user succeeded with status: " + response.getStatus());
             // When currentId is null, the disassociate request succeeded so we set the associatedId
             // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
             // the associate request succeeded so we set the associatedId.
-            namedUser.setAssociatedId(currentId);
+            namedUser.setLastUpdatedToken(currentToken);
             namedUserBackOff = 0;
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.error("Update named user failed with status: " + response.getStatus() +
+            Logger.error("PushService - Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
             namedUserBackOff = 0;
         } else {
-            Logger.error("Update named user failed with status: " + response.getStatus());
+            Logger.error("PushService - Update named user failed with status: " + response.getStatus());
             namedUserBackOff = 0;
         }
     }
@@ -603,7 +614,7 @@ public class PushService extends IntentService {
                 Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
 
                 // Unregister if we have different registered sender ids
-                if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {
+                if (registeredGcmSenderIds != null && !registeredGcmSenderIds.equals(senderIds)) {
                     Logger.verbose("PushService - GCM sender IDs changed. Push re-registration required.");
                     return true;
                 }
@@ -709,6 +720,7 @@ public class PushService extends IntentService {
 
     /**
      * Gets the channel client. Creates it if it does not exist.
+     *
      * @return The channel API client.
      */
     private ChannelAPIClient getChannelClient() {

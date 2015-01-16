@@ -17,6 +17,7 @@ import org.robolectric.shadows.ShadowIntent;
 import java.net.URL;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 public class NamedUserTest {
 
     private final String fakeNamedUserId = "fake-named-user-id";
+    private final String fakeToken = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
 
     private AirshipConfigOptions mockAirshipConfigOptions;
     private NamedUser namedUser;
@@ -69,6 +71,7 @@ public class NamedUserTest {
     @Test
     public void testSetIDInvalid() {
         String currentNamedUserId = namedUser.getId();
+
         namedUser.setId("     ");
         assertEquals("Current named user ID should not have changed", currentNamedUserId, namedUser.getId());
     }
@@ -84,25 +87,62 @@ public class NamedUserTest {
         namedUser.setId(null);
 
         ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
-        assertEquals(intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
+        assertEquals("Intent action should be to update named user",
+                intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
         assertNull("Current named user ID should be null", namedUser.getId());
     }
 
     /**
-     * Test set associated named user ID.
+     * Test when IDs match, don't update named user.
      */
     @Test
-    public void testSetAssociatedId() {
-        namedUser.setAssociatedId(fakeNamedUserId);
-        assertEquals("Associated named user ID should match", fakeNamedUserId, namedUser.getAssociatedId());
+    public void testIdsMatchNoUpdate() {
+        namedUser.setId(fakeNamedUserId);
+        String currentToken = namedUser.getCurrentToken();
+        assertEquals("Current named user ID should match", fakeNamedUserId, namedUser.getId());
+
+        namedUser.setId(fakeNamedUserId);
+        assertEquals("Current token should not change", currentToken, namedUser.getCurrentToken());
     }
 
     /**
-     * Test set associated named user ID null.
+     * Test force update changes the current token and starts the service.
      */
     @Test
-    public void testSetAssociatedIdNull() {
-        namedUser.setAssociatedId(null);
-        assertNull("Associated named user ID should be null", namedUser.getAssociatedId());
+    public void testForceUpdate() {
+        String currentToken = namedUser.getCurrentToken();
+
+        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        application.clearStartedServices();
+
+        namedUser.forceUpdate();
+
+        ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
+        assertEquals("Intent action should be to update named user",
+                intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
+        assertNotSame("Current token should have changed", currentToken, namedUser.getCurrentToken());
+    }
+
+    /**
+     * Test update change token.
+     */
+    @Test
+    public void testUpdateChangeToken() {
+        String currentToken = namedUser.getCurrentToken();
+        namedUser.updateChangeToken();
+        assertNotSame("Current token should have changed", currentToken, namedUser.getCurrentToken());
+    }
+
+    /**
+     * Test set last updated token.
+     */
+    @Test
+    public void testSetLastUpdatedToken() {
+        namedUser.setId(fakeNamedUserId);
+        String lastUpdatedToken = namedUser.getLastUpdatedToken();
+
+        namedUser.setLastUpdatedToken(fakeToken);
+        assertNotSame("Last updated token should not match", namedUser.getLastUpdatedToken(), lastUpdatedToken);
+        assertEquals("Last updated token should match", fakeToken, namedUser.getLastUpdatedToken());
     }
 }

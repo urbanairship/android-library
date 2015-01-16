@@ -28,6 +28,7 @@ public class PushServiceTest {
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String superFakeNamedUserId = "super-fake-named-user-id";
+    private final String fakeToken = "FAKEAAAA-BBBB-CCCC-DDDD-TOKENEEEEEEE";
 
     PushPreferences pushPref;
     PushManager pushManager;
@@ -293,8 +294,8 @@ public class PushServiceTest {
 
         assertEquals("The named user ID should match",
                 fakeNamedUserId, pushManager.getNamedUser().getId());
-        assertEquals("The named user ID should be associated",
-                fakeNamedUserId, pushManager.getNamedUser().getAssociatedId());
+        assertEquals("The token should match",
+                pushManager.getNamedUser().getCurrentToken(), pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
     }
 
@@ -303,7 +304,7 @@ public class PushServiceTest {
      */
     @Test
     public void testAssociateNamedUserFailed() {
-        namedUser.setAssociatedId(null);
+        namedUser.setLastUpdatedToken(null);
         pushManager.getNamedUser().setId(superFakeNamedUserId);
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
@@ -318,7 +319,7 @@ public class PushServiceTest {
 
         assertEquals("The current named user ID should match",
                 superFakeNamedUserId, pushManager.getNamedUser().getId());
-        assertNull("The named user should not be associated", pushManager.getNamedUser().getAssociatedId());
+        assertNull("The token should stay the same", pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
     }
 
@@ -327,7 +328,7 @@ public class PushServiceTest {
      */
     @Test
     public void testDisassociateNamedUserSucceed() {
-        namedUser.setAssociatedId(fakeNamedUserId);
+        namedUser.setLastUpdatedToken(fakeToken);
         pushManager.getNamedUser().setId(null);
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
@@ -341,7 +342,8 @@ public class PushServiceTest {
         pushService.onHandleIntent(intent);
 
         assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
-        assertNull("Associated named user ID should be null", pushManager.getNamedUser().getAssociatedId());
+        assertEquals("The token should match",
+                pushManager.getNamedUser().getCurrentToken(), pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));
     }
 
@@ -350,7 +352,7 @@ public class PushServiceTest {
      */
     @Test
     public void testDisassociateNamedUserFailed() {
-        namedUser.setAssociatedId(superFakeNamedUserId);
+        namedUser.setLastUpdatedToken(fakeToken);
         pushManager.getNamedUser().setId(null);
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
@@ -364,8 +366,8 @@ public class PushServiceTest {
         pushService.onHandleIntent(intent);
 
         assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
-        assertEquals("Associated named user ID should stay the same",
-                superFakeNamedUserId, pushManager.getNamedUser().getAssociatedId());
+        assertEquals("The token should stay the same",
+                fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));
     }
 
@@ -374,13 +376,15 @@ public class PushServiceTest {
      */
     @Test
     public void testAssociateNamedUserFailedNoChannel() {
-        namedUser.setAssociatedId(fakeNamedUserId);
+        namedUser.setLastUpdatedToken(fakeToken);
         pushManager.setChannel(null, null);
 
         pushManager.getNamedUser().setId(superFakeNamedUserId);
 
         // Verify associate not called when channel ID doesn't exist
         Mockito.verify(namedUserClient, Mockito.times(0)).associate(Mockito.any(String.class), Mockito.any(String.class));
+        assertEquals("The token should stay the same",
+                fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
     }
 
     /**
@@ -388,12 +392,14 @@ public class PushServiceTest {
      */
     @Test
     public void testDisassociateNamedUserFailedNoChannel() {
-        namedUser.setAssociatedId(fakeNamedUserId);
+        namedUser.setLastUpdatedToken(fakeToken);
         pushManager.setChannel(null, null);
 
         pushManager.getNamedUser().setId(null);
 
         // Verify disassociate not called when channel ID doesn't exist
         Mockito.verify(namedUserClient, Mockito.times(0)).disassociate(Mockito.any(String.class));
+        assertEquals("The token should stay the same",
+                fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
     }
 }

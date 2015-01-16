@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Urban Airship Inc. All rights reserved.
+Copyright 2009-2015 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -33,6 +33,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.UUID;
+
 /**
  * The named user is created in the PushManager.
  */
@@ -44,9 +46,14 @@ public class NamedUser {
     private static final String CURRENT_NAMED_USER_ID_KEY = "com.urbanairship.nameduser.CURRENT_NAMED_USER_ID";
 
     /**
-     * The associated named user ID.
+     * The current token tracks the start of setting the named user ID.
      */
-    private static final String ASSOCIATED_NAMED_USER_ID_KEY = "com.urbanairship.nameduser.ASSOCIATED_NAMED_USER_ID";
+    private static final String CURRENT_TOKEN_KEY = "com.urbanairship.nameduser.CURRENT_TOKEN_KEY";
+
+    /**
+     * The last updated token tracks when the named user ID was set successfully.
+     */
+    private static final String LAST_UPDATED_TOKEN_KEY = "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY";
 
     /**
      * The maximum length of the named user ID string.
@@ -54,7 +61,6 @@ public class NamedUser {
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
 
     private final PreferenceDataStore preferenceDataStore;
-
 
     /**
      * Creates a NamedUser.
@@ -75,47 +81,81 @@ public class NamedUser {
     }
 
     /**
-     * Sets the named user ID.
-     *
-     * @param namedUserId The named user ID string. Length must be greater than 0 and less than 129 characters.
+     * Forces a named user update.
      */
-    public void setId(String namedUserId) {
-        if (namedUserId == null) {
-            preferenceDataStore.remove(CURRENT_NAMED_USER_ID_KEY);
-        } else {
-            namedUserId = namedUserId.trim();
-            if (UAStringUtil.isEmpty(namedUserId) || namedUserId.length() > MAX_NAMED_USER_ID_LENGTH) {
-                Logger.error("Failed to set named user ID. " +
-                        "The named user ID must be greater than 0 and less than 129 characters.");
-                return;
-            }
-            preferenceDataStore.put(CURRENT_NAMED_USER_ID_KEY, namedUserId);
-        }
-
-        Logger.debug("Start service to update named user.");
+    public void forceUpdate() {
+        updateChangeToken();
         startUpdateService();
     }
 
     /**
-     * Sets the associated named user ID.
+     * Sets the named user ID.
+     * </p>
+     * To associate the named user ID, its length must be greater than 0 and less than 129 characters.
+     * To disassociate the named user ID, its value must be null.
      *
-     * @param id The named user ID string.
+     * @param namedUserId The named user ID string.
      */
-    void setAssociatedId(String id) {
-        if (id == null) {
-            preferenceDataStore.remove(ASSOCIATED_NAMED_USER_ID_KEY);
+    public void setId(String namedUserId) {
+        String id = null;
+        if (namedUserId != null) {
+            id = namedUserId.trim();
+            if (UAStringUtil.isEmpty(id) || id.length() > MAX_NAMED_USER_ID_LENGTH) {
+                Logger.error("NamedUser - Failed to set named user ID. " +
+                        "The named user ID must be greater than 0 and less than 129 characters.");
+                return;
+            }
+        }
+
+        // check if the newly trimmed ID matches with currently stored ID
+        boolean isEqual = getId() == null ? id == null : getId().equals(id);
+
+        // if the IDs don't match or ID is set to null and current token is null, then update.
+        if (!isEqual || (getId() == null && getCurrentToken() == null)) {
+            preferenceDataStore.put(CURRENT_NAMED_USER_ID_KEY, id);
+
+            // Force update by changing the token.
+            updateChangeToken();
+
+            Logger.debug("NamedUser - Start service to update named user.");
+            startUpdateService();
         } else {
-            preferenceDataStore.put(ASSOCIATED_NAMED_USER_ID_KEY, id);
+            Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: " + getId());
         }
     }
 
     /**
-     * Gets the associated named user ID.
+     * Gets the current named user ID token.
      *
-     * @return The associated named user ID or null if it does not exist.
+     * @return The current named user ID token.
      */
-    public String getAssociatedId() {
-        return preferenceDataStore.getString(ASSOCIATED_NAMED_USER_ID_KEY, null);
+    public String getCurrentToken() {
+        return preferenceDataStore.getString(CURRENT_TOKEN_KEY, null);
+    }
+
+    /**
+     * Change the current token to force an update.
+     */
+    void updateChangeToken() {
+        preferenceDataStore.put(CURRENT_TOKEN_KEY, UUID.randomUUID().toString());
+    }
+
+    /**
+     * Sets the last updated named user ID token.
+     *
+     * @param token The last updated named user ID token.
+     */
+    void setLastUpdatedToken(String token) {
+        preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, token);
+    }
+
+    /**
+     * Gets the last updated named user ID token.
+     *
+     * @return The last updated named user token.
+     */
+    public String getLastUpdatedToken() {
+        return preferenceDataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
     }
 
     /**
