@@ -294,8 +294,8 @@ public class PushServiceTest {
 
         assertEquals("The named user ID should match",
                 fakeNamedUserId, pushManager.getNamedUser().getId());
-        assertEquals("The token should match",
-                pushManager.getNamedUser().getCurrentToken(), pushManager.getNamedUser().getLastUpdatedToken());
+        assertEquals("The tokens should match",
+                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
     }
 
@@ -317,7 +317,7 @@ public class PushServiceTest {
 
         pushService.onHandleIntent(intent);
 
-        assertEquals("The current named user ID should match",
+        assertEquals("The named user ID should match",
                 superFakeNamedUserId, pushManager.getNamedUser().getId());
         assertNull("The token should stay the same", pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
@@ -342,8 +342,8 @@ public class PushServiceTest {
         pushService.onHandleIntent(intent);
 
         assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
-        assertEquals("The token should match",
-                pushManager.getNamedUser().getCurrentToken(), pushManager.getNamedUser().getLastUpdatedToken());
+        assertEquals("The tokens should match",
+                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));
     }
 
@@ -365,7 +365,7 @@ public class PushServiceTest {
 
         pushService.onHandleIntent(intent);
 
-        assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
+        assertNull("Named user ID should be null", pushManager.getNamedUser().getId());
         assertEquals("The token should stay the same",
                 fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
         Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));

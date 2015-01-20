@@ -362,9 +362,8 @@ public class PushService extends IntentService {
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                     // 200 means channel previously existed and a named user may be associated to it.
                     if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
-                        // If clearNamedUser flag is set to true, then disassociate by setting
-                        // named user ID to null.
-                        pushManager.getNamedUser().onChannelReinstall();
+                        // If clearNamedUser is true on re-install, then disassociate if necessary
+                        pushManager.getNamedUser().clearNamedUserIfNecessary();
                     }
                 }
 
@@ -491,16 +490,16 @@ public class PushService extends IntentService {
         PushManager pushManager = UAirship.shared().getPushManager();
         NamedUser namedUser = pushManager.getNamedUser();
         String currentId = namedUser.getId();
-        String currentToken = namedUser.getCurrentToken();
+        String changeToken = namedUser.getChangeToken();
         String lastUpdatedToken = namedUser.getLastUpdatedToken();
 
-        if (currentToken == null && lastUpdatedToken == null) {
+        if (changeToken == null && lastUpdatedToken == null) {
             // Skip since no one has set the named user ID. Usually from a new or re-install.
             Logger.debug("PushService - New or re-install. Skipping.");
             return;
         }
 
-        if (currentToken != null && currentToken.equals(lastUpdatedToken)) {
+        if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
             // Skip since no change has occurred (token remain the same).
             Logger.debug("PushService - named user already updated. Skipping.");
             return;
@@ -532,7 +531,7 @@ public class PushService extends IntentService {
             // When currentId is null, the disassociate request succeeded so we set the associatedId
             // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
             // the associate request succeeded so we set the associatedId.
-            namedUser.setLastUpdatedToken(currentToken);
+            namedUser.setLastUpdatedToken(changeToken);
             namedUserBackOff = 0;
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
             Logger.error("Update named user failed with status: " + response.getStatus() +

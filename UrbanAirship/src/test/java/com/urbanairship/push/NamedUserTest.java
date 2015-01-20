@@ -62,7 +62,7 @@ public class NamedUserTest {
         ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
-        assertEquals("Current named user ID should be set", fakeNamedUserId, namedUser.getId());
+        assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
 
     /**
@@ -73,7 +73,7 @@ public class NamedUserTest {
         String currentNamedUserId = namedUser.getId();
 
         namedUser.setId("     ");
-        assertEquals("Current named user ID should not have changed", currentNamedUserId, namedUser.getId());
+        assertEquals("Named user ID should not have changed", currentNamedUserId, namedUser.getId());
     }
 
     /**
@@ -89,7 +89,7 @@ public class NamedUserTest {
         ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
-        assertNull("Current named user ID should be null", namedUser.getId());
+        assertNull("Named user ID should be null", namedUser.getId());
     }
 
     /**
@@ -98,11 +98,11 @@ public class NamedUserTest {
     @Test
     public void testIdsMatchNoUpdate() {
         namedUser.setId(fakeNamedUserId);
-        String currentToken = namedUser.getCurrentToken();
-        assertEquals("Current named user ID should match", fakeNamedUserId, namedUser.getId());
+        String changeToken = namedUser.getChangeToken();
+        assertEquals("Named user ID should match", fakeNamedUserId, namedUser.getId());
 
         namedUser.setId(fakeNamedUserId);
-        assertEquals("Current token should not change", currentToken, namedUser.getCurrentToken());
+        assertEquals("Change token should not change", changeToken, namedUser.getChangeToken());
     }
 
     /**
@@ -110,7 +110,7 @@ public class NamedUserTest {
      */
     @Test
     public void testForceUpdate() {
-        String currentToken = namedUser.getCurrentToken();
+        String changeToken = namedUser.getChangeToken();
 
         ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
         application.clearStartedServices();
@@ -120,7 +120,7 @@ public class NamedUserTest {
         ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
-        assertNotSame("Current token should have changed", currentToken, namedUser.getCurrentToken());
+        assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
     }
 
     /**
@@ -128,9 +128,9 @@ public class NamedUserTest {
      */
     @Test
     public void testUpdateChangeToken() {
-        String currentToken = namedUser.getCurrentToken();
+        String changeToken = namedUser.getChangeToken();
         namedUser.updateChangeToken();
-        assertNotSame("Current token should have changed", currentToken, namedUser.getCurrentToken());
+        assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
     }
 
     /**
@@ -147,22 +147,22 @@ public class NamedUserTest {
     }
 
     /**
-     * Test onChannelReinstall sets the named user ID when it is null.
+     * Test clearNamedUserIfNecessary clears the named user ID when it is null.
      */
     @Test
-    public void testOnChannelReinstallNullId() {
+    public void testClearNamedUserIfNecessaryNullId() {
         namedUser.setId(null);
-        namedUser.onChannelReinstall();
+        namedUser.clearNamedUserIfNecessary();
         assertNull("Named user ID should be null", namedUser.getId());
     }
 
     /**
-     * Test onChannelReinstall does not set named user ID, when it is not null.
+     * Test clearNamedUserIfNecessary does not clear named user ID, when it is not null.
      */
     @Test
-    public void testOnChannelReinstallNonNullId() {
+    public void testClearNamedUserIfNecessaryNonNullId() {
         namedUser.setId(fakeNamedUserId);
-        namedUser.onChannelReinstall();
+        namedUser.clearNamedUserIfNecessary();
         assertEquals("Named user ID should remain the same", fakeNamedUserId, namedUser.getId());
     }
 }

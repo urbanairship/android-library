@@ -41,14 +41,14 @@ import java.util.UUID;
 public class NamedUser {
 
     /**
-     * The current named user ID.
+     * The named user ID.
      */
-    private static final String CURRENT_NAMED_USER_ID_KEY = "com.urbanairship.nameduser.CURRENT_NAMED_USER_ID";
+    private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
-     * The current token tracks the start of setting the named user ID.
+     * The change token tracks the start of setting the named user ID.
      */
-    private static final String CURRENT_TOKEN_KEY = "com.urbanairship.nameduser.CURRENT_TOKEN_KEY";
+    private static final String CHANGE_TOKEN_KEY = "com.urbanairship.nameduser.CHANGE_TOKEN_KEY";
 
     /**
      * The last updated token tracks when the named user ID was set successfully.
@@ -77,7 +77,7 @@ public class NamedUser {
      * @return The named user ID as a string or null if it does not exist.
      */
     public String getId() {
-        return preferenceDataStore.getString(CURRENT_NAMED_USER_ID_KEY, null);
+        return preferenceDataStore.getString(NAMED_USER_ID_KEY, null);
     }
 
     /**
@@ -112,8 +112,8 @@ public class NamedUser {
         boolean isEqual = getId() == null ? id == null : getId().equals(id);
 
         // if the IDs don't match or ID is set to null and current token is null (re-install case), then update.
-        if (!isEqual || (getId() == null && getCurrentToken() == null)) {
-            preferenceDataStore.put(CURRENT_NAMED_USER_ID_KEY, id);
+        if (!isEqual || (getId() == null && getChangeToken() == null)) {
+            preferenceDataStore.put(NAMED_USER_ID_KEY, id);
 
             // Update the change token.
             updateChangeToken();
@@ -126,25 +126,25 @@ public class NamedUser {
     }
 
     /**
-     * Gets the current named user ID token.
+     * Gets the named user ID change token.
      *
-     * @return The current named user ID token.
+     * @return The named user ID change token.
      */
-    String getCurrentToken() {
-        return preferenceDataStore.getString(CURRENT_TOKEN_KEY, null);
+    String getChangeToken() {
+        return preferenceDataStore.getString(CHANGE_TOKEN_KEY, null);
     }
 
     /**
-     * Change the current token to force an update.
+     * Modify the change token to force an update.
      */
     void updateChangeToken() {
-        preferenceDataStore.put(CURRENT_TOKEN_KEY, UUID.randomUUID().toString());
+        preferenceDataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString());
     }
 
     /**
      * Disassociate the named user only if the named user ID is really null.
      */
-    synchronized void onChannelReinstall() {
+    synchronized void clearNamedUserIfNecessary() {
         if (UAStringUtil.equals(getId(), null)) {
             setId(null);
         }
