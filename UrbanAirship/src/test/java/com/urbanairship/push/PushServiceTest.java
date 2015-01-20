@@ -385,6 +385,7 @@ public class PushServiceTest {
         Mockito.verify(namedUserClient, Mockito.times(0)).associate(Mockito.any(String.class), Mockito.any(String.class));
         assertEquals("The token should stay the same",
                 fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
+        assertEquals("The named user ID should be set", superFakeNamedUserId, pushManager.getNamedUser().getId());
     }
 
     /**
@@ -401,5 +402,6 @@ public class PushServiceTest {
         Mockito.verify(namedUserClient, Mockito.times(0)).disassociate(Mockito.any(String.class));
         assertEquals("The token should stay the same",
                 fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
+        assertNull("The named user ID should be null", pushManager.getNamedUser().getId());
     }
 }

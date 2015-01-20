@@ -145,4 +145,24 @@ public class NamedUserTest {
         assertNotSame("Last updated token should not match", namedUser.getLastUpdatedToken(), lastUpdatedToken);
         assertEquals("Last updated token should match", fakeToken, namedUser.getLastUpdatedToken());
     }
+
+    /**
+     * Test onChannelReinstall sets the named user ID when it is null.
+     */
+    @Test
+    public void testOnChannelReinstallNullId() {
+        namedUser.setId(null);
+        namedUser.onChannelReinstall();
+        assertNull("Named user ID should be null", namedUser.getId());
+    }
+
+    /**
+     * Test onChannelReinstall does not set named user ID, when it is not null.
+     */
+    @Test
+    public void testOnChannelReinstallNonNullId() {
+        namedUser.setId(fakeNamedUserId);
+        namedUser.onChannelReinstall();
+        assertEquals("Named user ID should remain the same", fakeNamedUserId, namedUser.getId());
+    }
 }

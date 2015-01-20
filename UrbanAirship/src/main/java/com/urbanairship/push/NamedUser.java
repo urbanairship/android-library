@@ -97,7 +97,7 @@ public class NamedUser {
      *
      * @param namedUserId The named user ID string.
      */
-    public void setId(String namedUserId) {
+    public synchronized void setId(String namedUserId) {
         String id = null;
         if (namedUserId != null) {
             id = namedUserId.trim();
@@ -115,7 +115,7 @@ public class NamedUser {
         if (!isEqual || (getId() == null && getCurrentToken() == null)) {
             preferenceDataStore.put(CURRENT_NAMED_USER_ID_KEY, id);
 
-            // Just update the change token.
+            // Update the change token.
             updateChangeToken();
 
             Logger.debug("NamedUser - Start service to update named user.");
@@ -130,7 +130,7 @@ public class NamedUser {
      *
      * @return The current named user ID token.
      */
-    public String getCurrentToken() {
+    String getCurrentToken() {
         return preferenceDataStore.getString(CURRENT_TOKEN_KEY, null);
     }
 
@@ -139,6 +139,15 @@ public class NamedUser {
      */
     void updateChangeToken() {
         preferenceDataStore.put(CURRENT_TOKEN_KEY, UUID.randomUUID().toString());
+    }
+
+    /**
+     * Disassociate the named user only if the named user ID is really null.
+     */
+    synchronized void onChannelReinstall() {
+        if (UAStringUtil.equals(getId(), null)) {
+            setId(null);
+        }
     }
 
     /**
@@ -155,7 +164,7 @@ public class NamedUser {
      *
      * @return The last updated named user token.
      */
-    public String getLastUpdatedToken() {
+    String getLastUpdatedToken() {
         return preferenceDataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
     }
 

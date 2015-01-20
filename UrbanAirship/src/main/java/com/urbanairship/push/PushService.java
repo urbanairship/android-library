@@ -364,12 +364,12 @@ public class PushService extends IntentService {
                     if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
                         // If clearNamedUser flag is set to true, then disassociate by setting
                         // named user ID to null.
-                        pushManager.getNamedUser().setId(null);
+                        pushManager.getNamedUser().onChannelReinstall();
                     }
-                } else {
-                    // When we get the channel, start the named user update service
-                    pushManager.getNamedUser().startUpdateService();
                 }
+
+                // If setId was called before channel creation, update named user
+                pushManager.getNamedUser().startUpdateService();
 
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
