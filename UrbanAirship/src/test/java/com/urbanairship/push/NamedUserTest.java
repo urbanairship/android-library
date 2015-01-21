@@ -147,22 +147,22 @@ public class NamedUserTest {
     }
 
     /**
-     * Test clearNamedUserIfNecessary clears the named user ID when it is null.
+     * Test disassociateNamedUserIfNull clears the named user ID when it is null.
      */
     @Test
-    public void testClearNamedUserIfNecessaryNullId() {
+    public void testDisassociateNamedUserNullId() {
         namedUser.setId(null);
-        namedUser.clearNamedUserIfNecessary();
+        namedUser.disassociateNamedUserIfNull();
         assertNull("Named user ID should be null", namedUser.getId());
     }
 
     /**
-     * Test clearNamedUserIfNecessary does not clear named user ID, when it is not null.
+     * Test disassociateNamedUserIfNull does not clear named user ID, when it is not null.
      */
     @Test
-    public void testClearNamedUserIfNecessaryNonNullId() {
+    public void testDisassociateNamedUserNonNullId() {
         namedUser.setId(fakeNamedUserId);
-        namedUser.clearNamedUserIfNecessary();
+        namedUser.disassociateNamedUserIfNull();
         assertEquals("Named user ID should remain the same", fakeNamedUserId, namedUser.getId());
     }
 }

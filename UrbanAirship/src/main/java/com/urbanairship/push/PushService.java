@@ -363,7 +363,7 @@ public class PushService extends IntentService {
                     // 200 means channel previously existed and a named user may be associated to it.
                     if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
                         // If clearNamedUser is true on re-install, then disassociate if necessary
-                        pushManager.getNamedUser().clearNamedUserIfNecessary();
+                        pushManager.getNamedUser().disassociateNamedUserIfNull();
                     }
                 }
 

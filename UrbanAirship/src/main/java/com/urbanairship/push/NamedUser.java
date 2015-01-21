@@ -144,7 +144,7 @@ public class NamedUser {
     /**
      * Disassociate the named user only if the named user ID is really null.
      */
-    synchronized void clearNamedUserIfNecessary() {
+    synchronized void disassociateNamedUserIfNull() {
         if (UAStringUtil.equals(getId(), null)) {
             setId(null);
         }
