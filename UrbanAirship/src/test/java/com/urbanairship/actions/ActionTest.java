@@ -36,13 +36,9 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
@@ -53,11 +49,11 @@ public class ActionTest {
      * with the expected inputs.
      */
     @Test
-    public void testRun() {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("metadata_key", "metadata_value");
+    public void testRun() throws ActionValue.ActionValueException {
+        Bundle metadata = new Bundle();
+        metadata.putString("metadata_key", "metadata_value");
 
-        final ActionResult expectedResult = ActionResult.newResult("result");
+        final ActionResult expectedResult = ActionResult.newResult(ActionValue.wrap("result"));
         final ActionArguments originalArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", metadata);
 
 
@@ -91,7 +87,7 @@ public class ActionTest {
                 super.onFinish(arguments, result);
 
                 assertEquals("Bundle does not contain the passed in metadata",
-                        arguments.getMetadata().get("metadata_key"), "metadata_value");
+                        arguments.getMetadata().getString("metadata_key"), "metadata_value");
 
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);
@@ -119,13 +115,13 @@ public class ActionTest {
      * accept the arguments.
      */
     @Test
-    public void testRunBadArgs() {
-        ActionResult performResult = ActionResult.newResult("result");
+    public void testRunBadArgs() throws ActionValue.ActionValueException {
+        ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(false, performResult);
 
         ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value"));
 
-        assertNull("Does not accept arguments should return a null result value", badArgsResult.getValue());
+        assertTrue("Does not accept arguments should return a 'null' result value", badArgsResult.getValue().isNull());
 
         assertEquals("Result should have an rejected arguemnts status",
                 ActionResult.Status.REJECTED_ARGUMENTS, badArgsResult.getStatus());
@@ -144,9 +140,9 @@ public class ActionTest {
      * returns a result with the exception as the value.
      */
     @Test
-    public void testRunPerformException() {
+    public void testRunPerformException() throws ActionValue.ActionValueException {
         ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
-        ActionResult performResult = ActionResult.newResult("result");
+        ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
 
         final IllegalStateException exception = new IllegalStateException("oh no!");
 
@@ -161,7 +157,7 @@ public class ActionTest {
         ActionResult result = action.run(args);
 
         assertEquals("Result should pass back exception as the value", exception, result.getException());
-        assertNull("Result value should be null", result.getValue());
+        assertTrue("Result should be 'null'", result.getValue().isNull());
         assertEquals("Result should have an error status",
                 ActionResult.Status.EXECUTION_ERROR, result.getStatus());
 
@@ -181,7 +177,7 @@ public class ActionTest {
 
         ActionResult result = action.run(args);
         assertNotNull("Result should never be null", result);
-        assertNull("Result should never be null", result.getValue());
+        assertTrue("Result should be 'null'", result.getValue().isNull());
         assertEquals("Result should have the COMPLETED status",
                 ActionResult.Status.COMPLETED, result.getStatus());
     }

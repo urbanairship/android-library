@@ -26,7 +26,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.content.Intent;
-import android.net.Uri;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 
@@ -37,7 +36,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -65,13 +63,13 @@ public class OpenExternalUrlActionTest {
         args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "adfadfafdsaf adfa dsfadfsa example");
         assertTrue("Should accept any string", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, new URL("http://example.com"));
+        args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "http://example.com");
         assertTrue("Should accept valid url", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON, new URL("http://example.com"));
+        args = ActionTestUtils.createArgs(Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON, "http://example.com");
         assertTrue("Should accept Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, new URL("http://example.com"));
+        args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "http://example.com");
         assertFalse("Should not accept Situation.PUSH_RECEIVED", action.acceptsArguments(args));
     }
 
@@ -83,23 +81,13 @@ public class OpenExternalUrlActionTest {
         ActionArguments args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "http://example.com");
         ActionResult result = action.perform(args);
 
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().toString());
+        assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
         validateLastActivity("http://example.com");
 
         args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "adfadfafdsaf adfa dsfadfsa example");
         result = action.perform(args);
-        assertEquals("Value should be the uri", "adfadfafdsaf adfa dsfadfsa example", result.getValue().toString());
+        assertEquals("Value should be the uri", "adfadfafdsaf adfa dsfadfsa example", result.getValue().getString());
         validateLastActivity("adfadfafdsaf adfa dsfadfsa example");
-
-        args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, new URL("http://example.com"));
-        result = action.perform(args);
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().toString());
-        validateLastActivity("http://example.com");
-
-        args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, Uri.parse("http://example.com"));
-        result = action.perform(args);
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().toString());
-        validateLastActivity("http://example.com");
     }
 
     /**

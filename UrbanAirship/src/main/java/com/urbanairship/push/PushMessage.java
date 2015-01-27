@@ -1,6 +1,8 @@
 package com.urbanairship.push;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.richpush.RichPushManager;
@@ -11,7 +13,7 @@ import com.urbanairship.util.UAStringUtil;
  * A push message, usually created from handling a message intent from either GCM,
  * or another push notification service
  */
-public class PushMessage {
+public class PushMessage implements Parcelable {
 
     /**
      * The ping extra indicates a push meant to test whether the application is active
@@ -150,7 +152,6 @@ public class PushMessage {
      * client. If not present, notifications may be delivered arbitrarily late.
      */
     public static final String EXTRA_EXPIRATION = "com.urbanairship.push.EXPIRATION";
-
 
     private Bundle pushBundle;
 
@@ -370,4 +371,30 @@ public class PushMessage {
     public String toString() {
         return pushBundle.toString();
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeBundle(pushBundle);
+    }
+
+    /**
+     * Parcel Creator for push messages.
+     */
+    public static final Parcelable.Creator<PushMessage> CREATOR = new Parcelable.Creator<PushMessage>() {
+
+        @Override
+        public PushMessage createFromParcel(Parcel in) {
+            return new PushMessage(in.readBundle());
+        }
+
+        @Override
+        public PushMessage[] newArray(int size) {
+            return new PushMessage[size];
+        }
+    };
 }

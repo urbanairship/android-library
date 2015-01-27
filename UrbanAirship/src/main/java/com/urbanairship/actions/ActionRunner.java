@@ -25,13 +25,12 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -113,8 +112,8 @@ public class ActionRunner {
         private final Executor executor;
         private String actionName;
         private Action action;
-        private Object actionValue;
-        private Map<String, Object> metadata;
+        private ActionValue actionValue;
+        private Bundle metadata;
         private Situation situation;
 
         /**
@@ -149,8 +148,25 @@ public class ActionRunner {
          * @param actionValue The action argument's value.
          * @return The request object.
          */
-        public RunRequest setValue(Object actionValue) {
+        public RunRequest setValue(ActionValue actionValue) {
             this.actionValue = actionValue;
+            return this;
+        }
+
+        /**
+         * Sets the action arguments value. The object will automatically be wrapped
+         * as a ActionValue and throw an illegal argument exception if its an invalid value.
+         *
+         * @param object The action arguments as an object.
+         * @return The request object.
+         * @throws IllegalArgumentException if the object is unable to be wrapped in an ActionValue.
+         */
+        public RunRequest setValue(Object object) {
+            try {
+                this.actionValue = ActionValue.wrap(object);
+            } catch (ActionValue.ActionValueException e) {
+                throw new IllegalArgumentException("Unable to wrap object: " + object + " as an ActionValue.", e);
+            }
             return this;
         }
 
@@ -160,8 +176,8 @@ public class ActionRunner {
          * @param metadata The action argument's metadata.
          * @return The request object.
          */
-        public RunRequest setMetadata(Map<String, Object> metadata) {
-            this.metadata = metadata == null ? null : new HashMap<>(metadata);
+        public RunRequest setMetadata(Bundle metadata) {
+            this.metadata = metadata;
             return this;
         }
 
@@ -246,9 +262,9 @@ public class ActionRunner {
          * @return The action arguments.
          */
         private ActionArguments createActionArguments() {
-            Map<String, Object> metadata = this.metadata == null ? new HashMap<String, Object>() : this.metadata;
+            Bundle metadata = this.metadata == null ? new Bundle() : new Bundle(this.metadata);
             if (actionName != null) {
-                metadata.put(ActionArguments.REGISTRY_ACTION_NAME_METADATA, actionName);
+                metadata.putString(ActionArguments.REGISTRY_ACTION_NAME_METADATA, actionName);
             }
 
             return new ActionArguments(situation, actionValue, metadata);

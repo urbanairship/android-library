@@ -147,8 +147,9 @@ public class AddCustomEventActionTest {
 
         Map map = new HashMap();
         map.put(CustomEvent.EVENT_NAME, "event name");
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+
+        Bundle metadata = new Bundle();
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
         ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
 
@@ -178,8 +179,8 @@ public class AddCustomEventActionTest {
         map.put(CustomEvent.EVENT_NAME, "event name");
         map.put(CustomEvent.INTERACTION_TYPE, "interaction type");
 
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+        Bundle metadata = new Bundle();
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
         ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
 
@@ -230,9 +231,9 @@ public class AddCustomEventActionTest {
         Bundle pushBundle = new Bundle();
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "send id");
 
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
-        metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+        Bundle metadata = new Bundle();
+        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
         ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
 

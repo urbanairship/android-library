@@ -26,11 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
-
-import java.util.Map;
 
 /**
  * An action that adds a custom event.
@@ -62,27 +61,33 @@ public class AddCustomEventAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_NAME = "add_custom_event_action";
 
-
     @Override
     public ActionResult perform(ActionArguments arguments) {
-        Map map = (Map) arguments.getValue();
-
         // Parse the event values from the map
-        String eventName = parseStringFromMap(map, CustomEvent.EVENT_NAME);
-        String eventValue = parseStringFromMap(map, CustomEvent.EVENT_VALUE);
-        String transactionId = parseStringFromMap(map, CustomEvent.TRANSACTION_ID);
-        String interactionType = parseStringFromMap(map, CustomEvent.INTERACTION_TYPE);
-        String interactionId = parseStringFromMap(map, CustomEvent.INTERACTION_ID);
+        String eventName = getValue(arguments, CustomEvent.EVENT_NAME).getString();
+
+        String eventStringValue = getValue(arguments, CustomEvent.EVENT_VALUE).getString();
+        double eventDoubleValue = getValue(arguments, CustomEvent.EVENT_VALUE).getDouble(0);
+
+        String transactionId = getValue(arguments, CustomEvent.TRANSACTION_ID).getString();
+        String interactionType = getValue(arguments, CustomEvent.INTERACTION_TYPE).getString();
+        String interactionId = getValue(arguments, CustomEvent.INTERACTION_ID).getString();
 
         CustomEvent.Builder eventBuilder = new CustomEvent.Builder(eventName)
-                .setEventValue(eventValue)
                 .setTransactionId(transactionId)
                 .setInteraction(interactionType, interactionId)
-                .setAttribution((PushMessage) arguments.getMetadata().get(ActionArguments.PUSH_MESSAGE_METADATA));
+                .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
+
+        if (eventStringValue != null) {
+            eventBuilder.setEventValue(eventStringValue);
+        } else {
+            eventBuilder.setEventValue(eventDoubleValue);
+        }
 
         // Try to fill in the interaction if its not set
         if (interactionId == null && interactionType == null) {
-            RichPushMessage message = (RichPushMessage) arguments.getMetadata().get(ActionArguments.RICH_PUSH_METADATA);
+            String messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
+            RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
 
             if (message != null) {
                 eventBuilder.setInteraction(message);
@@ -95,13 +100,8 @@ public class AddCustomEventAction extends Action {
 
     @Override
     public boolean acceptsArguments(ActionArguments arguments) {
-        if (!super.acceptsArguments(arguments)) {
-            return false;
-        }
-
-        if (arguments.getValue() instanceof Map) {
-            Map map = (Map) arguments.getValue();
-            if (map.get("event_name") == null) {
+        if (arguments.getValue().getMap() != null) {
+            if (arguments.getValue().getMap().get("event_name") == null) {
                 Logger.debug("CustomEventAction requires an event name in the event data.");
                 return false;
             }
@@ -112,18 +112,8 @@ public class AddCustomEventAction extends Action {
         return false;
     }
 
-    /**
-     * Helper method to parse the string value of an object from a map.
-     *
-     * @param map The map of objects.
-     * @param key The object's key.
-     * @return The string value of the object, or null if the object does not exist.
-     */
-    private String parseStringFromMap(Map map, String key) {
-        Object value = map.get(key);
-        if (value != null) {
-            return String.valueOf(value);
-        }
-        return null;
+    private ActionValue getValue(ActionArguments arguments, String key) {
+        ActionValue actionValue = arguments.getValue().getMap().get(key);
+        return actionValue == null ? ActionValue.NULL : actionValue;
     }
 }

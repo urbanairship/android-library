@@ -68,7 +68,7 @@ public class PushManager extends BaseManager {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_BUNDLE}
+     * {@link #EXTRA_PUSH_MESSAGE}
      */
     public static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.RECEIVED";
 
@@ -77,7 +77,7 @@ public class PushManager extends BaseManager {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_BUNDLE},
+     * {@link #EXTRA_PUSH_MESSAGE},
      * {@link #EXTRA_NOTIFICATION_BUTTON_ID},
      * {@link #EXTRA_NOTIFICATION_BUTTON_FOREGROUND}
      */
@@ -88,7 +88,7 @@ public class PushManager extends BaseManager {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_BUNDLE}
+     * {@link #EXTRA_PUSH_MESSAGE}
      */
     public static final String ACTION_NOTIFICATION_DISMISSED = "com.urbanairship.push.DISMISSED";
 
@@ -109,9 +109,9 @@ public class PushManager extends BaseManager {
     public static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.push.NOTIFICATION_ID";
 
     /**
-     * The actual push bundle when a notification is opened.
+     * The push message extra.
      */
-    public static final String EXTRA_PUSH_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_BUNDLE";
+    public static final String EXTRA_PUSH_MESSAGE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE";
 
     /**
      * The interactive notification action button identifier extra.
@@ -768,7 +768,7 @@ public class PushManager extends BaseManager {
      */
     private void sendPushReceivedBroadcast(PushMessage message, Integer notificationId) {
         Intent intent = new Intent(ACTION_PUSH_RECEIVED)
-                .putExtra(EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                .putExtra(EXTRA_PUSH_MESSAGE, message)
                 .addCategory(UAirship.getPackageName())
                 .setPackage(UAirship.getPackageName());
 
@@ -945,7 +945,7 @@ public class PushManager extends BaseManager {
             Intent contentIntent = new Intent(context, CoreReceiver.class)
                     .setAction(ACTION_NOTIFICATION_OPENED_PROXY)
                     .addCategory(UUID.randomUUID().toString())
-                    .putExtra(EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                    .putExtra(EXTRA_PUSH_MESSAGE, message)
                     .putExtra(EXTRA_NOTIFICATION_ID, notificationId);
 
             // If the notification already has an intent, add it to the extras to be sent later
@@ -956,7 +956,7 @@ public class PushManager extends BaseManager {
             Intent deleteIntent = new Intent(context, CoreReceiver.class)
                     .setAction(ACTION_NOTIFICATION_DISMISSED_PROXY)
                     .addCategory(UUID.randomUUID().toString())
-                    .putExtra(EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                    .putExtra(EXTRA_PUSH_MESSAGE, message)
                     .putExtra(EXTRA_NOTIFICATION_ID, notificationId);
 
             if (notification.deleteIntent != null) {
