@@ -38,16 +38,14 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.JSONUtils;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -186,35 +184,35 @@ public class UAJavascriptInterface {
      * Runs an action by name, and performs callbacks into the JavaScript layer with results.
      *
      * @param name The name of the action to run.
-     * @param encodedArguments A JSON-encoded string representing the action arguments.
+     * @param value A JSON-encoded string representing the action value.
      * @param callbackKey The key for the callback function in JavaScript.
      */
     /*
-     * The encodedArguments should evaluate to a JSON object containing a "value" key, and
-     * a valid JSON fragment as the value.  Once the action is finished (or has resulted in
-     * an unsuccessful status) This method will call back into the the finishAction function
-     * in the JavaScript layer.
+     * Once the action is finished (or has resulted in an unsuccessful status) This method will call
+     * back into the the finishAction function in the JavaScript layer.
      */
     @JavascriptInterface
-    public void actionCall(final String name,
-                           final String encodedArguments,
-                           final String callbackKey) {
-
-        Object arg = decodeActionValue(encodedArguments);
-        if (arg == null) {
-            Logger.info("Invalid encoded arguments: " + encodedArguments);
-            runActionCallback("Unable to decode arguments payload", null, callbackKey);
+    public void actionCall(final String name, final String value, final String callbackKey) {
+        // Parse the action value
+        ActionValue actionValue;
+        try {
+            actionValue = ActionValue.parseString(value);
+        } catch (ActionValue.ActionValueException e) {
+            Logger.warn("Unable to parse action argument value: " + value, e);
+            runActionCallback("Unable to decode arguments payload", ActionValue.NULL, callbackKey);
             return;
         }
 
+        // Create metadata
         Bundle metadata = new Bundle();
         if (message != null) {
             metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
 
+        // Run the action
         actionRunner.run(name)
                     .setMetadata(metadata)
-                    .setValue(arg)
+                    .setValue(actionValue)
                     .setSituation(Situation.WEB_VIEW_INVOCATION)
                     .execute(new ActionCompletionCallback() {
                         @Override
@@ -233,29 +231,23 @@ public class UAJavascriptInterface {
      * @param callbackKey The key for the callback function in JavaScript.
      */
     @SuppressLint("NewAPI")
-    private void runActionCallback(String error, Object resultValue, String callbackKey) {
+    private void runActionCallback(String error, ActionValue resultValue, String callbackKey) {
         // Create the callback string
         String callbackString = String.format("'%s'", callbackKey);
 
         // Create the error string
-        String errorString = error == null ?
-                             "null" : String.format("new Error('%s')", error);
-
-        // Create the result string
-        String resultValueString = "null";
-        if (resultValue != null) {
-            JSONObject resultPayload = new JSONObject();
-            try {
-                //pass back an object containing the result value, keyed "value"
-                resultPayload.put("value", resultValue);
-                resultValueString = String.format("'%s'", resultPayload);
-            } catch (JSONException jx) {
-                Logger.info("Unable to encode JS result value");
-            }
+        String errorString;
+        if (error == null) {
+            errorString = "null";
+        } else {
+            errorString = String.format(Locale.US, "new Error(%s)", JSONObject.quote(error));
         }
 
+        // Create the result value
+        String resultValueString = resultValue.toString();
+
         // Create the javascript call for UAirship.finishAction(error, value, callback)
-        final String finishAction = String.format("UAirship.finishAction(%s, %s, %s);",
+        final String finishAction = String.format(Locale.US, "UAirship.finishAction(%s, %s, %s);",
                 errorString, resultValueString, callbackString);
 
         // Call on main thread
@@ -269,22 +261,6 @@ public class UAJavascriptInterface {
                 }
             }
         });
-    }
-
-    /**
-     * Decodes the JSON-encoded string representing the action argument value.
-     *
-     * @param encodedArguments A JSON-encoded string representing the action arguments.
-     * @return The action argument's value.
-     */
-    private Object decodeActionValue(String encodedArguments) {
-        try {
-            JSONObject argumentsJSON = new JSONObject(encodedArguments);
-            Map<String, Object> argumentsMap = JSONUtils.convertToMap(argumentsJSON);
-            return argumentsMap.get("value");
-        } catch (JSONException e) {
-            return null;
-        }
     }
 
     /**

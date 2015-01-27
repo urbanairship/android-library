@@ -112,7 +112,7 @@ public class ActionRunner {
         private final Executor executor;
         private String actionName;
         private Action action;
-        private Object actionValue;
+        private ActionValue actionValue;
         private Bundle metadata;
         private Situation situation;
 
@@ -148,8 +148,25 @@ public class ActionRunner {
          * @param actionValue The action argument's value.
          * @return The request object.
          */
-        public RunRequest setValue(Object actionValue) {
+        public RunRequest setValue(ActionValue actionValue) {
             this.actionValue = actionValue;
+            return this;
+        }
+
+        /**
+         * Sets the action arguments value. The object will automatically be wrapped
+         * as a ActionValue and throw an illegal argument exception if its an invalid value.
+         *
+         * @param object The action arguments as an object.
+         * @return The request object.
+         * @throws IllegalArgumentException if the object is unable to be wrapped in an ActionValue.
+         */
+        public RunRequest setValue(Object object) {
+            try {
+                this.actionValue = ActionValue.wrap(object);
+            } catch (ActionValue.ActionValueException e) {
+                throw new IllegalArgumentException("Unable to wrap object: " + object + " as an ActionValue.", e);
+            }
             return this;
         }
 

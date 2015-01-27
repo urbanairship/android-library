@@ -36,6 +36,8 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionTestUtils;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.actions.StubbedRunRequest;
 import com.urbanairship.richpush.RichPushMessage;
@@ -99,14 +101,14 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testActionCallInvalidArguments() {
-        js.actionCall("actionName", "invalid json", "callbackKey");
+        js.actionCall("actionName", "{invalid json}}}", "callbackKey");
 
         // Callbacks are posted on the main thread using post, capture and run the runnable
         ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
         verify(webView).post(argument.capture());
         argument.getValue().run();
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error('Unable to decode arguments payload'), null, 'callbackKey');");
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackKey');");
     }
 
 
@@ -115,8 +117,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testActionCallActionNotFound() {
-        final MutableActionResult result = new MutableActionResult();
-        result.status = ActionResult.Status.ACTION_NOT_FOUND;
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.ACTION_NOT_FOUND);
 
         ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunner.run("actionName")).thenReturn(runRequest);
@@ -133,14 +134,15 @@ public class UAJavascriptInterfaceTest {
             }
         }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
-        js.actionCall("actionName", "{ \"value\": true }", "callbackKey");
+        js.actionCall("actionName", "true", "callbackKey");
 
         // Callbacks are posted on the main thread using post, capture and run the runnable
         ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
         verify(webView).post(argument.capture());
         argument.getValue().run();
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error('Action actionName not found'), null, 'callbackKey');");
+
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackKey');");
     }
 
 
@@ -149,8 +151,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testActionCallActionRejectedArguments() {
-        final MutableActionResult result = new MutableActionResult();
-        result.status = ActionResult.Status.REJECTED_ARGUMENTS;
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.REJECTED_ARGUMENTS);
 
         ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunner.run("actionName")).thenReturn(runRequest);
@@ -167,14 +168,14 @@ public class UAJavascriptInterfaceTest {
             }
         }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
-        js.actionCall("actionName", "{ \"value\": true }", "callbackKey");
+        js.actionCall("actionName", "true", "callbackKey");
 
         // Callbacks are posted on the main thread using post, capture and run the runnable
         ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
         verify(webView).post(argument.capture());
         argument.getValue().run();
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error('Action actionName rejected its arguments'), null, 'callbackKey');");
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackKey');");
     }
 
     /**
@@ -182,9 +183,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testActionCallActionExecutionError() {
-        final MutableActionResult result = new MutableActionResult();
-        result.status = ActionResult.Status.EXECUTION_ERROR;
-        result.error = new Exception("error!");
+        final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.Status.EXECUTION_ERROR);
 
         ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunner.run("actionName")).thenReturn(runRequest);
@@ -201,24 +200,22 @@ public class UAJavascriptInterfaceTest {
             }
         }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
-        js.actionCall("actionName", "{ \"value\": true }", "callbackKey");
+        js.actionCall("actionName", "true", "callbackKey");
 
         // Callbacks are posted on the main thread using post, capture and run the runnable
         ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
         verify(webView).post(argument.capture());
         argument.getValue().run();
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error('error!'), null, 'callbackKey');");
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"error!\"), null, 'callbackKey');");
     }
 
     /**
      * Test running an action with a result
      */
     @Test
-    public void testActionCallAction() {
-        final MutableActionResult result = new MutableActionResult();
-        result.status = ActionResult.Status.COMPLETED;
-        result.value = "actionValue";
+    public void testActionCallAction() throws ActionValue.ActionValueException {
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
 
         ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunner.run("actionName")).thenReturn(runRequest);
@@ -235,7 +232,7 @@ public class UAJavascriptInterfaceTest {
             }
         }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
-        js.actionCall("actionName", "{ \"value\": true }", "callbackKey");
+        js.actionCall("actionName", "true", "callbackKey");
 
         // Callbacks are posted on the main thread using post, capture and run the runnable
         ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
@@ -243,12 +240,12 @@ public class UAJavascriptInterfaceTest {
         argument.getValue().run();
 
         // Verify the callback
-        verify(webView).loadUrl("javascript:UAirship.finishAction(null, '{\"value\":\"actionValue\"}', 'callbackKey');");
+        verify(webView).loadUrl("javascript:UAirship.finishAction(null, \"action_result\", 'callbackKey');");
 
         // Verify the action request
         verify(runRequest).execute(any(ActionCompletionCallback.class));
         verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(runRequest).setValue(true);
+        verify(runRequest).setValue(ActionValue.wrap(true));
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Object o) {
@@ -346,36 +343,5 @@ public class UAJavascriptInterfaceTest {
         js = new UAJavascriptInterface(webView, actionRunner, null);
         assertEquals("Should return -1 if the message is null",
                 -1, js.getMessageSentDateMS());
-    }
-
-    /**
-     * A mutable action result
-     */
-    public static class MutableActionResult extends ActionResult {
-        public Status status;
-        public Object value;
-        public Exception error;
-
-        public MutableActionResult() {
-            super(null, null, Status.COMPLETED);
-            this.status = Status.COMPLETED;
-            this.value = null;
-            this.error = null;
-        }
-
-        @Override
-        public Status getStatus() {
-            return status;
-        }
-
-        @Override
-        public Object getValue() {
-            return value;
-        }
-
-        @Override
-        public Exception getException() {
-            return error;
-        }
     }
 }
