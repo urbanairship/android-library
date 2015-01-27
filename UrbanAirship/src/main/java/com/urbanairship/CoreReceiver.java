@@ -29,7 +29,6 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.actions.ActionService;
@@ -74,13 +73,12 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     static void handleNotificationOpenedProxy(Context context, Intent intent) {
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
-        if (pushBundle == null) {
-            Logger.error("CoreReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
-        PushMessage message = new PushMessage(pushBundle);
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         Logger.info("Notification opened ID: " + notificationId);
@@ -98,7 +96,7 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
@@ -113,9 +111,9 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     static void handleNotificationButtonOpenedProxy(Context context, Intent intent) {
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
-        if (pushBundle == null) {
-            Logger.error("CoreReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
@@ -125,7 +123,6 @@ public class CoreReceiver extends BroadcastReceiver {
             return;
         }
 
-        PushMessage message = new PushMessage(pushBundle);
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
         boolean isForegroundAction = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
         String actionPayload = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD);
@@ -146,7 +143,7 @@ public class CoreReceiver extends BroadcastReceiver {
         UAirship.shared().getAnalytics().addEvent(event);
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, message.getPushBundle())
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, notificationActionId)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, isForegroundAction)
@@ -165,9 +162,9 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     private void handleNotificationDismissedProxy(Context context, Intent intent) {
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
-        if (pushBundle == null) {
-            Logger.error("CoreReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
@@ -186,7 +183,7 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         Intent dismissIntent = new Intent(PushManager.ACTION_NOTIFICATION_DISMISSED)
-                .putExtra(PushManager.EXTRA_PUSH_BUNDLE, pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
@@ -203,13 +200,11 @@ public class CoreReceiver extends BroadcastReceiver {
     private void handleNotificationOpened(Context context, Intent intent) {
         AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
 
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_BUNDLE);
-        if (pushBundle == null) {
-            Logger.error("CoreReceiver - Intent is missing push bundle for: " + intent.getAction());
+        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        if (message == null) {
+            Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
-
-        PushMessage message = new PushMessage(pushBundle);
 
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID)) {
             boolean isForeground = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);

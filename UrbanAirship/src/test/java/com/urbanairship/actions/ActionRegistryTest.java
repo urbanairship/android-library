@@ -89,7 +89,7 @@ public class ActionRegistryTest {
         when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 8 * 24 * 1000 * 3600);
 
         assertFalse("Should reject PUSH_RECEIVED when the app has not been opened in the week.",
-                entry.getPredicate().apply(new ActionArguments(Situation.PUSH_RECEIVED, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
     }
 
     /**
@@ -107,7 +107,7 @@ public class ActionRegistryTest {
         when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 6 * 24 * 1000 * 3600);
 
         assertTrue("Should accept PUSH_RECEIVED when the app has been opened in the last week.",
-                entry.getPredicate().apply(new ActionArguments(Situation.PUSH_RECEIVED, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
     }
 
     /**
@@ -122,10 +122,10 @@ public class ActionRegistryTest {
         assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
 
         assertFalse("Add custom event should reject PUSH_RECEIVED.",
-                entry.getPredicate().apply(new ActionArguments(Situation.PUSH_RECEIVED, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
 
         assertFalse("Add custom event should reject PUSH_OPENED.",
-                entry.getPredicate().apply(new ActionArguments(Situation.PUSH_OPENED, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_OPENED, "value", null)));
     }
 
     /**
@@ -140,10 +140,10 @@ public class ActionRegistryTest {
         assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
 
         assertTrue("Add custom event should accept MANUAL_INVOCATION.",
-                entry.getPredicate().apply(new ActionArguments(Situation.MANUAL_INVOCATION, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", null)));
 
         assertTrue("Add custom event should accept WEB_VIEW_INVOCATION.",
-                entry.getPredicate().apply(new ActionArguments(Situation.WEB_VIEW_INVOCATION, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "value", null)));
     }
 
     /**
@@ -161,7 +161,7 @@ public class ActionRegistryTest {
         when(metrics.getLastOpenTimeMillis()).thenReturn(-1L);
 
         assertFalse("Should not accept PUSH_RECEIVED when the app has never been opened.",
-                entry.getPredicate().apply(new ActionArguments(Situation.PUSH_RECEIVED, "value")));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
     }
 
     /**

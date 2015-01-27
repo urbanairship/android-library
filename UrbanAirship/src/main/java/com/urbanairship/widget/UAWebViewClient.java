@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -37,16 +38,12 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
 import com.urbanairship.js.UAJavascriptInterface;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UriUtils;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -174,12 +171,10 @@ public class UAWebViewClient extends WebViewClient {
         Logger.verbose("Intercepting: " + url);
         if (RUN_BASIC_ACTIONS_COMMAND.equals(uri.getHost())) {
             Logger.info("Running run basic actions command for URL: " + url);
-            Map<String, List<String>> options = UriUtils.getQueryParameters(uri);
-            runBasicActions(options, message);
+            runActions(decodeActionArguments(uri, true), message);
         } else if (RUN_ACTIONS_COMMAND.equals(uri.getHost())) {
             Logger.info("Running run actions command for URL: " + url);
-            Map<String, List<String>> options = UriUtils.getQueryParameters(uri);
-            runActions(options, message);
+            runActions(decodeActionArguments(uri, false), message);
         } else if (RUN_ACTIONS_COMMAND_CALLBACK.equals(uri.getHost())) {
             Logger.info("Running run actions command with callback for URL: " + url);
             UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
@@ -207,88 +202,66 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Performs actions from the run actions command.
      *
-     * @param actions Map of action name to action arguments.
-     * @param message The rich push message associated with the web view.
+     * @param arguments Map of action to action arguments to run.
+     * @param message The optional rich push message associated with the web view.
      */
-    private void runActions(Map<String, List<String>> actions, RichPushMessage message) {
-        Map<String, List<ActionArguments>> decodedActionArguments = decodeActionArguments(actions, message, false);
+    private void runActions(Map<String, List<ActionValue>> arguments, RichPushMessage message) {
+        if (arguments == null) {
+            return;
+        }
 
-        if (decodedActionArguments != null) {
-            for (String actionName : decodedActionArguments.keySet()) {
-                for (ActionArguments decodedActionArgument : decodedActionArguments.get(actionName)) {
-                    actionRunner.runAction(actionName, decodedActionArgument);
+        Bundle metadata = new Bundle();
+        if (message != null) {
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
+        }
 
-                }
+        for (String actionName : arguments.keySet()) {
+            for (ActionValue arg : arguments.get(actionName)) {
+                actionRunner.run(actionName)
+                            .setValue(arg)
+                            .setMetadata(metadata)
+                            .setSituation(Situation.WEB_VIEW_INVOCATION)
+                            .execute();
             }
         }
 
-    }
-
-    /**
-     * Performs actions from the run basic actions command.
-     *
-     * @param actions Map of action name to action arguments
-     * @param message The rich push message associated with the web view.
-     */
-    private void runBasicActions(Map<String, List<String>> actions, RichPushMessage message) {
-        Map<String, List<ActionArguments>> decodedActionArguments = decodeActionArguments(actions, message, true);
-
-        if (decodedActionArguments != null) {
-            for (String actionName : decodedActionArguments.keySet()) {
-                for (ActionArguments decodedActionArgument : decodedActionArguments.get(actionName)) {
-                    actionRunner.runAction(actionName, decodedActionArgument);
-
-                }
-            }
-        }
     }
 
     /**
      * Decodes actions with basic URL or URL+json encoding
      *
-     * @param actions The map of actions to decode
-     * @param message The rich push message associated with the web view.
+     * @param uri The uri.
      * @param basicEncoding A boolean to select for basic encoding
-     * @return A map of action arguments under action name strings or returns null if decoding error occurs.
+     * @return A map of action values under action name strings or returns null if decoding error occurs.
      */
-    private Map<String, List<ActionArguments>> decodeActionArguments (Map<String, List<String>> actions, RichPushMessage message, boolean basicEncoding) {
-        HashMap<String, List<ActionArguments>> decodedActions = new HashMap<>();
-        List<ActionArguments> decodedActionArguments = new ArrayList<>();
+    private Map<String, List<ActionValue>> decodeActionArguments(Uri uri, boolean basicEncoding) {
+        Map<String, List<String>> options = UriUtils.getQueryParameters(uri);
+        if (options == null) {
+            return null;
+        }
 
-        for (String actionName : actions.keySet()) {
-            List<String> args = actions.get(actionName);
+        Map<String, List<ActionValue>> decodedActions = new HashMap<>();
 
-            if (args == null) {
+        for (String actionName : options.keySet()) {
+            List<ActionValue> decodedActionArguments = new ArrayList<>();
+
+            if (options.get(actionName) == null) {
                 Logger.warn("No arguments to decode for actionName: " + actionName);
                 return null;
             }
 
-            for (String arg : args) {
+            for (String arg : options.get(actionName)) {
                 try {
-                    ActionArguments arguments;
-                    if (basicEncoding) {
-                        arguments = new ActionArguments.Builder()
-                                .setSituation(Situation.WEB_VIEW_INVOCATION)
-                                .setValue(arg)
-                                .addMetadata(ActionArguments.RICH_PUSH_METADATA, message)
-                                .create();
-                    } else {
-                        arguments = new ActionArguments.Builder()
-                                .setSituation(Situation.WEB_VIEW_INVOCATION)
-                                .setValue(getArgumentFromJSONString(arg))
-                                .addMetadata(ActionArguments.RICH_PUSH_METADATA, message)
-                                .create();
-                    }
-                    decodedActionArguments.add(arguments);
-                } catch (JSONException e) {
+                    ActionValue actionValue = basicEncoding ? ActionValue.wrap(arg) : ActionValue.parseString(arg);
+                    decodedActionArguments.add(actionValue);
+                } catch (ActionValue.ActionValueException e) {
                     Logger.warn("Invalid json. Unable to create action argument "
                             + actionName + " with args: " + arg, e);
                     return null;
                 }
             }
 
-            decodedActions.put(actionName, new ArrayList<>(decodedActionArguments));
-            decodedActionArguments.clear();
+            decodedActions.put(actionName, decodedActionArguments);
         }
 
         if (decodedActions.isEmpty()) {
@@ -297,26 +270,6 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         return decodedActions;
-    }
-
-    /**
-     * Converts a json string to either a map or list that represents
-     * the json.
-     *
-     * @param jsonString json string to convert.
-     * @return A map or list from the json string.
-     * @throws JSONException If the jsonString is not valid json.
-     */
-    private Object getArgumentFromJSONString(String jsonString) throws JSONException {
-        if (jsonString == null) {
-            return null;
-        }
-
-        try {
-            return JSONUtils.convertToList(new JSONArray(jsonString));
-        } catch (JSONException e) {
-            return JSONUtils.convertToMap(new JSONObject(jsonString));
-        }
     }
 
     @Override
@@ -362,7 +315,7 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         if (!isWhiteListed(url)) {
-            Logger.warn( url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
+            Logger.warn(url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
             return;
         }
 
@@ -427,7 +380,6 @@ public class UAWebViewClient extends WebViewClient {
             this.password = password;
         }
     }
-
 
     String createJavascriptInterfaceWrapper(UAJavascriptInterface jsInterface) {
         String stringMethod = "_UAirship.%s = function(){return '%s';};";

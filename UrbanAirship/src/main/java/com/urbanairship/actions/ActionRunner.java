@@ -1,4 +1,5 @@
 package com.urbanairship.actions;
+
 /*
 Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
@@ -24,7 +25,9 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 
 import com.urbanairship.Logger;
 
@@ -46,6 +49,7 @@ import java.util.concurrent.Executors;
  * convenient way of running actions from another action.
  */
 public class ActionRunner {
+
     private static ActionRunner instance = new ActionRunner(ActionRegistry.shared(), Executors.newCachedThreadPool());
 
     private ActionRegistry actionRegistry;
@@ -73,148 +77,197 @@ public class ActionRunner {
     }
 
     /**
-     * Runs an action asynchronously with a callback.
+     * Starts an action run request. The action will not be run
+     * until executing the request.
+     *
+     * @param actionName The action name in the registry.
+     * @return An action run request.
+     */
+    public RunRequest run(String actionName) {
+        return new RunRequest(actionName, actionRegistry, executor);
+    }
+
+    /**
+     * Starts an action run request. The action will not be run
+     * until executing the request.
      *
      * @param action The action to run.
-     * @param arguments The action arguments.
-     * @param completionCallback The action completion callback. The callback
-     * will be executed on the caller's thread if it was called on the main thread
-     * or on a thread with a prepared looper, otherwise it will be executed
-     * on a background thread.
-     * @throws IllegalArgumentException if the action is null
+     * @return An action run request.
+     * @throws java.lang.IllegalArgumentException if the action is null.
      */
-    public void runAction(final Action action, final ActionArguments arguments, final ActionCompletionCallback completionCallback) {
+    public RunRequest run(Action action) {
         if (action == null) {
             throw new IllegalArgumentException("Unable to run null action");
         }
 
-        final Handler handler = getHandler();
+        return new RunRequest(action, actionRegistry, executor);
+    }
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                final ActionResult result = action.run(null, arguments);
-                postResult(handler, completionCallback, result);
+    /**
+     * Run request object with a fluent api for defining an action run.
+     */
+    public static class RunRequest {
+
+        private final ActionRegistry registry;
+        private final Executor executor;
+        private String actionName;
+        private Action action;
+        private ActionValue actionValue;
+        private Bundle metadata;
+        private Situation situation;
+
+        /**
+         * Creates a new action RunRequest.
+         *
+         * @param actionName The action name in the registry.
+         * @param registry The action registry.
+         * @param executor The executor.
+         */
+        RunRequest(String actionName, ActionRegistry registry, Executor executor) {
+            this.actionName = actionName;
+            this.registry = registry;
+            this.executor = executor;
+        }
+
+        /**
+         * Creates a new action RunRequest.
+         *
+         * @param action The action to run.
+         * @param registry The action registry.
+         * @param executor The executor.
+         */
+        RunRequest(Action action, ActionRegistry registry, Executor executor) {
+            this.action = action;
+            this.registry = registry;
+            this.executor = executor;
+        }
+
+        /**
+         * Sets the action argument's value.
+         *
+         * @param actionValue The action argument's value.
+         * @return The request object.
+         */
+        public RunRequest setValue(ActionValue actionValue) {
+            this.actionValue = actionValue;
+            return this;
+        }
+
+        /**
+         * Sets the action arguments value. The object will automatically be wrapped
+         * as a ActionValue and throw an illegal argument exception if its an invalid value.
+         *
+         * @param object The action arguments as an object.
+         * @return The request object.
+         * @throws IllegalArgumentException if the object is unable to be wrapped in an ActionValue.
+         */
+        public RunRequest setValue(Object object) {
+            try {
+                this.actionValue = ActionValue.wrap(object);
+            } catch (ActionValue.ActionValueException e) {
+                throw new IllegalArgumentException("Unable to wrap object: " + object + " as an ActionValue.", e);
             }
-        });
-    }
+            return this;
+        }
 
+        /**
+         * Sets the action argument's metadata.
+         *
+         * @param metadata The action argument's metadata.
+         * @return The request object.
+         */
+        public RunRequest setMetadata(Bundle metadata) {
+            this.metadata = metadata;
+            return this;
+        }
 
-    /**
-     * Runs an action asynchronously.
-     *
-     * @param action The action to run.
-     * @param arguments The action arguments.
-     */
-    public void runAction(Action action, ActionArguments arguments) {
-        this.runAction(action, arguments, null);
-    }
+        /**
+         * Sets the situation.
+         *
+         * @param situation The action argument's situation.
+         * @return The request object.
+         */
+        public RunRequest setSituation(Situation situation) {
+            this.situation = situation;
+            return this;
+        }
 
-    /**
-     * Runs an action asynchronously with a callback.
-     *
-     * @param actionName Name of the action in the registry.
-     * @param arguments The action arguments.
-     * @param completionCallback The action completion callback. The callback
-     * will be executed on the caller's thread if it was called on the main thread
-     * or on a thread with a prepared looper, otherwise it will be executed
-     * on a background thread.
-     */
-    public void runAction(final String actionName, final ActionArguments arguments, final ActionCompletionCallback completionCallback) {
-        final Handler handler = getHandler();
+        /**
+         * Executes the action synchronously.
+         *
+         * @return The action's result.
+         */
+        public ActionResult executeSync() {
+            ActionArguments arguments = createActionArguments();
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                final ActionResult result = runActionSync(actionName, arguments);
-                postResult(handler, completionCallback, result);
+            if (actionName != null) {
+                ActionRegistry.Entry entry = registry.getEntry(actionName);
+                if (entry == null) {
+                    return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
+                } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
+                    Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
+                    return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
+                } else {
+                    return entry.getActionForSituation(situation).run(arguments);
+                }
+            } else if (action != null) {
+                return action.run(arguments);
+            } else {
+                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
             }
-        });
-    }
-
-    /**
-     * Runs an action asynchronously.
-     *
-     * @param actionName Name of the action in the registry.
-     * @param arguments The action arguments.
-     */
-    public void runAction(String actionName, ActionArguments arguments) {
-        this.runAction(actionName, arguments, null);
-    }
-
-    /**
-     * Runs an action synchronously.
-     *
-     * @param action The action to run.
-     * @param arguments The action arguments.
-     * @return The action's result.
-     */
-    public ActionResult runActionSync(Action action, ActionArguments arguments) {
-        if (action == null) {
-            throw new IllegalArgumentException("Unable to run null action");
         }
 
-        return action.run(null, arguments);
-    }
-
-
-    /**
-     * Runs an action synchronously.
-     *
-     * @param actionName Name of the action in the registry.
-     * @param arguments The action arguments.
-     * @return The action's result.
-     */
-    public ActionResult runActionSync(String actionName, ActionArguments arguments) {
-        ActionRegistry.Entry entry = actionRegistry.getEntry(actionName);
-        if (entry == null) {
-            return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
-        } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
-            Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
-            return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
-        } else {
-            Situation situation = arguments == null ? null : arguments.getSituation();
-            return entry.getActionForSituation(situation).run(actionName, arguments);
-        }
-    }
-
-    /**
-     * Helper method that calls the callback on the right thread with the
-     * given result.
-     *
-     * @param handler The handler of the caller's thread.
-     * @param callback The action completion callback.
-     * @param result The result of the action.
-     */
-    private void postResult(Handler handler, final ActionCompletionCallback callback, final ActionResult result) {
-        if (callback == null) {
-            return;
+        /**
+         * Executes the action asynchronously.
+         */
+        public void execute() {
+            execute(null);
         }
 
-        // Post it on the original caller's handler if we can
-        if (handler != null) {
-            handler.post(new Runnable() {
+        /**
+         * Executes the action asynchronously with a callback.
+         *
+         * @param callback The action completion callback.
+         */
+        public void execute(final ActionCompletionCallback callback) {
+            final Handler handler = Looper.myLooper() != null ? new Handler() : null;
+
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    callback.onFinish(result);
+                    final ActionResult result = executeSync();
+
+                    if (callback == null) {
+                        return;
+                    }
+
+                    // Post it on the original caller's handler if we can
+                    if (handler != null) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.onFinish(result);
+                            }
+                        });
+                    } else {
+                        callback.onFinish(result);
+                    }
                 }
             });
-        } else {
-            callback.onFinish(result);
+        }
+
+        /**
+         * Helper method to construct the action arguments.
+         *
+         * @return The action arguments.
+         */
+        private ActionArguments createActionArguments() {
+            Bundle metadata = this.metadata == null ? new Bundle() : new Bundle(this.metadata);
+            if (actionName != null) {
+                metadata.putString(ActionArguments.REGISTRY_ACTION_NAME_METADATA, actionName);
+            }
+
+            return new ActionArguments(situation, actionValue, metadata);
         }
     }
-
-    /**
-     * Helper method to safely get the handler on the current thread.
-     *
-     * @return Handler if the current thread has a prepared looper, or null.
-     */
-    private Handler getHandler() {
-        try {
-            return new Handler();
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
 }

@@ -28,7 +28,7 @@ package com.urbanairship.actions;
 /**
  * Stores the results of running an {@link com.urbanairship.actions.Action}.
  */
-public class ActionResult {
+public final class ActionResult {
 
     /**
      * The run status of the action.
@@ -66,9 +66,9 @@ public class ActionResult {
     private final Exception exception;
 
     /**
-     * The result value. This value may be null.
+     * The result value.
      */
-    private final Object value;
+    private final ActionValue value;
 
     /**
      * Run status of the action.
@@ -87,7 +87,7 @@ public class ActionResult {
      *
      * @param value The result value
      */
-    public static ActionResult newResult(Object value) {
+    public static ActionResult newResult(ActionValue value) {
         return new ActionResult(value, null, Status.COMPLETED);
     }
 
@@ -112,13 +112,12 @@ public class ActionResult {
     /**
      * ActionResult constructor.
      *
-     * @param value The result value
-     * @param exception The result exception
-     * @param status The run status of the action. A null status will be coerced
-     * to Status.completed.
+     * @param value The result value.
+     * @param exception The result exception.
+     * @param status The run status of the action.
      */
-    protected ActionResult(Object value, Exception exception, Status status) {
-        this.value = value;
+    ActionResult(ActionValue value, Exception exception, Status status) {
+        this.value = value == null ? ActionValue.NULL : value;
         this.exception = exception;
         this.status = status != null ? status : Status.COMPLETED;
     }
@@ -126,9 +125,9 @@ public class ActionResult {
     /**
      * Retrieves the result value.
      *
-     * @return The result value as an Object
+     * @return The result value as an ActionValue.
      */
-    public Object getValue() {
+    public ActionValue getValue() {
         return value;
     }
 

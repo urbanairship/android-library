@@ -39,7 +39,6 @@ import com.urbanairship.widget.UAWebView;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Map;
 
 
 /**
@@ -94,15 +93,8 @@ public class LandingPageAction extends Action {
      */
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
-    /**
-     * Performs the landing page action.
-     *
-     * @param actionName The name of the action from the registry.
-     * @param arguments The action arguments.
-     * @return The result of the action.
-     */
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
 
         switch (arguments.getSituation()) {
@@ -148,10 +140,6 @@ public class LandingPageAction extends Action {
      */
     @Override
     public boolean acceptsArguments(ActionArguments arguments) {
-        if (!super.acceptsArguments(arguments)) {
-            return false;
-        }
-
         switch (arguments.getSituation()) {
             case PUSH_OPENED:
             case PUSH_RECEIVED:
@@ -171,13 +159,13 @@ public class LandingPageAction extends Action {
      * @return A landing page Uri, or null if the arguments could not be parsed.
      */
     protected Uri parseUri(ActionArguments arguments) {
-        Object uriValue;
+        String uriValue;
 
-        if (arguments.getValue() instanceof Map) {
-            Map map = (Map) arguments.getValue();
-            uriValue = map.get(URL_KEY);
+        if (arguments.getValue().getMap() != null) {
+            ActionValue actionValue = arguments.getValue().getMap().get(URL_KEY);
+            uriValue = actionValue != null ? actionValue.getString() : null;
         } else {
-            uriValue = arguments.getValue();
+            uriValue = arguments.getValue().getString();
         }
 
         if (uriValue == null) {
@@ -220,13 +208,9 @@ public class LandingPageAction extends Action {
      * with CACHE_ON_RECEIVE_KEY set to true, otherwise <code>false</code>.
      */
     protected boolean shouldCacheOnReceive(ActionArguments arguments) {
-        if (arguments.getValue() instanceof Map) {
-            Map map = (Map) arguments.getValue();
-            Object cache = map.get(CACHE_ON_RECEIVE_KEY);
-
-            if (cache != null && cache instanceof Boolean) {
-                return (Boolean) cache;
-            }
+        if (arguments.getValue().getMap() != null) {
+            ActionValue actionValue = arguments.getValue().getMap().get(CACHE_ON_RECEIVE_KEY);
+            return actionValue != null && actionValue.getBoolean(false);
         }
 
         return false;

@@ -25,27 +25,40 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import org.mockito.ArgumentMatcher;
+import android.os.Bundle;
 
 /**
- * Matches an ActionArgument
+ * Stubbed run request for testing. All methods are overridden to no-op.
  */
-public class ActionArgumentsMatcher extends ArgumentMatcher<ActionArguments> {
-    private final Situation situation;
-    private final Object value;
+public class StubbedRunRequest extends ActionRunner.RunRequest {
 
-    public ActionArgumentsMatcher(Situation situation, Object value) {
-        this.situation = situation;
-        this.value = value;
+    public StubbedRunRequest() {
+        super((String)null, null, null);
     }
 
     @Override
-    public boolean matches(Object o) {
-        if (!(o instanceof ActionArguments)) {
-            return false;
-        }
-        ActionArguments args = (ActionArguments) o;
-        return situation == null ? args.getSituation() == null : situation.equals(args.getSituation()) &&
-                                                                         value == null ? args.getValue() == null : value.equals(args.getValue());
+    public ActionRunner.RunRequest setValue(Object actionValue) {
+        return this;
     }
+
+    @Override
+    public ActionRunner.RunRequest setMetadata(Bundle metadata) {
+        return this;
+    }
+
+    @Override
+    public ActionRunner.RunRequest setSituation(Situation situation) {
+        return this;
+    }
+
+    @Override
+    public ActionResult executeSync() {
+        return ActionResult.newEmptyResult();
+    }
+
+    @Override
+    public void execute() { }
+
+    @Override
+    public void execute(final ActionCompletionCallback callback) { }
 }

@@ -1,6 +1,7 @@
 package com.urbanairship.push;
 
 import android.os.Bundle;
+import android.os.Parcel;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.richpush.RichPushManager;
@@ -366,5 +367,29 @@ public class PushMessageTest {
 
         PushMessage pushMessage = new PushMessage(extras);
         assertEquals("The public notification payload should match.", publicNotification, pushMessage.getPublicNotificationPayload());
+    }
+
+    /**
+     * Test saving and reading a push message from a parcel.
+     */
+    @Test
+    public void testParcelable() {
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
+        extras.putString("a random extra", "value");
+
+        PushMessage message = new PushMessage(extras);
+
+        // Write the push message to a parcel
+        Parcel parcel = Parcel.obtain();
+        message.writeToParcel(parcel, 0);
+
+        // Reset the parcel so we can read it
+        parcel.setDataPosition(0);
+
+        // Create the message from the parcel
+        PushMessage fromParcel = PushMessage.CREATOR.createFromParcel(parcel);
+        assertEquals("value", fromParcel.getPushBundle().getString("a random extra"));
+        assertEquals("Test Push Alert!", fromParcel.getAlert());
     }
 }

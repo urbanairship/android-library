@@ -23,7 +23,10 @@ import org.robolectric.shadows.ShadowApplication;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricGradleTestRunner.class)
 public class ActionServiceTest {
@@ -110,40 +113,34 @@ public class ActionServiceTest {
         intent.putExtra(ActionService.EXTRA_ACTIONS_PAYLOAD, actionsPayload);
         intent.putExtra(ActionService.EXTRA_SITUATION, situation);
 
+
+        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runner.run("actionName")).thenReturn(runRequest);
+
         // Have the action runner call the completion callback
         // immediately for each action it runs
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[2];
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(ActionResult.newEmptyResult());
                 return null;
             }
-        }).when(runner).runAction(Mockito.anyString(),
-                Mockito.any(ActionArguments.class),
-                Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+
 
         // Start the service
         service.onStartCommand(intent, 0, 1);
 
         // Verify that the action runner runs the action
-        Mockito.verify(runner).runAction(
-                Mockito.matches("actionName"),
-                (ActionArguments) Mockito.argThat(new ArgumentMatcher() {
-                    public boolean matches(Object o) {
-                        ActionArguments args = (ActionArguments) o;
-                        return args.getValue().equals("actionValue") &&
-                                args.getSituation().equals(Situation.PUSH_RECEIVED);
-                    }
-                }),
-                Mockito.any(ActionCompletionCallback.class)
-                                        );
+        verify(runRequest).setValue("actionValue");
+        verify(runRequest).setSituation(situation);
+        verify(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
         // Verify that the service called stop self with the last start id
         assertEquals(1, shadowService.getLastStopSelfId());
     }
-
 
     /**
      * Test running actions in the action service actually runs the actions
@@ -157,7 +154,7 @@ public class ActionServiceTest {
         CustomShadowService shadowService = (CustomShadowService) Robolectric.shadowOf(service);
         shadowApplication.clearStartedServices();
 
-        Situation situation = Situation.PUSH_RECEIVED;
+        final Situation situation = Situation.PUSH_RECEIVED;
         String actionsPayload = "{ \"actionName\": \"actionValue\" }";
         Bundle actionBundle = new Bundle();
         actionBundle.putString("oh", "hi");
@@ -168,6 +165,8 @@ public class ActionServiceTest {
         intent.putExtra(ActionService.EXTRA_SITUATION, situation);
         intent.putExtra(ActionService.EXTRA_PUSH_BUNDLE, actionBundle);
 
+        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runner.run("actionName")).thenReturn(runRequest);
 
         // Have the action runner call the completion callback
         // immediately for each action it runs
@@ -175,36 +174,30 @@ public class ActionServiceTest {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[2];
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
                 callback.onFinish(ActionResult.newEmptyResult());
                 return null;
             }
-        }).when(runner).runAction(Mockito.anyString(),
-                Mockito.argThat(new ArgumentMatcher<ActionArguments>() {
-                    @Override
-                    public boolean matches(Object o) {
-                        ActionArguments args = (ActionArguments)o;
-                        PushMessage message = args.getMetadata(ActionArguments.PUSH_MESSAGE_METADATA);
-                        return message != null && message.getPushBundle().get("oh").equals("hi");
-                    }
-                }),
-                Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
         // Start the service
         service.onStartCommand(intent, 0, 1);
 
         // Verify that the action runner runs the action
-        Mockito.verify(runner).runAction(
-                Mockito.matches("actionName"),
-                (ActionArguments) Mockito.argThat(new ArgumentMatcher() {
-                    public boolean matches(Object o) {
-                        ActionArguments args = (ActionArguments) o;
-                        return args.getValue().equals("actionValue") &&
-                                args.getSituation().equals(Situation.PUSH_RECEIVED);
-                    }
-                }),
-                Mockito.any(ActionCompletionCallback.class)
-                                        );
+        verify(runRequest).setValue("actionValue");
+
+        verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
+            @Override
+            public boolean matches(Object o) {
+                Bundle bundle = (Bundle) o;
+                PushMessage message = bundle.getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
+                return message.getPushBundle().getString("oh").equals("hi");
+            }
+        }));
+
+
+        verify(runRequest).setSituation(situation);
+        verify(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
 
         // Verify that the service called stop self with the last start id
         assertEquals(1, shadowService.getLastStopSelfId());

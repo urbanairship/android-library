@@ -78,19 +78,19 @@ public class ShareAction extends Action {
             case WEB_VIEW_INVOCATION:
             case MANUAL_INVOCATION:
             case FOREGROUND_NOTIFICATION_ACTION_BUTTON:
-                return arguments.getValue() != null && arguments.getValue() instanceof String;
+                return arguments.getValue().getString() != null;
             default:
                 return false;
         }
     }
 
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         final Context context = UAirship.getApplicationContext();
 
         Intent sharingIntent = new Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
-                .putExtra(Intent.EXTRA_TEXT, (String) arguments.getValue());
+                .putExtra(Intent.EXTRA_TEXT, arguments.getValue().getString());
 
 
         List<Intent> intentList = new ArrayList<>();

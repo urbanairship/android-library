@@ -26,7 +26,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.content.Intent;
-import android.net.Uri;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 
@@ -41,7 +40,6 @@ import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
@@ -61,11 +59,9 @@ public class LandingPageActionTest {
     public void testAcceptsArguments() {
         // Basic URIs
         verifyAcceptsArgumentValue("www.urbanairship.com", true);
-        verifyAcceptsArgumentValue(Uri.parse("www.urbanairship.com"), true);
 
         // Content URIs
         verifyAcceptsArgumentValue("u:<~@rH7,ASuTABk.~>", true);
-        verifyAcceptsArgumentValue(Uri.parse("u:<~@rH7,ASuTABk.~>"), true);
 
         // Payload
         Map<String, Object> payload = new HashMap<>();
@@ -83,8 +79,6 @@ public class LandingPageActionTest {
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
         verifyAcceptsArgumentValue("u:", true);
-        verifyAcceptsArgumentValue(Uri.parse("u:"), true);
-
 
         // Empty payload
         Map<String, Object> payload = new HashMap<>();
@@ -98,7 +92,6 @@ public class LandingPageActionTest {
     public void testPerform() {
         // Verify scheme less URIs turn into https
         verifyPerform("www.urbanairship.com", "https://www.urbanairship.com");
-        verifyPerform(Uri.parse("www.urbanairship.com"), "https://www.urbanairship.com");
 
         // Verify common file URIs
         verifyPerform("file://urbanairship.com", "file://urbanairship.com");
@@ -107,7 +100,6 @@ public class LandingPageActionTest {
 
         // Verify content URIs
         verifyPerform("u:<~@rH7,ASuTABk.~>", "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
-        verifyPerform(Uri.parse("u:<~@rH7,ASuTABk.~>"), "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
 
         // Verify basic payload
         Map<String, Object> payload = new HashMap<>();
@@ -129,10 +121,10 @@ public class LandingPageActionTest {
         };
 
         for (Situation situation : situations) {
-            ActionArguments args = new ActionArguments(situation, value);
+            ActionArguments args = ActionTestUtils.createArgs(situation, value);
 
-            ActionResult result = action.perform("name", args);
-            assertNull("Should return null for situation " + situation, result.getValue());
+            ActionResult result = action.perform(args);
+            assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
             Intent intent = application.getNextStartedActivity();
             assertEquals("Invalid intent action for situation " + situation,
@@ -157,7 +149,7 @@ public class LandingPageActionTest {
         };
 
         for (Situation situation : situations) {
-            ActionArguments args = new ActionArguments(situation, value);
+            ActionArguments args = ActionTestUtils.createArgs(situation, value);
             if (shouldAccept) {
                 assertTrue("Should accept arguments in situation " + situation,
                         action.acceptsArguments(args));

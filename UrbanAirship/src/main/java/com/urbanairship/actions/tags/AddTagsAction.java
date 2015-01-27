@@ -56,15 +56,8 @@ public class AddTagsAction extends BaseTagsAction {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^+t";
 
-    /**
-     * Performs the add tags action.
-     *
-     * @param actionName The name of the add tags action from the registry.
-     * @param arguments The action arguments.
-     * @return The result of the action.
-     */
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         Set<String> tags = getTags(arguments);
         Logger.info("AddTagsAction - Adding tags: " + tags);
 

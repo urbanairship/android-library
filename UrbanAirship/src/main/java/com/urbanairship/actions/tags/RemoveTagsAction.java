@@ -56,15 +56,8 @@ public class RemoveTagsAction extends BaseTagsAction {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^-t";
 
-    /**
-     * Performs the remove tags action.
-     *
-     * @param actionName The name of the remove tags action from the registry.
-     * @param arguments The action arguments.
-     * @return The result of the action.
-     */
     @Override
-    public ActionResult perform(String actionName, ActionArguments arguments) {
+    public ActionResult perform(ActionArguments arguments) {
         Set<String> tags = getTags(arguments);
         Logger.info("RemoveTagsAction - Removing tags: " + tags);
 
