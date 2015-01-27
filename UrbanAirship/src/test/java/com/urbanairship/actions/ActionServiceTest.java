@@ -20,8 +20,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
@@ -188,11 +186,11 @@ public class ActionServiceTest {
         // Verify that the action runner runs the action
         verify(runRequest).setValue("actionValue");
 
-        verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Map<String, Object>>() {
+        verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Object o) {
-                Map metadata = (Map) o;
-                PushMessage message = (PushMessage) metadata.get(ActionArguments.PUSH_MESSAGE_METADATA);
+                Bundle bundle = (Bundle) o;
+                PushMessage message = bundle.getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
                 return message.getPushBundle().getString("oh").equals("hi");
             }
         }));

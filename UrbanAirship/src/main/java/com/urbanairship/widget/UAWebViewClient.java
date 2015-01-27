@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -37,16 +38,12 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
 import com.urbanairship.js.UAJavascriptInterface;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UriUtils;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -208,19 +205,18 @@ public class UAWebViewClient extends WebViewClient {
      * @param arguments Map of action to action arguments to run.
      * @param message The optional rich push message associated with the web view.
      */
-    private void runActions(Map<String, List<Object>> arguments, RichPushMessage message) {
+    private void runActions(Map<String, List<ActionValue>> arguments, RichPushMessage message) {
         if (arguments == null) {
             return;
         }
 
-        Map<String, Object> metadata = null;
+        Bundle metadata = new Bundle();
         if (message != null) {
-            metadata = new HashMap<>();
-            metadata.put(ActionArguments.RICH_PUSH_METADATA, message);
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
 
         for (String actionName : arguments.keySet()) {
-            for (Object arg : arguments.get(actionName)) {
+            for (ActionValue arg : arguments.get(actionName)) {
                 actionRunner.run(actionName)
                             .setValue(arg)
                             .setMetadata(metadata)
@@ -238,16 +234,16 @@ public class UAWebViewClient extends WebViewClient {
      * @param basicEncoding A boolean to select for basic encoding
      * @return A map of action values under action name strings or returns null if decoding error occurs.
      */
-    private Map<String, List<Object>> decodeActionArguments(Uri uri, boolean basicEncoding) {
+    private Map<String, List<ActionValue>> decodeActionArguments(Uri uri, boolean basicEncoding) {
         Map<String, List<String>> options = UriUtils.getQueryParameters(uri);
         if (options == null) {
             return null;
         }
 
-        Map<String, List<Object>> decodedActions = new HashMap<>();
+        Map<String, List<ActionValue>> decodedActions = new HashMap<>();
 
         for (String actionName : options.keySet()) {
-            List<Object> decodedActionArguments = new ArrayList<>();
+            List<ActionValue> decodedActionArguments = new ArrayList<>();
 
             if (options.get(actionName) == null) {
                 Logger.warn("No arguments to decode for actionName: " + actionName);
@@ -255,14 +251,10 @@ public class UAWebViewClient extends WebViewClient {
             }
 
             for (String arg : options.get(actionName)) {
-                if (basicEncoding) {
-                    decodedActionArguments.add(arg);
-                    continue;
-                }
-
                 try {
-                    decodedActionArguments.add(getArgumentFromJSONString(arg));
-                } catch (JSONException e) {
+                    ActionValue actionValue = basicEncoding ? ActionValue.wrap(arg) : ActionValue.parseString(arg);
+                    decodedActionArguments.add(actionValue);
+                } catch (ActionValue.ActionValueException e) {
                     Logger.warn("Invalid json. Unable to create action argument "
                             + actionName + " with args: " + arg, e);
                     return null;
@@ -278,26 +270,6 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         return decodedActions;
-    }
-
-    /**
-     * Converts a json string to either a map or list that represents
-     * the json.
-     *
-     * @param jsonString json string to convert.
-     * @return A map or list from the json string.
-     * @throws JSONException If the jsonString is not valid json.
-     */
-    private Object getArgumentFromJSONString(String jsonString) throws JSONException {
-        if (jsonString == null) {
-            return null;
-        }
-
-        try {
-            return JSONUtils.convertToList(new JSONArray(jsonString));
-        } catch (JSONException e) {
-            return JSONUtils.convertToMap(new JSONObject(jsonString));
-        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.urbanairship.actions;
 
+import android.os.Bundle;
 import android.os.Looper;
 
 import com.android.internal.util.Predicate;
@@ -14,8 +15,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,8 +51,8 @@ public class ActionRunnerTest {
      * Test running an action
      */
     @Test
-    public void testRunAction() {
-        ActionResult result = ActionResult.newResult("result");
+    public void testRunAction() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
         // Run the action without a callback
@@ -92,11 +91,24 @@ public class ActionRunnerTest {
     }
 
     /**
+     * Test trying to set the action value to something that is not ActionValue wrappable.
+     */
+    @Test
+    public void testInvalidActionValueFromObject() {
+        // Expect the exception
+        exception.expect(IllegalArgumentException.class);
+
+        actionRunner.run("action")
+                    .setValue(new Object())
+                    .execute();
+    }
+
+    /**
      * Test running an action from the registry
      */
     @Test
-    public void testRunActionFromRegistry() {
-        ActionResult result = ActionResult.newResult("result");
+    public void testRunActionFromRegistry() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
         // Register the action
@@ -150,8 +162,8 @@ public class ActionRunnerTest {
 
         ActionResult result = callback.lastResult;
 
-        assertNull("Predicate rejecting args should have the result value be null",
-                result.getValue());
+        assertTrue("Predicate rejecting args should have the result value be 'null'",
+                result.getValue().isNull());
 
         assertEquals("Result should have an rejected argument status",
                 ActionResult.Status.REJECTED_ARGUMENTS, result.getStatus());
@@ -181,8 +193,8 @@ public class ActionRunnerTest {
 
         ActionResult result = callback.lastResult;
 
-        assertNull("Running an action that does not exist should return a null result",
-                result.getValue());
+        assertTrue("Running an action that does not exist should return a 'null' result",
+                result.getValue().isNull());
 
         assertEquals("Result should have an error status",
                 ActionResult.Status.ACTION_NOT_FOUND, result.getStatus());
@@ -266,8 +278,8 @@ public class ActionRunnerTest {
         actionRegistry.registerAction(action, "action!");
 
         // Create metadata
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("so", "meta");
+        Bundle metadata = new Bundle();
+        metadata.putString("so", "meta");
 
         // Run the action by name
         actionRunner.run("action!")
@@ -276,7 +288,7 @@ public class ActionRunnerTest {
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
-        assertEquals("Missing metadata", "meta", action.runArgs.getMetadata().get("so"));
+        assertEquals("Missing metadata", "meta", action.runArgs.getMetadata().getString("so"));
     }
 
     private class TestActionCompletionCallback implements ActionCompletionCallback {
