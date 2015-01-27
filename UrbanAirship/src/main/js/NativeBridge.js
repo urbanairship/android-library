@@ -37,27 +37,16 @@ if (typeof UAirship === 'undefined') {
 
       urbanAirship.runAction = function(actionName, argument, callback) {
         var callbackKey = 'ua-cb-' + (++callbackID)
-          , argPayload
 
         actionCallbacks[callbackKey] = function(err, data) {
           if(err) {
             return callback(err)
           }
 
-          try {
-            if(data) {
-              data = JSON.parse(data).value
-            }
-          } catch(err) {
-            return callback(new Error('could not decode response: ' + data))
-          }
-
           callback(null, data)
         }
 
-        argPayload = {value: argument}
-
-        _UAirship.actionCall(actionName, JSON.stringify(argPayload), callbackKey)
+        _UAirship.actionCall(actionName, JSON.stringify(argument), callbackKey)
       }
 
       urbanAirship.finishAction = function(err, data, callbackKey) {

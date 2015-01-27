@@ -81,12 +81,12 @@ public class OpenExternalUrlActionTest {
         ActionArguments args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "http://example.com");
         ActionResult result = action.perform(args);
 
-        assertEquals("Value should be the uri", "http://example.com", result.getValue().toString());
+        assertEquals("Value should be the uri", "http://example.com", result.getValue().getString());
         validateLastActivity("http://example.com");
 
         args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "adfadfafdsaf adfa dsfadfsa example");
         result = action.perform(args);
-        assertEquals("Value should be the uri", "adfadfafdsaf adfa dsfadfsa example", result.getValue().toString());
+        assertEquals("Value should be the uri", "adfadfafdsaf adfa dsfadfsa example", result.getValue().getString());
         validateLastActivity("adfadfafdsaf adfa dsfadfsa example");
     }
 

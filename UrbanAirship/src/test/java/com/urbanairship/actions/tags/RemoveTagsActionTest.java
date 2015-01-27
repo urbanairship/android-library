@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,7 +74,7 @@ public class RemoveTagsActionTest {
         ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
         ActionResult result = action.perform(args);
 
-        assertNull("Remove tags action should return null", result.getValue());
+        assertTrue("Remove tags action should return 'null' result", result.getValue().isNull());
 
         // Verify we only have tagTwo
         Set<String> expectedTags = new HashSet<>();

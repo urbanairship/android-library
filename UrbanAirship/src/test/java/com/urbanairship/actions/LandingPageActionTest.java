@@ -40,7 +40,6 @@ import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
@@ -125,7 +124,7 @@ public class LandingPageActionTest {
             ActionArguments args = ActionTestUtils.createArgs(situation, value);
 
             ActionResult result = action.perform(args);
-            assertNull("Should return null for situation " + situation, result.getValue());
+            assertTrue("Should return 'null' result for situation " + situation, result.getValue().isNull());
 
             Intent intent = application.getNextStartedActivity();
             assertEquals("Invalid intent action for situation " + situation,

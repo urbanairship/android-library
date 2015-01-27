@@ -85,4 +85,21 @@ public class ActionTestUtils {
         return new ActionArguments(situation, value, metadata);
     }
 
+    /**
+     * Creates an ActionResult and automatically wraps the value into an ActionValue.
+     *
+     * @param value The ActionResult value.
+     * @param exception The ActionResult exception.
+     * @param status The ActionResult status.
+     * @return ActionResult that contains the value, exception, and status.
+     */
+    public static ActionResult createResult(Object value, Exception exception, ActionResult.Status status) {
+        try {
+            return new ActionResult(ActionValue.wrap(value), exception, status);
+        } catch (ActionValue.ActionValueException e) {
+            // Throw an illegal argument exception to fail the test
+            throw new IllegalArgumentException("Object value: " + value + " unable to be wrapped as an action value.", e);
+        }
+    }
+
 }
