@@ -26,7 +26,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.content.Intent;
-import android.net.Uri;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 
@@ -61,11 +60,9 @@ public class LandingPageActionTest {
     public void testAcceptsArguments() {
         // Basic URIs
         verifyAcceptsArgumentValue("www.urbanairship.com", true);
-        verifyAcceptsArgumentValue(Uri.parse("www.urbanairship.com"), true);
 
         // Content URIs
         verifyAcceptsArgumentValue("u:<~@rH7,ASuTABk.~>", true);
-        verifyAcceptsArgumentValue(Uri.parse("u:<~@rH7,ASuTABk.~>"), true);
 
         // Payload
         Map<String, Object> payload = new HashMap<>();
@@ -83,8 +80,6 @@ public class LandingPageActionTest {
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
         verifyAcceptsArgumentValue("u:", true);
-        verifyAcceptsArgumentValue(Uri.parse("u:"), true);
-
 
         // Empty payload
         Map<String, Object> payload = new HashMap<>();
@@ -98,7 +93,6 @@ public class LandingPageActionTest {
     public void testPerform() {
         // Verify scheme less URIs turn into https
         verifyPerform("www.urbanairship.com", "https://www.urbanairship.com");
-        verifyPerform(Uri.parse("www.urbanairship.com"), "https://www.urbanairship.com");
 
         // Verify common file URIs
         verifyPerform("file://urbanairship.com", "file://urbanairship.com");
@@ -107,7 +101,6 @@ public class LandingPageActionTest {
 
         // Verify content URIs
         verifyPerform("u:<~@rH7,ASuTABk.~>", "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
-        verifyPerform(Uri.parse("u:<~@rH7,ASuTABk.~>"), "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
 
         // Verify basic payload
         Map<String, Object> payload = new HashMap<>();

@@ -38,16 +38,15 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.JSONUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -200,7 +199,7 @@ public class UAJavascriptInterface {
                            final String encodedArguments,
                            final String callbackKey) {
 
-        Object arg = decodeActionValue(encodedArguments);
+        ActionValue arg = decodeActionValue(encodedArguments);
         if (arg == null) {
             Logger.info("Invalid encoded arguments: " + encodedArguments);
             runActionCallback("Unable to decode arguments payload", null, callbackKey);
@@ -277,11 +276,10 @@ public class UAJavascriptInterface {
      * @param encodedArguments A JSON-encoded string representing the action arguments.
      * @return The action argument's value.
      */
-    private Object decodeActionValue(String encodedArguments) {
+    private ActionValue decodeActionValue(String encodedArguments) {
         try {
             JSONObject argumentsJSON = new JSONObject(encodedArguments);
-            Map<String, Object> argumentsMap = JSONUtils.convertToMap(argumentsJSON);
-            return argumentsMap.get("value");
+            return ActionValue.wrap(argumentsJSON.get("value"), null);
         } catch (JSONException e) {
             return null;
         }

@@ -33,7 +33,8 @@ import android.os.Bundle;
 public class ActionTestUtils {
 
     /**
-     * Creates an ActionArgument.
+     * Creates an ActionArgument and automatically wraps the value into an ActionValue.
+     *
      * @param situation The situation.
      * @param value The action value.
      * @return ActionArguments that contain the situation and value.
@@ -42,15 +43,45 @@ public class ActionTestUtils {
         return createArgs(situation, value, null);
     }
 
+    /**
+     * Creates an ActionArgument.
+     *
+     * @param situation The situation.
+     * @param value The action value.
+     * @return ActionArguments that contain the situation and value.
+     */
+    public static ActionArguments createArgs(Situation situation, ActionValue value) {
+        return createArgs(situation, value, null);
+    }
+
 
     /**
      * Creates an ActionArgument.
+     *
      * @param situation The situation.
      * @param value The action value.
      * @param metadata The metadata.
      * @return ActionArguments that contain the situation, value, and metadata.
      */
     public static ActionArguments createArgs(Situation situation, Object value, Bundle metadata) {
+        try {
+            return createArgs(situation, ActionValue.wrap(value), metadata);
+        } catch (ActionValue.ActionValueException e) {
+
+            // Throw an illegal argument exception to fail the test
+            throw new IllegalArgumentException("Object value: " + value + " unable to be wrapped as an action value.", e);
+        }
+    }
+
+    /**
+     * Creates an ActionArgument and automatically wraps the value into an ActionValue.
+     *
+     * @param situation The situation.
+     * @param value The action value.
+     * @param metadata The metadata.
+     * @return ActionArguments that contain the situation, value, and metadata.
+     */
+    public static ActionArguments createArgs(Situation situation, ActionValue value, Bundle metadata) {
         return new ActionArguments(situation, value, metadata);
     }
 

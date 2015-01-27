@@ -36,6 +36,7 @@ import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.actions.StubbedRunRequest;
 import com.urbanairship.richpush.RichPushMessage;
@@ -215,7 +216,7 @@ public class UAJavascriptInterfaceTest {
      * Test running an action with a result
      */
     @Test
-    public void testActionCallAction() {
+    public void testActionCallAction() throws ActionValue.ActionValueException {
         final MutableActionResult result = new MutableActionResult();
         result.status = ActionResult.Status.COMPLETED;
         result.value = "actionValue";
@@ -248,7 +249,7 @@ public class UAJavascriptInterfaceTest {
         // Verify the action request
         verify(runRequest).execute(any(ActionCompletionCallback.class));
         verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(runRequest).setValue(true);
+        verify(runRequest).setValue(ActionValue.wrap(true));
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Object o) {

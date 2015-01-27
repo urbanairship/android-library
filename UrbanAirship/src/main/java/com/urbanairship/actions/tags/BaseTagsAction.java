@@ -28,9 +28,9 @@ package com.urbanairship.actions.tags;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.push.PushManager;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -61,23 +61,23 @@ public abstract class BaseTagsAction extends Action {
      * could be parsed from the arguments
      */
     protected Set<String> getTags(ActionArguments arguments) {
-        Object value = arguments.getValue();
-
-        if (value == null) {
+        if (arguments == null || arguments.getValue().isNull()) {
             return null;
         }
 
-        if (value instanceof String) {
+        if (arguments.getValue().getString() != null) {
             Set<String> tags = new HashSet<>();
-            tags.add(String.valueOf(arguments.getValue()));
+            tags.add(String.valueOf(arguments.getValue().getString()));
             return tags;
         }
 
-        if (value instanceof Collection) {
+        if (arguments.getValue().getList() != null) {
             Set<String> tags = new HashSet<>();
 
-            for (Object tag : (Collection) value) {
-                tags.add(String.valueOf(tag));
+            for (ActionValue tag : arguments.getValue().getList()) {
+                if (tag.getString() != null) {
+                    tags.add(tag.getString());
+                }
             }
 
             return tags;

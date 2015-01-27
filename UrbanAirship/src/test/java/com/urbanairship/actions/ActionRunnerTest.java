@@ -91,6 +91,19 @@ public class ActionRunnerTest {
     }
 
     /**
+     * Test trying to set the action value to something that is not ActionValue wrappable.
+     */
+    @Test
+    public void testInvalidActionValueFromObject() {
+        // Expect the exception
+        exception.expect(IllegalArgumentException.class);
+
+        actionRunner.run("action")
+                    .setValue(new Object())
+                    .execute();
+    }
+
+    /**
      * Test running an action from the registry
      */
     @Test

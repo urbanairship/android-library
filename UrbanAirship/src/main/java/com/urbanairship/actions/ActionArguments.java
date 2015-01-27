@@ -51,7 +51,7 @@ public final class ActionArguments {
     public static final String REGISTRY_ACTION_NAME_METADATA = "com.urbanairship.REGISTRY_ACTION_NAME";
 
     private final Situation situation;
-    private final Object value;
+    private final ActionValue value;
     private final Bundle metadata;
 
     /**
@@ -61,9 +61,9 @@ public final class ActionArguments {
      * @param value The argument's value.
      * @param metadata The argument's metadata.
      */
-    public ActionArguments(Situation situation, Object value, Bundle metadata) {
+    public ActionArguments(Situation situation, ActionValue value, Bundle metadata) {
         this.situation = situation == null ? Situation.MANUAL_INVOCATION : situation;
-        this.value = value;
+        this.value = value == null ? ActionValue.NULL : value;
         this.metadata = metadata == null ? new Bundle() : new Bundle(metadata);
     }
 
@@ -72,7 +72,7 @@ public final class ActionArguments {
      *
      * @return The value as an Object.
      */
-    public Object getValue() {
+    public ActionValue getValue() {
         return value;
     }
 

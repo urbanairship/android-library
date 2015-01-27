@@ -60,7 +60,7 @@ public class OpenExternalUrlAction extends Action {
 
     @Override
     public ActionResult perform(ActionArguments arguments) {
-        Uri uri = UriUtils.parse(arguments.getValue());
+        Uri uri = UriUtils.parse(arguments.getValue().getString());
 
         Logger.info("Opening URI: " + uri);
 
@@ -89,7 +89,7 @@ public class OpenExternalUrlAction extends Action {
             case WEB_VIEW_INVOCATION:
             case MANUAL_INVOCATION:
             case FOREGROUND_NOTIFICATION_ACTION_BUTTON:
-                return UriUtils.parse(arguments.getValue()) != null;
+                return UriUtils.parse(arguments.getValue().getString()) != null;
             default:
                 return false;
         }
