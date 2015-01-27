@@ -51,8 +51,8 @@ public class ActionRunnerTest {
      * Test running an action
      */
     @Test
-    public void testRunAction() {
-        ActionResult result = ActionResult.newResult("result");
+    public void testRunAction() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
         // Run the action without a callback
@@ -107,8 +107,8 @@ public class ActionRunnerTest {
      * Test running an action from the registry
      */
     @Test
-    public void testRunActionFromRegistry() {
-        ActionResult result = ActionResult.newResult("result");
+    public void testRunActionFromRegistry() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
         // Register the action
@@ -162,8 +162,8 @@ public class ActionRunnerTest {
 
         ActionResult result = callback.lastResult;
 
-        assertNull("Predicate rejecting args should have the result value be null",
-                result.getValue());
+        assertTrue("Predicate rejecting args should have the result value be 'null'",
+                result.getValue().isNull());
 
         assertEquals("Result should have an rejected argument status",
                 ActionResult.Status.REJECTED_ARGUMENTS, result.getStatus());
@@ -193,8 +193,8 @@ public class ActionRunnerTest {
 
         ActionResult result = callback.lastResult;
 
-        assertNull("Running an action that does not exist should return a null result",
-                result.getValue());
+        assertTrue("Running an action that does not exist should return a 'null' result",
+                result.getValue().isNull());
 
         assertEquals("Result should have an error status",
                 ActionResult.Status.ACTION_NOT_FOUND, result.getStatus());

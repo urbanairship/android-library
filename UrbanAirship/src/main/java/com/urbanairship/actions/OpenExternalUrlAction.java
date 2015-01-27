@@ -68,7 +68,7 @@ public class OpenExternalUrlAction extends Action {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         UAirship.getApplicationContext().startActivity(intent);
-        return ActionResult.newResult(uri);
+        return ActionResult.newResult(arguments.getValue());
     }
 
     /**
