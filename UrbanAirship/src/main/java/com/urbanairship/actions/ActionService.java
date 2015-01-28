@@ -102,7 +102,6 @@ public class ActionService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Autopilot.automaticTakeOff((Application) getApplicationContext());
 
-
         lastStartId = startId;
 
         if (intent != null && ACTION_RUN_ACTIONS.equals(intent.getAction())) {

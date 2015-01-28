@@ -48,6 +48,10 @@ public class GCMPushReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        if (intent == null || intent.getAction() == null) {
+            return;
+        }
+
         Logger.verbose("GCMPushReceiver - Received intent: " + intent.getAction());
 
         if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {

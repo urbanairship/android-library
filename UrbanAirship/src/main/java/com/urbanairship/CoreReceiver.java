@@ -49,6 +49,10 @@ public class CoreReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        if (intent == null || intent.getAction() == null) {
+            return;
+        }
+
         Logger.verbose("CoreReceiver - Received intent: " + intent.getAction());
 
         switch (intent.getAction()) {
