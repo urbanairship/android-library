@@ -104,16 +104,15 @@ public class RichPushUpdateService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null) {
+        if (intent == null || intent.getAction() == null) {
             return;
         }
 
-        String action = intent.getAction();
-        Logger.verbose("RichPushUpdateService - Received intent: " + action);
+        Logger.verbose("RichPushUpdateService - Received intent: " + intent.getAction());
 
         final ResultReceiver receiver = intent.getParcelableExtra(EXTRA_RICH_PUSH_RESULT_RECEIVER);
 
-        if (ACTION_RICH_PUSH_MESSAGES_UPDATE.equals(action)) {
+        if (ACTION_RICH_PUSH_MESSAGES_UPDATE.equals(intent.getAction())) {
             //note - this should probably send an error result back
             if (!RichPushUser.isCreated()) {
                 Logger.debug("RichPushUpdateService - User has not been created, canceling messages update");
@@ -122,7 +121,7 @@ public class RichPushUpdateService extends IntentService {
                 messagesUpdate(receiver);
             }
 
-        } else if (ACTION_RICH_PUSH_USER_UPDATE.equals(action)) {
+        } else if (ACTION_RICH_PUSH_USER_UPDATE.equals(intent.getAction())) {
             userUpdate(receiver);
         }
     }

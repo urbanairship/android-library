@@ -150,7 +150,7 @@ public class PushService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null) {
+        if (intent == null || intent.getAction() == null) {
             return;
         }
 

@@ -208,10 +208,13 @@ public class LocationService extends Service {
 
 
     private void onHandleIntent(Intent intent) {
-        String action = intent == null ? null : intent.getAction();
-        Logger.verbose("LocationService - Received intent with action: " + action);
+        if (intent == null || intent.getAction() == null) {
+            return;
+        }
 
-        switch (action) {
+        Logger.verbose("LocationService - Received intent with action: " + intent.getAction());
+        
+        switch (intent.getAction()) {
             case ACTION_START_UPDATES:
                 onStartLocationUpdates();
                 break;

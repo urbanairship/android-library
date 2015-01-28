@@ -46,6 +46,11 @@ public class ADMPushReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
+
+        if (intent == null || intent.getAction() == null) {
+            return;
+        }
+
         Logger.verbose("ADMPushReceiver - Received intent: " + intent.getAction());
 
         if (Build.VERSION.SDK_INT < 15) {

@@ -77,6 +77,10 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        if (intent == null || intent.getAction() == null) {
+            return;
+        }
+
         String action = intent.getAction();
         Logger.info(this.getClass().getSimpleName() + " - Received intent with action: " + action);
 
