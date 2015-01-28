@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Urban Airship Inc. All rights reserved.
+Copyright 2009-2015 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -150,7 +150,7 @@ public class PushService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null) {
+        if (intent == null || intent.getAction() == null) {
             return;
         }
 

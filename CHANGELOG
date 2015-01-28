@@ -3,6 +3,14 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 5.1.5 - January 27, 2015
+================================
+ - Fixed a regression introduced in 5.1.4 where the LocationService will cause a NPE if started with a null intent.
+ 
+ Samples
+ -------
+  - Fixed the Rich Push Sample's deep linking.
+
 Version 5.1.4 - December 31, 2014
 =================================
  - Updated logging usage to use the various log levels more appropriately.
