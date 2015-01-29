@@ -10,3 +10,6 @@
     public *;
 }
 
+
+## Autopilot
+-keep public class * extends com.urbanairship.Autopilot
