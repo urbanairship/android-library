@@ -6,6 +6,7 @@ import android.os.Looper;
 import com.android.internal.util.Predicate;
 import com.urbanairship.RobolectricGradleTestRunner;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,9 +27,8 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class ActionRunnerTest {
+public class ActionRunRequestTest {
 
-    private ActionRunner actionRunner;
     private ActionRegistry actionRegistry;
 
     @Rule
@@ -43,8 +43,13 @@ public class ActionRunnerTest {
             }
         };
 
+        ActionRunRequest.executor = executor;
         actionRegistry = new ActionRegistry();
-        actionRunner = new ActionRunner(actionRegistry, executor);
+    }
+
+    @After
+    public void cleanup() {
+        ActionRunRequest.executor = Executors.newCachedThreadPool();
     }
 
     /**
@@ -56,24 +61,104 @@ public class ActionRunnerTest {
         TestAction action = new TestAction(true, result);
 
         // Run the action without a callback
-        actionRunner.run(action)
-                    .setValue("val")
-                    .execute();
+        ActionRunRequest.createRequest(action)
+                        .setValue("val")
+                        .run();
 
         assertTrue("Action failed to run", action.performCalled);
         assertNull("Action name should be null", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+    }
 
+    /**
+     * Test running an action with a callback.
+     */
+    @Test
+    public void testRunActionWithCallback() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestActionCompletionCallback callback = new TestActionCompletionCallback();
-        action = new TestAction(true, result);
+        TestAction action = new TestAction(true, result);
 
         // Run the action with a callback
-        actionRunner.run(action)
-                    .setValue("val")
-                    .execute(callback);
+        ActionRunRequest.createRequest(action)
+                        .setValue("val")
+                        .run(callback);
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Result was not called with expected result", result, callback.lastResult);
         assertNull("Action name should be null", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+    }
+
+    /**
+     * Test running an action from the registry.
+     */
+    @Test
+    public void testRunActionFromRegistry() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
+        TestAction action = new TestAction(true, result);
+
+        // Register the action
+        actionRegistry.registerAction(action, "action!");
+
+        // Run the action without a callback
+        ActionRunRequest.createRequest("action!", actionRegistry)
+                        .setValue("val")
+                        .run();
+
+        assertTrue("Action failed to run", action.performCalled);
+        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+    }
+
+    /**
+     * Test running an action from the registry with a callback.
+     */
+    @Test
+    public void testRunActionFromRegistryWithCallback() throws ActionValue.ActionValueException {
+        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
+        TestAction action = new TestAction(true, result);
+        TestActionCompletionCallback callback = new TestActionCompletionCallback();
+
+        // Register the action
+        actionRegistry.registerAction(action, "action!");
+
+        // Run the action with a callback
+        ActionRunRequest.createRequest("action!", actionRegistry)
+                        .setValue("val")
+                        .run(callback);
+
+        assertTrue("Action failed to run", action.performCalled);
+        assertEquals("Result was not called with expected result", result, callback.lastResult);
+        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+    }
+
+    /**
+     * Test running an action synchronously
+     */
+    @Test
+    public void testRunActionSync() {
+        TestAction action = new TestAction();
+
+        // Run the action by name
+        ActionResult result = ActionRunRequest.createRequest(action).runSync();
+        assertTrue("Action failed to run", action.performCalled);
+        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
+    }
+
+    /**
+     * Test running an action synchronously from the registry
+     */
+    @Test
+    public void testRunSyncFromRegistry() {
+        TestAction action = new TestAction();
+
+        // Register the action
+        actionRegistry.registerAction(action, "action!");
+
+        // Run the action by name
+        ActionResult result = ActionRunRequest.createRequest("action!", actionRegistry).runSync();
+
+        assertTrue("Action failed to run", action.performCalled);
+        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
     }
 
     /**
@@ -85,9 +170,7 @@ public class ActionRunnerTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Unable to run null action");
 
-        actionRunner.run((Action) null)
-                    .setValue("val")
-                    .execute();
+        ActionRunRequest.createRequest((Action) null);
     }
 
     /**
@@ -98,42 +181,8 @@ public class ActionRunnerTest {
         // Expect the exception
         exception.expect(IllegalArgumentException.class);
 
-        actionRunner.run("action")
-                    .setValue(new Object())
-                    .execute();
-    }
-
-    /**
-     * Test running an action from the registry
-     */
-    @Test
-    public void testRunActionFromRegistry() throws ActionValue.ActionValueException {
-        ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
-        TestAction action = new TestAction(true, result);
-
-        // Register the action
-        actionRegistry.registerAction(action, "action!");
-
-        // Run the action without a callback
-        actionRunner.run("action!")
-                    .setValue("val")
-                    .execute();
-
-        assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
-
-        TestActionCompletionCallback callback = new TestActionCompletionCallback();
-        action = new TestAction(true, result);
-        actionRegistry.registerAction(action, "action!");
-
-        // Run the action with a callback
-        actionRunner.run("action!")
-                    .setValue("val")
-                    .execute(callback);
-
-        assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Result was not called with expected result", result, callback.lastResult);
-        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+        // Try setting a invalid value
+        ActionRunRequest.createRequest("action").setValue(new Object());
     }
 
 
@@ -148,17 +197,18 @@ public class ActionRunnerTest {
 
         // Register the action
         ActionRegistry.Entry entry = actionRegistry.registerAction(action, "action!");
+
+        // Set a predicate that rejects all arguments
         entry.setPredicate(new Predicate<ActionArguments>() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return false;
-
             }
         });
 
-        actionRunner.run("action!")
-                    .setValue("val")
-                    .execute(callback);
+        ActionRunRequest.createRequest("action!", actionRegistry)
+                        .setValue("val")
+                        .run(callback);
 
         ActionResult result = callback.lastResult;
 
@@ -178,7 +228,8 @@ public class ActionRunnerTest {
     public void testRunDefaultSituation() {
         TestAction action = new TestAction(true, null);
 
-        actionRunner.run(action).setValue("hi").executeSync();
+        ActionRunRequest.createRequest(action).runSync();
+
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Situation should default to MANUAL_INVOCATION", Situation.MANUAL_INVOCATION, action.runArgs.getSituation());
     }
@@ -188,18 +239,13 @@ public class ActionRunnerTest {
      */
     @Test
     public void testRunActionNoEntry() {
-        TestActionCompletionCallback callback = new TestActionCompletionCallback();
-        actionRunner.run("action!").execute(callback);
-
-        ActionResult result = callback.lastResult;
+        ActionResult result = ActionRunRequest.createRequest("action", actionRegistry).runSync();
 
         assertTrue("Running an action that does not exist should return a 'null' result",
                 result.getValue().isNull());
 
         assertEquals("Result should have an error status",
                 ActionResult.Status.ACTION_NOT_FOUND, result.getStatus());
-
-        assertTrue("Callback is not being called", callback.onFinishCalled);
     }
 
     /**
@@ -214,18 +260,20 @@ public class ActionRunnerTest {
         // Run any tasks in its queue
         looper.runToEndOfTasks();
 
-        // Recreate the Action Manager with a single thread executor
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        actionRunner = new ActionRunner(actionRegistry, executor);
-
         // Run an action with a callback
         Action testAction = new TestAction();
         TestActionCompletionCallback callback = new TestActionCompletionCallback();
-        actionRunner.run(testAction).execute(callback);
+
+        // Assign a single thread executor to the ActionRunRequests
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        ActionRunRequest.executor = executorService;
+
+        ActionRunRequest.createRequest(testAction)
+                        .run(callback);
 
         // Wait for the action to finish running
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.SECONDS);
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.SECONDS);
 
         // Check that we have a message in the looper's queue
         assertEquals(1, looper.getScheduler().size());
@@ -238,43 +286,11 @@ public class ActionRunnerTest {
     }
 
     /**
-     * Test running an action synchronously
-     */
-    @Test
-    public void testRunActionSync() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        actionRunner = new ActionRunner(actionRegistry, executor);
-
-        TestAction action = new TestAction();
-
-        // Register the action
-        actionRegistry.registerAction(action, "action!");
-
-        // Run the action by name
-        ActionResult result = actionRunner.run("action!").executeSync();
-
-        assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
-        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
-
-        action = new TestAction();
-        result = actionRunner.run(action).executeSync();
-        assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
-    }
-
-
-    /**
      * Test setting metadata will be combined with the registry name.
      */
     @Test
     public void testMetadata() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        actionRunner = new ActionRunner(actionRegistry, executor);
-
         TestAction action = new TestAction();
-
-        // Register the action
         actionRegistry.registerAction(action, "action!");
 
         // Create metadata
@@ -282,12 +298,13 @@ public class ActionRunnerTest {
         metadata.putString("so", "meta");
 
         // Run the action by name
-        actionRunner.run("action!")
-                    .setMetadata(metadata)
-                    .executeSync();
+        ActionRunRequest.createRequest("action!", actionRegistry)
+                        .setMetadata(metadata)
+                        .runSync();
 
         assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
+        assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
         assertEquals("Missing metadata", "meta", action.runArgs.getMetadata().getString("so"));
     }
 

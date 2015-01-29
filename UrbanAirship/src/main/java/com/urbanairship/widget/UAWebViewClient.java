@@ -37,7 +37,7 @@ import android.webkit.WebViewClient;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
@@ -114,7 +114,7 @@ public class UAWebViewClient extends WebViewClient {
 
     /**
      * Run actions command with a callback. Maps to
-     * {@link com.urbanairship.js.UAJavascriptInterface#runActionCallback(String, Object, String)}.
+     * {@link com.urbanairship.js.UAJavascriptInterface#runActionCallback(String, com.urbanairship.actions.ActionValue, String)}.
      */
     private static final String RUN_ACTIONS_COMMAND_CALLBACK = "android-run-action-cb";
 
@@ -123,16 +123,24 @@ public class UAWebViewClient extends WebViewClient {
      */
     private static final String CLOSE_COMMAND = "close";
 
-    private ActionRunner actionRunner;
+    private ActionRunRequestFactory actionRunRequestFactory;
 
     private Map<String, Credentials> authRequestCredentials = new HashMap<>();
 
+    /**
+     * Default constructor.
+     */
     public UAWebViewClient() {
-        this(ActionRunner.shared());
+        this(new ActionRunRequestFactory());
     }
 
-    UAWebViewClient(ActionRunner runner) {
-        this.actionRunner = runner;
+    /**
+     * Constructs a UAWebViewClient with the specified ActionRunRequestFactory.
+     *
+     * @param actionRunRequestFactory The action run request factory.
+     */
+    UAWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
+        this.actionRunRequestFactory = actionRunRequestFactory;
     }
 
     @Override
@@ -220,11 +228,11 @@ public class UAWebViewClient extends WebViewClient {
 
         for (String actionName : arguments.keySet()) {
             for (ActionValue arg : arguments.get(actionName)) {
-                actionRunner.run(actionName)
-                            .setValue(arg)
-                            .setMetadata(metadata)
-                            .setSituation(Situation.WEB_VIEW_INVOCATION)
-                            .execute();
+                actionRunRequestFactory.createActionRequest(actionName)
+                                       .setValue(arg)
+                                       .setMetadata(metadata)
+                                       .setSituation(Situation.WEB_VIEW_INVOCATION)
+                                       .run();
             }
         }
 

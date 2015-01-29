@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -25,40 +25,19 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import android.os.Bundle;
-
 /**
- * Stubbed run request for testing. All methods are overridden to no-op.
+ * Factory class for creating {@link com.urbanairship.actions.ActionRunRequest}.
  */
-public class StubbedRunRequest extends ActionRunner.RunRequest {
+public class ActionRunRequestFactory {
 
-    public StubbedRunRequest() {
-        super((String)null, null, null);
+    /**
+     * Creates an action run request with a given action name.
+     *
+     * @param actionName The action name.
+     * @return An action run request.
+     */
+    public ActionRunRequest createActionRequest(String actionName) {
+        return ActionRunRequest.createRequest(actionName);
     }
 
-    @Override
-    public ActionRunner.RunRequest setValue(Object actionValue) {
-        return this;
-    }
-
-    @Override
-    public ActionRunner.RunRequest setMetadata(Bundle metadata) {
-        return this;
-    }
-
-    @Override
-    public ActionRunner.RunRequest setSituation(Situation situation) {
-        return this;
-    }
-
-    @Override
-    public ActionResult executeSync() {
-        return ActionResult.newEmptyResult();
-    }
-
-    @Override
-    public void execute() { }
-
-    @Override
-    public void execute(final ActionCompletionCallback callback) { }
 }

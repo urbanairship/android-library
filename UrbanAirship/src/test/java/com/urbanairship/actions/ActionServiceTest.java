@@ -32,13 +32,13 @@ import static org.mockito.Mockito.when;
 public class ActionServiceTest {
 
     ActionService service;
-    ActionRunner runner;
+    ActionRunRequestFactory actionRunRequestFactory;
     private Context context = UAirship.getApplicationContext();
 
     @Before
     public void setUp() {
-        runner = Mockito.mock(ActionRunner.class);
-        service = new ActionService(runner);
+        actionRunRequestFactory = Mockito.mock(ActionRunRequestFactory.class);
+        service = new ActionService(actionRunRequestFactory);
     }
 
     /**
@@ -114,11 +114,10 @@ public class ActionServiceTest {
         intent.putExtra(ActionService.EXTRA_SITUATION, situation);
 
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the request finish callback
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -127,16 +126,15 @@ public class ActionServiceTest {
                 callback.onFinish(ActionResult.newEmptyResult());
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
 
         // Start the service
         service.onStartCommand(intent, 0, 1);
 
-        // Verify that the action runner runs the action
         verify(runRequest).setValue("actionValue");
         verify(runRequest).setSituation(situation);
-        verify(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         // Verify that the service called stop self with the last start id
         assertEquals(1, shadowService.getLastStopSelfId());
@@ -165,11 +163,10 @@ public class ActionServiceTest {
         intent.putExtra(ActionService.EXTRA_SITUATION, situation);
         intent.putExtra(ActionService.EXTRA_PUSH_BUNDLE, actionBundle);
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the action request callback
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -178,12 +175,11 @@ public class ActionServiceTest {
                 callback.onFinish(ActionResult.newEmptyResult());
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         // Start the service
         service.onStartCommand(intent, 0, 1);
 
-        // Verify that the action runner runs the action
         verify(runRequest).setValue("actionValue");
 
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
@@ -197,7 +193,7 @@ public class ActionServiceTest {
 
 
         verify(runRequest).setSituation(situation);
-        verify(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         // Verify that the service called stop self with the last start id
         assertEquals(1, shadowService.getLastStopSelfId());
