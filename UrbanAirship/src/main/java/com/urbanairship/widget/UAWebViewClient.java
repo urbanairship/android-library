@@ -53,6 +53,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
+
 /**
  * <p>
  * A web view client that intercepts Urban Airship URLs and enables triggering
@@ -263,9 +266,9 @@ public class UAWebViewClient extends WebViewClient {
 
             for (String arg : options.get(actionName)) {
                 try {
-                    ActionValue actionValue = basicEncoding ? ActionValue.wrap(arg) : ActionValue.parseString(arg);
-                    decodedActionArguments.add(actionValue);
-                } catch (ActionValue.ActionValueException e) {
+                    JsonValue jsonValue = basicEncoding ? JsonValue.wrap(arg) : JsonValue.parseString(arg);
+                    decodedActionArguments.add(new ActionValue(jsonValue));
+                } catch (JsonException e) {
                     Logger.warn("Invalid json. Unable to create action argument "
                             + actionName + " with args: " + arg, e);
                     return null;

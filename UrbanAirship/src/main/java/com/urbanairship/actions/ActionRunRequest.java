@@ -142,7 +142,7 @@ public class ActionRunRequest {
     public ActionRunRequest setValue(Object object) {
         try {
             this.actionValue = ActionValue.wrap(object);
-        } catch (ActionValue.ActionValueException e) {
+        } catch (ActionValueException e) {
             throw new IllegalArgumentException("Unable to wrap object: " + object + " as an ActionValue.", e);
         }
         return this;

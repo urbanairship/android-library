@@ -63,7 +63,7 @@ public final class ActionArguments {
      */
     public ActionArguments(Situation situation, ActionValue value, Bundle metadata) {
         this.situation = situation == null ? Situation.MANUAL_INVOCATION : situation;
-        this.value = value == null ? ActionValue.NULL : value;
+        this.value = value == null ? new ActionValue() : value;
         this.metadata = metadata == null ? new Bundle() : new Bundle(metadata);
     }
 

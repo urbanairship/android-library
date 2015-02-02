@@ -56,7 +56,7 @@ public class ActionRunRequestTest {
      * Test running an action
      */
     @Test
-    public void testRunAction() throws ActionValue.ActionValueException {
+    public void testRunAction() throws ActionValueException {
         ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
@@ -73,7 +73,7 @@ public class ActionRunRequestTest {
      * Test running an action with a callback.
      */
     @Test
-    public void testRunActionWithCallback() throws ActionValue.ActionValueException {
+    public void testRunActionWithCallback() throws ActionValueException {
         ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestActionCompletionCallback callback = new TestActionCompletionCallback();
         TestAction action = new TestAction(true, result);
@@ -92,7 +92,7 @@ public class ActionRunRequestTest {
      * Test running an action from the registry.
      */
     @Test
-    public void testRunActionFromRegistry() throws ActionValue.ActionValueException {
+    public void testRunActionFromRegistry() throws ActionValueException {
         ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
 
@@ -112,7 +112,7 @@ public class ActionRunRequestTest {
      * Test running an action from the registry with a callback.
      */
     @Test
-    public void testRunActionFromRegistryWithCallback() throws ActionValue.ActionValueException {
+    public void testRunActionFromRegistryWithCallback() throws ActionValueException {
         ActionResult result = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(true, result);
         TestActionCompletionCallback callback = new TestActionCompletionCallback();

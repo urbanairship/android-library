@@ -162,8 +162,7 @@ public class LandingPageAction extends Action {
         String uriValue;
 
         if (arguments.getValue().getMap() != null) {
-            ActionValue actionValue = arguments.getValue().getMap().get(URL_KEY);
-            uriValue = actionValue != null ? actionValue.getString() : null;
+            uriValue = arguments.getValue().getMap().opt(URL_KEY).getString();
         } else {
             uriValue = arguments.getValue().getString();
         }
@@ -209,8 +208,7 @@ public class LandingPageAction extends Action {
      */
     protected boolean shouldCacheOnReceive(ActionArguments arguments) {
         if (arguments.getValue().getMap() != null) {
-            ActionValue actionValue = arguments.getValue().getMap().get(CACHE_ON_RECEIVE_KEY);
-            return actionValue != null && actionValue.getBoolean(false);
+            return arguments.getValue().getMap().opt(CACHE_ON_RECEIVE_KEY).getBoolean(false);
         }
 
         return false;

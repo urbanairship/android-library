@@ -66,7 +66,7 @@ public class ActionTestUtils {
     public static ActionArguments createArgs(Situation situation, Object value, Bundle metadata) {
         try {
             return createArgs(situation, ActionValue.wrap(value), metadata);
-        } catch (ActionValue.ActionValueException e) {
+        } catch (ActionValueException e) {
 
             // Throw an illegal argument exception to fail the test
             throw new IllegalArgumentException("Object value: " + value + " unable to be wrapped as an action value.", e);
@@ -96,7 +96,7 @@ public class ActionTestUtils {
     public static ActionResult createResult(Object value, Exception exception, ActionResult.Status status) {
         try {
             return new ActionResult(ActionValue.wrap(value), exception, status);
-        } catch (ActionValue.ActionValueException e) {
+        } catch (ActionValueException e) {
             // Throw an illegal argument exception to fail the test
             throw new IllegalArgumentException("Object value: " + value + " unable to be wrapped as an action value.", e);
         }
