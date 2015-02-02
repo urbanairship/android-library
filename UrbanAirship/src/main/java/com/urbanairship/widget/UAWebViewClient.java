@@ -51,6 +51,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -430,18 +431,15 @@ public class UAWebViewClient extends WebViewClient {
 
 
     String createJavascriptInterfaceWrapper(UAJavascriptInterface jsInterface) {
-        String stringMethod = "_UAirship.%s = function(){return '%s';};";
-        String literalMethod = "_UAirship.%s = function(){return %s;};";
-
         StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
 
         // Getters
-        sb.append(String.format(stringMethod, "getDeviceModel", jsInterface.getDeviceModel()))
-          .append(String.format(stringMethod, "getMessageId", jsInterface.getMessageId()))
-          .append(String.format(stringMethod, "getMessageTitle", jsInterface.getMessageTitle()))
-          .append(String.format(stringMethod, "getMessageSentDate", jsInterface.getMessageSentDate()))
-          .append(String.format(literalMethod, "getMessageSentDateMS", jsInterface.getMessageSentDateMS()))
-          .append(String.format(stringMethod, "getUserId", jsInterface.getUserId()));
+        sb.append(createGetter("getDeviceModel", jsInterface.getDeviceModel()))
+          .append(createGetter("getMessageId", jsInterface.getMessageId()))
+          .append(createGetter("getMessageTitle", jsInterface.getMessageTitle()))
+          .append(createGetter("getMessageSentDate", jsInterface.getMessageSentDate()))
+          .append(createGetter("getMessageSentDateMS", jsInterface.getMessageSentDateMS()))
+          .append(createGetter("getUserId", jsInterface.getUserId()));
 
         // Invoke helper method
         sb.append("_UAirship.invoke = function(url){")
@@ -461,22 +459,14 @@ public class UAWebViewClient extends WebViewClient {
           .append("_UAirship.invoke(url);")
           .append("};");
 
-        // NavigateTo
-        sb.append("_UAirship.navigateTo=function(activity){_UAirship.invoke('uairship://navigate-to/' + activity);};");
-
-        // MarkMessageRead
-        sb.append("_UAirship.markMessageRead=function(){")
-          .append("_UAirship.invoke('uairship://mark-message-read');")
-          .append(String.format(literalMethod, "isMessageRead", true))
-          .append("};");
-
-        // MarkMessageUnread
-        sb.append("_UAirship.markMessageUnread=function(){")
-          .append("_UAirship.invoke('uairship://mark-message-unread');")
-          .append(String.format(literalMethod, "isMessageRead", false))
-          .append("};");
-
         return sb.toString();
     }
 
+    private String createGetter(String functionName, String value) {
+        return String.format(Locale.US, "_UAirship.%s = function(){return %s;};", functionName, JSONObject.quote(value));
+    }
+
+    private String createGetter(String functionName, long value) {
+        return String.format(Locale.US, "_UAirship.%s = function(){return %d;};", functionName, value);
+    }
 }
