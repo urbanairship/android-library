@@ -45,6 +45,8 @@ import com.urbanairship.js.UAJavascriptInterface;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UriUtils;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
