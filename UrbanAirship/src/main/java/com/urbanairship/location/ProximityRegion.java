@@ -1,0 +1,233 @@
+/*
+Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package com.urbanairship.location;
+import com.urbanairship.Logger;
+import com.urbanairship.location.RegionEvent;
+
+/**
+ * A ProximityRegion defines a proximity region with an identifier, major, minor
+ * and optional latitude, longitude and RSSI.
+ */
+public class ProximityRegion {
+    /**
+     * The maximum proximity region major and minor value.
+     */
+    private static final int MAX_MAJOR_MINOR_VALUE = 65535;
+
+    /**
+     * The maximum RSSI for a proximity region in dBm.
+     */
+    private static final int MAX_RSSI = 100;
+
+    /**
+     * The minimum RSSI for a proximity region in dBm.
+     */
+    private static final int MIN_RSSI = -100;
+
+    /**
+     * The proximity region's identifier.
+     */
+    private final String proximityId;
+
+    /**
+     * The proximity region's major.
+     */
+    private final int major;
+
+    /**
+     * The proximity region's minor.
+     */
+    private final int minor;
+
+    /**
+     * The proximity region's latitude in degrees.
+     */
+    private Double latitude;
+
+    /**
+     * The proximity region's longitude in degrees.
+     */
+    private Double longitude;
+
+    /**
+     * The proximity region's received signal strength indication in dBm.
+     */
+    private Integer rssi;
+
+    /**
+     * Constructor for creating proximity region.
+     *
+     * @param proximityId The ID of the region object.
+     * @param major The major.
+     * @param minor The minor.
+     */
+    public ProximityRegion(String proximityId, int major, int minor) {
+        this.proximityId = proximityId;
+        this.major = major;
+        this.minor = minor;
+    }
+
+    /**
+     * Sets the proximity region's latitude and longitude.
+     *
+     * @param latitude The proximity region's latitude.
+     * @param longitude The proximity region's longitude.
+     */
+    public void setCoordinates(Double latitude, Double longitude) {
+
+        if (latitude == null || longitude == null) {
+            this.latitude = null;
+            this.longitude = null;
+            return;
+        }
+
+        if (!RegionEvent.regionEventLatitudeIsValid(latitude)) {
+            Logger.error("The latitude must be greater than or equal to " + RegionEvent.MIN_LATITUDE +
+                    " and less than or equal to " + RegionEvent.MAX_LATITUDE + " degrees.");
+            this.latitude = null;
+            return;
+        }
+
+        if (!RegionEvent.regionEventLongitudeIsValid(longitude)) {
+            Logger.error("The longitude must be greater than or equal to " + RegionEvent.MIN_LONGITUDE +
+                    " and less than or equal to " + RegionEvent.MAX_LONGITUDE + " degrees.");
+            this.longitude = null;
+            return;
+        }
+
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    /**
+     * Sets the proximity region's received signal strength indication.
+     *
+     * @param rssi The proximity region's received signal strength indication.
+     */
+    public void setRssi(Integer rssi) {
+        if (rssi == null) {
+            this.rssi = null;
+            return;
+        }
+
+        if (rssi > MAX_RSSI || rssi < MIN_RSSI) {
+            Logger.error("The rssi must be greater than or equal to " + MIN_RSSI +
+                    " and less than or equal to " + MAX_RSSI + " dBm.");
+            this.rssi = null;
+            return;
+        }
+
+        this.rssi = rssi;
+    }
+
+    /**
+     * Gets the proximity region's proximity ID.
+     *
+     * @return The proximity ID.
+     */
+    public String getProximityId() {
+        return this.proximityId;
+    }
+
+    /**
+     * Gets the proximity region's major.
+     *
+     * @return The major.
+     */
+    public int getMajor() {
+        return this.major;
+    }
+
+    /**
+     * Gets the proximity region's minor.
+     *
+     * @return The minor.
+     */
+    public int getMinor() {
+        return this.minor;
+    }
+
+    /**
+     * Gets the proximity region's latitude in degrees.
+     *
+     * @return The latitude.
+     */
+    public Double getLatitude() {
+        return this.latitude;
+    }
+
+    /**
+     * Gets the proximity region's longitude in degrees.
+     *
+     * @return The longitude.
+     */
+    public Double getLongitude() {
+        return this.longitude;
+    }
+
+    /**
+     * Gets the proximity region's RSSI in dBm.
+     *
+     * @return The RSSI.
+     */
+    public Integer getRssi() {
+        return this.rssi;
+    }
+
+
+    /**
+     * Validates the proximity region object.
+     *
+     * @return True if the proximity region is valid, false otherwise.
+     */
+    public boolean isValid() {
+        if (proximityId == null) {
+            Logger.error("The proximity ID must not be null.");
+            return false;
+        }
+
+        if (!RegionEvent.regionEventCharacterCountIsValid(proximityId)) {
+            Logger.error("The proximity ID must not be greater than " + RegionEvent.MAX_CHARACTER_LENGTH +
+                    " or less than " + 1 + " characters in length.");
+            return false;
+        }
+
+        if (major > MAX_MAJOR_MINOR_VALUE || major < 0) {
+            Logger.error("The major must not be greater than " + MAX_MAJOR_MINOR_VALUE +
+                    " or less than " + 0 + ".");
+            return false;
+        }
+
+        if (minor > MAX_MAJOR_MINOR_VALUE || minor < 0) {
+            Logger.error("The minor must not be greater than " + MAX_MAJOR_MINOR_VALUE +
+                    " or less than " + 0 + ".");
+            return false;
+        }
+
+        return true;
+    }
+}
+
