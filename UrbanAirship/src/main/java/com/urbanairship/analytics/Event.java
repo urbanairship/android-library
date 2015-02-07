@@ -150,7 +150,6 @@ public abstract class Event {
      */
     protected abstract JSONObject getEventData();
 
-
     /**
      * Returns a list of currently enabled notification types.
      *
@@ -176,6 +175,7 @@ public abstract class Event {
 
         return notificationTypes;
     }
+
     /**
      * Returns the connection type.
      *
@@ -214,7 +214,6 @@ public abstract class Event {
         return typeString;
     }
 
-
     /**
      * Returns the connection subtype.
      *
@@ -235,7 +234,6 @@ public abstract class Event {
         return "";
     }
 
-
     /**
      * Returns the current carrier.
      *
@@ -245,7 +243,6 @@ public abstract class Event {
         TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         return tm.getNetworkOperatorName();
     }
-
 
     /**
      * Returns the current time zone.
@@ -264,5 +261,14 @@ public abstract class Event {
      */
     protected boolean isDaylightSavingsTime() {
         return Calendar.getInstance().getTimeZone().inDaylightTime(new Date());
+    }
+
+    /**
+     * Validates the Event.
+     *
+     * @return True if valid, false otherwise.
+     */
+    public boolean isValid() {
+        return true;
     }
 }

@@ -40,6 +40,7 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.http.Response;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -105,6 +106,16 @@ public class PushService extends IntentService {
     static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.ACTION_PUSH_RECEIVED";
 
     /**
+     * Action to update named user association or disassociation.
+     */
+    static final String ACTION_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER";
+
+    /**
+     * Action to retry update named user association or disassociation.
+     */
+    static final String ACTION_RETRY_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER";
+
+    /**
      * Extra for wake lock ID. Set and removed by the service.
      */
     static final String EXTRA_WAKE_LOCK_ID = "com.urbanairship.push.EXTRA_WAKE_LOCK_ID";
@@ -115,6 +126,12 @@ public class PushService extends IntentService {
     static final String EXTRA_BACK_OFF = "com.urbanairship.push.EXTRA_BACK_OFF";
 
     private static final SparseArray<WakeLock> wakeLocks = new SparseArray<>();
+
+    /**
+     * The delay value used for associate and disassociate named user retries.
+     */
+    private static long namedUserBackOff = 0;
+
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
 
@@ -124,6 +141,8 @@ public class PushService extends IntentService {
 
     private ChannelAPIClient channelClient;
 
+    private NamedUserAPIClient namedUserClient;
+
     /**
      * PushService constructor.
      */
@@ -132,13 +151,15 @@ public class PushService extends IntentService {
     }
 
     /**
-     * PushService constructor that specifies the channel client. Used
+     * PushService constructor that specifies the channel and named user client. Used
      * for testing.
      * @param client The channel api client.
+     * @param namedUserClient The named user api client.
      */
-    PushService(ChannelAPIClient client) {
+    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient) {
         super("PushService");
         this.channelClient = client;
+        this.namedUserClient = namedUserClient;
     }
 
     @Override
@@ -161,6 +182,7 @@ public class PushService extends IntentService {
         int wakeLockId = intent.getIntExtra(EXTRA_WAKE_LOCK_ID, -1);
         intent.removeExtra(EXTRA_WAKE_LOCK_ID);
 
+
         try {
             switch (action) {
                 case ACTION_PUSH_RECEIVED:
@@ -180,6 +202,12 @@ public class PushService extends IntentService {
                     break;
                 case ACTION_RETRY_PUSH_REGISTRATION:
                     onRetryPushRegistration(intent);
+                    break;
+                case ACTION_UPDATE_NAMED_USER:
+                    onUpdateNamedUser();
+                    break;
+                case ACTION_RETRY_UPDATE_NAMED_USER:
+                    onRetryUpdateNamedUser(intent);
                     break;
             }
         } finally {
@@ -330,6 +358,18 @@ public class PushService extends IntentService {
                 pushPreferences.setLastRegistrationPayload(payload);
                 pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
                 pushManager.sendRegistrationFinishedBroadcast(true);
+
+                if (response.getStatus() == HttpURLConnection.HTTP_OK) {
+                    // 200 means channel previously existed and a named user may be associated to it.
+                    if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
+                        // If clearNamedUser is true on re-install, then disassociate if necessary
+                        pushManager.getNamedUser().disassociateNamedUserIfNull();
+                    }
+                }
+
+                // If setId was called before channel creation, update named user
+                pushManager.getNamedUser().startUpdateService();
+
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());
@@ -444,6 +484,77 @@ public class PushService extends IntentService {
     }
 
     /**
+     * Update named user ID.
+     */
+    private void onUpdateNamedUser() {
+        PushManager pushManager = UAirship.shared().getPushManager();
+        NamedUser namedUser = pushManager.getNamedUser();
+        String currentId = namedUser.getId();
+        String changeToken = namedUser.getChangeToken();
+        String lastUpdatedToken = namedUser.getLastUpdatedToken();
+
+        if (changeToken == null && lastUpdatedToken == null) {
+            // Skip since no one has set the named user ID. Usually from a new or re-install.
+            Logger.debug("PushService - New or re-install. Skipping.");
+            return;
+        }
+
+        if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
+            // Skip since no change has occurred (token remain the same).
+            Logger.debug("PushService - named user already updated. Skipping.");
+            return;
+        }
+
+        if (UAStringUtil.isEmpty(pushManager.getChannelId())) {
+            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
+            return;
+        }
+
+        Response response;
+
+        if (currentId == null) {
+            // When currentId is null, disassociate the current named user ID.
+            response = getNamedUserClient().disassociate(pushManager.getChannelId());
+        } else {
+            // When currentId is non-null, associate the currentId.
+            response = getNamedUserClient().associate(currentId, pushManager.getChannelId());
+        }
+
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // Server error occurred, so retry later.
+
+            Logger.error("Update named user failed, will retry.");
+            namedUserBackOff = calculateNextBackOff(namedUserBackOff);
+            scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
+        } else if (response.getStatus() == HttpURLConnection.HTTP_OK) {
+            Logger.info("Update named user succeeded with status: " + response.getStatus());
+            // When currentId is null, the disassociate request succeeded so we set the associatedId
+            // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
+            // the associate request succeeded so we set the associatedId.
+            namedUser.setLastUpdatedToken(changeToken);
+            namedUserBackOff = 0;
+        } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+            Logger.error("Update named user failed with status: " + response.getStatus() +
+                    " This action is not allowed when the app is in server-only mode.");
+            namedUserBackOff = 0;
+        } else {
+            Logger.error("Update named user failed with status: " + response.getStatus());
+            namedUserBackOff = 0;
+        }
+    }
+
+    /**
+     * Called when updating named user previously failed and is being retried.
+     *
+     * @param intent The value passed to onHandleIntent.
+     */
+    private void onRetryUpdateNamedUser(Intent intent) {
+        // Restore the back off if the application was restarted since the last retry.
+        namedUserBackOff = intent.getLongExtra(EXTRA_BACK_OFF, namedUserBackOff);
+        onUpdateNamedUser();
+    }
+
+    /**
      * Get the channel location as a URL
      *
      * @return The channel location URL
@@ -502,7 +613,7 @@ public class PushService extends IntentService {
                 Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
 
                 // Unregister if we have different registered sender ids
-                if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {
+                if (registeredGcmSenderIds != null && !registeredGcmSenderIds.equals(senderIds)) {
                     Logger.verbose("PushService - GCM sender IDs changed. Push re-registration required.");
                     return true;
                 }
@@ -608,6 +719,7 @@ public class PushService extends IntentService {
 
     /**
      * Gets the channel client. Creates it if it does not exist.
+     *
      * @return The channel API client.
      */
     private ChannelAPIClient getChannelClient() {
@@ -615,5 +727,17 @@ public class PushService extends IntentService {
             channelClient = new ChannelAPIClient();
         }
         return channelClient;
+    }
+
+    /**
+     * Gets the named user client. Creates it if it does not exist.
+     *
+     * @return The named user API client.
+     */
+    private NamedUserAPIClient getNamedUserClient() {
+        if (namedUserClient == null) {
+            namedUserClient = new NamedUserAPIClient();
+        }
+        return namedUserClient;
     }
 }

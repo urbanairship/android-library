@@ -184,6 +184,14 @@ public class AirshipConfigOptions {
     public long backgroundReportingIntervalMS = 15 * 60 * 1000;
 
     /**
+     * Flag indicating whether to clear an existing named user during a re-install.
+     * <p/>
+     * Defaults to <code>false</code>.
+     */
+    @PropertyName(name = "clearNamedUser")
+    public boolean clearNamedUser = false;
+
+    /**
      * Logger level when the application is in debug mode. Possible values are:
      * <br><ul>
      * <li>ASSERT
