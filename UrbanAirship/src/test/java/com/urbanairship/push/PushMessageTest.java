@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Parcel;
 
 import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.push.ian.InAppNotification;
 import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Test;
@@ -357,7 +359,31 @@ public class PushMessageTest {
     }
 
     /**
-     * Test get public notification payload.
+     * Test getting the InAppNotification from the push payload.
+     */
+    @Test
+    public void getGetInAppNotification() throws JsonException {
+        String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
+                "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
+                "\"alert\": \"Oh hi!\"}, \"actions\": {\"button_group\": \"ua_yes_no\"," +
+                "\"button_actions\": {\"yes\": {\"^+t\": \"yes_tag\"}, \"no\": {\"^+t\": \"no_tag\"}}," +
+                "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
+                "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
+
+        InAppNotification expected = new InAppNotification.Builder(InAppNotification.parseJson(inAppJson))
+                .setId("send id")
+                .create();
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_IN_APP_NOTIFICATION, inAppJson);
+        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
+
+        PushMessage pushMessage = new PushMessage(extras);
+        assertEquals(expected, pushMessage.getInAppNotification());
+    }
+
+    /**
+     * Test get in app notification
      */
     @Test
     public void testGetPublicNotificationPayload() {
