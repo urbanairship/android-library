@@ -19,7 +19,7 @@ public class JsonListTest {
 
     @Before
     public void setUp() throws JsonException {
-        jsonList = JsonValue.wrap(new Object[] { "first-value", "second-value" }).getList();
+        jsonList = JsonValue.wrap(new Object[] { "first-value", "second-value", null}).getList();
         assertNotNull(jsonList);
     }
 
@@ -38,7 +38,7 @@ public class JsonListTest {
      */
     @Test
     public void testToString() {
-        String expected = "[\"first-value\",\"second-value\"]";
+        String expected = "[\"first-value\",\"second-value\",null]";
         assertEquals(expected, jsonList.toString());
     }
 

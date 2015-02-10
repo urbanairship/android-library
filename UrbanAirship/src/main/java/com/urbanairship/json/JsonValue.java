@@ -303,7 +303,8 @@ public class JsonValue implements Parcelable {
      */
     void write(JSONStringer stringer) throws JSONException {
         if (isNull()) {
-            stringer.value(JSONObject.NULL);
+            stringer.value(null);
+            return;
         }
 
         if (value instanceof JsonList) {

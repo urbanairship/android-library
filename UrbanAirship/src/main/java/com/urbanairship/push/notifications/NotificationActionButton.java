@@ -199,6 +199,7 @@ public class NotificationActionButton {
 
         /**
          * Sets the description of the action. Used for analytics.
+         *
          * @param description The action description.
          * @return The builder with the description set.
          */
@@ -209,6 +210,8 @@ public class NotificationActionButton {
 
         /**
          * Set the icon.
+         * <p/>
+         * Note: All notification icons should be entirely white on a transparent background.
          *
          * @param iconId An int value.
          * @return The builder with the iconId value set.

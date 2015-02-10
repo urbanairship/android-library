@@ -24,6 +24,7 @@ public class JsonMapTest {
     @Before
     public void setUp() throws JsonException {
         Map<String, Object> map = new HashMap<>();
+        map.put("null-key", null);
         map.put("some-key", "some-value");
         map.put("another-key", "another-value");
 
@@ -58,8 +59,9 @@ public class JsonMapTest {
      * Test toString produces a JSON encoded String.
      */
     @Test
-    public void testToString() {
-        String expected = "{\"some-key\":\"some-value\",\"another-key\":\"another-value\"}";
+    public void testToString() throws JSONException {
+        String expected = "{\"some-key\":\"some-value\",\"null-key\":null,\"another-key\":\"another-value\"}";
+
         assertEquals(expected, jsonMap.toString());
     }
 

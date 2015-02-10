@@ -31,16 +31,15 @@ import android.os.Bundle;
 import com.urbanairship.Logger;
 import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
+import com.urbanairship.util.DateUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * The primary data structure for Rich Push messages.
@@ -49,12 +48,6 @@ import java.util.TimeZone;
  */
 public class RichPushMessage implements Comparable<RichPushMessage> {
 
-    /**
-     * We're storing everything in GMT/UTC, so this will help us turn what's in the database into a date
-     * and the date we get out of it back into what we want to store in the database. If the dev wants
-     * their own format, they can set their own formatter in their implementation of ViewBinder.
-     */
-    static final SimpleDateFormat UA_DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
     boolean deleted = false;
     boolean unreadClient;
@@ -71,9 +64,6 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     String title;
     JSONObject rawMessageJSON;
 
-    static {
-        UA_DATE_FORMATTER.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
 
     RichPushMessage(String messageId) {
         this.messageId = messageId;
@@ -117,15 +107,11 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
 
     static Long getMillisecondsFromTimeStamp(String timeStamp, Long defaultValue) {
         try {
-            if (timeStamp != null) {
-                Date date = UA_DATE_FORMATTER.parse(timeStamp);
-                return date.getTime();
-            }
-        } catch (Exception e) {
+            return DateUtils.parseIso8601(timeStamp);
+        } catch (ParseException e) {
             Logger.error("RichPushMessage - Couldn't parse message date: " + timeStamp + ", defaulting to: " + defaultValue + ".");
+            return defaultValue;
         }
-
-        return defaultValue;
     }
 
     @SuppressWarnings("unchecked")
