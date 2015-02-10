@@ -74,22 +74,22 @@ public class ActionService extends Service {
     // Number of currently running actions
     private int runningActions = 0;
 
-    private ActionRunner runner;
+    private ActionRunRequestFactory actionRunRequestFactory;
 
     /**
-     * ActionService constructor, allowing an injectable ActionRunner instance.
+     * ActionService constructor, allowing an injectable ActionRunRequestFactory instance.
      *
-     * @param runner An ActionRunner instance
+     * @param actionRunRequestFactory The action request factory.
      */
-    ActionService(ActionRunner runner) {
-        this.runner = runner;
+    ActionService(ActionRunRequestFactory actionRunRequestFactory) {
+        this.actionRunRequestFactory = actionRunRequestFactory;
     }
 
     /**
      * Default ActionService constructor.
      */
     public ActionService() {
-        this(ActionRunner.shared());
+        this(new ActionRunRequestFactory());
     }
 
     @Override
@@ -197,11 +197,11 @@ public class ActionService extends Service {
             // so we don't have to worry about any threading issues.  onFinish
             // can safely call stopSelf without worrying about any actions about to
             // run.
-            runner.run(actionName)
+            actionRunRequestFactory.createActionRequest(actionName)
                     .setMetadata(metadata)
                     .setValue(actionsMap.get(actionName))
                     .setSituation(situation)
-                    .execute(new ActionCompletionCallback() {
+                    .run(new ActionCompletionCallback() {
                         @Override
                         public void onFinish(ActionResult result) {
                             runningActions--;

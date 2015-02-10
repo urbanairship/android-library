@@ -5,9 +5,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.push.ian.InAppNotification;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
+
 
 /**
  * A push message, usually created from handling a message intent from either GCM,
@@ -152,6 +155,11 @@ public class PushMessage implements Parcelable {
      * client. If not present, notifications may be delivered arbitrarily late.
      */
     public static final String EXTRA_EXPIRATION = "com.urbanairship.push.EXPIRATION";
+
+    /**
+     * The extra key for the {@link com.urbanairship.push.ian.InAppNotification} payload.
+     */
+    public static final String EXTRA_IN_APP_NOTIFICATION = "com.urbanairship.in_app";
 
     private Bundle pushBundle;
 
@@ -366,6 +374,26 @@ public class PushMessage implements Parcelable {
         return pushBundle.getString(EXTRA_CATEGORY);
     }
 
+    /**
+     * Gets the InAppNotification from the push bundle.
+     *
+     * @return The InAppNotification.
+     */
+    public InAppNotification getInAppNotification() {
+        if (pushBundle.containsKey(EXTRA_IN_APP_NOTIFICATION)) {
+            try {
+                InAppNotification message = InAppNotification.parseJson(pushBundle.getString(EXTRA_IN_APP_NOTIFICATION));
+                return new InAppNotification.Builder(message)
+                        .setId(getSendId())
+                        .create();
+
+            } catch (JsonException e) {
+                Logger.error("PushMessage - unable to create in app message from push payload", e);
+            }
+        }
+
+        return null;
+    }
 
     @Override
     public String toString() {

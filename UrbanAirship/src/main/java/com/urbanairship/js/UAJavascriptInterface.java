@@ -37,7 +37,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
-import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.richpush.RichPushMessage;
@@ -47,6 +47,9 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 /**
  * The Urban Airship Javascript interface.
@@ -61,7 +64,7 @@ public class UAJavascriptInterface {
 
     private static SimpleDateFormat dateFormatter;
     private final RichPushMessage message;
-    private final ActionRunner actionRunner;
+    private final ActionRunRequestFactory actionRequestFactory;
     private final WebView webView;
 
     /**
@@ -72,7 +75,7 @@ public class UAJavascriptInterface {
      * @param webView The WebView associated with this interface.
      */
     public UAJavascriptInterface(WebView webView) {
-        this(webView, ActionRunner.shared(), null);
+        this(webView, null);
     }
 
     /**
@@ -82,13 +85,20 @@ public class UAJavascriptInterface {
      * @param message The rich push message.
      */
     public UAJavascriptInterface(WebView webView, RichPushMessage message) {
-        this(webView, ActionRunner.shared(), message);
+        this(webView, message, new ActionRunRequestFactory());
     }
 
-    UAJavascriptInterface(WebView webView, ActionRunner actionRunner, RichPushMessage message) {
+    /**
+     * Constructs the Javascript Interface with the specified RichPushMessage and ActionRunRequestFactory.
+     *
+     * @param webView The WebView associated with this interface.
+     * @param message The rich push message.
+     * @param actionRequestFactory The action request factory.
+     */
+    UAJavascriptInterface(WebView webView, RichPushMessage message, ActionRunRequestFactory actionRequestFactory) {
         this.webView = webView;
-        this.actionRunner = actionRunner;
         this.message = message;
+        this.actionRequestFactory = actionRequestFactory;
     }
 
     /**
@@ -196,10 +206,10 @@ public class UAJavascriptInterface {
         // Parse the action value
         ActionValue actionValue;
         try {
-            actionValue = ActionValue.parseString(value);
-        } catch (ActionValue.ActionValueException e) {
+            actionValue = new ActionValue(JsonValue.parseString(value));
+        } catch (JsonException e) {
             Logger.warn("Unable to parse action argument value: " + value, e);
-            runActionCallback("Unable to decode arguments payload", ActionValue.NULL, callbackKey);
+            runActionCallback("Unable to decode arguments payload", new ActionValue(), callbackKey);
             return;
         }
 
@@ -210,17 +220,17 @@ public class UAJavascriptInterface {
         }
 
         // Run the action
-        actionRunner.run(name)
-                    .setMetadata(metadata)
-                    .setValue(actionValue)
-                    .setSituation(Situation.WEB_VIEW_INVOCATION)
-                    .execute(new ActionCompletionCallback() {
-                        @Override
-                        public void onFinish(ActionResult result) {
-                            String errorMessage = createErrorMessageFromResult(name, result);
-                            runActionCallback(errorMessage, result.getValue(), callbackKey);
-                        }
-                    });
+        actionRequestFactory.createActionRequest(name)
+                            .setMetadata(metadata)
+                            .setValue(actionValue)
+                            .setSituation(Situation.WEB_VIEW_INVOCATION)
+                            .run(new ActionCompletionCallback() {
+                                @Override
+                                public void onFinish(ActionResult result) {
+                                    String errorMessage = createErrorMessageFromResult(name, result);
+                                    runActionCallback(errorMessage, result.getValue(), callbackKey);
+                                }
+                            });
     }
 
     /**

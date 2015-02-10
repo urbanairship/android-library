@@ -23,42 +23,17 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.actions;
-
-import android.os.Bundle;
+package com.urbanairship.json;
 
 /**
- * Stubbed run request for testing. All methods are overridden to no-op.
+ * Interface for classes whose instances can be written as a JsonValue.
  */
-public class StubbedRunRequest extends ActionRunner.RunRequest {
+public interface JsonSerializable {
 
-    public StubbedRunRequest() {
-        super((String)null, null, null);
-    }
-
-    @Override
-    public ActionRunner.RunRequest setValue(Object actionValue) {
-        return this;
-    }
-
-    @Override
-    public ActionRunner.RunRequest setMetadata(Bundle metadata) {
-        return this;
-    }
-
-    @Override
-    public ActionRunner.RunRequest setSituation(Situation situation) {
-        return this;
-    }
-
-    @Override
-    public ActionResult executeSync() {
-        return ActionResult.newEmptyResult();
-    }
-
-    @Override
-    public void execute() { }
-
-    @Override
-    public void execute(final ActionCompletionCallback callback) { }
+    /**
+     * Returns the objects represented as a JsonValue.
+     *
+     * @return The object as a JsonValue.
+     */
+    public JsonValue toJsonValue();
 }

@@ -55,7 +55,7 @@ import com.urbanairship.UAirship;
  * <p/>
  * While actions can be run manually, typically they are associated with names
  * in the {@link com.urbanairship.actions.ActionRegistry}, and run
- * on their own threads with the {@link com.urbanairship.actions.ActionRunner}.
+ * on their own threads with the {@link com.urbanairship.actions.ActionRunRequest}.
  * <p/>
  * Actions that are either long lived or are unable to be interrupted by the device
  * going to sleep should request a wake lock before performing. This is especially

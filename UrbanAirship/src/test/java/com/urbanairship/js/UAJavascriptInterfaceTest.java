@@ -35,11 +35,13 @@ import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
-import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.Situation;
-import com.urbanairship.actions.StubbedRunRequest;
+import com.urbanairship.actions.StubbedActionRunRequest;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
@@ -69,14 +71,14 @@ public class UAJavascriptInterfaceTest {
 
     private WebView webView;
     private View rootView;
-    private ActionRunner actionRunner;
+    private ActionRunRequestFactory actionRunRequestFactory;
 
     private RichPushMessage message;
 
 
     @Before
     public void setup() {
-        actionRunner = mock(ActionRunner.class);
+        actionRunRequestFactory = mock(ActionRunRequestFactory.class);
         rootView = mock(View.class);
         message = mock(RichPushMessage.class);
         when(message.getMessageId()).thenReturn("message id");
@@ -85,7 +87,7 @@ public class UAJavascriptInterfaceTest {
         webView = mock(WebView.class);
         when(webView.getRootView()).thenReturn(rootView);
 
-        js = new UAJavascriptInterface(webView, actionRunner, message);
+        js = new UAJavascriptInterface(webView, message, actionRunRequestFactory);
     }
 
     /**
@@ -119,11 +121,10 @@ public class UAJavascriptInterfaceTest {
     public void testActionCallActionNotFound() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.ACTION_NOT_FOUND);
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -132,7 +133,7 @@ public class UAJavascriptInterfaceTest {
                 callback.onFinish(result);
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         js.actionCall("actionName", "true", "callbackKey");
 
@@ -153,11 +154,10 @@ public class UAJavascriptInterfaceTest {
     public void testActionCallActionRejectedArguments() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.REJECTED_ARGUMENTS);
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -166,7 +166,7 @@ public class UAJavascriptInterfaceTest {
                 callback.onFinish(result);
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         js.actionCall("actionName", "true", "callbackKey");
 
@@ -185,11 +185,10 @@ public class UAJavascriptInterfaceTest {
     public void testActionCallActionExecutionError() {
         final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.Status.EXECUTION_ERROR);
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -198,7 +197,7 @@ public class UAJavascriptInterfaceTest {
                 callback.onFinish(result);
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         js.actionCall("actionName", "true", "callbackKey");
 
@@ -214,14 +213,13 @@ public class UAJavascriptInterfaceTest {
      * Test running an action with a result
      */
     @Test
-    public void testActionCallAction() throws ActionValue.ActionValueException {
+    public void testActionCallAction() throws ActionValueException {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
 
-        ActionRunner.RunRequest runRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunner.run("actionName")).thenReturn(runRequest);
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
 
-        // Have the action runner call the completion callback
-        // immediately for each action it runs
+        // Call the action completion handler on run
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -230,7 +228,7 @@ public class UAJavascriptInterfaceTest {
                 callback.onFinish(result);
                 return null;
             }
-        }).when(runRequest).execute(Mockito.any(ActionCompletionCallback.class));
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         js.actionCall("actionName", "true", "callbackKey");
 
@@ -243,7 +241,7 @@ public class UAJavascriptInterfaceTest {
         verify(webView).loadUrl("javascript:UAirship.finishAction(null, \"action_result\", 'callbackKey');");
 
         // Verify the action request
-        verify(runRequest).execute(any(ActionCompletionCallback.class));
+        verify(runRequest).run(any(ActionCompletionCallback.class));
         verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
         verify(runRequest).setValue(ActionValue.wrap(true));
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
@@ -301,7 +299,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testGetMessageIdNullMesssage() {
-        js = new UAJavascriptInterface(webView, actionRunner, null);
+        js = new UAJavascriptInterface(webView, null);
         assertNull("Should return null", js.getMessageId());
     }
 
@@ -321,7 +319,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testMessageSentDateNullMessage() {
-        js = new UAJavascriptInterface(webView, actionRunner, null);
+        js = new UAJavascriptInterface(webView, null);
         assertNull("Should return null", js.getMessageSentDate());
     }
 
@@ -340,7 +338,7 @@ public class UAJavascriptInterfaceTest {
      */
     @Test
     public void testMessageSentDateMSNullMessage() {
-        js = new UAJavascriptInterface(webView, actionRunner, null);
+        js = new UAJavascriptInterface(webView, null);
         assertEquals("Should return -1 if the message is null",
                 -1, js.getMessageSentDateMS());
     }

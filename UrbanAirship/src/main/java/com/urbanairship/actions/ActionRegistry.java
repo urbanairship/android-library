@@ -51,18 +51,6 @@ public final class ActionRegistry {
 
     private final Map<String, Entry> actionMap = new HashMap<>();
 
-    private static ActionRegistry instance = new ActionRegistry();
-
-
-    /**
-     * Returns the shared ActionRegistry singleton instance.
-     *
-     * @return A shared ActionRegistry instance
-     */
-    public static ActionRegistry shared() {
-        return instance;
-    }
-
     /**
      * Registers an action.
      * <p/>

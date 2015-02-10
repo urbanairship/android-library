@@ -81,6 +81,8 @@ public class UAirship {
     static UAirship sharedAirship;
 
     private static List<CancelableOperation> pendingAirshipRequests;
+
+    ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
     ApplicationMetrics applicationMetrics;
@@ -108,6 +110,7 @@ public class UAirship {
         this.locationManager = new UALocationManager(context, preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        this.actionRegistry = new ActionRegistry();
     }
 
     /**
@@ -330,11 +333,9 @@ public class UAirship {
             Logger.info("Urban Airship library changed from " + previousVersion +
                     " to " + currentVersion + ".");
         }
+
         // store current version as library version once check is performed
         preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
-
-        // Register default actions
-        ActionRegistry.shared().registerDefaultActions();
 
         // if in development mode, check the manifest and log manifest issues
         if (!options.inProduction) {
@@ -528,9 +529,11 @@ public class UAirship {
      */
     private void init() {
         // Initialize the managers
-        ((BaseManager) sharedAirship.getRichPushManager()).init();
-        ((BaseManager) sharedAirship.getPushManager()).init();
-        ((BaseManager) sharedAirship.getLocationManager()).init();
+        ((BaseManager) this.richPushManager).init();
+        ((BaseManager) this.pushManager).init();
+        ((BaseManager) this.locationManager).init();
+
+        this.actionRegistry.registerDefaultActions();
     }
 
     /**
@@ -538,9 +541,9 @@ public class UAirship {
      */
     private void tearDown() {
         // Tear down the managers
-        ((BaseManager) sharedAirship.getRichPushManager()).tearDown();
-        ((BaseManager) sharedAirship.getPushManager()).tearDown();
-        ((BaseManager) sharedAirship.getLocationManager()).tearDown();
+        ((BaseManager) this.richPushManager).tearDown();
+        ((BaseManager) this.pushManager).tearDown();
+        ((BaseManager) this.locationManager).tearDown();
     }
 
     /**
@@ -604,6 +607,13 @@ public class UAirship {
      */
     public Whitelist getWhitelist() {
         return whitelist;
+    }
+
+    /**
+     * The default Action Registry.
+     */
+    public ActionRegistry getActionRegistry() {
+        return actionRegistry;
     }
 
     /**

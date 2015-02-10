@@ -37,7 +37,7 @@ import android.webkit.WebViewClient;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
@@ -52,6 +52,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 /**
  * <p>
@@ -114,7 +117,7 @@ public class UAWebViewClient extends WebViewClient {
 
     /**
      * Run actions command with a callback. Maps to
-     * {@link com.urbanairship.js.UAJavascriptInterface#runActionCallback(String, Object, String)}.
+     * {@link com.urbanairship.js.UAJavascriptInterface#runActionCallback(String, com.urbanairship.actions.ActionValue, String)}.
      */
     private static final String RUN_ACTIONS_COMMAND_CALLBACK = "android-run-action-cb";
 
@@ -123,16 +126,24 @@ public class UAWebViewClient extends WebViewClient {
      */
     private static final String CLOSE_COMMAND = "close";
 
-    private ActionRunner actionRunner;
+    private ActionRunRequestFactory actionRunRequestFactory;
 
     private Map<String, Credentials> authRequestCredentials = new HashMap<>();
 
+    /**
+     * Default constructor.
+     */
     public UAWebViewClient() {
-        this(ActionRunner.shared());
+        this(new ActionRunRequestFactory());
     }
 
-    UAWebViewClient(ActionRunner runner) {
-        this.actionRunner = runner;
+    /**
+     * Constructs a UAWebViewClient with the specified ActionRunRequestFactory.
+     *
+     * @param actionRunRequestFactory The action run request factory.
+     */
+    UAWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
+        this.actionRunRequestFactory = actionRunRequestFactory;
     }
 
     @Override
@@ -220,11 +231,11 @@ public class UAWebViewClient extends WebViewClient {
 
         for (String actionName : arguments.keySet()) {
             for (ActionValue arg : arguments.get(actionName)) {
-                actionRunner.run(actionName)
-                            .setValue(arg)
-                            .setMetadata(metadata)
-                            .setSituation(Situation.WEB_VIEW_INVOCATION)
-                            .execute();
+                actionRunRequestFactory.createActionRequest(actionName)
+                                       .setValue(arg)
+                                       .setMetadata(metadata)
+                                       .setSituation(Situation.WEB_VIEW_INVOCATION)
+                                       .run();
             }
         }
 
@@ -255,9 +266,9 @@ public class UAWebViewClient extends WebViewClient {
 
             for (String arg : options.get(actionName)) {
                 try {
-                    ActionValue actionValue = basicEncoding ? ActionValue.wrap(arg) : ActionValue.parseString(arg);
-                    decodedActionArguments.add(actionValue);
-                } catch (ActionValue.ActionValueException e) {
+                    JsonValue jsonValue = basicEncoding ? JsonValue.wrap(arg) : JsonValue.parseString(arg);
+                    decodedActionArguments.add(new ActionValue(jsonValue));
+                } catch (JsonException e) {
                     Logger.warn("Invalid json. Unable to create action argument "
                             + actionName + " with args: " + arg, e);
                     return null;

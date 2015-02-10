@@ -30,10 +30,12 @@ import android.webkit.WebView;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.ActionRunner;
+import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.Situation;
-import com.urbanairship.actions.StubbedRunRequest;
+import com.urbanairship.actions.StubbedActionRunRequest;
 import com.urbanairship.js.NativeBridge;
 import com.urbanairship.js.UAJavascriptInterface;
 import com.urbanairship.richpush.RichPushMessage;
@@ -65,7 +67,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricGradleTestRunner.class)
 public class UAWebViewClientTest {
 
-    ActionRunner runner;
+    ActionRunRequestFactory runRequestFactory;
     UAWebViewClient client;
 
     String webViewUrl;
@@ -73,8 +75,10 @@ public class UAWebViewClientTest {
 
     @Before
     public void setup() {
-        runner = mock(ActionRunner.class);
-        client = new UAWebViewClient(runner);
+
+        runRequestFactory = mock(ActionRunRequestFactory.class);
+
+        client = new UAWebViewClient(runRequestFactory);
         webView = Mockito.mock(WebView.class);
 
         when(webView.getUrl()).then(new Answer<Object>() {
@@ -92,12 +96,12 @@ public class UAWebViewClientTest {
      * Test run basic actions command
      */
     @Test
-    public void testRunBasicActionsCommand() throws ActionValue.ActionValueException {
-        ActionRunner.RunRequest actionRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("action")).thenReturn(actionRunRequest);
+    public void testRunBasicActionsCommand() throws ActionValueException {
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
 
-        ActionRunner.RunRequest anotherActionRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("anotherAction")).thenReturn(anotherActionRunRequest);
+        ActionRunRequest anotherActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("anotherAction")).thenReturn(anotherActionRunRequest);
 
         String url = "uairship://run-basic-actions?action=value&anotherAction=anotherValue";
 
@@ -106,23 +110,23 @@ public class UAWebViewClientTest {
         // Verify that the action runner ran the "action" action
         verify(actionRunRequest).setValue(ActionValue.wrap("value"));
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).execute();
+        verify(actionRunRequest).run();
 
         // Verify that the action runner ran the "anotherAction" action
         verify(anotherActionRunRequest).setValue(eq(ActionValue.wrap("anotherValue")));
         verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).execute();
+        verify(anotherActionRunRequest).run();
     }
 
     /**
      * Test run basic actions command with encoded arguments
      */
     @Test
-    public void testRunBasicActionsCommandEncodedParamters() throws ActionValue.ActionValueException {
-        ActionRunner.RunRequest removeTagRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        ActionRunner.RunRequest addTagRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("^-t")).thenReturn(removeTagRunRequest);
-        when(runner.run("^+t")).thenReturn(addTagRunRequest);
+    public void testRunBasicActionsCommandEncodedParamters() throws ActionValueException {
+        ActionRunRequest removeTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("^-t")).thenReturn(removeTagRunRequest);
+        when(runRequestFactory.createActionRequest("^+t")).thenReturn(addTagRunRequest);
 
         // uairship://run-basic-actions?^+t=addTag&^-t=removeTag
         String encodedUrl = "uairship://run-basic-actions?%5E%2Bt=addTag&%5E-t=removeTag";
@@ -132,12 +136,12 @@ public class UAWebViewClientTest {
         // Verify that the action runner ran the removeTag action
         verify(removeTagRunRequest).setValue(ActionValue.wrap("removeTag"));
         verify(removeTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(removeTagRunRequest).execute();
+        verify(removeTagRunRequest).run();
 
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(ActionValue.wrap("addTag"));
         verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).execute();
+        verify(addTagRunRequest).run();
     }
 
     /**
@@ -151,7 +155,7 @@ public class UAWebViewClientTest {
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, encodedUrl));
 
         // Verify action were not executed
-        verify(runner, never()).run(Mockito.anyString());
+        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
     }
 
     /**
@@ -159,17 +163,17 @@ public class UAWebViewClientTest {
      */
     @Test
     public void testRunBasicActionsCommandNoActionArgs() {
-        ActionRunner.RunRequest addTagRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("addTag")).thenReturn(addTagRunRequest);
+        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
 
         String url = "uairship://run-basic-actions?addTag";
 
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         // Verify that the action runner ran the addTag action
-        verify(addTagRunRequest).setValue(ActionValue.NULL);
+        verify(addTagRunRequest).setValue(new ActionValue());
         verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).execute();
+        verify(addTagRunRequest).run();
     }
 
     /**
@@ -181,19 +185,19 @@ public class UAWebViewClientTest {
 
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(runner, never()).run(Mockito.anyString());
+        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
     }
 
     /**
      * Test run actions command
      */
     @Test
-    public void testRunActionsCommand() throws ActionValue.ActionValueException {
-        ActionRunner.RunRequest actionRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("action")).thenReturn(actionRunRequest);
+    public void testRunActionsCommand() throws ActionValueException {
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
 
-        ActionRunner.RunRequest anotherActionRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("anotherAction")).thenReturn(anotherActionRunRequest);
+        ActionRunRequest anotherActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("anotherAction")).thenReturn(anotherActionRunRequest);
 
         // uairship://run-actions?action={"key":"value"}&anotherAction=["one","two"]
         String url = "uairship://run-actions?action=%7B%20%22key%22%3A%22value%22%20%7D&anotherAction=%5B%22one%22%2C%22two%22%5D";
@@ -206,7 +210,7 @@ public class UAWebViewClientTest {
         expectedMap.put("key", "value");
         verify(actionRunRequest).setValue(ActionValue.wrap(expectedMap));
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).execute();
+        verify(actionRunRequest).run();
 
         // Verify that action "anotherAction" ran with a list
         List<String> expectedList = new ArrayList<>();
@@ -214,7 +218,7 @@ public class UAWebViewClientTest {
         expectedList.add("two");
         verify(anotherActionRunRequest).setValue(ActionValue.wrap(expectedList));
         verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).execute();
+        verify(anotherActionRunRequest).run();
     }
 
     /**
@@ -227,7 +231,7 @@ public class UAWebViewClientTest {
 
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(runner, never()).run(Mockito.anyString());
+        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
     }
 
     /**
@@ -235,16 +239,16 @@ public class UAWebViewClientTest {
      */
     @Test
     public void testRunActionsCommandNoActionArgs() {
-        ActionRunner.RunRequest actionRunRequest = Mockito.mock(StubbedRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runner.run("action")).thenReturn(actionRunRequest);
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
 
         String url = "uairship://run-actions?action";
 
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(actionRunRequest).setValue(ActionValue.NULL);
+        verify(actionRunRequest).setValue(new ActionValue());
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).execute();
+        verify(actionRunRequest).run();
     }
 
     /**
