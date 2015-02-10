@@ -39,6 +39,7 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.actions.StubbedActionRunRequest;
 import com.urbanairship.richpush.RichPushMessage;
@@ -212,7 +213,7 @@ public class UAJavascriptInterfaceTest {
      * Test running an action with a result
      */
     @Test
-    public void testActionCallAction() throws ActionValue.ActionValueException {
+    public void testActionCallAction() throws ActionValueException {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);

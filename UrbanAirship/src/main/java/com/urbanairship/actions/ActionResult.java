@@ -49,7 +49,7 @@ public final class ActionResult {
          * The action was not performed because the action was not found
          * in the {@link com.urbanairship.actions.ActionRegistry}. This value is
          * only possible if trying to run an action by name through the
-         * {@link com.urbanairship.actions.ActionRunner}.
+         * {@link com.urbanairship.actions.ActionRunRequestFactory}.
          */
         ACTION_NOT_FOUND,
 
@@ -117,7 +117,7 @@ public final class ActionResult {
      * @param status The run status of the action.
      */
     ActionResult(ActionValue value, Exception exception, Status status) {
-        this.value = value == null ? ActionValue.NULL : value;
+        this.value = value == null ? new ActionValue() : value;
         this.exception = exception;
         this.status = status != null ? status : Status.COMPLETED;
     }

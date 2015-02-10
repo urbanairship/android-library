@@ -48,6 +48,9 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
+
 /**
  * The Urban Airship Javascript interface.
  */
@@ -203,10 +206,10 @@ public class UAJavascriptInterface {
         // Parse the action value
         ActionValue actionValue;
         try {
-            actionValue = ActionValue.parseString(value);
-        } catch (ActionValue.ActionValueException e) {
+            actionValue = new ActionValue(JsonValue.parseString(value));
+        } catch (JsonException e) {
             Logger.warn("Unable to parse action argument value: " + value, e);
-            runActionCallback("Unable to decode arguments payload", ActionValue.NULL, callbackKey);
+            runActionCallback("Unable to decode arguments payload", new ActionValue(), callbackKey);
             return;
         }
 

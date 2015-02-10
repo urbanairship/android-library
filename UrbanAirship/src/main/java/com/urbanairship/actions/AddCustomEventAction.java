@@ -31,6 +31,8 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
 
+import com.urbanairship.json.JsonMap;
+
 /**
  * An action that adds a custom event.
  * <p/>
@@ -63,15 +65,18 @@ public class AddCustomEventAction extends Action {
 
     @Override
     public ActionResult perform(ActionArguments arguments) {
+
+        JsonMap customEventMap = arguments.getValue().getMap();
+
         // Parse the event values from the map
-        String eventName = getValue(arguments, CustomEvent.EVENT_NAME).getString();
+        String eventName = customEventMap.opt(CustomEvent.EVENT_NAME).getString();
 
-        String eventStringValue = getValue(arguments, CustomEvent.EVENT_VALUE).getString();
-        double eventDoubleValue = getValue(arguments, CustomEvent.EVENT_VALUE).getDouble(0);
+        String eventStringValue = customEventMap.opt(CustomEvent.EVENT_VALUE).getString();
+        double eventDoubleValue = customEventMap.opt(CustomEvent.EVENT_VALUE).getDouble(0);
 
-        String transactionId = getValue(arguments, CustomEvent.TRANSACTION_ID).getString();
-        String interactionType = getValue(arguments, CustomEvent.INTERACTION_TYPE).getString();
-        String interactionId = getValue(arguments, CustomEvent.INTERACTION_ID).getString();
+        String transactionId = customEventMap.opt(CustomEvent.TRANSACTION_ID).getString();
+        String interactionType = customEventMap.opt(CustomEvent.INTERACTION_TYPE).getString();
+        String interactionId = customEventMap.opt(CustomEvent.INTERACTION_ID).getString();
 
         CustomEvent.Builder eventBuilder = new CustomEvent.Builder(eventName)
                 .setTransactionId(transactionId)
@@ -112,8 +117,5 @@ public class AddCustomEventAction extends Action {
         return false;
     }
 
-    private ActionValue getValue(ActionArguments arguments, String key) {
-        ActionValue actionValue = arguments.getValue().getMap().get(key);
-        return actionValue == null ? ActionValue.NULL : actionValue;
-    }
+
 }

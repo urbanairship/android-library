@@ -28,11 +28,12 @@ package com.urbanairship.actions.tags;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionValue;
 import com.urbanairship.push.PushManager;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import com.urbanairship.json.JsonValue;
 
 /**
  * Abstract tag action class.
@@ -74,7 +75,7 @@ public abstract class BaseTagsAction extends Action {
         if (arguments.getValue().getList() != null) {
             Set<String> tags = new HashSet<>();
 
-            for (ActionValue tag : arguments.getValue().getList()) {
+            for (JsonValue tag : arguments.getValue().getList()) {
                 if (tag.getString() != null) {
                     tags.add(tag.getString());
                 }
