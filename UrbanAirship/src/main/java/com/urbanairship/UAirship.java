@@ -41,6 +41,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.push.ian.InAppManager;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.ManifestUtils;
 
@@ -91,6 +92,7 @@ public class UAirship {
     RichPushManager richPushManager;
     UALocationManager locationManager;
     Whitelist whitelist;
+    InAppManager inAppManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -108,6 +110,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
         this.richPushManager = new RichPushManager(preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
+        this.inAppManager = new InAppManager(preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
@@ -532,6 +535,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).init();
         ((BaseManager) this.pushManager).init();
         ((BaseManager) this.locationManager).init();
+        ((BaseManager) this.inAppManager).init();
 
         this.actionRegistry.registerDefaultActions();
     }
@@ -544,6 +548,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).tearDown();
         ((BaseManager) this.pushManager).tearDown();
         ((BaseManager) this.locationManager).tearDown();
+        ((BaseManager) this.inAppManager).tearDown();
     }
 
     /**
@@ -580,6 +585,15 @@ public class UAirship {
      */
     public UALocationManager getLocationManager() {
         return locationManager;
+    }
+
+    /**
+     * Returns the InAppManager instance.
+     *
+     * @return The InAppManager instance.
+     */
+    public InAppManager getInAppManager() {
+        return inAppManager;
     }
 
     /**

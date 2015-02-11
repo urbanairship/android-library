@@ -42,11 +42,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * Preferences base class.
- * <p/>
- * This class should not be used directly, instead create a new class that extends
- * this one and create preference specific methods that utilize the put method
- * and all the get methods implemented here.
+ * PreferenceDataStore stores and retrieves all the Urban Airship preferences through the
+ * {@link com.urbanairship.UrbanAirshipProvider}.
  *
  * @hide
  */
