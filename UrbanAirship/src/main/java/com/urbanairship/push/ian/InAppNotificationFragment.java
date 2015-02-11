@@ -143,18 +143,23 @@ public class InAppNotificationFragment extends Fragment {
     public void onResume() {
         super.onResume();
         timer.start();
+
+        UAirship.shared().getInAppManager().onInAppNotificationFragmentResumed(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         timer.stop();
+
+        UAirship.shared().getInAppManager().onInAppNotificationFragmentPaused(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (notification == null || notification.getAlert() == null) {
             dismiss(false);
+            UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
             return null;
         }
 
@@ -165,7 +170,8 @@ public class InAppNotificationFragment extends Fragment {
         view.setListener(new SwipeDismissViewLayout.Listener() {
             @Override
             public void onDismissed(View view) {
-                //dismiss(false);
+                dismiss(false);
+                UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
             }
 
             @Override
@@ -283,6 +289,15 @@ public class InAppNotificationFragment extends Fragment {
     }
 
     /**
+     * Gets the dismiss animation resource ID.
+     *
+     * @return The dismiss animation resource ID.
+     */
+    public int getDismissAnimation() {
+        return getArguments().getInt(DISMISS_ANIMATION, 0);
+    }
+
+    /**
      * Called when the notification body is clicked. Will dismiss the fragment and run
      * actions with the  {@link InAppNotification#getClickActionValues()}.
      *
@@ -291,6 +306,7 @@ public class InAppNotificationFragment extends Fragment {
     protected void onNotificationClicked(View view) {
         dismiss(true);
         runActions(notification.getClickActionValues());
+        UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
     }
 
     /**
@@ -305,6 +321,7 @@ public class InAppNotificationFragment extends Fragment {
         dismiss(true);
 
         runActions(notification.getButtonActionValues(actionButton.getId()));
+        UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
     }
 
     /**

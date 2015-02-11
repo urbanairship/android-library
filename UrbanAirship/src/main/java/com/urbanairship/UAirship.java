@@ -258,7 +258,7 @@ public class UAirship {
                 }
             }
 
-        } else  {
+        } else {
             // In 6.0, we should throw an illegal state exception.
             // throw new IllegalStateException("takeOff() must be called on the main thread!");
             Logger.error("takeOff() must be called on the main thread!");
@@ -278,7 +278,10 @@ public class UAirship {
             UAirship.application = application;
             UrbanAirshipProvider.init();
 
-            Analytics.registerLifeCycleCallbacks(application);
+            if (Build.VERSION.SDK_INT >= 14) {
+                Analytics.registerLifeCycleCallbacks(application);
+                InAppManager.registerLifeCycleCallbacks(application);
+            }
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -382,7 +385,10 @@ public class UAirship {
                 return;
             }
 
-            Analytics.unregisterLifeCycleCallbacks(application);
+            if (Build.VERSION.SDK_INT >= 14) {
+                Analytics.unregisterLifeCycleCallbacks();
+                InAppManager.unregisterLifeCycleCallbacks();
+            }
 
             // Block until takeoff is finished
             UAirship airship = UAirship.shared();
