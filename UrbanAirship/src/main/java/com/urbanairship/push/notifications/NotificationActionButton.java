@@ -64,27 +64,36 @@ public class NotificationActionButton {
     }
 
     /**
-     * Gets the notification ID.
+     * Gets the button's description.
      *
-     * @return The notification ID as a string.
+     * @return The button's description.
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Gets the button's ID.
+     *
+     * @return The button's ID as a string.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the notification label ID.
+     * Gets the button's label ID.
      *
-     * @return The notification label ID as an int.
+     * @return The button's label ID as an int.
      */
     public int getLabel() {
         return labelId;
     }
 
     /**
-     * Gets the notification icon.
+     * Gets the button's icon.
      *
-     * @return The notification icon as an int.
+     * @return The button's icon as an int.
      */
     public int getIcon() {
         return iconId;
@@ -100,7 +109,7 @@ public class NotificationActionButton {
     }
 
     /**
-     * Gets the notification action extras.
+     * Gets the button's extras.
      *
      * @return The extras as a Bundle.
      */
