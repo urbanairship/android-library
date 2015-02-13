@@ -287,7 +287,7 @@ public class InAppManagerTest {
         inAppManager.onInAppNotificationFragmentResumed(fragment);
 
         // Should dismiss it since its not the current fragment
-        verify(fragment).dismiss(true);
+        verify(fragment).dismiss(false);
     }
 
     /**
