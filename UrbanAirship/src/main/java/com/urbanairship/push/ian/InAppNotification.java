@@ -225,10 +225,10 @@ public class InAppNotification implements Parcelable, JsonSerializable {
 
             inAppNotification.buttonGroupId = in.readString();
             inAppNotification.buttonActionValues = new HashMap<>();
-            in.readMap(inAppNotification.buttonActionValues, null);
+            in.readMap(inAppNotification.buttonActionValues, ActionValue.class.getClassLoader());
 
             inAppNotification.clickActionValues = new HashMap<>();
-            in.readMap(inAppNotification.clickActionValues, null);
+            in.readMap(inAppNotification.clickActionValues, ActionValue.class.getClassLoader());
             return inAppNotification;
         }
 

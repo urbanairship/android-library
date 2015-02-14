@@ -206,7 +206,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
 
         @Override
         public ActionValue createFromParcel(Parcel in) {
-            return new ActionValue((JsonValue) in.readParcelable(null));
+            return new ActionValue((JsonValue) in.readParcelable(JsonValue.class.getClassLoader()));
         }
 
         @Override
