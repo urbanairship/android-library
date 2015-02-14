@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -38,6 +39,7 @@ import android.location.Location;
 import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -384,9 +386,10 @@ public class Analytics {
      * @param application The application.
      * @hide
      */
+    @TargetApi(14)
     public static void registerLifeCycleCallbacks(Application application) {
-        if (Build.VERSION.SDK_INT > 14 && lifeCycleCallbacks == null) {
-            lifeCycleCallbacks = new LifeCycleCallbacks() {
+        if (lifeCycleCallbacks == null) {
+            lifeCycleCallbacks = new LifeCycleCallbacks(application) {
                 @Override
                 public void onActivityStarted(final Activity activity) {
                     final long timeStamp = System.currentTimeMillis();
@@ -410,19 +413,19 @@ public class Analytics {
                 }
             };
 
-            lifeCycleCallbacks.register(application);
+            lifeCycleCallbacks.register();
         }
     }
 
     /**
      * Unregisters analytics for life cycle callbacks.
      *
-     * @param application The application.
      * @hide
      */
-    public static void unregisterLifeCycleCallbacks(Application application) {
-        if (Build.VERSION.SDK_INT > 14 && lifeCycleCallbacks != null) {
-            lifeCycleCallbacks.unregister(application);
+    @TargetApi(14)
+    public static void unregisterLifeCycleCallbacks() {
+        if (lifeCycleCallbacks != null) {
+            lifeCycleCallbacks.unregister();
         }
     }
 

@@ -37,6 +37,7 @@ import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.ian.InAppNotification;
 import com.urbanairship.util.UAStringUtil;
 
 
@@ -90,6 +91,12 @@ public class CoreReceiver extends BroadcastReceiver {
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
 
+        // Clear the pending in app notification
+        InAppNotification ian = message.getInAppNotification();
+        if (ian != null && ian.equals(UAirship.shared().getInAppManager().getPendingNotification())) {
+            UAirship.shared().getInAppManager().setPendingNotification(null);
+        }
+
         PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
         if (contentIntent != null) {
             try {
@@ -137,6 +144,12 @@ public class CoreReceiver extends BroadcastReceiver {
         // Set the conversion push id
         if (isForegroundAction) {
             UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
+        }
+
+        // Clear the pending in app notification
+        InAppNotification ian = message.getInAppNotification();
+        if (ian != null && ian.equals(UAirship.shared().getInAppManager().getPendingNotification())) {
+            UAirship.shared().getInAppManager().setPendingNotification(null);
         }
 
         // Dismiss the notification
