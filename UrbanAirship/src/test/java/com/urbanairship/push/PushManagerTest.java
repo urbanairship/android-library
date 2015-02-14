@@ -14,6 +14,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.push.ian.InAppNotification;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -40,6 +41,7 @@ import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,14 +92,14 @@ public class PushManagerTest {
                 .setSmallIcon(iconDrawableId)
                 .build();
 
-        mockAnalytics = Mockito.mock(Analytics.class);
+        mockAnalytics = mock(Analytics.class);
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
-        mockPushPreferences = Mockito.mock(PushPreferences.class);
-        mockNotificationManager = Mockito.mock(NotificationManagerCompat.class);
+        mockPushPreferences = mock(PushPreferences.class);
+        mockNotificationManager = mock(NotificationManagerCompat.class);
 
-        mockNamedUser = Mockito.mock(NamedUser.class);
+        mockNamedUser = mock(NamedUser.class);
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
@@ -132,7 +134,7 @@ public class PushManagerTest {
 
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push messsage should match.", pushMessage, intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE));
+        assertEquals("The push message should match.", pushMessage, intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
     }
 
@@ -312,6 +314,29 @@ public class PushManagerTest {
         assertNull("The notification sound should be null.", notification.vibrate);
         assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
                 notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
+    }
+
+    /**
+     * Test delivering a push with an InAppNotification sets the pending notification.
+     */
+    @Test
+    public void testDeliverPushInAppNotification() {
+        // Enable push
+        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
+        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
+
+        InAppNotification inAppNotification = new InAppNotification.Builder()
+                .setAlert("oh hi")
+                .setExpiry(1000l)
+                .setId("what")
+                .create();
+
+        PushMessage message = mock(PushMessage.class);
+        when(message.getInAppNotification()).thenReturn(inAppNotification);
+
+        pushManager.deliverPush(message);
+
+        assertEquals(inAppNotification, UAirship.shared().getInAppManager().getPendingNotification());
     }
 
     /**

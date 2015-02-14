@@ -41,6 +41,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.PushArrivedEvent;
+import com.urbanairship.push.ian.InAppNotification;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
@@ -844,6 +845,12 @@ public class PushManager extends BaseManager {
         if (message.isExpired()) {
             Logger.debug("PushManager - Notification expired, ignoring.");
             return;
+        }
+
+        InAppNotification inAppNotification = message.getInAppNotification();
+        if (inAppNotification != null) {
+            Logger.debug("PushManager - Received a Push with an InAppNotification.");
+            UAirship.shared().getInAppManager().setPendingNotification(inAppNotification);
         }
 
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {

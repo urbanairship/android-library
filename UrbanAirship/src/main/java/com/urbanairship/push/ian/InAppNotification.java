@@ -390,10 +390,19 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         inApp.put("display", display);
         display.put("type", "banner");
         display.put("alert", alert);
-        display.put("duration", TimeUnit.MILLISECONDS.toSeconds(durationMilliseconds));
         display.put("position", position == POSITION_TOP ? "top" : "bottom");
-        display.put("primary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & primaryColor)));
-        display.put("secondary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & secondaryColor)));
+
+        if (durationMilliseconds != null) {
+            display.put("duration", TimeUnit.MILLISECONDS.toSeconds(durationMilliseconds));
+        }
+
+        if (primaryColor != null) {
+            display.put("primary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & primaryColor)));
+        }
+
+        if (secondaryColor != null) {
+            display.put("secondary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & secondaryColor)));
+        }
 
         // Actions
         Map<String, Object> actions = new HashMap<>();
@@ -443,7 +452,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         result = 31 * result + (clickActionValues == null ? 0 : clickActionValues.hashCode());
         result = 31 * result + (buttonActionValues == null ? 0 : buttonActionValues.hashCode());
         result = 31 * result + (secondaryColor == null ? 0 : secondaryColor);
-        result = 31 * result + (primaryColor == null ? 0 :primaryColor);
+        result = 31 * result + (primaryColor == null ? 0 : primaryColor);
         result = 31 * result + (durationMilliseconds == null ? 0 : Long.valueOf(durationMilliseconds).hashCode());
         result = 31 * result + position;
         result = 31 * result + Long.valueOf(expiryMS).hashCode();
