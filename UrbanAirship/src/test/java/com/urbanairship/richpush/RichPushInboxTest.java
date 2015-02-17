@@ -53,6 +53,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
 
         this.insertRichPushRows(10, Util.getRichPushMessageJson());
         this.inbox = new RichPushInbox(this.richPushResolver);
+        this.inbox.updateCache();
     }
 
     /**

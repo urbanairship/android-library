@@ -57,8 +57,8 @@ public class RichPushManager extends BaseManager {
      */
     public static final String RICH_PUSH_KEY = "_uamid";
 
-    private RichPushUser user;
-    private RichPushInbox inbox;
+    private final RichPushUser user;
+    private final RichPushInbox inbox;
 
     // Number of refresh message requests currently in flight.
     private AtomicInteger refreshMessageRequestCount = new AtomicInteger();
@@ -71,12 +71,25 @@ public class RichPushManager extends BaseManager {
      * Creates a RichPushManager. Normally only one rich push manager instance should exist, and
      * can be accessed from {@link com.urbanairship.UAirship#getRichPushManager()}.
      *
+     * @param context The application context.
      * @param preferenceDataStore The preferences data store.
      *
      * @hide
      */
-    public RichPushManager(PreferenceDataStore preferenceDataStore) {
-        this.user = new RichPushUser(preferenceDataStore);
+    public RichPushManager(Context context, PreferenceDataStore preferenceDataStore) {
+        this(new RichPushUser(preferenceDataStore), new RichPushInbox(context));
+
+    }
+
+    /**
+     * Creates a RichPushManager.
+     *
+     * @param user The RichPushUser.
+     * @param inbox The RichPushInbox.
+     */
+    RichPushManager(RichPushUser user, RichPushInbox inbox) {
+        this.user = user;
+        this.inbox = inbox;
     }
 
     @Override
@@ -88,6 +101,7 @@ public class RichPushManager extends BaseManager {
             }
         };
 
+        inbox.updateCache();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
         filter.addCategory(UAirship.getPackageName());
@@ -181,9 +195,6 @@ public class RichPushManager extends BaseManager {
      * @return {@link com.urbanairship.richpush.RichPushInbox}.
      */
     public synchronized RichPushInbox getRichPushInbox() {
-        if (this.inbox == null) {
-            this.inbox = new RichPushInbox(UAirship.getApplicationContext());
-        }
         return this.inbox;
     }
 
