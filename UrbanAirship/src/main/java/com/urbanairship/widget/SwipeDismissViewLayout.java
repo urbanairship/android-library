@@ -280,7 +280,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
     @Override
     public void computeScroll() {
         super.computeScroll();
-        if (dragHelper.continueSettling(true)) {
+        if (dragHelper != null && dragHelper.continueSettling(true)) {
             ViewCompat.postInvalidateOnAnimation(this);
         }
     }
