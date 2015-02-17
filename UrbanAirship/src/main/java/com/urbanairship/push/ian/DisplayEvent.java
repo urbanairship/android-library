@@ -28,6 +28,7 @@ package com.urbanairship.push.ian;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,4 +74,8 @@ public class DisplayEvent extends Event {
         return data;
     }
 
+    @Override
+    public boolean isValid() {
+        return !UAStringUtil.isEmpty(id);
+    }
 }
