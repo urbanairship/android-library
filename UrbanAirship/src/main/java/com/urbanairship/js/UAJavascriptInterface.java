@@ -40,6 +40,8 @@ import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.json.JSONObject;
@@ -47,9 +49,6 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 
 /**
  * The Urban Airship Javascript interface.
@@ -226,7 +225,7 @@ public class UAJavascriptInterface {
                             .setSituation(Situation.WEB_VIEW_INVOCATION)
                             .run(new ActionCompletionCallback() {
                                 @Override
-                                public void onFinish(ActionResult result) {
+                                public void onFinish(ActionArguments arguments, ActionResult result) {
                                     String errorMessage = createErrorMessageFromResult(name, result);
                                     runActionCallback(errorMessage, result.getValue(), callbackKey);
                                 }

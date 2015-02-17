@@ -120,6 +120,7 @@ public class UAJavascriptInterfaceTest {
     @Test
     public void testActionCallActionNotFound() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.ACTION_NOT_FOUND);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -130,7 +131,7 @@ public class UAJavascriptInterfaceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(result);
+                callback.onFinish(arguments, result);
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
@@ -153,6 +154,7 @@ public class UAJavascriptInterfaceTest {
     @Test
     public void testActionCallActionRejectedArguments() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.REJECTED_ARGUMENTS);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -163,7 +165,7 @@ public class UAJavascriptInterfaceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(result);
+                callback.onFinish(arguments, result);
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
@@ -184,6 +186,7 @@ public class UAJavascriptInterfaceTest {
     @Test
     public void testActionCallActionExecutionError() {
         final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.Status.EXECUTION_ERROR);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -194,7 +197,7 @@ public class UAJavascriptInterfaceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(result);
+                callback.onFinish(arguments, result);
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
@@ -215,6 +218,7 @@ public class UAJavascriptInterfaceTest {
     @Test
     public void testActionCallAction() throws ActionValueException {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -225,7 +229,7 @@ public class UAJavascriptInterfaceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(result);
+                callback.onFinish(arguments, result);
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));

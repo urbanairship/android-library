@@ -85,6 +85,7 @@ public class ActionRunRequestTest {
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Result was not called with expected result", result, callback.lastResult);
+        assertEquals("Run args and the callback args should match", action.runArgs, callback.lastArguments);
         assertNull("Action name should be null", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
     }
 
@@ -312,10 +313,12 @@ public class ActionRunRequestTest {
 
         public ActionResult lastResult;
         public boolean onFinishCalled = false;
+        public ActionArguments lastArguments;
 
         @Override
-        public void onFinish(ActionResult result) {
+        public void onFinish(ActionArguments arguments, ActionResult result) {
             lastResult = result;
+            lastArguments = arguments;
             onFinishCalled = true;
         }
     }

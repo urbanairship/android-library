@@ -33,7 +33,8 @@ public interface ActionCompletionCallback {
     /**
      * Signals completion of the action.
      *
+     * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(ActionResult result);
+    public void onFinish(ActionArguments arguments, ActionResult result);
 }

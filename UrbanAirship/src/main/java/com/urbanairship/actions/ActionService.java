@@ -203,7 +203,7 @@ public class ActionService extends Service {
                     .setSituation(situation)
                     .run(new ActionCompletionCallback() {
                         @Override
-                        public void onFinish(ActionResult result) {
+                        public void onFinish(ActionArguments arguments, ActionResult result) {
                             runningActions--;
                             if (runningActions == 0) {
                                 stopSelf(lastStartId);
