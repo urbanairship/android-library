@@ -34,6 +34,7 @@ import android.os.Looper;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
+import com.urbanairship.analytics.Analytics;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,7 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -64,6 +66,7 @@ public class InAppManagerTest {
     private InAppNotification notification;
 
     private Activity mockActivity;
+    private Analytics mockAnalytics;
 
     @Before
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -71,9 +74,13 @@ public class InAppManagerTest {
         mockActivity = mock(Activity.class);
         when(mockActivity.getFragmentManager()).thenReturn(mock(FragmentManager.class));
 
+        mockAnalytics = mock(Analytics.class, CALLS_REAL_METHODS);
+        TestApplication.getApplication().setAnalytics(mockAnalytics);
+
         notification = new InAppNotification.Builder()
                 .setExpiry(10000l)
                 .setAlert("oh hi")
+                .setId("id")
                 .create();
 
         inAppManager = new InAppManager(TestApplication.getApplication().preferenceDataStore);
@@ -155,6 +162,9 @@ public class InAppManagerTest {
                 return false;
             }
         }), eq("com.urbanairship.in_app_fragment"));
+
+        // Verify we added a display event
+        verify(mockAnalytics, times(1)).addEvent(any(DisplayEvent.class));
     }
 
     /**
@@ -178,6 +188,9 @@ public class InAppManagerTest {
         // Verify a fragment was added only once (default is times(1))
         verify(transaction).setCustomAnimations(anyInt(), anyInt());
         verify(transaction).add(anyInt(), any(InAppNotificationFragment.class), anyString());
+
+        // Verify we only added a single display event
+        verify(mockAnalytics, times(1)).addEvent(any(DisplayEvent.class));
     }
 
     /**
@@ -287,7 +300,7 @@ public class InAppManagerTest {
         inAppManager.onInAppNotificationFragmentResumed(fragment);
 
         // Should dismiss it since its not the current fragment
-        verify(fragment).dismiss(true);
+        verify(fragment).dismiss(false);
     }
 
     /**

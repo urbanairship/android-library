@@ -509,6 +509,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
          *
          * @param id The notification's ID.
          * @return The builder.
+         * @hide
          */
         public Builder setId(String id) {
             this.id = id;

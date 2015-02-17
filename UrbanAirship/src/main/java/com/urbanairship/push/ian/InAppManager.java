@@ -40,6 +40,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.ref.WeakReference;
 
@@ -52,6 +53,7 @@ public class InAppManager extends BaseManager {
     private final static String PENDING_IN_APP_NOTIFICATION_KEY = "com.urbanairship.push.ian.PENDING_IN_APP_NOTIFICATION";
     private final static String DISPLAY_ASAP_KEY = "com.urbanairship.push.ian.DISPLAY_ASAP";
     private final static String AUTO_DISPLAY_ENABLED_KEY = "com.urbanairship.push.ian.AUTO_DISPLAY_ENABLED";
+    private final static String LAST_DISPLAYED_ID_KEY = "com.urbanairship.push.ian.LAST_DISPLAYED_ID";
 
     private final static String IN_APP_TAG = "com.urbanairship.in_app_fragment";
 
@@ -296,6 +298,14 @@ public class InAppManager extends BaseManager {
         }
 
         Logger.info("InAppManager - Displaying InAppNotification.");
+
+        // Add a display event if the last displayed id does not match the current notification
+        if (!UAStringUtil.equals(notification.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
+            DisplayEvent displayEvent = new DisplayEvent(notification);
+            UAirship.shared().getAnalytics().addEvent(displayEvent);
+            dataStore.put(LAST_DISPLAYED_ID_KEY, notification.getId());
+        }
+
         try {
             currentFragment = InAppNotificationFragment.newInstance(notification, exitAnimation);
             currentNotification = notification;
