@@ -34,6 +34,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
 public class DisplayEventTest {
@@ -51,6 +53,7 @@ public class DisplayEventTest {
         EventTestUtils.validateEventValue(event, "id", "notification id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
         assertEquals("ian_display", event.getType());
+        assertTrue(event.isValid());
     }
 
     /**
@@ -66,5 +69,18 @@ public class DisplayEventTest {
         EventTestUtils.validateEventValue(event, "id", "notification id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", null);
         assertEquals("ian_display", event.getType());
+        assertTrue(event.isValid());
+
+    }
+
+    /**
+     * Test display event is not valid if the id is empty.
+     */
+    @Test
+    public void testInvalidEvent() throws JSONException {
+        InAppNotification notification = new InAppNotification.Builder().create();
+
+        DisplayEvent event = new DisplayEvent(notification);
+        assertFalse(event.isValid());
     }
 }
