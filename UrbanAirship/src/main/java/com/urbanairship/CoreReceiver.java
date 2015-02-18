@@ -93,8 +93,8 @@ public class CoreReceiver extends BroadcastReceiver {
 
         // Clear the pending in app notification
         InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(UAirship.shared().getInAppManager().getPendingNotification())) {
-            UAirship.shared().getInAppManager().setPendingNotification(null);
+        if (ian != null && ian.equals(UAirship.shared().getInAppNotificationManager().getPendingNotification())) {
+            UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
         }
 
         PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
@@ -148,8 +148,8 @@ public class CoreReceiver extends BroadcastReceiver {
 
         // Clear the pending in app notification
         InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(UAirship.shared().getInAppManager().getPendingNotification())) {
-            UAirship.shared().getInAppManager().setPendingNotification(null);
+        if (ian != null && ian.equals(UAirship.shared().getInAppNotificationManager().getPendingNotification())) {
+            UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
         }
 
         // Dismiss the notification

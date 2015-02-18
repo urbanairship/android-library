@@ -47,7 +47,7 @@ import java.lang.ref.WeakReference;
 /**
  * This class is the primary interface for interacting with in app notifications.
  */
-public class InAppManager extends BaseManager {
+public class InAppNotificationManager extends BaseManager {
 
     // Preference data store keys
     private final static String PENDING_IN_APP_NOTIFICATION_KEY = "com.urbanairship.push.ian.PENDING_IN_APP_NOTIFICATION";
@@ -103,7 +103,7 @@ public class InAppManager extends BaseManager {
      * @param dataStore The preference data store.
      * @hide
      */
-    public InAppManager(PreferenceDataStore dataStore) {
+    public InAppNotificationManager(PreferenceDataStore dataStore) {
         this.dataStore = dataStore;
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingNotification = isDisplayAsapEnabled();
@@ -186,7 +186,7 @@ public class InAppManager extends BaseManager {
             try {
                 return InAppNotification.parseJson(payload);
             } catch (JsonException e) {
-                Logger.error("InAppManager - Failed to read pending in app notification: " + payload, e);
+                Logger.error("InAppNotificationManager - Failed to read pending in app notification: " + payload, e);
                 setPendingNotification(null);
             }
         }
@@ -278,26 +278,26 @@ public class InAppManager extends BaseManager {
         }
 
         if (Build.VERSION.SDK_INT < 14) {
-            Logger.error("InAppManager - Unable to show InAppNotification on Android versions older than API 14 (Ice Cream Sandwich).");
+            Logger.error("InAppNotificationManager - Unable to show InAppNotification on Android versions older than API 14 (Ice Cream Sandwich).");
             return false;
         }
 
         if (activity.isFinishing()) {
-            Logger.error("InAppManager - Unable to display InAppNotification for an activity that is finishing.");
+            Logger.error("InAppNotificationManager - Unable to display InAppNotification for an activity that is finishing.");
             return false;
         }
 
         if (Looper.getMainLooper() != Looper.myLooper()) {
-            Logger.error("InAppManager - Show notification must be called on the main thread.");
+            Logger.error("InAppNotificationManager - Show notification must be called on the main thread.");
             return false;
         }
 
         if (currentFragment != null) {
-            Logger.debug("InAppManager - InAppNotification already displayed.");
+            Logger.debug("InAppNotificationManager - InAppNotification already displayed.");
             return false;
         }
 
-        Logger.info("InAppManager - Displaying InAppNotification.");
+        Logger.info("InAppNotificationManager - Displaying InAppNotification.");
 
         // Add a display event if the last displayed id does not match the current notification
         if (!UAStringUtil.equals(notification.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
@@ -317,7 +317,7 @@ public class InAppManager extends BaseManager {
 
             return true;
         } catch (IllegalStateException e) {
-            Logger.debug("InAppManager - Failed to display InAppNotification.", e);
+            Logger.debug("InAppNotificationManager - Failed to display InAppNotification.", e);
             return false;
         }
     }
@@ -394,7 +394,7 @@ public class InAppManager extends BaseManager {
      * Called when the app is foregrounded.
      */
     void onForeground() {
-        Logger.verbose("InAppManager - App foregrounded.");
+        Logger.verbose("InAppNotificationManager - App foregrounded.");
         InAppNotification pending = getPendingNotification();
         if ((currentNotification == null && pending != null) || (pending != null && !pending.equals(currentNotification))) {
             currentNotification = null;
@@ -410,7 +410,7 @@ public class InAppManager extends BaseManager {
      * @param activity The paused activity.
      */
     void onActivityPaused(Activity activity) {
-        Logger.verbose("InAppManager - Activity paused: " + activity);
+        Logger.verbose("InAppNotificationManager - Activity paused: " + activity);
         activityReference = null;
         handler.removeCallbacks(displayRunnable);
     }
@@ -421,7 +421,7 @@ public class InAppManager extends BaseManager {
      * @param activity The resumed activity.
      */
     void onActivityResumed(Activity activity) {
-        Logger.verbose("InAppManager - Activity resumed: " + activity);
+        Logger.verbose("InAppNotificationManager - Activity resumed: " + activity);
         activityReference = new WeakReference<>(activity);
         handler.removeCallbacks(displayRunnable);
 
@@ -447,12 +447,12 @@ public class InAppManager extends BaseManager {
                     if (!isForeground) {
                         isForeground = true;
                         if (UAirship.isFlying()) {
-                            UAirship.shared().getInAppManager().onForeground();
+                            UAirship.shared().getInAppNotificationManager().onForeground();
                         } else {
                             UAirship.shared(new UAirship.OnReadyCallback() {
                                 @Override
                                 public void onAirshipReady(UAirship airship) {
-                                    UAirship.shared().getInAppManager().onForeground();
+                                    UAirship.shared().getInAppNotificationManager().onForeground();
                                 }
                             });
                         }
@@ -480,7 +480,7 @@ public class InAppManager extends BaseManager {
                     activityResumedOperation = UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            UAirship.shared().getInAppManager().onActivityResumed(activity);
+                            UAirship.shared().getInAppNotificationManager().onActivityResumed(activity);
                         }
                     });
                 }
@@ -492,7 +492,7 @@ public class InAppManager extends BaseManager {
                         return;
                     }
 
-                    UAirship.shared().getInAppManager().onActivityPaused(activity);
+                    UAirship.shared().getInAppNotificationManager().onActivityPaused(activity);
                 }
             };
 

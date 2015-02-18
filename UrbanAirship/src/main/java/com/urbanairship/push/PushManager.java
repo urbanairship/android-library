@@ -850,7 +850,7 @@ public class PushManager extends BaseManager {
         InAppNotification inAppNotification = message.getInAppNotification();
         if (inAppNotification != null) {
             Logger.debug("PushManager - Received a Push with an InAppNotification.");
-            UAirship.shared().getInAppManager().setPendingNotification(inAppNotification);
+            UAirship.shared().getInAppNotificationManager().setPendingNotification(inAppNotification);
         }
 
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
