@@ -37,11 +37,15 @@ import android.webkit.WebViewClient;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionCompletionCallback;
+import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
 import com.urbanairship.js.UAJavascriptInterface;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UriUtils;
 
@@ -52,9 +56,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 
 /**
  * <p>
@@ -129,6 +130,7 @@ public class UAWebViewClient extends WebViewClient {
     private ActionRunRequestFactory actionRunRequestFactory;
 
     private Map<String, Credentials> authRequestCredentials = new HashMap<>();
+    private ActionCompletionCallback actionCompletionCallback;
 
     /**
      * Default constructor.
@@ -144,6 +146,18 @@ public class UAWebViewClient extends WebViewClient {
      */
     UAWebViewClient(ActionRunRequestFactory actionRunRequestFactory) {
         this.actionRunRequestFactory = actionRunRequestFactory;
+    }
+
+    /**
+     * Sets the action completion callback to be invoked whenever an {@link com.urbanairship.actions.Action}
+     * is finished running from the web view.
+     *
+     * @param actionCompletionCallback The completion callback.
+     */
+    public void setActionCompletionCallback(ActionCompletionCallback actionCompletionCallback) {
+        synchronized (this) {
+            this.actionCompletionCallback = actionCompletionCallback;
+        }
     }
 
     @Override
@@ -235,7 +249,16 @@ public class UAWebViewClient extends WebViewClient {
                                        .setValue(arg)
                                        .setMetadata(metadata)
                                        .setSituation(Situation.WEB_VIEW_INVOCATION)
-                                       .run();
+                                       .run(new ActionCompletionCallback() {
+                                           @Override
+                                           public void onFinish(ActionArguments arguments, ActionResult result) {
+                                               synchronized (this) {
+                                                   if (actionCompletionCallback != null) {
+                                                       actionCompletionCallback.onFinish(arguments, result);
+                                                   }
+                                               }
+                                           }
+                                       });
             }
         }
 
@@ -334,11 +357,26 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         if (Build.VERSION.SDK_INT >= 17) {
+            UAJavascriptInterface javascriptInterface;
+
             if (view instanceof RichPushMessageWebView) {
-                view.addJavascriptInterface(new UAJavascriptInterface(view, ((RichPushMessageWebView) view).getCurrentMessage()), UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
+                javascriptInterface = new UAJavascriptInterface(view, ((RichPushMessageWebView) view).getCurrentMessage());
             } else {
-                view.addJavascriptInterface(new UAJavascriptInterface(view), UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
+                javascriptInterface = new UAJavascriptInterface(view);
             }
+
+            javascriptInterface.setActionCompletionCallback(new ActionCompletionCallback() {
+                @Override
+                public void onFinish(ActionArguments arguments, ActionResult result) {
+                    synchronized (this) {
+                        if (actionCompletionCallback != null) {
+                            actionCompletionCallback.onFinish(arguments, result);
+                        }
+                    }
+                }
+            });
+
+            view.addJavascriptInterface(javascriptInterface, UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
         }
     }
 

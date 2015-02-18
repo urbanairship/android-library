@@ -30,8 +30,12 @@ import android.webkit.WebView;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionCompletionCallback;
+import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.Situation;
@@ -57,7 +61,9 @@ import java.util.Map;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,12 +116,12 @@ public class UAWebViewClientTest {
         // Verify that the action runner ran the "action" action
         verify(actionRunRequest).setValue(ActionValue.wrap("value"));
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run();
+        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that the action runner ran the "anotherAction" action
         verify(anotherActionRunRequest).setValue(eq(ActionValue.wrap("anotherValue")));
         verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).run();
+        verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
     /**
@@ -136,12 +142,12 @@ public class UAWebViewClientTest {
         // Verify that the action runner ran the removeTag action
         verify(removeTagRunRequest).setValue(ActionValue.wrap("removeTag"));
         verify(removeTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(removeTagRunRequest).run();
+        verify(removeTagRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(ActionValue.wrap("addTag"));
         verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).run();
+        verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
     }
 
     /**
@@ -173,7 +179,7 @@ public class UAWebViewClientTest {
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(new ActionValue());
         verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).run();
+        verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
     }
 
     /**
@@ -210,7 +216,7 @@ public class UAWebViewClientTest {
         expectedMap.put("key", "value");
         verify(actionRunRequest).setValue(ActionValue.wrap(expectedMap));
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run();
+        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that action "anotherAction" ran with a list
         List<String> expectedList = new ArrayList<>();
@@ -218,7 +224,7 @@ public class UAWebViewClientTest {
         expectedList.add("two");
         verify(anotherActionRunRequest).setValue(ActionValue.wrap(expectedList));
         verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).run();
+        verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
     /**
@@ -248,7 +254,7 @@ public class UAWebViewClientTest {
 
         verify(actionRunRequest).setValue(new ActionValue());
         verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run();
+        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
     /**
@@ -396,5 +402,37 @@ public class UAWebViewClientTest {
         webViewUrl = "http://notwhitelisted";
         client.onPageFinished(webView, webViewUrl);
         verifyZeroInteractions(webView);
+    }
+
+    /**
+     * Test running an action calls the action completion callback
+     */
+    @Test
+    public void testActionCompletionCallback() {
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
+        client.setActionCompletionCallback(completionCallback);
+
+        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
+
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(addTagRunRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://run-basic-actions?addTag=what";
+
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        // Verify our callback was called
+        verify(completionCallback).onFinish(arguments, result);
     }
 }

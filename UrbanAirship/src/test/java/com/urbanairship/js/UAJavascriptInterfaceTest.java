@@ -346,4 +346,40 @@ public class UAJavascriptInterfaceTest {
         assertEquals("Should return -1 if the message is null",
                 -1, js.getMessageSentDateMS());
     }
+
+    /**
+     * Test setting a action completion callback gets called for completed actions
+     */
+    @Test
+    public void testActionCompletionCallback() throws ActionValueException {
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
+        js.setActionCompletionCallback(completionCallback);
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        js.actionCall("actionName", "true", "callbackKey");
+
+        // Callbacks are posted on the main thread using post, capture and run the runnable
+        ArgumentCaptor<Runnable> argument = ArgumentCaptor.forClass(Runnable.class);
+        verify(webView).post(argument.capture());
+        argument.getValue().run();
+
+        // Verify our callback was called
+        verify(completionCallback).onFinish(arguments, result);
+    }
 }

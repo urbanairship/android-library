@@ -65,6 +65,7 @@ public class UAJavascriptInterface {
     private final RichPushMessage message;
     private final ActionRunRequestFactory actionRequestFactory;
     private final WebView webView;
+    private ActionCompletionCallback actionCompletionCallback;
 
     /**
      * Default constructor.
@@ -98,6 +99,18 @@ public class UAJavascriptInterface {
         this.webView = webView;
         this.message = message;
         this.actionRequestFactory = actionRequestFactory;
+    }
+
+
+    /**
+     * Sets the action completion callback.
+     *
+     * @param actionCompletionCallback The action completion callback.
+     */
+    public void setActionCompletionCallback(ActionCompletionCallback actionCompletionCallback) {
+        synchronized (this) {
+            this.actionCompletionCallback = actionCompletionCallback;
+        }
     }
 
     /**
@@ -228,6 +241,12 @@ public class UAJavascriptInterface {
                                 public void onFinish(ActionArguments arguments, ActionResult result) {
                                     String errorMessage = createErrorMessageFromResult(name, result);
                                     runActionCallback(errorMessage, result.getValue(), callbackKey);
+
+                                    synchronized (this) {
+                                        if (actionCompletionCallback != null) {
+                                            actionCompletionCallback.onFinish(arguments, result);
+                                        }
+                                    }
                                 }
                             });
     }
