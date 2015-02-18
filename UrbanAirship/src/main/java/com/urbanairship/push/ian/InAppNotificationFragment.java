@@ -257,7 +257,7 @@ public class InAppNotificationFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     dismiss(true);
-                    UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+                    UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
                 }
             });
         }
