@@ -252,6 +252,14 @@ public class InAppNotificationFragment extends Fragment {
             if (drawable != null) {
                 drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
             }
+
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss(true);
+                    UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+                }
+            });
         }
 
         return view;
