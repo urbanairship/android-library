@@ -42,6 +42,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.urbanairship.Logger;
@@ -243,6 +244,22 @@ public class InAppNotificationFragment extends Fragment {
         } else {
             actionButtons.setVisibility(View.GONE);
             buttonDivider.setVisibility(View.GONE);
+        }
+
+        ImageButton imageButton = (ImageButton) cardView.findViewById(R.id.close);
+        if (imageButton != null) {
+            final Drawable drawable = imageButton.getDrawable();
+            if (drawable != null) {
+                drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
+            }
+
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss(true);
+                    UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+                }
+            });
         }
 
         return view;
