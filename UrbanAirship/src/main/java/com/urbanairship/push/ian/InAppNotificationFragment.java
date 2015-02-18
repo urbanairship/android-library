@@ -144,7 +144,7 @@ public class InAppNotificationFragment extends Fragment {
         super.onResume();
         timer.start();
 
-        UAirship.shared().getInAppManager().onInAppNotificationFragmentResumed(this);
+        UAirship.shared().getInAppNotificationManager().onInAppNotificationFragmentResumed(this);
     }
 
     @Override
@@ -152,14 +152,14 @@ public class InAppNotificationFragment extends Fragment {
         super.onPause();
         timer.stop();
 
-        UAirship.shared().getInAppManager().onInAppNotificationFragmentPaused(this);
+        UAirship.shared().getInAppNotificationManager().onInAppNotificationFragmentPaused(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (notification == null || notification.getAlert() == null) {
             dismiss(false);
-            UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+            UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
             return null;
         }
 
@@ -171,7 +171,7 @@ public class InAppNotificationFragment extends Fragment {
             @Override
             public void onDismissed(View view) {
                 dismiss(false);
-                UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+                UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
             }
 
             @Override
@@ -306,7 +306,7 @@ public class InAppNotificationFragment extends Fragment {
     protected void onNotificationClicked(View view) {
         dismiss(true);
         runActions(notification.getClickActionValues());
-        UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+        UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
     }
 
     /**
@@ -321,7 +321,7 @@ public class InAppNotificationFragment extends Fragment {
         dismiss(true);
 
         runActions(notification.getButtonActionValues(actionButton.getId()));
-        UAirship.shared().getInAppManager().onInAppNotificationFinished(notification);
+        UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
     }
 
     /**

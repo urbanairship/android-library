@@ -41,7 +41,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.ian.InAppManager;
+import com.urbanairship.push.ian.InAppNotificationManager;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.ManifestUtils;
 
@@ -92,7 +92,7 @@ public class UAirship {
     RichPushManager richPushManager;
     UALocationManager locationManager;
     Whitelist whitelist;
-    InAppManager inAppManager;
+    InAppNotificationManager inAppNotificationManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -110,7 +110,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
         this.richPushManager = new RichPushManager(preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
-        this.inAppManager = new InAppManager(preferenceDataStore);
+        this.inAppNotificationManager = new InAppNotificationManager(preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
@@ -280,7 +280,7 @@ public class UAirship {
 
             if (Build.VERSION.SDK_INT >= 14) {
                 Analytics.registerLifeCycleCallbacks(application);
-                InAppManager.registerLifeCycleCallbacks(application);
+                InAppNotificationManager.registerLifeCycleCallbacks(application);
             }
 
             Thread thread = new Thread(new Runnable() {
@@ -387,7 +387,7 @@ public class UAirship {
 
             if (Build.VERSION.SDK_INT >= 14) {
                 Analytics.unregisterLifeCycleCallbacks();
-                InAppManager.unregisterLifeCycleCallbacks();
+                InAppNotificationManager.unregisterLifeCycleCallbacks();
             }
 
             // Block until takeoff is finished
@@ -541,7 +541,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).init();
         ((BaseManager) this.pushManager).init();
         ((BaseManager) this.locationManager).init();
-        ((BaseManager) this.inAppManager).init();
+        ((BaseManager) this.inAppNotificationManager).init();
 
         this.actionRegistry.registerDefaultActions();
     }
@@ -554,7 +554,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).tearDown();
         ((BaseManager) this.pushManager).tearDown();
         ((BaseManager) this.locationManager).tearDown();
-        ((BaseManager) this.inAppManager).tearDown();
+        ((BaseManager) this.inAppNotificationManager).tearDown();
     }
 
     /**
@@ -594,12 +594,12 @@ public class UAirship {
     }
 
     /**
-     * Returns the InAppManager instance.
+     * Returns the InAppNotificationManager instance.
      *
-     * @return The InAppManager instance.
+     * @return The InAppNotificationManager instance.
      */
-    public InAppManager getInAppManager() {
-        return inAppManager;
+    public InAppNotificationManager getInAppNotificationManager() {
+        return inAppNotificationManager;
     }
 
     /**

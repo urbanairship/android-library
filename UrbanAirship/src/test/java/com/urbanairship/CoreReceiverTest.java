@@ -32,7 +32,7 @@ import android.os.Bundle;
 
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.ian.InAppManager;
+import com.urbanairship.push.ian.InAppNotificationManager;
 import com.urbanairship.push.ian.InAppNotification;
 
 import org.junit.Before;
@@ -64,8 +64,8 @@ public class CoreReceiverTest {
                 .create();
 
         // Set the pending IAN
-        InAppManager inAppManager = UAirship.shared().getInAppManager();
-        inAppManager.setPendingNotification(inAppNotification);
+        InAppNotificationManager inAppNotificationManager = UAirship.shared().getInAppNotificationManager();
+        inAppNotificationManager.setPendingNotification(inAppNotification);
 
         // Create the push message with the IAN
         Bundle pushBundle = new Bundle();
@@ -78,7 +78,7 @@ public class CoreReceiverTest {
         // Call the proxy
         CoreReceiver.handleNotificationOpenedProxy(context, intent);
 
-        assertNull(inAppManager.getPendingNotification());
+        assertNull(inAppNotificationManager.getPendingNotification());
     }
 
 
@@ -93,8 +93,8 @@ public class CoreReceiverTest {
                 .create();
 
         // Set the pending IAN
-        InAppManager inAppManager = UAirship.shared().getInAppManager();
-        inAppManager.setPendingNotification(inAppNotification);
+        InAppNotificationManager inAppNotificationManager = UAirship.shared().getInAppNotificationManager();
+        inAppNotificationManager.setPendingNotification(inAppNotification);
 
         // Create the push message with the IAN
         Bundle pushBundle = new Bundle();
@@ -109,6 +109,6 @@ public class CoreReceiverTest {
         // Call the proxy
         CoreReceiver.handleNotificationButtonOpenedProxy(context, intent);
 
-        assertNull(inAppManager.getPendingNotification());
+        assertNull(inAppNotificationManager.getPendingNotification());
     }
 }

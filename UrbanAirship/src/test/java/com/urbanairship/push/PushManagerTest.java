@@ -336,7 +336,7 @@ public class PushManagerTest {
 
         pushManager.deliverPush(message);
 
-        assertEquals(inAppNotification, UAirship.shared().getInAppManager().getPendingNotification());
+        assertEquals(inAppNotification, UAirship.shared().getInAppNotificationManager().getPendingNotification());
     }
 
     /**

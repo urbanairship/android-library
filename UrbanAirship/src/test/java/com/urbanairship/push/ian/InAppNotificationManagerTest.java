@@ -60,9 +60,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class InAppManagerTest {
+public class InAppNotificationManagerTest {
 
-    private InAppManager inAppManager;
+    private InAppNotificationManager inAppNotificationManager;
     private InAppNotification notification;
 
     private Activity mockActivity;
@@ -83,7 +83,7 @@ public class InAppManagerTest {
                 .setId("id")
                 .create();
 
-        inAppManager = new InAppManager(TestApplication.getApplication().preferenceDataStore);
+        inAppNotificationManager = new InAppNotificationManager(TestApplication.getApplication().preferenceDataStore);
     }
 
     /**
@@ -91,9 +91,9 @@ public class InAppManagerTest {
      */
     @Test
     public void testSetPendingNotification() {
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
-        assertEquals(notification, inAppManager.getPendingNotification());
+        assertEquals(notification, inAppNotificationManager.getPendingNotification());
     }
 
     /**
@@ -101,11 +101,11 @@ public class InAppManagerTest {
      */
     @Test
     public void testClearPendingNotification() {
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         // Clear it
-        inAppManager.setPendingNotification(null);
-        assertNull(inAppManager.getPendingNotification());
+        inAppNotificationManager.setPendingNotification(null);
+        assertNull(inAppNotificationManager.getPendingNotification());
     }
 
     /**
@@ -113,11 +113,11 @@ public class InAppManagerTest {
      */
     @Test
     public void testSetDisplayAsapEnabled() {
-        inAppManager.setDisplayAsapEnabled(true);
-        assertTrue(inAppManager.isDisplayAsapEnabled());
+        inAppNotificationManager.setDisplayAsapEnabled(true);
+        assertTrue(inAppNotificationManager.isDisplayAsapEnabled());
 
-        inAppManager.setDisplayAsapEnabled(false);
-        assertFalse(inAppManager.isDisplayAsapEnabled());
+        inAppNotificationManager.setDisplayAsapEnabled(false);
+        assertFalse(inAppNotificationManager.isDisplayAsapEnabled());
     }
 
     /**
@@ -125,11 +125,11 @@ public class InAppManagerTest {
      */
     @Test
     public void testSetAutoDisplayEnabled() {
-        inAppManager.setAutoDisplayEnabled(true);
-        assertTrue(inAppManager.isAutoDisplayEnabled());
+        inAppNotificationManager.setAutoDisplayEnabled(true);
+        assertTrue(inAppNotificationManager.isAutoDisplayEnabled());
 
-        inAppManager.setDisplayAsapEnabled(false);
-        assertFalse(inAppManager.isDisplayAsapEnabled());
+        inAppNotificationManager.setDisplayAsapEnabled(false);
+        assertFalse(inAppNotificationManager.isDisplayAsapEnabled());
     }
 
     /**
@@ -144,8 +144,8 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Set and show the pending notification
-        inAppManager.setPendingNotification(notification);
-        assertTrue(inAppManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
+        inAppNotificationManager.setPendingNotification(notification);
+        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
 
         // Verify a fragment was added
         verify(transaction).setCustomAnimations(android.R.animator.fade_in, 0);
@@ -179,11 +179,11 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Set and show the pending notification
-        inAppManager.setPendingNotification(notification);
-        assertTrue(inAppManager.showPendingNotification(mockActivity));
+        inAppNotificationManager.setPendingNotification(notification);
+        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity));
 
         // Call it again
-        assertFalse(inAppManager.showPendingNotification(mockActivity));
+        assertFalse(inAppNotificationManager.showPendingNotification(mockActivity));
 
         // Verify a fragment was added only once (default is times(1))
         verify(transaction).setCustomAnimations(anyInt(), anyInt());
@@ -206,13 +206,13 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Enable showing notification ASAP
-        inAppManager.setDisplayAsapEnabled(true);
+        inAppNotificationManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppManager.onActivityResumed(mockActivity);
+        inAppNotificationManager.onActivityResumed(mockActivity);
 
         // Set the pending notification
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         runMainLooperTasks();
 
@@ -235,13 +235,13 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Set the pending notification before setting display ASAP enabled
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         // Enable showing notification ASAP
-        inAppManager.setDisplayAsapEnabled(true);
+        inAppNotificationManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppManager.onActivityResumed(mockActivity);
+        inAppNotificationManager.onActivityResumed(mockActivity);
 
         runMainLooperTasks();
 
@@ -262,13 +262,13 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Set the pending notification before setting show ASAP enabled
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         // Notify foreground
-        inAppManager.onForeground();
+        inAppNotificationManager.onForeground();
 
         // Set the current, resumed activity
-        inAppManager.onActivityResumed(mockActivity);
+        inAppNotificationManager.onActivityResumed(mockActivity);
 
         runMainLooperTasks();
 
@@ -290,14 +290,14 @@ public class InAppManagerTest {
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Set and show the pending notification
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         // Show it
-        assertTrue(inAppManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
+        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
 
         // Try to resume a different fragment
         InAppNotificationFragment fragment = mock(InAppNotificationFragment.class);
-        inAppManager.onInAppNotificationFragmentResumed(fragment);
+        inAppNotificationManager.onInAppNotificationFragmentResumed(fragment);
 
         // Should dismiss it since its not the current fragment
         verify(fragment).dismiss(false);
@@ -309,12 +309,12 @@ public class InAppManagerTest {
     @Test
     public void testOnInAppNotificationFinished() {
         // Set and show the pending notification
-        inAppManager.setPendingNotification(notification);
+        inAppNotificationManager.setPendingNotification(notification);
 
         // Notify the pending notification is finished
-        inAppManager.onInAppNotificationFinished(notification);
+        inAppNotificationManager.onInAppNotificationFinished(notification);
 
-        assertNull(inAppManager.getPendingNotification());
+        assertNull(inAppNotificationManager.getPendingNotification());
     }
 
     /**
