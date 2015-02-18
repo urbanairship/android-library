@@ -80,7 +80,7 @@ public abstract class Event {
      */
     public Event(long timeMS) {
         eventId = UUID.randomUUID().toString();
-        time = String.format(Locale.US, "%.3f", timeMS / 1000.0);
+        time = millisecondsToSecondsString(timeMS);
     }
 
     /**
@@ -270,5 +270,17 @@ public abstract class Event {
      */
     public boolean isValid() {
         return true;
+    }
+
+
+    /**
+     * Helper method to convert milliseconds to a seconds string containing a double.
+     * @param milliseconds Milliseconds to convert.
+     *
+     * @return Seconds as a string containing a double.
+     * @hide
+     */
+    protected static String millisecondsToSecondsString(long milliseconds) {
+        return String.format(Locale.US, "%.3f", milliseconds / 1000.0);
     }
 }
