@@ -176,8 +176,16 @@ public class ActionRunRequest {
      * @return The action's result.
      */
     public ActionResult runSync() {
-        ActionArguments arguments = createActionArguments();
+        return runSync(createActionArguments());
+    }
 
+    /**
+     * Runs the action synchronously with the given action arguments.
+     *
+     * @param arguments The action arguments.
+     * @return The action's result.
+     */
+    private ActionResult runSync(ActionArguments arguments) {
         if (actionName != null) {
             ActionRegistry.Entry entry = lookUpAction(actionName);
             if (entry == null) {
@@ -224,28 +232,25 @@ public class ActionRunRequest {
             looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
         }
 
+        final ActionArguments arguments = createActionArguments();
+
         final Handler handler = new Handler(looper);
 
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                final ActionResult result = runSync();
+                final ActionResult result = runSync(arguments);
 
                 if (callback == null) {
                     return;
                 }
 
-                // Post it on the original caller's handler if we can
-                if (handler != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            callback.onFinish(result);
-                        }
-                    });
-                } else {
-                    callback.onFinish(result);
-                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onFinish(arguments, result);
+                    }
+                });
             }
         });
     }

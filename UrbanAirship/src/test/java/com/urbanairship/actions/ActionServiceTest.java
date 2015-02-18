@@ -123,7 +123,7 @@ public class ActionServiceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(ActionResult.newEmptyResult());
+                callback.onFinish(null, ActionResult.newEmptyResult());
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
@@ -172,7 +172,7 @@ public class ActionServiceTest {
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(ActionResult.newEmptyResult());
+                callback.onFinish(null, ActionResult.newEmptyResult());
                 return null;
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
