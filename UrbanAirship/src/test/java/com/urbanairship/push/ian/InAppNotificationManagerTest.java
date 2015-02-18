@@ -35,7 +35,10 @@ import android.os.Looper;
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.Event;
+import com.urbanairship.analytics.EventTestUtils;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +46,8 @@ import org.mockito.ArgumentMatcher;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
+
+import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -55,6 +60,7 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,9 +84,9 @@ public class InAppNotificationManagerTest {
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
         notification = new InAppNotification.Builder()
-                .setExpiry(10000l)
                 .setAlert("oh hi")
                 .setId("id")
+                .setExpiry(Long.MAX_VALUE / 1000 * 1000) // Work around for precision loss issue
                 .create();
 
         inAppNotificationManager = new InAppNotificationManager(TestApplication.getApplication().preferenceDataStore);
@@ -165,6 +171,53 @@ public class InAppNotificationManagerTest {
 
         // Verify we added a display event
         verify(mockAnalytics, times(1)).addEvent(any(DisplayEvent.class));
+    }
+
+    /**
+     * Test showing the pending notification when its expired should result in a resolution event
+     * and the pending notification to not be displayed.
+     */
+    @Test
+    @Config(emulateSdk = 18)
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void testShowExpiredPendingNotification() {
+
+        final InAppNotification expired = new InAppNotification.Builder()
+                .setExpiry(0l)
+                .setId(UUID.randomUUID().toString())
+                .create();
+
+        // Set the pending notification
+        inAppNotificationManager.setPendingNotification(expired);
+
+        // Set up a mocked transaction
+        FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
+        when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
+
+        // Assert false - did not display
+        assertFalse(inAppNotificationManager.showPendingNotification(mockActivity));
+
+        // The pending IAN should be removed
+        assertNull(inAppNotificationManager.getPendingNotification());
+
+        // Verify the right event was added
+        verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
+            @Override
+            public boolean matches(Object o) {
+                if (!(o instanceof ResolutionEvent)) {
+                    return false;
+                }
+
+                ResolutionEvent event = (ResolutionEvent) o;
+                try {
+                    EventTestUtils.validateEventValue(event, "id", expired.getId());
+                    EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");
+                } catch (JSONException e) {
+                    return false;
+                }
+                return true;
+            }
+        }));
     }
 
     /**
@@ -315,6 +368,113 @@ public class InAppNotificationManagerTest {
         inAppNotificationManager.onInAppNotificationFinished(notification);
 
         assertNull(inAppNotificationManager.getPendingNotification());
+    }
+
+
+    /**
+     * Test set pending notification generates a replace resolution event if a previous, not shown
+     * notification exists.
+     */
+    @Test
+    @Config(emulateSdk = 18)
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void testSetPendingNotificationGeneratesReplaceEvent() {
+        final InAppNotification otherNotification = new InAppNotification.Builder().setId(UUID.randomUUID().toString()).create();
+        // Set the pending notification
+        inAppNotificationManager.setPendingNotification(notification);
+
+        // Set another pending notification
+        inAppNotificationManager.setPendingNotification(otherNotification);
+
+        verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
+            @Override
+            public boolean matches(Object o) {
+                if (!(o instanceof ResolutionEvent)) {
+                    return false;
+                }
+
+                ResolutionEvent event = (ResolutionEvent) o;
+                try {
+                    EventTestUtils.validateEventValue(event, "id", notification.getId());
+                    EventTestUtils.validateNestedEventValue(event, "resolution", "type", "replaced");
+                    EventTestUtils.validateNestedEventValue(event, "resolution", "replacement_id", otherNotification.getId());
+                } catch (JSONException e) {
+                    return false;
+                }
+                return true;
+            }
+        }));
+    }
+
+    /**
+     * Test set pending notification does not generate a replace resolution if the event is already
+     * being displayed.
+     */
+    @Test
+    @Config(emulateSdk = 18)
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void testSetPendingNoReplaceEvent() {
+        final InAppNotification otherNotification = new InAppNotification.Builder().setId(UUID.randomUUID().toString()).create();
+
+        // Set up a mocked transaction
+        FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
+        when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
+
+        // Set the pending notification
+        inAppNotificationManager.setPendingNotification(notification);
+
+        // Show it
+        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity));
+
+        // Set another pending notification
+        inAppNotificationManager.setPendingNotification(otherNotification);
+
+        verify(mockAnalytics, never()).addEvent(argThat(new ArgumentMatcher<Event>() {
+            @Override
+            public boolean matches(Object o) {
+                return o instanceof ResolutionEvent;
+            }
+        }));
+    }
+
+    /**
+     * Test init checks and removes a expired pending in app notification.
+     */
+    @Test
+    @Config(emulateSdk = 18)
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void testInit() {
+        final InAppNotification expired = new InAppNotification.Builder()
+                .setExpiry(0l)
+                .setId(UUID.randomUUID().toString())
+                .create();
+
+        // Set the pending notification
+        inAppNotificationManager.setPendingNotification(expired);
+
+        inAppNotificationManager.init();
+
+        // The pending IAN should be removed
+        assertNull(inAppNotificationManager.getPendingNotification());
+
+        // Verify the right event was added
+        verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
+            @Override
+            public boolean matches(Object o) {
+                if (!(o instanceof ResolutionEvent)) {
+                    return false;
+                }
+
+                ResolutionEvent event = (ResolutionEvent) o;
+                try {
+                    EventTestUtils.validateEventValue(event, "id", expired.getId());
+                    EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");
+                } catch (JSONException e) {
+                    return false;
+                }
+                return true;
+            }
+        }));
     }
 
     /**

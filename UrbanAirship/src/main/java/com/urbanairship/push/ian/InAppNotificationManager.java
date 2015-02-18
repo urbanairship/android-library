@@ -82,6 +82,8 @@ public class InAppNotificationManager extends BaseManager {
     private boolean autoDisplayPendingNotification;
     private InAppNotification currentNotification;
 
+    private Object pendingNotificationLock = new Object();
+
     // Runnable that we post on the main looper whenever we attempt to auto display a in app notification
     private final Runnable displayRunnable = new Runnable() {
         @Override
@@ -96,7 +98,6 @@ public class InAppNotificationManager extends BaseManager {
         }
     };
 
-
     /**
      * Default constructor.
      *
@@ -107,6 +108,17 @@ public class InAppNotificationManager extends BaseManager {
         this.dataStore = dataStore;
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingNotification = isDisplayAsapEnabled();
+    }
+
+    @Override
+    protected void init() {
+        InAppNotification pending = getPendingNotification();
+        if (pending != null && pending.isExpired()) {
+            Logger.debug("InAppNotificationManager - pending notification expired.");
+            ResolutionEvent resolutionEvent = ResolutionEvent.createExpiredResolutionEvent(pending);
+            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+            setPendingNotification(null);
+        }
     }
 
     /**
@@ -162,15 +174,28 @@ public class InAppNotificationManager extends BaseManager {
      * @param notification The InAppNotification.
      */
     public void setPendingNotification(InAppNotification notification) {
-        if (notification == null) {
-            dataStore.remove(PENDING_IN_APP_NOTIFICATION_KEY);
-        } else {
-            dataStore.put(PENDING_IN_APP_NOTIFICATION_KEY, notification.toJsonValue().toString());
+        synchronized (pendingNotificationLock) {
+            if (notification == null) {
+                dataStore.remove(PENDING_IN_APP_NOTIFICATION_KEY);
+            } else {
+                InAppNotification previous = getPendingNotification();
+                if (notification.equals(previous)) {
+                    return;
+                }
 
-            if (isDisplayAsapEnabled()) {
-                autoDisplayPendingNotification = true;
-                handler.removeCallbacks(displayRunnable);
-                handler.post(displayRunnable);
+                dataStore.put(PENDING_IN_APP_NOTIFICATION_KEY, notification.toJsonValue().toString());
+
+                if (currentNotification == null && previous != null) {
+                    Logger.debug("InAppNotificationManager - pending notification replaced.");
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(previous, notification);
+                    UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+                }
+
+                if (isDisplayAsapEnabled()) {
+                    autoDisplayPendingNotification = true;
+                    handler.removeCallbacks(displayRunnable);
+                    handler.post(displayRunnable);
+                }
             }
         }
     }
@@ -181,17 +206,29 @@ public class InAppNotificationManager extends BaseManager {
      * @return The pending InAppNotification.
      */
     public InAppNotification getPendingNotification() {
-        String payload = dataStore.getString(PENDING_IN_APP_NOTIFICATION_KEY, null);
-        if (payload != null) {
-            try {
-                return InAppNotification.parseJson(payload);
-            } catch (JsonException e) {
-                Logger.error("InAppNotificationManager - Failed to read pending in app notification: " + payload, e);
-                setPendingNotification(null);
+        synchronized (pendingNotificationLock) {
+            String payload = dataStore.getString(PENDING_IN_APP_NOTIFICATION_KEY, null);
+            if (payload != null) {
+                try {
+                    return InAppNotification.parseJson(payload);
+                } catch (JsonException e) {
+                    Logger.error("InAppNotificationManager - Failed to read pending in app notification: " + payload, e);
+                    setPendingNotification(null);
+                }
             }
-        }
 
-        return null;
+            return null;
+        }
+    }
+
+    /**
+     * Gets the notification that is in the process of displaying.
+     *
+     * @return The current notification.
+     * @hide
+     */
+    public InAppNotification getCurrentNotification() {
+        return currentNotification;
     }
 
     /**
@@ -217,24 +254,25 @@ public class InAppNotificationManager extends BaseManager {
      */
     @TargetApi(14)
     public boolean showPendingNotification(Activity activity, int containerId) {
-        InAppNotification pending = getPendingNotification();
+        synchronized (pendingNotificationLock) {
+            InAppNotification pending = getPendingNotification();
 
-        if (pending == null) {
-            return false;
+            if (activity == null || pending == null) {
+                return false;
+            }
+
+            int enter, exit;
+            if (pending.getPosition() == InAppNotification.POSITION_TOP) {
+                enter = R.animator.ua_ian_slide_in_top;
+                exit = R.animator.ua_ian_slide_out_top;
+            } else {
+                enter = R.animator.ua_ian_slide_in_bottom;
+                exit = R.animator.ua_ian_slide_out_bottom;
+            }
+
+            return showPendingNotification(activity, containerId, enter, exit);
         }
-
-        int enter, exit;
-        if (pending.getPosition() == InAppNotification.POSITION_TOP) {
-            enter = R.animator.ua_ian_slide_in_top;
-            exit = R.animator.ua_ian_slide_out_top;
-        } else {
-            enter = R.animator.ua_ian_slide_in_bottom;
-            exit = R.animator.ua_ian_slide_out_bottom;
-        }
-
-        return showNotification(pending, activity, containerId, enter, exit);
     }
-
 
     /**
      * Shows the pending notification in a specified container ID and fragment animations.
@@ -254,26 +292,21 @@ public class InAppNotificationManager extends BaseManager {
      */
     @TargetApi(14)
     public boolean showPendingNotification(Activity activity, int containerId, int enterAnimation, int exitAnimation) {
-        return showNotification(getPendingNotification(), activity, containerId, enterAnimation, exitAnimation);
-    }
+        InAppNotification pending;
 
-    /**
-     * Shows an {@link InAppNotification}.
-     *
-     * @param notification The InAppNotification.
-     * @param activity The current activity.
-     * @param containerId An ID of a container in the activity's view to add the
-     * {@link InAppNotificationFragment}.
-     * @param enterAnimation The animation resource to run when the {@link InAppNotificationFragment}
-     * enters the view.
-     * @param exitAnimation The animation resource to run when the {@link InAppNotificationFragment}
-     * exits the view.
-     * @return {@code true} if a {@link InAppNotificationFragment} was added and displayed in the
-     * activity, otherwise {@code false}.
-     */
-    @TargetApi(14)
-    private boolean showNotification(InAppNotification notification, Activity activity, int containerId, int enterAnimation, int exitAnimation) {
-        if (activity == null || notification == null) {
+        synchronized (pendingNotificationLock) {
+            pending = getPendingNotification();
+            // Expired event
+            if (pending != null && pending.isExpired()) {
+                Logger.debug("InAppNotificationManager - Unable to display pending in app notification. Notification has expired.");
+                ResolutionEvent resolutionEvent = ResolutionEvent.createExpiredResolutionEvent(pending);
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+                setPendingNotification(null);
+                return false;
+            }
+        }
+
+        if (activity == null || pending == null) {
             return false;
         }
 
@@ -297,18 +330,24 @@ public class InAppNotificationManager extends BaseManager {
             return false;
         }
 
-        Logger.info("InAppNotificationManager - Displaying InAppNotification.");
-
         // Add a display event if the last displayed id does not match the current notification
-        if (!UAStringUtil.equals(notification.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
-            DisplayEvent displayEvent = new DisplayEvent(notification);
+        if (!UAStringUtil.equals(pending.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
+            Logger.debug("InAppNotificationManager - Displaying pending notification: " + pending + " for first time.");
+            DisplayEvent displayEvent = new DisplayEvent(pending);
             UAirship.shared().getAnalytics().addEvent(displayEvent);
-            dataStore.put(LAST_DISPLAYED_ID_KEY, notification.getId());
+            dataStore.put(LAST_DISPLAYED_ID_KEY, pending.getId());
         }
 
+        if (currentNotification != null && currentNotification.equals(pending)) {
+            // Replaced
+            ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentNotification, pending);
+            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+        }
+
+        Logger.info("InAppNotificationManager - Displaying InAppNotification.");
         try {
-            currentFragment = InAppNotificationFragment.newInstance(notification, exitAnimation);
-            currentNotification = notification;
+            currentFragment = InAppNotificationFragment.newInstance(pending, exitAnimation);
+            currentNotification = pending;
 
             activity.getFragmentManager().beginTransaction()
                     .setCustomAnimations(enterAnimation, 0)
@@ -320,6 +359,7 @@ public class InAppNotificationManager extends BaseManager {
             Logger.debug("InAppNotificationManager - Failed to display InAppNotification.", e);
             return false;
         }
+
     }
 
     /**
@@ -331,16 +371,16 @@ public class InAppNotificationManager extends BaseManager {
         return activityReference == null ? null : activityReference.get();
     }
 
-    // InAppNotificationFragment hooks
-
     /**
      * Called when an InAppNotification is finished displaying.
      *
      * @param notification The InAppNotification.
      */
     void onInAppNotificationFinished(InAppNotification notification) {
-        if (notification != null && notification.equals(getPendingNotification())) {
-            setPendingNotification(null);
+        synchronized (pendingNotificationLock) {
+            if (notification != null && notification.equals(getPendingNotification())) {
+                setPendingNotification(null);
+            }
         }
 
         if (notification != null && notification.equals(currentNotification)) {
@@ -397,6 +437,13 @@ public class InAppNotificationManager extends BaseManager {
         Logger.verbose("InAppNotificationManager - App foregrounded.");
         InAppNotification pending = getPendingNotification();
         if ((currentNotification == null && pending != null) || (pending != null && !pending.equals(currentNotification))) {
+
+            if (currentNotification != null) {
+                // Replaced
+                ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentNotification, pending);
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+            }
+
             currentNotification = null;
             autoDisplayPendingNotification = true;
             handler.removeCallbacks(displayRunnable);

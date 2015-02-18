@@ -129,6 +129,8 @@ public class InAppNotificationFragment extends Fragment {
             @Override
             protected void onFinish() {
                 dismiss(true);
+                ResolutionEvent resolutionEvent = ResolutionEvent.createTimedOutResolutionEvent(notification, timer.getRunTime());
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             }
         };
 
@@ -173,6 +175,9 @@ public class InAppNotificationFragment extends Fragment {
             public void onDismissed(View view) {
                 dismiss(false);
                 UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+
+                ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(notification, timer.getRunTime());
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             }
 
             @Override
@@ -258,6 +263,9 @@ public class InAppNotificationFragment extends Fragment {
                 public void onClick(View v) {
                     dismiss(true);
                     UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(notification, timer.getRunTime());
+                    UAirship.shared().getAnalytics().addEvent(resolutionEvent);
                 }
             });
         }
@@ -324,6 +332,9 @@ public class InAppNotificationFragment extends Fragment {
         dismiss(true);
         runActions(notification.getClickActionValues());
         UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+
+        ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(notification, timer.getRunTime());
+        UAirship.shared().getAnalytics().addEvent(resolutionEvent);
     }
 
     /**
@@ -339,6 +350,9 @@ public class InAppNotificationFragment extends Fragment {
 
         runActions(notification.getButtonActionValues(actionButton.getId()));
         UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+
+        ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), notification, actionButton, timer.getRunTime());
+        UAirship.shared().getAnalytics().addEvent(resolutionEvent);
     }
 
     /**
