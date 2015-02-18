@@ -48,6 +48,8 @@ import static org.mockito.Mockito.verify;
 public class RichPushManagerTest extends RichPushBaseTestCase {
 
     RichPushUser user;
+    RichPushInbox mockInbox;
+
     ShadowApplication application;
     RichPushManager manager;
 
@@ -58,13 +60,29 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         super.setUp();
 
         this.listener = new RichPushManagerTestListener();
-        manager = new RichPushManager(TestApplication.getApplication().preferenceDataStore);
+
+        user = new RichPushUser(TestApplication.getApplication().preferenceDataStore);
+        mockInbox = mock(RichPushInbox.class);
+
+        manager = new RichPushManager(user, mockInbox);
         manager.addListener(listener);
 
         user = manager.getRichPushUser();
 
+
         application = Robolectric.shadowOf(Robolectric.application);
         application.clearStartedServices();
+    }
+
+    /**
+     * Test init updates the inbox
+     */
+    @Test
+    public void testInitUpdatesInbox() {
+        manager.init();
+
+        // Verify we updated the inbox
+        verify(mockInbox).updateCache();
     }
 
     /**

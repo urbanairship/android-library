@@ -108,7 +108,7 @@ public class UAirship {
 
         this.analytics = new Analytics(context, preferenceDataStore, airshipConfigOptions);
         this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
-        this.richPushManager = new RichPushManager(preferenceDataStore);
+        this.richPushManager = new RichPushManager(context, preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
         this.inAppManager = new InAppManager(preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore);

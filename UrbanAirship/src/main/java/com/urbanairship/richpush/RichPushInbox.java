@@ -67,7 +67,6 @@ public class RichPushInbox {
 
     RichPushInbox(RichPushResolver resolver) {
         richPushResolver = resolver;
-        updateCacheFromDB();
     }
 
     // API
