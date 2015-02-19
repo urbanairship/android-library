@@ -45,18 +45,29 @@ import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.analytics.EventService;
 import com.urbanairship.location.LocationService;
+import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.GCMPushReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushService;
 import com.urbanairship.richpush.RichPushUpdateService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.
  */
 public class ManifestUtils {
+
+    /**
+     * Intent actions to validate for any app push receivers.
+     */
+    private static final String[] BASE_INTENT_RECEIVER_ACTIONS = new String[] { PushManager.ACTION_PUSH_RECEIVED,
+                                                                                PushManager.ACTION_NOTIFICATION_OPENED,
+                                                                                PushManager.ACTION_CHANNEL_UPDATED,
+                                                                                PushManager.ACTION_NOTIFICATION_DISMISSED };
 
     /**
      * Logs an error if the specified permission is not granted
@@ -202,6 +213,27 @@ public class ManifestUtils {
             }
         }
 
+        // Validate any app push receivers
+        ActivityInfo[] receivers = null;
+        try {
+            receivers = UAirship.getPackageManager().getPackageInfo(UAirship.getPackageName(), PackageManager.GET_RECEIVERS).receivers;
+        } catch (Exception e) {
+            Logger.error("Unable to query the application's receivers.", e);
+        }
+
+        if (receivers != null) {
+            for (ActivityInfo info : receivers) {
+                try {
+                    Class receiverClass = Class.forName(info.name);
+                    if (BaseIntentReceiver.class.isAssignableFrom(receiverClass)) {
+                        validateBaseIntentReceiver(info);
+                    }
+                } catch (ClassNotFoundException e) {
+                    Logger.debug("ManifestUtils - Unable to find class: " + info.name, e);
+                }
+            }
+        }
+
         // Core Activity
         if (componentInfoMap.get(CoreActivity.class) == null) {
             Logger.error("AndroidManifest.xml missing required activity: " + CoreActivity.class.getCanonicalName());
@@ -308,5 +340,59 @@ public class ManifestUtils {
             put(ActionActivity.class, ManifestUtils.getActivityInfo(ActionActivity.class));
             put(CoreActivity.class, ManifestUtils.getActivityInfo(CoreActivity.class));
         }};
+    }
+
+
+    /**
+     * Helper method to validate a BaseIntentReceiver's manifest entry.
+     */
+    private static void validateBaseIntentReceiver(ActivityInfo info) {
+        if (info.exported) {
+            Logger.error("Receiver " + info.name + " is exported. This might " +
+                    "allow outside applications to message the receiver. Make sure the intent is protected by a " +
+                    "permission or prevent the receiver from being exported.");
+        }
+
+        List<String> missingActions = new ArrayList<>();
+
+        for (String action : BASE_INTENT_RECEIVER_ACTIONS) {
+            Intent intent = new Intent(action)
+                    .addCategory(UAirship.getPackageName());
+
+            boolean resolved = false;
+            for (ResolveInfo resolveInfo : UAirship.getPackageManager().queryBroadcastReceivers(intent, 0)) {
+                if (resolveInfo.activityInfo != null && resolveInfo.activityInfo.name != null && resolveInfo.activityInfo.name.equals(info.name)) {
+                    resolved = true;
+                    break;
+                }
+            }
+
+            if (!resolved) {
+                missingActions.add(action);
+            }
+        }
+
+        if (missingActions.isEmpty()) {
+            return;
+        }
+
+        Logger.error("Receiver " + info.name + " unable to receive intents for actions: " + missingActions);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Update the manifest entry for ").append(info.name).append(" to:")
+               .append("\n<receiver android:name=\"").append(info.name).append("\" exported=\"false\">")
+               .append("\n\t<intent-filter> ");
+
+        for (String action : BASE_INTENT_RECEIVER_ACTIONS) {
+            sb.append("\n\t\t<action android:name=\"").append(action).append("\" />");
+        }
+
+        sb.append("\n\t\t<!-- Replace ${applicationId} with ").append(UAirship.getPackageName()).append(" if not using Android Gradle plugin -->")
+          .append("\n\t\t<category android:name=\"${applicationId}\" />")
+          .append("\n\t</intent-filter>")
+          .append("\n</receiver>");
+
+        Logger.error(sb.toString());
     }
 }
