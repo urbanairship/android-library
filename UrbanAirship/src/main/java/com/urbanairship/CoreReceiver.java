@@ -255,7 +255,7 @@ public class CoreReceiver extends BroadcastReceiver {
     private boolean launchApplication(Context context) {
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(UAirship.getPackageName());
         if (launchIntent != null) {
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             Logger.info("Starting application's launch intent.");
             context.startActivity(launchIntent);
             return true;
