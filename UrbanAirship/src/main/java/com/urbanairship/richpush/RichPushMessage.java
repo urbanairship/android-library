@@ -32,6 +32,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.DateUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -106,6 +107,10 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     // helpers
 
     static Long getMillisecondsFromTimeStamp(String timeStamp, Long defaultValue) {
+        if (UAStringUtil.isEmpty(timeStamp)) {
+            return defaultValue;
+        }
+
         try {
             return DateUtils.parseIso8601(timeStamp);
         } catch (ParseException e) {
