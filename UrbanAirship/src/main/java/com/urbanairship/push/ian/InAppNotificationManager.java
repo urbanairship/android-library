@@ -28,6 +28,7 @@ package com.urbanairship.push.ian;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -40,6 +41,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.ref.WeakReference;
@@ -56,6 +58,11 @@ public class InAppNotificationManager extends BaseManager {
     private final static String LAST_DISPLAYED_ID_KEY = "com.urbanairship.push.ian.LAST_DISPLAYED_ID";
 
     private final static String IN_APP_TAG = "com.urbanairship.in_app_fragment";
+
+    /**
+     * Activity metadata key to exclude an activity from automatically displaying an InAppNotification.
+     */
+    public static final String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.ian.EXCLUDE_FROM_AUTO_SHOW";
 
     /**
      * The delay before attempting to show an InAppNotification when an activity resumes.
@@ -469,6 +476,13 @@ public class InAppNotificationManager extends BaseManager {
      */
     void onActivityResumed(Activity activity) {
         Logger.verbose("InAppNotificationManager - Activity resumed: " + activity);
+
+        ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
+        if (info != null && info.metaData != null && info.metaData.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
+            Logger.verbose("InAppNotificationManager - Activity contains metadata to exclude it from auto showing an in app notification");
+            return;
+        }
+
         activityReference = new WeakReference<>(activity);
         handler.removeCallbacks(displayRunnable);
 
