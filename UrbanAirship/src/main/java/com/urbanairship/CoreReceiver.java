@@ -38,6 +38,8 @@ import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.ian.InAppNotification;
+import com.urbanairship.push.ian.InAppNotificationManager;
+import com.urbanairship.push.ian.ResolutionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 
@@ -91,10 +93,17 @@ public class CoreReceiver extends BroadcastReceiver {
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
 
-        // Clear the pending in app notification
+        // If the push that is opened is the pending notification and not currently the notification
+        // that is displaying, clear it and send a direct open resolution event.
+        InAppNotificationManager ianManager = UAirship.shared().getInAppNotificationManager();
         InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(UAirship.shared().getInAppNotificationManager().getPendingNotification())) {
+        if (ian != null && ian.equals(ianManager.getPendingNotification()) && !ian.equals(ianManager.getCurrentNotification())) {
+            Logger.info("Clearing InAppNotification due to directly interacting with the InAppNotification's push notification.");
             UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
+
+            // Direct open event
+            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(ian);
+            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
 
         PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
@@ -146,10 +155,17 @@ public class CoreReceiver extends BroadcastReceiver {
             UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
         }
 
-        // Clear the pending in app notification
+        // If the push that is opened is the pending notification and not currently the notification
+        // that is displaying, clear it and send a direct open resolution event.
+        InAppNotificationManager ianManager = UAirship.shared().getInAppNotificationManager();
         InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(UAirship.shared().getInAppNotificationManager().getPendingNotification())) {
+        if (ian != null && ian.equals(ianManager.getPendingNotification()) && !ian.equals(ianManager.getCurrentNotification())) {
+            Logger.info("Clearing InAppNotification due to directly interacting with the InAppNotification's push notification.");
             UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
+
+            // Direct open event
+            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(ian);
+            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
 
         // Dismiss the notification

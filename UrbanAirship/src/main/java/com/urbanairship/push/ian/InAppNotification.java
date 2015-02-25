@@ -96,7 +96,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
      * @return {@code true} if the notification is expired, otherwise {@code false}.
      */
     public boolean isExpired() {
-        return expiryMS > 0 && System.currentTimeMillis() > expiryMS;
+        return System.currentTimeMillis() > expiryMS;
     }
 
     /**

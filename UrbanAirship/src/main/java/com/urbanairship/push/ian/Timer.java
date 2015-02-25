@@ -36,11 +36,14 @@ abstract class Timer {
     private long startTimeMs;
     private long remainingTimeMs;
 
+    private long elapsedTimeMs;
+
     private final Handler handler = new Handler();
     private final Runnable trigger = new Runnable() {
         @Override
         public void run() {
             if (isStarted) {
+                stop();
                 onFinish();
             }
         }
@@ -81,9 +84,24 @@ abstract class Timer {
             return;
         }
 
+        elapsedTimeMs = SystemClock.elapsedRealtime() - startTimeMs;
+
         isStarted = false;
         handler.removeCallbacks(trigger);
         remainingTimeMs = Math.max(0, remainingTimeMs - (SystemClock.elapsedRealtime() - startTimeMs));
+    }
+
+    /**
+     * Gets the total run time in milliseconds.
+     *
+     * @return The total run time in milliseconds.
+     */
+    long getRunTime() {
+        if (isStarted) {
+            return elapsedTimeMs + SystemClock.elapsedRealtime() - startTimeMs;
+        }
+
+        return elapsedTimeMs;
     }
 
     /**
