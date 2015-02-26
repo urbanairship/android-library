@@ -159,6 +159,8 @@ public class WhitelistTest {
 
         // Reject
         assertFalse(whitelist.isWhitelisted("http://oh.bye.marc"));
+        assertFalse(whitelist.isWhitelisted("http://www.urbanairship.com.hackers.io"));
+        assertFalse(whitelist.isWhitelisted("http://omg.www.urbanairship.com.hackers.io"));
 
         // Accept
         assertTrue(whitelist.isWhitelisted("http://www.urbanairship.com"));
@@ -193,6 +195,9 @@ public class WhitelistTest {
         assertTrue(whitelist.isWhitelisted("http://what.urbanairship.com"));
         assertTrue(whitelist.isWhitelisted("http://hi.urbanairship.com"));
         assertTrue(whitelist.isWhitelisted("http://urbanairship.com"));
+
+        // Reject
+        assertFalse(whitelist.isWhitelisted("http://lololurbanairship.com"));
     }
 
     /**
@@ -212,14 +217,15 @@ public class WhitelistTest {
      */
     @Test
     public void testFilePaths() {
-        assertTrue(whitelist.addEntry("file:///android_asset/test.html"));
+        assertTrue(whitelist.addEntry("file:///foo/index.html"));
 
         // Reject
-        assertFalse(whitelist.isWhitelisted("file:///assets/test.html"));
-        assertFalse(whitelist.isWhitelisted("file:///android_asset/index.html"));
+        assertFalse(whitelist.isWhitelisted("file:///foo/test.html"));
+        assertFalse(whitelist.isWhitelisted("file:///foo/bar/index.html"));
+        assertFalse(whitelist.isWhitelisted("file:///foooooooo/index.html"));
 
         // Accept
-        assertTrue(whitelist.isWhitelisted("file:///android_asset/test.html"));
+        assertTrue(whitelist.isWhitelisted("file:///foo/index.html"));
     }
 
     /**
@@ -227,15 +233,15 @@ public class WhitelistTest {
      */
     @Test
     public void testFilePathsWildCard() {
-        assertTrue(whitelist.addEntry("file:///android_asset/*"));
+        assertTrue(whitelist.addEntry("file:///foo/*"));
 
         // Reject
-        assertFalse(whitelist.isWhitelisted("file:///assets/test.html"));
+        assertFalse(whitelist.isWhitelisted("file:///bar/index.html"));
         assertFalse(whitelist.isWhitelisted(""));
 
         // Accept
-        assertTrue(whitelist.isWhitelisted("file:///android_asset/test.html"));
-        assertTrue(whitelist.isWhitelisted("file:///android_asset/html/index.html"));
+        assertTrue(whitelist.isWhitelisted("file:///foo/test.html"));
+        assertTrue(whitelist.isWhitelisted("file:///foo/html/index.html"));
     }
 
     /**
@@ -245,6 +251,8 @@ public class WhitelistTest {
     public void testURLPaths() {
         whitelist.addEntry("*://*.urbanairship.com/accept.html");
         whitelist.addEntry("*://*.urbanairship.com/anythingHTML/*.html");
+        whitelist.addEntry("https://urbanairship.com/what/index.html");
+
 
         // Reject
         assertFalse(whitelist.isWhitelisted("https://what.urbanairship.com/reject.html"));
@@ -253,6 +261,8 @@ public class WhitelistTest {
         // Accept
         assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/index.html"));
         assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/test.html"));
+        assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/foo/bar/index.html"));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/index.html"));
     }
 }
 
