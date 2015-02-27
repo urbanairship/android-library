@@ -41,7 +41,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.ian.InAppNotificationManager;
+import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.ManifestUtils;
 
@@ -92,7 +92,7 @@ public class UAirship {
     RichPushManager richPushManager;
     UALocationManager locationManager;
     Whitelist whitelist;
-    InAppNotificationManager inAppNotificationManager;
+    InAppMessageManager inAppMessageManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -110,7 +110,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
         this.richPushManager = new RichPushManager(context, preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
-        this.inAppNotificationManager = new InAppNotificationManager(preferenceDataStore);
+        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
@@ -280,7 +280,7 @@ public class UAirship {
 
             if (Build.VERSION.SDK_INT >= 14) {
                 Analytics.registerLifeCycleCallbacks(application);
-                InAppNotificationManager.registerLifeCycleCallbacks(application);
+                InAppMessageManager.registerLifeCycleCallbacks(application);
             }
 
             Thread thread = new Thread(new Runnable() {
@@ -387,7 +387,7 @@ public class UAirship {
 
             if (Build.VERSION.SDK_INT >= 14) {
                 Analytics.unregisterLifeCycleCallbacks();
-                InAppNotificationManager.unregisterLifeCycleCallbacks();
+                InAppMessageManager.unregisterLifeCycleCallbacks();
             }
 
             // Block until takeoff is finished
@@ -541,7 +541,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).init();
         ((BaseManager) this.pushManager).init();
         ((BaseManager) this.locationManager).init();
-        ((BaseManager) this.inAppNotificationManager).init();
+        ((BaseManager) this.inAppMessageManager).init();
 
         this.actionRegistry.registerDefaultActions();
     }
@@ -554,7 +554,7 @@ public class UAirship {
         ((BaseManager) this.richPushManager).tearDown();
         ((BaseManager) this.pushManager).tearDown();
         ((BaseManager) this.locationManager).tearDown();
-        ((BaseManager) this.inAppNotificationManager).tearDown();
+        ((BaseManager) this.inAppMessageManager).tearDown();
     }
 
     /**
@@ -567,45 +567,45 @@ public class UAirship {
     }
 
     /**
-     * Returns the PushManager instance.
+     * Returns the {@link com.urbanairship.push.PushManager} instance.
      *
-     * @return The PushManager instance.
+     * @return The {@link com.urbanairship.push.PushManager} instance.
      */
     public PushManager getPushManager() {
         return pushManager;
     }
 
     /**
-     * Returns the RichPushManager instance.
+     * Returns the {@link com.urbanairship.richpush.RichPushManager} instance.
      *
-     * @return The RichPushManager instance.
+     * @return The {@link com.urbanairship.richpush.RichPushManager} instance.
      */
     public RichPushManager getRichPushManager() {
         return richPushManager;
     }
 
     /**
-     * Returns the UALocationManager instance.
+     * Returns the {@link com.urbanairship.location.UALocationManager} instance.
      *
-     * @return The UALocationManager instance.
+     * @return The {@link com.urbanairship.location.UALocationManager} instance.
      */
     public UALocationManager getLocationManager() {
         return locationManager;
     }
 
     /**
-     * Returns the InAppNotificationManager instance.
+     * Returns the {@link com.urbanairship.push.iam.InAppMessageManager} instance.
      *
-     * @return The InAppNotificationManager instance.
+     * @return The {@link com.urbanairship.push.iam.InAppMessageManager} instance.
      */
-    public InAppNotificationManager getInAppNotificationManager() {
-        return inAppNotificationManager;
+    public InAppMessageManager getInAppMessageManager() {
+        return inAppMessageManager;
     }
 
     /**
      * Returns the UAirship {@link com.urbanairship.analytics.Analytics} instance.
      *
-     * @return The analytics instance.
+     * @return The {@link com.urbanairship.analytics.Analytics} instance.
      */
     public Analytics getAnalytics() {
         return analytics;
@@ -614,7 +614,7 @@ public class UAirship {
     /**
      * Returns the {@link com.urbanairship.ApplicationMetrics} instance.
      *
-     * @return The application metrics instance.
+     * @return The {@link com.urbanairship.ApplicationMetrics} instance.
      */
     public ApplicationMetrics getApplicationMetrics() {
         return applicationMetrics;

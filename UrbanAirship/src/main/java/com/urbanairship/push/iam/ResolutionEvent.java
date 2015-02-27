@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.content.Context;
 
@@ -40,13 +40,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * An event that is sent when a {@link com.urbanairship.push.ian.InAppNotification} is finished.
+ * An event that is sent when a {@link InAppMessage} is finished.
  *
  * @hide
  */
 public class ResolutionEvent extends Event {
 
-    private static final String TYPE = "ian_resolution";
+    private static final String TYPE = "in_app_resolution";
 
 
     // Top level keys
@@ -78,7 +78,7 @@ public class ResolutionEvent extends Event {
     /**
      * Creates a ResolutionEvent.
      *
-     * @param id The InAppNotification ID.
+     * @param id The in-app message ID.
      * @param resolutionData The resolution data.
      */
     private ResolutionEvent(String id, Map<String, Object> resolutionData) {
@@ -87,19 +87,19 @@ public class ResolutionEvent extends Event {
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification interactive button is clicked.
+     * Creates a resolution event for when an in-app message interactive button is clicked.
      *
      * @param context The application context.
-     * @param notification The InAppNotification.
+     * @param message The in-app message.
      * @param button The button that was clicked.
-     * @param displayMs How long the InAppNotification was displayed in milliseconds.
+     * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createButtonClickedResolutionEvent(Context context, InAppNotification notification, NotificationActionButton button, long displayMs) {
+    public static ResolutionEvent createButtonClickedResolutionEvent(Context context, InAppMessage message, NotificationActionButton button, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_BUTTON_CLICK);
         resolutionData.put(BUTTON_ID, button.getId());
-        resolutionData.put(BUTTON_GROUP, notification.getButtonGroupId());
+        resolutionData.put(BUTTON_GROUP, message.getButtonGroupId());
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
 
         if (button.getDescription() != null) {
@@ -108,32 +108,32 @@ public class ResolutionEvent extends Event {
             resolutionData.put(BUTTON_DESCRIPTION, context.getString(button.getLabel()));
         }
 
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification is clicked.
+     * Creates a resolution event for when an in-app message is clicked.
      *
-     * @param notification The InAppNotification.
-     * @param displayMs How long the InAppNotification was displayed in milliseconds.
+     * @param message The in-app message.
+     * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createClickedResolutionEvent(InAppNotification notification, long displayMs) {
+    public static ResolutionEvent createClickedResolutionEvent(InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_MESSAGE_CLICK);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
 
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification is replaced.
+     * Creates a resolution event for when an in-app message is replaced.
      *
-     * @param replaced The replaced InAppNotification.
-     * @param replacement The new InAppNotification.
+     * @param replaced The replaced in-app message.
+     * @param replacement The new in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createReplacedResolutionEvent(InAppNotification replaced, InAppNotification replacement) {
+    public static ResolutionEvent createReplacedResolutionEvent(InAppMessage replaced, InAppMessage replacement) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_REPLACED);
         resolutionData.put(REPLACEMENT_ID, replacement.getId());
@@ -141,60 +141,60 @@ public class ResolutionEvent extends Event {
     }
 
     /**
-     * Creates a resolution event for when the Push Notification that delivered InAppNotification is
+     * Creates a resolution event for when the Push Notification that delivered in-app message is
      * opened directly.
      *
-     * @param notification The InAppNotification.
+     * @param message The in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createDirectOpenResolutionEvent(InAppNotification notification) {
+    public static ResolutionEvent createDirectOpenResolutionEvent(InAppMessage message) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_DIRECT_OPEN);
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification expires.
+     * Creates a resolution event for when an in-app message expires.
      *
-     * @param notification The InAppNotification.
+     * @param message The in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createExpiredResolutionEvent(InAppNotification notification) {
+    public static ResolutionEvent createExpiredResolutionEvent(InAppMessage message) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_EXPIRED);
-        resolutionData.put(EXPIRY, DateUtils.createIso8601TimeStamp(notification.getExpiry()));
+        resolutionData.put(EXPIRY, DateUtils.createIso8601TimeStamp(message.getExpiry()));
 
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification is dismissed by the end user.
+     * Creates a resolution event for when an in-app message is dismissed by the end user.
      *
-     * @param notification The InAppNotification.
-     * @param displayMs How long the InAppNotification was displayed in milliseconds.
+     * @param message The in-app message.
+     * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createUserDismissedResolutionEvent(InAppNotification notification, long displayMs) {
+    public static ResolutionEvent createUserDismissedResolutionEvent(InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_USER_DISMISSED);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
 
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     /**
-     * Creates a resolution event for when an InAppNotification displays for the full duration and times out.
+     * Creates a resolution event for when an in-app message displays for the full duration and times out.
      *
-     * @param notification The InAppNotification.
-     * @param displayMs How long the InAppNotification was displayed in milliseconds.
+     * @param message The in-app message.
+     * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createTimedOutResolutionEvent(InAppNotification notification, long displayMs) {
+    public static ResolutionEvent createTimedOutResolutionEvent(InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_TIMED_OUT);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
 
-        return new ResolutionEvent(notification.getId(), resolutionData);
+        return new ResolutionEvent(message.getId(), resolutionData);
     }
 
     @Override
@@ -211,7 +211,7 @@ public class ResolutionEvent extends Event {
             data.putOpt(RESOLUTION, new JSONObject(resolutionData));
             data.putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId());
         } catch (JSONException e) {
-            Logger.error("InAppNotificationDisplayEvent - Error constructing JSON data.", e);
+            Logger.error("ResolutionEvent - Error constructing JSON data.", e);
         }
 
         return data;

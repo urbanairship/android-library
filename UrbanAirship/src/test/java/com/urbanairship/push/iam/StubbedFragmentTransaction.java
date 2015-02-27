@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.annotation.TargetApi;
 import android.app.Fragment;

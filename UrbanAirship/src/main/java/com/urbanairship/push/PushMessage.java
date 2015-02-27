@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.push.ian.InAppNotification;
+import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
@@ -157,9 +157,9 @@ public class PushMessage implements Parcelable {
     public static final String EXTRA_EXPIRATION = "com.urbanairship.push.EXPIRATION";
 
     /**
-     * The extra key for the {@link com.urbanairship.push.ian.InAppNotification} payload.
+     * The extra key for the {@link com.urbanairship.push.iam.InAppMessage} payload.
      */
-    public static final String EXTRA_IN_APP_NOTIFICATION = "com.urbanairship.in_app";
+    public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
     private Bundle pushBundle;
 
@@ -375,20 +375,20 @@ public class PushMessage implements Parcelable {
     }
 
     /**
-     * Gets the InAppNotification from the push bundle.
+     * Gets the {@link com.urbanairship.push.iam.InAppMessage} from the push bundle.
      *
-     * @return The InAppNotification.
+     * @return The in-app message.
      */
-    public InAppNotification getInAppNotification() {
-        if (pushBundle.containsKey(EXTRA_IN_APP_NOTIFICATION)) {
+    public InAppMessage getInAppMessage() {
+        if (pushBundle.containsKey(EXTRA_IN_APP_MESSAGE)) {
             try {
-                InAppNotification message = InAppNotification.parseJson(pushBundle.getString(EXTRA_IN_APP_NOTIFICATION));
-                return new InAppNotification.Builder(message)
+                InAppMessage message = InAppMessage.parseJson(pushBundle.getString(EXTRA_IN_APP_MESSAGE));
+                return new InAppMessage.Builder(message)
                         .setId(getSendId())
                         .create();
 
             } catch (JsonException e) {
-                Logger.error("PushMessage - unable to create in app message from push payload", e);
+                Logger.error("PushMessage - unable to create in-app message from push payload", e);
             }
         }
 

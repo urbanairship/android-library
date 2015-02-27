@@ -14,7 +14,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
-import com.urbanairship.push.ian.InAppNotification;
+import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -317,26 +317,26 @@ public class PushManagerTest {
     }
 
     /**
-     * Test delivering a push with an InAppNotification sets the pending notification.
+     * Test delivering a push with an in-app message sets the pending notification.
      */
     @Test
-    public void testDeliverPushInAppNotification() {
+    public void testDeliverPushInAppMessage() {
         // Enable push
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
 
-        InAppNotification inAppNotification = new InAppNotification.Builder()
+        InAppMessage inAppMessage = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
                 .setId("what")
                 .create();
 
         PushMessage message = mock(PushMessage.class);
-        when(message.getInAppNotification()).thenReturn(inAppNotification);
+        when(message.getInAppMessage()).thenReturn(inAppMessage);
 
         pushManager.deliverPush(message);
 
-        assertEquals(inAppNotification, UAirship.shared().getInAppNotificationManager().getPendingNotification());
+        assertEquals(inAppMessage, UAirship.shared().getInAppMessageManager().getPendingMessage());
     }
 
     /**

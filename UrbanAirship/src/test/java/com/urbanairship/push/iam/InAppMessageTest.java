@@ -1,4 +1,4 @@
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.graphics.Color;
 import android.os.Parcel;
@@ -23,7 +23,7 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class InAppNotificationTest {
+public class InAppMessageTest {
 
     // Taken from the push api spec
     public static String VALID_JSON = "{\"display\": {\"primary_color\": \"#FF0000\"," +
@@ -37,7 +37,7 @@ public class InAppNotificationTest {
     public ExpectedException exception = ExpectedException.none();
 
     /**
-     * Test building the notification.
+     * Test building the in-app message.
      */
     @Test
     public void testBuildNotification() throws JsonException {
@@ -48,14 +48,14 @@ public class InAppNotificationTest {
         Map<String, ActionValue> actionValueMap = new HashMap<>();
         actionValueMap.put("action name", new ActionValue());
 
-        InAppNotification notification = new InAppNotification.Builder()
+        InAppMessage message = new InAppMessage.Builder()
                 .setAlert("alert")
                 .setId("id")
                 .setDuration(100l)
                 .setExpiry(200l)
                 .setPrimaryColor(Color.BLACK)
                 .setSecondaryColor(Color.BLUE)
-                .setPosition(InAppNotification.POSITION_TOP)
+                .setPosition(InAppMessage.POSITION_TOP)
                 .setExtras(jsonExtras)
                 .setButtonActionValues("button one", actionValueMap)
                 .setButtonGroupId("button group")
@@ -63,42 +63,42 @@ public class InAppNotificationTest {
                 .create();
 
         // Verify everything is set on the notification
-        assertEquals("alert", notification.getAlert());
-        assertEquals("id", notification.getId());
-        assertEquals(100l, (long) notification.getDuration());
-        assertEquals(200, notification.getExpiry());
-        assertEquals(Color.BLACK, (int) notification.getPrimaryColor());
-        assertEquals(Color.BLUE, (int) notification.getSecondaryColor());
-        assertEquals(InAppNotification.POSITION_TOP, notification.getPosition());
-        assertEquals(jsonExtras, notification.getExtras());
-        assertEquals(actionValueMap, notification.getButtonActionValues("button one"));
-        assertEquals("button group", notification.getButtonGroupId());
-        assertEquals(actionValueMap, notification.getClickActionValues());
+        assertEquals("alert", message.getAlert());
+        assertEquals("id", message.getId());
+        assertEquals(100l, (long) message.getDuration());
+        assertEquals(200, message.getExpiry());
+        assertEquals(Color.BLACK, (int) message.getPrimaryColor());
+        assertEquals(Color.BLUE, (int) message.getSecondaryColor());
+        assertEquals(InAppMessage.POSITION_TOP, message.getPosition());
+        assertEquals(jsonExtras, message.getExtras());
+        assertEquals(actionValueMap, message.getButtonActionValues("button one"));
+        assertEquals("button group", message.getButtonGroupId());
+        assertEquals(actionValueMap, message.getClickActionValues());
     }
 
     /**
-     * Test building an empty notification does not throw any exceptions and defaults to proper values.
+     * Test building an empty in-app message does not throw any exceptions and defaults to proper values.
      */
     @Test
     public void testBuildEmptyNotification() {
-        InAppNotification notification = new InAppNotification.Builder().create();
+        InAppMessage message = new InAppMessage.Builder().create();
 
         // Verify defaults
-        assertNull(notification.getAlert());
-        assertNull(notification.getId());
-        assertNull(notification.getDuration());
-        assertEquals(InAppNotification.POSITION_BOTTOM, notification.getPosition());
-        assertTrue(notification.getExtras().isEmpty());
-        assertNull(notification.getButtonActionValues("button one"));
-        assertNull(notification.getButtonGroupId());
-        assertTrue(notification.getClickActionValues().isEmpty());
-        assertNull(notification.getPrimaryColor());
-        assertNull(notification.getSecondaryColor());
+        assertNull(message.getAlert());
+        assertNull(message.getId());
+        assertNull(message.getDuration());
+        assertEquals(InAppMessage.POSITION_BOTTOM, message.getPosition());
+        assertTrue(message.getExtras().isEmpty());
+        assertNull(message.getButtonActionValues("button one"));
+        assertNull(message.getButtonGroupId());
+        assertTrue(message.getClickActionValues().isEmpty());
+        assertNull(message.getPrimaryColor());
+        assertNull(message.getSecondaryColor());
     }
 
     /**
-     * Test building a notification from an notification message copied all the attributes
-     * to the new notification.
+     * Test building a in-app message from an existing in-app message copied all the attributes
+     * to the new message.
      */
     @Test
     public void testBuildFromExistingNotification() throws JsonException {
@@ -109,32 +109,32 @@ public class InAppNotificationTest {
         Map<String, ActionValue> actionValueMap = new HashMap<>();
         actionValueMap.put("action name", new ActionValue());
 
-        InAppNotification originalNotification = new InAppNotification.Builder()
+        InAppMessage original = new InAppMessage.Builder()
                 .setAlert("alert")
                 .setId("id")
                 .setDuration(100l)
                 .setExpiry(200l)
-                .setPosition(InAppNotification.POSITION_TOP)
+                .setPosition(InAppMessage.POSITION_TOP)
                 .setExtras(jsonExtras)
                 .setButtonActionValues("button one", actionValueMap)
                 .setButtonGroupId("button group")
                 .setClickActionValues(actionValueMap)
                 .create();
 
-        InAppNotification newNotification = new InAppNotification.Builder(originalNotification)
+        InAppMessage extended = new InAppMessage.Builder(original)
                 .setId("other id")
                 .create();
 
         // Verify everything is set on the new notification
-        assertEquals("alert", newNotification.getAlert());
-        assertEquals("other id", newNotification.getId());
-        assertEquals(100l, (long)newNotification.getDuration());
-        assertEquals(200, newNotification.getExpiry());
-        assertEquals(InAppNotification.POSITION_TOP, newNotification.getPosition());
-        assertEquals(jsonExtras, newNotification.getExtras());
-        assertEquals(actionValueMap, newNotification.getButtonActionValues("button one"));
-        assertEquals("button group", newNotification.getButtonGroupId());
-        assertEquals(actionValueMap, newNotification.getClickActionValues());
+        assertEquals("alert", extended.getAlert());
+        assertEquals("other id", extended.getId());
+        assertEquals(100l, (long)extended.getDuration());
+        assertEquals(200, extended.getExpiry());
+        assertEquals(InAppMessage.POSITION_TOP, extended.getPosition());
+        assertEquals(jsonExtras, extended.getExtras());
+        assertEquals(actionValueMap, extended.getButtonActionValues("button one"));
+        assertEquals("button group", extended.getButtonGroupId());
+        assertEquals(actionValueMap, extended.getClickActionValues());
     }
 
     /**
@@ -143,7 +143,7 @@ public class InAppNotificationTest {
     @Test
     public void testBuilderSetInvalidPosition() {
         exception.expect(IllegalArgumentException.class);
-        new InAppNotification.Builder().setPosition(2);
+        new InAppMessage.Builder().setPosition(2);
     }
 
     /**
@@ -152,47 +152,47 @@ public class InAppNotificationTest {
     @Test
     public void testBuilderSetInvalidDuration() {
         exception.expect(IllegalArgumentException.class);
-        new InAppNotification.Builder().setDuration(0l);
+        new InAppMessage.Builder().setDuration(0l);
     }
 
     /**
-     * Test parsing a notification from a JSON payload.
+     * Test parsing a in-app message from a JSON payload.
      */
     @Test
     public void testParseJson() throws JsonException {
-        InAppNotification notification = InAppNotification.parseJson(VALID_JSON);
-        assertEquals("Oh hi!", notification.getAlert());
-        assertEquals(10000l, (long) notification.getDuration());
-        assertEquals(1449921600000l, notification.getExpiry());
-        assertEquals("ua_yes_no", notification.getButtonGroupId());
-        assertEquals(InAppNotification.POSITION_BOTTOM, notification.getPosition());
-        assertEquals(Color.parseColor("#FF0000"), (int) notification.getPrimaryColor());
-        assertEquals(Color.parseColor("#00FF00"), (int) notification.getSecondaryColor());
+        InAppMessage message = InAppMessage.parseJson(VALID_JSON);
+        assertEquals("Oh hi!", message.getAlert());
+        assertEquals(10000l, (long) message.getDuration());
+        assertEquals(1449921600000l, message.getExpiry());
+        assertEquals("ua_yes_no", message.getButtonGroupId());
+        assertEquals(InAppMessage.POSITION_BOTTOM, message.getPosition());
+        assertEquals(Color.parseColor("#FF0000"), (int) message.getPrimaryColor());
+        assertEquals(Color.parseColor("#00FF00"), (int) message.getSecondaryColor());
 
         // Verify extras
-        JsonMap extras = notification.getExtras();
+        JsonMap extras = message.getExtras();
         assertEquals(2, extras.size());
         assertEquals("Selleck", extras.get("Tom").getString());
         assertEquals(123, extras.get("wat").getInt(0));
 
         // Verify on click action values
-        Map<String, ActionValue> onClickActionValues = notification.getClickActionValues();
+        Map<String, ActionValue> onClickActionValues = message.getClickActionValues();
         assertEquals(1, onClickActionValues.size());
         assertEquals("someurl", onClickActionValues.get("^d").getString());
 
         // Verify yes button action values
-        Map<String, ActionValue> yesActionValues = notification.getButtonActionValues("yes");
+        Map<String, ActionValue> yesActionValues = message.getButtonActionValues("yes");
         assertEquals(1, yesActionValues.size());
         assertEquals("yes_tag", yesActionValues.get("^+t").getString());
 
         // Verify no button action values
-        Map<String, ActionValue> noActionValues = notification.getButtonActionValues("no");
+        Map<String, ActionValue> noActionValues = message.getButtonActionValues("no");
         assertEquals(1, noActionValues.size());
         assertEquals("no_tag", noActionValues.get("^+t").getString());
     }
 
     /**
-     * Test parsing a notification from a JSON payload that includes a type other than banner returns null.
+     * Test parsing a in-app message from a JSON payload that includes a type other than banner returns null.
      */
     @Test
     public void testParseJsonDisplayNotBanner() throws JsonException {
@@ -204,11 +204,11 @@ public class InAppNotificationTest {
                 "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
                 "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
 
-        assertNull(InAppNotification.parseJson(invalidJson));
+        assertNull(InAppMessage.parseJson(invalidJson));
     }
 
     /**
-     * Test parsing a notification from a JSON payload that does not define a "display" object returns null.
+     * Test parsing a in-app message from a JSON payload that does not define a "display" object returns null.
      */
     @Test
     public void testParseJsonNoDisplay() throws JsonException {
@@ -218,16 +218,16 @@ public class InAppNotificationTest {
                 "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
                 "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
 
-        assertNull(InAppNotification.parseJson(invalidJson));
+        assertNull(InAppMessage.parseJson(invalidJson));
     }
 
     /**
-     * Test parsing a notification from a JSON invalid JSON payload throws an exception.
+     * Test parsing a in-app message from a JSON invalid JSON payload throws an exception.
      */
     @Test
     public void testParseJsonInvalidPayload() throws JsonException {
         exception.expect(JsonException.class);
-        InAppNotification.parseJson("{\"wat\":}");
+        InAppMessage.parseJson("{\"wat\":}");
     }
 
     /**
@@ -235,9 +235,9 @@ public class InAppNotificationTest {
      */
     @Test
     public void testEquals() throws JsonException {
-        InAppNotification original = InAppNotification.parseJson(VALID_JSON);
-        InAppNotification same = InAppNotification.parseJson(VALID_JSON);
-        InAppNotification different = new InAppNotification.Builder(original).setId("id").create();
+        InAppMessage original = InAppMessage.parseJson(VALID_JSON);
+        InAppMessage same = InAppMessage.parseJson(VALID_JSON);
+        InAppMessage different = new InAppMessage.Builder(original).setId("id").create();
 
         assertTrue(original.equals(same));
         assertFalse(original.equals(different));
@@ -248,29 +248,29 @@ public class InAppNotificationTest {
      */
     @Test
     public void testParcelable() throws JsonException {
-        InAppNotification notification = InAppNotification.parseJson(VALID_JSON);
+        InAppMessage message = InAppMessage.parseJson(VALID_JSON);
 
-        // Write the notification to a parcel
+        // Write the message to a parcel
         Parcel parcel = Parcel.obtain();
-        notification.writeToParcel(parcel, 0);
+        message.writeToParcel(parcel, 0);
 
         // Reset the parcel so we can read it
         parcel.setDataPosition(0);
 
-        // Create the notification from the parcel
-        InAppNotification fromParcel = InAppNotification.CREATOR.createFromParcel(parcel);
-        assertEquals(notification, fromParcel);
+        // Create the message from the parcel
+        InAppMessage fromParcel = InAppMessage.CREATOR.createFromParcel(parcel);
+        assertEquals(message, fromParcel);
     }
 
     /**
-     * Test getting the IAN as Json.
+     * Test getting the in-app message as Json.
      */
     @Test
     public void testToJson() throws JsonException {
-        InAppNotification original = InAppNotification.parseJson(VALID_JSON);
+        InAppMessage original = InAppMessage.parseJson(VALID_JSON);
 
-        // Create another notification from the JSON of the original notification
-        InAppNotification same = InAppNotification.parseJson(original.toJsonValue().toString());
+        // Create another message from the JSON of the original message
+        InAppMessage same = InAppMessage.parseJson(original.toJsonValue().toString());
 
         // They should be the same
         assertEquals(original, same);

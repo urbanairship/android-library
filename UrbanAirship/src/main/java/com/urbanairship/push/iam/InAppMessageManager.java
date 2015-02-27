@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -47,25 +47,26 @@ import com.urbanairship.util.UAStringUtil;
 import java.lang.ref.WeakReference;
 
 /**
- * This class is the primary interface for interacting with in app notifications.
+ * This class is the primary interface for interacting with in-app messages.
  */
-public class InAppNotificationManager extends BaseManager {
+public class InAppMessageManager extends BaseManager {
 
     // Preference data store keys
-    private final static String PENDING_IN_APP_NOTIFICATION_KEY = "com.urbanairship.push.ian.PENDING_IN_APP_NOTIFICATION";
-    private final static String DISPLAY_ASAP_KEY = "com.urbanairship.push.ian.DISPLAY_ASAP";
-    private final static String AUTO_DISPLAY_ENABLED_KEY = "com.urbanairship.push.ian.AUTO_DISPLAY_ENABLED";
-    private final static String LAST_DISPLAYED_ID_KEY = "com.urbanairship.push.ian.LAST_DISPLAYED_ID";
+    private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
+    private final static String PENDING_IN_APP_MESSAGE_KEY = KEY_PREFIX + "PENDING_IN_APP_MESSAGE";
+    private final static String DISPLAY_ASAP_KEY = KEY_PREFIX + "DISPLAY_ASAP";
+    private final static String AUTO_DISPLAY_ENABLED_KEY = KEY_PREFIX + "AUTO_DISPLAY_ENABLED";
+    private final static String LAST_DISPLAYED_ID_KEY = KEY_PREFIX + "LAST_DISPLAYED_ID";
 
     private final static String IN_APP_TAG = "com.urbanairship.in_app_fragment";
 
     /**
-     * Activity metadata key to exclude an activity from automatically displaying an InAppNotification.
+     * Activity metadata key to exclude an activity from automatically displaying an in-app message.
      */
-    public static final String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.ian.EXCLUDE_FROM_AUTO_SHOW";
+    public static final String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
 
     /**
-     * The delay before attempting to show an InAppNotification when an activity resumes.
+     * The delay before attempting to show an in-app message when an activity resumes.
      */
     private static long ACTIVITY_RESUME_DELAY_MS = 3000;
 
@@ -85,22 +86,22 @@ public class InAppNotificationManager extends BaseManager {
     private final Handler handler;
 
     private WeakReference<Activity> activityReference;
-    private InAppNotificationFragment currentFragment;
-    private boolean autoDisplayPendingNotification;
-    private InAppNotification currentNotification;
+    private InAppMessageFragment currentFragment;
+    private boolean autoDisplayPendingMessage;
+    private InAppMessage currentMessage;
 
-    private Object pendingNotificationLock = new Object();
+    private Object pendingMessageLock = new Object();
 
-    // Runnable that we post on the main looper whenever we attempt to auto display a in app notification
+    // Runnable that we post on the main looper whenever we attempt to auto display a in-app message
     private final Runnable displayRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!autoDisplayPendingNotification && !isDisplayAsapEnabled() || !isAutoDisplayEnabled()) {
+            if (!autoDisplayPendingMessage && !isDisplayAsapEnabled() || !isAutoDisplayEnabled()) {
                 return;
             }
 
-            if (showPendingNotification(getCurrentActivity())) {
-                autoDisplayPendingNotification = false;
+            if (showPendingMessage(getCurrentActivity())) {
+                autoDisplayPendingMessage = false;
             }
         }
     };
@@ -111,44 +112,44 @@ public class InAppNotificationManager extends BaseManager {
      * @param dataStore The preference data store.
      * @hide
      */
-    public InAppNotificationManager(PreferenceDataStore dataStore) {
+    public InAppMessageManager(PreferenceDataStore dataStore) {
         this.dataStore = dataStore;
         handler = new Handler(Looper.getMainLooper());
-        autoDisplayPendingNotification = isDisplayAsapEnabled();
+        autoDisplayPendingMessage = isDisplayAsapEnabled();
     }
 
     @Override
     protected void init() {
-        InAppNotification pending = getPendingNotification();
+        InAppMessage pending = getPendingMessage();
         if (pending != null && pending.isExpired()) {
-            Logger.debug("InAppNotificationManager - pending notification expired.");
+            Logger.debug("InAppMessageManager - pending in-app message expired.");
             ResolutionEvent resolutionEvent = ResolutionEvent.createExpiredResolutionEvent(pending);
             UAirship.shared().getAnalytics().addEvent(resolutionEvent);
-            setPendingNotification(null);
+            setPendingMessage(null);
         }
     }
 
     /**
-     * Sets if in app notifications should be displayed as soon as possible or only on app foregrounds.
+     * Sets if in-app messages should be displayed as soon as possible or only on app foregrounds.
      * <p/>
-     * If a pending notification is already available, it will be displayed on the next time an activity
+     * If a pending in-app message is already available, it will be displayed on the next time an activity
      * is resumed.
      *
-     * @param enabled {@code true} to enable display in app notifications as soon as possible, otherwise
+     * @param enabled {@code true} to enable display in-app messages as soon as possible, otherwise
      * {@code false}.
      */
     public void setDisplayAsapEnabled(boolean enabled) {
         dataStore.put(DISPLAY_ASAP_KEY, enabled);
 
         if (enabled) {
-            autoDisplayPendingNotification = true;
+            autoDisplayPendingMessage = true;
         }
     }
 
     /**
-     * Checks in app notifications should be displayed as soon as possible or only on app foregrounds.
+     * Checks in-app messages should be displayed as soon as possible or only on app foregrounds.
      *
-     * @return {@code true} if in app notifications as soon as possible is enabled, otherwise
+     * @return {@code true} if in-app messages as soon as possible is enabled, otherwise
      * {@code false}.
      */
     public boolean isDisplayAsapEnabled() {
@@ -157,18 +158,18 @@ public class InAppNotificationManager extends BaseManager {
 
 
     /**
-     * Sets if in app notifications should be displayed automatically.
+     * Sets if in-app messages should be displayed automatically.
      *
-     * @param enabled {@code true} to display in app notifications automatically, otherwise {@code false}.
+     * @param enabled {@code true} to display in-app messages automatically, otherwise {@code false}.
      */
     public void setAutoDisplayEnabled(boolean enabled) {
         dataStore.put(AUTO_DISPLAY_ENABLED_KEY, enabled);
     }
 
     /**
-     * Checks if auto displaying in app notifications is enabled.
+     * Checks if auto displaying in-app messages is enabled.
      *
-     * @return {@code true} if displaying in app notifications automatically is enabled, otherwise
+     * @return {@code true} if displaying in-app messages automatically is enabled, otherwise
      * {@code false}.
      */
     public boolean isAutoDisplayEnabled() {
@@ -176,30 +177,30 @@ public class InAppNotificationManager extends BaseManager {
     }
 
     /**
-     * Sets the pending notification.
+     * Sets the pending in-app message.
      *
-     * @param notification The InAppNotification.
+     * @param message The in-app message.
      */
-    public void setPendingNotification(InAppNotification notification) {
-        synchronized (pendingNotificationLock) {
-            if (notification == null) {
-                dataStore.remove(PENDING_IN_APP_NOTIFICATION_KEY);
+    public void setPendingMessage(InAppMessage message) {
+        synchronized (pendingMessageLock) {
+            if (message == null) {
+                dataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
             } else {
-                InAppNotification previous = getPendingNotification();
-                if (notification.equals(previous)) {
+                InAppMessage previous = getPendingMessage();
+                if (message.equals(previous)) {
                     return;
                 }
 
-                dataStore.put(PENDING_IN_APP_NOTIFICATION_KEY, notification.toJsonValue().toString());
+                dataStore.put(PENDING_IN_APP_MESSAGE_KEY, message.toJsonValue().toString());
 
-                if (currentNotification == null && previous != null) {
-                    Logger.debug("InAppNotificationManager - pending notification replaced.");
-                    ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(previous, notification);
+                if (currentMessage == null && previous != null) {
+                    Logger.debug("InAppMessageManager - pending in-app message replaced.");
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(previous, message);
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
                 }
 
                 if (isDisplayAsapEnabled()) {
-                    autoDisplayPendingNotification = true;
+                    autoDisplayPendingMessage = true;
                     handler.removeCallbacks(displayRunnable);
                     handler.post(displayRunnable);
                 }
@@ -208,19 +209,19 @@ public class InAppNotificationManager extends BaseManager {
     }
 
     /**
-     * Gets the pending notification.
+     * Gets the pending in-app message.
      *
-     * @return The pending InAppNotification.
+     * @return The pending in-app message.
      */
-    public InAppNotification getPendingNotification() {
-        synchronized (pendingNotificationLock) {
-            String payload = dataStore.getString(PENDING_IN_APP_NOTIFICATION_KEY, null);
+    public InAppMessage getPendingMessage() {
+        synchronized (pendingMessageLock) {
+            String payload = dataStore.getString(PENDING_IN_APP_MESSAGE_KEY, null);
             if (payload != null) {
                 try {
-                    return InAppNotification.parseJson(payload);
+                    return InAppMessage.parseJson(payload);
                 } catch (JsonException e) {
-                    Logger.error("InAppNotificationManager - Failed to read pending in app notification: " + payload, e);
-                    setPendingNotification(null);
+                    Logger.error("InAppMessageManager - Failed to read pending in-app message: " + payload, e);
+                    setPendingMessage(null);
                 }
             }
 
@@ -229,86 +230,86 @@ public class InAppNotificationManager extends BaseManager {
     }
 
     /**
-     * Gets the notification that is in the process of displaying.
+     * Gets the in-app message that is in the process of displaying.
      *
-     * @return The current notification.
+     * @return The current in-app message.
      * @hide
      */
-    public InAppNotification getCurrentNotification() {
-        return currentNotification;
+    public InAppMessage getCurrentMessage() {
+        return currentMessage;
     }
 
     /**
-     * Shows the pending notification.
+     * Shows the pending in-app message.
      *
      * @param activity The current activity.
-     * @return {@code true} if a {@link InAppNotificationFragment} was added and displayed in the
+     * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingNotification(Activity activity) {
-        return showPendingNotification(activity, android.R.id.content);
+    public boolean showPendingMessage(Activity activity) {
+        return showPendingMessage(activity, android.R.id.content);
     }
 
     /**
-     * Shows the pending notification in a specified container ID.
+     * Shows the pending in-app message in a specified container ID.
      *
      * @param activity The current activity.
      * @param containerId An ID of a container in the activity's view to add the
-     * {@link InAppNotificationFragment}.
-     * @return {@code true} if a {@link InAppNotificationFragment} was added and displayed in the
+     * {@link InAppMessageFragment}.
+     * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingNotification(Activity activity, int containerId) {
-        synchronized (pendingNotificationLock) {
-            InAppNotification pending = getPendingNotification();
+    public boolean showPendingMessage(Activity activity, int containerId) {
+        synchronized (pendingMessageLock) {
+            InAppMessage pending = getPendingMessage();
 
             if (activity == null || pending == null) {
                 return false;
             }
 
             int enter, exit;
-            if (pending.getPosition() == InAppNotification.POSITION_TOP) {
-                enter = R.animator.ua_ian_slide_in_top;
-                exit = R.animator.ua_ian_slide_out_top;
+            if (pending.getPosition() == InAppMessage.POSITION_TOP) {
+                enter = R.animator.ua_iam_slide_in_top;
+                exit = R.animator.ua_iam_slide_out_top;
             } else {
-                enter = R.animator.ua_ian_slide_in_bottom;
-                exit = R.animator.ua_ian_slide_out_bottom;
+                enter = R.animator.ua_iam_slide_in_bottom;
+                exit = R.animator.ua_iam_slide_out_bottom;
             }
 
-            return showPendingNotification(activity, containerId, enter, exit);
+            return showPendingMessage(activity, containerId, enter, exit);
         }
     }
 
     /**
-     * Shows the pending notification in a specified container ID and fragment animations.
+     * Shows the pending in-app message in a specified container ID and fragment animations.
      * <p/>
      * Note: The animations must refer to API 11 object animators. View animators will result in a
      * runtime exception.
      *
      * @param activity The current activity.
      * @param containerId An ID of a container in the activity's view to add the
-     * {@link InAppNotificationFragment}.
-     * @param enterAnimation The animation resource to run when the {@link InAppNotificationFragment}
+     * {@link InAppMessageFragment}.
+     * @param enterAnimation The animation resource to run when the {@link InAppMessageFragment}
      * enters the view.
-     * @param exitAnimation The animation resource to run when the {@link InAppNotificationFragment}
+     * @param exitAnimation The animation resource to run when the {@link InAppMessageFragment}
      * exits the view.
-     * @return {@code true} if a {@link InAppNotificationFragment} was added and displayed in the
+     * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingNotification(Activity activity, int containerId, int enterAnimation, int exitAnimation) {
-        InAppNotification pending;
+    public boolean showPendingMessage(Activity activity, int containerId, int enterAnimation, int exitAnimation) {
+        InAppMessage pending;
 
-        synchronized (pendingNotificationLock) {
-            pending = getPendingNotification();
+        synchronized (pendingMessageLock) {
+            pending = getPendingMessage();
             // Expired event
             if (pending != null && pending.isExpired()) {
-                Logger.debug("InAppNotificationManager - Unable to display pending in app notification. Notification has expired.");
+                Logger.debug("InAppMessageManager - Unable to display pending in-app message. Message has expired.");
                 ResolutionEvent resolutionEvent = ResolutionEvent.createExpiredResolutionEvent(pending);
                 UAirship.shared().getAnalytics().addEvent(resolutionEvent);
-                setPendingNotification(null);
+                setPendingMessage(null);
                 return false;
             }
         }
@@ -318,43 +319,43 @@ public class InAppNotificationManager extends BaseManager {
         }
 
         if (Build.VERSION.SDK_INT < 14) {
-            Logger.error("InAppNotificationManager - Unable to show InAppNotification on Android versions older than API 14 (Ice Cream Sandwich).");
+            Logger.error("InAppMessageManager - Unable to show in-app messages on Android versions older than API 14 (Ice Cream Sandwich).");
             return false;
         }
 
         if (activity.isFinishing()) {
-            Logger.error("InAppNotificationManager - Unable to display InAppNotification for an activity that is finishing.");
+            Logger.error("InAppMessageManager - Unable to display in-app messages for an activity that is finishing.");
             return false;
         }
 
         if (Looper.getMainLooper() != Looper.myLooper()) {
-            Logger.error("InAppNotificationManager - Show notification must be called on the main thread.");
+            Logger.error("InAppMessageManager - Show message must be called on the main thread.");
             return false;
         }
 
         if (currentFragment != null) {
-            Logger.debug("InAppNotificationManager - InAppNotification already displayed.");
+            Logger.debug("InAppMessageManager - An in-app message is already displayed.");
             return false;
         }
 
-        // Add a display event if the last displayed id does not match the current notification
+        // Add a display event if the last displayed id does not match the current message
         if (!UAStringUtil.equals(pending.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
-            Logger.debug("InAppNotificationManager - Displaying pending notification: " + pending + " for first time.");
+            Logger.debug("InAppMessageManager - Displaying pending message: " + pending + " for first time.");
             DisplayEvent displayEvent = new DisplayEvent(pending);
             UAirship.shared().getAnalytics().addEvent(displayEvent);
             dataStore.put(LAST_DISPLAYED_ID_KEY, pending.getId());
         }
 
-        if (currentNotification != null && currentNotification.equals(pending)) {
+        if (currentMessage != null && currentMessage.equals(pending)) {
             // Replaced
-            ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentNotification, pending);
+            ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentMessage, pending);
             UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
 
-        Logger.info("InAppNotificationManager - Displaying InAppNotification.");
+        Logger.info("InAppMessageManager - Displaying in-app message.");
         try {
-            currentFragment = InAppNotificationFragment.newInstance(pending, exitAnimation);
-            currentNotification = pending;
+            currentFragment = InAppMessageFragment.newInstance(pending, exitAnimation);
+            currentMessage = pending;
 
             activity.getFragmentManager().beginTransaction()
                     .setCustomAnimations(enterAnimation, 0)
@@ -363,7 +364,7 @@ public class InAppNotificationManager extends BaseManager {
 
             return true;
         } catch (IllegalStateException e) {
-            Logger.debug("InAppNotificationManager - Failed to display InAppNotification.", e);
+            Logger.debug("InAppMessageManager - Failed to display in-app message.", e);
             return false;
         }
 
@@ -379,35 +380,35 @@ public class InAppNotificationManager extends BaseManager {
     }
 
     /**
-     * Called when an InAppNotification is finished displaying.
+     * Called when an in-app message is finished displaying.
      *
-     * @param notification The InAppNotification.
+     * @param message The in-app message.
      */
-    void onInAppNotificationFinished(InAppNotification notification) {
-        synchronized (pendingNotificationLock) {
-            if (notification != null && notification.equals(getPendingNotification())) {
-                setPendingNotification(null);
+    void onInAppMessageFinished(InAppMessage message) {
+        synchronized (pendingMessageLock) {
+            if (message != null && message.equals(getPendingMessage())) {
+                setPendingMessage(null);
             }
         }
 
-        if (notification != null && notification.equals(currentNotification)) {
-            currentNotification = null;
+        if (message != null && message.equals(currentMessage)) {
+            currentMessage = null;
         }
     }
 
     /**
-     * Called from an {@link InAppNotificationFragment#onResume()}.
+     * Called from an {@link InAppMessageFragment#onResume()}.
      *
-     * @param fragment The InAppNotificationFragment.
+     * @param fragment The in-app message fragment.
      */
     @TargetApi(11)
-    void onInAppNotificationFragmentResumed(InAppNotificationFragment fragment) {
+    void onInAppMessageFragmentResumed(InAppMessageFragment fragment) {
         if (currentFragment != null && currentFragment != fragment) {
             fragment.dismiss(false);
             return;
         }
 
-        if (currentNotification == null || !currentNotification.equals(fragment.getNotification())) {
+        if (currentMessage == null || !currentMessage.equals(fragment.getMessage())) {
             fragment.dismiss(false);
         } else {
             currentFragment = fragment;
@@ -415,12 +416,12 @@ public class InAppNotificationManager extends BaseManager {
     }
 
     /**
-     * Called from an {@link InAppNotificationFragment#onPause()}.
+     * Called from an {@link InAppMessageFragment#onPause()}.
      *
-     * @param fragment The InAppNotificationFragment.
+     * @param fragment The in-app message fragment.
      */
     @TargetApi(11)
-    void onInAppNotificationFragmentPaused(InAppNotificationFragment fragment) {
+    void onInAppMessageFragmentPaused(InAppMessageFragment fragment) {
         if (fragment != currentFragment) {
             return;
         }
@@ -428,10 +429,10 @@ public class InAppNotificationManager extends BaseManager {
         currentFragment = null;
         if (!fragment.isDismissed() && fragment.getActivity().isFinishing()) {
             /*
-             * If the InAppNotificationFragment's activity is finishing, but the notification is still
-             * displaying, show the notification on the next activity.
+             * If the InAppMessageFragment's activity is finishing, but the message is still
+             * displaying, show the message on the next activity.
              */
-            autoDisplayPendingNotification = true;
+            autoDisplayPendingMessage = true;
         }
     }
 
@@ -441,18 +442,18 @@ public class InAppNotificationManager extends BaseManager {
      * Called when the app is foregrounded.
      */
     void onForeground() {
-        Logger.verbose("InAppNotificationManager - App foregrounded.");
-        InAppNotification pending = getPendingNotification();
-        if ((currentNotification == null && pending != null) || (pending != null && !pending.equals(currentNotification))) {
+        Logger.verbose("InAppMessageManager - App foregrounded.");
+        InAppMessage pending = getPendingMessage();
+        if ((currentMessage == null && pending != null) || (pending != null && !pending.equals(currentMessage))) {
 
-            if (currentNotification != null) {
+            if (currentMessage != null) {
                 // Replaced
-                ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentNotification, pending);
+                ResolutionEvent resolutionEvent = ResolutionEvent.createReplacedResolutionEvent(currentMessage, pending);
                 UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             }
 
-            currentNotification = null;
-            autoDisplayPendingNotification = true;
+            currentMessage = null;
+            autoDisplayPendingMessage = true;
             handler.removeCallbacks(displayRunnable);
             handler.postDelayed(displayRunnable, ACTIVITY_RESUME_DELAY_MS);
         }
@@ -464,7 +465,7 @@ public class InAppNotificationManager extends BaseManager {
      * @param activity The paused activity.
      */
     void onActivityPaused(Activity activity) {
-        Logger.verbose("InAppNotificationManager - Activity paused: " + activity);
+        Logger.verbose("InAppMessageManager - Activity paused: " + activity);
         activityReference = null;
         handler.removeCallbacks(displayRunnable);
     }
@@ -475,18 +476,18 @@ public class InAppNotificationManager extends BaseManager {
      * @param activity The resumed activity.
      */
     void onActivityResumed(Activity activity) {
-        Logger.verbose("InAppNotificationManager - Activity resumed: " + activity);
+        Logger.verbose("InAppMessageManager - Activity resumed: " + activity);
 
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
         if (info != null && info.metaData != null && info.metaData.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
-            Logger.verbose("InAppNotificationManager - Activity contains metadata to exclude it from auto showing an in app notification");
+            Logger.verbose("InAppMessageManager - Activity contains metadata to exclude it from auto showing an in-app message");
             return;
         }
 
         activityReference = new WeakReference<>(activity);
         handler.removeCallbacks(displayRunnable);
 
-        if (autoDisplayPendingNotification) {
+        if (autoDisplayPendingMessage) {
             handler.postDelayed(displayRunnable, ACTIVITY_RESUME_DELAY_MS);
         }
     }
@@ -508,12 +509,12 @@ public class InAppNotificationManager extends BaseManager {
                     if (!isForeground) {
                         isForeground = true;
                         if (UAirship.isFlying()) {
-                            UAirship.shared().getInAppNotificationManager().onForeground();
+                            UAirship.shared().getInAppMessageManager().onForeground();
                         } else {
                             UAirship.shared(new UAirship.OnReadyCallback() {
                                 @Override
                                 public void onAirshipReady(UAirship airship) {
-                                    UAirship.shared().getInAppNotificationManager().onForeground();
+                                    UAirship.shared().getInAppMessageManager().onForeground();
                                 }
                             });
                         }
@@ -541,7 +542,7 @@ public class InAppNotificationManager extends BaseManager {
                     activityResumedOperation = UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            UAirship.shared().getInAppNotificationManager().onActivityResumed(activity);
+                            UAirship.shared().getInAppMessageManager().onActivityResumed(activity);
                         }
                     });
                 }
@@ -553,7 +554,7 @@ public class InAppNotificationManager extends BaseManager {
                         return;
                     }
 
-                    UAirship.shared().getInAppNotificationManager().onActivityPaused(activity);
+                    UAirship.shared().getInAppMessageManager().onActivityPaused(activity);
                 }
             };
 

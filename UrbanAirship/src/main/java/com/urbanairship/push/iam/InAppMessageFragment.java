@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.annotation.TargetApi;
 import android.app.Fragment;
@@ -58,60 +58,60 @@ import com.urbanairship.widget.SwipeDismissViewLayout;
 import java.util.Map;
 
 /**
- * The InAppNotificationFragment that displays an InAppNotification.
+ * A fragment that displays an in-app message.
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-public class InAppNotificationFragment extends Fragment {
+public class InAppMessageFragment extends Fragment {
 
     /**
-     * Default primary color for in app notifications. The value is only used if the notification's
-     * {@link InAppNotification#getPrimaryColor()} returns null.
+     * Default primary color for in-app messages. The value is only used if the in-app message's
+     * {@link InAppMessage#getPrimaryColor()} returns null.
      */
     public static final int DEFAULT_PRIMARY_COLOR = Color.WHITE;
 
     /**
-     * Default secondary color for in app notifications. The value is only used if the notification's
-     * {@link InAppNotification#getSecondaryColor()} returns null.
+     * Default secondary color for in-app messages. The value is only used if the in-app message's
+     * {@link InAppMessage#getSecondaryColor()} returns null.
      */
     public static final int DEFAULT_SECONDARY_COLOR = Color.DKGRAY;
 
     /**
-     * Default duration in milliseconds. The value is only used if the notification's
-     * {@link InAppNotification#getDuration()} returns null.
+     * Default duration in milliseconds. The value is only used if the in-app message's
+     * {@link InAppMessage#getDuration()} returns null.
      */
     public static final long DEFAULT_DURATION = 15000;
 
-    private static final String NOTIFICATION = "notification";
+    private static final String MESSAGE = "message";
     private static final String DISMISS_ANIMATION = "dismiss_animation";
     private static final String DISMISSED = "dismissed";
 
-    private InAppNotification notification;
+    private InAppMessage message;
     private boolean isDismissed;
     private Timer timer;
 
     /**
-     * Creates a new InAppNotificationFragment fragment.
+     * Creates a new InAppMessageFragment fragment.
      *
-     * @param notification The associated InAppNotification.
-     * @return A new InAppNotificationFragment.
+     * @param message The associated in-app message.
+     * @return A new InAppMessageFragment.
      */
-    public static InAppNotificationFragment newInstance(InAppNotification notification) {
-        return newInstance(notification, 0);
+    public static InAppMessageFragment newInstance(InAppMessage message) {
+        return newInstance(message, 0);
     }
 
     /**
-     * Creates a new InAppNotificationFragment fragment.
+     * Creates a new InAppMessageFragment fragment.
      *
-     * @param notification The associated InAppNotification.
-     * @param dismissAnimation Resource ID of a fragment transition to run when the notification is dismissed.
-     * @return A new InAppNotificationFragment.
+     * @param message The associated in-app message..
+     * @param dismissAnimation Resource ID of a fragment transition to run when the message is dismissed.
+     * @return A new InAppMessageFragment.
      */
-    public static InAppNotificationFragment newInstance(InAppNotification notification, int dismissAnimation) {
+    public static InAppMessageFragment newInstance(InAppMessage message, int dismissAnimation) {
         Bundle args = new Bundle();
-        args.putParcelable(NOTIFICATION, notification);
+        args.putParcelable(MESSAGE, message);
         args.putInt(DISMISS_ANIMATION, dismissAnimation);
 
-        InAppNotificationFragment fragment = new InAppNotificationFragment();
+        InAppMessageFragment fragment = new InAppMessageFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -121,15 +121,15 @@ public class InAppNotificationFragment extends Fragment {
         super.onCreate(savedInstance);
         this.setRetainInstance(true);
 
-        this.notification = getArguments().getParcelable(NOTIFICATION);
+        this.message = getArguments().getParcelable(MESSAGE);
         this.isDismissed = savedInstance != null && savedInstance.getBoolean(DISMISSED, false);
 
-        long duration = notification.getDuration() == null ? DEFAULT_DURATION : notification.getDuration();
+        long duration = message.getDuration() == null ? DEFAULT_DURATION : message.getDuration();
         this.timer = new Timer(duration) {
             @Override
             protected void onFinish() {
                 dismiss(true);
-                ResolutionEvent resolutionEvent = ResolutionEvent.createTimedOutResolutionEvent(notification, timer.getRunTime());
+                ResolutionEvent resolutionEvent = ResolutionEvent.createTimedOutResolutionEvent(message, timer.getRunTime());
                 UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             }
         };
@@ -147,7 +147,7 @@ public class InAppNotificationFragment extends Fragment {
         super.onResume();
         timer.start();
 
-        UAirship.shared().getInAppNotificationManager().onInAppNotificationFragmentResumed(this);
+        UAirship.shared().getInAppMessageManager().onInAppMessageFragmentResumed(this);
     }
 
     @Override
@@ -155,28 +155,28 @@ public class InAppNotificationFragment extends Fragment {
         super.onPause();
         timer.stop();
 
-        UAirship.shared().getInAppNotificationManager().onInAppNotificationFragmentPaused(this);
+        UAirship.shared().getInAppMessageManager().onInAppMessageFragmentPaused(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (notification == null || notification.getAlert() == null) {
+        if (message == null || message.getAlert() == null) {
             dismiss(false);
-            UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+            UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
             return null;
         }
 
-        int primaryColor = notification.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : notification.getPrimaryColor();
-        int secondaryColor = notification.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : notification.getSecondaryColor();
+        int primaryColor = message.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : message.getPrimaryColor();
+        int secondaryColor = message.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : message.getSecondaryColor();
 
-        final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(R.layout.ua_fragment_ian, container, false);
+        final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(R.layout.ua_fragment_iam, container, false);
         view.setListener(new SwipeDismissViewLayout.Listener() {
             @Override
             public void onDismissed(View view) {
                 dismiss(false);
-                UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+                UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
-                ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(notification, timer.getRunTime());
+                ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
                 UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             }
 
@@ -194,17 +194,17 @@ public class InAppNotificationFragment extends Fragment {
         });
 
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-        layoutParams.gravity = notification.getPosition() == InAppNotification.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
+        layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
         view.setLayoutParams(layoutParams);
 
-        final CardView cardView = (CardView) view.findViewById(R.id.in_app_notification);
+        final CardView cardView = (CardView) view.findViewById(R.id.in_app_message);
         cardView.setCardBackgroundColor(primaryColor);
 
-        if (!notification.getClickActionValues().isEmpty()) {
+        if (!message.getClickActionValues().isEmpty()) {
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onNotificationClicked(v);
+                    onMessageClicked(v);
                 }
             });
         } else {
@@ -213,21 +213,21 @@ public class InAppNotificationFragment extends Fragment {
         }
 
         TextView alertView = (TextView) cardView.findViewById(R.id.alert);
-        alertView.setText(notification.getAlert());
+        alertView.setText(message.getAlert());
         alertView.setTextColor(secondaryColor);
 
         View buttonDivider = view.findViewById(R.id.action_divider);
         buttonDivider.setBackgroundColor(secondaryColor);
 
         View actionButtons = cardView.findViewById(R.id.action_buttons);
-        NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(notification.getButtonGroupId());
+        NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(message.getButtonGroupId());
         if (group != null) {
 
             Resources r = getResources();
             int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, r.getDisplayMetrics());
 
             for (final NotificationActionButton actionButton : group.getNotificationActionButtons()) {
-                Button button = (Button) inflater.inflate(R.layout.ua_ian_button, (ViewGroup) actionButtons, false);
+                Button button = (Button) inflater.inflate(R.layout.ua_iam_button, (ViewGroup) actionButtons, false);
 
                 final Drawable drawable = getResources().getDrawable(actionButton.getIcon());
                 drawable.setBounds(0, 0, size, size);
@@ -262,9 +262,9 @@ public class InAppNotificationFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     dismiss(true);
-                    UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+                    UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
-                    ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(notification, timer.getRunTime());
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
                 }
             });
@@ -305,12 +305,12 @@ public class InAppNotificationFragment extends Fragment {
     }
 
     /**
-     * Gets the InAppNotification.
+     * Gets the in-app message.
      *
-     * @return The InAppNotification.
+     * @return The in-app message.
      */
-    public InAppNotification getNotification() {
-        return notification;
+    public InAppMessage getMessage() {
+        return message;
     }
 
     /**
@@ -323,35 +323,35 @@ public class InAppNotificationFragment extends Fragment {
     }
 
     /**
-     * Called when the notification body is clicked. Will dismiss the fragment and run
-     * actions with the  {@link InAppNotification#getClickActionValues()}.
+     * Called when the message body is clicked. Will dismiss the fragment and run
+     * actions with the {@link InAppMessage#getClickActionValues()}.
      *
      * @param view The view that was clicked.
      */
-    protected void onNotificationClicked(View view) {
+    protected void onMessageClicked(View view) {
         dismiss(true);
-        runActions(notification.getClickActionValues());
-        UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+        runActions(message.getClickActionValues());
+        UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
-        ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(notification, timer.getRunTime());
+        ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
     }
 
     /**
-     * Called when a notification button is clicked. Will dismiss the fragment and run
-     * actions for the button's ID in {@link InAppNotification#getButtonActionValues(String)}.
+     * Called when a message button is clicked. Will dismiss the fragment and run
+     * actions for the button's ID in {@link InAppMessage#getButtonActionValues(String)}.
      *
      * @param view The view that was clicked.
      * @param actionButton The associated button.
      */
     protected void onButtonClicked(View view, NotificationActionButton actionButton) {
-        Logger.info("In app action clicked: " + actionButton.getId());
+        Logger.info("In-app message button clicked: " + actionButton.getId());
         dismiss(true);
 
-        runActions(notification.getButtonActionValues(actionButton.getId()));
-        UAirship.shared().getInAppNotificationManager().onInAppNotificationFinished(notification);
+        runActions(message.getButtonActionValues(actionButton.getId()));
+        UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
-        ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), notification, actionButton, timer.getRunTime());
+        ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
     }
 

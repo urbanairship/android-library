@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.UAirship;
@@ -46,13 +46,13 @@ public class DisplayEventTest {
     @Test
     public void testDisplayEvent() throws JSONException {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
-        InAppNotification notification = new InAppNotification.Builder().setId("notification id").create();
+        InAppMessage message = new InAppMessage.Builder().setId("message id").create();
 
-        DisplayEvent event = new DisplayEvent(notification);
+        DisplayEvent event = new DisplayEvent(message);
 
-        EventTestUtils.validateEventValue(event, "id", "notification id");
+        EventTestUtils.validateEventValue(event, "id", "message id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        assertEquals("ian_display", event.getType());
+        assertEquals("in_app_display", event.getType());
         assertTrue(event.isValid());
     }
 
@@ -62,13 +62,13 @@ public class DisplayEventTest {
     @Test
     public void testDisplayEventNoConversionSendId() throws JSONException {
         UAirship.shared().getAnalytics().setConversionSendId(null);
-        InAppNotification notification = new InAppNotification.Builder().setId("notification id").create();
+        InAppMessage message = new InAppMessage.Builder().setId("message id").create();
 
-        DisplayEvent event = new DisplayEvent(notification);
+        DisplayEvent event = new DisplayEvent(message);
 
-        EventTestUtils.validateEventValue(event, "id", "notification id");
+        EventTestUtils.validateEventValue(event, "id", "message id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", null);
-        assertEquals("ian_display", event.getType());
+        assertEquals("in_app_display", event.getType());
         assertTrue(event.isValid());
 
     }
@@ -78,9 +78,9 @@ public class DisplayEventTest {
      */
     @Test
     public void testInvalidEvent() throws JSONException {
-        InAppNotification notification = new InAppNotification.Builder().create();
+        InAppMessage message = new InAppMessage.Builder().create();
 
-        DisplayEvent event = new DisplayEvent(notification);
+        DisplayEvent event = new DisplayEvent(message);
         assertFalse(event.isValid());
     }
 }

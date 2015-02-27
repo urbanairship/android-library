@@ -32,8 +32,8 @@ import android.os.Bundle;
 
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.ian.InAppNotificationManager;
-import com.urbanairship.push.ian.InAppNotification;
+import com.urbanairship.push.iam.InAppMessage;
+import com.urbanairship.push.iam.InAppMessageManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,22 +54,22 @@ public class CoreReceiverTest {
         when(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(mock(NotificationManager.class));
     }
     /**
-     * Test when a notification is opened it clears the pending in app notification.
+     * Test when a notification is opened it clears the pending in-app message.
      */
     @Test
-    public void testOpenProxyClearPendingInAppNotification() {
-        InAppNotification inAppNotification = new InAppNotification.Builder()
+    public void testOpenProxyClearPendingInAppMessage() {
+        InAppMessage inAppMessage = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
                 .create();
 
-        // Set the pending IAN
-        InAppNotificationManager inAppNotificationManager = UAirship.shared().getInAppNotificationManager();
-        inAppNotificationManager.setPendingNotification(inAppNotification);
+        // Set the pending in-app message
+        InAppMessageManager inAppMessageManager = UAirship.shared().getInAppMessageManager();
+        inAppMessageManager.setPendingMessage(inAppMessage);
 
-        // Create the push message with the IAN
+        // Create the push message with the in-app message
         Bundle pushBundle = new Bundle();
-        pushBundle.putString(PushMessage.EXTRA_IN_APP_NOTIFICATION, inAppNotification.toJsonValue().toString());
+        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppMessage.toJsonValue().toString());
         PushMessage message = new PushMessage(pushBundle);
 
         // Create the intent
@@ -78,27 +78,27 @@ public class CoreReceiverTest {
         // Call the proxy
         CoreReceiver.handleNotificationOpenedProxy(context, intent);
 
-        assertNull(inAppNotificationManager.getPendingNotification());
+        assertNull(inAppMessageManager.getPendingMessage());
     }
 
 
     /**
-     * Test when a notification is opened it clears the pending in app notification.
+     * Test when a notification is opened it clears the pending in-app message
      */
     @Test
     public void testButtonClickProxyClearPendingInAppNotification() {
-        InAppNotification inAppNotification = new InAppNotification.Builder()
+        InAppMessage inAppMessage = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
                 .create();
 
-        // Set the pending IAN
-        InAppNotificationManager inAppNotificationManager = UAirship.shared().getInAppNotificationManager();
-        inAppNotificationManager.setPendingNotification(inAppNotification);
+        // Set the pending in-app message
+        InAppMessageManager inAppMessageManager = UAirship.shared().getInAppMessageManager();
+        inAppMessageManager.setPendingMessage(inAppMessage);
 
-        // Create the push message with the IAN
+        // Create the push message with the in-app message
         Bundle pushBundle = new Bundle();
-        pushBundle.putString(PushMessage.EXTRA_IN_APP_NOTIFICATION, inAppNotification.toJsonValue().toString());
+        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppMessage.toJsonValue().toString());
         PushMessage message = new PushMessage(pushBundle);
 
         // Create the intent
@@ -109,6 +109,6 @@ public class CoreReceiverTest {
         // Call the proxy
         CoreReceiver.handleNotificationButtonOpenedProxy(context, intent);
 
-        assertNull(inAppNotificationManager.getPendingNotification());
+        assertNull(inAppMessageManager.getPendingMessage());
     }
 }
