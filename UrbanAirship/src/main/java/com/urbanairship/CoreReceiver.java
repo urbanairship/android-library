@@ -37,9 +37,9 @@ import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.ian.InAppNotification;
-import com.urbanairship.push.ian.InAppNotificationManager;
-import com.urbanairship.push.ian.ResolutionEvent;
+import com.urbanairship.push.iam.InAppMessage;
+import com.urbanairship.push.iam.InAppMessageManager;
+import com.urbanairship.push.iam.ResolutionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 
@@ -93,16 +93,16 @@ public class CoreReceiver extends BroadcastReceiver {
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
 
-        // If the push that is opened is the pending notification and not currently the notification
+        // If the push that is opened is the pending in-app message and not currently the in-app message
         // that is displaying, clear it and send a direct open resolution event.
-        InAppNotificationManager ianManager = UAirship.shared().getInAppNotificationManager();
-        InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(ianManager.getPendingNotification()) && !ian.equals(ianManager.getCurrentNotification())) {
-            Logger.info("Clearing InAppNotification due to directly interacting with the InAppNotification's push notification.");
-            UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
+        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
+        InAppMessage iam = message.getInAppMessage();
+        if (iam != null && iam.equals(iamManager.getPendingMessage()) && !iam.equals(iamManager.getCurrentMessage())) {
+            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
+            iamManager.setPendingMessage(null);
 
             // Direct open event
-            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(ian);
+            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(iam);
             UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
 
@@ -155,16 +155,16 @@ public class CoreReceiver extends BroadcastReceiver {
             UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
         }
 
-        // If the push that is opened is the pending notification and not currently the notification
+        // If the push that is opened is the pending in-app message and not currently the in-app message
         // that is displaying, clear it and send a direct open resolution event.
-        InAppNotificationManager ianManager = UAirship.shared().getInAppNotificationManager();
-        InAppNotification ian = message.getInAppNotification();
-        if (ian != null && ian.equals(ianManager.getPendingNotification()) && !ian.equals(ianManager.getCurrentNotification())) {
-            Logger.info("Clearing InAppNotification due to directly interacting with the InAppNotification's push notification.");
-            UAirship.shared().getInAppNotificationManager().setPendingNotification(null);
+        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
+        InAppMessage iam = message.getInAppMessage();
+        if (iam != null && iam.equals(iamManager.getPendingMessage()) && !iam.equals(iamManager.getCurrentMessage())) {
+            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
+            iamManager.setPendingMessage(null);
 
             // Direct open event
-            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(ian);
+            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(iam);
             UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
 

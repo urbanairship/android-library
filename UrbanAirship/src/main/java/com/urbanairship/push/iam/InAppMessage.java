@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.graphics.Color;
 import android.os.Parcel;
@@ -45,19 +45,19 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * In app notification model object.
+ * In-app message model object.
  */
-public class InAppNotification implements Parcelable, JsonSerializable {
+public class InAppMessage implements Parcelable, JsonSerializable {
 
     private static final long DEFAULT_EXPIRY_MS = 2592000000l; // 30 days
 
     /**
-     * Display notification on top of the screen.
+     * Display the message on top of the screen.
      */
     public static final int POSITION_TOP = 1;
 
     /**
-     * Display notification on bottom of the screen.
+     * Display the message on bottom of the screen.
      */
     public static final int POSITION_BOTTOM = 0;
 
@@ -79,7 +79,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     /**
      * Default constructor
      */
-    InAppNotification() {}
+    InAppMessage() {}
 
     /**
      * Returns the expiration time in milliseconds since Jan. 1, 1970, midnight GMT.
@@ -91,18 +91,18 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Tests if the notification is expired or not.
+     * Tests if the message is expired or not.
      *
-     * @return {@code true} if the notification is expired, otherwise {@code false}.
+     * @return {@code true} if the message is expired, otherwise {@code false}.
      */
     public boolean isExpired() {
         return System.currentTimeMillis() > expiryMS;
     }
 
     /**
-     * Returns the notification's ID
+     * Returns the message's ID
      *
-     * @return The notification's ID.
+     * @return The message's ID.
      */
     public String getId() {
         return id;
@@ -118,9 +118,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Returns the notification's alert.
+     * Returns the message's alert.
      *
-     * @return The notification's alert.
+     * @return The message's alert.
      */
     public String getAlert() {
         return alert;
@@ -158,83 +158,83 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Returns the duration in milliseconds for how long the notification should be shown.
+     * Returns the duration in milliseconds for how long the message should be shown.
      *
-     * @return The duration of the notification in milliseconds.
+     * @return The duration of the message in milliseconds.
      */
     public Long getDuration() {
         return durationMilliseconds;
     }
 
     /**
-     * Returns the position of the in app notification. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}.
+     * Returns the position of the in-app message. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}.
      *
-     * @return The notification's position.
+     * @return The message's position.
      */
     public int getPosition() {
         return position;
     }
 
     /**
-     * Returns the notification's primary color.
+     * Returns the message's primary color.
      *
-     * @return The notification's primary color.
+     * @return The message's primary color.
      */
     public Integer getPrimaryColor() {
         return primaryColor;
     }
 
     /**
-     * Returns the notification's secondary color.
+     * Returns the message's secondary color.
      *
-     * @return The notification's secondary color.
+     * @return The message's secondary color.
      */
     public Integer getSecondaryColor() {
         return secondaryColor;
     }
 
     /**
-     * InAppNotification parcel creator.
+     * InAppMessage parcel creator.
      */
-    public static final Parcelable.Creator<InAppNotification> CREATOR = new Parcelable.Creator<InAppNotification>() {
+    public static final Parcelable.Creator<InAppMessage> CREATOR = new Parcelable.Creator<InAppMessage>() {
 
         @Override
-        public InAppNotification createFromParcel(Parcel in) {
-            InAppNotification inAppNotification = new InAppNotification();
-            inAppNotification.id = in.readString();
-            inAppNotification.alert = in.readString();
-            inAppNotification.expiryMS = in.readLong();
-            inAppNotification.position = in.readInt();
+        public InAppMessage createFromParcel(Parcel in) {
+            InAppMessage inAppMessage = new InAppMessage();
+            inAppMessage.id = in.readString();
+            inAppMessage.alert = in.readString();
+            inAppMessage.expiryMS = in.readLong();
+            inAppMessage.position = in.readInt();
 
             if (in.readByte() == 1) {
-                inAppNotification.durationMilliseconds = in.readLong();
+                inAppMessage.durationMilliseconds = in.readLong();
             }
             if (in.readByte() == 1) {
-                inAppNotification.primaryColor = in.readInt();
+                inAppMessage.primaryColor = in.readInt();
             }
             if (in.readByte() == 1) {
-                inAppNotification.secondaryColor = in.readInt();
+                inAppMessage.secondaryColor = in.readInt();
             }
 
             try {
-                inAppNotification.extras = JsonValue.parseString(in.readString()).getMap();
+                inAppMessage.extras = JsonValue.parseString(in.readString()).getMap();
             } catch (JsonException e) {
-                Logger.error("InAppNotification - unable to parse extras from parcel.");
-                inAppNotification.extras = new JsonMap(null);
+                Logger.error("InAppMessage - unable to parse extras from parcel.");
+                inAppMessage.extras = new JsonMap(null);
             }
 
-            inAppNotification.buttonGroupId = in.readString();
-            inAppNotification.buttonActionValues = new HashMap<>();
-            in.readMap(inAppNotification.buttonActionValues, ActionValue.class.getClassLoader());
+            inAppMessage.buttonGroupId = in.readString();
+            inAppMessage.buttonActionValues = new HashMap<>();
+            in.readMap(inAppMessage.buttonActionValues, ActionValue.class.getClassLoader());
 
-            inAppNotification.clickActionValues = new HashMap<>();
-            in.readMap(inAppNotification.clickActionValues, ActionValue.class.getClassLoader());
-            return inAppNotification;
+            inAppMessage.clickActionValues = new HashMap<>();
+            in.readMap(inAppMessage.clickActionValues, ActionValue.class.getClassLoader());
+            return inAppMessage;
         }
 
         @Override
-        public InAppNotification[] newArray(int size) {
-            return new InAppNotification[size];
+        public InAppMessage[] newArray(int size) {
+            return new InAppMessage[size];
         }
     };
 
@@ -280,13 +280,13 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     }
 
     /**
-     * Creates an InAppNotification from a JSON payload.
+     * Creates an in-app message from a JSON payload.
      *
      * @param json The json payload.
-     * @return The in app notification, or null if the payload defines an invalid in app notification.
+     * @return The in-app message, or null if the payload defines an invalid in-app message.
      * @throws JsonException If the JSON payload is unable to parsed.
      */
-    public static InAppNotification parseJson(String json) throws JsonException {
+    public static InAppMessage parseJson(String json) throws JsonException {
         JsonMap inAppJson = JsonValue.parseString(json).getMap();
 
         if (inAppJson == null) {
@@ -297,7 +297,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         JsonMap actionsJson = inAppJson.opt("actions").getMap();
 
         if (displayJson == null || !"banner".equals(displayJson.opt("type").getString())) {
-            Logger.error("InAppNotification - Unable to parse json: " + json);
+            Logger.error("InAppMessage - Unable to parse json: " + json);
             return null;
         }
 
@@ -370,7 +370,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         try {
             return Color.parseColor(colorString);
         } catch (IllegalArgumentException e) {
-            Logger.warn("InAppNotification - Unable to parse color: " + colorString, e);
+            Logger.warn("InAppMessage - Unable to parse color: " + colorString, e);
             return null;
         }
     }
@@ -420,11 +420,11 @@ public class InAppNotification implements Parcelable, JsonSerializable {
             return true;
         }
 
-        if (!(o instanceof InAppNotification)) {
+        if (!(o instanceof InAppMessage)) {
             return false;
         }
 
-        InAppNotification other = (InAppNotification) o;
+        InAppMessage other = (InAppMessage) o;
 
         return (id == null ? other.id == null : id.equals(other.id)) &&
                 (alert == null ? other.alert == null : alert.equals(other.alert)) &&
@@ -461,7 +461,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
     }
 
     /**
-     * InAppNotification Builder.
+     * InAppMessage Builder.
      */
     public static class Builder {
 
@@ -486,28 +486,28 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Creates a new Builder with the values of the specified notification.
+         * Creates a new Builder with the values of the specified message.
          *
-         * @param notification The notification.
+         * @param message The message.
          */
-        public Builder(InAppNotification notification) {
-            this.id = notification.id;
-            this.buttonGroupId = notification.buttonGroupId;
-            this.alert = notification.alert;
-            this.expiryMS = notification.expiryMS;
-            this.durationMilliseconds = notification.durationMilliseconds;
-            this.position = notification.position;
-            this.clickActionValues = new HashMap<>(notification.clickActionValues);
-            this.buttonActionValues = new HashMap<>(notification.buttonActionValues);
-            this.extras = notification.extras;
-            this.primaryColor = notification.primaryColor;
-            this.secondaryColor = notification.secondaryColor;
+        public Builder(InAppMessage message) {
+            this.id = message.id;
+            this.buttonGroupId = message.buttonGroupId;
+            this.alert = message.alert;
+            this.expiryMS = message.expiryMS;
+            this.durationMilliseconds = message.durationMilliseconds;
+            this.position = message.position;
+            this.clickActionValues = new HashMap<>(message.clickActionValues);
+            this.buttonActionValues = new HashMap<>(message.buttonActionValues);
+            this.extras = message.extras;
+            this.primaryColor = message.primaryColor;
+            this.secondaryColor = message.secondaryColor;
         }
 
         /**
-         * Sets the notification's ID.
+         * Sets the message's ID.
          *
-         * @param id The notification's ID.
+         * @param id The message's ID.
          * @return The builder.
          * @hide
          */
@@ -517,7 +517,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's expiry in milliseconds. If no expiry is set, it will default
+         * Sets the message's expiry in milliseconds. If no expiry is set, it will default
          * to 30 days from the creation date.
          *
          * @param milliseconds The expiry date in milliseconds.
@@ -530,9 +530,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
 
 
         /**
-         * Sets the notification's extras.
+         * Sets the message's extras.
          *
-         * @param extras The notification's extras.
+         * @param extras The message's extras.
          * @return The builder.
          */
         public Builder setExtras(JsonMap extras) {
@@ -541,9 +541,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's on click action values.
+         * Sets the message's on click action values.
          *
-         * @param actionValues The notification's on click action values.
+         * @param actionValues The message's on click action values.
          * @return The builder.
          */
         public Builder setClickActionValues(Map<String, ActionValue> actionValues) {
@@ -557,7 +557,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's button actions for a given button ID.
+         * Sets the message's button actions for a given button ID.
          *
          * @param buttonId The button's ID.
          * @param actionValues The button's action values.
@@ -573,9 +573,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's button group ID.
+         * Sets the message's button group ID.
          *
-         * @param buttonGroupId The notification's button group ID.
+         * @param buttonGroupId The message's button group ID.
          * @return The builder.
          */
         public Builder setButtonGroupId(String buttonGroupId) {
@@ -584,9 +584,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's alert.
+         * Sets the message's alert.
          *
-         * @param alert The notification's alert.
+         * @param alert The message's alert.
          * @return The builder.
          */
         public Builder setAlert(String alert) {
@@ -595,7 +595,7 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the duration to show the notification for.
+         * Sets the duration to show the message for.
          *
          * @param milliseconds The duration in milliseconds.
          * @return The builder.
@@ -611,16 +611,16 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's position. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}
+         * Sets the message's position. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}
          * are acceptable values. Any other value will result in an illegal argument exception.
          *
-         * @param position The notification's position.
+         * @param position The message's position.
          * @return The builder.
          * @throws IllegalArgumentException If the position is not {@link #POSITION_BOTTOM} nor {@link #POSITION_TOP}.
          */
         public Builder setPosition(int position) {
             if (position != POSITION_TOP && position != POSITION_BOTTOM) {
-                throw new IllegalArgumentException("Position must be either InAppNotification.POSITION_BOTTOM or InAppNotification.POSITION_TOP.");
+                throw new IllegalArgumentException("Position must be either InAppMessage.POSITION_BOTTOM or InAppMessage.POSITION_TOP.");
             }
 
             this.position = position;
@@ -628,9 +628,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's primary color.
+         * Sets the message's primary color.
          *
-         * @param color The notification's primary color.
+         * @param color The message's primary color.
          * @return The builder.
          */
         public Builder setPrimaryColor(Integer color) {
@@ -639,9 +639,9 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Sets the notification's secondary color.
+         * Sets the message's secondary color.
          *
-         * @param color The notification's secondary color.
+         * @param color The message's secondary color.
          * @return The builder.
          */
         public Builder setSecondaryColor(Integer color) {
@@ -650,26 +650,26 @@ public class InAppNotification implements Parcelable, JsonSerializable {
         }
 
         /**
-         * Creates the notification.
+         * Creates the message.
          *
-         * @return The created in app notification.
+         * @return The created in-app message.
          */
-        public InAppNotification create() {
-            InAppNotification notification = new InAppNotification();
+        public InAppMessage create() {
+            InAppMessage message = new InAppMessage();
 
-            notification.expiryMS = expiryMS == null ? System.currentTimeMillis() + DEFAULT_EXPIRY_MS : expiryMS;
-            notification.id = id;
-            notification.extras = extras == null ? new JsonMap(null) : extras;
-            notification.alert = alert;
-            notification.durationMilliseconds = durationMilliseconds;
-            notification.buttonGroupId = buttonGroupId;
-            notification.buttonActionValues = buttonActionValues == null ? new HashMap<String, Map<String, ActionValue>>() : buttonActionValues;
-            notification.clickActionValues = clickActionValues == null ? new HashMap<String, ActionValue>() : clickActionValues;
-            notification.position = position;
-            notification.primaryColor = primaryColor;
-            notification.secondaryColor = secondaryColor;
+            message.expiryMS = expiryMS == null ? System.currentTimeMillis() + DEFAULT_EXPIRY_MS : expiryMS;
+            message.id = id;
+            message.extras = extras == null ? new JsonMap(null) : extras;
+            message.alert = alert;
+            message.durationMilliseconds = durationMilliseconds;
+            message.buttonGroupId = buttonGroupId;
+            message.buttonActionValues = buttonActionValues == null ? new HashMap<String, Map<String, ActionValue>>() : buttonActionValues;
+            message.clickActionValues = clickActionValues == null ? new HashMap<String, ActionValue>() : clickActionValues;
+            message.position = position;
+            message.primaryColor = primaryColor;
+            message.secondaryColor = secondaryColor;
 
-            return notification;
+            return message;
         }
     }
 }

@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -34,12 +34,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * An event that is sent the first time an {@link com.urbanairship.push.ian.InAppNotification} is displayed.
+ * An event that is sent the first time an {@link InAppMessage} is displayed.
  *
  * @hide
  */
 public class DisplayEvent extends Event {
-    private static final String TYPE = "ian_display";
+    private static final String TYPE = "in_app_display";
 
     private static final String ID = "id";
     private static final String CONVERSION_SEND_ID = "conversion_send_id";
@@ -49,10 +49,10 @@ public class DisplayEvent extends Event {
     /**
      * Default constructor.
      *
-     * @param inAppNotification The InAppNotification.
+     * @param message The in-app message.
      */
-    public DisplayEvent(InAppNotification inAppNotification) {
-        id = inAppNotification.getId();
+    public DisplayEvent(InAppMessage message) {
+        id = message.getId();
     }
 
     @Override

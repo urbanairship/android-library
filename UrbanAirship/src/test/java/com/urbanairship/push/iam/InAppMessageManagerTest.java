@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push.ian;
+package com.urbanairship.push.iam;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -66,10 +66,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class InAppNotificationManagerTest {
+public class InAppMessageManagerTest {
 
-    private InAppNotificationManager inAppNotificationManager;
-    private InAppNotification notification;
+    private InAppMessageManager inAppMessageManager;
+    private InAppMessage message;
 
     private Activity mockActivity;
     private Analytics mockAnalytics;
@@ -83,35 +83,35 @@ public class InAppNotificationManagerTest {
         mockAnalytics = mock(Analytics.class, CALLS_REAL_METHODS);
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
-        notification = new InAppNotification.Builder()
+        message = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setId("id")
                 .setExpiry(Long.MAX_VALUE / 1000 * 1000) // Work around for precision loss issue
                 .create();
 
-        inAppNotificationManager = new InAppNotificationManager(TestApplication.getApplication().preferenceDataStore);
+        inAppMessageManager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore);
     }
 
     /**
-     * Test setting the pending notification persists.
+     * Test setting the pending in-app message persists.
      */
     @Test
-    public void testSetPendingNotification() {
-        inAppNotificationManager.setPendingNotification(notification);
+    public void testSetPendingMessage() {
+        inAppMessageManager.setPendingMessage(message);
 
-        assertEquals(notification, inAppNotificationManager.getPendingNotification());
+        assertEquals(message, inAppMessageManager.getPendingMessage());
     }
 
     /**
-     * Test clearing the pending notification.
+     * Test clearing the pending in-app message.
      */
     @Test
-    public void testClearPendingNotification() {
-        inAppNotificationManager.setPendingNotification(notification);
+    public void testClearPendingMessage() {
+        inAppMessageManager.setPendingMessage(message);
 
         // Clear it
-        inAppNotificationManager.setPendingNotification(null);
-        assertNull(inAppNotificationManager.getPendingNotification());
+        inAppMessageManager.setPendingMessage(null);
+        assertNull(inAppMessageManager.getPendingMessage());
     }
 
     /**
@@ -119,11 +119,11 @@ public class InAppNotificationManagerTest {
      */
     @Test
     public void testSetDisplayAsapEnabled() {
-        inAppNotificationManager.setDisplayAsapEnabled(true);
-        assertTrue(inAppNotificationManager.isDisplayAsapEnabled());
+        inAppMessageManager.setDisplayAsapEnabled(true);
+        assertTrue(inAppMessageManager.isDisplayAsapEnabled());
 
-        inAppNotificationManager.setDisplayAsapEnabled(false);
-        assertFalse(inAppNotificationManager.isDisplayAsapEnabled());
+        inAppMessageManager.setDisplayAsapEnabled(false);
+        assertFalse(inAppMessageManager.isDisplayAsapEnabled());
     }
 
     /**
@@ -131,39 +131,39 @@ public class InAppNotificationManagerTest {
      */
     @Test
     public void testSetAutoDisplayEnabled() {
-        inAppNotificationManager.setAutoDisplayEnabled(true);
-        assertTrue(inAppNotificationManager.isAutoDisplayEnabled());
+        inAppMessageManager.setAutoDisplayEnabled(true);
+        assertTrue(inAppMessageManager.isAutoDisplayEnabled());
 
-        inAppNotificationManager.setDisplayAsapEnabled(false);
-        assertFalse(inAppNotificationManager.isDisplayAsapEnabled());
+        inAppMessageManager.setDisplayAsapEnabled(false);
+        assertFalse(inAppMessageManager.isDisplayAsapEnabled());
     }
 
     /**
-     * Test showing the pending notification
+     * Test showing the pending in-app message.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testShowPendingNotification() {
+    public void testShowPendingMessage() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set and show the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
-        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
+        // Set and show the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
+        assertTrue(inAppMessageManager.showPendingMessage(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
 
         // Verify a fragment was added
         verify(transaction).setCustomAnimations(android.R.animator.fade_in, 0);
-        verify(transaction).add(eq(android.R.id.custom), argThat(new ArgumentMatcher<InAppNotificationFragment>() {
+        verify(transaction).add(eq(android.R.id.custom), argThat(new ArgumentMatcher<InAppMessageFragment>() {
             @Override
             public boolean matches(Object o) {
-                if (o instanceof InAppNotificationFragment) {
-                    InAppNotificationFragment fragment = (InAppNotificationFragment) o;
+                if (o instanceof InAppMessageFragment) {
+                    InAppMessageFragment fragment = (InAppMessageFragment) o;
                     fragment.onCreate(null);
 
                     return fragment.getDismissAnimation() == android.R.animator.fade_out &&
-                            fragment.getNotification().equals(notification);
+                            fragment.getMessage().equals(message);
                 }
                 return false;
             }
@@ -174,31 +174,31 @@ public class InAppNotificationManagerTest {
     }
 
     /**
-     * Test showing the pending notification when its expired should result in a resolution event
-     * and the pending notification to not be displayed.
+     * Test showing the pending in-app message when its expired should result in a resolution event
+     * and the pending in-app message to not be displayed.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testShowExpiredPendingNotification() {
+    public void testShowExpiredPendingMessage() {
 
-        final InAppNotification expired = new InAppNotification.Builder()
+        final InAppMessage expired = new InAppMessage.Builder()
                 .setExpiry(0l)
                 .setId(UUID.randomUUID().toString())
                 .create();
 
-        // Set the pending notification
-        inAppNotificationManager.setPendingNotification(expired);
+        // Set the pending in-app message
+        inAppMessageManager.setPendingMessage(expired);
 
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
         // Assert false - did not display
-        assertFalse(inAppNotificationManager.showPendingNotification(mockActivity));
+        assertFalse(inAppMessageManager.showPendingMessage(mockActivity));
 
-        // The pending IAN should be removed
-        assertNull(inAppNotificationManager.getPendingNotification());
+        // The pending in-app message should be removed
+        assertNull(inAppMessageManager.getPendingMessage());
 
         // Verify the right event was added
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
@@ -221,62 +221,62 @@ public class InAppNotificationManagerTest {
     }
 
     /**
-     * Test showing the pending notification when its already showing does not show a second time.
+     * Test showing the pending in-app message when its already showing does not show a second time.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testShowPendingNotificationAlreadyShowing() {
+    public void testShowPendingMessageAlreadyShowing() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set and show the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
-        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity));
+        // Set and show the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
+        assertTrue(inAppMessageManager.showPendingMessage(mockActivity));
 
         // Call it again
-        assertFalse(inAppNotificationManager.showPendingNotification(mockActivity));
+        assertFalse(inAppMessageManager.showPendingMessage(mockActivity));
 
         // Verify a fragment was added only once (default is times(1))
         verify(transaction).setCustomAnimations(anyInt(), anyInt());
-        verify(transaction).add(anyInt(), any(InAppNotificationFragment.class), anyString());
+        verify(transaction).add(anyInt(), any(InAppMessageFragment.class), anyString());
 
         // Verify we only added a single display event
         verify(mockAnalytics, times(1)).addEvent(any(DisplayEvent.class));
     }
 
     /**
-     * Test when display ASAP is enabled the manager will attempt to display the pending notification when its
+     * Test when display ASAP is enabled the manager will attempt to display the pending in-app message when its
      * set.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testSetPendingNotificationShowAsap() {
+    public void testSetPendingMessageShowAsap() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Enable showing notification ASAP
-        inAppNotificationManager.setDisplayAsapEnabled(true);
+        // Enable showing message ASAP
+        inAppMessageManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppNotificationManager.onActivityResumed(mockActivity);
+        inAppMessageManager.onActivityResumed(mockActivity);
 
-        // Set the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
+        // Set the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
 
         runMainLooperTasks();
 
         // Verify a fragment was added
         verify(transaction).setCustomAnimations(anyInt(), eq(0));
-        verify(transaction).add(eq(android.R.id.content), any(InAppNotificationFragment.class), eq("com.urbanairship.in_app_fragment"));
+        verify(transaction).add(eq(android.R.id.content), any(InAppMessageFragment.class), eq("com.urbanairship.in_app_fragment"));
     }
 
 
     /**
-     * Test when display ASAP is enabled the manager will attempt to display the pending notification when the
+     * Test when display ASAP is enabled the manager will attempt to display the pending in-app message when the
      * next activity is resumed.
      */
     @Test
@@ -287,24 +287,24 @@ public class InAppNotificationManagerTest {
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set the pending notification before setting display ASAP enabled
-        inAppNotificationManager.setPendingNotification(notification);
+        // Set the pending in-app message before setting display ASAP enabled
+        inAppMessageManager.setPendingMessage(message);
 
-        // Enable showing notification ASAP
-        inAppNotificationManager.setDisplayAsapEnabled(true);
+        // Enable showing message ASAP
+        inAppMessageManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppNotificationManager.onActivityResumed(mockActivity);
+        inAppMessageManager.onActivityResumed(mockActivity);
 
         runMainLooperTasks();
 
         // Verify a fragment was added
         verify(transaction).setCustomAnimations(anyInt(), eq(0));
-        verify(transaction).add(eq(android.R.id.content), any(InAppNotificationFragment.class), eq("com.urbanairship.in_app_fragment"));
+        verify(transaction).add(eq(android.R.id.content), any(InAppMessageFragment.class), eq("com.urbanairship.in_app_fragment"));
     }
 
     /**
-     * Test when the app foregrounds it tries to show the pending notification on next activity resume.
+     * Test when the app foregrounds it tries to show the pending in-app message on next activity resume.
      */
     @Test
     @Config(emulateSdk = 18)
@@ -314,77 +314,77 @@ public class InAppNotificationManagerTest {
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set the pending notification before setting show ASAP enabled
-        inAppNotificationManager.setPendingNotification(notification);
+        // Set the pending in-app message before setting show ASAP enabled
+        inAppMessageManager.setPendingMessage(message);
 
         // Notify foreground
-        inAppNotificationManager.onForeground();
+        inAppMessageManager.onForeground();
 
         // Set the current, resumed activity
-        inAppNotificationManager.onActivityResumed(mockActivity);
+        inAppMessageManager.onActivityResumed(mockActivity);
 
         runMainLooperTasks();
 
         // Verify a fragment was added
         verify(transaction).setCustomAnimations(anyInt(), eq(0));
-        verify(transaction).add(eq(android.R.id.content), any(InAppNotificationFragment.class), eq("com.urbanairship.in_app_fragment"));
+        verify(transaction).add(eq(android.R.id.content), any(InAppMessageFragment.class), eq("com.urbanairship.in_app_fragment"));
     }
 
     /**
-     * Test when an InAppNotificationFragment resumes and its no the last resumed fragment it will
+     * Test when an InAppMessageFragment resumes and its no the last resumed fragment it will
      * be dismissed.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testOnInAppNotificationFragmentResumed() {
+    public void testOnInAppMessageFragmentResumed() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set and show the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
+        // Set and show the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
 
         // Show it
-        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
+        assertTrue(inAppMessageManager.showPendingMessage(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
 
         // Try to resume a different fragment
-        InAppNotificationFragment fragment = mock(InAppNotificationFragment.class);
-        inAppNotificationManager.onInAppNotificationFragmentResumed(fragment);
+        InAppMessageFragment fragment = mock(InAppMessageFragment.class);
+        inAppMessageManager.onInAppMessageFragmentResumed(fragment);
 
         // Should dismiss it since its not the current fragment
         verify(fragment).dismiss(false);
     }
 
     /**
-     * Test finishing the pending notification clears it.
+     * Test finishing the pending in-app message clears it.
      */
     @Test
-    public void testOnInAppNotificationFinished() {
-        // Set and show the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
+    public void testOnInAppMessageFinished() {
+        // Set and show the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
 
-        // Notify the pending notification is finished
-        inAppNotificationManager.onInAppNotificationFinished(notification);
+        // Notify the pending in-app message is finished
+        inAppMessageManager.onInAppMessageFinished(message);
 
-        assertNull(inAppNotificationManager.getPendingNotification());
+        assertNull(inAppMessageManager.getPendingMessage());
     }
 
 
     /**
-     * Test set pending notification generates a replace resolution event if a previous, not shown
-     * notification exists.
+     * Test set pending in-app message generates a replace resolution event if a previous, not shown
+     * message exists.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testSetPendingNotificationGeneratesReplaceEvent() {
-        final InAppNotification otherNotification = new InAppNotification.Builder().setId(UUID.randomUUID().toString()).create();
-        // Set the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
+    public void testSetPendingMessageGeneratesReplaceEvent() {
+        final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
+        // Set the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
 
-        // Set another pending notification
-        inAppNotificationManager.setPendingNotification(otherNotification);
+        // Set another pending in-app message
+        inAppMessageManager.setPendingMessage(otherMessage);
 
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
@@ -395,9 +395,9 @@ public class InAppNotificationManagerTest {
 
                 ResolutionEvent event = (ResolutionEvent) o;
                 try {
-                    EventTestUtils.validateEventValue(event, "id", notification.getId());
+                    EventTestUtils.validateEventValue(event, "id", message.getId());
                     EventTestUtils.validateNestedEventValue(event, "resolution", "type", "replaced");
-                    EventTestUtils.validateNestedEventValue(event, "resolution", "replacement_id", otherNotification.getId());
+                    EventTestUtils.validateNestedEventValue(event, "resolution", "replacement_id", otherMessage.getId());
                 } catch (JSONException e) {
                     return false;
                 }
@@ -407,27 +407,27 @@ public class InAppNotificationManagerTest {
     }
 
     /**
-     * Test set pending notification does not generate a replace resolution if the event is already
+     * Test set pending in-app message does not generate a replace resolution if the event is already
      * being displayed.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingNoReplaceEvent() {
-        final InAppNotification otherNotification = new InAppNotification.Builder().setId(UUID.randomUUID().toString()).create();
+        final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
 
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set the pending notification
-        inAppNotificationManager.setPendingNotification(notification);
+        // Set the pending in-app message
+        inAppMessageManager.setPendingMessage(message);
 
         // Show it
-        assertTrue(inAppNotificationManager.showPendingNotification(mockActivity));
+        assertTrue(inAppMessageManager.showPendingMessage(mockActivity));
 
-        // Set another pending notification
-        inAppNotificationManager.setPendingNotification(otherNotification);
+        // Set another pending in-app message
+        inAppMessageManager.setPendingMessage(otherMessage);
 
         verify(mockAnalytics, never()).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
@@ -438,24 +438,24 @@ public class InAppNotificationManagerTest {
     }
 
     /**
-     * Test init checks and removes a expired pending in app notification.
+     * Test init checks and removes a expired pending in app message.
      */
     @Test
     @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testInit() {
-        final InAppNotification expired = new InAppNotification.Builder()
+        final InAppMessage expired = new InAppMessage.Builder()
                 .setExpiry(0l)
                 .setId(UUID.randomUUID().toString())
                 .create();
 
-        // Set the pending notification
-        inAppNotificationManager.setPendingNotification(expired);
+        // Set the pending in-app message
+        inAppMessageManager.setPendingMessage(expired);
 
-        inAppNotificationManager.init();
+        inAppMessageManager.init();
 
-        // The pending IAN should be removed
-        assertNull(inAppNotificationManager.getPendingNotification());
+        // The pending in-app message should be removed
+        assertNull(inAppMessageManager.getPendingMessage());
 
         // Verify the right event was added
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
