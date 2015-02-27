@@ -207,7 +207,8 @@ public class UAirship {
      * of the shared methods.
      *
      * @param application The application (required)
-     * @param readyCallback Optional ready callback.
+     * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
+     * that performs {@code takeOff}.
      */
     public static void takeOff(Application application, OnReadyCallback readyCallback) {
         takeOff(application, null, readyCallback);
@@ -234,7 +235,8 @@ public class UAirship {
      * @param options The launch options. If not null, the options passed in here
      * will override the options loaded from the <code>.properties</code> file. This parameter
      * is useful for specifying options at runtime.
-     * @param readyCallback Optional ready callback.
+     * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
+     * that performs {@code takeOff}.
      */
     public static void takeOff(final Application application, final AirshipConfigOptions options, final OnReadyCallback readyCallback) {
         // the context argument is crucial to pretty much everything
