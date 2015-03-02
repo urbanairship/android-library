@@ -99,7 +99,7 @@ class NamedUserAPIClient {
     }
 
     /**
-     * Disassociate the channel from the name user ID.
+     * Disassociate the channel from the named user ID.
      *
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.

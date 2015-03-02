@@ -526,7 +526,7 @@ public class PushService extends IntentService {
             Logger.error("Update named user failed, will retry.");
             namedUserBackOff = calculateNextBackOff(namedUserBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
-        } else if (response.getStatus() == HttpURLConnection.HTTP_OK) {
+        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             Logger.info("Update named user succeeded with status: " + response.getStatus());
             // When currentId is null, the disassociate request succeeded so we set the associatedId
             // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
