@@ -39,6 +39,6 @@ public class PushEnablePreference extends UACheckBoxPreference {
 
     @Override
     public PreferenceType getPreferenceType() {
-        return PreferenceType.USER_NOTIFICATIONS_ENABLE;
+        return PreferenceType.USER_NOTIFICATIONS_ENABLED;
     }
 }

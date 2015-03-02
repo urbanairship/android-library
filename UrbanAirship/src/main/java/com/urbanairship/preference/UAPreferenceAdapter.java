@@ -106,10 +106,10 @@ public class UAPreferenceAdapter {
             case LOCATION_BACKGROUND_UPDATES_ALLOWED:
                 value = airship.getLocationManager().isBackgroundLocationAllowed();
                 break;
-            case USER_NOTIFICATIONS_ENABLE:
+            case USER_NOTIFICATIONS_ENABLED:
                 value = airship.getPushManager().getUserNotificationsEnabled();
                 break;
-            case QUIET_TIME_ENABLE:
+            case QUIET_TIME_ENABLED:
                 value = airship.getPushManager().isQuietTimeEnabled();
                 break;
             case QUIET_TIME_END:
@@ -120,10 +120,10 @@ public class UAPreferenceAdapter {
                 quietTimes = airship.getPushManager().getQuietTimeInterval();
                 value = quietTimes != null ? quietTimes[0].getTime() : null;
                 break;
-            case SOUND_ENABLE:
+            case SOUND_ENABLED:
                 value = airship.getPushManager().isSoundEnabled();
                 break;
-            case VIBRATE_ENABLE:
+            case VIBRATE_ENABLED:
                 value = airship.getPushManager().isVibrateEnabled();
                 break;
             case CHANNEL_ID:
@@ -131,6 +131,9 @@ public class UAPreferenceAdapter {
                 break;
             case USER_ID:
                 value = airship.getRichPushManager().getRichPushUser().getId();
+                break;
+            case ANALYTICS_ENABLED:
+                value = airship.getAnalytics().isEnabled();
                 break;
         }
 
@@ -156,16 +159,16 @@ public class UAPreferenceAdapter {
             case LOCATION_UPDATES_ENABLED:
                 airship.getLocationManager().setLocationUpdatesEnabled((Boolean) value);
                 break;
-            case USER_NOTIFICATIONS_ENABLE:
+            case USER_NOTIFICATIONS_ENABLED:
                 airship.getPushManager().setUserNotificationsEnabled((Boolean) value);
                 break;
-            case QUIET_TIME_ENABLE:
+            case QUIET_TIME_ENABLED:
                 airship.getPushManager().setQuietTimeEnabled((Boolean) value);
                 break;
-            case SOUND_ENABLE:
+            case SOUND_ENABLED:
                 airship.getPushManager().setSoundEnabled((Boolean) value);
                 break;
-            case VIBRATE_ENABLE:
+            case VIBRATE_ENABLED:
                 airship.getPushManager().setVibrateEnabled((Boolean) value);
                 break;
             case QUIET_TIME_END:
@@ -181,6 +184,9 @@ public class UAPreferenceAdapter {
             case CHANNEL_ID:
             case USER_ID:
                 // do nothing
+                break;
+            case ANALYTICS_ENABLED:
+                airship.getAnalytics().setEnabled((Boolean) value);
                 break;
             default:
                 break;

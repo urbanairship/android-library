@@ -443,6 +443,16 @@ public class AirshipConfigOptions {
             valid = false;
         }
 
+        if (analyticsEnabled && UAStringUtil.isEmpty(analyticsServer)) {
+            Logger.error("Invalid config - analyticsServer is empty or null.");
+            valid = false;
+        }
+
+        if (UAStringUtil.isEmpty(hostURL)) {
+            Logger.error("Invalid config - hostURL is empty or null.");
+            valid = false;
+        }
+
         // If invalid, test for obfuscation and alert the developer
         if (!valid) {
             try {

@@ -80,7 +80,7 @@ public class InAppMessageManagerTest {
         mockActivity = mock(Activity.class);
         when(mockActivity.getFragmentManager()).thenReturn(mock(FragmentManager.class));
 
-        mockAnalytics = mock(Analytics.class, CALLS_REAL_METHODS);
+        mockAnalytics = mock(Analytics.class);
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
         message = new InAppMessage.Builder()

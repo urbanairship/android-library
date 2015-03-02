@@ -54,7 +54,7 @@ class EventDataManager extends DataManager {
     /**
      * Events table contract
      */
-    public static final class Events implements BaseColumns {
+    static final class Events implements BaseColumns {
 
         // This class cannot be instantiated
         private Events() {}
@@ -91,8 +91,7 @@ class EventDataManager extends DataManager {
 
     }
 
-
-    public EventDataManager() {
+    EventDataManager() {
         super(UAirship.getApplicationContext(), DATABASE_NAME, DATABASE_VERSION);
     }
 
@@ -148,13 +147,15 @@ class EventDataManager extends DataManager {
         onCreate(db);
     }
 
+
+
     /**
      * Gets a map of event data
      *
      * @param count Number of events to return, starts from the oldest to the newest.
      * @return Map of event id to event data
      */
-    public Map<String, String> getEvents(int count) {
+    Map<String, String> getEvents(int count) {
         HashMap<String, String> events = new HashMap<>(count);
 
         String[] columns = new String[] {
@@ -179,12 +180,19 @@ class EventDataManager extends DataManager {
     }
 
     /**
+     * Deletes all events.
+     */
+    void deleteAllEvents() {
+        delete(Events.TABLE_NAME, null, null);
+    }
+
+    /**
      * Deletes a single event
      *
      * @param eventId The id of the event to delete
      * @return <code>true</code> if the event was deleted, otherwise <code>false</code>
      */
-    public boolean deleteEvent(String eventId) {
+    boolean deleteEvent(String eventId) {
         return delete(Events.TABLE_NAME, Events.COLUMN_NAME_EVENT_ID + " = ?", new String[] { eventId }) > 0;
     }
 
@@ -194,7 +202,7 @@ class EventDataManager extends DataManager {
      * @param type The type of events to delete
      * @return <code>true</code> if any events where deleted, otherwise <code>false</code>
      */
-    public boolean deleteEventType(String type) {
+    boolean deleteEventType(String type) {
         return delete(Events.TABLE_NAME, Events.COLUMN_NAME_TYPE + " = ?", new String[] { type }) > 0;
     }
 
@@ -204,7 +212,7 @@ class EventDataManager extends DataManager {
      * @param eventIds Ids of the events to delete
      * @return <code>true</code> if any events where deleted, otherwise <code>false</code>
      */
-    public boolean deleteEvents(Set<String> eventIds) {
+    boolean deleteEvents(Set<String> eventIds) {
         if (eventIds == null || eventIds.size() == 0) {
             Logger.verbose("EventDataManager - Nothing to delete. Returning.");
             return false;
@@ -234,7 +242,7 @@ class EventDataManager extends DataManager {
      * @return <code>true</code> if the delete operation was successful,
      * otherwise <code>false</code>
      */
-    public boolean deleteSession(String sessionId) {
+    boolean deleteSession(String sessionId) {
         int deleted = delete(Events.TABLE_NAME, Events.COLUMN_NAME_SESSION_ID + " = ?", new String[] { sessionId });
 
         if (deleted > 0) {
@@ -251,7 +259,7 @@ class EventDataManager extends DataManager {
      *
      * @return The oldest session id if exists, null otherwise
      */
-    public String getOldestSessionId() {
+    String getOldestSessionId() {
         String[] columns = new String[] { Events.COLUMN_NAME_SESSION_ID };
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, Events.ASCENDING_SORT_ORDER, "0, 1");
 
@@ -274,7 +282,7 @@ class EventDataManager extends DataManager {
      *
      * @return The current event count
      */
-    public int getEventCount() {
+    int getEventCount() {
         Integer result = null;
         String[] columns = new String[] { "COUNT(*) as _cnt" };
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, null, null);
@@ -298,7 +306,7 @@ class EventDataManager extends DataManager {
      *
      * @return The current size of the database in bytes
      */
-    public int getDatabaseSize() {
+    int getDatabaseSize() {
         Integer result = null;
         String[] columns = new String[] { "SUM(" + Events.COLUMN_NAME_EVENT_SIZE + ") as _size" };
         Cursor cursor = query(Events.TABLE_NAME, columns, null, null, null, null);
@@ -335,7 +343,7 @@ class EventDataManager extends DataManager {
      *
      * @return Row Id of the event or -1 if the insert failed.
      */
-    public long insertEvent(String eventType, String eventData, String eventId, String sessionId, String eventTime) {
+    long insertEvent(String eventType, String eventData, String eventId, String sessionId, String eventTime) {
         ContentValues values = new ContentValues();
         values.put(EventDataManager.Events.COLUMN_NAME_TYPE, eventType);
         values.put(EventDataManager.Events.COLUMN_NAME_EVENT_ID, eventId);

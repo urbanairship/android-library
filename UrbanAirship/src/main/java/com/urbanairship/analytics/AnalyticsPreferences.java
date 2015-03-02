@@ -13,6 +13,7 @@ class AnalyticsPreferences {
     private static final String MAX_WAIT_KEY = KEY_PREFIX + ".MAX_WAIT";
     private static final String MIN_BATCH_INTERVAL_KEY = KEY_PREFIX + ".MIN_BATCH_INTERVAL";
     private static final String LAST_SEND_KEY = KEY_PREFIX + ".LAST_SEND";
+    private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
 
     static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; //5 MB
     static final int MIN_TOTAL_DB_SIZE_BYTES = 10 * 1024;       //10 KB
@@ -119,5 +120,23 @@ class AnalyticsPreferences {
      */
     void setLastSendTime(long lastSendTime) {
         preferenceDataStore.put(LAST_SEND_KEY, lastSendTime);
+    }
+
+    /**
+     * Sets analytics enabled flag.
+     *
+     * @param enabled {@code true} to enable, {@code false} to disable.
+     */
+    void setAnalyticsEnabled(boolean enabled) {
+        preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
+    }
+
+    /**
+     * Returns the analytics enable flag.
+     *
+     * @return {@code true} if enabled, otherwise {@code false}.
+     */
+    boolean isAnalyticsEnabled() {
+        return preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
     }
 }
