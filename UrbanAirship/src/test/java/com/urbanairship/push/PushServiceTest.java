@@ -275,78 +275,29 @@ public class PushServiceTest {
     }
 
     /**
-     * Test associate named user succeeds if the status is 200.
+     * Test associate named user succeeds if the status is 2xx.
      */
     @Test
     public void testAssociateNamedUserSucceed() {
-        namedUser.setId(null);
-        pushManager.getNamedUser().setId(fakeNamedUserId);
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        for (int statusCode = 200; statusCode < 300; statusCode++) {
+            // Set up a 2xx response
+            Response response = Mockito.mock(Response.class);
+            when(namedUserClient.associate(fakeNamedUserId, fakeChannelId)).thenReturn(response);
+            when(response.getStatus()).thenReturn(statusCode);
 
-        // Set up a 200 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(namedUserClient.associate(fakeNamedUserId, fakeChannelId)).thenReturn(response);
+            namedUser.setLastUpdatedToken(fakeToken);
+            namedUser.setId(fakeNamedUserId);
+            pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
+            Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
 
-        pushService.onHandleIntent(intent);
+            pushService.onHandleIntent(intent);
 
-        assertEquals("The named user ID should match",
-                fakeNamedUserId, pushManager.getNamedUser().getId());
-        assertEquals("The tokens should match",
-                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
-        Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
-    }
-
-    /**
-     * Test associate named user succeeds if the status is 201.
-     */
-    @Test
-    public void testAssociateNamedUserSucceed201() {
-        namedUser.setId(null);
-        pushManager.getNamedUser().setId(fakeNamedUserId);
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-
-        // Set up a 201 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_CREATED);
-        when(namedUserClient.associate(fakeNamedUserId, fakeChannelId)).thenReturn(response);
-
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-
-        pushService.onHandleIntent(intent);
-
-        assertEquals("The named user ID should match",
-                fakeNamedUserId, pushManager.getNamedUser().getId());
-        assertEquals("The tokens should match",
-                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
-        Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
-    }
-
-    /**
-     * Test associate named user succeeds if the status is 202.
-     */
-    @Test
-    public void testAssociateNamedUserSucceed202() {
-        namedUser.setId(null);
-        pushManager.getNamedUser().setId(fakeNamedUserId);
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-
-        // Set up a 202 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_ACCEPTED);
-        when(namedUserClient.associate(fakeNamedUserId, fakeChannelId)).thenReturn(response);
-
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-
-        pushService.onHandleIntent(intent);
-
-        assertEquals("The named user ID should match",
-                fakeNamedUserId, pushManager.getNamedUser().getId());
-        assertEquals("The tokens should match",
-                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
-        Mockito.verify(namedUserClient, Mockito.times(1)).associate(Mockito.any(String.class), Mockito.any(String.class));
+            assertEquals("The named user ID should match",
+                    fakeNamedUserId, pushManager.getNamedUser().getId());
+            assertEquals("The tokens should match",
+                    pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
+        }
     }
 
     /**
@@ -374,52 +325,30 @@ public class PushServiceTest {
     }
 
     /**
-     * Test disassociate named user succeeds if the status is 200.
+     * Test disassociate named user succeeds if the status is 2xx.
      */
     @Test
     public void testDisassociateNamedUserSucceed() {
-        namedUser.setLastUpdatedToken(fakeToken);
-        pushManager.getNamedUser().setId(null);
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        for (int statusCode = 200; statusCode < 300; statusCode++) {
+            // Set up a 2xx response
+            Response response = Mockito.mock(Response.class);
+            when(namedUserClient.disassociate(fakeChannelId)).thenReturn(response);
+            when(response.getStatus()).thenReturn(statusCode);
 
-        // Set up a 200 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(namedUserClient.disassociate(fakeChannelId)).thenReturn(response);
+            namedUser.setLastUpdatedToken(fakeToken);
+            pushManager.getNamedUser().setId(null);
+            pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
+            Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
 
-        pushService.onHandleIntent(intent);
+            pushService.onHandleIntent(intent);
 
-        assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
-        assertEquals("The tokens should match",
-                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
-        Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));
+            assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
+            assertEquals("The tokens should match",
+                    pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
+        }
     }
 
-    /**
-     * Test disassociate named user succeeds if the status is 299.
-     */
-    @Test
-    public void testDisassociateNamedUserSucceed299() {
-        namedUser.setLastUpdatedToken(fakeToken);
-        pushManager.getNamedUser().setId(null);
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-
-        // Set up a 299 response
-        Response response = Mockito.mock(Response.class);
-        when(response.getStatus()).thenReturn(299);
-        when(namedUserClient.disassociate(fakeChannelId)).thenReturn(response);
-
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-
-        pushService.onHandleIntent(intent);
-
-        assertNull("Current named user ID should be null", pushManager.getNamedUser().getId());
-        assertEquals("The tokens should match",
-                pushManager.getNamedUser().getChangeToken(), pushManager.getNamedUser().getLastUpdatedToken());
-        Mockito.verify(namedUserClient, Mockito.times(1)).disassociate(Mockito.any(String.class));
-    }
     /**
      * Test disassociate named user fails if status is not 200.
      */
