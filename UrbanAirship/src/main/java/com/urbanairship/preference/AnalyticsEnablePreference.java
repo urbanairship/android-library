@@ -29,16 +29,16 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 /**
- * CheckboxPreference to enable/disable quiet time.
+ * CheckboxPreference to enable/disable analytic events.
  */
-public class QuietTimeEnablePreference extends UACheckBoxPreference {
+public class AnalyticsEnablePreference extends UACheckBoxPreference {
 
-    public QuietTimeEnablePreference(Context context, AttributeSet attrs) {
+    public AnalyticsEnablePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
     public PreferenceType getPreferenceType() {
-        return PreferenceType.QUIET_TIME_ENABLED;
+        return PreferenceType.ANALYTICS_ENABLED;
     }
 }

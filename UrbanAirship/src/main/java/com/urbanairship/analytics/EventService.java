@@ -54,6 +54,11 @@ public class EventService extends IntentService {
     static final String ACTION_ADD = "com.urbanairship.analytics.ADD";
 
     /**
+     * Intent action to delete all locally stored events.
+     */
+    static final String ACTION_DELETE_ALL = "com.urbanairship.analytics.DELETE_ALL";
+
+    /**
      * Intent extra for the event's type.
      */
     static final String EXTRA_EVENT_TYPE = "EXTRA_EVENT_TYPE";
@@ -109,6 +114,11 @@ public class EventService extends IntentService {
 
         Logger.verbose("EventService - Received intent: " + intent.getAction());
 
+        if (ACTION_DELETE_ALL.equals(intent.getAction())) {
+            Logger.info("Deleting all analytic events.");
+            UAirship.shared().getAnalytics().getDataManager().deleteAllEvents();
+            return;
+        }
 
         if (ACTION_ADD.equals(intent.getAction())) {
             addEventFromIntent(intent);

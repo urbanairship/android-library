@@ -39,6 +39,6 @@ public class SoundEnablePreference extends UACheckBoxPreference {
 
     @Override
     public PreferenceType getPreferenceType() {
-        return PreferenceType.SOUND_ENABLE;
+        return PreferenceType.SOUND_ENABLED;
     }
 }

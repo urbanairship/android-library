@@ -251,8 +251,9 @@ public class AnalyticsTest {
         Mockito.when(event.getEventId()).thenReturn("event-id");
         Mockito.when(event.getType()).thenReturn("event-type");
         Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
-        Mockito.when(event.getEventId()).thenReturn("event-id");
         Mockito.when(event.getTime()).thenReturn("1000");
+        Mockito.when(event.isValid()).thenReturn(true);
+
 
         analytics.addEvent(event);
 
@@ -268,16 +269,30 @@ public class AnalyticsTest {
     }
 
     /**
-     * Test adding an event when analytics is disabled
+     * Test adding an event when analytics is disabled through airship config.
      */
     @Test
-    public void testAddEventDisabledAnalytics() {
+    public void testAddEventDisabledAnalyticsConfig() {
         AirshipConfigOptions options = new AirshipConfigOptions();
         options.analyticsEnabled = false;
 
         analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
 
         analytics.addEvent(new AppForegroundEvent(100));
+        Intent addEventIntent = shadowApplication.getNextStartedService();
+        assertNull("Should not add events if analytics is disabled", addEventIntent);
+    }
+
+    /**
+     * Test adding an event when analytics is disabled
+     */
+    @Test
+    public void testAddEventDisabledAnalytics() {
+        analytics.setEnabled(false);
+        shadowApplication.clearStartedServices();
+
+        analytics.addEvent(new AppForegroundEvent(100));
+
         Intent addEventIntent = shadowApplication.getNextStartedService();
         assertNull("Should not add events if analytics is disabled", addEventIntent);
     }
@@ -290,6 +305,35 @@ public class AnalyticsTest {
         analytics.addEvent(null);
         Intent addEventIntent = shadowApplication.getNextStartedService();
         assertNull("Should not start the event service to add a null event", addEventIntent);
+    }
+
+    /**
+     * Test adding an invalid event
+     */
+    @Test
+    public void testAddInvalidEvent() {
+        Event event = Mockito.mock(Event.class);
+        Mockito.when(event.getEventId()).thenReturn("event-id");
+        Mockito.when(event.getType()).thenReturn("event-type");
+        Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
+        Mockito.when(event.getEventId()).thenReturn("event-id");
+        Mockito.when(event.getTime()).thenReturn("1000");
+
+        Mockito.when(event.isValid()).thenReturn(false);
+
+        analytics.addEvent(event);
+        Intent addEventIntent = shadowApplication.getNextStartedService();
+        assertNull("Should not start the event service to add a null event", addEventIntent);
+    }
+
+    /**
+     * Test disabling analytics should start the event service to delete all events.
+     */
+    @Test
+    public void testDisableAnalytics() {
+        analytics.setEnabled(false);
+
+        assertEquals(EventService.ACTION_DELETE_ALL, shadowApplication.getNextStartedService().getAction());
     }
 
     /**
@@ -324,5 +368,6 @@ public class AnalyticsTest {
         // Verify that the activity monitor was called with auto instrumentation
         Mockito.verify(mockActivityMonitor).activityStopped(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.AUTO_INSTRUMENTATION), Mockito.anyLong());
     }
+
 
 }

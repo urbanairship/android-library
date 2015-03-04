@@ -39,6 +39,6 @@ public class VibrateEnablePreference extends UACheckBoxPreference {
 
     @Override
     public PreferenceType getPreferenceType() {
-        return PreferenceType.VIBRATE_ENABLE;
+        return PreferenceType.VIBRATE_ENABLED;
     }
 }

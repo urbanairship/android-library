@@ -233,4 +233,14 @@ public class EventServiceTest {
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
         assertNotNull("Alarm should be schedule when upload fails", alarm);
     }
+
+    /**
+     * Test DELETE_ALL intent action deletes all events.
+     */
+    @Test
+    public void testDeleteAll() {
+        Intent intent = new Intent(EventService.ACTION_DELETE_ALL);
+        service.onHandleIntent(intent);
+        Mockito.verify(dataManager).deleteAllEvents();
+    }
 }

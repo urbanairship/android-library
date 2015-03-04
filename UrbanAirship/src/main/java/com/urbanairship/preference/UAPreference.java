@@ -36,24 +36,24 @@ public interface UAPreference {
      */
     public enum PreferenceType {
         /**
-         * User notifications enable preference
+         * User notifications enabled preference
          */
-        USER_NOTIFICATIONS_ENABLE,
+        USER_NOTIFICATIONS_ENABLED,
 
         /**
-         * Sound enable preference
+         * Sound enabled preference
          */
-        SOUND_ENABLE,
+        SOUND_ENABLED,
 
         /**
-         * Vibrate enable preference
+         * Vibrate enabled preference
          */
-        VIBRATE_ENABLE,
+        VIBRATE_ENABLED,
 
         /**
-         * Quiet time enable preference
+         * Quiet time enabled preference
          */
-        QUIET_TIME_ENABLE,
+        QUIET_TIME_ENABLED,
 
         /**
          * Quiet time's start preference
@@ -66,7 +66,7 @@ public interface UAPreference {
         QUIET_TIME_END,
 
         /**
-         * Location update enabled preference
+         * Location updates enabled preference
          */
         LOCATION_UPDATES_ENABLED,
 
@@ -83,7 +83,12 @@ public interface UAPreference {
         /**
          * User ID
          */
-        USER_ID
+        USER_ID,
+
+        /**
+         * Analytics enabled preference
+         */
+        ANALYTICS_ENABLED
     }
 
     /**

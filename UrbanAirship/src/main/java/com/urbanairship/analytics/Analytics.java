@@ -44,7 +44,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.location.LocationRequestOptions;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.UUID;
 
@@ -88,7 +87,7 @@ public class Analytics {
 
     private boolean stickyBroadcastAllowed = false;
     private int minSdkVersion;
-    private boolean analyticsEnabled;
+    private AirshipConfigOptions configOptions;
     private Context context;
     private String sessionId;
     private String conversionSendId;
@@ -117,15 +116,9 @@ public class Analytics {
         this.minSdkVersion = options.minSdkVersion;
         this.inBackground = true; //application is starting
 
-        this.analyticsEnabled = options.analyticsEnabled;
+        this.configOptions = options;
 
         startNewSession();
-
-        String server = options.analyticsServer;
-        if (analyticsEnabled && UAStringUtil.isEmpty(server)) {
-            Logger.error("Analytics server URL in AirshipConfigOptions has been overridden by an empty or null string. Disabling analytics.");
-            analyticsEnabled = false;
-        }
 
         this.activityMonitor = activityMonitor;
         this.activityMonitor.setListener(new ActivityMonitor.Listener() {
@@ -230,7 +223,7 @@ public class Analytics {
      * @hide
      */
     private void reportActivityStopped(Activity activity, ActivityMonitor.Source source, long timeMS) {
-        if (minSdkVersion >= 14 && analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
+        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
             Logger.warn("activityStopped call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
         }
 
@@ -246,7 +239,7 @@ public class Analytics {
      * @hide
      */
     private void reportActivityStarted(Activity activity, ActivityMonitor.Source source, long timeMS) {
-        if (minSdkVersion >= 14 && analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
+        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
             Logger.warn("activityStarted call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
         }
 
@@ -269,7 +262,13 @@ public class Analytics {
      * @param event The event to be triggered.
      */
     public void addEvent(final Event event) {
-        if (!analyticsEnabled || event == null) {
+        if (event == null || !event.isValid()) {
+            Logger.warn("Analytics - Invalid event: " + event);
+            return;
+        }
+
+        if (!isEnabled()) {
+            Logger.debug("Analytics disabled - ignoring event: " + event.getType());
             return;
         }
 
@@ -278,9 +277,7 @@ public class Analytics {
             Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
-        Context ctx = UAirship.getApplicationContext();
-
-        Intent i = new Intent(ctx, EventService.class)
+        Intent i = new Intent(context, EventService.class)
                 .setAction(EventService.ACTION_ADD)
                 .putExtra(EventService.EXTRA_EVENT_TYPE, event.getType())
                 .putExtra(EventService.EXTRA_EVENT_ID, event.getEventId())
@@ -288,10 +285,10 @@ public class Analytics {
                 .putExtra(EventService.EXTRA_EVENT_TIME_STAMP, event.getTime())
                 .putExtra(EventService.EXTRA_EVENT_SESSION_ID, sessionId);
 
-        if (ctx.startService(i) == null) {
+        if (context.startService(i) == null) {
             Logger.warn("Unable to start analytics service. Check that the event service is added to the manifest.");
         } else {
-            Logger.debug("Analytics - Added " + event.getType() + ": " + eventPayload);
+            Logger.debug("Analytics - Added event: " + event.getType() + ": " + eventPayload);
         }
     }
 
@@ -435,5 +432,33 @@ public class Analytics {
     void startNewSession() {
         sessionId = UUID.randomUUID().toString();
         Logger.debug("Analytics - New session: " + sessionId);
+    }
+
+    /**
+     * Sets analytics enabled. When disabling, any locally stored events
+     * will be deleted.
+     *
+     * @param enabled {@code true} to enable analytics, {@code false} to disable.
+     */
+    public void setEnabled(boolean enabled) {
+        // When we disable analytics delete all the events
+        if (preferences.isAnalyticsEnabled() && !enabled) {
+            Intent i = new Intent(context, EventService.class)
+                    .setAction(EventService.ACTION_DELETE_ALL);
+
+            context.startService(i);
+        }
+
+        preferences.setAnalyticsEnabled(enabled);
+    }
+
+    /**
+     * Returns {@code true} if analytics is enabled and {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
+     * is set to {@code true}, otherwise {@code false}.
+     *
+     * @return {@code true} if analytics is enabled, otherwise {@code false}.
+     */
+    public boolean isEnabled() {
+        return configOptions.analyticsEnabled && preferences.isAnalyticsEnabled();
     }
 }
