@@ -41,7 +41,6 @@ import com.urbanairship.richpush.RichPushMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -58,7 +57,6 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -251,60 +249,6 @@ public class UAWebViewClientTest {
                 client.shouldOverrideUrlLoading(webView, url));
     }
 
-
-    /**
-     * Test onPageStarted removes and injects the javascript interface.
-     */
-    @Test
-    @Config(reportSdk = 17)
-    @SuppressLint("NewApi")
-    public void testOnPageStarted() {
-        client.onPageStarted(webView, webViewUrl, null);
-        verify(webView).removeJavascriptInterface(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-        verify(webView).addJavascriptInterface(Mockito.any(UAJavascriptInterface.class), eq(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER));
-    }
-
-    /**
-     * Test onPageStarted from a rich push web view injects the js interface with the current message.
-     */
-    @Test
-    @Config(reportSdk = 17)
-    @SuppressLint("NewApi")
-    public void testOnPageStartedRichPush() {
-        // Set up a RichPushMessageWebView
-        final RichPushMessage message = Mockito.mock(RichPushMessage.class);
-        RichPushMessageWebView richPushMessageWebView = Mockito.mock(RichPushMessageWebView.class);
-        when(richPushMessageWebView.getCurrentMessage()).thenReturn(message);
-        when(richPushMessageWebView.getUrl()).thenReturn(webViewUrl);
-        when(message.getMessageId()).thenReturn("message id");
-
-
-        client.onPageStarted(richPushMessageWebView, webViewUrl, null);
-
-        // Verify the js interface was added with the rich push message
-        verify(richPushMessageWebView).removeJavascriptInterface(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-        verify(richPushMessageWebView).addJavascriptInterface(Mockito.argThat(new ArgumentMatcher<Object>() {
-            @Override
-            public boolean matches(Object o) {
-                UAJavascriptInterface js = (UAJavascriptInterface) o;
-                return js != null && js.getMessageId().equals("message id");
-            }
-        }), eq(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER));
-    }
-
-    /**
-     * Test the js interface is removed, but not injected if the url is not white listed.
-     */
-    @Test
-    @Config(reportSdk = 17)
-    @SuppressLint("NewApi")
-    public void testOnPageStartedNotWhiteListed() {
-        webViewUrl = "http://notwhitelisted";
-        client.onPageStarted(webView, webViewUrl, null);
-        verify(webView).removeJavascriptInterface(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-        verify(webView, times(0)).addJavascriptInterface(Mockito.any(UAJavascriptInterface.class), eq(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER));
-    }
-
 //    Enable this test once Robolectric supports API 19.
 //
 //    /**
@@ -326,6 +270,7 @@ public class UAWebViewClientTest {
     @SuppressLint("NewApi")
     public void testOnPageFinishedAPI17() {
         client.onPageFinished(webView, webViewUrl);
+        verify(webView).loadUrl("javascript:" + client.createJavascriptInterfaceWrapper(new UAJavascriptInterface(webView)));
         verify(webView).loadUrl("javascript:" + NativeBridge.getJavaScriptSource());
     }
 
