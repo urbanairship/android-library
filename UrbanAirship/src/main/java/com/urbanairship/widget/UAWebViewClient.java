@@ -323,7 +323,11 @@ public class UAWebViewClient extends WebViewClient {
     @Override
     @SuppressLint("NewAPI")
     public void onPageFinished(final WebView view, String url) {
-        if (view == null || !isWhiteListed(url)) {
+        if (view == null) {
+            return;
+        }
+
+        if (!isWhiteListed(url)) {
             Logger.debug("UAWebViewClient - " + url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
             return;
         }
