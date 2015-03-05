@@ -26,10 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.webkit.HttpAuthHandler;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -322,57 +322,40 @@ public class UAWebViewClient extends WebViewClient {
 
     @Override
     @SuppressLint("NewAPI")
-    public void onPageFinished(WebView view, String url) {
+    public void onPageFinished(final WebView view, String url) {
         if (view == null || !isWhiteListed(url)) {
+            Logger.debug("UAWebViewClient - " + url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
             return;
         }
 
-        if (Build.VERSION.SDK_INT < 17) {
-            Logger.info("Loading UrbanAirship Javascript interface.");
+        Logger.info("Loading UrbanAirship Javascript interface.");
 
-            RichPushMessage message = null;
-            if (view instanceof RichPushMessageWebView) {
-                message = ((RichPushMessageWebView) view).getCurrentMessage();
-            }
 
-            UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
-            String jsWrapper = createJavascriptInterfaceWrapper(jsInterface);
-            view.loadUrl("javascript:" + jsWrapper);
+        RichPushMessage message = null;
+        if (view instanceof RichPushMessageWebView) {
+            message = ((RichPushMessageWebView) view).getCurrentMessage();
         }
 
-        // Load the native bridge
-        Logger.info("Loading UrbanAirship native Javascript bridge.");
-        String nativeBridge = NativeBridge.getJavaScriptSource();
+        UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
+
+        final String jsWrapper = createJavascriptInterfaceWrapper(jsInterface);
+        final String nativeBridge = NativeBridge.getJavaScriptSource();
+
         if (Build.VERSION.SDK_INT >= 19) {
-            view.evaluateJavascript(nativeBridge, null);
+
+            // Load the jsWrapper first
+            view.evaluateJavascript(jsWrapper, new ValueCallback<String>() {
+                @Override
+                @SuppressLint("NewApi")
+                public void onReceiveValue(String value) {
+                    view.evaluateJavascript(nativeBridge, null);
+                }
+            });
+
         } else {
+            // Load the jsWrapper first.
+            view.loadUrl("javascript:" + jsWrapper);
             view.loadUrl("javascript:" + nativeBridge);
-        }
-    }
-
-    @Override
-    @SuppressLint({ "NewAPI", "AddJavascriptInterface" })
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (view == null) {
-            return;
-        }
-
-        // Always remove the old interface if supported
-        if (Build.VERSION.SDK_INT >= 17) {
-            view.removeJavascriptInterface(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-        }
-
-        if (!isWhiteListed(url)) {
-            Logger.warn( url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT >= 17) {
-            if (view instanceof RichPushMessageWebView) {
-                view.addJavascriptInterface(new UAJavascriptInterface(view, ((RichPushMessageWebView) view).getCurrentMessage()), UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-            } else {
-                view.addJavascriptInterface(new UAJavascriptInterface(view), UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-            }
         }
     }
 
