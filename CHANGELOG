@@ -30,6 +30,13 @@ Added to preview on February 27, 2015
  - Fixed Urban Airship Javascript bridge when the associated RichPushMessage contains invalid characters in its title.
  - Fixed Rich Push Inbox blocking on first access.
 
+
+Version 5.1.6 - March 5, 2015
+=============================
+ - Added Intent flag FLAG_ACTIVITY_SINGLE_TOP when automatically launching the application from a notification open to prevent
+   relaunching the launcher activity if its already on top.
+ - Fixed the Airship Javascript bridge sometimes failing to load on API 19+.
+
 Version 5.1.5 - January 27, 2015
 ================================
  - Fixed a regression introduced in 5.1.4 where the LocationService will cause a NPE if started with a null intent.

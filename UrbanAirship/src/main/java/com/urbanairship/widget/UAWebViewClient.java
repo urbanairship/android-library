@@ -26,11 +26,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.HttpAuthHandler;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -311,72 +311,44 @@ public class UAWebViewClient extends WebViewClient {
 
     @Override
     @SuppressLint("NewAPI")
-    public void onPageFinished(WebView view, String url) {
-        if (view == null || !isWhiteListed(url)) {
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT < 17) {
-            Logger.info("Loading UrbanAirship Javascript interface.");
-
-            RichPushMessage message = null;
-            if (view instanceof RichPushMessageWebView) {
-                message = ((RichPushMessageWebView) view).getCurrentMessage();
-            }
-
-            UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
-            String jsWrapper = createJavascriptInterfaceWrapper(jsInterface);
-            view.loadUrl("javascript:" + jsWrapper);
-        }
-
-        // Load the native bridge
-        Logger.info("Loading UrbanAirship native Javascript bridge.");
-        String nativeBridge = NativeBridge.getJavaScriptSource();
-        if (Build.VERSION.SDK_INT >= 19) {
-            view.evaluateJavascript(nativeBridge, null);
-        } else {
-            view.loadUrl("javascript:" + nativeBridge);
-        }
-    }
-
-    @Override
-    @SuppressLint({ "NewAPI", "AddJavascriptInterface" })
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+    public void onPageFinished(final WebView view, String url) {
         if (view == null) {
             return;
         }
 
-        // Always remove the old interface if supported
-        if (Build.VERSION.SDK_INT >= 17) {
-            view.removeJavascriptInterface(UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
-        }
-
         if (!isWhiteListed(url)) {
-            Logger.warn(url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
+            Logger.debug("UAWebViewClient - " + url + " is not a white listed URL. Urban Airship Javascript interface will not be accessible.");
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= 17) {
-            UAJavascriptInterface javascriptInterface;
+        Logger.info("Loading UrbanAirship Javascript interface.");
 
-            if (view instanceof RichPushMessageWebView) {
-                javascriptInterface = new UAJavascriptInterface(view, ((RichPushMessageWebView) view).getCurrentMessage());
-            } else {
-                javascriptInterface = new UAJavascriptInterface(view);
-            }
 
-            javascriptInterface.setActionCompletionCallback(new ActionCompletionCallback() {
+        RichPushMessage message = null;
+        if (view instanceof RichPushMessageWebView) {
+            message = ((RichPushMessageWebView) view).getCurrentMessage();
+        }
+
+        UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
+
+        final String jsWrapper = createJavascriptInterfaceWrapper(jsInterface);
+        final String nativeBridge = NativeBridge.getJavaScriptSource();
+
+        if (Build.VERSION.SDK_INT >= 19) {
+
+            // Load the jsWrapper first
+            view.evaluateJavascript(jsWrapper, new ValueCallback<String>() {
                 @Override
-                public void onFinish(ActionArguments arguments, ActionResult result) {
-                    synchronized (this) {
-                        if (actionCompletionCallback != null) {
-                            actionCompletionCallback.onFinish(arguments, result);
-                        }
-                    }
+                @SuppressLint("NewApi")
+                public void onReceiveValue(String value) {
+                    view.evaluateJavascript(nativeBridge, null);
                 }
             });
 
-            view.addJavascriptInterface(javascriptInterface, UAJavascriptInterface.JAVASCRIPT_IDENTIFIER);
+        } else {
+            // Load the jsWrapper first.
+            view.loadUrl("javascript:" + jsWrapper);
+            view.loadUrl("javascript:" + nativeBridge);
         }
     }
 

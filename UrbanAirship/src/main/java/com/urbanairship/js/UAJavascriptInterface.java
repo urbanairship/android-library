@@ -52,7 +52,9 @@ import java.util.TimeZone;
 
 /**
  * The Urban Airship Javascript interface.
+ * @deprecated Marked to be removed in 6.0.0.
  */
+@Deprecated
 public class UAJavascriptInterface {
 
     /**
