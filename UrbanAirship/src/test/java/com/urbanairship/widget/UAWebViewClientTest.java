@@ -26,6 +26,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
+import android.view.KeyEvent;
+import android.view.View;
 import android.webkit.WebView;
 
 import com.urbanairship.RobolectricGradleTestRunner;
@@ -40,20 +42,16 @@ import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.actions.StubbedActionRunRequest;
-import com.urbanairship.js.NativeBridge;
-import com.urbanairship.js.UAJavascriptInterface;
-import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +59,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -74,18 +73,20 @@ public class UAWebViewClientTest {
 
     ActionRunRequestFactory runRequestFactory;
     UAWebViewClient client;
+    View rootView;
 
     String webViewUrl;
     WebView webView;
 
     @Before
     public void setup() {
-
         runRequestFactory = mock(ActionRunRequestFactory.class);
+        rootView = mock(View.class);
 
-        client = new UAWebViewClient(runRequestFactory);
         webView = Mockito.mock(WebView.class);
+        when(webView.getRootView()).thenReturn(rootView);
 
+        webViewUrl = "http://test-client";
         when(webView.getUrl()).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -93,8 +94,9 @@ public class UAWebViewClientTest {
             }
         });
 
-        webViewUrl = "http://test-client";
         UAirship.shared().getWhitelist().addEntry("http://test-client");
+
+        client = new UAWebViewClient(runRequestFactory);
     }
 
     /**
@@ -273,71 +275,19 @@ public class UAWebViewClientTest {
                 client.shouldOverrideUrlLoading(webView, url));
     }
 
-//    Enable this test once Robolectric supports API 19.
-//
-//    /**
-//     * Test onPageFinished evaluates the js bridge on API 19.
-//     */
-//    @Test
-//    @Config(emulateSdk = 19)
-//    @SuppressLint("NewApi")
-//    public void testOnPageFinishedAPI19() {
-//        client.onPageFinished(webView, webViewUrl);
-//        verify(webView).evaluateJavascript(NativeBridge.getJavaScriptSource(), null);
-//    }
-
     /**
-     * Test onPageFinished loads the js bridge on API 17-18.
+     * Test onPageFinished loads the js bridge
      */
     @Test
-    @Config(reportSdk = 17)
     @SuppressLint("NewApi")
-    public void testOnPageFinishedAPI17() {
+    public void testOnPageFinished() {
         client.onPageFinished(webView, webViewUrl);
-        verify(webView).loadUrl("javascript:" + client.createJavascriptInterfaceWrapper(new UAJavascriptInterface(webView)));
-        verify(webView).loadUrl("javascript:" + NativeBridge.getJavaScriptSource());
-    }
-
-    /**
-     * Test onPageFinished loads the js bridge and the wrapper on API < 17.
-     */
-    @Test
-    @Config(reportSdk = 16)
-    @SuppressLint("NewApi")
-    public void testOnPageFinishedPre17() {
-        client.onPageFinished(webView, webViewUrl);
-
-        // Wrapper
-        verify(webView).loadUrl("javascript:" + client.createJavascriptInterfaceWrapper(new UAJavascriptInterface(webView)));
-
-        // Bridge
-        verify(webView).loadUrl("javascript:" + NativeBridge.getJavaScriptSource());
-    }
-
-    /**
-     * Test onPageFinished loads the js bridge and the wrapper with the message on API < 17.
-     */
-    @Test
-    @Config(reportSdk = 16)
-    @SuppressLint("NewApi")
-    public void testOnPageFinishedPre17RichPush() {
-        // Set up a RichPushMessageWebView
-        RichPushMessage message = Mockito.mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("message id");
-        when(message.getSentDateMS()).thenReturn(100L);
-        when(message.getSentDate()).thenReturn(new Date(100L));
-
-        RichPushMessageWebView richPushMessageWebView = Mockito.mock(RichPushMessageWebView.class);
-        when(richPushMessageWebView.getCurrentMessage()).thenReturn(message);
-        when(richPushMessageWebView.getUrl()).thenReturn(webViewUrl);
-
-        client.onPageFinished(richPushMessageWebView, webViewUrl);
-
-        // Wrapper
-        verify(richPushMessageWebView).loadUrl("javascript:" + client.createJavascriptInterfaceWrapper(new UAJavascriptInterface(richPushMessageWebView, message)));
-
-        // Bridge
-        verify(richPushMessageWebView).loadUrl("javascript:" + NativeBridge.getJavaScriptSource());
+        verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
+            @Override
+            public boolean matches(Object argument) {
+                return ((String)argument).startsWith("javascript:");
+            }
+        }));
     }
 
     /**
@@ -354,7 +304,7 @@ public class UAWebViewClientTest {
      * Test running an action calls the action completion callback
      */
     @Test
-    public void testActionCompletionCallback() {
+    public void testRunActionsCallsCompletionCallback() {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
@@ -376,6 +326,221 @@ public class UAWebViewClientTest {
 
         String url = "uairship://run-basic-actions?addTag=what";
 
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        // Verify our callback was called
+        verify(completionCallback).onFinish(arguments, result);
+    }
+
+    /**
+     * Test close command calls onClose
+     */
+    @Test
+    public void testCloseCommand() {
+        String url = "uairship://close";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
+            @Override
+            public boolean matches(Object o) {
+                KeyEvent event = (KeyEvent) o;
+                return KeyEvent.ACTION_DOWN == event.getAction() &&
+                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
+            }
+        }));
+
+        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
+            @Override
+            public boolean matches(Object o) {
+                KeyEvent event = (KeyEvent) o;
+                return KeyEvent.ACTION_UP == event.getAction() &&
+                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
+            }
+        }));
+    }
+
+    /**
+     * Test close simulates a back press on the activity
+     */
+    @Test
+    public void testOnClose() {
+        client.onClose(webView);
+
+        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
+            @Override
+            public boolean matches(Object o) {
+                KeyEvent event = (KeyEvent) o;
+                return KeyEvent.ACTION_DOWN == event.getAction() &&
+                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
+            }
+        }));
+
+        verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
+            @Override
+            public boolean matches(Object o) {
+                KeyEvent event = (KeyEvent) o;
+                return KeyEvent.ACTION_UP == event.getAction() &&
+                        KeyEvent.KEYCODE_BACK == event.getKeyCode();
+            }
+        }));
+    }
+
+    /**
+     * Test running an action with an invalid arguments payload
+     */
+    @Test
+    public void testActionCallInvalidArguments() {
+        // actionName = {invalid_json}}}
+        String url = "uairship://android-run-action-cb/actionName/%7Binvalid_json%7D%7D%7D/callbackId";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
+    }
+
+    /**
+     * Test running an action that is not found
+     */
+    @Test
+    public void testActionCallActionNotFound() {
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.ACTION_NOT_FOUND);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
+    }
+
+    /**
+     * Test running an action that rejects the arguments
+     */
+    @Test
+    public void testActionCallActionRejectedArguments() {
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.REJECTED_ARGUMENTS);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
+    }
+
+    /**
+     * Test running an action that had an execution error
+     */
+    @Test
+    public void testActionCallActionExecutionError() {
+        final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.Status.EXECUTION_ERROR);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
+    }
+
+    /**
+     * Test running an action with a result
+     */
+    @Test
+    public void testActionCallAction() throws ActionValueException {
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
+
+        // Verify the callback
+        verify(webView).loadUrl("javascript:UAirship.finishAction(null, \"action_result\", 'callbackId');");
+
+        // Verify the action request
+        verify(runRequest).run(any(ActionCompletionCallback.class));
+        verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(runRequest).setValue(ActionValue.wrap(true));
+    }
+
+    /**
+     * Test setting a action completion callback gets called for completed actions with callbacks
+     */
+    @Test
+    public void testRunActionCallsCompletionCallback() throws ActionValueException {
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+
+        ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
+        client.setActionCompletionCallback(completionCallback);
+
+        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+
+        // Call the action completion handler on run
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
+                callback.onFinish(arguments, result);
+                return null;
+            }
+        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
+
+        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         // Verify our callback was called
