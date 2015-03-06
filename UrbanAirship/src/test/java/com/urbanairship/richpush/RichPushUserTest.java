@@ -34,6 +34,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class RichPushUserTest extends RichPushBaseTestCase {
 
@@ -48,6 +50,10 @@ public class RichPushUserTest extends RichPushBaseTestCase {
         super.setUp();
         this.user = new RichPushUser(TestApplication.getApplication().preferenceDataStore);
         this.preferences = user.preferences;
+
+        RichPushManager manager = mock(RichPushManager.class);
+        when(manager.getRichPushUser()).thenReturn(user);
+        TestApplication.getApplication().setRichPushManager(manager);
     }
 
     /**
@@ -55,7 +61,7 @@ public class RichPushUserTest extends RichPushBaseTestCase {
      */
     @Test
     public void testIsCreatedTrue() {
-        RichPushManager.shared().getRichPushUser().preferences.setUserCredentials(fakeUserId, fakeToken);
+        user.preferences.setUserCredentials(fakeUserId, fakeToken);
         assertTrue("Should return true.", RichPushUser.isCreated());
     }
 
@@ -65,7 +71,7 @@ public class RichPushUserTest extends RichPushBaseTestCase {
     @Test
     public void testIsCreatedFalse() {
         // Clear any user or user token
-        RichPushManager.shared().getRichPushUser().preferences.setUserCredentials(null, null);
+        user.preferences.setUserCredentials(null, null);
         assertFalse("Should return false.", RichPushUser.isCreated());
     }
 
@@ -74,7 +80,7 @@ public class RichPushUserTest extends RichPushBaseTestCase {
      */
     @Test
     public void testIsCreatedFalseNoUserToken() {
-        RichPushManager.shared().getRichPushUser().preferences.setUserCredentials(fakeUserId, null);
+        user.preferences.setUserCredentials(fakeUserId, null);
         assertFalse("Should return false.", RichPushUser.isCreated());
     }
 

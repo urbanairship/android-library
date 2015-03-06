@@ -169,18 +169,6 @@ public class RichPushManager extends BaseManager {
     // getters
 
     /**
-     * Returns the shared RichPushManager singleton instance. This call will block unless
-     * UAirship is ready.
-     *
-     * @return The shared RichPushManager instance.
-     * @deprecated As of 5.0.0. Use {@link com.urbanairship.UAirship#getRichPushManager()} instead.
-     */
-    @Deprecated
-    public static RichPushManager shared() {
-        return UAirship.shared().getRichPushManager();
-    }
-
-    /**
      * Get the {@link RichPushUser}.
      *
      * @return {@link RichPushUser}.
