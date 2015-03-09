@@ -90,10 +90,10 @@ public class LocationServiceTest {
         LocationRequestOptions options = locationManager.getLocationRequestOptions();
 
         // Request updates
-        sendIntent(LocationService.ACTION_START_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Request the update again, should ignore the update for the same request options.
-        sendIntent(LocationService.ACTION_START_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Should of connected to the provider
         verify(mockProvider, times(1)).connect();
@@ -113,13 +113,13 @@ public class LocationServiceTest {
         LocationRequestOptions options = new LocationRequestOptions.Builder().setMinDistance(100).create();
 
         // Start updates with the default location options
-        sendIntent(LocationService.ACTION_START_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Set new location options
         locationManager.setLocationRequestOptions(options);
 
         // Start the service again
-        sendIntent(LocationService.ACTION_START_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Should of connected to the provider 2 times - 1 for each update request.
         verify(mockProvider, times(2)).connect();
@@ -136,13 +136,15 @@ public class LocationServiceTest {
      */
     @Test
     public void testStopUpdates() {
-        sendIntent(LocationService.ACTION_STOP_UPDATES);
+        locationManager.setLocationUpdatesEnabled(false);
+
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Should of cancel previous requests
         verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
 
         // Send stop again to verify it doesn't bother canceling requests
-        sendIntent(LocationService.ACTION_STOP_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Should skip stopping if it knows it previously stopped.
         verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
@@ -223,7 +225,7 @@ public class LocationServiceTest {
 
         sendIntent(LocationService.ACTION_LOCATION_UPDATE, extras);
 
-        sendIntent(LocationService.ACTION_START_UPDATES);
+        sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Verify no request was made
         verify(mockProvider, times(0)).connect();
