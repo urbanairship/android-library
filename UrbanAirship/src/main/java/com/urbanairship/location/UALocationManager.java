@@ -40,6 +40,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
 import com.urbanairship.BaseManager;
@@ -141,8 +142,9 @@ public class UALocationManager extends BaseManager {
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(Analytics.ACTION_APP_FOREGROUND);
                 filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-                filter.addCategory(UAirship.getPackageName());
-                context.registerReceiver(new BroadcastReceiver() {
+
+                LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
+                broadcastManager.registerReceiver(new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         updateServiceConnection();

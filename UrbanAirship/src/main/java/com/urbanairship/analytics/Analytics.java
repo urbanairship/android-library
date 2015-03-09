@@ -33,6 +33,7 @@ import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.LifeCycleCallbacks;
@@ -51,12 +52,12 @@ public class Analytics {
     /**
      * Intent action for application foreground.
      */
-    public static final String ACTION_APP_FOREGROUND = UAirship.getPackageName() + ".urbanairship.analytics.APP_FOREGROUND";
+    public static final String ACTION_APP_FOREGROUND = "com.urbanairship.analytics.APP_FOREGROUND";
 
     /**
      * Intent action for application background.
      */
-    public static final String ACTION_APP_BACKGROUND = UAirship.getPackageName() + ".urbanairship.analytics.APP_BACKGROUND";
+    public static final String ACTION_APP_BACKGROUND = "com.urbanairship.analytics.APP_BACKGROUND";
 
 
     private static LifeCycleCallbacks lifeCycleCallbacks;
@@ -88,7 +89,7 @@ public class Analytics {
      * @param options The airship config options
      * @param activityMonitor Optional activityMonitor
      */
-    Analytics(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions options, ActivityMonitor activityMonitor) {
+    Analytics(final Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions options, ActivityMonitor activityMonitor) {
         this.preferences = new AnalyticsPreferences(preferenceDataStore);
         this.context = context.getApplicationContext();
 
@@ -108,7 +109,10 @@ public class Analytics {
                 startNewSession();
 
                 inBackground = false;
-                sendForegroundBroadcast();
+
+                // Send the foreground broadcast
+                LocalBroadcastManager.getInstance(context)
+                        .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
 
                 addEvent(new AppForegroundEvent(timeMS));
             }
@@ -118,7 +122,9 @@ public class Analytics {
                 inBackground = true;
                 addEvent(new AppBackgroundEvent(timeMS));
 
-                sendBackgroundBroadcast();
+                // Send the background broadcast
+                LocalBroadcastManager.getInstance(context)
+                                     .sendBroadcast(new Intent(Analytics.ACTION_APP_BACKGROUND));
 
                 setConversionSendId(null);
             }
@@ -157,18 +163,6 @@ public class Analytics {
                 airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.Source.MANUAL_INSTRUMENTATION, timeMS);
             }
         });
-    }
-
-    private void sendForegroundBroadcast() {
-        Intent foreground = new Intent(Analytics.ACTION_APP_FOREGROUND)
-                .addCategory(UAirship.getPackageName());
-        context.sendBroadcast(foreground);
-    }
-
-    private void sendBackgroundBroadcast() {
-        Intent background = new Intent(Analytics.ACTION_APP_BACKGROUND)
-                .addCategory(UAirship.getPackageName());
-        context.sendBroadcast(background);
     }
 
     /**

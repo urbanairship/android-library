@@ -4,7 +4,7 @@
           android:versionCode="1"
           android:versionName="1.0">
 
-    <uses-sdk tools:overrideLibrary="com.google.android.gms, com.squareup.fest"/>
+    <uses-sdk tools:overrideLibrary="com.google.android.gms"/>
 
     <application/>
 </manifest>

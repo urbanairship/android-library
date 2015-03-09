@@ -29,6 +29,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.analytics.Analytics;
 
@@ -48,8 +49,10 @@ public class ApplicationMetrics {
     private void registerBroadcastReceivers(Context context) {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addCategory(UAirship.getPackageName());
-        context.registerReceiver(new BroadcastReceiver() {
+
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
+
+        broadcastManager.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 preferenceDataStore.put(LAST_OPEN_KEY, System.currentTimeMillis());
