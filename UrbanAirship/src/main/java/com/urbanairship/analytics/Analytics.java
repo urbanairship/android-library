@@ -25,15 +25,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
-import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.os.Build;
@@ -56,6 +52,7 @@ public class Analytics {
      * Intent action for application foreground.
      */
     public static final String ACTION_APP_FOREGROUND = UAirship.getPackageName() + ".urbanairship.analytics.APP_FOREGROUND";
+
     /**
      * Intent action for application background.
      */
@@ -69,23 +66,6 @@ public class Analytics {
     private final AnalyticsPreferences preferences;
     private boolean inBackground;
 
-    private BroadcastReceiver appStateChangeReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            Logger.verbose(intent.getAction());
-
-            if (Analytics.ACTION_APP_BACKGROUND.equals(intent.getAction())) {
-                inBackground = true;
-            } else if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
-                inBackground = false;
-            }
-        }
-
-    };
-
-    private boolean stickyBroadcastAllowed = false;
     private int minSdkVersion;
     private AirshipConfigOptions configOptions;
     private Context context;
@@ -143,8 +123,6 @@ public class Analytics {
                 setConversionSendId(null);
             }
         });
-
-        registerBroadcastReceiver(context);
     }
 
     /**
@@ -181,37 +159,16 @@ public class Analytics {
         });
     }
 
-    private void registerBroadcastReceiver(Context context) {
-        if (PackageManager.PERMISSION_GRANTED ==
-                UAirship.getPackageManager().checkPermission(Manifest.permission.BROADCAST_STICKY, UAirship.getPackageName())) {
-            stickyBroadcastAllowed = true;
-        }
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addCategory(UAirship.getPackageName());
-        context.registerReceiver(appStateChangeReceiver, filter);
-    }
-
     private void sendForegroundBroadcast() {
-        Intent foreground = new Intent(Analytics.ACTION_APP_FOREGROUND);
-        foreground.addCategory(UAirship.getPackageName());
-        if (stickyBroadcastAllowed) {
-            context.sendStickyBroadcast(foreground);
-        } else {
-            context.sendBroadcast(foreground);
-        }
+        Intent foreground = new Intent(Analytics.ACTION_APP_FOREGROUND)
+                .addCategory(UAirship.getPackageName());
+        context.sendBroadcast(foreground);
     }
 
     private void sendBackgroundBroadcast() {
-        Intent background = new Intent(Analytics.ACTION_APP_BACKGROUND);
-        background.addCategory(UAirship.getPackageName());
-        if (stickyBroadcastAllowed) {
-            context.sendStickyBroadcast(background);
-        } else {
-            context.sendBroadcast(background);
-        }
+        Intent background = new Intent(Analytics.ACTION_APP_BACKGROUND)
+                .addCategory(UAirship.getPackageName());
+        context.sendBroadcast(background);
     }
 
     /**
