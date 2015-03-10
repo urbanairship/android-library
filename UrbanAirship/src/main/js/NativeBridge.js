@@ -5,7 +5,7 @@ if (typeof UAirship === 'undefined') {
       var actionCallbacks = {}
         , callbackID = 0
 
-      var invoke = function(url) {
+      function invoke(url) {
         var f = document.createElement('iframe')
         f.style.display = 'none'
         f.src = url
