@@ -70,7 +70,7 @@ public class AppForegroundEventTest {
     @Test
     public void testNotificationTypes() throws JSONException {
         JSONObject data = event.getEventData();
-        JSONArray typesJSON = (JSONArray) data.get(Event.NOTIFICATION_TYPES_KEY);
+        JSONArray typesJSON = (JSONArray) data.get(AppForegroundEvent.NOTIFICATION_TYPES_KEY);
         ArrayList<String> typesList = new ArrayList<>();
         for (int i = 0; i < typesJSON.length(); i++) {
             typesList.add((String) typesJSON.get(i));
@@ -98,12 +98,6 @@ public class AppForegroundEventTest {
     public void testPushId() throws JSONException {
         when(analytics.getConversionSendId()).thenReturn("send id");
         EventTestUtils.validateEventValue(event, Event.PUSH_ID_KEY, "send id");
-    }
-
-    @Test
-    public void testPushEnabled() throws JSONException {
-        when(mockPush.isPushEnabled()).thenReturn(false);
-        EventTestUtils.validateEventValue(event, Event.PUSH_ENABLED_KEY, false);
     }
 
     /**

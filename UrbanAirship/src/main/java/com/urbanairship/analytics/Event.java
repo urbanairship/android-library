@@ -64,8 +64,6 @@ public abstract class Event {
     static final String CONNECTION_SUBTYPE_KEY = "connection_subtype";
     static final String CARRIER_KEY = "carrier";
     static final String PUSH_ID_KEY = "push_id";
-    static final String NOTIFICATION_TYPES_KEY = "notification_types";
-    static final String PUSH_ENABLED_KEY = "push_enabled";
     static final String TIME_ZONE_KEY = "time_zone";
     static final String DAYLIGHT_SAVINGS_KEY = "daylight_savings";
     static final String OS_VERSION_KEY = "os_version";

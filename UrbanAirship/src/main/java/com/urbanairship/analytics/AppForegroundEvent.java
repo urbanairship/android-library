@@ -39,6 +39,9 @@ class AppForegroundEvent extends Event {
 
     static final String TYPE = "app_foreground";
 
+    static final String NOTIFICATION_TYPES_KEY = "notification_types";
+
+
     /**
      * Default constructor for AppForegroundEvent.
      *
@@ -75,7 +78,6 @@ class AppForegroundEvent extends Event {
             data.put(LIB_VERSION_KEY, UAirship.getVersion());
             data.put(PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName);
             data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
-            data.put(PUSH_ENABLED_KEY, UAirship.shared().getPushManager().isPushEnabled());
             data.put(LAST_SEND_ID_KEY, UAirship.shared().getPushManager().getLastReceivedSendId());
         } catch (JSONException e) {
             Logger.error("AppForegroundEvent - Error constructing JSON data.", e);
