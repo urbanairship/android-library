@@ -1,39 +1,22 @@
 if (typeof UAirship === 'undefined') {
-
     UAirship = (function() {
-      var urbanAirship = {}
-      // Prototyping does not work for native interface objects and bugs exist
-      // that prevent Object.keys() from working, so we are working around the
-      // problem by explicitly listing the methods from the native interface
-      // and adding methods to our urbanAirship object that wraps the methods.
-
-      var methods = [
-          'getDeviceModel'
-        , 'getMessageId'
-        , 'getMessageTitle'
-        , 'getMessageSentDate'
-        , 'getMessageSentDateMS'
-        , 'getUserId'
-        , 'close'
-        , 'getViewHeight'
-        , 'getViewWidth'
-        , 'getDeviceOrientation'
-        , 'navigateTo'
-        , 'isMessageRead'
-        , 'markMessageRead'
-        , 'markMessageUnread'
-      ]
-
-      methods.forEach(function(name) {
-        urbanAirship[name] = function() {
-          var val = _UAirship[name].apply(_UAirship, arguments)
-
-          return typeof val === 'undefined' ?  null : val
-        }
-      })
+      var urbanAirship = (typeof _UAirship === 'object') ? Object.create(_UAirship) : {}
 
       var actionCallbacks = {}
         , callbackID = 0
+
+      function invoke(url) {
+        var f = document.createElement('iframe')
+        f.style.display = 'none'
+        f.src = url
+
+        document.body.appendChild(f)
+        f.parentNode.removeChild(f)
+      }
+
+      urbanAirship.close = function() {
+        invoke('uairship://close')
+      }
 
       urbanAirship.runAction = function(actionName, argument, callback) {
         var callbackKey = 'ua-cb-' + (++callbackID)
@@ -46,7 +29,8 @@ if (typeof UAirship === 'undefined') {
           callback(null, data)
         }
 
-        _UAirship.actionCall(actionName, JSON.stringify(argument), callbackKey)
+        var encodedArgument = encodeURIComponent(JSON.stringify(argument))
+        invoke('uairship://android-run-action-cb/' + actionName + '/' + encodedArgument + '/' + callbackKey)
       }
 
       urbanAirship.finishAction = function(err, data, callbackKey) {

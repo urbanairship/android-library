@@ -218,8 +218,8 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         updateService.onHandleIntent(intent);
 
         // Verify user name and user token was set
-        assertEquals("Should update the user name", RichPushManager.shared().getRichPushUser().getId(), fakeUserId);
-        assertEquals("Should update the user token", RichPushManager.shared().getRichPushUser().getPassword(), fakeUserToken);
+        assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
+        assertEquals("Should update the user token", richPushManager.getRichPushUser().getPassword(), fakeUserToken);
 
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
@@ -239,8 +239,8 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
 
         updateService.onHandleIntent(intent);
 
-        assertNull("Should not update the user name", RichPushManager.shared().getRichPushUser().getId());
-        assertNull("Should not update the user token", RichPushManager.shared().getRichPushUser().getPassword());
+        assertNull("Should not update the user name", richPushManager.getRichPushUser().getId());
+        assertNull("Should not update the user token", richPushManager.getRichPushUser().getPassword());
 
         // Verify result receiver
         assertEquals("Should return error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,

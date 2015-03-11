@@ -242,18 +242,6 @@ public class PushManager extends BaseManager {
     }
 
     /**
-     * Returns the shared PushManager singleton instance. This call will block unless
-     * UAirship is ready.
-     *
-     * @return The shared PushManager instance.
-     * @deprecated As of 5.0.0. Use {@link com.urbanairship.UAirship#getPushManager()}} instead.
-     */
-    @Deprecated
-    public static PushManager shared() {
-        return UAirship.shared().getPushManager();
-    }
-
-    /**
      * Enables or disables push notifications.
      * <p/>
      * This setting is persisted between application starts, so there is no need to call this

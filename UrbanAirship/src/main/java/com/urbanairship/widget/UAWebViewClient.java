@@ -29,8 +29,8 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
-import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -43,7 +43,6 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
-import com.urbanairship.js.UAJavascriptInterface;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
@@ -51,11 +50,13 @@ import com.urbanairship.util.UriUtils;
 
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * <p>
@@ -117,20 +118,20 @@ public class UAWebViewClient extends WebViewClient {
     public static final String RUN_ACTIONS_COMMAND = "run-actions";
 
     /**
-     * Run actions command with a callback. Maps to
-     * {@link com.urbanairship.js.UAJavascriptInterface#runActionCallback(String, com.urbanairship.actions.ActionValue, String)}.
+     * Run actions command with a callback.
      */
     private static final String RUN_ACTIONS_COMMAND_CALLBACK = "android-run-action-cb";
 
     /**
      * Close command to handle close method in the Javascript Interface.
      */
-    private static final String CLOSE_COMMAND = "close";
-
-    private ActionRunRequestFactory actionRunRequestFactory;
+    public static final String CLOSE_COMMAND = "close";
 
     private Map<String, Credentials> authRequestCredentials = new HashMap<>();
     private ActionCompletionCallback actionCompletionCallback;
+    private final ActionRunRequestFactory actionRunRequestFactory;
+    private static SimpleDateFormat dateFormatter;
+
 
     /**
      * Default constructor.
@@ -160,13 +161,24 @@ public class UAWebViewClient extends WebViewClient {
         }
     }
 
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        return interceptUrl(view, url);
+    /**
+     * Called when UAirship.close() is triggered from the Urban Airship Javascript interface.
+     * <p/>
+     * The default behavior simulates a back key press.
+     * @param webView The web view.
+     */
+    public void onClose(final WebView webView) {
+        webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+        webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
     }
 
     @Override
-    public void onLoadResource(WebView view, String url) {
+    public boolean shouldOverrideUrlLoading(WebView webView, String url) {
+        return interceptUrl(webView, url);
+    }
+
+    @Override
+    public void onLoadResource(WebView webView, String url) {
 
         /*
          * Sometimes shouldOverrideUrlLoading is not called when the uairship library is ready for whatever reasons,
@@ -174,71 +186,76 @@ public class UAWebViewClient extends WebViewClient {
          * being called with the url.
          */
 
-        interceptUrl(view, url);
+        interceptUrl(webView, url);
     }
 
     /**
      * Intercepts a url for our JS bridge.
      *
-     * @param view The web view.
+     * @param webView The web view.
      * @param url The url being loaded.
      * @return <code>true</code> if the url was loaded, otherwise <code>false</code>.
      */
-    private boolean interceptUrl(WebView view, String url) {
-        Uri uri = Uri.parse(url);
-
-        if (!uri.getScheme().equals(UA_ACTION_SCHEME) || view == null || !isWhiteListed(view.getUrl())) {
+    private boolean interceptUrl(WebView webView, String url) {
+        if (webView == null || url == null) {
             return false;
         }
 
-        RichPushMessage message = null;
-        if (view instanceof RichPushMessageWebView) {
-            message = ((RichPushMessageWebView) view).getCurrentMessage();
+        Uri uri = Uri.parse(url);
+        if (uri.getHost() == null || !uri.getScheme().equals(UA_ACTION_SCHEME) || !isWhiteListed(webView.getUrl())) {
+            return false;
         }
 
         Logger.verbose("Intercepting: " + url);
-        if (RUN_BASIC_ACTIONS_COMMAND.equals(uri.getHost())) {
-            Logger.info("Running run basic actions command for URL: " + url);
-            runActions(decodeActionArguments(uri, true), message);
-        } else if (RUN_ACTIONS_COMMAND.equals(uri.getHost())) {
-            Logger.info("Running run actions command for URL: " + url);
-            runActions(decodeActionArguments(uri, false), message);
-        } else if (RUN_ACTIONS_COMMAND_CALLBACK.equals(uri.getHost())) {
-            Logger.info("Running run actions command with callback for URL: " + url);
-            UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
-            List<String> paths = uri.getPathSegments();
-            if (paths.size() == 3) {
-                Logger.info("Action: " + paths.get(0) + ", Args: " + paths.get(1) + ", Callback: " + paths.get(2));
-                jsInterface.actionCall(paths.get(0), paths.get(1), paths.get(2));
-            } else {
-                Logger.error("Unable to run action, invalid number of arguments.");
-            }
-        } else if (CLOSE_COMMAND.equals(uri.getHost())) {
-            Logger.info("Running close command for URL: " + url);
-            UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
-            jsInterface.close();
-        } else {
-            Logger.warn("Unrecognized command: " + uri.getHost()
-                    + " for URL: " + url);
+        switch (uri.getHost()) {
+            case RUN_BASIC_ACTIONS_COMMAND:
+                Logger.info("Running run basic actions command for URL: " + url);
+                runActions(webView, decodeActionArguments(uri, true));
+                return true;
 
-            return false;
+            case RUN_ACTIONS_COMMAND:
+                Logger.info("Running run actions command for URL: " + url);
+                runActions(webView, decodeActionArguments(uri, false));
+                return true;
+
+            case RUN_ACTIONS_COMMAND_CALLBACK:
+                Logger.info("Running run actions command with callback for URL: " + url);
+
+                List<String> paths = uri.getPathSegments();
+                if (paths.size() == 3) {
+                    Logger.info("Action: " + paths.get(0) + ", Args: " + paths.get(1) + ", Callback: " + paths.get(2));
+                    runAction(webView, paths.get(0), paths.get(1), paths.get(2));
+                } else {
+                    Logger.error("Unable to run action, invalid number of arguments.");
+                }
+                return true;
+
+            case CLOSE_COMMAND:
+                Logger.info("Running close command for URL: " + url);
+                onClose(webView);
+                return true;
+
+            default:
+                Logger.warn("Unrecognized command: " + uri.getHost()
+                        + " for URL: " + url);
+
+                return false;
         }
-
-        return true;
     }
 
     /**
-     * Performs actions from the run actions command.
+     * Runs a set of actions for the web view.
      *
+     * @param webView The web view.
      * @param arguments Map of action to action arguments to run.
-     * @param message The optional rich push message associated with the web view.
      */
-    private void runActions(Map<String, List<ActionValue>> arguments, RichPushMessage message) {
+    private void runActions(WebView webView, Map<String, List<ActionValue>> arguments) {
         if (arguments == null) {
             return;
         }
 
         Bundle metadata = new Bundle();
+        RichPushMessage message = getMessage(webView);
         if (message != null) {
             metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
         }
@@ -261,7 +278,103 @@ public class UAWebViewClient extends WebViewClient {
                                        });
             }
         }
+    }
 
+    /**
+     * Runs a single action by name, and performs callbacks into the JavaScript layer with results.
+     *
+     * @param webView The web view.
+     * @param name The name of the action to run.
+     * @param value A JSON-encoded string representing the action value.
+     * @param callbackKey The key for the callback function in JavaScript.
+     */
+    private void runAction(final WebView webView, final String name, final String value, final String callbackKey) {
+        // Parse the action value
+        ActionValue actionValue;
+        try {
+            actionValue = new ActionValue(JsonValue.parseString(value));
+        } catch (JsonException e) {
+            Logger.warn("Unable to parse action argument value: " + value, e);
+            triggerCallback(webView, "Unable to decode arguments payload", new ActionValue(), callbackKey);
+            return;
+        }
+
+        // Create metadata
+        Bundle metadata = new Bundle();
+        RichPushMessage message = getMessage(webView);
+        if (message != null) {
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
+        }
+
+        // Run the action
+        actionRunRequestFactory.createActionRequest(name)
+                               .setMetadata(metadata)
+                               .setValue(actionValue)
+                               .setSituation(Situation.WEB_VIEW_INVOCATION)
+                               .run(new ActionCompletionCallback() {
+                                   @Override
+                                   public void onFinish(ActionArguments arguments, ActionResult result) {
+
+                                       String errorMessage = null;
+                                       switch (result.getStatus()) {
+                                           case ACTION_NOT_FOUND:
+                                               errorMessage =  String.format("Action %s not found", name);
+                                               break;
+                                           case REJECTED_ARGUMENTS:
+                                               errorMessage = String.format("Action %s rejected its arguments", name);
+                                               break;
+                                           case EXECUTION_ERROR:
+                                               if (result.getException() != null) {
+                                                   errorMessage = result.getException().getMessage();
+                                               } else {
+                                                   errorMessage = String.format("Action %s failed with unspecified error", name);
+                                               }
+                                       }
+
+                                       triggerCallback(webView, errorMessage, result.getValue(), callbackKey);
+
+                                       synchronized (this) {
+                                           if (actionCompletionCallback != null) {
+                                               actionCompletionCallback.onFinish(arguments, result);
+                                           }
+                                       }
+                                   }
+                               });
+    }
+
+    /**
+     * Helper method that calls the action callback.
+     *
+     * @param webView The web view.
+     * @param error The error message or null if no error.
+     * @param resultValue The actions value of the result.
+     * @param callbackKey The key for the callback function in JavaScript.
+     */
+    @SuppressLint("NewAPI")
+    private void triggerCallback(final WebView webView, String error, ActionValue resultValue, String callbackKey) {
+        // Create the callback string
+        String callbackString = String.format("'%s'", callbackKey);
+
+        // Create the error string
+        String errorString;
+        if (error == null) {
+            errorString = "null";
+        } else {
+            errorString = String.format(Locale.US, "new Error(%s)", JSONObject.quote(error));
+        }
+
+        // Create the result value
+        String resultValueString = resultValue.toString();
+
+        // Create the javascript call for UAirship.finishAction(error, value, callback)
+        final String finishAction = String.format(Locale.US, "UAirship.finishAction(%s, %s, %s);",
+                errorString, resultValueString, callbackString);
+
+        if (Build.VERSION.SDK_INT >= 19) {
+            webView.evaluateJavascript(finishAction, null);
+        } else {
+            webView.loadUrl("javascript:" + finishAction);
+        }
     }
 
     /**
@@ -310,7 +423,6 @@ public class UAWebViewClient extends WebViewClient {
     }
 
     @Override
-    @SuppressLint("NewAPI")
     public void onPageFinished(final WebView view, String url) {
         if (view == null) {
             return;
@@ -322,34 +434,7 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         Logger.info("Loading UrbanAirship Javascript interface.");
-
-
-        RichPushMessage message = null;
-        if (view instanceof RichPushMessageWebView) {
-            message = ((RichPushMessageWebView) view).getCurrentMessage();
-        }
-
-        UAJavascriptInterface jsInterface = new UAJavascriptInterface(view, message);
-
-        final String jsWrapper = createJavascriptInterfaceWrapper(jsInterface);
-        final String nativeBridge = NativeBridge.getJavaScriptSource();
-
-        if (Build.VERSION.SDK_INT >= 19) {
-
-            // Load the jsWrapper first
-            view.evaluateJavascript(jsWrapper, new ValueCallback<String>() {
-                @Override
-                @SuppressLint("NewApi")
-                public void onReceiveValue(String value) {
-                    view.evaluateJavascript(nativeBridge, null);
-                }
-            });
-
-        } else {
-            // Load the jsWrapper first.
-            view.loadUrl("javascript:" + jsWrapper);
-            view.loadUrl("javascript:" + nativeBridge);
-        }
+        injectJavascriptInterface(view);
     }
 
     /**
@@ -360,7 +445,6 @@ public class UAWebViewClient extends WebViewClient {
      */
     private boolean isWhiteListed(String url) {
         return UAirship.shared().getWhitelist().isWhitelisted(url);
-
     }
 
     @Override
@@ -393,6 +477,68 @@ public class UAWebViewClient extends WebViewClient {
     }
 
     /**
+     * Injects the Urban Airship Javascript interface into the web view.
+     * @param webView The web view.
+     */
+    @SuppressLint("NewAPI")
+    private void injectJavascriptInterface(WebView webView) {
+        RichPushMessage message = getMessage(webView);
+
+        if (dateFormatter == null) {
+            dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
+            dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+
+        /*
+         * The native bridge will prototype _UAirship, so inject any additional
+         * functionality under _UAirship and the final UAirship object will have
+         * access to it.
+         */
+        StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
+
+        // Getters
+        sb.append(createGetter("getDeviceModel",  Build.MODEL))
+          .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
+          .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
+          .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
+          .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
+          .append(createGetter("getUserId", UAirship.shared().getRichPushManager().getRichPushUser().getId()));
+
+        // Append native bridge
+        sb.append(NativeBridge.getJavaScriptSource());
+
+        String javaScript = sb.toString();
+
+        if (Build.VERSION.SDK_INT >= 19) {
+            webView.evaluateJavascript(javaScript, null);
+        } else {
+            webView.loadUrl("javascript:" + javaScript);
+        }
+    }
+
+    private String createGetter(String functionName, String value) {
+        value = (value == null) ? "null" : JSONObject.quote(value);
+        return String.format(Locale.US, "_UAirship.%s = function(){return %s;};", functionName, value);
+    }
+
+    private String createGetter(String functionName, long value) {
+        return String.format(Locale.US, "_UAirship.%s = function(){return %d;};", functionName, value);
+    }
+
+    /**
+     * Helper method to get the RichPushMessage from the web view.
+     * @param webView The web view.
+     * @return The rich push message or null if the web view is not an instance of RichPushMessageWebView
+     * or does not have an associated message.
+     */
+    private RichPushMessage getMessage(WebView webView) {
+        if (webView instanceof RichPushMessageWebView) {
+            return ((RichPushMessageWebView) webView).getCurrentMessage();
+        }
+        return null;
+    }
+
+    /**
      * Credentials model class.
      */
     private static class Credentials {
@@ -405,43 +551,5 @@ public class UAWebViewClient extends WebViewClient {
         }
     }
 
-    String createJavascriptInterfaceWrapper(UAJavascriptInterface jsInterface) {
-        StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
 
-        // Getters
-        sb.append(createGetter("getDeviceModel", jsInterface.getDeviceModel()))
-          .append(createGetter("getMessageId", jsInterface.getMessageId()))
-          .append(createGetter("getMessageTitle", jsInterface.getMessageTitle()))
-          .append(createGetter("getMessageSentDate", jsInterface.getMessageSentDate()))
-          .append(createGetter("getMessageSentDateMS", jsInterface.getMessageSentDateMS()))
-          .append(createGetter("getUserId", jsInterface.getUserId()));
-
-        // Invoke helper method
-        sb.append("_UAirship.invoke = function(url){")
-          .append("var f = document.createElement('iframe');")
-          .append("f.style.display = 'none';")
-          .append("f.src = url;")
-          .append("document.body.appendChild(f);")
-          .append("f.parentNode.removeChild(f);")
-          .append("};");
-
-        // Close
-        sb.append("_UAirship.close=function(){_UAirship.invoke('uairship://close');};");
-
-        // ActionCall
-        sb.append("_UAirship.actionCall=function(name, args, callback){")
-          .append("var url = 'uairship://android-run-action-cb/' + name + '/' + encodeURIComponent(args) +'/' + callback;")
-          .append("_UAirship.invoke(url);")
-          .append("};");
-
-        return sb.toString();
-    }
-
-    private String createGetter(String functionName, String value) {
-        return String.format(Locale.US, "_UAirship.%s = function(){return %s;};", functionName, JSONObject.quote(value));
-    }
-
-    private String createGetter(String functionName, long value) {
-        return String.format(Locale.US, "_UAirship.%s = function(){return %d;};", functionName, value);
-    }
 }
