@@ -38,12 +38,14 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.ResultReceiver;
 import android.util.SparseArray;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
 
 import java.util.ArrayList;
@@ -123,20 +125,26 @@ public class LocationService extends Service {
     static final String EXTRA_MIN_TIME = "com.urbanairship.location.EXTRA_MIN_TIME";
 
     /**
-     * Action to start continuous location updates.
+     * Action to check if location updates need to be started or stopped.
      */
-    static final String ACTION_START_UPDATES = "com.urbanairship.location.ACTION_START_UPDATES";
-
-    /**
-     * Action to stop continuous location updates.
-     */
-    static final String ACTION_STOP_UPDATES = "com.urbanairship.location.ACTION_STOP_UPDATES";
+    static final String ACTION_CHECK_LOCATION_UPDATES = "com.urbanairship.location.ACTION_CHECK_LOCATION_UPDATES";
 
     /**
      * Action used for location updates.
      */
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
+
+    /**
+     * Extra for a result receiver for {@link #ACTION_CHECK_LOCATION_UPDATES}. Will return either
+     * {@code 0} (updates not started) or {@link #RESULT_LOCATION_UPDATES_STARTED} (updates started).
+     */
+    static final String EXTRA_RESULT_RECEIVER = "com.urbanairship.location.EXTRA_RESULT_RECEIVER";
+
+    /**
+     * Result receiver code indicating continuous location updates have been started.
+     */
+    static int RESULT_LOCATION_UPDATES_STARTED = 1;
 
     private Set<Messenger> subscribedClients = new HashSet<>();
     private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
@@ -213,13 +221,10 @@ public class LocationService extends Service {
         }
 
         Logger.verbose("LocationService - Received intent with action: " + intent.getAction());
-        
+
         switch (intent.getAction()) {
-            case ACTION_START_UPDATES:
-                onStartLocationUpdates();
-                break;
-            case ACTION_STOP_UPDATES:
-                onStopLocationUpdates();
+            case ACTION_CHECK_LOCATION_UPDATES:
+                onCheckLocationUpdates(intent);
                 break;
             case ACTION_LOCATION_UPDATE:
                 onLocationUpdate(intent);
@@ -321,7 +326,7 @@ public class LocationService extends Service {
      * @param intent The received intent.
      */
     private void onLocationUpdate(Intent intent) {
-        if (!UAirship.shared().getLocationManager().isLocationUpdatesNeeded() || areUpdatesStopped) {
+        if (!isContinuousLocationUpdatesAllowed() || areUpdatesStopped) {
             // Location is disabled and will be stopped in another intent.
             return;
         }
@@ -379,42 +384,46 @@ public class LocationService extends Service {
     }
 
     /**
-     * Called when an intent is received with action ACTION_START_UPDATES.
+     * Called when an intent is received with action {@link #ACTION_CHECK_LOCATION_UPDATES}. Starts
+     * or stops location updates.
+     *
+     * @param intent The received intent.
      */
-    private void onStartLocationUpdates() {
-        LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
+    private void onCheckLocationUpdates(Intent intent) {
+        int resultCode = 0;
+        if (isContinuousLocationUpdatesAllowed()) {
+            resultCode = RESULT_LOCATION_UPDATES_STARTED;
 
-        /*
-         * Canceling and starting location updates causes the provider to request
-         * another fix, so skip requesting it again if we already are requesting.
-         */
-        if (lastUpdateOptions != null && lastUpdateOptions.equals(options)) {
-            Logger.verbose("LocationService - Updates already started.");
-            return;
-        }
+            LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
 
-        Logger.debug("LocationService - Starting updates.");
+            /*
+             * Canceling and starting location updates causes the provider to request
+             * another fix, so skip requesting it again if we already are requesting.
+             */
+            if (lastUpdateOptions == null || !lastUpdateOptions.equals(options)) {
+                Logger.debug("LocationService - Starting updates.");
 
-        lastUpdateOptions = options;
-        areUpdatesStopped = false;
+                lastUpdateOptions = options;
+                areUpdatesStopped = false;
 
-        PendingIntent pendingIntent = createLocationUpdateIntent(options);
+                PendingIntent pendingIntent = createLocationUpdateIntent(options);
 
-        locationProvider.connect();
-        locationProvider.cancelRequests(pendingIntent);
+                locationProvider.connect();
+                locationProvider.cancelRequests(pendingIntent);
 
-        locationProvider.requestLocationUpdates(options, pendingIntent);
-    }
+                locationProvider.requestLocationUpdates(options, pendingIntent);
+            }
 
-    /**
-     * Called when an intent is received with action ACTION_STOP_UPDATES.
-     */
-    private void onStopLocationUpdates() {
-        if (!areUpdatesStopped) {
+        } else if (!areUpdatesStopped) {
             Logger.debug("LocationService - Stopping updates.");
             locationProvider.cancelRequests(createLocationUpdateIntent(null));
             lastUpdateOptions = null;
             areUpdatesStopped = true;
+        }
+
+        ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_RESULT_RECEIVER);
+        if (resultReceiver != null) {
+            resultReceiver.send(resultCode, new Bundle());
         }
     }
 
@@ -541,6 +550,18 @@ public class LocationService extends Service {
         }
 
         return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    /**
+     * Checks if location updates should be enabled.
+     *
+     * @return <code>true</code> if location updates should be enabled,
+     * otherwise <code>false</code>.
+     */
+    private boolean isContinuousLocationUpdatesAllowed() {
+        UALocationManager locationManager = UAirship.shared().getLocationManager();
+        Analytics analytics = UAirship.shared().getAnalytics();
+        return locationManager.isLocationUpdatesEnabled() && (locationManager.isBackgroundLocationAllowed() || analytics.isAppInForeground());
     }
 
     /**

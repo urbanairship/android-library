@@ -39,6 +39,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
 import com.urbanairship.BaseManager;
@@ -57,6 +59,7 @@ import java.util.List;
 public class UALocationManager extends BaseManager {
 
     private final Messenger messenger;
+    private final Context context;
     private Messenger serviceMessenger;
 
     private boolean isBound;
@@ -98,12 +101,12 @@ public class UALocationManager extends BaseManager {
      *
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
-     *
      * @hide
      */
     public UALocationManager(final Context context, PreferenceDataStore preferenceDataStore) {
-        preferences = new LocationPreferences(preferenceDataStore);
-        messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
+        this.context = context.getApplicationContext();
+        this.preferences = new LocationPreferences(preferenceDataStore);
+        this.messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
 
         /*
          * When preferences are changed on the current process or other processes,
@@ -139,8 +142,9 @@ public class UALocationManager extends BaseManager {
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(Analytics.ACTION_APP_FOREGROUND);
                 filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-                filter.addCategory(UAirship.getPackageName());
-                UAirship.getApplicationContext().registerReceiver(new BroadcastReceiver() {
+
+                LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
+                broadcastManager.registerReceiver(new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         updateServiceConnection();
@@ -302,41 +306,47 @@ public class UALocationManager extends BaseManager {
      * Updates the service connection. Handles binding and subscribing to
      * the location service.
      */
-    private synchronized void updateServiceConnection() {
-        boolean isUpdatesNeeded = isLocationUpdatesNeeded();
-
-        Context context = UAirship.getApplicationContext();
-
-        if (isUpdatesNeeded) {
-            // Start the service for updates
-            Intent intent = new Intent(context, LocationService.class);
-            intent.setAction(LocationService.ACTION_START_UPDATES);
-            if (context.startService(intent) == null) {
-                Logger.error("Unable to start location service. Check that the location service is added to the manifest.");
+    private void updateServiceConnection() {
+        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+            @Override
+            protected void onReceiveResult(int resultCode, Bundle resultData) {
+                if (resultCode == LocationService.RESULT_LOCATION_UPDATES_STARTED) {
+                    onUpdatesStarted();
+                } else {
+                    onUpdatesStopped();
+                }
             }
-        } else {
-            // Stop any updates
-            Intent intent = new Intent(context, LocationService.class);
-            intent.setAction(LocationService.ACTION_STOP_UPDATES);
-            context.startService(intent);
-        }
 
-
-        // Check if we need to subscribe for updates
-        if (isUpdatesNeeded && !locationListeners.isEmpty()) {
-            if (isBound) {
-                subscribeUpdates();
-            } else {
-                // Once bound we will call updateServiceConnection again.
-                bindService();
+            private void onUpdatesStarted() {
+                synchronized (locationListeners) {
+                    if (!locationListeners.isEmpty()) {
+                        if (isBound) {
+                            subscribeUpdates();
+                        } else {
+                            // Once bound we will call updateServiceConnection again.
+                            bindService();
+                        }
+                    }
+                }
             }
-        } else {
-            unsubscribeUpdates();
 
-            // unbind service
-            if (singleLocationRequests.size() == 0) {
-                unbindService();
+            private void onUpdatesStopped() {
+                unsubscribeUpdates();
+                synchronized (singleLocationRequests) {
+                    // unbind service
+                    if (singleLocationRequests.size() == 0) {
+                        unbindService();
+                    }
+                }
             }
+        };
+
+        Intent intent = new Intent(context, LocationService.class)
+                .setAction(LocationService.ACTION_CHECK_LOCATION_UPDATES)
+                .putExtra(LocationService.EXTRA_RESULT_RECEIVER, resultReceiver);
+
+        if (context.startService(intent) == null) {
+            Logger.error("Unable to start location service. Check that the location service is added to the manifest.");
         }
     }
 

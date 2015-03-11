@@ -25,37 +25,28 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.analytics.Analytics;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricGradleTestRunner.class)
 public class ApplicationMetricsTest {
 
-    private Context context;
-    private PreferenceDataStore preferenceDataStore;
     private ApplicationMetrics metrics;
 
     @Before
     public void setup() {
-        context = mock(Context.class);
-        preferenceDataStore = new PreferenceDataStore(mock(UrbanAirshipResolver.class));
+        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(mock(UrbanAirshipResolver.class));
+        metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore);
     }
 
     /**
@@ -64,7 +55,6 @@ public class ApplicationMetricsTest {
      */
     @Test
     public void testGetLastOpenNotSet() {
-        metrics = new ApplicationMetrics(context, preferenceDataStore);
         assertEquals("Last open time should default to -1", -1, metrics.getLastOpenTimeMillis());
     }
 
@@ -74,26 +64,9 @@ public class ApplicationMetricsTest {
      */
     @Test
     public void testLastOpenTimeTracking() {
-        // Set up an argument captor to grab the broadcast receiver
-        ArgumentCaptor<BroadcastReceiver> argumentCaptor = ArgumentCaptor.forClass(BroadcastReceiver.class);
-
-        // Only capture it for the right register receiver
-        when(context.registerReceiver(argumentCaptor.capture(), argThat(new ArgumentMatcher<IntentFilter>() {
-            @Override
-            public boolean matches(Object argument) {
-                IntentFilter filter = (IntentFilter) argument;
-                return filter != null && filter.getAction(0).equals(Analytics.ACTION_APP_FOREGROUND);
-            }
-        }))).thenReturn(null);
-
-        metrics = new ApplicationMetrics(context, preferenceDataStore);
-
-        // Verify we have a receiver
-        BroadcastReceiver receiver = argumentCaptor.getValue();
-        assertNotNull("Application metrics should set up a receiver to track foreground events", receiver);
-
-        // Send an app foreground action
-        receiver.onReceive(context, new Intent(Analytics.ACTION_APP_FOREGROUND));
+        // Send the foreground broadcast to update last open time
+        LocalBroadcastManager.getInstance(TestApplication.getApplication())
+                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
 
         // Make sure the time is greater than 0
         assertTrue("Last open time should of updated", metrics.getLastOpenTimeMillis() > 0);

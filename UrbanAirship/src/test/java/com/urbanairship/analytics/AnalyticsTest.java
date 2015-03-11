@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Looper;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.RobolectricGradleTestRunner;
@@ -42,6 +43,7 @@ import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowLocalBroadcastManager;
 
 import java.util.List;
 
@@ -58,7 +60,9 @@ public class AnalyticsTest {
     Analytics analytics;
     ActivityMonitor.Listener activityMonitorListener;
     ActivityMonitor mockActivityMonitor;
+    LocalBroadcastManager localBroadcastManager;
     ShadowApplication shadowApplication;
+
 
     @Before
     public void setup() {
@@ -71,11 +75,11 @@ public class AnalyticsTest {
         activityMonitorListener = listenerCapture.getValue();
         assertNotNull("Should set the listener on create", activityMonitorListener);
 
-        // Replace the executor so it adds events on the same thread
-
         shadowApplication = Robolectric.shadowOf(Robolectric.application);
         shadowApplication.clearStartedServices();
 
+
+        localBroadcastManager = LocalBroadcastManager.getInstance(TestApplication.getApplication());
         TestApplication.getApplication().setAnalytics(analytics);
     }
 
@@ -97,7 +101,6 @@ public class AnalyticsTest {
         // Start analytics in the background
         activityMonitorListener.onBackground(0);
 
-        shadowApplication.clearStartedServices();
         assertFalse(analytics.isAppInForeground());
 
         // Grab the session id to compare it to a new session id
@@ -114,8 +117,9 @@ public class AnalyticsTest {
         assertTrue(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app foreground
-        List<Intent> broadcasts = shadowApplication.getBroadcastIntents();
-        assertEquals("Should of sent a foreground broadcast",
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = Robolectric.shadowOf(localBroadcastManager);
+        List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
+        assertEquals("Should of sent a foreground local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_FOREGROUND);
     }
 
@@ -149,8 +153,9 @@ public class AnalyticsTest {
         assertFalse(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app background
-        List<Intent> broadcasts = shadowApplication.getBroadcastIntents();
-        assertEquals("Should of sent a background broadcast",
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = Robolectric.shadowOf(localBroadcastManager);
+        List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
+        assertEquals("Should of sent a background local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_BACKGROUND);
     }
 

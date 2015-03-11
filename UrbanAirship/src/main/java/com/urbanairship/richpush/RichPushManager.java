@@ -33,6 +33,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.BaseManager;
 import com.urbanairship.Logger;
@@ -78,7 +79,6 @@ public class RichPushManager extends BaseManager {
      */
     public RichPushManager(Context context, PreferenceDataStore preferenceDataStore) {
         this(new RichPushUser(preferenceDataStore), new RichPushInbox(context));
-
     }
 
     /**
@@ -94,6 +94,9 @@ public class RichPushManager extends BaseManager {
 
     @Override
     protected void init() {
+        inbox.updateCache();
+        updateUserIfNecessary();
+
         foregroundReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -101,13 +104,13 @@ public class RichPushManager extends BaseManager {
             }
         };
 
-        inbox.updateCache();
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(UAirship.getApplicationContext());
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addCategory(UAirship.getPackageName());
-        UAirship.getApplicationContext().registerReceiver(foregroundReceiver, filter);
 
-        updateUserIfNecessary();
+        broadcastManager.registerReceiver(foregroundReceiver, filter);
+        UAirship.getApplicationContext().registerReceiver(foregroundReceiver, filter);
     }
 
     @Override
