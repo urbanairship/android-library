@@ -86,6 +86,7 @@ public class Analytics {
      * The Analytics constructor
      *
      * @param context The application context.
+     * @param preferenceDataStore The preference data store.
      * @param options The airship config options
      * @param activityMonitor Optional activityMonitor
      */
