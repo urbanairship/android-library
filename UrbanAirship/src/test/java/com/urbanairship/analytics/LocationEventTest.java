@@ -3,22 +3,15 @@ package com.urbanairship.analytics;
 import android.location.Location;
 
 import com.urbanairship.RobolectricGradleTestRunner;
-import com.urbanairship.TestApplication;
-import com.urbanairship.push.PushManager;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-
-import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricGradleTestRunner.class)
 public class LocationEventTest {
@@ -52,8 +45,6 @@ public class LocationEventTest {
     final double LAT = 45.5236;
     final double LON = 122.5236;
 
-    private PushManager mockPush;
-
     @Before
     public void setUp() {
         gpsLocation = createTestLocation("GPS");
@@ -77,27 +68,6 @@ public class LocationEventTest {
 
         singleUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.SINGLE, 1, 1, true);
         continuousUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, false);
-
-
-        mockPush = Mockito.mock(PushManager.class);
-        TestApplication.getApplication().setPushManager(mockPush);
-    }
-
-    @Test
-    public void testPushEnabled() throws JSONException {
-        when(mockPush.isPushEnabled()).thenReturn(true);
-        assertEquals(event.getEventData().get(Event.PUSH_ENABLED_KEY), true);
-    }
-
-    @Test
-    public void testNotificationTypes() throws JSONException {
-        JSONObject data = event.getEventData();
-        JSONArray typesJSON = (JSONArray) data.get(Event.NOTIFICATION_TYPES_KEY);
-        ArrayList<String> typesList = new ArrayList<>();
-        for (int i = 0; i < typesJSON.length(); i++) {
-            typesList.add((String) typesJSON.get(i));
-        }
-        assertEquals(typesList, event.getNotificationTypes());
     }
 
     @Test
@@ -170,7 +140,7 @@ public class LocationEventTest {
     @Test
     public void testJSONKeys() throws JSONException {
         String[] expectedKeys = new String[] { "session_id", "lat", "long", "requested_accuracy", "update_type",
-                                               "push_enabled", "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground", "notification_types" };
+                                               "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground" };
 
         JSONObject eventData = new JSONObject(event.createEventPayload("sessionId")).getJSONObject(Event.DATA_KEY);
 

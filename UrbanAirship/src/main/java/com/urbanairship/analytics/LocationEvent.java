@@ -28,10 +28,8 @@ package com.urbanairship.analytics;
 import android.location.Location;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -105,8 +103,6 @@ public class LocationEvent extends Event {
         JSONObject data = new JSONObject();
 
         try {
-            data.put(PUSH_ENABLED_KEY, UAirship.shared().getPushManager().isPushEnabled());
-            data.put(NOTIFICATION_TYPES_KEY, new JSONArray(getNotificationTypes()));
             data.put(LATITUDE_KEY, latitude);
             data.put(LONGITUDE_KEY, longitude);
             data.put(REQUESTED_ACCURACY_KEY, requestedAccuracy);
