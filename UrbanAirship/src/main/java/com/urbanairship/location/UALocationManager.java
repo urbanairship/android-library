@@ -153,18 +153,6 @@ public class UALocationManager extends BaseManager {
     }
 
     /**
-     * Returns the shared UALocationManager singleton instance. This call will block unless
-     * UAirship is ready.
-     *
-     * @return The shared UALocationManager instance.
-     * @deprecated As of 5.0.0. Use {@link com.urbanairship.UAirship#getLocationManager()} instead.
-     */
-    @Deprecated
-    public static UALocationManager shared() {
-        return UAirship.shared().getLocationManager();
-    }
-
-    /**
      * Checks if continuous location updates is enabled or not.
      *
      * @return <code>true</code> if location updates are enabled, otherwise
