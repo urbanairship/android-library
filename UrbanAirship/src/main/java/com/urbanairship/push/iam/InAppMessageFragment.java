@@ -55,6 +55,8 @@ import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.widget.SwipeDismissViewLayout;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,6 +64,29 @@ import java.util.Map;
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 public class InAppMessageFragment extends Fragment {
+
+    /**
+     * Listener for InAppMessageFragment events.
+     */
+    public interface Listener {
+        /**
+         * The fragment was resumed.
+         * @param fragment The resumed fragment.
+         */
+        public void onResume(InAppMessageFragment fragment);
+
+        /**
+         * The fragment was paused.
+         * @param fragment The paused fragment.
+         */
+        public void onPause(InAppMessageFragment fragment);
+
+        /**
+         * The fragment is finished displaying the in-app message.
+         * @param fragment The fragment.
+         */
+        public void onFinish(InAppMessageFragment fragment);
+    }
 
     /**
      * Default primary color for in-app messages. The value is only used if the in-app message's
@@ -84,10 +109,13 @@ public class InAppMessageFragment extends Fragment {
     private static final String MESSAGE = "message";
     private static final String DISMISS_ANIMATION = "dismiss_animation";
     private static final String DISMISSED = "dismissed";
+    private static final String DISMISS_ON_RECREATE = "dismiss_on_recreate";
 
     private InAppMessage message;
     private boolean isDismissed;
     private Timer timer;
+    private final List<Listener> listeners = new ArrayList<>();
+    private boolean dismissOnRecreate;
 
     /**
      * Creates a new InAppMessageFragment fragment.
@@ -116,9 +144,34 @@ public class InAppMessageFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Subscribe a listener for in-app message fragment events.
+     *
+     * @param listener An object implementing the
+     * {@link com.urbanairship.push.iam.InAppMessageFragment.Listener } interface.
+     */
+    public final void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Unsubscribe a listener for in-app message fragment events.
+     *
+     * @param listener An object implementing the
+     * {@link com.urbanairship.push.iam.InAppMessageFragment.Listener } interface.
+     */
+    public final void removeListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
+
         this.setRetainInstance(true);
 
         this.message = getArguments().getParcelable(MESSAGE);
@@ -134,12 +187,21 @@ public class InAppMessageFragment extends Fragment {
             }
         };
 
+        /**
+         * If we have saved state and our saved dismissOnRecreate does not match the value in the saved
+         * state then we know the fragment was reconstructed.
+         */
+        if (savedInstance != null && savedInstance.getBoolean(DISMISS_ON_RECREATE, false) != dismissOnRecreate) {
+            Logger.debug("InAppMessageFragment - Dismissing on recreate.");
+            dismiss(true);
+        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(DISMISSED, isDismissed);
+        outState.putBoolean(DISMISS_ON_RECREATE, dismissOnRecreate);
     }
 
     @Override
@@ -147,7 +209,11 @@ public class InAppMessageFragment extends Fragment {
         super.onResume();
         timer.start();
 
-        UAirship.shared().getInAppMessageManager().onInAppMessageFragmentResumed(this);
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onResume(this);
+            }
+        }
     }
 
     @Override
@@ -155,14 +221,17 @@ public class InAppMessageFragment extends Fragment {
         super.onPause();
         timer.stop();
 
-        UAirship.shared().getInAppMessageManager().onInAppMessageFragmentPaused(this);
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onPause(this);
+            }
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (message == null || message.getAlert() == null) {
             dismiss(false);
-            UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
             return null;
         }
 
@@ -174,7 +243,6 @@ public class InAppMessageFragment extends Fragment {
             @Override
             public void onDismissed(View view) {
                 dismiss(false);
-                UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
                 ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
                 UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -262,7 +330,6 @@ public class InAppMessageFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     dismiss(true);
-                    UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
                     ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -283,6 +350,12 @@ public class InAppMessageFragment extends Fragment {
 
         if (isDismissed) {
             return;
+        }
+
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onFinish(this);
+            }
         }
 
         isDismissed = true;
@@ -323,6 +396,19 @@ public class InAppMessageFragment extends Fragment {
     }
 
     /**
+     * Dismisses the fragment automatically if the fragment is reconstructed.
+     *
+     * Since fragments can be recreated from saved state (bundle) it will lose any saved fields that
+     * are not saved in the bundle including things such as the listeners.
+     *
+     * @param dismissOnRecreate {@code true} to dismiss the fragment if the fragment is reconstructed,
+     * otherwise {@code false}.
+     */
+    void setDismissOnRecreate(boolean dismissOnRecreate) {
+        this.dismissOnRecreate = dismissOnRecreate;
+    }
+
+    /**
      * Called when the message body is clicked. Will dismiss the fragment and run
      * actions with the {@link InAppMessage#getClickActionValues()}.
      *
@@ -330,8 +416,8 @@ public class InAppMessageFragment extends Fragment {
      */
     protected void onMessageClicked(View view) {
         dismiss(true);
+
         runActions(message.getClickActionValues());
-        UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
         ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -349,7 +435,6 @@ public class InAppMessageFragment extends Fragment {
         dismiss(true);
 
         runActions(message.getButtonActionValues(actionButton.getId()));
-        UAirship.shared().getInAppMessageManager().onInAppMessageFinished(message);
 
         ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);

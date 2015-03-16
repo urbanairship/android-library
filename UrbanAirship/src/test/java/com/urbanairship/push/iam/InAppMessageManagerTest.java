@@ -331,47 +331,6 @@ public class InAppMessageManagerTest {
     }
 
     /**
-     * Test when an InAppMessageFragment resumes and its no the last resumed fragment it will
-     * be dismissed.
-     */
-    @Test
-    @Config(emulateSdk = 18)
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void testOnInAppMessageFragmentResumed() {
-        // Set up a mocked transaction
-        FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
-        when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
-
-        // Set and show the pending in-app message
-        inAppMessageManager.setPendingMessage(message);
-
-        // Show it
-        assertTrue(inAppMessageManager.showPendingMessage(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
-
-        // Try to resume a different fragment
-        InAppMessageFragment fragment = mock(InAppMessageFragment.class);
-        inAppMessageManager.onInAppMessageFragmentResumed(fragment);
-
-        // Should dismiss it since its not the current fragment
-        verify(fragment).dismiss(false);
-    }
-
-    /**
-     * Test finishing the pending in-app message clears it.
-     */
-    @Test
-    public void testOnInAppMessageFinished() {
-        // Set and show the pending in-app message
-        inAppMessageManager.setPendingMessage(message);
-
-        // Notify the pending in-app message is finished
-        inAppMessageManager.onInAppMessageFinished(message);
-
-        assertNull(inAppMessageManager.getPendingMessage());
-    }
-
-
-    /**
      * Test set pending in-app message generates a replace resolution event if a previous, not shown
      * message exists.
      */

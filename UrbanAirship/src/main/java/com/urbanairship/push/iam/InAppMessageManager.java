@@ -45,11 +45,32 @@ import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is the primary interface for interacting with in-app messages.
  */
 public class InAppMessageManager extends BaseManager {
+
+    /**
+     * Listener for in-app messaging receive and display events.
+     */
+    public interface Listener {
+
+        /**
+         * Called when a new pending message is available.
+         * @param message The in-app message.
+         */
+        public void onPendingMessageAvailable(InAppMessage message);
+
+        /**
+         * Called when an InAppMessage is being displayed
+         * @param fragment The InAppMessageFragment that will display the in-app message.
+         * @param message The in-app message.
+         */
+        public void onDisplay(InAppMessageFragment fragment, InAppMessage message);
+    }
 
     // Preference data store keys
     private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
@@ -89,8 +110,8 @@ public class InAppMessageManager extends BaseManager {
     private InAppMessageFragment currentFragment;
     private boolean autoDisplayPendingMessage;
     private InAppMessage currentMessage;
-
-    private Object pendingMessageLock = new Object();
+    private final List<Listener> listeners = new ArrayList<>();
+    private final Object pendingMessageLock = new Object();
 
     // Runnable that we post on the main looper whenever we attempt to auto display a in-app message
     private final Runnable displayRunnable = new Runnable() {
@@ -150,12 +171,12 @@ public class InAppMessageManager extends BaseManager {
      * Checks in-app messages should be displayed as soon as possible or only on app foregrounds.
      *
      * @return {@code true} if in-app messages as soon as possible is enabled, otherwise
+
      * {@code false}.
      */
     public boolean isDisplayAsapEnabled() {
         return dataStore.getBoolean(DISPLAY_ASAP_KEY, false);
     }
-
 
     /**
      * Sets if in-app messages should be displayed automatically.
@@ -181,7 +202,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @param message The in-app message.
      */
-    public void setPendingMessage(InAppMessage message) {
+    public void setPendingMessage(final InAppMessage message) {
         synchronized (pendingMessageLock) {
             if (message == null) {
                 dataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
@@ -190,6 +211,18 @@ public class InAppMessageManager extends BaseManager {
                 if (message.equals(previous)) {
                     return;
                 }
+
+                // Notify the listener on the main thread of the new pending message
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (listeners) {
+                            for (Listener listener : listeners) {
+                                listener.onPendingMessageAvailable(message);
+                            }
+                        }
+                    }
+                });
 
                 dataStore.put(PENDING_IN_APP_MESSAGE_KEY, message.toJsonValue().toString());
 
@@ -204,6 +237,8 @@ public class InAppMessageManager extends BaseManager {
                     handler.removeCallbacks(displayRunnable);
                     handler.post(displayRunnable);
                 }
+
+
             }
         }
     }
@@ -300,7 +335,7 @@ public class InAppMessageManager extends BaseManager {
      */
     @TargetApi(14)
     public boolean showPendingMessage(Activity activity, int containerId, int enterAnimation, int exitAnimation) {
-        InAppMessage pending;
+        final InAppMessage pending;
 
         synchronized (pendingMessageLock) {
             pending = getPendingMessage();
@@ -355,7 +390,17 @@ public class InAppMessageManager extends BaseManager {
         Logger.info("InAppMessageManager - Displaying in-app message.");
         try {
             currentFragment = InAppMessageFragment.newInstance(pending, exitAnimation);
+
+            currentFragment.addListener(fragmentListener);
+            currentFragment.setDismissOnRecreate(true);
+
             currentMessage = pending;
+
+            synchronized (listeners) {
+                for (Listener listener : listeners) {
+                    listener.onDisplay(currentFragment, pending);
+                }
+            }
 
             activity.getFragmentManager().beginTransaction()
                     .setCustomAnimations(enterAnimation, 0)
@@ -371,69 +416,36 @@ public class InAppMessageManager extends BaseManager {
     }
 
     /**
+     * Subscribe a listener for in-app message events.
+     *
+     * @param listener An object implementing the
+     * {@link com.urbanairship.push.iam.InAppMessageManager.Listener } interface.
+     */
+    public void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Unsubscribe a listener for in-app message events.
+     *
+     * @param listener An object implementing the
+     * {@link com.urbanairship.push.iam.InAppMessageManager.Listener } interface.
+     */
+    public void removeListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    /**
      * Helper method to get the current, resumed activity.
      *
      * @return The current, resumed activity or null.
      */
     private Activity getCurrentActivity() {
         return activityReference == null ? null : activityReference.get();
-    }
-
-    /**
-     * Called when an in-app message is finished displaying.
-     *
-     * @param message The in-app message.
-     */
-    void onInAppMessageFinished(InAppMessage message) {
-        synchronized (pendingMessageLock) {
-            if (message != null && message.equals(getPendingMessage())) {
-                setPendingMessage(null);
-            }
-        }
-
-        if (message != null && message.equals(currentMessage)) {
-            currentMessage = null;
-        }
-    }
-
-    /**
-     * Called from an {@link InAppMessageFragment#onResume()}.
-     *
-     * @param fragment The in-app message fragment.
-     */
-    @TargetApi(11)
-    void onInAppMessageFragmentResumed(InAppMessageFragment fragment) {
-        if (currentFragment != null && currentFragment != fragment) {
-            fragment.dismiss(false);
-            return;
-        }
-
-        if (currentMessage == null || !currentMessage.equals(fragment.getMessage())) {
-            fragment.dismiss(false);
-        } else {
-            currentFragment = fragment;
-        }
-    }
-
-    /**
-     * Called from an {@link InAppMessageFragment#onPause()}.
-     *
-     * @param fragment The in-app message fragment.
-     */
-    @TargetApi(11)
-    void onInAppMessageFragmentPaused(InAppMessageFragment fragment) {
-        if (fragment != currentFragment) {
-            return;
-        }
-
-        currentFragment = null;
-        if (!fragment.isDismissed() && fragment.getActivity().isFinishing()) {
-            /*
-             * If the InAppMessageFragment's activity is finishing, but the message is still
-             * displaying, show the message on the next activity.
-             */
-            autoDisplayPendingMessage = true;
-        }
     }
 
     // Life cycle hooks
@@ -491,6 +503,64 @@ public class InAppMessageManager extends BaseManager {
             handler.postDelayed(displayRunnable, ACTIVITY_RESUME_DELAY_MS);
         }
     }
+
+    private final InAppMessageFragment.Listener fragmentListener = new InAppMessageFragment.Listener() {
+        @Override
+        public void onResume(InAppMessageFragment fragment) {
+            Logger.verbose("InAppMessageManager - InAppMessageFragment resumed: " + fragment);
+
+            if (currentFragment != null && currentFragment != fragment) {
+                Logger.debug("InAppMessageManager - Dismissing " + fragment + " because it is no longer the current fragment.");
+                fragment.dismiss(false);
+                return;
+            }
+
+            if (currentMessage == null || !currentMessage.equals(fragment.getMessage())) {
+                Logger.debug("InAppMessageManager - Dismissing " + fragment + " because its message is no longer current.");
+                fragment.dismiss(false);
+            } else {
+                currentFragment = fragment;
+            }
+        }
+
+        @Override
+        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+        public void onPause(InAppMessageFragment fragment) {
+            Logger.verbose("InAppMessageManager - InAppMessageFragment paused: " + fragment);
+            if (fragment != currentFragment) {
+                return;
+            }
+
+            currentFragment = null;
+            if (!fragment.isDismissed() && fragment.getActivity().isFinishing()) {
+
+                Logger.verbose("InAppMessageManager - InAppMessageFragment's activity is finishing: " + fragment);
+
+                /*
+                 * If the InAppMessageFragment's activity is finishing, but the message is still
+                 * displaying, show the message on the next activity.
+                 */
+                autoDisplayPendingMessage = true;
+            }
+        }
+
+        @Override
+        public void onFinish(InAppMessageFragment fragment) {
+            Logger.verbose("InAppMessageManager - InAppMessageFragment finished: " + fragment);
+
+            InAppMessage message = fragment.getMessage();
+
+            synchronized (pendingMessageLock) {
+                if (message != null && message.equals(getPendingMessage())) {
+                    setPendingMessage(null);
+                }
+            }
+
+            if (message != null && message.equals(currentMessage)) {
+                currentMessage = null;
+            }
+        }
+    };
 
     /**
      * Registers life cycle callbacks.
