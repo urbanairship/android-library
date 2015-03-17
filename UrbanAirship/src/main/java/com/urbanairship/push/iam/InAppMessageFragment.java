@@ -272,7 +272,7 @@ public class InAppMessageFragment extends Fragment {
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onMessageClicked(v);
+                    onMessageClick(v);
                 }
             });
         } else {
@@ -307,7 +307,7 @@ public class InAppMessageFragment extends Fragment {
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        onButtonClicked(view, actionButton);
+                        onButtonClick(view, actionButton);
                     }
                 });
 
@@ -414,10 +414,10 @@ public class InAppMessageFragment extends Fragment {
      *
      * @param view The view that was clicked.
      */
-    protected void onMessageClicked(View view) {
+    protected void onMessageClick(View view) {
         dismiss(true);
 
-        runActions(message.getClickActionValues());
+        runActions(message.getClickActionValues(), Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON);
 
         ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -430,11 +430,14 @@ public class InAppMessageFragment extends Fragment {
      * @param view The view that was clicked.
      * @param actionButton The associated button.
      */
-    protected void onButtonClicked(View view, NotificationActionButton actionButton) {
+    protected void onButtonClick(View view, NotificationActionButton actionButton) {
         Logger.info("In-app message button clicked: " + actionButton.getId());
         dismiss(true);
 
-        runActions(message.getButtonActionValues(actionButton.getId()));
+        Situation situation = actionButton.isForegroundAction() ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON :
+                              Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+
+        runActions(message.getButtonActionValues(actionButton.getId()), situation);
 
         ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -444,8 +447,9 @@ public class InAppMessageFragment extends Fragment {
      * Helper method to run a map of action name to action values.
      *
      * @param actionValueMap The action value map.
+     * @param situation The actions' situation.
      */
-    private void runActions(Map<String, ActionValue> actionValueMap) {
+    private void runActions(Map<String, ActionValue> actionValueMap, Situation situation) {
         if (actionValueMap == null) {
             return;
         }
@@ -453,7 +457,7 @@ public class InAppMessageFragment extends Fragment {
         for (Map.Entry<String, ActionValue> entry : actionValueMap.entrySet()) {
             ActionRunRequest.createRequest(entry.getKey())
                             .setValue(entry.getValue())
-                            .setSituation(Situation.MANUAL_INVOCATION)
+                            .setSituation(situation)
                             .run();
         }
     }
