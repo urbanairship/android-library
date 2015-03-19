@@ -53,20 +53,18 @@ public class RichPushInbox {
 
     private static final SentAtRichPushMessageComparator richPushMessageComparator = new SentAtRichPushMessageComparator();
     private final List<String> pendingDeletionMessageIds = new ArrayList<>();
-
-
     private final List<Listener> listeners = new ArrayList<>();
     private final RichPushMessageCache messageCache = new RichPushMessageCache();
-    private RichPushResolver richPushResolver;
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final RichPushResolver richPushResolver;
+    final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     RichPushInbox(Context context) {
         this(new RichPushResolver(context));
     }
 
     RichPushInbox(RichPushResolver resolver) {
-        richPushResolver = resolver;
+        this.richPushResolver = resolver;
     }
 
     // API
@@ -244,12 +242,18 @@ public class RichPushInbox {
      * @param messageIds A set of message ids.
      */
     public void deleteMessages(final Set<String> messageIds) {
-        pendingDeletionMessageIds.addAll(messageIds);
+        synchronized (pendingDeletionMessageIds) {
+            pendingDeletionMessageIds.addAll(messageIds);
+        }
+
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 richPushResolver.markMessagesDeleted(messageIds);
-                pendingDeletionMessageIds.removeAll(messageIds);
+
+                synchronized (pendingDeletionMessageIds) {
+                    pendingDeletionMessageIds.removeAll(messageIds);
+                }
             }
         });
 
@@ -278,7 +282,11 @@ public class RichPushInbox {
      * Updates the richMessageCache from the database.
      */
     private void updateCacheFromDB() {
-        List<String> deletedIds = new ArrayList<>(pendingDeletionMessageIds);
+        List<String> deletedIds;
+        synchronized (pendingDeletionMessageIds) {
+            deletedIds = new ArrayList<>(pendingDeletionMessageIds);
+        }
+
         Cursor inboxCursor = richPushResolver.getAllMessages();
 
         if (inboxCursor == null) {
@@ -346,7 +354,7 @@ public class RichPushInbox {
             @Override
             public void run() {
                 synchronized (listeners) {
-                    for (Listener listener : listeners) {
+                    for (Listener listener : new ArrayList<>(listeners)) {
                         listener.onUpdateInbox();
                     }
                 }
