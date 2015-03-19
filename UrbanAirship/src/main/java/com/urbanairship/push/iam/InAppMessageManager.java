@@ -30,6 +30,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -112,6 +113,7 @@ public class InAppMessageManager extends BaseManager {
     private InAppMessage currentMessage;
     private final List<Listener> listeners = new ArrayList<>();
     private final Object pendingMessageLock = new Object();
+    private InAppMessageFragmentFactory fragmentFactory;
 
     // Runnable that we post on the main looper whenever we attempt to auto display a in-app message
     private final Runnable displayRunnable = new Runnable() {
@@ -137,6 +139,15 @@ public class InAppMessageManager extends BaseManager {
         this.dataStore = dataStore;
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingMessage = isDisplayAsapEnabled();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            fragmentFactory = new InAppMessageFragmentFactory() {
+                @Override
+                public InAppMessageFragment createFragment(InAppMessage message) {
+                    return new InAppMessageFragment();
+                }
+            };
+        }
     }
 
     @Override
@@ -389,11 +400,28 @@ public class InAppMessageManager extends BaseManager {
 
         Logger.info("InAppMessageManager - Displaying in-app message.");
         try {
-            currentFragment = InAppMessageFragment.newInstance(pending, exitAnimation);
+
+            InAppMessageFragmentFactory factory = getFragmentFactory();
+            if (factory == null) {
+                Logger.error("InAppMessageManager - InAppMessageFragmentFactory is null, unable to display an in-app message.");
+                return false;
+            }
+
+            currentFragment = factory.createFragment(pending);
+            if (currentFragment == null) {
+                Logger.error("InAppMessageManager - InAppMessageFragmentFactory returned a null fragment, unable to display an in-app message.");
+                return false;
+            }
+
+            Bundle args = InAppMessageFragment.createArgs(pending, exitAnimation);
+            if (currentFragment.getArguments() != null) {
+                args.putAll(currentFragment.getArguments());
+            }
+
+            currentFragment.setArguments(args);
 
             currentFragment.addListener(fragmentListener);
             currentFragment.setDismissOnRecreate(true);
-
             currentMessage = pending;
 
             synchronized (listeners) {
@@ -437,6 +465,24 @@ public class InAppMessageManager extends BaseManager {
         synchronized (listeners) {
             listeners.remove(listener);
         }
+    }
+
+    /**
+     * Sets the the in-app message fragment factory. The factory can be used to provide
+     * a customized in-app message fragment to provide a different look and feel for in-app messages.
+     *
+     * @param factory The InAppMessageFragmentFactory.
+     */
+    public void setFragmentFactory(InAppMessageFragmentFactory factory) {
+        this.fragmentFactory = factory;
+    }
+
+    /**
+     * Returns the current in-app message fragment factory.
+     * @return The current in-app message fragment factory.
+     */
+    public InAppMessageFragmentFactory getFragmentFactory() {
+        return fragmentFactory;
     }
 
     /**

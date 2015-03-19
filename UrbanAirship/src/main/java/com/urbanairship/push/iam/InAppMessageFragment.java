@@ -118,30 +118,18 @@ public class InAppMessageFragment extends Fragment {
     private boolean dismissOnRecreate;
 
     /**
-     * Creates a new InAppMessageFragment fragment.
+     * Creates arguments for the InAppMessageFragment. Arguments must be set
+     * after creating the initial fragment.
      *
      * @param message The associated in-app message.
-     * @return A new InAppMessageFragment.
-     */
-    public static InAppMessageFragment newInstance(InAppMessage message) {
-        return newInstance(message, 0);
-    }
-
-    /**
-     * Creates a new InAppMessageFragment fragment.
-     *
-     * @param message The associated in-app message..
      * @param dismissAnimation Resource ID of a fragment transition to run when the message is dismissed.
-     * @return A new InAppMessageFragment.
+     * @return A bundle with the given arguments for creating the InAppMessageFragment.
      */
-    public static InAppMessageFragment newInstance(InAppMessage message, int dismissAnimation) {
+    public static Bundle createArgs(InAppMessage message, int dismissAnimation) {
         Bundle args = new Bundle();
         args.putParcelable(MESSAGE, message);
         args.putInt(DISMISS_ANIMATION, dismissAnimation);
-
-        InAppMessageFragment fragment = new InAppMessageFragment();
-        fragment.setArguments(args);
-        return fragment;
+        return args;
     }
 
     /**
