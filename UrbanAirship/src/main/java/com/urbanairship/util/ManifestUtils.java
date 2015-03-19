@@ -85,6 +85,17 @@ public class ManifestUtils {
     }
 
     /**
+     * Returns whether the specified permission is granted for the application or not.
+     *
+     * @param permission Permission to check.
+     * @return <code>true</code> if the permission is granted, otherwise <code>false</code>.
+     */
+    public static boolean isPermissionGranted(String permission) {
+        return PackageManager.PERMISSION_GRANTED == UAirship.getPackageManager()
+                                                         .checkPermission(permission, UAirship.getPackageName());
+    }
+
+    /**
      * Gets the ComponentInfo for a service
      *
      * @param service The service to look up

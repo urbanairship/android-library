@@ -25,7 +25,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
+import android.provider.Settings;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -33,6 +36,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
@@ -50,6 +54,10 @@ import java.util.TimeZone;
  * A client that handles uploading analytic events
  */
 class EventAPIClient {
+
+    static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
+    static final String NOT_ALLOWED = "NOT_ALLOWED";
+    static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
 
     private RequestFactory requestFactory;
 
@@ -131,7 +139,11 @@ class EventAPIClient {
                                                 Boolean.toString(UAirship.shared().getPushManager().isOptIn()))
                                         .setHeader("X-UA-Channel-Background-Enabled",
                                                 Boolean.toString(UAirship.shared().getPushManager().isPushEnabled() &&
-                                                                UAirship.shared().getPushManager().isPushAvailable()));
+                                                                UAirship.shared().getPushManager().isPushAvailable()))
+                                        .setHeader("X-UA-Location-Permission", getLocationPermission())
+                                        .setHeader("X-UA-Location-Service-Enabled",
+                                                Boolean.toString(UAirship.shared().getLocationManager().isLocationUpdatesEnabled()))
+                                        .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()));
 
         Locale locale = Locale.getDefault();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
@@ -164,5 +176,67 @@ class EventAPIClient {
 
 
         return response == null ? null : new EventResponse(response);
+    }
+
+    /**
+     * Gets the location permission for the app.
+     *
+     * @return The location permission string.
+     */
+    static String getLocationPermissionForApp() {
+        if (ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION) ||
+                ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            return ALWAYS_ALLOWED;
+        } else {
+            return NOT_ALLOWED;
+        }
+    }
+
+    /**
+     * Gets the location permission.
+     *
+     * @return The location permission string.
+     */
+    static String getLocationPermission() {
+
+        int locationMode = 0;
+        String locationProviders;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            try {
+                locationMode = Settings.Secure.getInt(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                Logger.debug("EventAPIClient - Settings not found.");
+            }
+
+            if (locationMode != Settings.Secure.LOCATION_MODE_OFF) {
+                return getLocationPermissionForApp();
+            } else {
+                return SYSTEM_LOCATION_DISABLED;
+            }
+
+        } else {
+            locationProviders = Settings.Secure.getString(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            if (!UAStringUtil.isEmpty(locationProviders)) {
+                return getLocationPermissionForApp();
+            } else {
+                return SYSTEM_LOCATION_DISABLED;
+            }
+        }
+    }
+
+    /**
+     * Gets the Bluetooth enable/disable status.
+     *
+     * @return <code>true</code> if Bluetooth is enabled, otherwise <code>false</code>.
+     */
+    static boolean isBluetoothEnabled() {
+        if (!ManifestUtils.isPermissionGranted(Manifest.permission.BLUETOOTH)) {
+            // Manifest missing Bluetooth permissions
+            return false;
+        } else {
+            // Code from Android Developer: http://developer.android.com/guide/topics/connectivity/bluetooth.html
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
+        }
     }
 }
