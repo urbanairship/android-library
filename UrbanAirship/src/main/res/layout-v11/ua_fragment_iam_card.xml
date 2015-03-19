@@ -5,17 +5,17 @@
     android:layout_height="wrap_content"
     android:layout_gravity="bottom">
 
-    <FrameLayout
+    <android.support.v7.widget.CardView
         android:id="@+id/in_app_message"
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="16dp"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:background="@drawable/ua_iam_background">
+        android:foreground="?android:attr/selectableItemBackground">
 
         <include layout="@layout/ua_iam_content" />
 
-    </FrameLayout>
+    </android.support.v7.widget.CardView>
 
 </com.urbanairship.widget.SwipeDismissViewLayout>

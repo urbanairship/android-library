@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-                android:duration="@integer/ian_animation_duration"
+                android:duration="@integer/iam_animation_duration"
                 android:interpolator="@android:anim/linear_interpolator"
                 android:propertyName="yFraction"
                 android:valueType="floatType"

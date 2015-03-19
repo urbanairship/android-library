@@ -25,6 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push.iam;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.res.Resources;
@@ -65,24 +66,29 @@ import java.util.Map;
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 public class InAppMessageFragment extends Fragment {
 
+    private static Boolean isCardViewAvailable;
+
     /**
      * Listener for InAppMessageFragment events.
      */
     public interface Listener {
         /**
          * The fragment was resumed.
+         *
          * @param fragment The resumed fragment.
          */
         public void onResume(InAppMessageFragment fragment);
 
         /**
          * The fragment was paused.
+         *
          * @param fragment The paused fragment.
          */
         public void onPause(InAppMessageFragment fragment);
 
         /**
          * The fragment is finished displaying the in-app message.
+         *
          * @param fragment The fragment.
          */
         public void onFinish(InAppMessageFragment fragment);
@@ -216,6 +222,7 @@ public class InAppMessageFragment extends Fragment {
         }
     }
 
+    @SuppressLint("NewAPI")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (message == null || message.getAlert() == null) {
@@ -226,7 +233,9 @@ public class InAppMessageFragment extends Fragment {
         int primaryColor = message.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : message.getPrimaryColor();
         int secondaryColor = message.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : message.getSecondaryColor();
 
-        final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(R.layout.ua_fragment_iam, container, false);
+        int layout = isCardViewAvailable() ? R.layout.ua_fragment_iam_card : R.layout.ua_fragment_iam;
+
+        final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(layout, container, false);
         view.setListener(new SwipeDismissViewLayout.Listener() {
             @Override
             public void onDismissed(View view) {
@@ -253,29 +262,41 @@ public class InAppMessageFragment extends Fragment {
         layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
         view.setLayoutParams(layoutParams);
 
-        final CardView cardView = (CardView) view.findViewById(R.id.in_app_message);
-        cardView.setCardBackgroundColor(primaryColor);
+        FrameLayout messageView = (FrameLayout) view.findViewById(R.id.in_app_message);
+
+        if (checkCardViewDependencyAvailable()) {
+            CardView cardView = (CardView) messageView;
+            cardView.setCardBackgroundColor(primaryColor);
+            cardView.setRadius(getResources().getDimension(R.dimen.iam_corner_radius));
+            cardView.setCardElevation(getResources().getDimension(R.dimen.iam_elevation));
+        } else {
+            messageView.getBackground().setColorFilter(primaryColor, PorterDuff.Mode.MULTIPLY);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                messageView.setElevation(getResources().getDimension(R.dimen.iam_elevation));
+            }
+        }
 
         if (!message.getClickActionValues().isEmpty()) {
-            cardView.setOnClickListener(new View.OnClickListener() {
+            messageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     onMessageClick(v);
                 }
             });
         } else {
-            cardView.setClickable(false);
-            cardView.setForeground(null);
+            messageView.setClickable(false);
+            messageView.setForeground(null);
         }
 
-        TextView alertView = (TextView) cardView.findViewById(R.id.alert);
+        TextView alertView = (TextView) view.findViewById(R.id.alert);
         alertView.setText(message.getAlert());
         alertView.setTextColor(secondaryColor);
 
         View buttonDivider = view.findViewById(R.id.action_divider);
         buttonDivider.setBackgroundColor(secondaryColor);
 
-        View actionButtons = cardView.findViewById(R.id.action_buttons);
+        View actionButtons = view.findViewById(R.id.action_buttons);
         NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(message.getButtonGroupId());
         if (group != null) {
 
@@ -307,7 +328,7 @@ public class InAppMessageFragment extends Fragment {
             buttonDivider.setVisibility(View.GONE);
         }
 
-        ImageButton imageButton = (ImageButton) cardView.findViewById(R.id.close);
+        ImageButton imageButton = (ImageButton) view.findViewById(R.id.close);
         if (imageButton != null) {
             final Drawable drawable = imageButton.getDrawable();
             if (drawable != null) {
@@ -385,7 +406,7 @@ public class InAppMessageFragment extends Fragment {
 
     /**
      * Dismisses the fragment automatically if the fragment is reconstructed.
-     *
+     * <p/>
      * Since fragments can be recreated from saved state (bundle) it will lose any saved fields that
      * are not saved in the bundle including things such as the listeners.
      *
@@ -429,6 +450,23 @@ public class InAppMessageFragment extends Fragment {
 
         ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
         UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+    }
+
+    /**
+     * Helper method to check if the card view dependency is available or not.
+     * @return {@code true} if available, otherwise {@code false}.
+     */
+    private static boolean checkCardViewDependencyAvailable() {
+        if (isCardViewAvailable == null) {
+            try {
+                Class.forName("android.support.v7.widget.CardView");
+                isCardViewAvailable = true;
+            } catch (ClassNotFoundException e) {
+                isCardViewAvailable = false;
+            }
+        }
+
+        return isCardViewAvailable;
     }
 
     /**
