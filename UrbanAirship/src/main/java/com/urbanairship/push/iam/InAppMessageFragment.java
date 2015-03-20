@@ -233,7 +233,7 @@ public class InAppMessageFragment extends Fragment {
         int primaryColor = message.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : message.getPrimaryColor();
         int secondaryColor = message.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : message.getSecondaryColor();
 
-        int layout = isCardViewAvailable() ? R.layout.ua_fragment_iam_card : R.layout.ua_fragment_iam;
+        int layout = checkCardViewDependencyAvailable() ? R.layout.ua_fragment_iam_card : R.layout.ua_fragment_iam;
 
         final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(layout, container, false);
         view.setListener(new SwipeDismissViewLayout.Listener() {
