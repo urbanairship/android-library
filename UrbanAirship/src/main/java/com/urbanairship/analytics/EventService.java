@@ -34,6 +34,7 @@ import android.content.Intent;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.location.RegionEvent;
 
 import java.util.Map;
 
@@ -83,6 +84,11 @@ public class EventService extends IntentService {
      */
     static final String EXTRA_EVENT_SESSION_ID = "EXTRA_EVENT_SESSION_ID";
 
+    /**
+     * Region Event batching delay in ms.
+     */
+    static final int REGION_BATCH_DELAY = 1000;
+
     private static long backoffMs = 0;
 
     private EventAPIClient eventClient;
@@ -108,28 +114,26 @@ public class EventService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null) {
+        if (intent == null || intent.getAction() == null) {
             return;
         }
 
         Logger.verbose("EventService - Received intent: " + intent.getAction());
 
-        if (ACTION_DELETE_ALL.equals(intent.getAction())) {
-            Logger.info("Deleting all analytic events.");
-            UAirship.shared().getAnalytics().getDataManager().deleteAllEvents();
-            return;
-        }
-
-        if (ACTION_ADD.equals(intent.getAction())) {
-            addEventFromIntent(intent);
-        }
-
-        // If the next send time is in the future, schedule
-        // an upload at a later time
-        if (getNextSendTime() > System.currentTimeMillis()) {
-            scheduleEventUpload(getNextSendTime());
-        } else {
-            uploadEvents();
+        switch (intent.getAction()) {
+            case ACTION_DELETE_ALL:
+                Logger.info("Deleting all analytic events.");
+                UAirship.shared().getAnalytics().getDataManager().deleteAllEvents();
+                break;
+            case ACTION_ADD:
+                addEventFromIntent(intent);
+                break;
+            case ACTION_SEND:
+                uploadEvents();
+                break;
+            default:
+                Logger.warn("EventService - Unrecognized intent action: " + intent.getAction());
+                break;
         }
     }
 
@@ -167,18 +171,27 @@ public class EventService extends IntentService {
             Logger.error("EventService - Unable to insert event into database.");
         }
 
-        //in the case of a location event
+        // In the case of a location event
         if (LocationEvent.TYPE.equals(eventType)) {
             long currentTime = System.currentTimeMillis();
             long lastSendTime = preferences.getLastSendTime();
             long sendDelta = currentTime - lastSendTime;
             long throttleDelta = UAirship.shared().getAirshipConfigOptions().backgroundReportingIntervalMS;
 
-            //if we're in the background and we haven't passed the threshold, hold off on uploading
+            // If we're in the background and we haven't passed the threshold, hold off on uploading
             if (!UAirship.shared().getAnalytics().isAppInForeground() && sendDelta < throttleDelta) {
                 long minimumWait = throttleDelta - sendDelta;
                 Logger.info("LocationEvent was inserted, but may not be updated until " + minimumWait + " ms have passed");
             }
+        }
+
+        if (getNextSendTime() < System.currentTimeMillis()) {
+            uploadEvents();
+        } else if (RegionEvent.TYPE.equals(eventType)) {
+            // Schedule a 1 second delay to do some minimal batching on region events
+            scheduleEventUpload(System.currentTimeMillis() + REGION_BATCH_DELAY);
+        } else {
+            scheduleEventUpload(getNextSendTime());
         }
     }
 
