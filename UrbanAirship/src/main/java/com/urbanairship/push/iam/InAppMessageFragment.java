@@ -28,23 +28,14 @@ package com.urbanairship.push.iam;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Fragment;
-import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.widget.ViewDragHelper;
-import android.support.v7.widget.CardView;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -52,9 +43,10 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.Situation;
+import com.urbanairship.push.iam.view.Banner;
+import com.urbanairship.push.iam.view.SwipeDismissViewLayout;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
-import com.urbanairship.widget.SwipeDismissViewLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +55,7 @@ import java.util.Map;
 /**
  * A fragment that displays an in-app message.
  */
-@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
+@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class InAppMessageFragment extends Fragment {
 
     private static Boolean isCardViewAvailable;
@@ -93,18 +85,6 @@ public class InAppMessageFragment extends Fragment {
          */
         public void onFinish(InAppMessageFragment fragment);
     }
-
-    /**
-     * Default primary color for in-app messages. The value is only used if the in-app message's
-     * {@link InAppMessage#getPrimaryColor()} returns null.
-     */
-    public static final int DEFAULT_PRIMARY_COLOR = Color.WHITE;
-
-    /**
-     * Default secondary color for in-app messages. The value is only used if the in-app message's
-     * {@link InAppMessage#getSecondaryColor()} returns null.
-     */
-    public static final int DEFAULT_SECONDARY_COLOR = Color.DKGRAY;
 
     /**
      * Default duration in milliseconds. The value is only used if the in-app message's
@@ -230,12 +210,16 @@ public class InAppMessageFragment extends Fragment {
             return null;
         }
 
-        int primaryColor = message.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : message.getPrimaryColor();
-        int secondaryColor = message.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : message.getSecondaryColor();
-
         int layout = checkCardViewDependencyAvailable() ? R.layout.ua_fragment_iam_card : R.layout.ua_fragment_iam;
 
-        final SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(layout, container, false);
+        SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(layout, container, false);
+
+        // Adjust gravity depending on the message's position
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
+        layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
+        view.setLayoutParams(layoutParams);
+
+
         view.setListener(new SwipeDismissViewLayout.Listener() {
             @Override
             public void onDismissed(View view) {
@@ -258,93 +242,64 @@ public class InAppMessageFragment extends Fragment {
             }
         });
 
-        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-        layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
-        view.setLayoutParams(layoutParams);
-
-        FrameLayout messageView = (FrameLayout) view.findViewById(R.id.in_app_message);
-
-        if (checkCardViewDependencyAvailable()) {
-            CardView cardView = (CardView) messageView;
-            cardView.setCardBackgroundColor(primaryColor);
-            cardView.setRadius(getResources().getDimension(R.dimen.iam_corner_radius));
-            cardView.setCardElevation(getResources().getDimension(R.dimen.iam_elevation));
-        } else {
-            messageView.getBackground().setColorFilter(primaryColor, PorterDuff.Mode.MULTIPLY);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                messageView.setElevation(getResources().getDimension(R.dimen.iam_elevation));
-            }
-        }
+        FrameLayout bannerView = (FrameLayout) view.findViewById(R.id.in_app_message);
 
         if (!message.getClickActionValues().isEmpty()) {
-            messageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onMessageClick(v);
-                }
-            });
-        } else {
-            messageView.setClickable(false);
-            messageView.setForeground(null);
-        }
-
-        TextView alertView = (TextView) view.findViewById(R.id.alert);
-        alertView.setText(message.getAlert());
-        alertView.setTextColor(secondaryColor);
-
-        View buttonDivider = view.findViewById(R.id.action_divider);
-        buttonDivider.setBackgroundColor(secondaryColor);
-
-        View actionButtons = view.findViewById(R.id.action_buttons);
-        NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(message.getButtonGroupId());
-        if (group != null) {
-
-            Resources r = getResources();
-            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, r.getDisplayMetrics());
-
-            for (final NotificationActionButton actionButton : group.getNotificationActionButtons()) {
-                Button button = (Button) inflater.inflate(R.layout.ua_iam_button, (ViewGroup) actionButtons, false);
-
-                final Drawable drawable = getResources().getDrawable(actionButton.getIcon());
-                drawable.setBounds(0, 0, size, size);
-                drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
-                button.setCompoundDrawables(drawable, null, null, null);
-                button.setText(actionButton.getLabel());
-                button.setTextColor(secondaryColor);
-
-                button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        onButtonClick(view, actionButton);
-                    }
-                });
-
-                ((ViewGroup) actionButtons).addView(button);
-            }
-
-        } else {
-            actionButtons.setVisibility(View.GONE);
-            buttonDivider.setVisibility(View.GONE);
-        }
-
-        ImageButton imageButton = (ImageButton) view.findViewById(R.id.close);
-        if (imageButton != null) {
-            final Drawable drawable = imageButton.getDrawable();
-            if (drawable != null) {
-                drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
-            }
-
-            imageButton.setOnClickListener(new View.OnClickListener() {
+            bannerView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dismiss(true);
 
-                    ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
+                    runActions(message.getClickActionValues(), Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON);
+
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
                 }
             });
+        } else {
+            bannerView.setClickable(false);
+            bannerView.setForeground(null);
         }
+
+        Banner banner = (Banner)bannerView;
+        banner.setOnDismissClickListener(new Banner.OnDismissClickListener() {
+            @Override
+            public void onDismissClick() {
+                dismiss(true);
+
+                ResolutionEvent resolutionEvent = ResolutionEvent.createUserDismissedResolutionEvent(message, timer.getRunTime());
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+            }
+        });
+
+        banner.setOnActionClickListener(new Banner.OnActionClickListener() {
+            @Override
+            public void onActionClick(NotificationActionButton actionButton) {
+                Logger.info("In-app message button clicked: " + actionButton.getId());
+                dismiss(true);
+
+                Situation situation = actionButton.isForegroundAction() ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON :
+                                      Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+
+                runActions(message.getButtonActionValues(actionButton.getId()), situation);
+
+                ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
+                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+            }
+        });
+
+        if (message.getPrimaryColor() != null)  {
+            banner.setPrimaryColor(message.getPrimaryColor());
+        }
+
+        if (message.getSecondaryColor() != null) {
+            banner.setSecondaryColor(message.getSecondaryColor());
+        }
+
+        banner.setText(message.getAlert());
+
+        NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(message.getButtonGroupId());
+        banner.setNotificationActionButtonGroup(group);
 
         return view;
     }
@@ -415,41 +370,6 @@ public class InAppMessageFragment extends Fragment {
      */
     void setDismissOnRecreate(boolean dismissOnRecreate) {
         this.dismissOnRecreate = dismissOnRecreate;
-    }
-
-    /**
-     * Called when the message body is clicked. Will dismiss the fragment and run
-     * actions with the {@link InAppMessage#getClickActionValues()}.
-     *
-     * @param view The view that was clicked.
-     */
-    protected void onMessageClick(View view) {
-        dismiss(true);
-
-        runActions(message.getClickActionValues(), Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON);
-
-        ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
-        UAirship.shared().getAnalytics().addEvent(resolutionEvent);
-    }
-
-    /**
-     * Called when a message button is clicked. Will dismiss the fragment and run
-     * actions for the button's ID in {@link InAppMessage#getButtonActionValues(String)}.
-     *
-     * @param view The view that was clicked.
-     * @param actionButton The associated button.
-     */
-    protected void onButtonClick(View view, NotificationActionButton actionButton) {
-        Logger.info("In-app message button clicked: " + actionButton.getId());
-        dismiss(true);
-
-        Situation situation = actionButton.isForegroundAction() ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON :
-                              Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
-
-        runActions(message.getButtonActionValues(actionButton.getId()), situation);
-
-        ResolutionEvent resolutionEvent = ResolutionEvent.createButtonClickedResolutionEvent(getActivity(), message, actionButton, timer.getRunTime());
-        UAirship.shared().getAnalytics().addEvent(resolutionEvent);
     }
 
     /**
