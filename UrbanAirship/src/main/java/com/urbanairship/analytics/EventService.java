@@ -85,9 +85,14 @@ public class EventService extends IntentService {
     static final String EXTRA_EVENT_SESSION_ID = "EXTRA_EVENT_SESSION_ID";
 
     /**
-     * Region Event batching delay in ms.
+     * Batch delay for region events in milliseconds.
      */
-    static final int REGION_BATCH_DELAY = 1000;
+    private static final long REGION_BATCH_DELAY = 1000; // 1s
+
+    /**
+     * Batch delay for normal priority events in milliseconds.
+     */
+    private static final long BATCH_DELAY = 10000; // 10s
 
     private static long backoffMs = 0;
 
@@ -172,26 +177,23 @@ public class EventService extends IntentService {
         }
 
         // In the case of a location event
-        if (LocationEvent.TYPE.equals(eventType)) {
+        if (LocationEvent.TYPE.equals(eventType) && !UAirship.shared().getAnalytics().isAppInForeground()) {
             long currentTime = System.currentTimeMillis();
             long lastSendTime = preferences.getLastSendTime();
             long sendDelta = currentTime - lastSendTime;
             long throttleDelta = UAirship.shared().getAirshipConfigOptions().backgroundReportingIntervalMS;
+            long minimumWait = throttleDelta - sendDelta;
 
-            // If we're in the background and we haven't passed the threshold, hold off on uploading
-            if (!UAirship.shared().getAnalytics().isAppInForeground() && sendDelta < throttleDelta) {
-                long minimumWait = throttleDelta - sendDelta;
+            if (minimumWait > getNextSendDelay() && minimumWait > BATCH_DELAY) {
                 Logger.info("LocationEvent was inserted, but may not be updated until " + minimumWait + " ms have passed");
+                scheduleEventUpload(minimumWait);
+            } else {
+                scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
             }
-        }
-
-        if (getNextSendTime() < System.currentTimeMillis()) {
-            uploadEvents();
-        } else if (RegionEvent.TYPE.equals(eventType)) {
-            // Schedule a 1 second delay to do some minimal batching on region events
-            scheduleEventUpload(System.currentTimeMillis() + REGION_BATCH_DELAY);
+        } if (RegionEvent.TYPE.equals(eventType)) {
+            scheduleEventUpload(REGION_BATCH_DELAY);
         } else {
-            scheduleEventUpload(getNextSendTime());
+            scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
         }
     }
 
@@ -238,7 +240,7 @@ public class EventService extends IntentService {
         // If there are still events left, schedule the next send
         if (!isSuccess || eventCount - events.size() > 0) {
             Logger.debug("EventService - Scheduling next event batch upload.");
-            scheduleEventUpload(getNextSendTime());
+            scheduleEventUpload(getNextSendDelay());
         }
 
         if (response != null) {
@@ -250,30 +252,44 @@ public class EventService extends IntentService {
     }
 
     /**
-     * Gets the next upload send time
+     * Gets the next upload delay in milliseconds.
      *
-     * @return A time in ms for the next time events can be uploaded.
+     * @return A delay in ms for the time the events should be sent.
      */
-    private long getNextSendTime() {
+    private long getNextSendDelay() {
         AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
-        return preferences.getLastSendTime() + preferences.getMinBatchInterval() + backoffMs;
+        long nextSendTime = preferences.getLastSendTime() + preferences.getMinBatchInterval() + backoffMs;
+        return Math.max(nextSendTime - System.currentTimeMillis(), 0);
     }
 
     /**
      * Schedule a batch event upload at a given time in the future.
      *
-     * @param nextSendTime The time (in ms) when the next upload should occur.
+     * @param milliseconds The milliseconds from the current time to schedule the event upload.
      */
-    private void scheduleEventUpload(final long nextSendTime) {
-        Context ctx = UAirship.getApplicationContext();
-        AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+    private void scheduleEventUpload(final long milliseconds) {
+        long sendTime = System.currentTimeMillis() + milliseconds;
 
-        // Build a pending intent, cancel previous ones, then set an alarm
-        Intent i = new Intent(ctx, EventService.class);
-        i.setAction(EventService.ACTION_SEND);
-        PendingIntent intent = PendingIntent.getService(ctx, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        //Set the new alarm
-        alarmManager.set(AlarmManager.RTC, nextSendTime, intent);
+        Intent intent = new Intent(this, EventService.class)
+                .setAction(EventService.ACTION_SEND);
+
+        long previousScheduledTime = preferences.getScheduledSendTime();
+
+        // Check if we should reschedule - previousAlarmTime is older than now or greater then the new send time
+        boolean reschedule = previousScheduledTime < System.currentTimeMillis() || previousScheduledTime > sendTime;
+
+        // Schedule the alarm if we need to either reschedule or an existing pending intent does not exist
+        if (reschedule || PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_NO_CREATE) == null) {
+            PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            // Reschedule the intent
+            alarmManager.set(AlarmManager.RTC, sendTime, pendingIntent);
+            preferences.setScheduledSendTime(sendTime);
+        } else {
+            Logger.verbose("EventService - Alarm already scheduled for an earlier time.");
+        }
     }
 }
