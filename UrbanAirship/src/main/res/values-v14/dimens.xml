@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The corner radius for in-app message banner views -->
+    <dimen name="ua_iam_banner_corner_radius">4dp</dimen>
+
+    <!-- The elevation for in-app message banners. Only applicable for card views or API 21 or newer -->
+    <dimen name="ua_iam_banner_elevation">4dp</dimen>
+
+    <!-- The in-app message banner width -->
+    <dimen name="ua_iam_banner_width">320dp</dimen>
+</resources>

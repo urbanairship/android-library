@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.widget;
+package com.urbanairship.push.iam.view;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -45,7 +45,7 @@ import com.urbanairship.Logger;
  * The SwipeDismissViewLayout allows its children to be dismissed from a horizontal swipe or drag. The
  * layout will notify the listener when a child view is being dismissed or dragged. A dismissed view
  * will be settled at the edge of the SwipeDismissViewLayout view. After the view is settled, it
- * will call the listener's {@link com.urbanairship.widget.SwipeDismissViewLayout.Listener#onDismissed}
+ * will call the listener's {@link SwipeDismissViewLayout.Listener#onDismissed}
  * and be removed from the SwipeDismissViewLayout.
  */
 public class SwipeDismissViewLayout extends FrameLayout {
