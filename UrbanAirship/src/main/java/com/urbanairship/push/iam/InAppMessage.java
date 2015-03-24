@@ -335,10 +335,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                 builder.setClickActionValues(clickActions);
             }
 
+            // Button group
+            builder.setButtonGroupId(actionsJson.opt("button_group").getString());
+
             // Button actions
             JsonMap buttonActionsJson = actionsJson.opt("button_actions").getMap();
             if (buttonActionsJson != null) {
-                builder.setButtonGroupId(actionsJson.opt("button_group").getString());
 
                 for (Map.Entry<String, JsonValue> entry : buttonActionsJson.entrySet()) {
                     String buttonId = entry.getKey();
