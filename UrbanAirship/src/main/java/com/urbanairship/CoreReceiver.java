@@ -93,18 +93,8 @@ public class CoreReceiver extends BroadcastReceiver {
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
 
-        // If the push that is opened is the pending in-app message and not currently the in-app message
-        // that is displaying, clear it and send a direct open resolution event.
-        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
-        InAppMessage iam = message.getInAppMessage();
-        if (iam != null && iam.equals(iamManager.getPendingMessage()) && !iam.equals(iamManager.getCurrentMessage())) {
-            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
-            iamManager.setPendingMessage(null);
-
-            // Direct open event
-            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(iam);
-            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
-        }
+        // Clear the in-app message if it matches the push send Id
+        clearInAppMessage(message.getSendId());
 
         PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
         if (contentIntent != null) {
@@ -155,18 +145,8 @@ public class CoreReceiver extends BroadcastReceiver {
             UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
         }
 
-        // If the push that is opened is the pending in-app message and not currently the in-app message
-        // that is displaying, clear it and send a direct open resolution event.
-        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
-        InAppMessage iam = message.getInAppMessage();
-        if (iam != null && iam.equals(iamManager.getPendingMessage()) && !iam.equals(iamManager.getCurrentMessage())) {
-            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
-            iamManager.setPendingMessage(null);
-
-            // Direct open event
-            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(iam);
-            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
-        }
+        // Clear the in-app message if it matches the push send Id
+        clearInAppMessage(message.getSendId());
 
         // Dismiss the notification
         NotificationManagerCompat.from(context).cancel(notificationId);
@@ -286,6 +266,32 @@ public class CoreReceiver extends BroadcastReceiver {
         } else {
             Logger.info("Unable to launch application. Launch intent is unavailable.");
             return false;
+        }
+    }
+
+    /**
+     * Helper method to clear the pending in-app message and generate a resolution event if the
+     * message is pending and currently not being displayed.
+     *
+     * @param messageId The message ID to clear.
+     */
+    private static void clearInAppMessage(String messageId) {
+        if (UAStringUtil.isEmpty(messageId)) {
+            return;
+        }
+
+        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
+        InAppMessage pendingMessage = iamManager.getPendingMessage();
+        InAppMessage currentMessage = iamManager.getCurrentMessage();
+
+        // Only clear it if the messageId matches and the pending message is not currently showing
+        if (pendingMessage != null && messageId.equals(pendingMessage.getId()) && !pendingMessage.equals(currentMessage)) {
+            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
+            iamManager.setPendingMessage(null);
+
+            // Direct open event
+            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(pendingMessage);
+            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
     }
 }
