@@ -309,12 +309,22 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                .setPrimaryColor(parseColor(displayJson.opt("primary_color").getString()))
                .setSecondaryColor(parseColor(displayJson.opt("secondary_color").getString()));
 
-        long duration = displayJson.opt("duration").getLong(0);
-        if (duration > 0) {
-            builder.setDuration(TimeUnit.SECONDS.toMillis(duration));
+        long duration;
+        if (displayJson.containsKey("duration_ms")) {
+            duration = displayJson.get("duration_ms").getLong(0);
+            if (duration > 0) {
+                builder.setDuration(duration);
+            }
+        } else {
+            duration = displayJson.opt("duration").getLong(0);
+            if (duration > 0) {
+                builder.setDuration(TimeUnit.SECONDS.toMillis(duration));
+            }
         }
 
-        if (inAppJson.containsKey("expiry")) {
+        if (inAppJson.containsKey("expiry_ms")) {
+            builder.setExpiry(inAppJson.get("expiry_ms").getLong(System.currentTimeMillis() + DEFAULT_EXPIRY_MS));
+        } else  if (inAppJson.containsKey("expiry")) {
             builder.setExpiry(DateUtils.parseIso8601(inAppJson.opt("expiry").getString(), System.currentTimeMillis() + DEFAULT_EXPIRY_MS));
         }
 
@@ -382,7 +392,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         // Top Level
         Map<String, Object> inApp = new HashMap<>();
         inApp.put("id", id);
-        inApp.put("expiry", DateUtils.createIso8601TimeStamp(expiryMS));
+        inApp.put("expiry_ms", expiryMS);
 
         // Extras
         inApp.put("extra", extras);
@@ -395,7 +405,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         display.put("position", position == POSITION_TOP ? "top" : "bottom");
 
         if (durationMilliseconds != null) {
-            display.put("duration", TimeUnit.MILLISECONDS.toSeconds(durationMilliseconds));
+            display.put("duration_ms", durationMilliseconds);
         }
 
         if (primaryColor != null) {

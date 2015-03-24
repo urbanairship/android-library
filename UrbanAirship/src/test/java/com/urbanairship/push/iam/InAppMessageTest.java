@@ -51,7 +51,7 @@ public class InAppMessageTest {
         InAppMessage message = new InAppMessage.Builder()
                 .setAlert("alert")
                 .setId("id")
-                .setDuration(100l)
+                .setDuration(10l)
                 .setExpiry(200l)
                 .setPrimaryColor(Color.BLACK)
                 .setSecondaryColor(Color.BLUE)
@@ -65,7 +65,7 @@ public class InAppMessageTest {
         // Verify everything is set on the notification
         assertEquals("alert", message.getAlert());
         assertEquals("id", message.getId());
-        assertEquals(100l, (long) message.getDuration());
+        assertEquals(10l, (long) message.getDuration());
         assertEquals(200, message.getExpiry());
         assertEquals(Color.BLACK, (int) message.getPrimaryColor());
         assertEquals(Color.BLUE, (int) message.getSecondaryColor());
