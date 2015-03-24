@@ -276,4 +276,22 @@ public class InAppMessageTest {
         assertEquals(original, same);
     }
 
+    /**
+     * Test expiry and duration do not suffer from sub-second precision loss when serializing to json.
+     */
+    @Test
+    public void testNoPrecisionLoss() throws JsonException {
+        InAppMessage message = new InAppMessage.Builder()
+                .setDuration(12345l)
+                .setExpiry(6789l)
+                .create();
+
+        InAppMessage jsonMessage = InAppMessage.parseJson(message.toJsonValue().toString());
+
+        // They should be the same
+        assertEquals(message, jsonMessage);
+        assertEquals((long)jsonMessage.getDuration(), 12345l);
+        assertEquals(jsonMessage.getExpiry(), 6789l);
+    }
+
 }
