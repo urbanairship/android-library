@@ -5,11 +5,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
+
+import java.util.HashMap;
 
 
 /**
@@ -382,10 +387,20 @@ public class PushMessage implements Parcelable {
     public InAppMessage getInAppMessage() {
         if (pushBundle.containsKey(EXTRA_IN_APP_MESSAGE)) {
             try {
-                InAppMessage message = InAppMessage.parseJson(pushBundle.getString(EXTRA_IN_APP_MESSAGE));
-                return new InAppMessage.Builder(message)
-                        .setId(getSendId())
-                        .create();
+                InAppMessage rawMessage = InAppMessage.parseJson(pushBundle.getString(EXTRA_IN_APP_MESSAGE));
+                InAppMessage.Builder builder = new InAppMessage.Builder(rawMessage)
+                        .setId(getSendId());
+
+                boolean containsOpenMcAction = rawMessage.getClickActionValues().containsKey(OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME) ||
+                        rawMessage.getClickActionValues().containsKey(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+                if (!UAStringUtil.isEmpty(getRichPushMessageId()) && !containsOpenMcAction) {
+                    HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
+                    actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId(), null)));
+                    builder.setClickActionValues(actions);
+                }
+
+                return builder.create();
 
             } catch (JsonException e) {
                 Logger.error("PushMessage - unable to create in-app message from push payload", e);
