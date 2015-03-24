@@ -4,12 +4,17 @@ import android.os.Bundle;
 import android.os.Parcel;
 
 import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.ActionValueException;
+import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -377,6 +382,39 @@ public class PushMessageTest {
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
         extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
+
+        PushMessage pushMessage = new PushMessage(extras);
+        assertEquals(expected, pushMessage.getInAppMessage());
+    }
+
+    /**
+     * Test getting the in-app message from the push payload amends the message
+     * to include the open MCRAP action if the push also contains a rich push message ID.
+     */
+    @Test
+    public void getGetInAppMessageAmendsOpenMcRap() throws JsonException, ActionValueException {
+        String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
+                "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
+                "\"alert\": \"Oh hi!\"}, \"actions\": {\"button_group\": \"ua_yes_no\"," +
+                "\"button_actions\": {\"yes\": {\"^+t\": \"yes_tag\"}, \"no\": {\"^+t\": \"no_tag\"}}," +
+                "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
+                "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
+
+
+        InAppMessage rawMessage = InAppMessage.parseJson(inAppJson);
+
+        HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
+        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message_id"));
+
+        InAppMessage expected = new InAppMessage.Builder(rawMessage)
+                .setId("send id")
+                .setClickActionValues(actions)
+                .create();
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
+        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
+        extras.putString(RichPushManager.RICH_PUSH_KEY, "message_id");
 
         PushMessage pushMessage = new PushMessage(extras);
         assertEquals(expected, pushMessage.getInAppMessage());
