@@ -215,6 +215,10 @@ public final class ActionRegistry {
                         Situation.WEB_VIEW_INVOCATION == arguments.getSituation());
             }
         });
+
+        registerAction(new OpenRichPushInboxAction(),
+                OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
+                OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
     }
 
     /**

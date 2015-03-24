@@ -51,6 +51,22 @@ import java.util.concurrent.Executors;
  */
 public class RichPushInbox {
 
+    /**
+     * Intent action to view the rich push inbox.
+     */
+    public static final String VIEW_INBOX_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_INBOX";
+
+    /**
+     * Intent action to view a rich push message.
+     */
+    public static final String VIEW_MESSAGE_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_MESSAGE";
+
+    /**
+     * Scheme used for @{code message:<MESSAGE_ID>} when requesting to view a message with
+     * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE}.
+     */
+    public static final String MESSAGE_DATA_SCHEME = "message";
+
     private static final SentAtRichPushMessageComparator richPushMessageComparator = new SentAtRichPushMessageComparator();
     private final List<String> pendingDeletionMessageIds = new ArrayList<>();
     private final List<Listener> listeners = new ArrayList<>();
