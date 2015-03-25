@@ -98,12 +98,11 @@ public class EventServiceTest {
         intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
 
         service.onHandleIntent(intent);
-
         // Verify it was added to the data manager
         Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
 
-        // Verify that it tried to do the upload
-        Mockito.verify(preferences).setLastSendTime(Mockito.anyLong());
+        // Verify we add an event.
+        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
     }
 
     /**
@@ -207,34 +206,6 @@ public class EventServiceTest {
         ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
         assertNotNull("Alarm should be schedule when upload fails", alarm);
-    }
-
-    /**
-     * Test adding an event results in an immediate send when next send time is less than current system time
-     */
-    @Test
-    public void testAddEventSendImmediately() {
-        Map<String, String> events = new HashMap<>();
-        events.put("firstEvent", "{ 'firstEventBody' }");
-
-        Intent intent = new Intent(EventService.ACTION_ADD);
-        intent.putExtra(EventService.EXTRA_EVENT_TYPE, RegionEvent.TYPE);
-        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
-        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
-        intent.putExtra(EventService.EXTRA_EVENT_DATA, "Event Data");
-        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
-
-        when(dataManager.getEventCount()).thenReturn(2);
-        when(dataManager.getDatabaseSize()).thenReturn(200);
-        when(dataManager.getEvents(1)).thenReturn(events);
-        when(preferences.getMaxBatchSize()).thenReturn(100);
-
-        // Set last send time to year 0 so we upload immediately
-        when(preferences.getLastSendTime()).thenReturn(0l);
-
-        service.onHandleIntent(intent);
-
-        Mockito.verify(client).sendEvents(events.values());
     }
 
     /**

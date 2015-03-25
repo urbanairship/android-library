@@ -198,7 +198,7 @@ public class EventService extends IntentService {
     }
 
     /**
-     * Uploads events
+     * Uploads events.
      */
     private void uploadEvents() {
         AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
