@@ -32,6 +32,7 @@ import android.content.Intent;
 
 import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
+import com.urbanairship.location.RegionEvent;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,11 +42,14 @@ import org.mockito.internal.verification.Times;
 import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowAlarmManager.ScheduledAlarm;
+import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -82,10 +86,11 @@ public class EventServiceTest {
     }
 
     /**
-     * Tests adding an event from an intent
+     * Tests adding an event from an intent passed the next send time adds the event and schedules
+     * a send in 10 seconds.
      */
     @Test
-    public void testAddEvent() {
+    public void testAddEventAfterNextSendTime() {
         Intent intent = new Intent(EventService.ACTION_ADD);
         intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
         intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
@@ -94,12 +99,70 @@ public class EventServiceTest {
         intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
 
         service.onHandleIntent(intent);
-
         // Verify it was added to the data manager
-        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id",  "100");
+        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
 
-        // Verify that it tried to do the upload
-        Mockito.verify(preferences).setLastSendTime(Mockito.anyLong());
+        // Verify we add an event.
+        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+
+        // Reset last send time, should schedule the event in 10 seconds
+        when(preferences.getLastSendTime()).thenReturn(0l);
+
+        // Check it schedules an upload
+        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
+
+        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        assertTrue(shadowPendingIntent.isServiceIntent());
+        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
+
+        // Verify the alarm is within 10 second
+        assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 10000);
+    }
+
+    /**
+     * Tests adding an event from an intent passed the next send time adds the event and schedules
+     * a send for the next send time.
+     */
+    @Test
+    public void testAddEventBeforeNextSendTime() {
+        Intent intent = new Intent(EventService.ACTION_ADD);
+        intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
+        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
+        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
+
+        service.onHandleIntent(intent);
+        // Verify it was added to the data manager
+        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+        // Verify we add an event.
+        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+
+        // Set the last send time to the current time so the next send time is minBatchInterval
+        when(preferences.getLastSendTime()).thenReturn(System.currentTimeMillis());
+
+        // Set the minBatchInterval to 20 seconds
+        when(preferences.getMinBatchInterval()).thenReturn(20000);
+
+
+        // Check it schedules an upload
+        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
+
+        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        assertTrue(shadowPendingIntent.isServiceIntent());
+        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
+
+        // Verify the alarm is within 20 second
+        assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 20000);
     }
 
     /**
@@ -202,36 +265,38 @@ public class EventServiceTest {
         AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
         ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
-        assertNotNull("Alarm should be schedule when upload fails", alarm);
+        assertNotNull("Alarm should be scheduled when upload fails", alarm);
     }
 
     /**
-     * Test sending events when nextSendTime is in the future
+     * Test adding a region event results in a scheduled alarm
      */
     @Test
-    public void testSendEventsBeforeNextSendTime() {
-        Map<String, String> events = new HashMap<>();
-        events.put("firstEvent", "{ 'firstEventBody' }");
-        when(dataManager.getEventCount()).thenReturn(1);
-        when(dataManager.getDatabaseSize()).thenReturn(100);
-        when(dataManager.getEvents(1)).thenReturn(events);
-        when(preferences.getMaxBatchSize()).thenReturn(100);
+    public void testAddRegionEventSendAfterDelay() {
+        Intent intent = new Intent(EventService.ACTION_ADD);
+        intent.putExtra(EventService.EXTRA_EVENT_TYPE, RegionEvent.TYPE);
+        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(EventService.EXTRA_EVENT_DATA, "Region Event Data");
+        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
 
-        // Make next send time 30 seconds in the future
-        when(preferences.getLastSendTime()).thenReturn(System.currentTimeMillis());
-        when(preferences.getMinBatchInterval()).thenReturn(30000);
+        // Set last send time to year 3005 so we don't upload immediately
+        when(preferences.getLastSendTime()).thenReturn(32661446400000l);
 
-        Intent intent = new Intent(EventService.ACTION_SEND);
         service.onHandleIntent(intent);
 
-        Mockito.verify(client, Mockito.never()).sendEvents(events.values());
-        Mockito.verify(dataManager, Mockito.never()).getEvents(Mockito.anyInt());
-
-        // Check it schedules another upload
+        // Check it schedules an upload
         AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
         ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
-        assertNotNull("Alarm should be schedule when upload fails", alarm);
+
+        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        assertTrue(shadowPendingIntent.isServiceIntent());
+        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
+
+        // Verify the alarm is within a second
+        assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 1000);
     }
 
     /**

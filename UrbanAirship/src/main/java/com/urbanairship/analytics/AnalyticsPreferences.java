@@ -13,6 +13,7 @@ class AnalyticsPreferences {
     private static final String MAX_WAIT_KEY = KEY_PREFIX + ".MAX_WAIT";
     private static final String MIN_BATCH_INTERVAL_KEY = KEY_PREFIX + ".MIN_BATCH_INTERVAL";
     private static final String LAST_SEND_KEY = KEY_PREFIX + ".LAST_SEND";
+    private static final String SCHEDULED_SEND_TIME = KEY_PREFIX + ".SCHEDULED_SEND_TIME";
     private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
 
     static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; //5 MB
@@ -121,6 +122,25 @@ class AnalyticsPreferences {
     void setLastSendTime(long lastSendTime) {
         preferenceDataStore.put(LAST_SEND_KEY, lastSendTime);
     }
+
+    /**
+     * Gets the scheduled event upload time in milliseconds.
+     *
+     * @return next scheduled event upload time in milliseconds.
+     */
+    long getScheduledSendTime() {
+        return preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
+    }
+
+    /**
+     * Sets the scheduled send time in milliseconds for event uploads.
+     *
+     * @param scheduledSendTime Last send time in milliseconds.
+     */
+    void setScheduledSendTime(long scheduledSendTime) {
+        preferenceDataStore.put(SCHEDULED_SEND_TIME, scheduledSendTime);
+    }
+
 
     /**
      * Sets analytics enabled flag.

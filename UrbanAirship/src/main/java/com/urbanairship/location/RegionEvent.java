@@ -41,7 +41,7 @@ public class RegionEvent extends Event {
     /**
      * The event type.
      */
-    private static final String TYPE = "region_event";
+    public static final String TYPE = "region_event";
 
     /**
      * The region ID key.
