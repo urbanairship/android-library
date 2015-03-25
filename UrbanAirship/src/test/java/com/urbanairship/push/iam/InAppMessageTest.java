@@ -51,7 +51,7 @@ public class InAppMessageTest {
         InAppMessage message = new InAppMessage.Builder()
                 .setAlert("alert")
                 .setId("id")
-                .setDuration(100l)
+                .setDuration(10l)
                 .setExpiry(200l)
                 .setPrimaryColor(Color.BLACK)
                 .setSecondaryColor(Color.BLUE)
@@ -65,7 +65,7 @@ public class InAppMessageTest {
         // Verify everything is set on the notification
         assertEquals("alert", message.getAlert());
         assertEquals("id", message.getId());
-        assertEquals(100l, (long) message.getDuration());
+        assertEquals(10l, (long) message.getDuration());
         assertEquals(200, message.getExpiry());
         assertEquals(Color.BLACK, (int) message.getPrimaryColor());
         assertEquals(Color.BLUE, (int) message.getSecondaryColor());
@@ -274,6 +274,24 @@ public class InAppMessageTest {
 
         // They should be the same
         assertEquals(original, same);
+    }
+
+    /**
+     * Test expiry and duration do not suffer from sub-second precision loss when serializing to json.
+     */
+    @Test
+    public void testNoPrecisionLoss() throws JsonException {
+        InAppMessage message = new InAppMessage.Builder()
+                .setDuration(12345l)
+                .setExpiry(6789l)
+                .create();
+
+        InAppMessage jsonMessage = InAppMessage.parseJson(message.toJsonValue().toString());
+
+        // They should be the same
+        assertEquals(message, jsonMessage);
+        assertEquals((long)jsonMessage.getDuration(), 12345l);
+        assertEquals(jsonMessage.getExpiry(), 6789l);
     }
 
 }
