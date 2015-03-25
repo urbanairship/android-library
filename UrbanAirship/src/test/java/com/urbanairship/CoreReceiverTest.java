@@ -61,15 +61,16 @@ public class CoreReceiverTest {
         InAppMessage inAppMessage = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
+                .setId("sendId")
                 .create();
 
         // Set the pending in-app message
         InAppMessageManager inAppMessageManager = UAirship.shared().getInAppMessageManager();
         inAppMessageManager.setPendingMessage(inAppMessage);
 
-        // Create the push message with the in-app message
+        // Create the push message with the matching send ID
         Bundle pushBundle = new Bundle();
-        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppMessage.toJsonValue().toString());
+        pushBundle.putString(PushMessage.EXTRA_SEND_ID, "sendId");
         PushMessage message = new PushMessage(pushBundle);
 
         // Create the intent
@@ -90,21 +91,22 @@ public class CoreReceiverTest {
         InAppMessage inAppMessage = new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
+                .setId("sendId")
                 .create();
 
         // Set the pending in-app message
         InAppMessageManager inAppMessageManager = UAirship.shared().getInAppMessageManager();
         inAppMessageManager.setPendingMessage(inAppMessage);
 
-        // Create the push message with the in-app message
+        // Create the push message with the matching send ID
         Bundle pushBundle = new Bundle();
-        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppMessage.toJsonValue().toString());
+        pushBundle.putString(PushMessage.EXTRA_SEND_ID, "sendId");
         PushMessage message = new PushMessage(pushBundle);
 
         // Create the intent
         Intent intent = new Intent()
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "button id");
+                .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId");
 
         // Call the proxy
         CoreReceiver.handleNotificationButtonOpenedProxy(context, intent);
