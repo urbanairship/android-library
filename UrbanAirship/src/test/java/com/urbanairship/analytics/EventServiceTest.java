@@ -117,7 +117,7 @@ public class EventServiceTest {
         ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
-        assertNotNull("Alarm should be schedule when region event is added", alarm);
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within 10 second
         assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 10000);
@@ -159,7 +159,7 @@ public class EventServiceTest {
         ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
-        assertNotNull("Alarm should be schedule when region event is added", alarm);
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within 20 second
         assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 20000);
@@ -265,7 +265,7 @@ public class EventServiceTest {
         AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
         ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
-        assertNotNull("Alarm should be schedule when upload fails", alarm);
+        assertNotNull("Alarm should be scheduled when upload fails", alarm);
     }
 
     /**
@@ -293,7 +293,7 @@ public class EventServiceTest {
         ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
-        assertNotNull("Alarm should be schedule when region event is added", alarm);
+        assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within a second
         assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 1000);

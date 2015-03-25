@@ -223,7 +223,7 @@ public class EventService extends IntentService {
         boolean isSuccess = response != null && response.getStatus() == 200;
 
         if (isSuccess) {
-            Logger.info("Analytic events uploaded succesfully.");
+            Logger.info("Analytic events uploaded successfully.");
             dataManager.deleteEvents(events.keySet());
             backoffMs = 0;
         } else {
