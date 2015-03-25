@@ -190,7 +190,7 @@ public class EventService extends IntentService {
             } else {
                 scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
             }
-        } if (RegionEvent.TYPE.equals(eventType)) {
+        } else if (RegionEvent.TYPE.equals(eventType)) {
             scheduleEventUpload(REGION_BATCH_DELAY);
         } else {
             scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
