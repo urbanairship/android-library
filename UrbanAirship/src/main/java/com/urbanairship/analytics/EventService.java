@@ -271,10 +271,11 @@ public class EventService extends IntentService {
         long sendTime = System.currentTimeMillis() + milliseconds;
 
         AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = (AlarmManager) getApplicationContext()
+                .getSystemService(Context.ALARM_SERVICE);
 
-        Intent intent = new Intent(this, EventService.class)
-                .setAction(EventService.ACTION_SEND);
+        Intent intent = new Intent(getApplicationContext(), EventService.class);
+        intent.setAction(EventService.ACTION_SEND);
 
         long previousScheduledTime = preferences.getScheduledSendTime();
 
@@ -282,8 +283,8 @@ public class EventService extends IntentService {
         boolean reschedule = previousScheduledTime < System.currentTimeMillis() || previousScheduledTime > sendTime;
 
         // Schedule the alarm if we need to either reschedule or an existing pending intent does not exist
-        if (reschedule || PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_NO_CREATE) == null) {
-            PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (reschedule || PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_NO_CREATE) == null) {
+            PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Reschedule the intent
             alarmManager.set(AlarmManager.RTC, sendTime, pendingIntent);
