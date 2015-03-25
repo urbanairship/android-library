@@ -86,10 +86,11 @@ public class EventServiceTest {
     }
 
     /**
-     * Tests adding an event from an intent
+     * Tests adding an event from an intent passed the next send time adds the event and schedules
+     * a send in 10 seconds.
      */
     @Test
-    public void testAddEvent() {
+    public void testAddEventAfterNextSendTime() {
         Intent intent = new Intent(EventService.ACTION_ADD);
         intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
         intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
@@ -103,6 +104,65 @@ public class EventServiceTest {
 
         // Verify we add an event.
         Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+
+        // Reset last send time, should schedule the event in 10 seconds
+        when(preferences.getLastSendTime()).thenReturn(0l);
+
+        // Check it schedules an upload
+        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
+
+        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        assertTrue(shadowPendingIntent.isServiceIntent());
+        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertNotNull("Alarm should be schedule when region event is added", alarm);
+
+        // Verify the alarm is within 10 second
+        assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 10000);
+    }
+
+    /**
+     * Tests adding an event from an intent passed the next send time adds the event and schedules
+     * a send for the next send time.
+     */
+    @Test
+    public void testAddEventBeforeNextSendTime() {
+        Intent intent = new Intent(EventService.ACTION_ADD);
+        intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
+        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
+        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
+
+        service.onHandleIntent(intent);
+        // Verify it was added to the data manager
+        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+        // Verify we add an event.
+        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+
+
+        // Set the last send time to the current time so the next send time is minBatchInterval
+        when(preferences.getLastSendTime()).thenReturn(System.currentTimeMillis());
+
+        // Set the minBatchInterval to 20 seconds
+        when(preferences.getMinBatchInterval()).thenReturn(20000);
+
+
+        // Check it schedules an upload
+        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
+
+        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        assertTrue(shadowPendingIntent.isServiceIntent());
+        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertNotNull("Alarm should be schedule when region event is added", alarm);
+
+        // Verify the alarm is within 20 second
+        assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 20000);
     }
 
     /**
@@ -234,6 +294,8 @@ public class EventServiceTest {
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be schedule when region event is added", alarm);
+
+        // Verify the alarm is within a second
         assertTrue(alarm.triggerAtTime <= System.currentTimeMillis() + 1000);
     }
 

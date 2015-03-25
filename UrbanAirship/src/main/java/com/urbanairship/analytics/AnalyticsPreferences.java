@@ -123,13 +123,22 @@ class AnalyticsPreferences {
         preferenceDataStore.put(LAST_SEND_KEY, lastSendTime);
     }
 
-
+    /**
+     * Gets the scheduled event upload time in milliseconds.
+     *
+     * @return next scheduled event upload time in milliseconds.
+     */
     long getScheduledSendTime() {
         return preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
     }
 
-    void setScheduledSendTime(long lastSendTime) {
-        preferenceDataStore.put(SCHEDULED_SEND_TIME, lastSendTime);
+    /**
+     * Sets the scheduled send time in milliseconds for event uploads.
+     *
+     * @param scheduledSendTime Last send time in milliseconds.
+     */
+    void setScheduledSendTime(long scheduledSendTime) {
+        preferenceDataStore.put(SCHEDULED_SEND_TIME, scheduledSendTime);
     }
 
 
