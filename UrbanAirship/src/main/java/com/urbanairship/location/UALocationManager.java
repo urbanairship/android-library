@@ -159,7 +159,7 @@ public class UALocationManager extends BaseManager {
     /**
      * Checks if continuous location updates is enabled or not.
      * </p>
-     * Features that depend on analytics being enabled may not work properly if its disabled (reports,
+     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
      * @return <code>true</code> if location updates are enabled, otherwise
@@ -172,7 +172,7 @@ public class UALocationManager extends BaseManager {
     /**
      * Enable or disable continuous location updates.
      * </p>
-     * Features that depend on analytics being enabled may not work properly if its disabled (reports,
+     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
      * region triggers, location segmentation, push to local time).
      *
      * @param enabled If location updates should be enabled or not.
