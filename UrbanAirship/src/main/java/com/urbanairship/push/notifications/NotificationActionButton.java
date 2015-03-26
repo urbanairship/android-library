@@ -140,7 +140,7 @@ public class NotificationActionButton {
      * @return The action as a NotificationCompat.Action
      */
     NotificationCompat.Action createAndroidNotificationAction(Context context, String actionsPayload, PushMessage message, int notificationId) {
-        String label = labelId > 0 ? context.getString(labelId) : null;
+        String label = labelId > 0 ? context.getString(labelId) : "";
         String actionDescription = description == null ? label : description;
 
         PendingIntent actionPendingIntent;
