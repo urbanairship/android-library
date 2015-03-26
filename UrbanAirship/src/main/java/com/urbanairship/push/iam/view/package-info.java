@@ -24,7 +24,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
- * Contains classes for interacting with the Urban Airship In App Messaging View.
+ * Contains classes for interacting with the Urban Airship In-App Messaging View.
  *
  * This package provides an interface to all in-app messaging view related
  * functionality.
