@@ -38,7 +38,7 @@ import com.urbanairship.util.UriUtils;
  * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
  * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
- * Accepted argument value types: String, {@link java.net.URL}, {@link android.net.Uri}
+ * Accepted argument value types: URL as a string
  * <p/>
  * Result value: The URI that was opened.
  * <p/>
@@ -72,7 +72,7 @@ public class OpenExternalUrlAction extends Action {
     }
 
     /**
-     * The open external URL action accepts String, URL and URI argument value types.
+     * The open external URL action accepts Strings that can be parsed as URL argument value types.
      *
      * @param arguments The action arguments.
      * @return <code>true</code> if the action can perform with the arguments,
