@@ -90,7 +90,7 @@ public class InAppMessageManager extends BaseManager {
     /**
      * The delay before attempting to show an in-app message when an activity resumes.
      */
-    private static long ACTIVITY_RESUME_DELAY_MS = 3000;
+    private static long DEFAULT_ACTIVITY_RESUME_DELAY_MS = 3000;
 
     /**
      * A small delay that allows activity configuration changes to happen before we consider the app
@@ -114,6 +114,8 @@ public class InAppMessageManager extends BaseManager {
     private final List<Listener> listeners = new ArrayList<>();
     private final Object pendingMessageLock = new Object();
     private InAppMessageFragmentFactory fragmentFactory;
+    private long autoDisplayDelayMs;
+
 
     // Runnable that we post on the main looper whenever we attempt to auto display a in-app message
     private final Runnable displayRunnable = new Runnable() {
@@ -137,6 +139,7 @@ public class InAppMessageManager extends BaseManager {
      */
     public InAppMessageManager(PreferenceDataStore dataStore) {
         this.dataStore = dataStore;
+        autoDisplayDelayMs = DEFAULT_ACTIVITY_RESUME_DELAY_MS;
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingMessage = isDisplayAsapEnabled();
 
@@ -161,6 +164,23 @@ public class InAppMessageManager extends BaseManager {
         }
     }
 
+    /**
+     * Sets the default delay before an in-app message is automatically displayed when an activity
+     * is resumed.
+     * @param milliseconds The auto display delay in milliseconds.
+     */
+    public void setAutoDisplayDelay(long milliseconds) {
+        this.autoDisplayDelayMs = milliseconds;
+    }
+
+    /**
+     * Gets the delay in milliseconds before an in-app message is automatically displayed when
+     * an activity is resumed.
+     * @return The auto display delay in milliseconds.
+     */
+    public long getAutoDisplayDelay() {
+        return this.autoDisplayDelayMs;
+    }
     /**
      * Sets if in-app messages should be displayed as soon as possible or only on app foregrounds.
      * <p/>
@@ -513,7 +533,7 @@ public class InAppMessageManager extends BaseManager {
             currentMessage = null;
             autoDisplayPendingMessage = true;
             handler.removeCallbacks(displayRunnable);
-            handler.postDelayed(displayRunnable, ACTIVITY_RESUME_DELAY_MS);
+            handler.postDelayed(displayRunnable, autoDisplayDelayMs);
         }
     }
 
@@ -546,7 +566,7 @@ public class InAppMessageManager extends BaseManager {
         handler.removeCallbacks(displayRunnable);
 
         if (autoDisplayPendingMessage) {
-            handler.postDelayed(displayRunnable, ACTIVITY_RESUME_DELAY_MS);
+            handler.postDelayed(displayRunnable, autoDisplayDelayMs);
         }
     }
 
