@@ -449,7 +449,9 @@ public class PushService extends IntentService {
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
                 if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
-                    Logger.info("Unable to start registration. Google Play services unavailable.");
+                    Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
+                            "the modular Google Play Services dependencies, make sure the application includes " +
+                            "the com.google.android.gms:play-services-gcm dependency.");
                     performChannelRegistration();
                 } else {
                     try {
