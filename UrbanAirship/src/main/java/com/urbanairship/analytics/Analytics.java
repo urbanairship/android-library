@@ -387,8 +387,10 @@ public class Analytics {
     }
 
     /**
-     * Sets analytics enabled. When disabling, any locally stored events
-     * will be deleted.
+     * Sets analytics enabled. When disabling analytics, any locally stored events will be deleted.
+     * </p>
+     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
+     * region triggers, location segmentation, push to local time).
      *
      * @param enabled {@code true} to enable analytics, {@code false} to disable.
      */
@@ -407,6 +409,9 @@ public class Analytics {
     /**
      * Returns {@code true} if analytics is enabled and {@link com.urbanairship.AirshipConfigOptions#analyticsEnabled}
      * is set to {@code true}, otherwise {@code false}.
+     * </p>
+     * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
+     * region triggers, location segmentation, push to local time).
      *
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
