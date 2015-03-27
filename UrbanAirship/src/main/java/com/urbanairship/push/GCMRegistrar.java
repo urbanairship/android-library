@@ -33,6 +33,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.GCMUtils;
+import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.util.ManifestUtils;
 
 import java.io.IOException;
@@ -92,6 +93,11 @@ class GCMRegistrar {
      * otherwise <code>false</code>
      */
     private static boolean isGCMAvailable() {
+        if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
+            Logger.error("Google Play services for GCM is unavailable.");
+            return false;
+        }
+
         try {
             int playServicesStatus = GooglePlayServicesUtil.isGooglePlayServicesAvailable(UAirship.getApplicationContext());
             if (ConnectionResult.SUCCESS != playServicesStatus) {

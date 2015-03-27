@@ -4,7 +4,7 @@
           android:versionCode="1"
           android:versionName="1.0">
 
-    <uses-sdk tools:overrideLibrary="com.google.android.gms"/>
+    <uses-sdk tools:overrideLibrary="com.google.android.gms, com.google.android.gms.location, com.google.android.gms.gcm, com.google.android.gms.maps"/>
 
     <application/>
 </manifest>
