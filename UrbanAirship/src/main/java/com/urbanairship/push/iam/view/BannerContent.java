@@ -149,7 +149,10 @@ class BannerContent implements Banner {
 
         for (final NotificationActionButton actionButton : group.getNotificationActionButtons()) {
             Button button = (Button) inflater.inflate(R.layout.ua_iam_button, actionButtonViewGroup, false);
-            button.setText(actionButton.getLabel());
+
+            if (actionButton.getLabel() > 0) {
+                button.setText(actionButton.getLabel());
+            }
 
             Drawable drawable = resources.getDrawable(actionButton.getIcon());
             drawable.setBounds(0, 0, size, size);
