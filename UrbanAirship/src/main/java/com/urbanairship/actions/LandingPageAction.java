@@ -50,10 +50,9 @@ import java.net.URLEncoder;
  * Accepted situations: Situation.PUSH_OPENED, Situation.PUSH_RECEIVED, Situation.WEB_VIEW_INVOCATION,
  * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
- * Accepted argument value types: URL defined as either String, {@link android.net.Uri}, {@link android.net.Uri}
- * or a Map containing the key "url" that defines the URL. The map argument value can also define a
- * "cache_on_receive" flag to enable or disable caching when a PUSH_RECEIVED. Caching is disabled
- * by default.
+ * Accepted argument value types: URL defined as either a String or a Map containing the key
+ * "url" that defines the URL. The map argument value can also define a "cache_on_receive" flag
+ * to enable or disable caching when a PUSH_RECEIVED. Caching is disabled by default.
  * <p/>
  * <pre>{@code Note: URLs in the format of "u:<content-id>" will be treated as a short url and
  * used to construct a separate url using the content id. }</pre>

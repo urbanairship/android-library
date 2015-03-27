@@ -21,38 +21,14 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-package com.urbanairship.actions;
+*/
 
 /**
- * Action for opening a deep link.
- * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION, and
- * Situation.MANUAL_INVOCATION.
- * <p/>
- * Accepted argument value types: URL as string
- * <p/>
- * Result value: The URI that was opened.
- * <p/>
- * Default Registration Names: ^d, deep_link_action
- * <p/>
- * Default Registration Predicate: none
- * <p/>
- * This action defaults to the {@link com.urbanairship.actions.OpenExternalUrlAction}
- * behavior, where it will try to open a deep link using an intent with the
- * data set to the arguments value.
+ * Contains classes for interacting with the Urban Airship In-App Messaging.
+ *
+ * This package provides an interface to all in-app messaging related
+ * functionality.
+ *
  */
-public class DeepLinkAction extends OpenExternalUrlAction {
+package com.urbanairship.push.iam;
 
-    /**
-     * Default registry name
-     */
-    public static final String DEFAULT_REGISTRY_NAME = "deep_link_action";
-
-    /**
-     * Default registry short name
-     */
-    public static final String DEFAULT_REGISTRY_SHORT_NAME = "^d";
-
-}
