@@ -3,20 +3,15 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
-6.0.0.x Early Access/Preview
-============================
-
-Added to preview on February 27, 2015
--------------------------------------
- - Initial Preview release for 6.0.0.
+Version 6.0.0 - March 31, 2015
+==============================
  - Support for in-app messaging.
  - Support for associating and disassociating a channel to a named user.
+ - Added a flag to enable/disable analytics at runtime. Useful for providing a privacy opt-out switch.
  - Added new region events for proximity triggers.
  - Support listening for UAWebViewClient action runs by allowing an optional ActionCompletionCallback.
- - Expose the PushMessage directly instead of the Push bundle when broadcasting push events.
  - Updated AutoPilot to now call takeOff instead of a general "execute" method.
- - Added Intent flag FLAG_ACTIVITY_SINGLE_TOP when automatically launching the application from a notification open.
-
+ - Exposed the PushMessage directly instead of the Push bundle when broadcasting push events.
  - Actions framework:
    - Added new ActionValue class that limits the type of values ActionArguments and ActionResults
      can contain.
@@ -26,10 +21,7 @@ Added to preview on February 27, 2015
    - Replaced ActionRunner with a new ActionRunRequest class that provides a fluent API for running actions.
    - Replaced the RichPushMessage with its ID in the ActionArguments metadata when triggering actions
      from a web view with an associated RichPushMessage.
-
  - Fixed Urban Airship Javascript bridge when the associated RichPushMessage contains invalid characters in its title.
- - Fixed Rich Push Inbox blocking on first access.
-
 
 Version 5.1.6 - March 5, 2015
 =============================
