@@ -15,6 +15,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
+
+
 @RunWith(RobolectricGradleTestRunner.class)
 public class RegionEventTest {
 
@@ -43,7 +45,7 @@ public class RegionEventTest {
         String expectedData = "{\"proximity\":{\"proximity_id\":\"test_proximity_region\",\"minor\":2," +
                 "\"longitude\":\"0.0\",\"rssi\":-59,\"latitude\":\"0.0\",\"major\":1},\"source\":\"source\"," +
                 "\"action\":\"enter\",\"region_id\":\"region_id\",\"circular_region\":{\"longitude\":\"180.0000000\"," +
-                "\"radius\":10,\"latitude\":\"90.0000000\"}}";
+                "\"radius\":\"10.0\",\"latitude\":\"90.0000000\"}}";
 
         // test isValid returns true for valid region event
         assertEquals(expectedData, event.getEventData().toString());

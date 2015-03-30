@@ -213,7 +213,7 @@ public class RegionEvent extends Event {
             if (circularRegion != null && circularRegion.isValid()) {
                 circularRegionData = new JSONObject();
 
-                circularRegionData.putOpt(CIRCULAR_REGION_RADIUS, circularRegion.getRadius());
+                circularRegionData.putOpt(CIRCULAR_REGION_RADIUS, String.format(Locale.US, "%.1f", circularRegion.getRadius()));
                 circularRegionData.putOpt(LATITUDE,  String.format(Locale.US, "%.7f", circularRegion.getLatitude()));
                 circularRegionData.putOpt(LONGITUDE, String.format(Locale.US, "%.7f", circularRegion.getLongitude()));
 
