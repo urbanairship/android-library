@@ -20,6 +20,9 @@
 
     <!-- Style attributes for in-app message banners -->
     <declare-styleable name="BannerView">
+        <!-- The banner's font path -->
+        <attr name="bannerFontPath" format="string"/>
+
         <!-- The banner's text appearance -->
         <attr name="bannerTextAppearance" format="reference"/>
 

@@ -28,7 +28,9 @@ package com.urbanairship.push.iam.view;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -42,6 +44,7 @@ import android.widget.TextView;
 import com.urbanairship.R;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * Helper class to manage the banner view's content. Common code between the
@@ -61,8 +64,10 @@ class BannerContent implements Banner {
     private ViewGroup actionButtonViewGroup;
     private int primaryColor;
     private int secondaryColor;
-    private int textAppearance;
     private int actionButtonTextAppearance;
+
+    private Typeface typeface;
+
 
     private Banner.OnDismissClickListener dismissClickListener;
     private Banner.OnActionClickListener actionClickListener;
@@ -98,12 +103,16 @@ class BannerContent implements Banner {
         if (attrs != null) {
             TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.BannerView, defStyleAttr, R.style.InAppMessage_Banner);
 
-            this.textAppearance = attributes.getResourceId(R.styleable.BannerView_bannerTextAppearance, -1);
-            if (textAppearance != -1) {
-                messageTextView.setTextAppearance(context, textAppearance);
+            String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
+            if (!UAStringUtil.isEmpty(fontPath)) {
+                typeface = Typeface.createFromAsset(context.getAssets(), fontPath);
             }
 
-            actionButtonTextAppearance = attributes.getResourceId(R.styleable.BannerView_bannerActionButtonTextAppearance, -1);
+            int defaultPrimary = context.getResources().getColor(R.color.ua_iam_primary);
+            int defaultSecondary = context.getResources().getColor(R.color.ua_iam_secondary);
+
+            setPrimaryColor(attributes.getColor(R.styleable.BannerView_bannerPrimaryColor, defaultPrimary));
+            setSecondaryColor(attributes.getColor(R.styleable.BannerView_bannerSecondaryColor, defaultSecondary));
 
             if (attributes.getBoolean(R.styleable.BannerView_bannerNoDismissButton, false)) {
                 dismissButton.setVisibility(View.GONE);
@@ -114,16 +123,16 @@ class BannerContent implements Banner {
                 }
             }
 
-            // Needs to be called after setting the textAppearance
-            int defaultPrimary = context.getResources().getColor(R.color.ua_iam_primary);
-            int defaultSecondary = context.getResources().getColor(R.color.ua_iam_secondary);
+            this.actionButtonTextAppearance = attributes.getResourceId(R.styleable.BannerView_bannerActionButtonTextAppearance, -1);
 
-            setPrimaryColor(attributes.getColor(R.styleable.BannerView_bannerPrimaryColor, defaultPrimary));
-            setSecondaryColor(attributes.getColor(R.styleable.BannerView_bannerSecondaryColor, defaultSecondary));
+            int textAppearance = attributes.getResourceId(R.styleable.BannerView_bannerTextAppearance, -1);
+            applyTextStyle(context, messageTextView, textAppearance);
 
             attributes.recycle();
         }
     }
+
+
 
     @Override
     public void setText(CharSequence text) {
@@ -159,12 +168,7 @@ class BannerContent implements Banner {
             drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
             button.setCompoundDrawables(drawable, null, null, null);
 
-            if (actionButtonTextAppearance != -1) {
-                button.setTextAppearance(context, actionButtonTextAppearance);
-            }
-
-            // Called after setting the text appearance
-            button.setTextColor(secondaryColor);
+            applyTextStyle(context, button, actionButtonTextAppearance);
 
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -222,5 +226,41 @@ class BannerContent implements Banner {
      */
     int getPrimaryColor() {
         return primaryColor;
+    }
+
+
+    /**
+     * Helper method to apply custom text view styles.
+     *
+     * secondaryColor and typeFace need to be set before calling this method.
+     *
+     * @param context The view's context.
+     * @param textView The text view.
+     * @param textAppearance Optional text appearance.
+     */
+    private void applyTextStyle(Context context, TextView textView, int textAppearance) {
+        // Apply text appearance first before the color or type face.
+        if (textAppearance != -1) {
+            textView.setTextAppearance(context, textAppearance);
+        }
+
+        // Called after setting the text appearance so we can keep style defined in the text appearance
+        if (typeface != null) {
+            int style = -1;
+            if (textView.getTypeface() != null) {
+                style = textView.getTypeface().getStyle();
+            }
+
+            textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+
+            if (style >= 0) {
+                textView.setTypeface(typeface, style);
+            } else {
+                textView.setTypeface(typeface);
+            }
+        }
+
+        // Called after setting the text appearance to override the color
+        textView.setTextColor(secondaryColor);
     }
 }
