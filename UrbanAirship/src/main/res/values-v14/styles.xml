@@ -48,7 +48,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">16dp</item>
         <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">4dp</item>
+        <item name="android:layout_marginRight">16dp</item>
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:ellipsize">end</item>
         <item name="android:maxLines">4</item>
@@ -64,6 +64,7 @@
     <style name="Base.Widget.UrbanAirship.InAppMessage.Banner.DismissButton" parent="">
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>
+        <item name="android:layout_marginLeft">-12dp</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
         <item name="android:scaleType">center</item>
         <item name="android:src">@drawable/ic_close_white_18dp</item>
