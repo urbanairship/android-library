@@ -332,7 +332,6 @@ public class UAirship {
         preferenceDataStore.loadAll();
 
         sharedAirship = new UAirship(application.getApplicationContext(), options, preferenceDataStore);
-        sharedAirship.init();
 
         String currentVersion = getVersion();
         String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
@@ -351,10 +350,14 @@ public class UAirship {
         }
 
         synchronized (airshipLock) {
-            // IMPORTANT! Make sure we set isFlying before calling the readyCallback callback to prevent
-            // shared from deadlocking or adding another pendingAirshipRequests.
+            // IMPORTANT! Make sure we set isFlying before calling the readyCallback callback or
+            // initializing any of the modules to prevent shared from deadlocking or adding
+            // another pendingAirshipRequests.
             isFlying = true;
             isTakingOff = false;
+
+            // Initialize the modules
+            sharedAirship.init();
 
             Logger.info("Airship ready!");
 
