@@ -416,7 +416,7 @@ public class UAirship {
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
     public static String getPackageName() {
-        return application.getPackageName();
+        return getApplicationContext().getPackageName();
     }
 
     /**
@@ -426,7 +426,7 @@ public class UAirship {
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
     public static String getUrbanAirshipPermission() {
-        return application.getPackageName() + ".permission.UA_DATA";
+        return getApplicationContext().getPackageName() + ".permission.UA_DATA";
     }
 
     /**
@@ -436,7 +436,7 @@ public class UAirship {
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
     public static PackageManager getPackageManager() {
-        return application.getPackageManager();
+        return getApplicationContext().getPackageManager();
     }
 
     /**
@@ -462,7 +462,7 @@ public class UAirship {
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
     public static ApplicationInfo getAppInfo() {
-        return application.getApplicationInfo();
+        return getApplicationContext().getApplicationInfo();
     }
 
     /**
