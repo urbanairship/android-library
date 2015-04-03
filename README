@@ -3,28 +3,32 @@ Welcome to the Urban Airship client library for Android.
 
 Add the library to your project using Android Studio
 ----------------------------------------------------
-Include the `urbanairship-lib-x.x.x.aar` file as a dependency in the project.
+Include the urbanairship-lib-x.x.x.aar file as a dependency in the project.
 
-1. Create a local ``aars`` directory with the library in the root of the your
-project.
+1. Open your project in Android Studio
+2. Go to File -> New Module -> Import from .JAR or .AAR Package
+3. Select the downloaded urbanairship-lib-x.x.x.aar file
+4. Add the Urban Airship library, Android Support v4 library (revision 21 or newer),
+   Android Support v7 CardView library (revision 21 or newer, required for in-app
+   messaging) and Google Play Service GCM and Location (version 7.0 or newer) as
+   dependencies in the build.gradle file:
 
-2. Modify the repositories section of the `build.gradle` file to look for the
-local `aars` files:
-    repositories {
-        mavenCentral()
+        dependencies {
+            compile project (':urbanairship-lib-x.x.x')
+            compile 'com.android.support:support-v4:22.0.0'
 
-        flatDir {
-            dirs 'aars'
+            // Required for Android push notifications
+            compile 'com.google.android.gms:play-services-gcm:7.0.0'
+
+            // Recommended for in-app messaging
+            compile 'com.android.support:cardview-v7:22.0.0'
+
+            // Recommended if using location services
+            compile 'com.google.android.gms:play-services-location:7.0.0'
         }
-    }
 
-3. Add the Urban Airship library, support v4, and Google Play Services as
-dependencies:
-    compile 'com.urbanairship:urbanairship-lib:+@aar'
-    compile 'com.android.support:support-v4:20.+'
-    compile 'com.google.android.gms:play-services:5.0.89'
 
-4. Sync the project with the gradle file.
+5. Sync the project with the gradle file
 
 Add the library to your project using Eclipse
 ---------------------------------------------
