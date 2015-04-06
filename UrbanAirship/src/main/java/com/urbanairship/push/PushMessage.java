@@ -140,21 +140,6 @@ public class PushMessage implements Parcelable {
     public static final String EXTRA_PUSH_ID = "com.urbanairship.push.CANONICAL_PUSH_ID";
 
     /**
-     * The string extra contains the value of the "extra" field in an Urban Airship
-     * Push Notification if it was sent as a String instead of a Map<String, String>.
-     * <p/>
-     * This extra will only be included if the contents of the Urban Airship "extra" field
-     * are a JSON string.
-     *
-     * @deprecated The latest versions of the Urban Airship API allow the extra to
-     * contain key/value pairs and the bare string extra has been deprecated in favor
-     * of that method. Marked to be removed on August 1, 2014 when we no longer support Urban
-     * Airship API Version 1.
-     */
-    @Deprecated
-    public static final String EXTRA_STRING_EXTRA = "com.urbanairship.push.STRING_EXTRA";
-
-    /**
      * The EXPIRATION extra is a time expressed in seconds since the Epoch after which, if specified, the
      * notification should not be delivered. It is removed from the notification before delivery to the
      * client. If not present, notifications may be delivered arbitrarily late.
