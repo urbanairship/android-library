@@ -5,19 +5,17 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.RichPushTable;
-import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.UrbanAirshipProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public abstract class RichPushBaseTestCase {
+public abstract class RichPushBaseTestCase extends BaseTestCase {
 
     public RichPushResolver richPushResolver;
     public ContentResolver resolver;
@@ -25,7 +23,7 @@ public abstract class RichPushBaseTestCase {
 
     @Before
     public void setUp() {
-        this.app = Robolectric.application;
+        this.app = RuntimeEnvironment.application;
         this.resolver = app.getApplicationContext().getContentResolver();
         this.richPushResolver = new RichPushResolver(app.getApplicationContext());
     }

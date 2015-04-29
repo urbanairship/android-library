@@ -1,16 +1,14 @@
 package com.urbanairship.location;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class LocationRequestOptionsTest {
+public class LocationRequestOptionsTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

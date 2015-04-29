@@ -2,7 +2,7 @@ package com.urbanairship.analytics;
 
 import android.os.Bundle;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
@@ -23,8 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class CustomEventTest {
+public class CustomEventTest extends BaseTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     PushManager pushManager;

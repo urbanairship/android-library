@@ -1,7 +1,7 @@
 package com.urbanairship.richpush;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -13,7 +13,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -31,8 +30,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class UserAPIClientTest {
+public class UserAPIClientTest extends BaseTestCase {
 
     private AirshipConfigOptions mockAirshipConfigOptions;
     private JSONObject newUserPayload = new JSONObject();

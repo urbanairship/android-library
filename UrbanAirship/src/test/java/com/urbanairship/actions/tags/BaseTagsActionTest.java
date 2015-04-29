@@ -25,7 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions.tags;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
@@ -33,7 +33,6 @@ import com.urbanairship.actions.Situation;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -43,8 +42,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class BaseTagsActionTest {
+public class BaseTagsActionTest extends BaseTestCase {
 
     BaseTagsAction action;
     private Situation[] acceptedSituations;

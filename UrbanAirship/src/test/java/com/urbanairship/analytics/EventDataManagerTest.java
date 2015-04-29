@@ -1,11 +1,10 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,8 +16,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class EventDataManagerTest {
+public class EventDataManagerTest extends BaseTestCase {
 
     EventDataManager dataManager;
 

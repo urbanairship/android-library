@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
@@ -33,7 +33,6 @@ import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,8 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class RemoveTagsActionTest {
+public class RemoveTagsActionTest extends BaseTestCase {
 
     RemoveTagsAction action;
     PushManager pushManager;

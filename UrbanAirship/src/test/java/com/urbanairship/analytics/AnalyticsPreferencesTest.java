@@ -1,18 +1,16 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class AnalyticsPreferencesTest {
+public class AnalyticsPreferencesTest extends BaseTestCase {
 
     private AnalyticsPreferences preferences;
 

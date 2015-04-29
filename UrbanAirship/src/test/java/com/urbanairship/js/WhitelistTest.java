@@ -1,18 +1,15 @@
 package com.urbanairship.js;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
-import com.urbanairship.js.Whitelist;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class WhitelistTest {
+public class WhitelistTest extends BaseTestCase {
 
     Whitelist whitelist;
 
@@ -36,7 +33,7 @@ public class WhitelistTest {
         assertFalse(whitelist.isWhitelisted("file:///*"));
     }
 
-   /**
+    /**
      * Test the default white list accepts Urban Airship URLs.
      */
     @Test
@@ -76,7 +73,7 @@ public class WhitelistTest {
 
         // Invalid hosts
         assertFalse(whitelist.addEntry("*://what*"));
-        assertFalse( whitelist.addEntry("*://*what"));
+        assertFalse(whitelist.addEntry("*://*what"));
 
         // Missing host
         assertFalse(whitelist.addEntry("*://"));

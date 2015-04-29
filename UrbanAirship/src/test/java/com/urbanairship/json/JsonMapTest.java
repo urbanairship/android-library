@@ -1,11 +1,10 @@
 package com.urbanairship.json;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,9 +14,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-
-@RunWith(RobolectricGradleTestRunner.class)
-public class JsonMapTest {
+public class JsonMapTest extends BaseTestCase {
 
     private JsonMap jsonMap;
 

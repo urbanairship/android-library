@@ -11,16 +11,15 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.robolectric.Robolectric;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import static junit.framework.Assert.assertTrue;
@@ -35,8 +34,7 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for the Location Service
  */
-@RunWith(RobolectricGradleTestRunner.class)
-public class LocationServiceTest {
+public class LocationServiceTest extends BaseTestCase {
 
     LocationService locationService;
     ShadowLooper shadowLooper;
@@ -57,7 +55,7 @@ public class LocationServiceTest {
         mockAnalytics = mock(Analytics.class);
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
-        shadowLooper = Robolectric.shadowOf(Looper.myLooper());
+        shadowLooper = Shadows.shadowOf(Looper.myLooper());
 
         locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore);
         TestApplication.getApplication().setLocationManager(locationManager);

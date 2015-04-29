@@ -3,7 +3,7 @@ package com.urbanairship.analytics;
 import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -12,7 +12,6 @@ import com.urbanairship.http.Response;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -32,8 +31,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class EventAPIClientTest {
+public class EventAPIClientTest extends BaseTestCase {
 
     private List<String> events = new ArrayList<>();
     private EventAPIClient client;

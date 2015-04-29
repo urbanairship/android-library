@@ -32,15 +32,15 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLocalBroadcastManager;
@@ -54,8 +54,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class AnalyticsTest {
+public class AnalyticsTest extends BaseTestCase {
 
     Analytics analytics;
     ActivityMonitor.Listener activityMonitorListener;
@@ -66,6 +65,8 @@ public class AnalyticsTest {
 
     @Before
     public void setup() {
+
+
         mockActivityMonitor = Mockito.mock(ActivityMonitor.class);
         ArgumentCaptor<ActivityMonitor.Listener> listenerCapture = ArgumentCaptor.forClass(ActivityMonitor.Listener.class);
 
@@ -75,7 +76,7 @@ public class AnalyticsTest {
         activityMonitorListener = listenerCapture.getValue();
         assertNotNull("Should set the listener on create", activityMonitorListener);
 
-        shadowApplication = Robolectric.shadowOf(Robolectric.application);
+        shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
 
@@ -117,7 +118,7 @@ public class AnalyticsTest {
         assertTrue(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app foreground
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = Robolectric.shadowOf(localBroadcastManager);
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.support.v4.Shadows.shadowOf(localBroadcastManager);
         List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
         assertEquals("Should of sent a foreground local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_FOREGROUND);
@@ -153,7 +154,7 @@ public class AnalyticsTest {
         assertFalse(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app background
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = Robolectric.shadowOf(localBroadcastManager);
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.support.v4.Shadows.shadowOf(localBroadcastManager);
         List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
         assertEquals("Should of sent a background local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_BACKGROUND);
@@ -175,16 +176,15 @@ public class AnalyticsTest {
      * Test activity started when life cycle calls enabled (API >= 14)
      */
     @Test
-    @Config(reportSdk = 14)
     public void testActivityStartedLifeCyclesEnabled() {
         Activity activity = new Activity();
         Analytics.activityStarted(activity);
 
         // Activity started is posted on the main looper
-        Robolectric.shadowOf(Looper.myLooper()).runToEndOfTasks();
+        Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
 
         // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity),  Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
 
         // Verify it did not start the event service to add an event.  Should be
         // done with life cycle calls
@@ -196,13 +196,13 @@ public class AnalyticsTest {
      * Test activity started when life cycle calls disabled
      */
     @Test
-    @Config(reportSdk = 10)
+    @Config(reportSdk = 10, application = TestApplication.class)
     public void testActivityStartedLifeCyclesDisabled() {
         Activity activity = new Activity();
         Analytics.activityStarted(activity);
 
         // Activity started is posted on the main looper
-        Robolectric.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
+        Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
 
         // Verify that the activity monitor was called with manual instrumentation
         Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
@@ -212,13 +212,12 @@ public class AnalyticsTest {
      * Test activity stopped when life cycle calls enabled (API >= 14)
      */
     @Test
-    @Config(reportSdk = 14)
     public void testActivityStoppedLifeCyclesEnabled() {
         Activity activity = new Activity();
         Analytics.activityStopped(activity);
 
         // Activity stopped is posted on the main looper
-        Robolectric.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
 
 
         // Verify that the activity monitor was called with manual instrumentation
@@ -234,13 +233,13 @@ public class AnalyticsTest {
      * Test activity stopped when life cycle calls disabled
      */
     @Test
-    @Config(reportSdk = 10)
+    @Config(reportSdk = 10, application = TestApplication.class)
     public void testActivityStoppedLifeCyclesDisabled() {
         Activity activity = new Activity();
         Analytics.activityStopped(activity);
 
         // Activity stopped is posted on the main looper
-        Robolectric.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
+        Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
 
 
         // Verify that the activity monitor was called with manual instrumentation
@@ -345,14 +344,13 @@ public class AnalyticsTest {
      * Test life cycle activity events when an activity is started
      */
     @SuppressLint("NewApi")
-    @Config(reportSdk = 14)
     public void testActivityLifeCycleEventsActivityStarted() {
         Activity activity = new Activity();
 
         TestApplication.getApplication().callback.onActivityStarted(activity);
 
         // The activity started is posted on the looper
-        Robolectric.shadowOf(Looper.myLooper()).runToEndOfTasks();
+        Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
 
 
         // Verify that the activity monitor was called with auto instrumentation
@@ -363,7 +361,6 @@ public class AnalyticsTest {
      * Test life cycle activity events when an activity is stopped
      */
     @SuppressLint("NewApi")
-    @Config(reportSdk = 14)
     public void testActivityLifeCycleEventsActivityStopped() {
         Activity activity = new Activity();
 

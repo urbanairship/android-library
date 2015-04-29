@@ -3,7 +3,7 @@ package com.urbanairship.push.iam;
 import android.graphics.Color;
 import android.os.Parcel;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -12,7 +12,6 @@ import com.urbanairship.json.JsonValue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +21,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class InAppMessageTest {
+public class InAppMessageTest extends BaseTestCase {
 
     // Taken from the push api spec
     public static String VALID_JSON = "{\"display\": {\"primary_color\": \"#FF0000\"," +
@@ -128,7 +126,7 @@ public class InAppMessageTest {
         // Verify everything is set on the new notification
         assertEquals("alert", extended.getAlert());
         assertEquals("other id", extended.getId());
-        assertEquals(100l, (long)extended.getDuration());
+        assertEquals(100l, (long) extended.getDuration());
         assertEquals(200, extended.getExpiry());
         assertEquals(InAppMessage.POSITION_TOP, extended.getPosition());
         assertEquals(jsonExtras, extended.getExtras());
@@ -290,7 +288,7 @@ public class InAppMessageTest {
 
         // They should be the same
         assertEquals(message, jsonMessage);
-        assertEquals((long)jsonMessage.getDuration(), 12345l);
+        assertEquals((long) jsonMessage.getDuration(), 12345l);
         assertEquals(jsonMessage.getExpiry(), 6789l);
     }
 

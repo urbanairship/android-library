@@ -1,31 +1,28 @@
 package com.urbanairship.push.notifications;
 
 import android.app.Notification;
-import android.content.Context;
 import android.os.Bundle;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.robolectric.RuntimeEnvironment;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class SystemNotificationFactoryTest {
+public class SystemNotificationFactoryTest extends BaseTestCase {
 
     private SystemNotificationFactory factory;
-    private Context context = UAirship.getApplicationContext();
     private PushMessage pushMessage;
 
     @Before
     public void setup() {
-        factory = new SystemNotificationFactory(context);
+        factory = new SystemNotificationFactory(RuntimeEnvironment.application);
 
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!!!");

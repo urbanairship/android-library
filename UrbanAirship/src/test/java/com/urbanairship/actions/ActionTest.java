@@ -29,11 +29,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertEquals;
@@ -41,8 +39,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ActionTest {
+public class ActionTest extends BaseTestCase {
 
     /**
      * Test running an action calls onStart, perform, and onFinish
@@ -216,7 +213,7 @@ public class ActionTest {
         actionThread.start();
 
         // Wait til we have a started activity from the action thread
-        ShadowApplication application = Robolectric.getShadowApplication();
+        ShadowApplication application = ShadowApplication.getInstance();
         for (int i = 0; i < 10; i++) {
             Intent intent = application.peekNextStartedActivity();
             if (intent != null && intent.getComponent().getClassName().equals(ActionActivity.class.getName())) {

@@ -3,24 +3,26 @@ package com.urbanairship.location;
 import android.app.PendingIntent;
 import android.content.Intent;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.mockito.Matchers;
+
+import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class UALocationProviderTests {
+public class UALocationProviderTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -40,7 +42,7 @@ public class UALocationProviderTests {
 
         provider = new UALocationProvider(mockAdapterOne, mockAdapterTwo);
 
-        pendingIntent = PendingIntent.getService(TestApplication.getApplication(), 1, new Intent(), 0);
+        pendingIntent = PendingIntent.getService(TestApplication.getApplication(), 1, new Intent().addCategory(UUID.randomUUID().toString()), 0);
         options = LocationRequestOptions.createDefaultOptions();
     }
 
@@ -86,7 +88,7 @@ public class UALocationProviderTests {
         provider.disconnect();
 
         // Verify we did not try to disconnect again
-        verify(mockAdapterOne, times(1)).disconnect();
+        verify(mockAdapterOne, times(0)).disconnect();
         verify(mockAdapterTwo, times(1)).disconnect();
     }
 
@@ -106,8 +108,8 @@ public class UALocationProviderTests {
         verify(mockAdapterTwo, times(1)).connect();
 
         // Verify we only canceled requests on the adapter that was connected
-        verify(mockAdapterOne, times(0)).cancelLocationUpdates(pendingIntent);
-        verify(mockAdapterTwo, times(1)).cancelLocationUpdates(pendingIntent);
+        verify(mockAdapterOne, times(0)).cancelLocationUpdates(Matchers.refEq(pendingIntent));
+        verify(mockAdapterTwo, times(1)).cancelLocationUpdates(Matchers.refEq(pendingIntent));
     }
 
     /**
@@ -121,8 +123,8 @@ public class UALocationProviderTests {
 
         provider.requestLocationUpdates(options, pendingIntent);
 
-        verify(mockAdapterTwo).requestLocationUpdates(options, pendingIntent);
-        verify(mockAdapterOne, times(0)).requestLocationUpdates(options, pendingIntent);
+        verify(mockAdapterTwo).requestLocationUpdates(eq(options), Matchers.refEq(pendingIntent));
+        verify(mockAdapterOne, times(0)).requestLocationUpdates(eq(options), Matchers.refEq(pendingIntent));
     }
 
     /**
@@ -176,7 +178,7 @@ public class UALocationProviderTests {
             }
         };
 
-        when(mockAdapterOne.connect()).thenReturn(true);
+        when(mockAdapterOne.connect()).thenReturn(false);
         when(mockAdapterOne.requestSingleLocation(options)).thenReturn(request);
         when(mockAdapterTwo.requestSingleLocation(options)).thenReturn(request);
 

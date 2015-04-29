@@ -1,11 +1,10 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.ActivityMonitor.Source;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,8 +15,8 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Urban Airship
  */
-@RunWith(RobolectricGradleTestRunner.class)
-public class ActivityStateTest {
+
+public class ActivityStateTest extends BaseTestCase {
 
     private ActivityState icsState;
     private ActivityState preIcsState;

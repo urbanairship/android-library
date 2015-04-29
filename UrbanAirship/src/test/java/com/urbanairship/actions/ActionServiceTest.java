@@ -4,19 +4,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.CustomShadowService;
-import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 
@@ -28,8 +28,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ActionServiceTest {
+public class ActionServiceTest extends BaseTestCase {
 
     ActionService service;
     ActionRunRequestFactory actionRunRequestFactory;
@@ -47,7 +46,7 @@ public class ActionServiceTest {
      */
     @Test
     public void testRunActionsPayload() {
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
         String actionsPayload = "{ \"actionName\": \"actionValue\" }";
@@ -76,7 +75,7 @@ public class ActionServiceTest {
      */
     @Test
     public void testRunActionsPayloadInvalid() {
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
         String actionsPayload = null;
@@ -101,8 +100,8 @@ public class ActionServiceTest {
     @Config(shadows = { CustomShadowService.class })
     public void testRunActions() {
 
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
-        CustomShadowService shadowService = (CustomShadowService) Robolectric.shadowOf(service);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        CustomShadowService shadowService = (CustomShadowService) Shadows.shadowOf(service);
         shadowApplication.clearStartedServices();
 
         Situation situation = Situation.PUSH_RECEIVED;
@@ -148,8 +147,8 @@ public class ActionServiceTest {
     @Config(shadows = { CustomShadowService.class })
     public void testRunActionsWithPushMessage() {
 
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
-        CustomShadowService shadowService = (CustomShadowService) Robolectric.shadowOf(service);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        CustomShadowService shadowService = (CustomShadowService) Shadows.shadowOf(service);
         shadowApplication.clearStartedServices();
 
         final Situation situation = Situation.PUSH_RECEIVED;

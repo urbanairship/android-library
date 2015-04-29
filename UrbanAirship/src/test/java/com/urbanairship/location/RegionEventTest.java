@@ -1,14 +1,10 @@
 package com.urbanairship.location;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.EventTestUtils;
-import com.urbanairship.location.CircularRegion;
-import com.urbanairship.location.ProximityRegion;
-import com.urbanairship.location.RegionEvent;
 
 import org.json.JSONException;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -16,9 +12,7 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 
-
-@RunWith(RobolectricGradleTestRunner.class)
-public class RegionEventTest {
+public class RegionEventTest extends BaseTestCase {
 
     /**
      * Test region event data formatting directly.
@@ -91,7 +85,7 @@ public class RegionEventTest {
      * Test creating a region event with a null region ID.
      */
     @Test
-    public void testNullRegionID() throws JSONException  {
+    public void testNullRegionID() throws JSONException {
 
         String source = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
@@ -106,7 +100,7 @@ public class RegionEventTest {
      * Test creating a region event with a region ID greater than maximum allowed length.
      */
     @Test
-    public void testMaxRegionID() throws JSONException  {
+    public void testMaxRegionID() throws JSONException {
 
         String regionId = createFixedSizeString('a', 256);
         String source = createFixedSizeString('b', 255);
@@ -122,7 +116,7 @@ public class RegionEventTest {
      * Test creating a region event with an empty source.
      */
     @Test
-    public void testEmptySource() throws JSONException  {
+    public void testEmptySource() throws JSONException {
 
         String regionId = createFixedSizeString('a', 255);
         String source = "";
@@ -139,7 +133,7 @@ public class RegionEventTest {
      * Test creating a region event with a null source.
      */
     @Test
-    public void testNullSource() throws JSONException  {
+    public void testNullSource() throws JSONException {
 
         String regionId = createFixedSizeString('b', 255);
         int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
@@ -154,7 +148,7 @@ public class RegionEventTest {
      * Test creating a region event with a source greater than maximum allowed length.
      */
     @Test
-    public void testMaxSource() throws JSONException  {
+    public void testMaxSource() throws JSONException {
 
         String regionId = createFixedSizeString('a', 255);
         String source = createFixedSizeString('b', 256);
@@ -170,7 +164,7 @@ public class RegionEventTest {
      * Test a creating a region event with an invalid boundary event.
      */
     @Test
-    public void testInvalidBoundaryEvent() throws JSONException  {
+    public void testInvalidBoundaryEvent() throws JSONException {
 
         String regionId = createFixedSizeString('a', 255);
         String source = createFixedSizeString('b', 255);

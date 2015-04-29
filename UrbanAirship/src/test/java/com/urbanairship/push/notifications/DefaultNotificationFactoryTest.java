@@ -5,21 +5,19 @@ import android.content.Context;
 import android.os.Bundle;
 import android.provider.Settings;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class DefaultNotificationFactoryTest {
+public class DefaultNotificationFactoryTest extends BaseTestCase {
 
     private DefaultNotificationFactory factory;
     private Context context = UAirship.getApplicationContext();
@@ -59,7 +57,6 @@ public class DefaultNotificationFactoryTest {
         assertEquals("Title should use app name by default.", 0, factory.getTitleId());
         assertEquals("Small icon should match.", UAirship.getAppIcon(), factory.getSmallIconId());
     }
-
 
 
     /**

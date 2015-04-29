@@ -1,25 +1,23 @@
 package com.urbanairship.json;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class JsonListTest {
+public class JsonListTest extends BaseTestCase {
 
     private JsonList jsonList;
 
     @Before
     public void setUp() throws JsonException {
-        jsonList = JsonValue.wrap(new Object[] { "first-value", "second-value", null}).getList();
+        jsonList = JsonValue.wrap(new Object[] { "first-value", "second-value", null }).getList();
         assertNotNull(jsonList);
     }
 

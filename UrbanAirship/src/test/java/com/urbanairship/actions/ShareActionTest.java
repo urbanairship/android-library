@@ -6,20 +6,18 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Parcelable;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.res.builder.RobolectricPackageManager;
+import org.robolectric.shadows.ShadowApplication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ShareActionTest {
+public class ShareActionTest extends BaseTestCase {
 
     private ShareAction action;
     private RobolectricPackageManager packageManager;
@@ -27,7 +25,7 @@ public class ShareActionTest {
     @Before
     public void setup() {
         action = new ShareAction();
-        packageManager = (RobolectricPackageManager) Robolectric.getShadowApplication().getPackageManager();
+        packageManager = (RobolectricPackageManager) ShadowApplication.getInstance().getPackageManager();
     }
 
     /**
@@ -73,7 +71,7 @@ public class ShareActionTest {
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "Share text"));
 
         // Verify the chooser intent has the right flags and actions
-        Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals(startedIntent.getAction(), Intent.ACTION_CHOOSER);
         assertEquals(startedIntent.getFlags(), Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -124,7 +122,7 @@ public class ShareActionTest {
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "Share text"));
 
         // Should still start the intent
-        Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals(startedIntent.getAction(), Intent.ACTION_CHOOSER);
         assertEquals(startedIntent.getFlags(), Intent.FLAG_ACTIVITY_NEW_TASK);
 

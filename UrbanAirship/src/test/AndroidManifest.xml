@@ -4,6 +4,7 @@
           android:versionCode="1"
           android:versionName="1.0">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-sdk android:minSdkVersion="6" android:targetSdkVersion="18"/>
 
     <application android:name=".TestApplication"/>

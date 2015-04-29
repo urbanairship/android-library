@@ -6,16 +6,14 @@ import android.content.SharedPreferences;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class PreferenceDataStoreTest {
+public class PreferenceDataStoreTest extends BaseTestCase {
 
     private ContentResolver resolver;
     private Context context;
@@ -23,7 +21,7 @@ public class PreferenceDataStoreTest {
 
     @Before
     public void setUp() {
-        context = Robolectric.application.getApplicationContext();
+        context = RuntimeEnvironment.application.getApplicationContext();
         resolver = context.getContentResolver();
 
         testPrefs = new PreferenceDataStore(context);

@@ -5,12 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import static junit.framework.Assert.assertEquals;
@@ -18,8 +17,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class BaseIntentReceiverTest {
+
+public class BaseIntentReceiverTest extends BaseTestCase {
 
     Context context;
     PushMessage pushMessage;

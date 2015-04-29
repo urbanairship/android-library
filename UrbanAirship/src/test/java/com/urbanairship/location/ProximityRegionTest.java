@@ -1,18 +1,15 @@
 package com.urbanairship.location;
 
-import com.urbanairship.RobolectricGradleTestRunner;
-import com.urbanairship.location.ProximityRegion;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ProximityRegionTest {
+public class ProximityRegionTest extends BaseTestCase {
 
     /**
      * Test isValid returns true for valid proximity region.
@@ -56,7 +53,7 @@ public class ProximityRegionTest {
      */
     @Test
     public void testMajorAboveMax() {
-        ProximityRegion proximityRegion = new ProximityRegion("proximity region test",  65536, 2);
+        ProximityRegion proximityRegion = new ProximityRegion("proximity region test", 65536, 2);
         assertFalse(proximityRegion.isValid());
     }
 

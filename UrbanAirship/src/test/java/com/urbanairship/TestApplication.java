@@ -10,7 +10,7 @@ import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.richpush.RichPushManager;
 
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.TestLifecycleApplication;
 import org.robolectric.shadows.ShadowContentResolver;
 
@@ -58,7 +58,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
     }
 
     public static TestApplication getApplication() {
-        return (TestApplication) Robolectric.application;
+        return (TestApplication) RuntimeEnvironment.application;
     }
 
     public void setApplicationMetrics(ApplicationMetrics metrics) {

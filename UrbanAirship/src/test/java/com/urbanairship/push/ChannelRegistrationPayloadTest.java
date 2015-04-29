@@ -1,13 +1,12 @@
 package com.urbanairship.push;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,8 +17,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ChannelRegistrationPayloadTest {
+public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
     private final boolean testOptIn = true;
     private final boolean testBackgroundEnabled = true;

@@ -1,16 +1,16 @@
 package com.urbanairship.push;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowIntent;
 
@@ -23,8 +23,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class NamedUserTest {
+public class NamedUserTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeToken = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
@@ -54,12 +53,12 @@ public class NamedUserTest {
      */
     @Test
     public void testSetIDValid() {
-        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         namedUser.setId(fakeNamedUserId);
 
-        ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
+        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
@@ -81,12 +80,12 @@ public class NamedUserTest {
      */
     @Test
     public void testSetIDNull() {
-        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         namedUser.setId(null);
 
-        ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
+        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
         assertNull("Named user ID should be null", namedUser.getId());
@@ -112,12 +111,12 @@ public class NamedUserTest {
     public void testForceUpdate() {
         String changeToken = namedUser.getChangeToken();
 
-        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         namedUser.forceUpdate();
 
-        ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
+        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
         assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());

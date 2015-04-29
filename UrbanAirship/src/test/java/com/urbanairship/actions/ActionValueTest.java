@@ -2,19 +2,15 @@ package com.urbanairship.actions;
 
 import android.os.Parcel;
 
-import com.urbanairship.RobolectricGradleTestRunner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
+import org.junit.Test;
+
 import static junit.framework.Assert.assertEquals;
 
-
-@RunWith(RobolectricGradleTestRunner.class)
-public class ActionValueTest {
+public class ActionValueTest extends BaseTestCase {
 
     /**
      * Test saving and reading a ActionValue from a parcel.
@@ -22,7 +18,7 @@ public class ActionValueTest {
     @Test
     public void testParcelable() throws JsonException {
 
-        JsonValue jsonValue = JsonValue.wrap(new Object[] {"value", 1, "another-value"});
+        JsonValue jsonValue = JsonValue.wrap(new Object[] { "value", 1, "another-value" });
         ActionValue actionValue = new ActionValue(jsonValue);
 
         // Write the push message to a parcel

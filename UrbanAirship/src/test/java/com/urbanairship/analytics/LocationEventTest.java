@@ -2,19 +2,17 @@ package com.urbanairship.analytics;
 
 import android.location.Location;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class LocationEventTest {
+public class LocationEventTest extends BaseTestCase {
 
     Location gpsLocation;
     Location bogusProviderLocation;
@@ -147,7 +145,7 @@ public class LocationEventTest {
         for (String key : expectedKeys) {
             assertTrue(eventData.has(key));
         }
-        
+
         assertEquals("One of these does not belong: " + eventData.names().toString(), eventData.length(), expectedKeys.length);
     }
 

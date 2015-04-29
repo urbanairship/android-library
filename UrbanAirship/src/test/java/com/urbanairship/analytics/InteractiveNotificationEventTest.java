@@ -1,19 +1,17 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.push.PushMessage;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import static com.urbanairship.analytics.EventTestUtils.validateEventValue;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class InteractiveNotificationEventTest {
+public class InteractiveNotificationEventTest extends BaseTestCase {
 
     private PushMessage mockPushMessage;
 

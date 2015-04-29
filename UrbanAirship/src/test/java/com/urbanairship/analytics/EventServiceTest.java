@@ -30,16 +30,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.location.RegionEvent;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowAlarmManager.ScheduledAlarm;
 import org.robolectric.shadows.ShadowPendingIntent;
@@ -54,8 +54,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class EventServiceTest {
+public class EventServiceTest extends BaseTestCase {
 
     EventService service;
     EventAPIClient client;
@@ -110,11 +109,11 @@ public class EventServiceTest {
         when(preferences.getLastSendTime()).thenReturn(0l);
 
         // Check it schedules an upload
-        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
-        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);
@@ -152,11 +151,11 @@ public class EventServiceTest {
 
 
         // Check it schedules an upload
-        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
-        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);
@@ -232,8 +231,8 @@ public class EventServiceTest {
         Mockito.verify(preferences).setMinBatchInterval(100);
 
         // Check it schedules another upload
-        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
-        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
         assertNotNull("Alarm should be schedule for more uploads", alarm);
     }
@@ -262,8 +261,8 @@ public class EventServiceTest {
         Mockito.verify(dataManager, Mockito.never()).deleteEvents(events.keySet());
 
         // Check it schedules another upload
-        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
-        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
         assertNotNull("Alarm should be scheduled when upload fails", alarm);
     }
@@ -286,11 +285,11 @@ public class EventServiceTest {
         service.onHandleIntent(intent);
 
         // Check it schedules an upload
-        AlarmManager alarmManager = (AlarmManager) Robolectric.application.getSystemService(Context.ALARM_SERVICE);
-        ShadowAlarmManager shadowAlarmManager = Robolectric.shadowOf(alarmManager);
+        AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(alarm.operation);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
         assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);

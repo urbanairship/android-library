@@ -1,17 +1,15 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class EventTest {
+public class EventTest extends BaseTestCase {
 
     private BasicEvent event;
 

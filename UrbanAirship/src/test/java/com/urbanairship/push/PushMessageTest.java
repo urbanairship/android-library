@@ -3,7 +3,7 @@ package com.urbanairship.push;
 import android.os.Bundle;
 import android.os.Parcel;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.OpenRichPushInboxAction;
@@ -12,7 +12,6 @@ import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 
@@ -20,8 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class PushMessageTest {
+public class PushMessageTest extends BaseTestCase {
 
     /**
      * Test when the message expired.
@@ -53,7 +51,7 @@ public class PushMessageTest {
     public void testNotExpired() {
         Bundle extras = new Bundle();
         // Set expiration in the future
-        String expiration = String.valueOf((System.currentTimeMillis() + 10000)/1000);
+        String expiration = String.valueOf((System.currentTimeMillis() + 10000) / 1000);
         extras.putString(PushMessage.EXTRA_EXPIRATION, expiration);
 
         PushMessage pushMessage = new PushMessage(extras);

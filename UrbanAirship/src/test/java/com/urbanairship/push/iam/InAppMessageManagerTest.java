@@ -32,7 +32,7 @@ import android.app.FragmentTransaction;
 import android.os.Build;
 import android.os.Looper;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
@@ -41,10 +41,8 @@ import com.urbanairship.analytics.EventTestUtils;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.UUID;
@@ -65,8 +63,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class InAppMessageManagerTest {
+public class InAppMessageManagerTest extends BaseTestCase {
 
     private InAppMessageManager inAppMessageManager;
     private InAppMessage message;
@@ -142,7 +139,6 @@ public class InAppMessageManagerTest {
      * Test showing the pending in-app message.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowPendingMessage() {
         // Set up a mocked transaction
@@ -178,7 +174,6 @@ public class InAppMessageManagerTest {
      * and the pending in-app message to not be displayed.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowExpiredPendingMessage() {
 
@@ -224,7 +219,6 @@ public class InAppMessageManagerTest {
      * Test showing the pending in-app message when its already showing does not show a second time.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowPendingMessageAlreadyShowing() {
         // Set up a mocked transaction
@@ -251,7 +245,6 @@ public class InAppMessageManagerTest {
      * set.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingMessageShowAsap() {
         // Set up a mocked transaction
@@ -280,7 +273,6 @@ public class InAppMessageManagerTest {
      * next activity is resumed.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testActivityResumedShowAsap() {
         // Set up a mocked transaction
@@ -307,7 +299,6 @@ public class InAppMessageManagerTest {
      * Test when the app foregrounds it tries to show the pending in-app message on next activity resume.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testActivityResume() {
         // Set up a mocked transaction
@@ -335,7 +326,6 @@ public class InAppMessageManagerTest {
      * message exists.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingMessageGeneratesReplaceEvent() {
         final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
@@ -370,7 +360,6 @@ public class InAppMessageManagerTest {
      * being displayed.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingNoReplaceEvent() {
         final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
@@ -400,7 +389,6 @@ public class InAppMessageManagerTest {
      * Test init checks and removes a expired pending in app message.
      */
     @Test
-    @Config(emulateSdk = 18)
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testInit() {
         final InAppMessage expired = new InAppMessage.Builder()
@@ -441,7 +429,7 @@ public class InAppMessageManagerTest {
      */
     private static void runMainLooperTasks() {
         // Get the looper
-        ShadowLooper looper = Robolectric.shadowOf(Looper.getMainLooper());
+        ShadowLooper looper = Shadows.shadowOf(Looper.getMainLooper());
 
         // Run any tasks in its queue
         looper.runToEndOfTasks();

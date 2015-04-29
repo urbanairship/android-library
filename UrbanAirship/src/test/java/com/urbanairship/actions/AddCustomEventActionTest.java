@@ -2,7 +2,7 @@ package com.urbanairship.actions;
 
 import android.os.Bundle;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
@@ -15,7 +15,6 @@ import com.urbanairship.richpush.RichPushMessage;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import java.util.HashMap;
@@ -29,8 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class AddCustomEventActionTest {
+public class AddCustomEventActionTest extends BaseTestCase {
 
     AddCustomEventAction action;
     Situation[] acceptedSituations;
