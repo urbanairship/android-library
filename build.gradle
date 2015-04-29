@@ -102,6 +102,13 @@ task packageUrbanAirshipRelease << {
     buildInfo.text += "Samples commit: ${gitRevision("samples")} \n"
     buildInfo.text += "Java: ${JavaVersion.current()}"
 
+    // Dex count
+    File dexCount = file("${project.findProject('UrbanAirship').buildDir}/dex-counts/release")
+    if (dexCount.exists()) {
+        buildInfo.text += "\n"
+        buildInfo.text += dexCount.text
+    }
+
     // Add any additional build info
     File additionalBuildInfo = file("${project.getProjectDir()}/BUILD_INFO")
     if (additionalBuildInfo.exists()) {
@@ -120,10 +127,9 @@ task packageUrbanAirshipRelease << {
     }.execute()
 }
 
-packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'UrbanAirship:build', 'docs:build')
+packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'UrbanAirship:build', 'docs:build',
+        ':UrbanAirship:saveDexMethodCount')
 
 task continuousIntegration
 continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', ':UrbanAirship:build',
         'docs:build', ':UrbanAirship:test', 'packageUrbanAirshipRelease')
-
-
