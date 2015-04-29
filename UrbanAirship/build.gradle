@@ -88,7 +88,30 @@ task templatizeNativeBridge(type: Exec) {
     commandLine 'src/main/js/templatize'
 }
 
+def getDexMethodCount() {
+    try {
+        def dx = "${android.getSdkDirectory()}/build-tools/${android.getBuildToolsRevision()}/dx"
+        def jar = "${project.buildDir}/intermediates/bundles/release/classes.jar"
+        def output = new ByteArrayOutputStream()
+        exec {
+            commandLine "../tools/dex-method-count.sh", dx, jar
+            standardOutput = output
+        }
+        return output.toString().trim()
+    } catch (e) {
+        println(e)
+        return ""
+    }
+}
+
+task saveDexMethodCount << {
+    File dex = file("${project.buildDir}/dex-counts/release")
+    dex.getParentFile().mkdirs()
+    dex.text = "Dex Method Count: ${getDexMethodCount()}"
+}
+
 project.afterEvaluate {
-    prepareDebugDependencies.dependsOn("templatizeNativeBridge")
-    prepareReleaseDependencies.dependsOn("templatizeNativeBridge")
+    prepareDebugDependencies.dependsOn(templatizeNativeBridge)
+    prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
+    saveDexMethodCount.dependsOn(assembleRelease)
 }
