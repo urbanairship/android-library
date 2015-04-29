@@ -80,7 +80,7 @@ public class EventTestUtils {
      * @param expectedValue The expected value.
      * @throws org.json.JSONException
      */
-    public static void validateEventValue(Event event, String key,  boolean expectedValue) throws JSONException {
+    public static void validateEventValue(Event event, String key, boolean expectedValue) throws JSONException {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().getBoolean(key));
     }
 

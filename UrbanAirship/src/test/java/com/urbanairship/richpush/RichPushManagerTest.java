@@ -31,7 +31,8 @@ import android.os.ResultReceiver;
 import com.urbanairship.TestApplication;
 
 import org.junit.Test;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowIntent;
 
@@ -70,7 +71,7 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         user = manager.getRichPushUser();
 
 
-        application = Robolectric.shadowOf(Robolectric.application);
+        application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
     }
 
@@ -120,12 +121,12 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         long lastUpdateTime = System.currentTimeMillis() - (25 * 60 * 60 * 1000);
         user.setLastUpdateTime(lastUpdateTime);
 
-        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         manager.updateUserIfNecessary();
 
-        ShadowIntent intent = Robolectric.shadowOf(application.peekNextStartedService());
+        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals(intent.getAction(), RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE);
     }
 
@@ -138,7 +139,7 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         long lastUpdateTime = System.currentTimeMillis() - (1 * 60 * 60 * 1000);
         user.setLastUpdateTime(lastUpdateTime);
 
-        ShadowApplication application = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         manager.updateUserIfNecessary();

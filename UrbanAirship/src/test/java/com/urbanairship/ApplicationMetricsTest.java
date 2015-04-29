@@ -32,14 +32,12 @@ import com.urbanairship.analytics.Analytics;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ApplicationMetricsTest {
+public class ApplicationMetricsTest extends BaseTestCase {
 
     private ApplicationMetrics metrics;
 

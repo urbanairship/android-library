@@ -1,7 +1,7 @@
 package com.urbanairship.push;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
@@ -10,7 +10,6 @@ import com.urbanairship.http.Response;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
@@ -23,9 +22,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-
-public class NamedUserAPIClientTest {
+public class NamedUserAPIClientTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";

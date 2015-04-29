@@ -1,12 +1,11 @@
 package com.urbanairship.location;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.RobolectricGradleTestRunner;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +15,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class LocationPreferencesTest {
+public class LocationPreferencesTest extends BaseTestCase {
 
     LocationPreferences preferences;
     LocationRequestOptions options;

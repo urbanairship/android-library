@@ -8,17 +8,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class UAirshipTest {
+public class UAirshipTest extends BaseTestCase {
 
-    @Rule public ExpectedException exception = ExpectedException.none();
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     AirshipConfigOptions configOptions;
     ShadowLooper looper;
@@ -26,7 +25,7 @@ public class UAirshipTest {
 
     @Before
     public void setup() {
-        looper = Robolectric.shadowOf(Looper.myLooper());
+        looper = Shadows.shadowOf(Looper.myLooper());
         configOptions = new AirshipConfigOptions();
         configOptions.inProduction = true;
         configOptions.productionAppKey = "app_key";

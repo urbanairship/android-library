@@ -2,7 +2,7 @@ package com.urbanairship.analytics;
 
 import android.os.Build;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushManager;
@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -21,8 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class AppForegroundEventTest {
+public class AppForegroundEventTest extends BaseTestCase {
 
     private AppForegroundEvent event;
     private JSONObject data;

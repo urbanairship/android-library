@@ -30,7 +30,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
@@ -45,7 +45,6 @@ import com.urbanairship.actions.StubbedActionRunRequest;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -68,8 +67,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class UAWebViewClientTest {
+public class UAWebViewClientTest extends BaseTestCase {
 
     ActionRunRequestFactory runRequestFactory;
     UAWebViewClient client;
@@ -285,7 +283,7 @@ public class UAWebViewClientTest {
         verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
             @Override
             public boolean matches(Object argument) {
-                return ((String)argument).startsWith("javascript:");
+                return ((String) argument).startsWith("javascript:");
             }
         }));
     }

@@ -1,16 +1,14 @@
 package com.urbanairship.util;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class UAHttpStatusUtilTest {
+public class UAHttpStatusUtilTest extends BaseTestCase {
 
     /**
      * Test inSuccessRange succeeds

@@ -6,29 +6,23 @@ import android.util.Log;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-
 /**
  * This class tests the parsing of each type of configuration
  * value from a Java-style properties file.
- *
- * @author Urban Airship
  */
-@RunWith(RobolectricGradleTestRunner.class)
-public class AirshipConfigOptionsTest {
+public class AirshipConfigOptionsTest extends BaseTestCase {
     public Context uaContext;
     static final String optionsTestPropertiesFile = "optionstest.properties";
     static final String validateIntegerValuesFile = "validateIntegerValues.properties";
@@ -94,7 +88,7 @@ public class AirshipConfigOptionsTest {
 
     @Before
     public void setUp() throws Exception {
-        Application app = Robolectric.application;
+        Application app = RuntimeEnvironment.application;
         this.uaContext = app.getApplicationContext();
     }
 
@@ -175,7 +169,7 @@ public class AirshipConfigOptionsTest {
     @Test
     public void testGetGCMSenderIdsAdditionalIds() {
         AirshipConfigOptions aco = new AirshipConfigOptions();
-        aco.additionalGCMSenderIds = new String[] {"sender-2", "sender-3"};
+        aco.additionalGCMSenderIds = new String[] { "sender-2", "sender-3" };
         aco.gcmSender = "sender-1";
 
         Set<String> ids = aco.getGCMSenderIds();

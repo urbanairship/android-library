@@ -4,16 +4,14 @@ import android.os.Bundle;
 import android.os.Looper;
 
 import com.android.internal.util.Predicate;
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
-import org.robolectric.annotation.Config;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.Executor;
@@ -26,8 +24,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ActionRunRequestTest {
+public class ActionRunRequestTest extends BaseTestCase {
 
     private ActionRegistry actionRegistry;
 
@@ -252,11 +249,10 @@ public class ActionRunRequestTest {
     /**
      * Test action callback is called on the callers thread
      */
-    @Config(reportSdk = 5)
     @Test
     public void testCallbackHappensOnCallersThread() throws InterruptedException {
         // Get the looper
-        ShadowLooper looper = Robolectric.shadowOf(Looper.getMainLooper());
+        ShadowLooper looper = Shadows.shadowOf(Looper.getMainLooper());
 
         // Run any tasks in its queue
         looper.runToEndOfTasks();

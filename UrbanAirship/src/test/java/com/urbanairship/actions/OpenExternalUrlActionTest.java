@@ -27,12 +27,10 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.MalformedURLException;
@@ -41,8 +39,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class OpenExternalUrlActionTest {
+public class OpenExternalUrlActionTest extends BaseTestCase {
 
     private OpenExternalUrlAction action;
 
@@ -95,7 +92,7 @@ public class OpenExternalUrlActionTest {
      * the open url action
      */
     private void validateLastActivity(String expectedUri) {
-        ShadowApplication application = Robolectric.getShadowApplication();
+        ShadowApplication application = ShadowApplication.getInstance();
         Intent intent = application.getNextStartedActivity();
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.getFlags());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());

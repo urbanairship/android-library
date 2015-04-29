@@ -27,19 +27,17 @@ package com.urbanairship.location;
 
 import android.location.Location;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
-import com.urbanairship.RobolectricGradleTestRunner;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class BaseSingleLocationRequestTest {
+public class BaseSingleLocationRequestTest extends BaseTestCase {
 
     PendingLocationResult request;
     private boolean onCancelCalled;

@@ -27,12 +27,10 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.util.HashMap;
@@ -42,8 +40,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class LandingPageActionTest {
+public class LandingPageActionTest extends BaseTestCase {
 
     private LandingPageAction action;
 
@@ -112,7 +109,7 @@ public class LandingPageActionTest {
     }
 
     private void verifyPerform(Object value, String expectedIntentData) {
-        ShadowApplication application = Robolectric.getShadowApplication();
+        ShadowApplication application = ShadowApplication.getInstance();
 
         Situation[] situations = new Situation[] {
                 Situation.PUSH_OPENED,

@@ -1,16 +1,13 @@
 package com.urbanairship.location;
 
-import com.urbanairship.RobolectricGradleTestRunner;
-import com.urbanairship.location.CircularRegion;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class CircularRegionTest {
+public class CircularRegionTest extends BaseTestCase {
 
     /**
      * Test isValid returns true for valid circular region.

@@ -3,19 +3,17 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class PushPreferencesTest {
+public class PushPreferencesTest extends BaseTestCase {
 
     private static final String KEY_PREFIX = "com.urbanairship.push";
     private static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";

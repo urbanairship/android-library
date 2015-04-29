@@ -1,18 +1,17 @@
 package com.urbanairship.util;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import java.text.ParseException;
 
 import static junit.framework.Assert.assertEquals;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class DateUtilsTest {
+public class DateUtilsTest extends BaseTestCase {
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 

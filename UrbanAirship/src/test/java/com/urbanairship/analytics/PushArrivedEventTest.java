@@ -1,13 +1,11 @@
 package com.urbanairship.analytics;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class PushArrivedEventTest {
+public class PushArrivedEventTest extends BaseTestCase {
 
     @Test
     public void testEventData() throws JSONException {

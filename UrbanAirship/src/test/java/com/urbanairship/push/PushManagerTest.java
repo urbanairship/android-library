@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -23,10 +23,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPendingIntent;
 
@@ -45,9 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
-@RunWith(RobolectricGradleTestRunner.class)
-public class PushManagerTest {
+public class PushManagerTest extends BaseTestCase {
 
     Analytics mockAnalytics;
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
@@ -85,7 +83,7 @@ public class PushManagerTest {
 
         backgroundMessage = new PushMessage(backgroundMessageExtras);
 
-        notification = new NotificationCompat.Builder(Robolectric.application)
+        notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
                 .setContentText("Test NotificationBuilder Text")
                 .setAutoCancel(true)
@@ -129,7 +127,7 @@ public class PushManagerTest {
 
         verify(mockNotificationManager).notify(constantNotificationId, notification);
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(notification.contentIntent);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
@@ -144,7 +142,7 @@ public class PushManagerTest {
     @Test
     public void testDeliverPushUserPushDisabled() {
 
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
 
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(false);
@@ -152,7 +150,7 @@ public class PushManagerTest {
         pushManager.deliverPush(pushMessage);
 
         List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size()-1);
+        Intent i = intents.get(intents.size() - 1);
         Bundle extras = i.getExtras();
         PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
@@ -167,7 +165,7 @@ public class PushManagerTest {
     @Test
     public void testDeliverBackgroundPush() {
 
-        ShadowApplication shadowApplication = Robolectric.shadowOf(Robolectric.application);
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
 
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(false);
@@ -175,7 +173,7 @@ public class PushManagerTest {
         pushManager.deliverPush(backgroundMessage);
 
         List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size()-1);
+        Intent i = intents.get(intents.size() - 1);
         Bundle extras = i.getExtras();
         PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
@@ -231,7 +229,7 @@ public class PushManagerTest {
 
         pushManager.deliverPush(pushMessage);
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(notification.contentIntent);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
@@ -261,7 +259,7 @@ public class PushManagerTest {
 
         pushManager.deliverPush(pushMessage);
 
-        ShadowPendingIntent shadowPendingIntent = Robolectric.shadowOf(notification.deleteIntent);
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
@@ -1065,7 +1063,7 @@ public class PushManagerTest {
         assertTrue(keys.size() > 0);
 
         for (String key : keys) {
-            assertNotNull( "Missing notification button group with ID: " + key, pushManager.getNotificationActionGroup(key));
+            assertNotNull("Missing notification button group with ID: " + key, pushManager.getNotificationActionGroup(key));
         }
     }
 

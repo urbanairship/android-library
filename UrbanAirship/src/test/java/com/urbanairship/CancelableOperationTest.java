@@ -4,22 +4,20 @@ import android.os.Looper;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class CancelableOperationTest {
+public class CancelableOperationTest extends BaseTestCase {
 
     ShadowLooper looper;
     TestOperation operation;
 
     @Before
     public void setup() {
-        looper = Robolectric.shadowOf(Looper.myLooper());
+        looper = Shadows.shadowOf(Looper.myLooper());
         operation = new TestOperation(Looper.myLooper());
     }
 

@@ -37,14 +37,12 @@ import com.urbanairship.push.iam.InAppMessageManager;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class CoreReceiverTest {
+public class CoreReceiverTest extends BaseTestCase {
 
     Context context;
 
@@ -53,6 +51,7 @@ public class CoreReceiverTest {
         context = mock(Context.class);
         when(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(mock(NotificationManager.class));
     }
+
     /**
      * Test when a notification is opened it clears the pending in-app message.
      */

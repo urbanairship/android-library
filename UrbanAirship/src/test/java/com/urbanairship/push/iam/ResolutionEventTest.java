@@ -27,7 +27,7 @@ package com.urbanairship.push.iam;
 
 import android.content.Context;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.push.notifications.NotificationActionButton;
@@ -36,14 +36,12 @@ import com.urbanairship.util.DateUtils;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class ResolutionEventTest {
+public class ResolutionEventTest extends BaseTestCase {
 
     private InAppMessage message;
 

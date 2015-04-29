@@ -2,7 +2,7 @@ package com.urbanairship.json;
 
 import android.os.Parcel;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -27,8 +26,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class JsonValueTest {
+public class JsonValueTest extends BaseTestCase {
 
     Map<String, Object> primitiveMap;
     List<Object> primitiveList;
@@ -38,7 +36,7 @@ public class JsonValueTest {
 
     @Before
     public void setUp() {
-        primitiveList = Arrays.asList(new Object[] {"String", 1.2, false, 1, 'c', (byte) 2, (short) 3});
+        primitiveList = Arrays.asList(new Object[] { "String", 1.2, false, 1, 'c', (byte) 2, (short) 3 });
 
         primitiveMap = new HashMap<>();
         primitiveMap.put("double", 1.2);
@@ -134,7 +132,7 @@ public class JsonValueTest {
     public void testWrapMap() throws JSONException, JsonException {
         Map<String, Object> map = new HashMap<>(primitiveMap);
         map.put("map", primitiveMap);
-        map.put("collection",primitiveList);
+        map.put("collection", primitiveList);
 
         JsonMap jsonMap = JsonValue.wrap(map).getMap();
         assertNotNull(jsonMap);
@@ -205,8 +203,8 @@ public class JsonValueTest {
     @Test
     public void testWrapInteger() throws JsonException {
         // bytes and shorts are converted to Integer
-        assertEquals(1, JsonValue.wrap((byte)1).getInt(0));
-        assertEquals(1, JsonValue.wrap((short)1).getInt(0));
+        assertEquals(1, JsonValue.wrap((byte) 1).getInt(0));
+        assertEquals(1, JsonValue.wrap((short) 1).getInt(0));
 
         assertEquals(1, JsonValue.wrap(1).getInt(0));
     }

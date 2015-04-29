@@ -25,20 +25,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push.iam;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.EventTestUtils;
 
 import org.json.JSONException;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class DisplayEventTest {
+public class DisplayEventTest extends BaseTestCase {
 
     /**
      * Test display event.

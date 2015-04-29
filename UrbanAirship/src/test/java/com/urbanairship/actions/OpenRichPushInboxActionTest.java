@@ -27,7 +27,7 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 
-import com.urbanairship.RobolectricGradleTestRunner;
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushManager;
@@ -35,16 +35,16 @@ import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
+import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(RobolectricGradleTestRunner.class)
-public class OpenRichPushInboxActionTest {
+
+public class OpenRichPushInboxActionTest extends BaseTestCase {
+
     private OpenRichPushInboxAction action;
     private RichPushInbox mockInbox;
 
@@ -93,7 +93,7 @@ public class OpenRichPushInboxActionTest {
     public void testPerformNoMessageId() {
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null));
 
-        Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());
     }
 
@@ -106,7 +106,7 @@ public class OpenRichPushInboxActionTest {
 
         when(mockInbox.getMessage("message_id")).thenReturn(null);
 
-        Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());
     }
 
@@ -122,7 +122,7 @@ public class OpenRichPushInboxActionTest {
 
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
 
-        Intent startedIntent = Robolectric.getShadowApplication().getNextStartedActivity();
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
         assertEquals("message:message_id", startedIntent.getDataString());
     }
