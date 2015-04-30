@@ -23,6 +23,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 
@@ -80,6 +81,7 @@ public class JsonValueTest extends BaseTestCase {
 
         JsonValue jsonValue = JsonValue.wrap(jsonSerializable);
         assertEquals(JsonValue.NULL, jsonValue);
+        assertNull(jsonValue.getValue());
     }
 
     /**
@@ -91,7 +93,10 @@ public class JsonValueTest extends BaseTestCase {
         jsonObject.put("map", new JSONObject(primitiveMap));
         jsonObject.put("collection", new JSONArray(primitiveList));
 
-        JsonMap jsonMap = JsonValue.wrap(jsonObject).getMap();
+        JsonValue jsonValue = JsonValue.wrap(jsonObject);
+        assertTrue(jsonValue.getValue() instanceof JsonMap);
+
+        JsonMap jsonMap = jsonValue.getMap();
 
         // Validate all the values in the map
         for (Map.Entry<String, JsonValue> entry : jsonMap.entrySet()) {
@@ -112,8 +117,10 @@ public class JsonValueTest extends BaseTestCase {
         jsonArray.put(new JSONObject(primitiveMap));
         jsonArray.put(new JSONArray(primitiveList));
 
+        JsonValue jsonValue = JsonValue.wrap(jsonArray);
+        assertTrue(jsonValue.getValue() instanceof JsonList);
 
-        JsonList jsonList = JsonValue.wrap(jsonArray).getList();
+        JsonList jsonList = jsonValue.getList();
 
         // Validate all the values in the list
         for (int i = 0; i < jsonList.size(); i++) {
@@ -134,7 +141,10 @@ public class JsonValueTest extends BaseTestCase {
         map.put("map", primitiveMap);
         map.put("collection", primitiveList);
 
-        JsonMap jsonMap = JsonValue.wrap(map).getMap();
+        JsonValue jsonValue = JsonValue.wrap(map);
+        assertTrue(jsonValue.getValue() instanceof JsonMap);
+
+        JsonMap jsonMap = jsonValue.getMap();
         assertNotNull(jsonMap);
 
         // Validate all the values in the map
@@ -159,7 +169,10 @@ public class JsonValueTest extends BaseTestCase {
         list.add(primitiveMap);
         list.add(primitiveList);
 
-        JsonList jsonList = JsonValue.wrap(list).getList();
+        JsonValue jsonValue = JsonValue.wrap(list);
+        assertTrue(jsonValue.getValue() instanceof JsonList);
+
+        JsonList jsonList = jsonValue.getList();
 
         // Validate all the values are in the list properly
         for (int i = 0; i < jsonList.size(); i++) {
@@ -184,7 +197,10 @@ public class JsonValueTest extends BaseTestCase {
 
         Object[] array = list.toArray(new Object[list.size()]);
 
-        JsonList jsonList = JsonValue.wrap(list).getList();
+        JsonValue jsonValue = JsonValue.wrap(list);
+        assertTrue(jsonValue.getValue() instanceof JsonList);
+
+        JsonList jsonList = jsonValue.getList();
         assertNotNull(jsonList);
 
         // Validate all the values are in the list properly
@@ -205,8 +221,9 @@ public class JsonValueTest extends BaseTestCase {
         // bytes and shorts are converted to Integer
         assertEquals(1, JsonValue.wrap((byte) 1).getInt(0));
         assertEquals(1, JsonValue.wrap((short) 1).getInt(0));
-
         assertEquals(1, JsonValue.wrap(1).getInt(0));
+
+        assertTrue(JsonValue.wrap(1).getValue() instanceof Integer);
     }
 
     /**
@@ -215,6 +232,7 @@ public class JsonValueTest extends BaseTestCase {
     @Test
     public void testWrapLong() throws JsonException {
         assertEquals(1l, JsonValue.wrap(1l).getLong(0));
+        assertTrue(JsonValue.wrap(1l).getValue() instanceof Long);
     }
 
     /**
@@ -224,8 +242,10 @@ public class JsonValueTest extends BaseTestCase {
     public void testWrapDouble() throws JsonException {
         // floats are converted to doubles
         assertEquals(1.0d, JsonValue.wrap(1.0f).getDouble(0));
+        assertTrue(JsonValue.wrap(1.0f).getValue() instanceof Double);
 
         assertEquals(1.0d, JsonValue.wrap(1.0d).getDouble(0));
+        assertTrue(JsonValue.wrap(1.0d).getValue() instanceof Double);
     }
 
     /**
@@ -234,7 +254,10 @@ public class JsonValueTest extends BaseTestCase {
     @Test
     public void testWrapBoolean() throws JsonException {
         assertTrue(JsonValue.wrap(true).getBoolean(false));
+        assertTrue(JsonValue.wrap(true).getValue() instanceof Boolean);
+
         assertFalse(JsonValue.wrap(false).getBoolean(true));
+        assertTrue(JsonValue.wrap(false).getValue() instanceof Boolean);
     }
 
     /**
@@ -243,7 +266,10 @@ public class JsonValueTest extends BaseTestCase {
     @Test
     public void testWrapString() throws JsonException, MalformedURLException, URISyntaxException {
         assertEquals("Hello", JsonValue.wrap("Hello").getString());
+        assertTrue(JsonValue.wrap("Hello").getValue() instanceof String);
+
         assertEquals("c", JsonValue.wrap('c').getString());
+        assertTrue(JsonValue.wrap('c').getValue() instanceof String);
     }
 
     /**
@@ -251,7 +277,7 @@ public class JsonValueTest extends BaseTestCase {
      */
     @Test
     public void testWrapNull() throws JsonException {
-        assertTrue(JsonValue.wrap(null).isNull());
+        assertTrue(JsonValue.wrap((Object) null).isNull());
     }
 
     /**
@@ -372,5 +398,95 @@ public class JsonValueTest extends BaseTestCase {
 
         // Validate the data
         assertEquals(jsonValue, fromParcel);
+    }
+
+    /**
+     * Test isNull is true for null values.
+     */
+    @Test
+    public void testIsNull() throws JsonException {
+        assertTrue(JsonValue.NULL.isNull());
+        assertTrue(JsonValue.wrap((Object) null).isNull());
+    }
+
+    /**
+     * Test isString is true for String values.
+     */
+    @Test
+    public void testIsString() {
+        assertTrue(JsonValue.wrap('c').isString());
+        assertTrue(JsonValue.wrap("hi").isString());
+    }
+
+    /**
+     * Test isInteger is true only for int values.
+     */
+    @Test
+    public void testIsInteger() throws JsonException {
+        assertTrue(JsonValue.wrap(1).isInteger());
+
+        assertFalse(JsonValue.wrap(1l).isInteger());
+        assertFalse(JsonValue.wrap(1.0d).isInteger());
+        assertFalse(JsonValue.wrap(1.0f).isInteger());
+    }
+
+    /**
+     * Test isLong is true only for longs.
+     */
+    @Test
+    public void testIsLong() throws JsonException {
+        assertTrue(JsonValue.wrap(1l).isLong());
+
+        assertFalse(JsonValue.wrap(1).isLong());
+        assertFalse(JsonValue.wrap(1.0d).isLong());
+        assertFalse(JsonValue.wrap(1.0f).isLong());
+    }
+
+    /**
+     * Test isDouble is true for floats and doubles.
+     */
+    @Test
+    public void testIsDouble() throws JsonException {
+        assertTrue(JsonValue.wrap(1d).isDouble());
+        assertTrue(JsonValue.wrap(1f).isDouble());
+
+        assertFalse(JsonValue.wrap(1l).isDouble());
+        assertFalse(JsonValue.wrap(1).isDouble());
+    }
+
+    /**
+     * Test isNumber is true for any number types.
+     */
+    @Test
+    public void testIsNumber() throws JsonException {
+        assertTrue(JsonValue.wrap(1d).isNumber());
+        assertTrue(JsonValue.wrap(1f).isNumber());
+        assertTrue(JsonValue.wrap(1).isNumber());
+        assertTrue(JsonValue.wrap(1l).isNumber());
+    }
+
+    /**
+     * Test isBoolean is true for any boolean values.
+     */
+    @Test
+    public void testIsBoolean() {
+        assertTrue(JsonValue.wrap(true).isBoolean());
+        assertTrue(JsonValue.wrap(false).isBoolean());
+    }
+
+    /**
+     * Test isJsonMap is true for map values.
+     */
+    @Test
+    public void testIsJsonMap() throws JsonException {
+        assertTrue(JsonValue.wrap(new HashMap<String, String>()).isJsonMap());
+    }
+
+    /**
+     * Test isJsonList is true for list values.
+     */
+    @Test
+    public void testIsJsonList() throws JsonException {
+        assertTrue(JsonValue.wrap(new ArrayList<String>()).isJsonList());
     }
 }

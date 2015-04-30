@@ -339,7 +339,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             JsonMap clickActionsJson = actionsJson.opt("on_click").getMap();
             if (clickActionsJson != null) {
                 Map<String, ActionValue> clickActions = new HashMap<>();
-                for (Map.Entry<String, JsonValue> entry : clickActionsJson.entrySet()) {
+                for (Map.Entry<String, JsonValue> entry : clickActionsJson) {
                     clickActions.put(entry.getKey(), new ActionValue(entry.getValue()));
                 }
                 builder.setClickActionValues(clickActions);
