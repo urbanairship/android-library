@@ -51,6 +51,66 @@ public class ActionValue implements JsonSerializable, Parcelable {
     }
 
     /**
+     * Wraps a String as an ActionValue.
+     *
+     * @param value The action's value as a string.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(String value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
+     * Wraps an int as an ActionValue.
+     *
+     * @param value The action's value as an int.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(int value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
+     * Wraps a long as an ActionValue.
+     *
+     * @param value The action's value as a long.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(long value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
+     * Wraps a char as an ActionValue.
+     *
+     * @param value The action's value as a char.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(char value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
+     * Wraps a boolean as an ActionValue.
+     *
+     * @param value The action's value as a boolean.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(boolean value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
+     * Wraps a JsonSerializable object as an ActionValue.
+     *
+     * @param value The action's value as a JsonSerializable object.
+     * @return The ActionValue object.
+     */
+    public static ActionValue wrap(JsonSerializable value) {
+        return new ActionValue(JsonValue.wrap(value));
+    }
+
+    /**
      * Wraps a {@link com.urbanairship.json.JsonValue} compatible object as an ActionValue.
      *
      * @param object The action's value.

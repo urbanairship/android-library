@@ -28,8 +28,8 @@ package com.urbanairship.actions;
 /**
  * Action for opening a deep link.
  * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION, and
- * Situation.MANUAL_INVOCATION.
+ * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
+ * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL as string
  * <p/>

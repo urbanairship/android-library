@@ -72,6 +72,16 @@ public class JsonValue implements Parcelable {
     }
 
     /**
+     * Gets the raw value of the JsonValue. Will be either a String, Boolean, Long, Double, Integer,
+     * JsonMap, JsonArray, or null.
+     *
+     * @return The raw value.
+     */
+    public Object getValue() {
+        return value;
+    }
+
+    /**
      * Gets the contained value as a String.
      *
      * @return The value as a String, or null if the value is not a String.
@@ -91,12 +101,13 @@ public class JsonValue implements Parcelable {
             return null;
         }
 
-        if (value instanceof String) {
+        if (isString()) {
             return (String) value;
         }
 
         return defaultValue;
     }
+
 
     /**
      * Gets the contained values as an int.
@@ -109,11 +120,11 @@ public class JsonValue implements Parcelable {
             return defaultValue;
         }
 
-        if (value instanceof Integer) {
+        if (isInteger()) {
             return (Integer) value;
         }
 
-        if (value instanceof Number) {
+        if (isNumber()) {
             return ((Number) value).intValue();
         }
 
@@ -131,11 +142,11 @@ public class JsonValue implements Parcelable {
             return defaultValue;
         }
 
-        if (value instanceof Double) {
+        if (isDouble()) {
             return (Double) value;
         }
 
-        if (value instanceof Number) {
+        if (isNumber()) {
             return ((Number) value).doubleValue();
         }
 
@@ -153,17 +164,29 @@ public class JsonValue implements Parcelable {
             return defaultValue;
         }
 
-        if (value instanceof Long) {
+        if (isLong()) {
             return (Long) value;
         }
 
-        if (value instanceof Number) {
+        if (isNumber()) {
             return ((Number) value).longValue();
         }
 
         return defaultValue;
     }
 
+    /**
+     * Gets the contained values as a Number.
+     *
+     * @return The value as a number or null if the value is null or not a number.
+     */
+    public Number getNumber() {
+        if (isNull() || !isNumber()) {
+            return null;
+        }
+
+        return (Number) value;
+    }
 
     /**
      * Gets the contained values as a boolean.
@@ -176,7 +199,7 @@ public class JsonValue implements Parcelable {
             return defaultValue;
         }
 
-        if (value instanceof Boolean) {
+        if (isBoolean()) {
             return (Boolean) value;
         }
 
@@ -189,11 +212,11 @@ public class JsonValue implements Parcelable {
      * @return The value as a JsonList, or null if the value is not a JsonList.
      */
     public JsonList getList() {
-        if (!isNull() && value instanceof JsonList) {
-            return (JsonList) value;
+        if (isNull() || !isJsonList()) {
+            return null;
         }
 
-        return null;
+        return (JsonList) value;
     }
 
     /**
@@ -202,11 +225,11 @@ public class JsonValue implements Parcelable {
      * @return The value as JsonMap, or null if the value is not a JsonMap.
      */
     public JsonMap getMap() {
-        if (!isNull() && value instanceof JsonMap) {
-            return (JsonMap) value;
+        if (isNull() || !isJsonMap()) {
+            return null;
         }
 
-        return null;
+        return (JsonMap) value;
     }
 
     /**
@@ -216,6 +239,78 @@ public class JsonValue implements Parcelable {
      */
     public boolean isNull() {
         return value == null;
+    }
+
+    /**
+     * Checks if the value is a String.
+     *
+     * @return {@code true} if the value is a String, otherwise {@code false}.
+     */
+    public boolean isString() {
+        return value instanceof String;
+    }
+
+    /**
+     * Checks if the value is an Integer.
+     *
+     * @return {@code true} if the value is an Integer, otherwise {@code false}.
+     */
+    public boolean isInteger() {
+        return value instanceof Integer;
+    }
+
+    /**
+     * Checks if the value is a Double.
+     *
+     * @return {@code true} if the value is a Double, otherwise {@code false}.
+     */
+    public boolean isDouble() {
+        return value instanceof Double;
+    }
+
+    /**
+     * Checks if the value is a Long.
+     *
+     * @return {@code true} if the value is a Long, otherwise {@code false}.
+     */
+    public boolean isLong() {
+        return value instanceof Long;
+    }
+
+    /**
+     * Checks if the value is a Number.
+     *
+     * @return {@code true} if the value is a Number, otherwise {@code false}.
+     */
+    public boolean isNumber() {
+        return value instanceof Number;
+    }
+
+    /**
+     * Checks if the value is a Boolean.
+     *
+     * @return {@code true} if the value is a Boolean, otherwise {@code false}.
+     */
+    public boolean isBoolean() {
+        return value instanceof Boolean;
+    }
+
+    /**
+     * Checks if the value is a JsonMap.
+     *
+     * @return {@code true} if the value is a JsonMap, otherwise {@code false}.
+     */
+    public boolean isJsonMap() {
+        return value instanceof JsonMap;
+    }
+
+    /**
+     * Checks if the value is a JsonList.
+     *
+     * @return {@code true} if the value is a JsonList, otherwise {@code false}.
+     */
+    public boolean isJsonList() {
+        return value instanceof JsonList;
     }
 
     /**
@@ -314,6 +409,67 @@ public class JsonValue implements Parcelable {
         } else {
             stringer.value(value);
         }
+    }
+
+    /**
+     * Wraps a String as a JsonValue.
+     *
+     * @param value The value as a string.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(String value) {
+        return JsonValue.wrap(value, null);
+    }
+
+    /**
+     * Wraps a char as a JsonValue.
+     *
+     * @param value The value as a char.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(char value) {
+        return JsonValue.wrap(value, null);
+    }
+
+    /**
+     * Wraps an int as a JsonValue.
+     *
+     * @param value The value as an int.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(int value) {
+        return JsonValue.wrap(value, null);
+    }
+
+    /**
+     * Wraps a long as a JsonValue.
+     *
+     * @param value The value as a long.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(long value) {
+        return JsonValue.wrap(value, null);
+    }
+
+    /**
+     *
+     * Wraps a boolean as a JsonValue.
+     *
+     * @param value The value as a boolean.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(boolean value) {
+        return JsonValue.wrap(value, null);
+    }
+
+    /**
+     * Wraps a JsonSerializable object as a JsonValue.
+     *
+     * @param value The value as a JsonSerializable object.
+     * @return The JsonValue object.
+     */
+    public static JsonValue wrap(JsonSerializable value) {
+        return JsonValue.wrap(value, null);
     }
 
     /**

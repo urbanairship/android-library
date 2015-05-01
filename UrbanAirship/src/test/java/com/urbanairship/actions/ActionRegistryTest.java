@@ -61,7 +61,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions();
-        assertEquals("Default entries changed", 8, registry.getEntries().size());
+        assertEquals("Default entries changed", 9, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
@@ -71,7 +71,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("add_custom_event_action"), "add_custom_event_action");
         validateEntry(registry.getEntry("^s"), "^s", "share_action");
         validateEntry(registry.getEntry("^mc"), "^mc", "open_mc_action");
-
+        validateEntry(registry.getEntry("^c"), "^c", "clipboard_action");
     }
 
     /**

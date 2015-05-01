@@ -126,6 +126,15 @@ public class JsonList implements Iterable<JsonValue> {
         return list.size();
     }
 
+    /**
+     * Gets the JsonList as a List.
+     *
+     * @return The JsonList as a list.
+     */
+    public List<JsonValue> getList() {
+        return new ArrayList<>(list);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == this) {

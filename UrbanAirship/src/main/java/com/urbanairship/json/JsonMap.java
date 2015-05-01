@@ -33,13 +33,14 @@ import org.json.JSONStringer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * An immutable mapping of String keys to JsonValues.
  */
-public class JsonMap {
+public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
 
     private Map<String, JsonValue> map;
 
@@ -151,6 +152,15 @@ public class JsonMap {
         return new ArrayList<>(map.values());
     }
 
+    /**
+     * Gets the JsonMap as a Map.
+     *
+     * @return The JsonMap as a Map.
+     */
+    public Map<String, JsonValue> getMap() {
+        return new HashMap<>(map);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == this) {
@@ -199,5 +209,10 @@ public class JsonMap {
             entry.getValue().write(stringer);
         }
         stringer.endObject();
+    }
+
+    @Override
+    public Iterator<Map.Entry<String, JsonValue>> iterator() {
+        return entrySet().iterator();
     }
 }
