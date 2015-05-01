@@ -93,6 +93,7 @@ public class UAirship {
     UALocationManager locationManager;
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
+    ChannelCapture channelCapture;
 
     /**
      * Constructs an instance of UAirship.
@@ -114,6 +115,7 @@ public class UAirship {
         this.pushManager = new PushManager(context, preferenceDataStore);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
+        this.channelCapture = new ChannelCapture(context, airshipConfigOptions, this.pushManager);
     }
 
     /**
@@ -547,6 +549,7 @@ public class UAirship {
         ((BaseManager) this.pushManager).init();
         ((BaseManager) this.locationManager).init();
         ((BaseManager) this.inAppMessageManager).init();
+        ((BaseManager) this.channelCapture).init();
 
         this.actionRegistry.registerDefaultActions();
     }
@@ -560,6 +563,7 @@ public class UAirship {
         ((BaseManager) this.pushManager).tearDown();
         ((BaseManager) this.locationManager).tearDown();
         ((BaseManager) this.inAppMessageManager).tearDown();
+        ((BaseManager) this.channelCapture).tearDown();
     }
 
     /**

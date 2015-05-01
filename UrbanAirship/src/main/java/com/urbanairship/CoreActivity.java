@@ -50,6 +50,8 @@ public class CoreActivity extends Activity {
                 CoreReceiver.handleNotificationOpenedProxy(this, intent);
             } else if (PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY.equals(intent.getAction())) {
                 CoreReceiver.handleNotificationButtonOpenedProxy(this, intent);
+            } else if (ChannelCapture.ACTION_CHANNEL_CAPTURE.equals(intent.getAction())) {
+                CoreReceiver.handleChannelCapture(this, intent);
             }
         }
 

@@ -47,6 +47,8 @@ import com.urbanairship.util.UAStringUtil;
  * This class is the core Broadcast Receiver for the Urban Airship library.
  */
 public class CoreReceiver extends BroadcastReceiver {
+
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
@@ -70,7 +72,32 @@ public class CoreReceiver extends BroadcastReceiver {
             case PushManager.ACTION_NOTIFICATION_OPENED:
                 handleNotificationOpened(context, intent);
                 break;
+            case ChannelCapture.ACTION_CHANNEL_CAPTURE:
+                handleChannelCapture(context, intent);
+
         }
+    }
+
+    /**
+     * Handles the channel capture action.
+     *
+     * @param context The application context.
+     * @param intent The notification intent.
+     */
+    static void handleChannelCapture(Context context, Intent intent) {
+        if (intent.hasExtra(ChannelCapture.EXTRA_NOTIFICATION_ID)) {
+            int notificationId = intent.getIntExtra(ChannelCapture.EXTRA_NOTIFICATION_ID, -1);
+            NotificationManagerCompat.from(context).cancel(notificationId);
+        }
+
+        String actionPayload = intent.getStringExtra(ChannelCapture.EXTRA_ACTIONS);
+        if (!UAStringUtil.isEmpty(actionPayload)) {
+            // Run UA actions for the notification action
+            Logger.debug("Running actions for notification action: " + actionPayload);
+
+            ActionService.runActionsPayload(context, actionPayload, Situation.MANUAL_INVOCATION);
+        }
+
     }
 
     /**
