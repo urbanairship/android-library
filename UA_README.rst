@@ -4,20 +4,16 @@ First Things First
 
 This is an Android project. You will need:
 
-- Java 1.6 (OSX will install it for you if you try to use java)
-- ant
-- Android Studio: http://developer.android.com/sdk/installing/studio.html
+- Java 1.7, Java 1.6
+- Android Studio
+- Android SDK
 
 =====
 Setup
 =====
 
 Clone the latest android library:
-
-.. code:: bash
-    git clone git@github.com:urbanairship/android-lib.git
-    cd android-lib
-    git submodule update --init --recursive
+    git clone --recursive git@github.com:urbanairship/android-lib.git
 
 Update Android Studio's Android SDK Manager:
 
@@ -37,91 +33,146 @@ Update Android Studio's Android SDK Manager:
 AndroidManifest Entries
 =======================
 
-Required for library:
-    <permission android:name="PACKAGE_NAME.permission.UA_DATA" android:protectionLevel="signature" />
-    <uses-permission android:name="PACKAGE_NAME.permission.UA_DATA" />
+Permissions:
 
-    <provider android:name="com.urbanairship.UrbanAirshipProvider"
-              android:authorities="PACKAGE_NAME.urbanairship.provider"
-              android:permission="PACKAGE_NAME.permission.UA_DATA"
-              android:exported="true"
-              android:multiprocess="true" />
+    <!-- Common -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <permission android:name="${applicationId}.permission.UA_DATA" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.UA_DATA" />
 
-Required for Push:
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <!-- Push -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- GCM -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
 
-    <receiver android:name="com.urbanairship.CoreReceiver" />
+    <!-- ADM -->
+    <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE" />
+    <permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" />
 
-    <receiver android:name="com.urbanairship.push.GCMPushReceiver"
-              android:permission="com.google.android.c2dm.permission.SEND">
-      <intent-filter>
-          <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-          <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-          <category android:name="PACKAGE_NAME" />
-      </intent-filter>
-    </receiver>
-
-    <service android:name="com.urbanairship.push.PushService"/>
-
-Required for RichPush:
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <service android:name="com.urbanairship.richpush.RichPushUpdateService"/>
-
-Required for location:
-    <!-- Only one permission is required -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Location -->
+    <!-- Use ACCESS_COARSE_LOCATION if GPS access is not necessary -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <service android:name="com.urbanairship.location.LocationService"/>
 
-Required for actions:
-    <service android:name="com.urbanairship.actions.ActionService" />
+Activities:
 
-    <!-- Needed for base action framework, but its currently an unused feature -->
-    <activity android:name="com.urbanairship.actions.ActionActivity"/>
+    <!-- Common -->
+    <activity android:name="com.urbanairship.CoreActivity"/>
 
-Required for landing page:
-    <activity
-        android:name="com.urbanairship.actions.LandingPageActivity"
+    <!-- Landing Page -->
+    <activity android:name="com.urbanairship.actions.LandingPageActivity"
         android:exported="false">
+
         <intent-filter>
-            <action android:name="com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION"/>
+            <action android:name="com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION" />
             <data android:scheme="http" />
             <data android:scheme="https" />
-            <category android:name="android.intent.category.DEFAULT"/>
+            <category android:name="android.intent.category.DEFAULT" />
         </intent-filter>
     </activity>
 
+    <!-- PlayServiceUtils.handleAnyPlayServicesError to handle Google Play services recoverable errors. -->
+    <activity android:name="com.urbanairship.google.PlayServicesErrorActivity"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+Services:
+
+    <!-- Push -->
+    <service android:name="com.urbanairship.push.PushService" android:label="Push Notification Service" />
+
+    <!-- Analytics -->
+    <service android:name="com.urbanairship.analytics.EventService" android:label="Event Service" />
+
+    <!-- Actions -->
+    <service android:name="com.urbanairship.actions.ActionService" />
+
+    <!-- Rich Push -->
+    <service android:name="com.urbanairship.richpush.RichPushUpdateService" />
+
+    <!-- Location -->
+    <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
+
+Receivers:
+
+    <!-- Common -->
+    <receiver android:name="com.urbanairship.CoreReceiver"
+              android:exported="false">
+        <intent-filter android:priority="-999">
+            <action android:name="com.urbanairship.push.OPENED" />
+            <category android:name="${applicationId}" />
+        </intent-filter>
+    </receiver>
+
+    <!-- ADM -->
+    <receiver android:name="com.urbanairship.push.ADMPushReceiver"
+        android:permission="com.amazon.device.messaging.permission.SEND">
+
+        <intent-filter>
+            <action android:name="com.amazon.device.messaging.intent.REGISTRATION" />
+            <action android:name="com.amazon.device.messaging.intent.RECEIVE" />
+            <category android:name="${applicationId}" />
+        </intent-filter>
+    </receiver>
+
+    <!-- GCM -->
+    <receiver
+        android:name="com.urbanairship.push.GCMPushReceiver"
+        android:permission="com.google.android.c2dm.permission.SEND">
+        <intent-filter>
+            <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+            <category android:name="${applicationId}" />
+        </intent-filter>
+    </receiver>
+
+Providers:
+
+    <!-- Common -->
+    <provider android:name="com.urbanairship.UrbanAirshipProvider"
+              android:authorities="${applicationId}.urbanairship.provider"
+              android:permission="${applicationId}.permission.UA_DATA"
+              android:exported="true"
+              android:multiprocess="true" />
+
+Other:
+
+    <!-- ADM -->
+    <amazon:enable-feature
+        android:name="com.amazon.device.messaging"
+        android:required="false" />
+
+    <!-- GCM -->
+    <meta-data
+        android:name="com.google.android.gms.version"
+        android:value="@integer/google_play_services_version" />
 
 ======================
 Important Gradle Tasks
 ======================
 
-build:
-  Builds the Urban Airship SDK.
+build
+  Builds the SDK and samples.
 
 test:
-  Run all of the library's unit tests.
+  Runs all the unit tests.
 
-deploy:
-  Builds the SDK, updates the samples to the latest SDK, and creates release zips
-  of the samples and library in the deploy directory.
+UrbanAirship:javaDoc:
+  Builds the docs. Generated docs will be created under UrbanAirship/build/docs/javadoc.
 
-docs:
- Builds the docs.  Generated docs will be created in docs/doclava-build.  For
- more information, see the README in the docs folder.
+packageUrbanAirshipRelease
+  Builds the distribution zip. The generated will be created under build/ua-package.
 
-To run a gradle command, be in the root of the project folder and run:
+continuousIntegration
+  Builds the SDK, samples, docs, generates the distribution zip, and runs all the unit tests.
 
-.. code:: bash
-
-    ./gradlew <TASK>
+To run a gradle command, be in the root of the project folder and run: `./gradlew <TASK>`
 
 ==================
 Command Line Tools
@@ -130,7 +181,6 @@ There are some useful tools in the android-lib/tools folder:
 
 - ``lc`` - a fancy color ``adb -v time`` wrapper
 - ``lcgrep`` - a fancier lc + grep wrapper. you can pass it any grep arguments e.g., ``lcgrep -i pushsample``
-
 
 =============
 Eclipse Setup
