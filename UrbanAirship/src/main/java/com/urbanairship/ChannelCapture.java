@@ -127,6 +127,9 @@ class ChannelCapture extends BaseManager {
 
     @Override
     protected void init() {
+        if (!this.configOptions.channelCaptureEnabled) {
+            return;
+        }
 
         // Magic must be prepared on a thread with a prepared looper
         new Handler(Looper.getMainLooper()).post(new Runnable() {

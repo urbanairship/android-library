@@ -237,6 +237,30 @@ public class ChannelCaptureTest extends BaseTestCase {
     }
 
     /**
+     * Test disabling the channel capture through AirshipConfigOptions.
+     */
+    @Test
+    public void testChannelCaptureDisabled() {
+        // Disable the channel capture
+        configOptions.channelCaptureEnabled = false;
+
+        // Reinitialize it
+        capture.tearDown();
+        capture.init();
+
+        // Set up a valid token
+        when(mockPushManager.getChannelId()).thenReturn("channel ID");
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
+
+        // Send the foreground broadcast
+        LocalBroadcastManager.getInstance(TestApplication.getApplication())
+                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+
+        // Verify we did not post a notification
+        verifyZeroInteractions(mockNotificationManager);
+    }
+
+    /**
      * Helper method to generate the channel capture clipboard token.
      *
      * @param urlPath Optional url path.

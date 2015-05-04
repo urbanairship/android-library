@@ -241,6 +241,14 @@ public class AirshipConfigOptions {
     public boolean autoLaunchApplication = true;
 
     /**
+     * Flag indicating whether channel capture feature is enabled or not.
+     * <p/>
+     * The flag defaults to true.
+     */
+    @PropertyName(name = "channelCaptureEnabled")
+    public boolean channelCaptureEnabled = true;
+
+    /**
      * Convenience method for loading the default options from a properties
      * file
      *
