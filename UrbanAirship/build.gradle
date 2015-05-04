@@ -20,7 +20,7 @@ android {
     buildToolsVersion '22.0.1'
 
     lintOptions {
-        ignore 'GradleDependency'
+        abortOnError false
     }
 
     defaultConfig {

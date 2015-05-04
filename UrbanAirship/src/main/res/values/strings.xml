@@ -22,4 +22,11 @@
 
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Share</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship Channel</string>
+    <string name="ua_notification_button_copy">Copy</string>
+    <string name="ua_notification_button_save">Save</string>
+
+
 </resources>
