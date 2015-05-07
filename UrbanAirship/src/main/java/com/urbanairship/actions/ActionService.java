@@ -34,13 +34,13 @@ import android.os.IBinder;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,9 +54,9 @@ public class ActionService extends Service {
     public static final String ACTION_RUN_ACTIONS = "com.urbanairship.actionservice.ACTION_RUN_ACTIONS";
 
     /**
-     * Intent extra for storing the actions payload
+     * Intent extra for storing the actions bundle.
      */
-    public static final String EXTRA_ACTIONS_PAYLOAD = "com.urbanairship.actionservice.EXTRA_ACTIONS_PAYLOAD";
+    public static final String EXTRA_ACTIONS_BUNDLE = "com.urbanairship.actionservice.EXTRA_ACTIONS";
 
     /**
      * Intent extra for storing the current situation.
@@ -64,10 +64,9 @@ public class ActionService extends Service {
     public static final String EXTRA_SITUATION = "com.urbanairship.actionservice.EXTRA_SITUATION";
 
     /**
-     * Intent extra for storing the push bundle that triggered the actions.
+     * Intent extra for storing metadata.
      */
-    public static final String EXTRA_PUSH_BUNDLE = "com.urbanairship.actionservice.EXTRA_PUSH_BUNDLE";
-
+    public static final String EXTRA_METADATA = "com.urbanairship.actionservice.EXTRA_METADATA";
 
     private int lastStartId = 0;
 
@@ -105,15 +104,8 @@ public class ActionService extends Service {
         lastStartId = startId;
 
         if (intent != null && ACTION_RUN_ACTIONS.equals(intent.getAction())) {
-
             Logger.verbose("ActionService - Received intent: " + intent.getAction() + " startId: " + startId);
-
-            String actions = intent.getStringExtra(EXTRA_ACTIONS_PAYLOAD);
-            Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
-            Bundle pushBundle = intent.getBundleExtra(EXTRA_PUSH_BUNDLE);
-            PushMessage message = pushBundle == null ? null : new PushMessage(pushBundle);
-
-            runActions(actions, situation, message);
+            onRunActions(intent);
         }
 
         if (runningActions == 0) {
@@ -134,63 +126,107 @@ public class ActionService extends Service {
      * @param payload Actions payload.
      * @param situation The current situation.
      * @param message The push message that triggered the actions.
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
      */
+    @Deprecated
     public static void runActionsPayload(Context context, String payload, Situation situation, PushMessage message) {
-        if (UAStringUtil.isEmpty(payload)) {
-            return;
-        }
-
-        Intent i = new Intent(ACTION_RUN_ACTIONS)
-                .setClass(context, ActionService.class)
-                .putExtra(EXTRA_ACTIONS_PAYLOAD, payload)
-                .putExtra(EXTRA_SITUATION, situation);
-
+        Bundle metadata = new Bundle();
         if (message != null) {
-            i.putExtra(EXTRA_PUSH_BUNDLE, message.getPushBundle());
+            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
         }
 
-        context.startService(i);
+        runActions(context, payload, situation, metadata);
     }
-
 
     /**
      * Convenience method for running actions in the action service.
      *
+     * @param context The application context.
      * @param payload Actions payload.
      * @param situation The current situation.
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
      */
+    @Deprecated
     public static void runActionsPayload(Context context, String payload, Situation situation) {
-        runActionsPayload(context, payload, situation, null);
+        runActions(context, payload, situation, null);
     }
 
-    private void runActions(String actionsPayload, Situation situation, PushMessage message) {
-        if (situation == null) {
-            Logger.debug("ActionService - Unable to run actions with a null situation");
+    /**
+     * Convenience method for running actions in the action service.
+     *
+     * @param context The application context.
+     * @param actionsPayload Actions payload.
+     * @param situation The action situation.
+     * @param metadata The action metadata.
+     */
+    public static void runActions(Context context, String actionsPayload, Situation situation, Bundle metadata) {
+        if (UAStringUtil.isEmpty(actionsPayload)) {
             return;
         }
 
-        if (UAStringUtil.isEmpty(actionsPayload)) {
+        Map<String, ActionValue> actions = new HashMap<>();
+
+        try {
+            JsonMap actionsJson = JsonValue.parseString(actionsPayload).getMap();
+            if (actionsJson != null) {
+                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                    actions.put(entry.getKey(), new ActionValue(entry.getValue()));
+                }
+            }
+        } catch (JsonException e) {
+            Logger.error("Unable to parse action payload: " + actionsPayload);
+            return;
+        }
+
+        runActions(context, actions, situation, metadata);
+    }
+
+    /**
+     * Convenience method for running actions in the action service.
+     *
+     * @param context The application context.
+     * @param actions Map of action name to action values.
+     * @param situation The action situation.
+     * @param metadata The action metadata.
+     */
+    public static void runActions(Context context, Map<String, ActionValue> actions, Situation situation, Bundle metadata) {
+        if (actions.isEmpty()) {
+            return;
+        }
+
+        Bundle actionsBundle = new Bundle();
+        for (Map.Entry<String, ActionValue> entry : actions.entrySet()) {
+            actionsBundle.putParcelable(entry.getKey(), entry.getValue());
+        }
+
+        Intent intent = new Intent(ACTION_RUN_ACTIONS)
+                .setClass(context, ActionService.class)
+                .putExtra(EXTRA_ACTIONS_BUNDLE, actionsBundle)
+                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
+
+        if (metadata != null) {
+            intent.putExtra(EXTRA_METADATA, metadata);
+        }
+
+        context.startService(intent);
+    }
+
+    /**
+     * Handles the {@link #ACTION_RUN_ACTIONS} intent action.
+     *
+     * @param intent The service intent.
+     */
+    private void onRunActions(Intent intent) {
+        Bundle actions = intent.getBundleExtra(EXTRA_ACTIONS_BUNDLE);
+        if (actions.isEmpty()) {
             Logger.debug("ActionService - No actions to run.");
             return;
         }
 
-        JSONObject actionsJSON;
-        try {
-            actionsJSON = new JSONObject(actionsPayload);
-        } catch (JSONException e) {
-            Logger.debug("ActionService - Invalid actions payload: " + actionsPayload);
-            return;
-        }
+        Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
+        Bundle metadata = intent.getBundleExtra(EXTRA_METADATA);
 
-        Bundle metadata = null;
-        if (message != null) {
-            metadata = new Bundle();
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        }
-
-        Map<String, Object> actionsMap = JSONUtils.convertToMap(actionsJSON);
-
-        for (String actionName : actionsMap.keySet()) {
+        for (String actionName : actions.keySet()) {
             runningActions++;
 
             // ActionCompletionCallback posts the runnable on the callers handle,
@@ -198,18 +234,18 @@ public class ActionService extends Service {
             // can safely call stopSelf without worrying about any actions about to
             // run.
             actionRunRequestFactory.createActionRequest(actionName)
-                    .setMetadata(metadata)
-                    .setValue(actionsMap.get(actionName))
-                    .setSituation(situation)
-                    .run(new ActionCompletionCallback() {
-                        @Override
-                        public void onFinish(ActionArguments arguments, ActionResult result) {
-                            runningActions--;
-                            if (runningActions == 0) {
-                                stopSelf(lastStartId);
-                            }
-                        }
-                    });
+                                   .setMetadata(metadata)
+                                   .setValue((ActionValue) actions.getParcelable(actionName))
+                                   .setSituation(situation)
+                                   .run(new ActionCompletionCallback() {
+                                       @Override
+                                       public void onFinish(ActionArguments arguments, ActionResult result) {
+                                           runningActions--;
+                                           if (runningActions == 0) {
+                                               stopSelf(lastStartId);
+                                           }
+                                       }
+                                   });
         }
     }
 }

@@ -7,7 +7,6 @@ import android.os.Bundle;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.CustomShadowService;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.PushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +18,9 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -41,19 +43,20 @@ public class ActionServiceTest extends BaseTestCase {
     }
 
     /**
-     * Test that the ActionService.runActionsPayload starts the
+     * Test that the ActionService.runActions starts the
      * action service with the correct intent.
      */
     @Test
-    public void testRunActionsPayload() {
+    public void testRunActionsWithString() {
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
         String actionsPayload = "{ \"actionName\": \"actionValue\" }";
-        Bundle extras = new Bundle();
-        extras.putString("com.urbanairship.actions", actionsPayload);
 
-        ActionService.runActionsPayload(context, actionsPayload, Situation.WEB_VIEW_INVOCATION);
+        Bundle metadata = new Bundle();
+        metadata.putString("oh", "hi");
+
+        ActionService.runActions(context, actionsPayload, Situation.WEB_VIEW_INVOCATION, metadata);
 
         Intent runActionsIntent = shadowApplication.getNextStartedService();
         assertNotNull(runActionsIntent);
@@ -61,13 +64,42 @@ public class ActionServiceTest extends BaseTestCase {
         assertEquals("Should add an intent with action RUN_ACTIONS_ACTION",
                 runActionsIntent.getAction(), ActionService.ACTION_RUN_ACTIONS);
 
-        assertEquals("Should add the actions extra", actionsPayload,
-                runActionsIntent.getStringExtra(ActionService.EXTRA_ACTIONS_PAYLOAD));
+        Bundle actionBundle = runActionsIntent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE);
+        assertEquals(actionBundle.getParcelable("actionName"), ActionValue.wrap("actionValue"));
 
         assertEquals("Should add the situation", Situation.WEB_VIEW_INVOCATION,
                 runActionsIntent.getSerializableExtra(ActionService.EXTRA_SITUATION));
     }
 
+    /**
+     * Test that the ActionService.runActions starts the
+     * action service with the correct intent.
+     */
+    @Test
+    public void testRunActions() {
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        shadowApplication.clearStartedServices();
+
+        Map<String, ActionValue> actions = new HashMap<>();
+        actions.put("actionName", ActionValue.wrap("actionValue"));
+
+        Bundle metadata = new Bundle();
+        metadata.putString("oh", "hi");
+
+        ActionService.runActions(context, actions, Situation.PUSH_OPENED, metadata);
+
+        Intent runActionsIntent = shadowApplication.getNextStartedService();
+        assertNotNull(runActionsIntent);
+
+        assertEquals("Should add an intent with action RUN_ACTIONS_ACTION",
+                runActionsIntent.getAction(), ActionService.ACTION_RUN_ACTIONS);
+
+        Bundle actionBundle = runActionsIntent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE);
+        assertEquals(actionBundle.getParcelable("actionName"), ActionValue.wrap("actionValue"));
+
+        assertEquals("Should add the situation", Situation.PUSH_OPENED,
+                runActionsIntent.getSerializableExtra(ActionService.EXTRA_SITUATION));
+    }
 
     /**
      * Test that the ActionService.runActionsPayload does not start
@@ -79,7 +111,7 @@ public class ActionServiceTest extends BaseTestCase {
         shadowApplication.clearStartedServices();
 
         String actionsPayload = null;
-        ActionService.runActionsPayload(context, actionsPayload, Situation.WEB_VIEW_INVOCATION);
+        ActionService.runActions(context, actionsPayload, Situation.WEB_VIEW_INVOCATION, null);
 
         Intent runActionsIntent = shadowApplication.getNextStartedService();
         assertNull("Action service should not start with a null actions payload",
@@ -98,20 +130,11 @@ public class ActionServiceTest extends BaseTestCase {
      */
     @Test
     @Config(shadows = { CustomShadowService.class })
-    public void testRunActions() {
+    public void testHandleRunActionIntent() {
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         CustomShadowService shadowService = (CustomShadowService) Shadows.shadowOf(service);
         shadowApplication.clearStartedServices();
-
-        Situation situation = Situation.PUSH_RECEIVED;
-        String actionsPayload = "{ \"actionName\": \"actionValue\" }";
-
-        // Create the intent that starts the service
-        Intent intent = new Intent(ActionService.ACTION_RUN_ACTIONS);
-        intent.putExtra(ActionService.EXTRA_ACTIONS_PAYLOAD, actionsPayload);
-        intent.putExtra(ActionService.EXTRA_SITUATION, situation);
-
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -127,72 +150,27 @@ public class ActionServiceTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
+        // Metadata
+        Bundle metadata = new Bundle();
+        metadata.putString("oh", "hi");
+
+        // Create the intent
+        ActionService.runActions(context, "{ \"actionName\": \"actionValue\" }", Situation.WEB_VIEW_INVOCATION, metadata);
+        Intent runActionsIntent = shadowApplication.getNextStartedService();
 
         // Start the service
-        service.onStartCommand(intent, 0, 1);
+        service.onStartCommand(runActionsIntent, 0, 1);
 
-        verify(runRequest).setValue("actionValue");
-        verify(runRequest).setSituation(situation);
+        verify(runRequest).setValue(ActionValue.wrap("actionValue"));
+        verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
         verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
-
-        // Verify that the service called stop self with the last start id
-        assertEquals(1, shadowService.getLastStopSelfId());
-    }
-
-    /**
-     * Test running actions in the action service actually runs the actions
-     * with the correct push message meta data.
-     */
-    @Test
-    @Config(shadows = { CustomShadowService.class })
-    public void testRunActionsWithPushMessage() {
-
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        CustomShadowService shadowService = (CustomShadowService) Shadows.shadowOf(service);
-        shadowApplication.clearStartedServices();
-
-        final Situation situation = Situation.PUSH_RECEIVED;
-        String actionsPayload = "{ \"actionName\": \"actionValue\" }";
-        Bundle actionBundle = new Bundle();
-        actionBundle.putString("oh", "hi");
-
-        // Create the intent that starts the service
-        Intent intent = new Intent(ActionService.ACTION_RUN_ACTIONS);
-        intent.putExtra(ActionService.EXTRA_ACTIONS_PAYLOAD, actionsPayload);
-        intent.putExtra(ActionService.EXTRA_SITUATION, situation);
-        intent.putExtra(ActionService.EXTRA_PUSH_BUNDLE, actionBundle);
-
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
-
-        // Call the action request callback
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(null, ActionResult.newEmptyResult());
-                return null;
-            }
-        }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
-
-        // Start the service
-        service.onStartCommand(intent, 0, 1);
-
-        verify(runRequest).setValue("actionValue");
-
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
             public boolean matches(Object o) {
                 Bundle bundle = (Bundle) o;
-                PushMessage message = bundle.getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
-                return message.getPushBundle().getString("oh").equals("hi");
+                return bundle.getString("oh").equals("hi");
             }
         }));
-
-
-        verify(runRequest).setSituation(situation);
-        verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
         // Verify that the service called stop self with the last start id
         assertEquals(1, shadowService.getLastStopSelfId());
