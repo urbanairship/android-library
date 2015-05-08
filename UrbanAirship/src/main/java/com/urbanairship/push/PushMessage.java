@@ -8,13 +8,18 @@ import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -242,9 +247,35 @@ public class PushMessage implements Parcelable {
      * Gets the actions payload that runs when the message is received or opened.
      *
      * @return The actions payload.
+     * @deprecated Marked to be remove in 7.0.0. Use {@link #getActions()} instead.
      */
-    public String getActionsPayload() {
+    @Deprecated
+    public String getActionsPayload()  {
         return pushBundle.getString(EXTRA_ACTIONS);
+    }
+
+    /**
+     * Gets the push message's actions.
+     *
+     * @return A map of action name to action value.
+     */
+    public Map<String, ActionValue> getActions() {
+        String actionsPayload = pushBundle.getString(EXTRA_ACTIONS);
+        Map<String, ActionValue> actions = new HashMap<>();
+
+        try {
+            JsonMap actionsJson = JsonValue.parseString(actionsPayload).getMap();
+            if (actionsJson != null) {
+                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                    actions.put(entry.getKey(), new ActionValue(entry.getValue()));
+                }
+            }
+        } catch (JsonException e) {
+            Logger.error("Unable to parse action payload: " + actionsPayload);
+            return actions;
+        }
+
+        return actions;
     }
 
     /**

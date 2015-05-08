@@ -29,8 +29,10 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
@@ -95,7 +97,7 @@ public class CoreReceiver extends BroadcastReceiver {
             // Run UA actions for the notification action
             Logger.debug("Running actions for notification action: " + actionPayload);
 
-            ActionService.runActionsPayload(context, actionPayload, Situation.MANUAL_INVOCATION);
+            ActionService.runActions(context, actionPayload, Situation.MANUAL_INVOCATION, null);
         }
 
     }
@@ -262,7 +264,11 @@ public class CoreReceiver extends BroadcastReceiver {
                 Logger.debug("Running actions for notification action: " + actionPayload);
 
                 Situation situation = isForeground ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON : Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
-                ActionService.runActionsPayload(context, actionPayload, situation, message);
+
+                Bundle metadata = new Bundle();
+                metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+
+                ActionService.runActions(context, actionPayload, situation, metadata);
             }
 
         } else {
@@ -274,7 +280,11 @@ public class CoreReceiver extends BroadcastReceiver {
                 }
             }
 
-            ActionService.runActionsPayload(context, message.getActionsPayload(), Situation.PUSH_OPENED, message);
+            // Run any actions for the push
+            Bundle metadata = new Bundle();
+            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+
+            ActionService.runActions(context, message.getActions(), Situation.PUSH_OPENED, metadata);
         }
     }
 
