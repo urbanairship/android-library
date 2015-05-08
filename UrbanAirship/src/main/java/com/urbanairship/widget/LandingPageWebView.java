@@ -25,27 +25,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.widget;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
 
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.UAirship;
-
-import org.apache.http.Header;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.auth.BasicScheme;
-
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * A web view configured to display a Landing Page.
- * <p/>
- * Only available in API 5 and higher (Eclair)
+ *
+ * @deprecated Marked to be removed in 7.0.0. Use UAWebView instead.
  */
+@Deprecated
 public class LandingPageWebView extends UAWebView {
 
     /**
@@ -92,64 +82,4 @@ public class LandingPageWebView extends UAWebView {
     public LandingPageWebView(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
     }
-
-    /**
-     * Loads the given URL.
-     *
-     * @param url The URL to load.
-     */
-    @Override
-    @SuppressLint("NewApi")
-    public void loadUrl(String url) {
-        // Not a landing page content url, load url normally
-        if (url == null || !url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
-            super.loadUrl(url);
-            return;
-        }
-
-        // Do pre auth if we can
-        if (Build.VERSION.SDK_INT >= 8) {
-            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(options.getAppKey(), options.getAppSecret());
-            Header credentialHeader = BasicScheme.authenticate(credentials, "UTF-8", false);
-
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put(credentialHeader.getName(), credentialHeader.getValue());
-
-            super.loadUrl(url, headers);
-        } else {
-            super.loadUrl(url);
-        }
-
-        // Set the client auth request
-        setClientAuthRequest(url);
-    }
-
-    /**
-     * Loads the given URL with the specified additional HTTP headers.
-     *
-     * @param url The URL to load.
-     * @param additionalHttpHeaders The additional headers to be used in the HTTP request for
-     * this URL.
-     */
-    @Override
-    @TargetApi(Build.VERSION_CODES.FROYO)
-    public void loadUrl(String url, Map<String, String> additionalHttpHeaders) {
-        super.loadUrl(url, additionalHttpHeaders);
-
-        if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
-            setClientAuthRequest(url);
-        }
-    }
-
-    /**
-     * Set the client authorization request.
-     *
-     * @param url The URL string.
-     */
-    private void setClientAuthRequest(String url) {
-        AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-        setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
-    }
-
 }

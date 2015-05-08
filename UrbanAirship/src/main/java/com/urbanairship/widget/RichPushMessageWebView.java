@@ -25,32 +25,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.widget;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
 
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.richpush.RichPushUser;
-
-import org.apache.http.Header;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.auth.BasicScheme;
-
-import java.util.HashMap;
-
 /**
  * A web view configured to display a Rich Push Message.
- * <p/>
- * Only available in API 5 and higher (Eclair)
+ *
+ * @deprecated Marked to be removed in 7.0.0. Use UAWebView instead.
  */
-@TargetApi(5)
+@Deprecated
 public class RichPushMessageWebView extends UAWebView {
-
-    private RichPushMessage currentMessage;
 
     /**
      * Construct a new RichPushMessageWebView
@@ -97,45 +83,4 @@ public class RichPushMessageWebView extends UAWebView {
         super(context);
     }
 
-    /**
-     * Loads the web view with the rich push message.
-     *
-     * @param message The RichPushMessage that will be displayed.
-     */
-    @SuppressLint("NewApi")
-    public void loadRichPushMessage(RichPushMessage message) {
-        if (message == null) {
-            Logger.warn("Unable to load null message into RichPushMessageWebView");
-            return;
-        }
-
-        currentMessage = message;
-
-        RichPushUser user = UAirship.shared().getRichPushManager().getRichPushUser();
-
-        // Send authorization in the headers if the web view supports it
-        if (Build.VERSION.SDK_INT >= 8) {
-            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user.getId(), user.getPassword());
-            Header credentialHeader = BasicScheme.authenticate(credentials, "UTF-8", false);
-
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put(credentialHeader.getName(), credentialHeader.getValue());
-
-            loadUrl(message.getMessageBodyUrl(), headers);
-        } else {
-            loadUrl(message.getMessageBodyUrl());
-        }
-
-        // Set the auth
-        setClientAuthRequest(message.getMessageBodyUrl(), user.getId(), user.getPassword());
-    }
-
-    /**
-     * The current loaded RichPushMessage.
-     *
-     * @return The current RichPushMessage that was loaded.
-     */
-    public RichPushMessage getCurrentMessage() {
-        return currentMessage;
-    }
 }
