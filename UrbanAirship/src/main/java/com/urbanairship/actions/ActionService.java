@@ -40,7 +40,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,7 +53,7 @@ public class ActionService extends Service {
     public static final String ACTION_RUN_ACTIONS = "com.urbanairship.actionservice.ACTION_RUN_ACTIONS";
 
     /**
-     * Intent extra for storing the actions bundle.
+     * Intent extra for storing the actions as a bundle of action name to action values.
      */
     public static final String EXTRA_ACTIONS_BUNDLE = "com.urbanairship.actionservice.EXTRA_ACTIONS";
 
@@ -64,9 +63,27 @@ public class ActionService extends Service {
     public static final String EXTRA_SITUATION = "com.urbanairship.actionservice.EXTRA_SITUATION";
 
     /**
-     * Intent extra for storing metadata.
+     * Intent extra for storing metadata as a bundle.
      */
     public static final String EXTRA_METADATA = "com.urbanairship.actionservice.EXTRA_METADATA";
+
+    /**
+     * Intent extra for storing the actions payload
+     *
+     * @deprecated Marked to be removed in 7.0.0 . Use {@link #EXTRA_ACTIONS_BUNDLE} to specify
+     * the actions as a bundle rather than a JSON string.
+     */
+    @Deprecated
+    public static final String EXTRA_ACTIONS_PAYLOAD = "com.urbanairship.actionservice.EXTRA_ACTIONS_PAYLOAD";
+
+    /**
+     * Intent extra for storing the push bundle that triggered the actions.
+     *
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #EXTRA_METADATA} to specify a bundle with
+     * the PushMessage parcelable stored under the {@link ActionArguments#PUSH_MESSAGE_METADATA} key.
+     */
+    @Deprecated
+    public static final String EXTRA_PUSH_BUNDLE = "com.urbanairship.actionservice.EXTRA_PUSH_BUNDLE";
 
     private int lastStartId = 0;
 
@@ -161,25 +178,21 @@ public class ActionService extends Service {
      * @param metadata The action metadata.
      */
     public static void runActions(Context context, String actionsPayload, Situation situation, Bundle metadata) {
-        if (UAStringUtil.isEmpty(actionsPayload)) {
+        Bundle actions = createActionsBundle(actionsPayload);
+        if (actions.isEmpty()) {
             return;
         }
 
-        Map<String, ActionValue> actions = new HashMap<>();
+        Intent intent = new Intent(ACTION_RUN_ACTIONS)
+                .setClass(context, ActionService.class)
+                .putExtra(EXTRA_ACTIONS_BUNDLE, actions)
+                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
 
-        try {
-            JsonMap actionsJson = JsonValue.parseString(actionsPayload).getMap();
-            if (actionsJson != null) {
-                for (Map.Entry<String, JsonValue> entry : actionsJson) {
-                    actions.put(entry.getKey(), new ActionValue(entry.getValue()));
-                }
-            }
-        } catch (JsonException e) {
-            Logger.error("Unable to parse action payload: " + actionsPayload);
-            return;
+        if (metadata != null) {
+            intent.putExtra(EXTRA_METADATA, metadata);
         }
 
-        runActions(context, actions, situation, metadata);
+        context.startService(intent);
     }
 
     /**
@@ -219,13 +232,30 @@ public class ActionService extends Service {
      */
     private void onRunActions(Intent intent) {
         Bundle actions = intent.getBundleExtra(EXTRA_ACTIONS_BUNDLE);
-        if (actions.isEmpty()) {
-            Logger.debug("ActionService - No actions to run.");
-            return;
+        if (actions == null) {
+            actions = new Bundle();
         }
 
         Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
         Bundle metadata = intent.getBundleExtra(EXTRA_METADATA);
+        if (metadata == null) {
+            metadata = new Bundle();
+        }
+
+        // TODO: Remove in 7.0.0
+        String actionsPayload = intent.getStringExtra(EXTRA_ACTIONS_PAYLOAD);
+        actions.putAll(createActionsBundle(actionsPayload));
+
+        // TODO: Remove in 7.0.0
+        Bundle pushBundle = intent.getParcelableExtra(EXTRA_PUSH_BUNDLE);
+        if (pushBundle != null) {
+            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
+        }
+
+        if (actions.isEmpty()) {
+            Logger.debug("ActionService - No actions to run.");
+            return;
+        }
 
         for (String actionName : actions.keySet()) {
             runningActions++;
@@ -248,5 +278,33 @@ public class ActionService extends Service {
                                        }
                                    });
         }
+    }
+
+
+    /**
+     * Creates a Bundle of action name to action values from an action payload.
+     *
+     * @param actionsPayload The action payload.
+     * @return A bundle of actions to run.
+     */
+    private static Bundle createActionsBundle(String actionsPayload) {
+        Bundle actions = new Bundle();
+
+        if (UAStringUtil.isEmpty(actionsPayload)) {
+            return actions;
+        }
+
+        try {
+            JsonMap actionsJson = JsonValue.parseString(actionsPayload).getMap();
+            if (actionsJson != null) {
+                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                    actions.putParcelable(entry.getKey(), new ActionValue(entry.getValue()));
+                }
+            }
+        } catch (JsonException e) {
+            Logger.error("Unable to parse action payload: " + actionsPayload);
+        }
+
+        return actions;
     }
 }
