@@ -48,40 +48,33 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
-import com.urbanairship.util.UAStringUtil;
-import com.urbanairship.widget.LandingPageWebView;
+import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
 /**
  * An activity that displays a landing page.
  * <p/>
  * The easiest way to customize the landing page view is to specify a theme
- * for the activity in the AndroidManifest.xml.  A custom layout can be specified
+ * for the activity in the AndroidManifest.xml. A custom layout can be specified
  * by providing a metadata element com.urbanairship.action.LANDING_PAGE_VIEW with
- * the specified view resource.  When supplying a custom view, a
- * {@link com.urbanairship.widget.LandingPageWebView} must be defined with id
+ * the specified view resource. When supplying a custom view, a
+ * {@link com.urbanairship.widget.UAWebView} must be defined with id
  * android.R.id.primary with an optional progress view with id android.R.id.progress.
  * An optional close button can be added by defining it in the layout and setting
- * the android:onClick="onCloseButtonClick".  The onCloseButtonClick method will
+ * the android:onClick="onCloseButtonClick". The onCloseButtonClick method will
  * close the landing page by finishing the activity.
  * <p/>
  * More extensive landing page customization can be defined by creating custom Activity.
  * In the AndroidManifest.xml, define the landing page activity with an intent
  * filter with action com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION,
  * with category android:name="android.intent.category.DEFAULT", and data scheme
- * "http" and "https".  The custom activity is responsible for displaying the url
- * defined in the intent's data field.
- * <p/>
- * A landing page action could be triggered from a notification before any of the
- * other activities are started.  When this happens, the landing page activity will
- * be the root task and up or back navigation will exit the application.  Defining
- * a parent activity will force the parent to be started first if the activity
- * is the root task.  Define the parent activity by supplying the
- * android:parentActivityName attribute in the <activity> element for API >= 16, and
- * supplying a metadata element with a value for android.support.PARENT_ACTIVITY
- * for older api versions.
+ * "http", "https" and "message". The "message" scheme is used to display a {@link RichPushMessage}
+ * in the landing page. The message's ID is available as the {@link Uri#getSchemeSpecificPart()}.
  */
 public class LandingPageActivity extends Activity {
 
@@ -97,11 +90,11 @@ public class LandingPageActivity extends Activity {
 
     private static final long LANDING_PAGE_RETRY_DELAY_MS = 20000; // 20 seconds
 
-    private LandingPageWebView webView;
+    private UAWebView webView;
     private Integer error = null;
     private int webViewBackgroundColor = -1;
     private Handler handler;
-    private String url;
+    private Uri uri;
 
     @SuppressLint("NewApi")
     @Override
@@ -123,11 +116,11 @@ public class LandingPageActivity extends Activity {
         Bundle metadata = info.metaData == null ? new Bundle() : info.metaData;
 
         webViewBackgroundColor = metadata.getInt(LANDING_PAGE_BACKGROUND_COLOR, -1);
-        url = getIntent().getDataString();
         handler = new Handler();
+        uri = intent.getData();
 
-        if (UAStringUtil.isEmpty(url)) {
-            Logger.warn("LandingPageActivity - No landing page url to load.");
+        if (uri == null) {
+            Logger.warn("LandingPageActivity - No landing page uri to load.");
             finish();
             return;
         }
@@ -147,7 +140,7 @@ public class LandingPageActivity extends Activity {
             }
         }
 
-        webView = (LandingPageWebView) findViewById(android.R.id.primary);
+        webView = (UAWebView) findViewById(android.R.id.primary);
         final ProgressBar progressBar = (ProgressBar) findViewById(android.R.id.progress);
 
         if (webView != null) {
@@ -192,7 +185,7 @@ public class LandingPageActivity extends Activity {
                 }
             });
         } else {
-            Logger.error("LandingPageActivity - A LandingPageWebView with id android.R.id.primary is not defined" +
+            Logger.error("LandingPageActivity - A UAWebView with id android.R.id.primary is not defined" +
                     " in the custom layout.  Unable to show the landing page.");
             finish();
         }
@@ -226,9 +219,6 @@ public class LandingPageActivity extends Activity {
 
         // Activity instrumentation for analytic tracking
         Analytics.activityStarted(this);
-
-        // Start loading the landing page
-        loadLandingPage();
     }
 
     @Override
@@ -237,30 +227,33 @@ public class LandingPageActivity extends Activity {
 
         // Activity instrumentation for analytic tracking
         Analytics.activityStopped(this);
-
-        // Stop any loading
-        webView.stopLoading();
-
-        // Cancel any delayed landing pages
-        handler.removeCallbacksAndMessages(url);
     }
 
     @SuppressLint("NewApi")
     @Override
     public void onResume() {
         super.onResume();
-        if (Build.VERSION.SDK_INT >= 11 && webView != null) {
+        if (Build.VERSION.SDK_INT >= 11) {
             webView.onResume();
         }
+
+        // Start loading the landing page
+        loadLandingPage();
     }
 
     @SuppressLint("NewApi")
     @Override
     public void onPause() {
         super.onPause();
-        if (Build.VERSION.SDK_INT >= 11 && webView != null) {
+        if (Build.VERSION.SDK_INT >= 11) {
             webView.onPause();
         }
+
+        // Stop any loading
+        webView.stopLoading();
+
+        // Cancel any delayed landing pages
+        handler.removeCallbacksAndMessages(uri);
     }
 
     /**
@@ -315,7 +308,7 @@ public class LandingPageActivity extends Activity {
      */
     private View createDefaultLandingPageView() {
         FrameLayout frameLayout = new FrameLayout(this);
-        LandingPageWebView webView = new LandingPageWebView(this);
+        UAWebView webView = new UAWebView(this);
         webView.setId(android.R.id.primary);
 
         FrameLayout.LayoutParams webViewLayoutParams = new FrameLayout.LayoutParams(
@@ -339,14 +332,14 @@ public class LandingPageActivity extends Activity {
     }
 
     /**
-     * Loads the landing page url
+     * Loads the landing page uri
      */
     protected void loadLandingPage() {
         loadLandingPage(0);
     }
 
     /**
-     * Load the landing page url with a delay
+     * Load the landing page uri with a delay
      *
      * @param delay Delay before loading the landing page.  Delay of 0 or less
      * will start loading the landing page immediately.
@@ -365,11 +358,11 @@ public class LandingPageActivity extends Activity {
                 public void run() {
                     loadLandingPage(0);
                 }
-            }, url, SystemClock.uptimeMillis() + delay);
+            }, uri, SystemClock.uptimeMillis() + delay);
             return;
         }
 
-        Logger.info("Loading landing page: " + url);
+        Logger.info("Loading landing page: " + uri);
 
         // Set the background color
         if (webViewBackgroundColor != -1) {
@@ -382,7 +375,24 @@ public class LandingPageActivity extends Activity {
         }
 
         error = null;
-        webView.loadUrl(getIntent().getDataString());
+
+
+        if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+            String messageId = uri.getSchemeSpecificPart();
+            RichPushMessage message = UAirship.shared()
+                                              .getRichPushManager()
+                                              .getRichPushInbox()
+                                              .getMessage(messageId);
+            if (message != null) {
+                webView.loadRichPushMessage(message);
+                message.markRead();
+            } else {
+                Logger.error("Message " + messageId + " not found.");
+                finish();
+            }
+        } else {
+            webView.loadUrl(uri.toString());
+        }
     }
 
     /**

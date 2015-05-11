@@ -31,24 +31,26 @@ import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Base64;
 import android.view.MotionEvent;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.richpush.RichPushUser;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * A web view that sets settings appropriate for Urban Airship content.
- * <p/>
- * Only available in API 5 and higher (Eclair)
  */
-@TargetApi(5)
 public class UAWebView extends WebView {
 
     private WebViewClient webViewClient;
@@ -56,6 +58,7 @@ public class UAWebView extends WebView {
     private static final String CACHE_DIRECTORY = "urbanairship";
 
     private String currentClientAuthRequestUrl;
+    private RichPushMessage currentMessage;
 
     /**
      * UAWebView Constructor
@@ -151,7 +154,6 @@ public class UAWebView extends WebView {
         populateCustomJavascriptInterfaces();
     }
 
-
     /**
      * Initializes the web view with any default settings.
      * <p/>
@@ -202,7 +204,26 @@ public class UAWebView extends WebView {
      */
     public void loadUrl(String url) {
         onPreLoad();
-        super.loadUrl(url);
+
+        // Add auth to landing page content URLs
+        if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
+            // Do pre auth if we can
+            if (Build.VERSION.SDK_INT >= 8) {
+                AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("Authorization", createBasicAuth(options.getAppKey(), options.getAppSecret()));
+
+                super.loadUrl(url, headers);
+            } else {
+                super.loadUrl(url);
+            }
+
+            // Set the client auth request
+            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
+            setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
+        } else {
+            super.loadUrl(url);
+        }
     }
 
     /**
@@ -212,10 +233,53 @@ public class UAWebView extends WebView {
      * @param additionalHttpHeaders The additional headers to be used in the HTTP request for
      * this URL.
      */
-    @TargetApi(Build.VERSION_CODES.FROYO)
     public void loadUrl(String url, Map<String, String> additionalHttpHeaders) {
         onPreLoad();
         super.loadUrl(url, additionalHttpHeaders);
+
+        if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
+            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
+            setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
+        }
+    }
+
+    /**
+     * Loads the web view with the rich push message.
+     *
+     * @param message The RichPushMessage that will be displayed.
+     */
+    @SuppressLint("NewApi")
+    public void loadRichPushMessage(RichPushMessage message) {
+        if (message == null) {
+            Logger.warn("Unable to load null message into UAWebView");
+            return;
+        }
+
+        RichPushUser user = UAirship.shared().getRichPushManager().getRichPushUser();
+
+        // Send authorization in the headers if the web view supports it
+        if (Build.VERSION.SDK_INT >= 8) {
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
+
+            loadUrl(message.getMessageBodyUrl(), headers);
+        } else {
+            loadUrl(message.getMessageBodyUrl());
+        }
+
+        currentMessage = message;
+
+        // Set the auth
+        setClientAuthRequest(message.getMessageBodyUrl(), user.getId(), user.getPassword());
+    }
+
+    /**
+     * The current loaded RichPushMessage.
+     *
+     * @return The current RichPushMessage that was loaded.
+     */
+    public RichPushMessage getCurrentMessage() {
+        return currentMessage;
     }
 
     @Override
@@ -234,6 +298,8 @@ public class UAWebView extends WebView {
      */
     @SuppressLint("NewApi")
     private void onPreLoad() {
+        currentMessage = null;
+
         if (getWebViewClient() == null) {
             Logger.info("No web view client set, setting a default " +
                     "UAWebViewClient for landing page view.");
@@ -279,7 +345,7 @@ public class UAWebView extends WebView {
      * @param username The auth user
      * @param password The auth password
      */
-    void setClientAuthRequest(String url, String username, String password) {
+    private void setClientAuthRequest(String url, String username, String password) {
         if (url == null) {
             return;
         }
@@ -292,5 +358,18 @@ public class UAWebView extends WebView {
             String host = Uri.parse(url).getHost();
             webViewClient.addAuthRequestCredentials(host, username, password);
         }
+    }
+
+    /**
+     * Creates a basic auth string.
+     *
+     * @param userName The user name.
+     * @param password The password.
+     * @return The basic auth string.
+     */
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    private String createBasicAuth(String userName, String password) {
+        String credentials = userName + ":" + password;
+        return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
     }
 }

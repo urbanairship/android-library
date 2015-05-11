@@ -528,12 +528,12 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Helper method to get the RichPushMessage from the web view.
      * @param webView The web view.
-     * @return The rich push message or null if the web view is not an instance of RichPushMessageWebView
+     * @return The rich push message or null if the web view is not an instance of UAWebView
      * or does not have an associated message.
      */
     private RichPushMessage getMessage(WebView webView) {
-        if (webView instanceof RichPushMessageWebView) {
-            return ((RichPushMessageWebView) webView).getCurrentMessage();
+        if (webView instanceof UAWebView) {
+            return ((UAWebView) webView).getCurrentMessage();
         }
         return null;
     }
