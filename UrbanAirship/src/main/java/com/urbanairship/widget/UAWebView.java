@@ -370,6 +370,6 @@ public class UAWebView extends WebView {
     @TargetApi(Build.VERSION_CODES.FROYO)
     private String createBasicAuth(String userName, String password) {
         String credentials = userName + ":" + password;
-        return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.DEFAULT);
+        return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
     }
 }
