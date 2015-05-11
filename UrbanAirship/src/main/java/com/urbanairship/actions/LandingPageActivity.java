@@ -48,9 +48,11 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
-import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
@@ -71,8 +73,8 @@ import com.urbanairship.widget.UAWebViewClient;
  * In the AndroidManifest.xml, define the landing page activity with an intent
  * filter with action com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION,
  * with category android:name="android.intent.category.DEFAULT", and data scheme
- * "http" and "https". The custom activity is responsible for displaying the url
- * defined in the intent's data field.
+ * "http", "https" and "message". The "message" scheme is used to display a {@link RichPushMessage}
+ * in the landing page. The message's ID is available as the {@link Uri#getSchemeSpecificPart()}.
  */
 public class LandingPageActivity extends Activity {
 
@@ -92,7 +94,7 @@ public class LandingPageActivity extends Activity {
     private Integer error = null;
     private int webViewBackgroundColor = -1;
     private Handler handler;
-    private String url;
+    private Uri uri;
 
     @SuppressLint("NewApi")
     @Override
@@ -114,11 +116,11 @@ public class LandingPageActivity extends Activity {
         Bundle metadata = info.metaData == null ? new Bundle() : info.metaData;
 
         webViewBackgroundColor = metadata.getInt(LANDING_PAGE_BACKGROUND_COLOR, -1);
-        url = getIntent().getDataString();
         handler = new Handler();
+        uri = intent.getData();
 
-        if (UAStringUtil.isEmpty(url)) {
-            Logger.warn("LandingPageActivity - No landing page url to load.");
+        if (uri == null) {
+            Logger.warn("LandingPageActivity - No landing page uri to load.");
             finish();
             return;
         }
@@ -217,9 +219,6 @@ public class LandingPageActivity extends Activity {
 
         // Activity instrumentation for analytic tracking
         Analytics.activityStarted(this);
-
-        // Start loading the landing page
-        loadLandingPage();
     }
 
     @Override
@@ -228,30 +227,33 @@ public class LandingPageActivity extends Activity {
 
         // Activity instrumentation for analytic tracking
         Analytics.activityStopped(this);
-
-        // Stop any loading
-        webView.stopLoading();
-
-        // Cancel any delayed landing pages
-        handler.removeCallbacksAndMessages(url);
     }
 
     @SuppressLint("NewApi")
     @Override
     public void onResume() {
         super.onResume();
-        if (Build.VERSION.SDK_INT >= 11 && webView != null) {
+        if (Build.VERSION.SDK_INT >= 11) {
             webView.onResume();
         }
+
+        // Start loading the landing page
+        loadLandingPage();
     }
 
     @SuppressLint("NewApi")
     @Override
     public void onPause() {
         super.onPause();
-        if (Build.VERSION.SDK_INT >= 11 && webView != null) {
+        if (Build.VERSION.SDK_INT >= 11) {
             webView.onPause();
         }
+
+        // Stop any loading
+        webView.stopLoading();
+
+        // Cancel any delayed landing pages
+        handler.removeCallbacksAndMessages(uri);
     }
 
     /**
@@ -330,14 +332,14 @@ public class LandingPageActivity extends Activity {
     }
 
     /**
-     * Loads the landing page url
+     * Loads the landing page uri
      */
     protected void loadLandingPage() {
         loadLandingPage(0);
     }
 
     /**
-     * Load the landing page url with a delay
+     * Load the landing page uri with a delay
      *
      * @param delay Delay before loading the landing page.  Delay of 0 or less
      * will start loading the landing page immediately.
@@ -356,11 +358,11 @@ public class LandingPageActivity extends Activity {
                 public void run() {
                     loadLandingPage(0);
                 }
-            }, url, SystemClock.uptimeMillis() + delay);
+            }, uri, SystemClock.uptimeMillis() + delay);
             return;
         }
 
-        Logger.info("Loading landing page: " + url);
+        Logger.info("Loading landing page: " + uri);
 
         // Set the background color
         if (webViewBackgroundColor != -1) {
@@ -373,7 +375,24 @@ public class LandingPageActivity extends Activity {
         }
 
         error = null;
-        webView.loadUrl(getIntent().getDataString());
+
+
+        if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+            String messageId = uri.getSchemeSpecificPart();
+            RichPushMessage message = UAirship.shared()
+                                              .getRichPushManager()
+                                              .getRichPushInbox()
+                                              .getMessage(messageId);
+            if (message != null) {
+                webView.loadRichPushMessage(message);
+                message.markRead();
+            } else {
+                Logger.error("Message " + messageId + " not found.");
+                finish();
+            }
+        } else {
+            webView.loadUrl(uri.toString());
+        }
     }
 
     /**
