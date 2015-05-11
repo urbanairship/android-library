@@ -29,6 +29,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -38,6 +39,7 @@ import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.PushArrivedEvent;
@@ -823,7 +825,9 @@ public class PushManager extends BaseManager {
         createPushArrivedEvent(message.getSendId());
 
         // Run any actions for the push
-        ActionService.runActionsPayload(UAirship.getApplicationContext(), message.getActionsPayload(), Situation.PUSH_RECEIVED, message);
+        Bundle metadata = new Bundle();
+        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+        ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Situation.PUSH_RECEIVED, metadata);
 
         if (message.isPing()) {
             Logger.verbose("PushManager - Received UA Ping");

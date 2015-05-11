@@ -36,7 +36,9 @@ import java.util.Map;
 
 /**
  * A class containing utility methods related to JSON data.
+ * @deprecated Marked to be removed in 7.0.0.
  */
+@Deprecated
 public class JSONUtils {
 
     /**
