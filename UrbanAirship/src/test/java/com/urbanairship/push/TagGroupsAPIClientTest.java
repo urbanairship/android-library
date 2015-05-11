@@ -2,11 +2,11 @@ package com.urbanairship.push;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
-import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,29 +31,26 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String namedUserTagGroup = "named_user_tags";
+
     private Set<String> tagsToAdd;
     private Set<String> tagsToRemove;
-    private AirshipConfigOptions mockAirshipConfigOptions;
-    private TagGroupsAPIClient client;
     private TestRequest testRequest;
 
+    private TagGroupsAPIClient client;
+    
     @Before
     public void setUp() {
-        mockAirshipConfigOptions = Mockito.mock(AirshipConfigOptions.class);
-        testRequest = new TestRequest();
+        AirshipConfigOptions configOptions = new AirshipConfigOptions();
+        configOptions.developmentAppKey = "appKey";
+        configOptions.developmentAppSecret = "appSecret";
+        configOptions.inProduction = false;
+        configOptions.hostURL = "https://go-demo.urbanairship.com/";
 
+        testRequest = new TestRequest();
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        when(mockAirshipConfigOptions.getAppKey()).thenReturn("appKey");
-        when(mockAirshipConfigOptions.getAppSecret()).thenReturn("appSecret");
-
-        TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
-
-        // Set hostURL
-        UAirship.shared().getAirshipConfigOptions().hostURL = "https://go-demo.urbanairship.com/";
-
-        client = new TagGroupsAPIClient(mockRequestFactory);
+        client = new TagGroupsAPIClient(configOptions, mockRequestFactory);
 
         tagsToAdd = new HashSet<>();
         tagsToAdd.add("tag1");
@@ -66,8 +63,8 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
      * Test updateNamedUserTags succeeds if status is 200.
      */
     @Test
-    public void testUpdateNamedUserTagsSucceeds() {
-
+    public void testUpdateNamedUserTagsSucceeds() throws JsonException {
+        // testRequest is returned from the mockRequestFactory
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
@@ -83,6 +80,18 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+
+        testRequest.getRequestBody();
+
+        Map<String, String> audience = new HashMap<>();
+        audience.put("named_user_id", fakeNamedUserId);
+
+        JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
+
+        // verify payload
+        assertEquals(request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertEquals(request.getMap().get("add"), JsonValue.wrap(addTags));
+        assertEquals(request.getMap().get("remove"), JsonValue.wrap(removeTags));
     }
 
     /**
@@ -106,7 +115,8 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
      * Test updateChannelTags succeeds if status is 200.
      */
     @Test
-    public void testUpdateChannelTagsSucceeds() {
+    public void testUpdateChannelTagsSucceeds() throws JsonException {
+        // testRequest is returned from the mockRequestFactory
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
                 .setResponseBody("{ \"ok\": true}")
@@ -123,6 +133,17 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
 
+        testRequest.getRequestBody();
+
+        Map<String, String> audience = new HashMap<>();
+        audience.put("android_channel", fakeChannelId);
+
+        JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
+
+        // verify payload
+        assertEquals(request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertEquals(request.getMap().get("add"), JsonValue.wrap(addTags));
+        assertEquals(request.getMap().get("remove"), JsonValue.wrap(removeTags));
     }
 
     /**
@@ -139,30 +160,6 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
 
         Response response = client.updateChannelTags(null, addTags, removeTags);
 
-        assertNull("Response should be null", response);
-    }
-
-    /**
-     * Test updateNamedUserTags and updateChannelTags with malformed host URL returns null.
-     */
-    @Test
-    public void testMalformedUrl() {
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-        // Set hostURL
-        UAirship.shared().getAirshipConfigOptions().hostURL = "files://thisIsMalformed";
-
-        TagGroupsAPIClient client2 = new TagGroupsAPIClient(mockRequestFactory);
-
-        Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(namedUserTagGroup, tagsToAdd);
-
-        Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(namedUserTagGroup, tagsToRemove);
-
-        Response response = client2.updateNamedUserTags(fakeNamedUserId, addTags, removeTags);
-        assertNull("Response should be null", response);
-
-        response = client2.updateChannelTags(fakeChannelId, addTags, removeTags);
         assertNull("Response should be null", response);
     }
 }
