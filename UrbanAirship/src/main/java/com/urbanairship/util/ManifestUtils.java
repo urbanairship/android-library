@@ -302,6 +302,18 @@ public class ManifestUtils {
                     " Landing page action may not function properly.");
         }
 
+        // Landing page message activity
+        i = new Intent(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION, Uri.parse("message://"))
+                .setPackage(UAirship.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addCategory(Intent.CATEGORY_DEFAULT);
+
+        if (UAirship.getPackageManager().resolveActivity(i, 0) == null) {
+            Logger.error("AndroidManifest.xml missing activity with an intent " +
+                    "filter for action " + LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION +
+                    ", category " + Intent.CATEGORY_DEFAULT + ", and data with scheme message" +
+                    " Landing page action may not function properly.");
+        }
 
         String processName = UAirship.getAppInfo() == null ? UAirship.getPackageName()
                                                            : UAirship.getAppInfo().processName;
