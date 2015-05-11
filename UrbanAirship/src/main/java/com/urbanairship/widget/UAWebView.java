@@ -205,7 +205,7 @@ public class UAWebView extends WebView {
     public void loadUrl(String url) {
         onPreLoad();
 
-        // Not a landing page content url, load url normally
+        // Add auth to landing page content URLs
         if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
             // Do pre auth if we can
             if (Build.VERSION.SDK_INT >= 8) {
