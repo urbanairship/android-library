@@ -29,13 +29,13 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,8 +44,8 @@ import java.util.Set;
  */
 class TagGroupsAPIClient {
 
-    static final String CHANNEL_TAGS_PATH = "/api/channels/tags/";
-    static final String NAMED_USER_TAGS_PATH = "/api/named_users/tags/";
+    static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
+    static final String NAMED_USER_TAGS_PATH = "api/named_users/tags/";
     static final String AUDIENCE_KEY = "audience";
     static final String ANDROID_CHANNEL_KEY = "android_channel";
     static final String AMAZON_CHANNEL_KEY = "amazon_channel";
@@ -74,16 +74,18 @@ class TagGroupsAPIClient {
             return null;
         }
 
-        JSONObject payload = new JSONObject();
-        JSONObject audience = new JSONObject();
+        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> audience = new HashMap<>();
 
+        audience.put(NAMED_USER_ID_KEY, namedUserId);
+        payload.put(AUDIENCE_KEY, audience);
+        payload.put(ADD_KEY, addTags);
+        payload.put(REMOVE_KEY, removeTags);
+
+        String tagPayload = null;
         try {
-            audience.put(NAMED_USER_ID_KEY, namedUserId);
-            payload.put(AUDIENCE_KEY, audience);
-            payload.put(ADD_KEY, addTags);
-            payload.put(REMOVE_KEY, removeTags);
-
-        } catch (JSONException e) {
+            tagPayload = JsonValue.wrap(payload).toString();
+        } catch (JsonException e) {
             Logger.error("Failed to create named user tags payload as json.", e);
         }
 
@@ -96,7 +98,7 @@ class TagGroupsAPIClient {
             return null;
         }
 
-        return request(namedUserTagsUrl, payload.toString());
+        return request(namedUserTagsUrl, tagPayload);
     }
 
     Response updateChannelTags(String channelId,
@@ -108,16 +110,19 @@ class TagGroupsAPIClient {
             return null;
         }
 
-        JSONObject payload = new JSONObject();
-        JSONObject audience = new JSONObject();
+        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> audience = new HashMap<>();
 
+
+        audience.put(getChannelType(), channelId);
+        payload.put(AUDIENCE_KEY, audience);
+        payload.put(ADD_KEY, addTags);
+        payload.put(REMOVE_KEY, removeTags);
+
+        String tagPayload = null;
         try {
-            audience.put(getChannelType(), channelId);
-            payload.put(AUDIENCE_KEY, audience);
-            payload.put(ADD_KEY, addTags);
-            payload.put(REMOVE_KEY, removeTags);
-
-        } catch (JSONException e) {
+            tagPayload = JsonValue.wrap(payload).toString();
+        } catch (JsonException e) {
             Logger.error("Failed to create channel tag groups payload as json.", e);
         }
 
