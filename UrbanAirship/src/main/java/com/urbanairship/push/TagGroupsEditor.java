@@ -26,7 +26,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -50,17 +49,17 @@ public abstract class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor addTags(String tagGroup, String... tags) {
-        return addTags(tagGroup, Arrays.asList(tags));
+        return addTags(tagGroup, new HashSet<>(Arrays.asList(tags)));
     }
 
     /**
-     * Add a collection of tags to the tag group.
+     * Add a set of tags to the tag group.
      *
      * @param tagGroup The tag group string.
-     * @param tags The tags collection.
-     * @return The TagGroups Editor
+     * @param tags The tags set.
+     * @return The TagGroupsEditor
      */
-    public TagGroupsEditor addTags(String tagGroup, Collection<String> tags) {
+    public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
         if (tagsToRemove.containsKey(tagGroup)) {
             tagsToRemove.get(tagGroup).removeAll(tags);
         }
@@ -82,17 +81,17 @@ public abstract class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor removeTags(String tagGroup, String... tags) {
-        return removeTags(tagGroup, Arrays.asList(tags));
+        return removeTags(tagGroup, new HashSet<>(Arrays.asList(tags)));
     }
 
     /**
-     * Remove a collection of tags from the tag group.
+     * Remove a set of tags from the tag group.
      *
      * @param tagGroup The tag group string.
-     * @param tags The tags collection.
+     * @param tags The tags set.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor removeTags(String tagGroup, Collection<String> tags) {
+    public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
         if (tagsToAdd.containsKey(tagGroup)) {
             tagsToAdd.get(tagGroup).removeAll(tags);
         }

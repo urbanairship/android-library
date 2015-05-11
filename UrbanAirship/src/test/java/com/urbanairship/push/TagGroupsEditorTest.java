@@ -41,10 +41,10 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test add a collection of tags to the tag group.
+     * Test add a set of tags to the tag group.
      */
     @Test
-    public void testAddTagsCollection() {
+    public void testAddTagsSet() {
         Set<String> expectedTags = new HashSet<>();
         expectedTags.add("tag1");
         expectedTags.add("tag2");
@@ -75,10 +75,10 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test remove collection of tags from the tag group.
+     * Test remove a set of tags from the tag group.
      */
     @Test
-    public void testRemoveTagsCollection() {
+    public void testRemoveTagsSet() {
         Set<String> expectedTags = new HashSet<>();
         expectedTags.add("tag1");
         expectedTags.add("tag2");
