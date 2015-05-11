@@ -298,7 +298,7 @@ public class ManifestUtils {
         if (UAirship.getPackageManager().resolveActivity(i, 0) == null) {
             Logger.error("AndroidManifest.xml missing activity with an intent " +
                     "filter for action " + LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION +
-                    ", category " + Intent.CATEGORY_DEFAULT + ", and data with scheme https" +
+                    ", category " + Intent.CATEGORY_DEFAULT + ", and data with scheme https." +
                     " Landing page action may not function properly.");
         }
 
@@ -311,7 +311,7 @@ public class ManifestUtils {
         if (UAirship.getPackageManager().resolveActivity(i, 0) == null) {
             Logger.error("AndroidManifest.xml missing activity with an intent " +
                     "filter for action " + LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION +
-                    ", category " + Intent.CATEGORY_DEFAULT + ", and data with scheme message" +
+                    ", category " + Intent.CATEGORY_DEFAULT + ", and data with scheme message." +
                     " Landing page action may not function properly.");
         }
 

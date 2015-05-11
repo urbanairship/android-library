@@ -385,6 +385,7 @@ public class LandingPageActivity extends Activity {
                                               .getMessage(messageId);
             if (message != null) {
                 webView.loadRichPushMessage(message);
+                message.markRead();
             } else {
                 Logger.error("Message " + messageId + " not found.");
                 finish();
