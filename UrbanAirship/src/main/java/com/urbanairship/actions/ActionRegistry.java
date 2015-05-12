@@ -220,6 +220,10 @@ public final class ActionRegistry {
                 OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
                 OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
 
+        registerAction(new OverlayRichPushMessageAction(),
+                OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
+                OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
+
         registerAction(new ClipboardAction(),
                 ClipboardAction.DEFAULT_REGISTRY_NAME,
                 ClipboardAction.DEFAULT_REGISTRY_SHORT_NAME);
