@@ -26,15 +26,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertEquals;
@@ -45,8 +52,8 @@ import static org.mockito.Mockito.when;
 
 public class OpenRichPushInboxActionTest extends BaseTestCase {
 
-    private OpenRichPushInboxAction action;
-    private RichPushInbox mockInbox;
+    OpenRichPushInboxAction action;
+    RichPushInbox mockInbox;
 
     @Before
     public void setup() {
@@ -91,6 +98,8 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformNoMessageId() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
+
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
@@ -102,6 +111,8 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMessageUnavailable() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
+
         action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
 
         when(mockInbox.getMessage("message_id")).thenReturn(null);
@@ -115,6 +126,8 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMessageAvailable() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:message_id");
+
         RichPushMessage message = mock(RichPushMessage.class);
         when(message.getMessageId()).thenReturn("message_id");
 
@@ -125,5 +138,108 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
         assertEquals("message:message_id", startedIntent.getDataString());
+    }
+
+    /**
+     * Test falling back to the landing page when the application does not handle com.urbanairship.VIEW_RICH_PUSH_MESSAGE
+     * intent action.
+     */
+    @Test
+    public void testFallbackLandingPage() {
+        addResolveInfoForAction("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", "message:message_id");
+
+        RichPushMessage message = mock(RichPushMessage.class);
+        when(message.getMessageId()).thenReturn("message_id");
+
+        when(mockInbox.getMessage("message_id")).thenReturn(message);
+
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
+        assertEquals("message:message_id", startedIntent.getDataString());
+    }
+
+    /**
+     * Test MESSAGE_ID placeholder looks for the message's ID in the push message metadata.
+     */
+    @Test
+    public void testPerformMessageIdPlaceHolderPushMetadata() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:the_message_id");
+
+        RichPushMessage message = mock(RichPushMessage.class);
+        when(message.getMessageId()).thenReturn("the_message_id");
+        when(mockInbox.getMessage("the_message_id")).thenReturn(message);
+
+        Bundle pushBundle = new Bundle();
+        pushBundle.putString(RichPushManager.RICH_PUSH_KEY, "the_message_id");
+        Bundle metadata = new Bundle();
+        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
+
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
+        assertEquals("message:the_message_id", startedIntent.getDataString());
+    }
+
+    /**
+     * Test MESSAGE_ID placeholder looks for the message's ID in the rich push message ID metadata.
+     */
+    @Test
+    public void testPerformMessageIdPlaceHolderRichPushMessageMetadata() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:the_message_id");
+
+        RichPushMessage message = mock(RichPushMessage.class);
+        when(message.getMessageId()).thenReturn("the_message_id");
+        when(mockInbox.getMessage("the_message_id")).thenReturn(message);
+
+        Bundle metadata = new Bundle();
+        metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
+
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
+        assertEquals("message:the_message_id", startedIntent.getDataString());
+    }
+
+    /**
+     * Test MESSAGE_ID placeholder will fail to find the message ID if no metadata is available
+     * and tries to view the inbox instead.
+     */
+    @Test
+    public void testPerformMessageIdPlaceHolderNoMetadata() {
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:the_message_id");
+        addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
+
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID"));
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());
+    }
+
+    /**
+     * Adds resolve info for an intent to the package manager. Allows us to simulate that a given intent
+     * is capable of starting for the activity.
+     * @param action The intent's action.
+     * @param data Optional intent data.
+     */
+    void addResolveInfoForAction(String action, String data) {
+        ResolveInfo info = new ResolveInfo();
+        info.isDefault = true;
+        info.activityInfo = new ActivityInfo();
+        info.activityInfo.name = action;
+        info.activityInfo.applicationInfo = new ApplicationInfo();
+        info.activityInfo.applicationInfo.packageName = RuntimeEnvironment.application.getPackageName();
+
+        Intent intent = new Intent(action)
+                .setPackage(RuntimeEnvironment.application.getPackageName());
+
+        if (data != null) {
+            intent.setData(Uri.parse(data));
+        }
+
+        RuntimeEnvironment.getRobolectricPackageManager().addResolveInfoForIntent(intent, info);
     }
 }
