@@ -95,6 +95,9 @@ public class LandingPageActionTest extends BaseTestCase {
         verifyPerform("https://www.urbanairship.com", "https://www.urbanairship.com");
         verifyPerform("http://www.urbanairship.com", "http://www.urbanairship.com");
 
+        // Verify message URIs
+        verifyPerform("message://message_id", "message://message_id");
+
         // Verify content URIs
         verifyPerform("u:<~@rH7,ASuTABk.~>", "https://dl.urbanairship.com/aaa/app_key/%3C%7E%40rH7%2CASuTABk.%7E%3E");
 

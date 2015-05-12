@@ -25,6 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -33,6 +34,8 @@ import android.os.Looper;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.UriUtils;
 import com.urbanairship.widget.UAWebView;
@@ -105,7 +108,21 @@ public class LandingPageAction extends Action {
                         @Override
                         public void run() {
                             UAWebView webView = new UAWebView(UAirship.getApplicationContext());
-                            webView.loadUrl(uri.toString());
+
+                            if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+                                String messageId = uri.getSchemeSpecificPart();
+                                RichPushMessage message = UAirship.shared()
+                                                                  .getRichPushManager()
+                                                                  .getRichPushInbox()
+                                                                  .getMessage(messageId);
+                                if (message != null) {
+                                    webView.loadRichPushMessage(message);
+                                } else {
+                                    Logger.debug("LandingPageAction - Message " + messageId + " not found.");
+                                }
+                            } else {
+                                webView.loadUrl(uri.toString());
+                            }
                         }
                     });
 
@@ -121,7 +138,12 @@ public class LandingPageAction extends Action {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        UAirship.getApplicationContext().startActivity(actionIntent);
+                        try {
+                            UAirship.getApplicationContext().startActivity(actionIntent);
+                        } catch (ActivityNotFoundException ex) {
+                            Logger.error("Unable to view a landing page for uri " + uri + ". The landing page's" +
+                                    "intent filter is missing the scheme: " + uri.getScheme());
+                        }
                     }
                 });
         }
