@@ -7,6 +7,7 @@ import android.os.Parcelable;
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.OpenRichPushInboxAction;
+import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -15,7 +16,7 @@ import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -274,6 +275,20 @@ public class PushMessage implements Parcelable {
             Logger.error("Unable to parse action payload: " + actionsPayload);
             return actions;
         }
+
+        if (getRichPushMessageId() != null) {
+            List<String> inboxActionNames = new ArrayList<String>() {{
+                add(OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME);
+                add(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
+                add(OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME);
+                add(OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
+            }};
+
+            if (Collections.disjoint(actions.keySet(), inboxActionNames)) {
+                actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
+            }
+        }
+
 
         return actions;
     }

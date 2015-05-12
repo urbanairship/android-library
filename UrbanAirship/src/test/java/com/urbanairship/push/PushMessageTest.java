@@ -8,12 +8,14 @@ import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -454,4 +456,71 @@ public class PushMessageTest extends BaseTestCase {
         assertEquals("value", fromParcel.getPushBundle().getString("a random extra"));
         assertEquals("Test Push Alert!", fromParcel.getAlert());
     }
+
+    /**
+     * Test get actions returns a Map of action names to action values.
+     */
+    @Test
+    public void testGetActions() throws JsonException {
+        Map<String, ActionValue> actions = new HashMap<>();
+        actions.put("action_name", ActionValue.wrap("action_value"));
+        actions.put("oh", ActionValue.wrap("hi"));
+
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
+        PushMessage message = new PushMessage(bundle);
+
+        assertEquals(actions, message.getActions());
+    }
+
+    /**
+     * Test get actions returns an empty map if its unable to parse the actions payload.
+     */
+    @Test
+    public void testGetActionsInvalidPayload() {
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ACTIONS, "}}what{{");
+        PushMessage message = new PushMessage(bundle);
+
+        assertTrue(message.getActions().isEmpty());
+    }
+
+    /**
+     * Test get actions appends a OpenRichPushInboxAction if it contains a message ID and does
+     * not already define a inbox action.
+     */
+    @Test
+    public void testGetActionAppendsInboxAction() throws JsonException {
+        Map<String, ActionValue> actions = new HashMap<>();
+        actions.put("action_name", ActionValue.wrap("action_value"));
+        actions.put("oh", ActionValue.wrap("hi"));
+
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
+        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        PushMessage message = new PushMessage(bundle);
+
+        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message ID"));
+        assertEquals(actions, message.getActions());
+    }
+
+    /**
+     * Test get actions when the payload defines an inbox action that it does not append the
+     * OpenRichPushInboxAction action.
+     */
+    @Test
+    public void testGetActionsContainsInboxAction() throws JsonException {
+        Map<String, ActionValue> actions = new HashMap<>();
+        actions.put("action_name", ActionValue.wrap("action_value"));
+        actions.put("oh", ActionValue.wrap("hi"));
+        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("some other message ID"));
+
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
+        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        PushMessage message = new PushMessage(bundle);
+
+        assertEquals(actions, message.getActions());
+    }
 }
+
