@@ -50,6 +50,7 @@ import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -685,6 +686,38 @@ public class PushManager extends BaseManager {
      */
     public void setQuietTimeInterval(Date startTime, Date endTime) {
         preferences.setQuietTimeInterval(startTime, endTime);
+    }
+
+    /**
+     * Edit the channel tag groups.
+     *
+     * @return The TagGroupsEditor.
+     */
+    public TagGroupsEditor editTagGroups() {
+        return new TagGroupsEditor() {
+            @Override
+            public void apply() {
+
+                // "group-1" : [tags]
+
+                Bundle addTags = new Bundle();
+                for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
+                    addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+
+                Bundle removeTags = new Bundle();
+                for (Map.Entry<String, Set<String>> entry : tagsToRemove.entrySet()) {
+                    removeTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+
+                Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
+                        .setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS)
+                        .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTags)
+                        .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTags);
+
+                UAirship.getApplicationContext().startService(i);
+            }
+        };
     }
 
     /**

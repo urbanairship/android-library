@@ -30,6 +30,7 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
@@ -41,6 +42,8 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -48,6 +51,9 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -116,6 +122,24 @@ public class PushService extends IntentService {
     static final String ACTION_RETRY_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER";
 
     /**
+     * Action to update the channel tag groups.
+     */
+    static final String ACTION_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_TAG_GROUPS";
+
+    /**
+     * Extra containing tag groups to add to named user tags or channel tag groups.
+     *
+     * @hide
+     */
+    public static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
+
+    /**
+     * Extra containing tag groups to remove from named user tags or channel tag groups.
+     *
+     * @hide
+     */
+    public static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
+    /**
      * Extra for wake lock ID. Set and removed by the service.
      */
     static final String EXTRA_WAKE_LOCK_ID = "com.urbanairship.push.EXTRA_WAKE_LOCK_ID";
@@ -139,8 +163,9 @@ public class PushService extends IntentService {
 
     private static long pushRegistrationBackOff = 0;
 
-    private ChannelAPIClient channelClient;
 
+    private ChannelAPIClient channelClient;
+    private TagGroupsAPIClient tagGroupsClient;
     private NamedUserAPIClient namedUserClient;
 
     /**
@@ -155,8 +180,9 @@ public class PushService extends IntentService {
      * for testing.
      * @param client The channel api client.
      * @param namedUserClient The named user api client.
+     * @param tagGroupsClient The tag groups api client.
      */
-    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient) {
+    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient, TagGroupsAPIClient tagGroupsClient) {
         super("PushService");
         this.channelClient = client;
         this.namedUserClient = namedUserClient;
@@ -208,6 +234,9 @@ public class PushService extends IntentService {
                     break;
                 case ACTION_RETRY_UPDATE_NAMED_USER:
                     onRetryUpdateNamedUser(intent);
+                    break;
+                case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
+                    onUpdateTagGroup(intent);
                     break;
             }
         } finally {
@@ -557,6 +586,90 @@ public class PushService extends IntentService {
     }
 
     /**
+     * Update the channel tag groups.
+     *
+     * @param intent The value passed to onHandleIntent.
+     */
+    private void onUpdateTagGroup(Intent intent) {
+        PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
+
+        Map<String, Set<String>> pendingAddTags = pushPreferences.getPendingAddTagGroups();
+        Map<String, Set<String>> pendingRemoveTags = pushPreferences.getPendingRemoveTagGroups();
+
+        Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
+        if (addTagsBundle != null) {
+            for (String group : addTagsBundle.keySet()) {
+                List<String> tags = addTagsBundle.getStringArrayList(group);
+
+                if (pendingAddTags.containsKey(group)) {
+                    pendingAddTags.get(group).addAll(tags);
+                } else {
+                    pendingAddTags.put(group, new HashSet<>(tags));
+                }
+
+                if (pendingRemoveTags.containsKey(group)) {
+                    pendingRemoveTags.get(group).removeAll(tags);
+                }
+            }
+        }
+
+        Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
+        if (removeTagsBundle != null) {
+            for (String group : removeTagsBundle.keySet()) {
+                List<String> tags = removeTagsBundle.getStringArrayList(group);
+
+                if (pendingRemoveTags.containsKey(group)) {
+                    pendingRemoveTags.get(group).addAll(tags);
+                } else {
+                    pendingRemoveTags.put(group, new HashSet<>(tags));
+                }
+
+                if (pendingAddTags.containsKey(group)) {
+                    pendingAddTags.get(group).removeAll(tags);
+                }
+            }
+        }
+
+        String channelId = UAirship.shared().getPushManager().getChannelId();
+
+        if (channelId == null) {
+            pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            Logger.error("Failed to update tag groups due to null channel ID. Saved pending tag groups.");
+            return;
+        }
+
+        Response response = getTagGroupsClient().updateChannelTags(channelId, pendingAddTags, pendingRemoveTags);
+
+        // if fail, save pending
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // Save pending
+            pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            Logger.error("Failed to update tag groups. Saved pending tag groups.");
+            // TODO: retry logic
+        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+            // Clear pending
+            pushPreferences.setPendingTagGroupsChanges(null, null);
+            Logger.info("Update tag groups succeeded with status: " + response.getStatus());
+            JsonValue responseJson = JsonValue.NULL;
+            try {
+                responseJson = JsonValue.parseString(response.getResponseBody());
+            } catch (JsonException e) {
+                Logger.error("Unable to parse tag group response", e);
+            }
+
+            if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
+                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
+                    Logger.warn("Tag Groups update: " + warning.getString());
+                }
+            }
+        } else {
+            // Save pending
+            pushPreferences.setPendingTagGroupsChanges(null, null);
+            Logger.error("Update tag groups failed with status: " + response.getStatus());
+        }
+    }
+
+    /**
      * Get the channel location as a URL
      *
      * @return The channel location URL
@@ -741,5 +854,17 @@ public class PushService extends IntentService {
             namedUserClient = new NamedUserAPIClient();
         }
         return namedUserClient;
+    }
+
+    /**
+     * Gets the tag groups client. Creates it if it does not exist.
+     *
+     * @return The tag groups API client.
+     */
+    private TagGroupsAPIClient getTagGroupsClient() {
+        if (tagGroupsClient == null) {
+            tagGroupsClient = new TagGroupsAPIClient(UAirship.shared().getAirshipConfigOptions());
+        }
+        return tagGroupsClient;
     }
 }
