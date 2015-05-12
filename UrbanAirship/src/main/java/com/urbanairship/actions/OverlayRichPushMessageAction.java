@@ -97,7 +97,7 @@ public class OverlayRichPushMessageAction extends Action {
 
         String messageId = arguments.getValue().getString();
 
-        if (messageId.equals("MESSAGE_ID")) {
+        if (messageId.equals(MESSAGE_ID_PLACEHOLDER)) {
             PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
             if (pushMessage != null && pushMessage.getRichPushMessageId() != null) {
                 messageId = pushMessage.getRichPushMessageId();

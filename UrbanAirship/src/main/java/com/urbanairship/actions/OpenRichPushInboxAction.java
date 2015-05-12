@@ -94,7 +94,7 @@ public class OpenRichPushInboxAction extends Action {
 
         String messageId = arguments.getValue().getString();
 
-        if (MESSAGE_ID_PLACEHOLDER.equals(MESSAGE_ID_PLACEHOLDER)) {
+        if (MESSAGE_ID_PLACEHOLDER.equals(messageId)) {
             PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
             if (pushMessage != null && pushMessage.getRichPushMessageId() != null) {
                 messageId = pushMessage.getRichPushMessageId();
