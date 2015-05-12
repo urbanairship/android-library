@@ -25,7 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -33,24 +33,27 @@ import android.os.Looper;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
 /**
- * Action that will try to start an activity to view either the {@link com.urbanairship.richpush.RichPushInbox}
- * or a {@link com.urbanairship.richpush.RichPushMessage} if a message ID is supplied as the arguments
- * value and the message is present in the inbox.
+ * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage}.
  * <p/>
  * In order to view the inbox, the action will attempt to start an activity with intent action
- * {@code com.urbanairship.VIEW_RICH_PUSH_INBOX}. To view messages, the intent will use the action
+ * {@code com.urbanairship.VIEW_RICH_PUSH_INBOX}.
+ * <p/>
+ * To view messages, the intent will use the action
  * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE} with the message ID supplied as the data
- * in the form of {@code message:<MESSAGE_ID>}. It is up to the application to assign
- * the proper intent filters to activities that can handle either of those requests.
+ * in the form of {@code message:<MESSAGE_ID>}. If an activity is unable to be started, the message
+ * will attempt to be displayed in a Landing Page by using the intent action
+ * {@link LandingPageAction#SHOW_LANDING_PAGE_INTENT_ACTION}.
  * <p/>
  * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
  * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
- * Accepted argument values: An optional message ID.
+ * Accepted argument values: {@code null} to launch the inbox, the specified message ID, or {@code "MESSAGE_ID"}
+ * to look for the message ID in the {@link ActionArguments#getMetadata()}.
  * <p/>
  * Result value: <code>null</code>
  * <p/>
@@ -68,6 +71,8 @@ public class OpenRichPushInboxAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mc";
 
+
+    public static final String MESSAGE_ID_PLACEHOLDER = "MESSAGE_ID";
 
     @Override
     public boolean acceptsArguments(ActionArguments arguments) {
@@ -88,41 +93,85 @@ public class OpenRichPushInboxAction extends Action {
     public ActionResult perform(ActionArguments arguments) {
 
         String messageId = arguments.getValue().getString();
-        RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
 
-        final Intent intent = new Intent()
-                .setPackage(UAirship.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        if (message != null) {
-            intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION)
-                  .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
-        } else {
-            intent.setAction(RichPushInbox.VIEW_INBOX_INTENT_ACTION);
+        if (MESSAGE_ID_PLACEHOLDER.equals(MESSAGE_ID_PLACEHOLDER)) {
+            PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
+            if (pushMessage != null && pushMessage.getRichPushMessageId() != null) {
+                messageId = pushMessage.getRichPushMessageId();
+            } else if (arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA)) {
+                messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
+            }
         }
+
+        final RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
 
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                try {
-                    UAirship.getApplicationContext().startActivity(intent);
-                } catch (ActivityNotFoundException ex) {
-                    if (intent.getAction().equals(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION)) {
-                        Logger.error("Unable to view an inbox message. Add the intent filter to an activity that " +
-                                "can handle viewing an inbox message: <intent-filter>" +
-                                "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_MESSAGE\" />" +
-                                "<data android:scheme=\"message\"/><category android:name=\"android.intent.category.DEFAULT\" />" +
-                                "</intent-filter>");
-                    } else {
-                        Logger.error("Unable to view the inbox. Add the intent filter to an activity that " +
-                                "can handle viewing the inbox: <intent-filter>" +
-                                "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_INBOX\" />" +
-                                "<category android:name=\"android.intent.category.DEFAULT\" /></intent-filter>");
-                    }
+                if (message != null) {
+                    startInboxMessageActivity(UAirship.getApplicationContext(), message);
+                } else {
+                    startInboxActivity(UAirship.getApplicationContext());
                 }
             }
         });
 
         return ActionResult.newEmptyResult();
+    }
+
+    /**
+     * Called when an activity should be started to view a {@link RichPushMessage}.
+     *
+     * @param context The application context.
+     * @param message The rich push message.
+     */
+    private void startInboxMessageActivity(Context context, RichPushMessage message) {
+        Intent intent = new Intent()
+                .setPackage(UAirship.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, message.getMessageId(), null));
+
+        // Try VIEW_MESSAGE_INTENT_ACTION first
+        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
+        if (intent.resolveActivity(context.getPackageManager()) == null) {
+
+            // Fallback to SHOW_LANDING_PAGE_INTENT_ACTION
+            intent.setAction(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION);
+            if (intent.resolveActivity(context.getPackageManager()) == null) {
+
+                // Log an error about the missing manifest entry
+                Logger.error("Unable to view the inbox message. Add the intent filter to an activity that " +
+                        "can handle viewing an inbox message: <intent-filter>" +
+                        "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_MESSAGE\" />" +
+                        "<data android:scheme=\"message\"/><category android:name=\"android.intent.category.DEFAULT\" />" +
+                        "</intent-filter>");
+
+                return;
+            }
+        }
+
+        context.startActivity(intent);
+    }
+
+    /**
+     * Called when an activity should be started to view the {@link RichPushInbox}.
+     *
+     * @param context The application context.
+     */
+    private void startInboxActivity(Context context) {
+        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
+                .setPackage(UAirship.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        if (intent.resolveActivity(context.getPackageManager()) == null) {
+            Logger.error("Unable to view the inbox. Add the intent filter to an activity that " +
+                    "can handle viewing the inbox: <intent-filter>" +
+                    "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_INBOX\" />" +
+                    "<category android:name=\"android.intent.category.DEFAULT\" /></intent-filter>");
+
+            return;
+        }
+
+        context.startActivity(intent);
     }
 }
