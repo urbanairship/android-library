@@ -438,18 +438,19 @@ class PushPreferences {
     }
 
     /**
-     * Returns the pending add tag groups.
+     * Returns the pending tag group.
      *
-     * @return The pending add tag groups.
+     * @param tagGroupKey The tag group key string.
+     * @return The pending tag groups.
      */
-    Map<String, Set<String>> getPendingAddTagGroups() {
+    Map<String, Set<String>> getPendingTagGroups(String tagGroupKey) {
         Map<String, Set<String>> tagGroups = new HashMap<>();
         JsonValue tagGroupsJsonValue = null;
         try {
-            tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(PENDING_ADD_TAG_GROUPS_KEY, null));
+            tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(tagGroupKey, null));
         } catch (JsonException e) {
-            Logger.error("Unable to parse pending add tag groups.", e);
-            preferenceDataStore.remove(PENDING_ADD_TAG_GROUPS_KEY);
+            Logger.error("Unable to parse pending tag groups.", e);
+            preferenceDataStore.remove(tagGroupKey);
         }
 
         if (tagGroupsJsonValue != null && tagGroupsJsonValue.isJsonMap()) {
@@ -470,35 +471,21 @@ class PushPreferences {
     }
 
     /**
+     * Returns the pending add tag groups.
+     *
+     * @return The pending add tag groups.
+     */
+    Map<String, Set<String>> getPendingAddTagGroups() {
+        return getPendingTagGroups(PENDING_ADD_TAG_GROUPS_KEY);
+    }
+
+    /**
      * Returns the pending remove tag groups.
      *
      * @return The pending remove tag groups.
      */
     Map<String, Set<String>> getPendingRemoveTagGroups() {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-        JsonValue tagGroupsJsonValue = null;
-        try {
-            tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(PENDING_REMOVE_TAG_GROUPS_KEY, null));
-        } catch (JsonException e) {
-            Logger.error("Unable to parse pending remove tag groups.", e);
-            preferenceDataStore.remove(PENDING_REMOVE_TAG_GROUPS_KEY);
-        }
-
-        if (tagGroupsJsonValue != null && tagGroupsJsonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> groupEntry : tagGroupsJsonValue.getMap()) {
-                Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
-                if (!tags.isEmpty()) {
-                    tagGroups.put(groupEntry.getKey(), tags);
-                }
-            }
-        }
-
-        return tagGroups;
+        return getPendingTagGroups(PENDING_REMOVE_TAG_GROUPS_KEY);
     }
 
     /**
