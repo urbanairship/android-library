@@ -186,6 +186,7 @@ public class PushService extends IntentService {
         super("PushService");
         this.channelClient = client;
         this.namedUserClient = namedUserClient;
+        this.tagGroupsClient = tagGroupsClient;
     }
 
     @Override
@@ -663,9 +664,20 @@ public class PushService extends IntentService {
                 }
             }
         } else {
-            // Save pending
-            pushPreferences.setPendingTagGroupsChanges(null, null);
             Logger.error("Update tag groups failed with status: " + response.getStatus());
+
+            if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
+                // Clear pending
+                pushPreferences.setPendingTagGroupsChanges(null, null);
+                Logger.error("Both add & remove fields are present and the intersection of the tags in these fields is not empty.");
+            } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+                // Clear pending
+                pushPreferences.setPendingTagGroupsChanges(null, null);
+                Logger.error("Secure tag groups require master secret to modify tags, thus not allowed when the app is in server-only mode.");
+            } else {
+                // Save pending
+                pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            }
         }
     }
 

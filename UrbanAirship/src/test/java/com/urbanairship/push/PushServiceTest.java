@@ -34,17 +34,19 @@ public class PushServiceTest extends BaseTestCase {
     ChannelAPIClient client;
     NamedUserAPIClient namedUserClient;
     NamedUser namedUser;
+    TagGroupsAPIClient tagGroupsClient;
 
     @Before
     public void setUp() {
         client = Mockito.mock(ChannelAPIClient.class);
         namedUserClient = Mockito.mock(NamedUserAPIClient.class);
+        tagGroupsClient = Mockito.mock(TagGroupsAPIClient.class);
         pushManager = UAirship.shared().getPushManager();
         pushPref = pushManager.getPreferences();
         namedUser = pushManager.getNamedUser();
 
         // Extend it to make onHandleIntent public so we can call it directly
-        pushService = new PushService(client, namedUserClient) {
+        pushService = new PushService(client, namedUserClient, tagGroupsClient) {
             @Override
             public void onHandleIntent(Intent intent) {
                 super.onHandleIntent(intent);

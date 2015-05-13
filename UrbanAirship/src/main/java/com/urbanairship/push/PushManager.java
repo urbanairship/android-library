@@ -698,8 +698,6 @@ public class PushManager extends BaseManager {
             @Override
             public void apply() {
 
-                // "group-1" : [tags]
-
                 Bundle addTags = new Bundle();
                 for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
                     addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
