@@ -16,7 +16,7 @@ import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -157,6 +157,12 @@ public class PushMessage implements Parcelable {
      */
     public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
+    private static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
+            OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
+            OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
+            OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
+            OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
+
     private Bundle pushBundle;
 
     /**
@@ -251,7 +257,7 @@ public class PushMessage implements Parcelable {
      * @deprecated Marked to be remove in 7.0.0. Use {@link #getActions()} instead.
      */
     @Deprecated
-    public String getActionsPayload()  {
+    public String getActionsPayload() {
         return pushBundle.getString(EXTRA_ACTIONS);
     }
 
@@ -276,19 +282,11 @@ public class PushMessage implements Parcelable {
             return actions;
         }
 
-        if (getRichPushMessageId() != null) {
-            List<String> inboxActionNames = new ArrayList<String>() {{
-                add(OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME);
-                add(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
-                add(OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME);
-                add(OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
-            }};
-
-            if (Collections.disjoint(actions.keySet(), inboxActionNames)) {
+        if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
+            if (Collections.disjoint(actions.keySet(), INBOX_ACTION_NAMES)) {
                 actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
             }
         }
-
 
         return actions;
     }
@@ -422,13 +420,12 @@ public class PushMessage implements Parcelable {
                 InAppMessage.Builder builder = new InAppMessage.Builder(rawMessage)
                         .setId(getSendId());
 
-                boolean containsOpenMcAction = rawMessage.getClickActionValues().containsKey(OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME) ||
-                        rawMessage.getClickActionValues().containsKey(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-                if (!UAStringUtil.isEmpty(getRichPushMessageId()) && !containsOpenMcAction) {
-                    HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
-                    actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId(), null)));
-                    builder.setClickActionValues(actions);
+                if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
+                    if (Collections.disjoint(rawMessage.getClickActionValues().keySet(), INBOX_ACTION_NAMES)) {
+                        HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
+                        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId(), null)));
+                        builder.setClickActionValues(actions);
+                    }
                 }
 
                 return builder.create();
