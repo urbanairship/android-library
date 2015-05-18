@@ -45,19 +45,19 @@ import java.util.Set;
  */
 class TagGroupsAPIClient {
 
-    static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
-    static final String NAMED_USER_TAGS_PATH = "api/named_users/tags/";
-    static final String AUDIENCE_KEY = "audience";
-    static final String ANDROID_CHANNEL_KEY = "android_channel";
-    static final String AMAZON_CHANNEL_KEY = "amazon_channel";
-    static final String NAMED_USER_ID_KEY = "named_user_id";
-    static final String ADD_KEY = "add";
-    static final String REMOVE_KEY = "remove";
+    private static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
+    private static final String NAMED_USER_TAGS_PATH = "api/named_users/tags/";
+    private static final String AUDIENCE_KEY = "audience";
+    private static final String ANDROID_CHANNEL_KEY = "android_channel";
+    private static final String AMAZON_CHANNEL_KEY = "amazon_channel";
+    private static final String NAMED_USER_ID_KEY = "named_user_id";
+    private static final String ADD_KEY = "add";
+    private static final String REMOVE_KEY = "remove";
 
-    protected String urlString;
-    protected String appKey;
-    protected String appSecret;
-    private RequestFactory requestFactory;
+    private final String urlString;
+    private final String appKey;
+    private final String appSecret;
+    private final RequestFactory requestFactory;
 
     TagGroupsAPIClient(AirshipConfigOptions configOptions) {
         this(configOptions, new RequestFactory());
