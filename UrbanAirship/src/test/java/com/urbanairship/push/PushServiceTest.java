@@ -1,6 +1,7 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -14,6 +15,11 @@ import org.mockito.Mockito;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -27,6 +33,12 @@ public class PushServiceTest extends BaseTestCase {
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String superFakeNamedUserId = "super-fake-named-user-id";
     private final String fakeToken = "FAKEAAAA-BBBB-CCCC-DDDD-TOKENEEEEEEE";
+    private Set<String> addTags = new HashSet<>();
+    private Map<String, Set<String>> pendingAddTags = new HashMap<>();
+    private Set<String> removeTags = new HashSet<>();
+    private Map<String, Set<String>> pendingRemoveTags = new HashMap<>();
+    private Bundle addTagsBundle = new Bundle();
+    private Bundle removeTagsBundle = new Bundle();
 
     PushPreferences pushPref;
     PushManager pushManager;
@@ -44,6 +56,22 @@ public class PushServiceTest extends BaseTestCase {
         pushManager = UAirship.shared().getPushManager();
         pushPref = pushManager.getPreferences();
         namedUser = pushManager.getNamedUser();
+
+        addTags.add("tag1");
+        addTags.add("tag2");
+        pendingAddTags.put("tagGroup", addTags);
+
+        removeTags.add("tag4");
+        removeTags.add("tag5");
+        pendingRemoveTags.put("tagGroup", removeTags);
+
+        for (Map.Entry<String, Set<String>> entry : pendingAddTags.entrySet()) {
+            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        for (Map.Entry<String, Set<String>> entry : pendingRemoveTags.entrySet()) {
+            removeTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
 
         // Extend it to make onHandleIntent public so we can call it directly
         pushService = new PushService(client, namedUserClient, tagGroupsClient) {
@@ -405,5 +433,103 @@ public class PushServiceTest extends BaseTestCase {
         assertEquals("The token should stay the same",
                 fakeToken, pushManager.getNamedUser().getLastUpdatedToken());
         assertNull("The named user ID should be null", pushManager.getNamedUser().getId());
+    }
+
+    /**
+     * Test update channel tag groups succeeds if the status is 200 and clears pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsSucceed() {
+        // Set up a 200 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateChannelTags(fakeChannelId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateChannelTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags cleared
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+        assertEquals("Pending add tags should be empty", emptyTags, pushPref.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be empty", emptyTags, pushPref.getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test update channel tag groups without channel fails and save pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsNoChannel() {
+        pushManager.setChannel(null, null);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateChannelTags not called when channel ID doesn't exist
+        Mockito.verify(tagGroupsClient, Mockito.times(0)).updateChannelTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags saved
+        assertEquals("Pending add tags should be saved", pendingAddTags, pushPref.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushPref.getPendingRemoveTagGroups());
+
+    }
+
+    /**
+     * Test update channel tag groups fails if the status is 500 and save pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsServerError() {
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateChannelTags(fakeChannelId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateChannelTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags saved
+        assertEquals("Pending add tags should be saved", pendingAddTags, pushPref.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushPref.getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test update channel tag groups succeeds if the status is 400 and clears pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsBadRequest() {
+        // Set up a 400 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateChannelTags(fakeChannelId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(400);
+
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateChannelTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags cleared
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+        assertEquals("Pending add tags should be empty", emptyTags, pushPref.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be empty", emptyTags, pushPref.getPendingRemoveTagGroups());
     }
 }

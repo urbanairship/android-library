@@ -127,17 +127,23 @@ public class PushService extends IntentService {
     static final String ACTION_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_TAG_GROUPS";
 
     /**
-     * Extra containing tag groups to add to named user tags or channel tag groups.
+     * Action to retry update channel tag groups.
+     */
+    static final String ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS";
+
+    /**
+     * Extra containing tag groups to add to channel tag groups.
      *
      * @hide
      */
     public static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
 
     /**
-     * Extra containing tag groups to remove from named user tags or channel tag groups.
+     * Extra containing tag groups to remove from channel tag groups.
      *
      * @hide
      */
+
     public static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
     /**
      * Extra for wake lock ID. Set and removed by the service.
@@ -155,6 +161,11 @@ public class PushService extends IntentService {
      * The delay value used for associate and disassociate named user retries.
      */
     private static long namedUserBackOff = 0;
+
+    /**
+     * The delay value used for updating channel tag groups retries.
+     */
+    private static long tagGroupsBackOff = 0;
 
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
@@ -237,7 +248,10 @@ public class PushService extends IntentService {
                     onRetryUpdateNamedUser(intent);
                     break;
                 case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
-                    onUpdateTagGroup(intent);
+                    onUpdateTagGroups(intent);
+                    break;
+                case ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS:
+                    onRetryUpdateTagGroups(intent);
                     break;
             }
         } finally {
@@ -591,7 +605,7 @@ public class PushService extends IntentService {
      *
      * @param intent The value passed to onHandleIntent.
      */
-    private void onUpdateTagGroup(Intent intent) {
+    private void onUpdateTagGroups(Intent intent) {
         PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
 
         Map<String, Set<String>> pendingAddTags = pushPreferences.getPendingAddTagGroups();
@@ -645,12 +659,14 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update tag groups. Saved pending tag groups.");
-            // TODO: retry logic
+            Logger.error("Failed to update tag groups, will retry. Saved pending tag groups.");
+            tagGroupsBackOff = calculateNextBackOff(tagGroupsBackOff);
+            scheduleRetry(ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS, tagGroupsBackOff);
         } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             // Clear pending
             pushPreferences.setPendingTagGroupsChanges(null, null);
             Logger.info("Update tag groups succeeded with status: " + response.getStatus());
+            tagGroupsBackOff = 0;
             JsonValue responseJson = JsonValue.NULL;
             try {
                 responseJson = JsonValue.parseString(response.getResponseBody());
@@ -665,6 +681,7 @@ public class PushService extends IntentService {
             }
         } else {
             Logger.error("Update tag groups failed with status: " + response.getStatus());
+            tagGroupsBackOff = 0;
 
             if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
                 // Clear pending
@@ -679,6 +696,17 @@ public class PushService extends IntentService {
                 pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
             }
         }
+    }
+
+    /**
+     * Called when updating channel tag groups previously failed and is being retried.
+     *
+     * @param intent The value passed to onHandleIntent.
+     */
+    private void onRetryUpdateTagGroups(Intent intent) {
+        // Restore the back off if the application was restarted since the last retry.
+        tagGroupsBackOff = intent.getLongExtra(EXTRA_BACK_OFF, tagGroupsBackOff);
+        onUpdateTagGroups(intent);
     }
 
     /**

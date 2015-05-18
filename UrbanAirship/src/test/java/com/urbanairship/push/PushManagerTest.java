@@ -1106,4 +1106,31 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.init();
         verify(mockNamedUser).startUpdateService();
     }
+
+    /**
+     * Test editTagGroups apply starts the update channel tag groups service.
+     */
+    @Test
+    public void testStartUpdateChannelTagService() {
+
+        pushManager.editTagGroups()
+                   .addTags("tagGroup", "tag1", "tag2", "tag3")
+                   .removeTags("tagGroup", "tag3", "tag4", "tag5")
+                   .apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Update Channel Tag Groups Service", PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+    }
+
+    /**
+     * Test editTagGroups apply does not start the service when addTags and removeTags are empty.
+     */
+    @Test
+    public void testEmptyAddTagsRemoveTags() {
+
+        pushManager.editTagGroups().apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().peekNextStartedService();
+        assertNull("Update channel tag groups service should not have started", startedIntent);
+    }
 }

@@ -698,6 +698,10 @@ public class PushManager extends BaseManager {
             @Override
             public void apply() {
 
+                if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
+                    return;
+                }
+
                 Bundle addTags = new Bundle();
                 for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
                     addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
