@@ -143,8 +143,8 @@ public class PushService extends IntentService {
      *
      * @hide
      */
-
     public static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
+
     /**
      * Extra for wake lock ID. Set and removed by the service.
      */
@@ -650,6 +650,11 @@ public class PushService extends IntentService {
         if (channelId == null) {
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
             Logger.error("Failed to update tag groups due to null channel ID. Saved pending tag groups.");
+            return;
+        }
+
+        // if pendingAddTags and pendingRemoveTags size are both empty, then skip call to update channel tags.
+        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
             return;
         }
 

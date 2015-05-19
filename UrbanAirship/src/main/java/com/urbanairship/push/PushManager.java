@@ -242,6 +242,11 @@ public class PushManager extends BaseManager {
 
         // Start named user update
         this.namedUser.startUpdateService();
+
+        // Update channel tags
+        Intent intent = new Intent(UAirship.getApplicationContext(), PushService.class);
+        intent.setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        UAirship.getApplicationContext().startService(intent);
     }
 
     /**

@@ -1133,4 +1133,21 @@ public class PushManagerTest extends BaseTestCase {
         Intent startedIntent = ShadowApplication.getInstance().peekNextStartedService();
         assertNull("Update channel tag groups service should not have started", startedIntent);
     }
+
+    /**
+     * Test init update channel tags.
+     */
+    @Test
+    public void testInitUpdateChannelTags() {
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        shadowApplication.clearStartedServices();
+
+        pushManager.init();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect start registration", PushService.ACTION_START_REGISTRATION, startedIntent.getAction());
+
+        startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect update channel tag groups service", PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+    }
 }

@@ -479,7 +479,6 @@ public class PushServiceTest extends BaseTestCase {
         // Verify pending tags saved
         assertEquals("Pending add tags should be saved", pendingAddTags, pushPref.getPendingAddTagGroups());
         assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushPref.getPendingRemoveTagGroups());
-
     }
 
     /**
@@ -505,6 +504,24 @@ public class PushServiceTest extends BaseTestCase {
         // Verify pending tags saved
         assertEquals("Pending add tags should be saved", pendingAddTags, pushPref.getPendingAddTagGroups());
         assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushPref.getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test don't update channel tags if both pendingAddTags and pendingRemoveTags are empty.
+     */
+    @Test
+    public void testNoUpdateWithEmptyTags() {
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        Bundle emptyTagsBundle = new Bundle();
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, emptyTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, emptyTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateChannelTags not called when both pendingAddTags and pendingRemoveTags are empty
+        Mockito.verify(tagGroupsClient, Mockito.times(0)).updateChannelTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
     }
 
     /**
