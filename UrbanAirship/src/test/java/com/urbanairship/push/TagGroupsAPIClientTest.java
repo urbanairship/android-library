@@ -30,7 +30,7 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
-    private final String namedUserTagGroup = "named_user_tags";
+    private final String tagGroup = "fake_tag_group";
 
     private Set<String> tagsToAdd;
     private Set<String> tagsToRemove;
@@ -71,10 +71,10 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
                 .create();
 
         Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(namedUserTagGroup, tagsToAdd);
+        addTags.put(tagGroup, tagsToAdd);
 
         Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(namedUserTagGroup, tagsToRemove);
+        removeTags.put(tagGroup, tagsToRemove);
 
         Response response = client.updateNamedUserTags(fakeNamedUserId, addTags, removeTags);
 
@@ -101,10 +101,10 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
     public void testUpdateNamedUserTagsNullNamedUser() {
 
         Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(namedUserTagGroup, tagsToAdd);
+        addTags.put(tagGroup, tagsToAdd);
 
         Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(namedUserTagGroup, tagsToRemove);
+        removeTags.put(tagGroup, tagsToRemove);
 
         Response response = client.updateNamedUserTags(null, addTags, removeTags);
 
@@ -123,10 +123,10 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
                 .create();
 
         Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(namedUserTagGroup, tagsToAdd);
+        addTags.put(tagGroup, tagsToAdd);
 
         Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(namedUserTagGroup, tagsToRemove);
+        removeTags.put(tagGroup, tagsToRemove);
 
         Response response = client.updateChannelTags(fakeChannelId, addTags, removeTags);
 
@@ -153,10 +153,10 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
     public void testUpdateChannelTagsNullChannel() {
 
         Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(namedUserTagGroup, tagsToAdd);
+        addTags.put(tagGroup, tagsToAdd);
 
         Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(namedUserTagGroup, tagsToRemove);
+        removeTags.put(tagGroup, tagsToRemove);
 
         Response response = client.updateChannelTags(null, addTags, removeTags);
 
