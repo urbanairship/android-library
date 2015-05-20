@@ -7,6 +7,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.OpenRichPushInboxAction;
+import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
@@ -514,6 +515,25 @@ public class PushMessageTest extends BaseTestCase {
         actions.put("action_name", ActionValue.wrap("action_value"));
         actions.put("oh", ActionValue.wrap("hi"));
         actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("some other message ID"));
+
+        Bundle bundle = new Bundle();
+        bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
+        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        PushMessage message = new PushMessage(bundle);
+
+        assertEquals(actions, message.getActions());
+    }
+
+    /**
+     * Test get actions when the payload defines an overlay rich push message action that it does not append the
+     * OpenRichPushInboxAction action.
+     */
+    @Test
+    public void testGetActionsContainsOverlayMessageAction() throws JsonException {
+        Map<String, ActionValue> actions = new HashMap<>();
+        actions.put("action_name", ActionValue.wrap("action_value"));
+        actions.put("oh", ActionValue.wrap("hi"));
+        actions.put(OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME, ActionValue.wrap("some other message ID"));
 
         Bundle bundle = new Bundle();
         bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
