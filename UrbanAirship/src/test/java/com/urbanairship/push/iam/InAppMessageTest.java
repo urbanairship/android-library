@@ -263,6 +263,26 @@ public class InAppMessageTest {
     }
 
     /**
+     * Test writing and reading the same empty in-app message from a parcel does not produce a NPE.
+     * MB-1188
+     */
+    @Test
+    public void testParcelExtrasNPE() throws JsonException {
+        InAppMessage message = new InAppMessage.Builder().create();
+
+        for (int i = 0; i < 2; i++) {
+            // Write the message to a parcel
+            Parcel parcel = Parcel.obtain();
+            message.writeToParcel(parcel, 0);
+
+            // Reset the parcel so we can read it
+            parcel.setDataPosition(0);
+
+            message = InAppMessage.CREATOR.createFromParcel(parcel);
+        }
+    }
+
+    /**
      * Test getting the in-app message as Json.
      */
     @Test
