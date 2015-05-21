@@ -654,6 +654,7 @@ public class JsonValue implements Parcelable {
             list.add(wrap(jsonArray.opt(i)));
         }
 
+        // Return a JsonValue that contains a JsonList
         return new JsonValue(new JsonList(list));
     }
 
@@ -667,10 +668,6 @@ public class JsonValue implements Parcelable {
     private static JsonValue wrapJSONObject(JSONObject jsonObject) throws JsonException {
         Map<String, JsonValue> jsonValueMap = new HashMap<>();
 
-        if (jsonObject == null || jsonObject.length() == 0) {
-            return new JsonValue(jsonValueMap);
-        }
-
         Iterator iterator = jsonObject.keys();
         while (iterator.hasNext()) {
             String key = (String) iterator.next();
@@ -683,6 +680,7 @@ public class JsonValue implements Parcelable {
             jsonValueMap.put(key, wrap(jsonObject.opt(key)));
         }
 
+        // Return a JsonValue that contains a JsonMap
         return new JsonValue(new JsonMap(jsonValueMap));
     }
 

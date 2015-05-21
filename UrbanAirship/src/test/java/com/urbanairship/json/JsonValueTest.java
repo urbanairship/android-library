@@ -330,6 +330,12 @@ public class JsonValueTest extends BaseTestCase {
         assertEquals(JsonValue.NULL, JsonValue.parseString("null"));
         assertEquals(JsonValue.NULL, JsonValue.parseString(null));
 
+        // Test empty map
+        assertEquals(new JsonMap(null), JsonValue.parseString("{}").getMap());
+
+        // Test empty list
+        assertEquals(new JsonList(null), JsonValue.parseString("[]").getList());
+
         // Map
         JSONObject json = new JSONObject(primitiveMap);
         json.put("map", new JSONObject(primitiveMap));
