@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.0.2 - May 21, 2015
+=============================
+ - Fix intermittent in-app message crashes.
+
 Version 6.0.1 - April 3, 2015
 =============================
  - Fix deadlock caused by an expired in-app message.
