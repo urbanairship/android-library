@@ -26,15 +26,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.http;
 
 import android.os.Build;
+import android.util.Base64;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
-
-import org.apache.http.Header;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.auth.BasicScheme;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -181,9 +178,8 @@ public class Request {
             }
 
             if (!UAStringUtil.isEmpty(user) && !UAStringUtil.isEmpty(password)) {
-                UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, password);
-                Header credentialHeader = BasicScheme.authenticate(creds, "UTF-8", false);
-                conn.setRequestProperty(credentialHeader.getName(), credentialHeader.getValue());
+                String credentials = user + ":" + password;
+                conn.setRequestProperty("Authorization", Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP));
             }
 
             // Create the form content
