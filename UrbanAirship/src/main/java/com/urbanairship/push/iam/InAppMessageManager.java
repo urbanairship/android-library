@@ -263,13 +263,11 @@ public class InAppMessageManager extends BaseManager {
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
                 }
 
-                if (isDisplayAsapEnabled()) {
+                if (isDisplayAsapEnabled() && getCurrentActivity() != null) {
                     autoDisplayPendingMessage = true;
                     handler.removeCallbacks(displayRunnable);
                     handler.post(displayRunnable);
                 }
-
-
             }
         }
     }
@@ -624,6 +622,12 @@ public class InAppMessageManager extends BaseManager {
 
             if (message != null && message.equals(currentMessage)) {
                 currentMessage = null;
+
+                if (isDisplayAsapEnabled() && getCurrentActivity() != null) {
+                    autoDisplayPendingMessage = true;
+                    handler.removeCallbacks(displayRunnable);
+                    handler.postDelayed(displayRunnable, autoDisplayDelayMs);
+                }
             }
         }
     };
