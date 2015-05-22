@@ -157,11 +157,6 @@ public class Request {
      * @return The request response.
      */
     public Response execute() {
-        // Disable HTTP connection reuse which was buggy pre-froyo
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.FROYO) {
-            System.setProperty("http.keepAlive", "false");
-        }
-
         HttpURLConnection conn = null;
 
         try {
