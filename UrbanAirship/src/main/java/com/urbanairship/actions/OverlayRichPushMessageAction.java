@@ -47,7 +47,7 @@ import com.urbanairship.richpush.RichPushMessage;
  * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
  * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
- * Accepted argument values: The specified message ID, or {@code "MESSAGE_ID"}
+ * Accepted argument values: The specified message ID, or {@code "auto"}
  * to look for the message ID in the {@link ActionArguments#getMetadata()}.
  * <p/>
  * Result value: <code>null</code>
@@ -66,7 +66,7 @@ public class OverlayRichPushMessageAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^mco";
 
-    public static final String MESSAGE_ID_PLACEHOLDER = "MESSAGE_ID";
+    public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
     @Override
     public boolean acceptsArguments(ActionArguments arguments) {
@@ -79,7 +79,7 @@ public class OverlayRichPushMessageAction extends Action {
                     return false;
                 }
 
-                if (MESSAGE_ID_PLACEHOLDER.equals(arguments.getValue().getString())) {
+                if (MESSAGE_ID_PLACEHOLDER.equalsIgnoreCase(arguments.getValue().getString())) {
                     return arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA) ||
                             arguments.getMetadata().containsKey(ActionArguments.PUSH_MESSAGE_METADATA);
                 }
@@ -97,7 +97,7 @@ public class OverlayRichPushMessageAction extends Action {
 
         String messageId = arguments.getValue().getString();
 
-        if (messageId.equals(MESSAGE_ID_PLACEHOLDER)) {
+        if (messageId.equalsIgnoreCase(MESSAGE_ID_PLACEHOLDER)) {
             PushMessage pushMessage = arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA);
             if (pushMessage != null && pushMessage.getRichPushMessageId() != null) {
                 messageId = pushMessage.getRichPushMessageId();

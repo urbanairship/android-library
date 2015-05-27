@@ -95,7 +95,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
     }
 
     /**
-     * Test accepts arguments with "MESSAGE_ID" placeholder when the push message metadata is available.
+     * Test accepts arguments with "auto" placeholder when the push message metadata is available.
      */
     @Test
     public void testAcceptsArgumentsWithPlaceHolderPushMessageMetadata() {
@@ -104,20 +104,20 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(new Bundle()));
 
         for (Situation situation : acceptedSituations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, "MESSAGE_ID", metadata);
+            ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
         for (Situation situation : rejectedSituations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, "MESSAGE_ID", metadata);
+            ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
     }
 
     /**
-     * Test accepts arguments with "MESSAGE_ID" placeholder when the rich push message ID metadata is available.
+     * Test accepts arguments with "auto" placeholder when the rich push message ID metadata is available.
      */
     @Test
     public void testAcceptsArgumentsWithPlaceHolderMessageIdMetadata() {
@@ -126,13 +126,13 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
         for (Situation situation : acceptedSituations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, "MESSAGE_ID", metadata);
+            ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
         for (Situation situation : rejectedSituations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, "MESSAGE_ID", metadata);
+            ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
@@ -156,7 +156,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
     @Test
     public void testRejectsPlaceHolderWithNoMetadata() {
         for (Situation situation : acceptedSituations) {
-            ActionArguments args = ActionTestUtils.createArgs(situation, "MESSAGE_ID");
+            ActionArguments args = ActionTestUtils.createArgs(situation, "auto");
             assertFalse("Should reject MESSAGE_ID when no metadata is available in situation " + situation,
                     action.acceptsArguments(args));
         }
@@ -168,19 +168,19 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
     @Test
     public void testPerformMessageId() {
         RichPushMessage message = mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("message_id");
+        when(message.getMessageId()).thenReturn("the_message_id");
 
-        when(mockInbox.getMessage("message_id")).thenReturn(message);
+        when(mockInbox.getMessage("the_message_id")).thenReturn(message);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "the_message_id"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
-        assertEquals("message:message_id", startedIntent.getDataString());
+        assertEquals("message:the_message_id", startedIntent.getDataString());
     }
 
     /**
-     * Test MESSAGE_ID placeholder looks for the message's ID in the push message metadata.
+     * Test "auto" placeholder looks for the message's ID in the push message metadata.
      */
     @Test
     public void testPerformMessageIdPlaceHolderPushMetadata() {
@@ -193,7 +193,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
@@ -201,7 +201,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
     }
 
     /**
-     * Test MESSAGE_ID placeholder looks for the message's ID in the rich push message ID metadata.
+     * Test "auto" placeholder looks for the message's ID in the rich push message ID metadata.
      */
     @Test
     public void testPerformMessageIdPlaceHolderRichPushMessageMetadata() {
@@ -212,7 +212,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());

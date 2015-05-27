@@ -161,7 +161,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     }
 
     /**
-     * Test MESSAGE_ID placeholder looks for the message's ID in the push message metadata.
+     * Test "auto" placeholder looks for the message's ID in the push message metadata.
      */
     @Test
     public void testPerformMessageIdPlaceHolderPushMetadata() {
@@ -176,7 +176,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
@@ -184,7 +184,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     }
 
     /**
-     * Test MESSAGE_ID placeholder looks for the message's ID in the rich push message ID metadata.
+     * Test "auto" placeholder looks for the message's ID in the rich push message ID metadata.
      */
     @Test
     public void testPerformMessageIdPlaceHolderRichPushMessageMetadata() {
@@ -197,7 +197,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID", metadata));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
@@ -205,7 +205,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     }
 
     /**
-     * Test MESSAGE_ID placeholder will fail to find the message ID if no metadata is available
+     * Test "auto" placeholder will fail to find the message ID if no metadata is available
      * and tries to view the inbox instead.
      */
     @Test
@@ -213,7 +213,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:the_message_id");
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "MESSAGE_ID"));
+        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());
