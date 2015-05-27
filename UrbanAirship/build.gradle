@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.+'
+        classpath 'com.android.tools.build:gradle:1.2.3'
     }
 }
 
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 7
+        minSdkVersion 8
         targetSdkVersion 22
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${airshipVersion}\""
@@ -39,10 +39,10 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:support-v4:22.1.0'
+    compile 'com.android.support:cardview-v7:22.1.0'
     compile 'com.google.android.gms:play-services-location:7.0.0'
     compile 'com.google.android.gms:play-services-gcm:7.0.0'
-    compile 'com.android.support:cardview-v7:22.0.0'
 
     provided files('libs/amazon-device-messaging-1.0.1.jar')
 
