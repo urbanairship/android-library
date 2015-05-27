@@ -89,9 +89,9 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
         JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
 
         // verify payload
-        assertEquals(request.getMap().get("audience"), JsonValue.wrap(audience));
-        assertEquals(request.getMap().get("add"), JsonValue.wrap(addTags));
-        assertEquals(request.getMap().get("remove"), JsonValue.wrap(removeTags));
+        assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertEquals("Payload should contain addTags", request.getMap().get("add"), JsonValue.wrap(addTags));
+        assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
     }
 
     /**
@@ -141,9 +141,9 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
         JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
 
         // verify payload
-        assertEquals(request.getMap().get("audience"), JsonValue.wrap(audience));
-        assertEquals(request.getMap().get("add"), JsonValue.wrap(addTags));
-        assertEquals(request.getMap().get("remove"), JsonValue.wrap(removeTags));
+        assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertEquals("Payload should contain addTags", request.getMap().get("add"), JsonValue.wrap(addTags));
+        assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
     }
 
     /**
@@ -160,6 +160,98 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
 
         Response response = client.updateChannelTags(null, addTags, removeTags);
 
+        assertNull("Response should be null", response);
+    }
+
+    /**
+     * Test payload does not contain empty addTags.
+     */
+    @Test
+    public void testEmptyAddTags() throws JsonException {
+        // testRequest is returned from the mockRequestFactory
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+                .setResponseMessage("OK")
+                .setResponseBody("{ \"ok\": true}")
+                .create();
+
+        Map<String, Set<String>> emptyAddTags = new HashMap<>();
+
+        Map<String, Set<String>> removeTags = new HashMap<>();
+        removeTags.put(tagGroup, tagsToRemove);
+
+        Response response = client.updateChannelTags(fakeChannelId, emptyAddTags, removeTags);
+
+        assertNotNull("Response should not be null", response);
+        assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+
+        testRequest.getRequestBody();
+
+        Map<String, String> audience = new HashMap<>();
+        audience.put("android_channel", fakeChannelId);
+
+        JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
+
+        // verify payload
+        assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertNull("EmptyAddTags should not be present in payload", request.getMap().get("add"));
+        assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
+    }
+
+    /**
+     * Test payload does not contain empty removeTags.
+     */
+    @Test
+    public void testEmptyRemoveTags() throws JsonException {
+        // testRequest is returned from the mockRequestFactory
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+                .setResponseMessage("OK")
+                .setResponseBody("{ \"ok\": true}")
+                .create();
+
+        Map<String, Set<String>> addTags = new HashMap<>();
+        addTags.put(tagGroup, tagsToAdd);
+
+        Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
+
+        Response response = client.updateChannelTags(fakeChannelId, addTags, emptyRemoveTags);
+
+        assertNotNull("Response should not be null", response);
+        assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
+
+        testRequest.getRequestBody();
+
+        Map<String, String> audience = new HashMap<>();
+        audience.put("android_channel", fakeChannelId);
+
+        JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
+
+        // verify payload
+        assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
+        assertEquals("Payload should contain addTags", request.getMap().get("add"), JsonValue.wrap(addTags));
+        assertNull("EmptyRemoveTags should not be present in payload", request.getMap().get("remove"));
+    }
+
+    /**
+     * Test updateChannelTags with empty addTags and removeTags returns null.
+     */
+    @Test
+    public void testUpdateChannelEmptyTags() {
+        Map<String, Set<String>> emptyAddTags = new HashMap<>();
+        Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
+
+        Response response = client.updateChannelTags(fakeChannelId, emptyAddTags, emptyRemoveTags);
+        assertNull("Response should be null", response);
+    }
+
+    /**
+     * Test updateNamedUserTags with empty addTags and removeTags returns null.
+     */
+    @Test
+    public void testUpdateNamedUserEmptyTags() {
+        Map<String, Set<String>> emptyAddTags = new HashMap<>();
+        Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
+
+        Response response = client.updateNamedUserTags(fakeNamedUserId, emptyAddTags, emptyRemoveTags);
         assertNull("Response should be null", response);
     }
 }

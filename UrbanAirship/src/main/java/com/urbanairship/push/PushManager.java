@@ -704,6 +704,7 @@ public class PushManager extends BaseManager {
             public void apply() {
 
                 if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
+                    Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
                     return;
                 }
 

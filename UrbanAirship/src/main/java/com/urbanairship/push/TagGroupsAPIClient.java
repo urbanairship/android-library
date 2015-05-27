@@ -89,6 +89,12 @@ class TagGroupsAPIClient {
 
         URL namedUserTagsUrl = getTagURL(NAMED_USER_TAGS_PATH);
         if (namedUserTagsUrl == null) {
+            Logger.error("The named user tags URL cannot be null.");
+            return null;
+        }
+
+        if (addTags.isEmpty() && removeTags.isEmpty()) {
+            Logger.error("Both addTags and removeTags cannot be empty.");
             return null;
         }
 
@@ -114,6 +120,12 @@ class TagGroupsAPIClient {
 
         URL channelTagsUrl = getTagURL(CHANNEL_TAGS_PATH);
         if (channelTagsUrl == null) {
+            Logger.error("The channel tags URL cannot be null.");
+            return null;
+        }
+
+        if (addTags.isEmpty() && removeTags.isEmpty()) {
+            Logger.error("Both addTags and removeTags cannot be empty.");
             return null;
         }
 
@@ -139,8 +151,12 @@ class TagGroupsAPIClient {
 
         audience.put(audienceSelector, audienceId);
         payload.put(AUDIENCE_KEY, audience);
-        payload.put(ADD_KEY, addTags);
-        payload.put(REMOVE_KEY, removeTags);
+        if (!addTags.isEmpty()) {
+            payload.put(ADD_KEY, addTags);
+        }
+        if (!removeTags.isEmpty()) {
+            payload.put(REMOVE_KEY, removeTags);
+        }
 
         String tagPayload;
         try {
@@ -149,6 +165,8 @@ class TagGroupsAPIClient {
             Logger.error("Failed to create channel tag groups payload as json.", e);
             return null;
         }
+
+        Logger.info("Updating tag groups with payload: " + tagPayload);
 
         Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(appKey, appSecret)
