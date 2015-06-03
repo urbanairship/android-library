@@ -25,6 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import com.urbanairship.Logger;
+import com.urbanairship.util.UAStringUtil;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,15 +63,31 @@ public abstract class TagGroupsEditor {
      * @return The TagGroupsEditor
      */
     public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
+        if (UAStringUtil.isEmpty(tagGroup)) {
+            Logger.warn("The tag group ID string cannot be null.");
+            return this;
+        }
+
+        if (tags.isEmpty()) {
+            Logger.warn("The tags cannot be empty");
+            return this;
+        }
+
         if (tagsToRemove.containsKey(tagGroup)) {
             tagsToRemove.get(tagGroup).removeAll(tags);
+            if (tagsToRemove.get(tagGroup).size() == 0) {
+                tagsToRemove.remove(tagGroup);
+            }
         }
 
         if (tagsToAdd.containsKey(tagGroup)) {
             tagsToAdd.get(tagGroup).addAll(tags);
-        } else {
-            tagsToAdd.put(tagGroup, new HashSet<>(tags));
+            if (tagsToAdd.get(tagGroup).size() == 0) {
+                tagsToAdd.remove(tagGroup);
+            }
         }
+
+        tagsToAdd.put(tagGroup, new HashSet<>(tags));
 
         return this;
     }
@@ -92,15 +111,31 @@ public abstract class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
+        if (UAStringUtil.isEmpty(tagGroup)) {
+            Logger.warn("The tag group ID string cannot be null.");
+            return this;
+        }
+
+        if (tags.isEmpty()) {
+            Logger.warn("The tags cannot be empty");
+            return this;
+        }
+
         if (tagsToAdd.containsKey(tagGroup)) {
             tagsToAdd.get(tagGroup).removeAll(tags);
+            if (tagsToAdd.get(tagGroup).size() == 0) {
+                tagsToAdd.remove(tagGroup);
+            }
         }
 
         if (tagsToRemove.containsKey(tagGroup)) {
             tagsToRemove.get(tagGroup).addAll(tags);
-        } else {
-            tagsToRemove.put(tagGroup, new HashSet<>(tags));
+            if (tagsToRemove.get(tagGroup).size() == 0) {
+                tagsToRemove.remove(tagGroup);
+            }
         }
+
+        tagsToRemove.put(tagGroup, new HashSet<>(tags));
 
         return this;
     }
