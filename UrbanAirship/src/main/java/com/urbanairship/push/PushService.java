@@ -132,6 +132,16 @@ public class PushService extends IntentService {
     static final String ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS";
 
     /**
+     * Action to update named user tags.
+     */
+    static final String ACTION_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER_TAGS";
+
+    /**
+     * Action to retry update named user tags.
+     */
+    static final String ACTION_RETRY_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER_TAGS";
+
+    /**
      * Extra containing tag groups to add to channel tag groups.
      *
      * @hide
@@ -166,6 +176,11 @@ public class PushService extends IntentService {
      * The delay value used for updating channel tag groups retries.
      */
     private static long tagGroupsBackOff = 0;
+
+    /**
+     * The delay value used for updating named user tags retries.
+     */
+    private static long namedUserTagsBackOff = 0;
 
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
@@ -252,6 +267,12 @@ public class PushService extends IntentService {
                     break;
                 case ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS:
                     onRetryUpdateTagGroups(intent);
+                    break;
+                case ACTION_UPDATE_NAMED_USER_TAGS:
+                    onUpdateNamedUserTags(intent);
+                    break;
+                case ACTION_RETRY_UPDATE_NAMED_USER_TAGS:
+                    onRetryUpdateNamedUserTags(intent);
                     break;
             }
         } finally {
@@ -712,6 +733,120 @@ public class PushService extends IntentService {
         // Restore the back off if the application was restarted since the last retry.
         tagGroupsBackOff = intent.getLongExtra(EXTRA_BACK_OFF, tagGroupsBackOff);
         onUpdateTagGroups(intent);
+    }
+
+    /**
+     * Update named user tags.
+     *
+     * @param intent The value passed to onHandleIntent.
+     */
+    private void onUpdateNamedUserTags(Intent intent) {
+        PushManager pushManager = UAirship.shared().getPushManager();
+        NamedUser namedUser = pushManager.getNamedUser();
+
+        Map<String, Set<String>> pendingAddTags = namedUser.getPendingAddTagGroups();
+        Map<String, Set<String>> pendingRemoveTags = namedUser.getPendingRemoveTagGroups();
+
+        Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
+        if (addTagsBundle != null) {
+            for (String group : addTagsBundle.keySet()) {
+                List<String> tags = addTagsBundle.getStringArrayList(group);
+
+                if (pendingAddTags.containsKey(group)) {
+                    pendingAddTags.get(group).addAll(tags);
+                } else {
+                    pendingAddTags.put(group, new HashSet<>(tags));
+                }
+
+                if (pendingRemoveTags.containsKey(group)) {
+                    pendingRemoveTags.get(group).removeAll(tags);
+                }
+            }
+        }
+
+        Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
+        if (removeTagsBundle != null) {
+            for (String group : removeTagsBundle.keySet()) {
+                List<String> tags = removeTagsBundle.getStringArrayList(group);
+
+                if (pendingRemoveTags.containsKey(group)) {
+                    pendingRemoveTags.get(group).addAll(tags);
+                } else {
+                    pendingRemoveTags.put(group, new HashSet<>(tags));
+                }
+
+                if (pendingAddTags.containsKey(group)) {
+                    pendingAddTags.get(group).removeAll(tags);
+                }
+            }
+        }
+
+        String namedUserId = namedUser.getId();
+        if (namedUserId == null) {
+            namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            Logger.error("Failed to update named user tags due to null named user ID. Saved pending tag groups.");
+            return;
+        }
+
+        // if pendingAddTags and pendingRemoveTags size are both empty, then skip call to update named user tags.
+        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
+            return;
+        }
+
+        Response response = getTagGroupsClient().updateNamedUserTags(namedUserId, pendingAddTags, pendingRemoveTags);
+
+        // if fail, save pending
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // Save pending
+            namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            Logger.error("Failed to update namee user tags, will retry. Saved pending tag groups.");
+            namedUserTagsBackOff = calculateNextBackOff(namedUserTagsBackOff);
+            scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER_TAGS, namedUserTagsBackOff);
+        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+            // Clear pending
+            namedUser.setPendingTagGroupsChanges(null, null);
+            Logger.info("Update named user tags succeeded with status: " + response.getStatus());
+            namedUserTagsBackOff = 0;
+            JsonValue responseJson = JsonValue.NULL;
+            try {
+                responseJson = JsonValue.parseString(response.getResponseBody());
+            } catch (JsonException e) {
+                Logger.error("Unable to parse named user tags response", e);
+            }
+
+            if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
+                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
+                    Logger.warn("Named User Tags update: " + warning.getString());
+                }
+            }
+        } else {
+            Logger.error("Update named user tags failed with status: " + response.getStatus());
+            namedUserTagsBackOff = 0;
+
+            if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
+                // Clear pending
+                namedUser.setPendingTagGroupsChanges(null, null);
+                Logger.error("Both add & remove fields are present and the intersection of the tags in these fields is not empty.");
+            } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+                // Clear pending
+                namedUser.setPendingTagGroupsChanges(null, null);
+                Logger.error("Secure tag groups require master secret to modify tags, thus not allowed when the app is in server-only mode.");
+            } else {
+                // Save pending
+                namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+            }
+        }
+    }
+
+    /**
+     * Called when update named user tags previously failed and is being retried.
+     *
+     * @param intent The value passed to onHandleIntent.
+     */
+    private void onRetryUpdateNamedUserTags(Intent intent) {
+        // Restore the back off if the application was restarted since the last retry.
+        namedUserTagsBackOff = intent.getLongExtra(EXTRA_BACK_OFF, namedUserTagsBackOff);
+        onUpdateNamedUserTags(intent);
     }
 
     /**

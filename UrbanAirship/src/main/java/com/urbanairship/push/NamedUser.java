@@ -27,12 +27,20 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -59,6 +67,16 @@ public class NamedUser {
      * The maximum length of the named user ID string.
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
+
+    /**
+     * The pending add tags.
+     */
+    private static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_ADD_TAG_GROUPS_KEY";
+
+    /**
+     * The pending remove tags.
+     */
+    private static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
 
     private final PreferenceDataStore preferenceDataStore;
 
@@ -126,6 +144,41 @@ public class NamedUser {
     }
 
     /**
+     * Edit the named user tags.
+     *
+     * @return The TagGroupsEditor.
+     */
+    public TagGroupsEditor editTagGroups() {
+        return new TagGroupsEditor() {
+            @Override
+            public void apply() {
+
+                if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
+                    Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
+                    return;
+                }
+
+                Bundle addTags = new Bundle();
+                for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
+                    addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+
+                Bundle removeTags = new Bundle();
+                for (Map.Entry<String, Set<String>> entry : tagsToRemove.entrySet()) {
+                    removeTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+                }
+
+                Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
+                        .setAction(PushService.ACTION_UPDATE_NAMED_USER_TAGS)
+                        .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTags)
+                        .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTags);
+
+                UAirship.getApplicationContext().startService(i);
+            }
+        };
+    }
+
+    /**
      * Gets the named user ID change token.
      *
      * @return The named user ID change token.
@@ -177,4 +230,66 @@ public class NamedUser {
         i.setAction(PushService.ACTION_UPDATE_NAMED_USER);
         ctx.startService(i);
     }
+
+    /**
+     *  Returns the pending tag group.
+     *
+     *  @param tagGroupKey The tag group key string.
+     *  @return The pending tag groups.
+     */
+    Map<String, Set<String>> getPendingTagGroups(String tagGroupKey) {
+        Map<String, Set<String>> tagGroups = new HashMap<>();
+        JsonValue tagGroupsJsonValue = null;
+        try {
+            tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(tagGroupKey, null));
+        } catch (JsonException e) {
+            Logger.error("Unable to parse pending tag groups.", e);
+            preferenceDataStore.remove(tagGroupKey);
+        }
+
+        if (tagGroupsJsonValue != null && tagGroupsJsonValue.isJsonMap()) {
+            for (Map.Entry<String, JsonValue> groupEntry : tagGroupsJsonValue.getMap()) {
+                Set<String> tags = new HashSet<>();
+                for (JsonValue tag : groupEntry.getValue().getList()) {
+                    if (tag.isString()) {
+                        tags.add(tag.getString());
+                    }
+                }
+                if (!tags.isEmpty()) {
+                    tagGroups.put(groupEntry.getKey(), tags);
+                }
+            }
+        }
+
+        return tagGroups;
+    }
+    /**
+     * Returns the pending add tag groups.
+     *
+     * @return The pending add tag groups.
+     */
+    Map<String, Set<String>> getPendingAddTagGroups() {
+        return getPendingTagGroups(PENDING_ADD_TAG_GROUPS_KEY);
+    }
+
+    /**
+     * Returns the pending remove tag groups.
+     *
+     * @return The pending remove tag groups.
+     */
+    Map<String, Set<String>> getPendingRemoveTagGroups() {
+        return getPendingTagGroups(PENDING_REMOVE_TAG_GROUPS_KEY);
+    }
+
+    /**
+     * Stores the pending add and remove tag groups.
+     *
+     * @param pendingAddTagGroups The pending add tag groups.
+     * @param pendingRemoveTagGroups The pending remove tag groups.
+     */
+    void setPendingTagGroupsChanges(Map<String, Set<String>> pendingAddTagGroups, Map<String, Set<String>> pendingRemoveTagGroups) {
+        preferenceDataStore.put(PENDING_ADD_TAG_GROUPS_KEY, pendingAddTagGroups);
+        preferenceDataStore.put(PENDING_REMOVE_TAG_GROUPS_KEY, pendingRemoveTagGroups);
+    }
+
 }
