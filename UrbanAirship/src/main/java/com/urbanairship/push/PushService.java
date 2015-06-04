@@ -142,14 +142,14 @@ public class PushService extends IntentService {
     static final String ACTION_RETRY_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER_TAGS";
 
     /**
-     * Extra containing tag groups to add to channel tag groups.
+     * Extra containing tag groups to add to channel tag groups or named user tags.
      *
      * @hide
      */
     public static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
 
     /**
-     * Extra containing tag groups to remove from channel tag groups.
+     * Extra containing tag groups to remove from channel tag groups or named user tags.
      *
      * @hide
      */
@@ -799,7 +799,7 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update namee user tags, will retry. Saved pending tag groups.");
+            Logger.error("Failed to update named user tags, will retry. Saved pending tag groups.");
             namedUserTagsBackOff = calculateNextBackOff(namedUserTagsBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER_TAGS, namedUserTagsBackOff);
         } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {

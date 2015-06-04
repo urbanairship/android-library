@@ -154,7 +154,7 @@ public class NamedUser {
             public void apply() {
 
                 if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
-                    Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
+                    Logger.info("Skipping named user tags update because tags to add and tags to remove are both empty.");
                     return;
                 }
 

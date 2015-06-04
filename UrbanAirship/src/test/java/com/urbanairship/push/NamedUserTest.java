@@ -1,11 +1,14 @@
 package com.urbanairship.push;
 
+import android.content.Intent;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -15,6 +18,10 @@ import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowIntent;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotSame;
@@ -163,5 +170,72 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.setId(fakeNamedUserId);
         namedUser.disassociateNamedUserIfNull();
         assertEquals("Named user ID should remain the same", fakeNamedUserId, namedUser.getId());
+    }
+
+    /**
+     * Test editTagGroups apply starts the update named user tags service.
+     */
+    @Test
+    public void testStartUpdateNamedUserTagsService() {
+
+        namedUser.editTagGroups()
+                 .addTags("tagGroup", "tag1", "tag2", "tag3")
+                 .removeTags("tagGroup", "tag3", "tag4", "tag5")
+                 .apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Update Named User Tags Service", PushService.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
+    }
+
+    /**
+     * Test editTagGroups apply does not start the service when addTags and removeTags are empty.
+     */
+    @Test
+    public void testEmptyAddTagsRemoveTags() {
+
+        namedUser.editTagGroups().apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().peekNextStartedService();
+        assertNull("Update named user tags service should not have started", startedIntent);
+    }
+
+    /**
+     * Test set pending tag groups.
+     */
+    @Test
+    public void testPendingTagGroups() {
+        Set<String> addTags = new HashSet<>();
+        addTags.add("tag1");
+        addTags.add("tag2");
+        addTags.add("tag3");
+
+        Map<String, Set<String>> pendingAddTags = new HashMap<>();
+        pendingAddTags.put("tagGroup", addTags);
+
+        Set<String> removeTags = new HashSet<>();
+        removeTags.add("tag3");
+        removeTags.add("tag4");
+        removeTags.add("tag5");
+
+        Map<String, Set<String>> pendingRemoveTags = new HashMap<>();
+        pendingRemoveTags.put("tagGroup", removeTags);
+
+        namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+
+        Assert.assertEquals("Pending add tags should match", pendingAddTags, namedUser.getPendingAddTagGroups());
+        Assert.assertEquals("Pending remove tags should match", pendingRemoveTags, namedUser.getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test clear pending tag groups.
+     */
+    @Test
+    public void testClearPendingTagGroups() {
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+
+        namedUser.setPendingTagGroupsChanges(null, null);
+
+        Assert.assertEquals("Pending add tags should be empty", emptyTags, namedUser.getPendingAddTagGroups());
+        Assert.assertEquals("Pending remove tags should be empty", emptyTags, namedUser.getPendingRemoveTagGroups());
     }
 }
