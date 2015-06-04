@@ -59,6 +59,21 @@ public class TagGroupsEditorTest {
     }
 
     /**
+     * Test add a set of tags to the tag group.
+     */
+    @Test
+    public void testAddTagsSetNormalized() {
+        Set<String> expectedTags = new HashSet<>();
+        expectedTags.add("tag1");
+        expectedTags.add("tag2");
+        expectedTags.add("tag3");
+
+        editor.addTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
+
+        assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
+    }
+
+    /**
      * Test remove tags from the tag group.
      */
     @Test
@@ -72,6 +87,21 @@ public class TagGroupsEditorTest {
 
         assertEquals("Expect size to be 1", 1, editor.tagsToRemove.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToRemove.get(tagGroup).size());
+        assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
+    }
+
+    /**
+     * Test remove tags from the tag group.
+     */
+    @Test
+    public void testRemoveTagsNormalized() {
+        Set<String> expectedTags = new HashSet<>();
+        expectedTags.add("tag1");
+        expectedTags.add("tag2");
+        expectedTags.add("tag3");
+
+        editor.removeTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
+
         assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
     }
 

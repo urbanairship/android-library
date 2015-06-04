@@ -73,21 +73,23 @@ public abstract class TagGroupsEditor {
             return this;
         }
 
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
+
         if (tagsToRemove.containsKey(tagGroup)) {
-            tagsToRemove.get(tagGroup).removeAll(tags);
+            tagsToRemove.get(tagGroup).removeAll(normalizedTags);
             if (tagsToRemove.get(tagGroup).size() == 0) {
                 tagsToRemove.remove(tagGroup);
             }
         }
 
         if (tagsToAdd.containsKey(tagGroup)) {
-            tagsToAdd.get(tagGroup).addAll(tags);
+            tagsToAdd.get(tagGroup).addAll(normalizedTags);
             if (tagsToAdd.get(tagGroup).size() == 0) {
                 tagsToAdd.remove(tagGroup);
             }
         }
 
-        tagsToAdd.put(tagGroup, new HashSet<>(tags));
+        tagsToAdd.put(tagGroup, new HashSet<>(normalizedTags));
 
         return this;
     }
@@ -121,21 +123,23 @@ public abstract class TagGroupsEditor {
             return this;
         }
 
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
+
         if (tagsToAdd.containsKey(tagGroup)) {
-            tagsToAdd.get(tagGroup).removeAll(tags);
+            tagsToAdd.get(tagGroup).removeAll(normalizedTags);
             if (tagsToAdd.get(tagGroup).size() == 0) {
                 tagsToAdd.remove(tagGroup);
             }
         }
 
         if (tagsToRemove.containsKey(tagGroup)) {
-            tagsToRemove.get(tagGroup).addAll(tags);
+            tagsToRemove.get(tagGroup).addAll(normalizedTags);
             if (tagsToRemove.get(tagGroup).size() == 0) {
                 tagsToRemove.remove(tagGroup);
             }
         }
 
-        tagsToRemove.put(tagGroup, new HashSet<>(tags));
+        tagsToRemove.put(tagGroup, new HashSet<>(normalizedTags));
 
         return this;
     }

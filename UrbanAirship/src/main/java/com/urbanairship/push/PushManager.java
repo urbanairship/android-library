@@ -53,7 +53,6 @@ import com.urbanairship.util.UAStringUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -190,7 +189,6 @@ public class PushManager extends BaseManager {
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
-    private static final int MAX_TAG_LENGTH = 127;
     private static final int MAX_CANONICAL_IDS = 10;
     private static final int RICH_PUSH_REFRESH_WAIT_TIME_MS = 60000; // 1 minute
 
@@ -353,7 +351,7 @@ public class PushManager extends BaseManager {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = normalizeTags(tags);
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
 
         // only update server w/ registration call if
         // at least one of the values has changed
@@ -487,44 +485,14 @@ public class PushManager extends BaseManager {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = normalizeTags(tags);
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
         if (!normalizedTags.equals(preferences.getTags())) {
             preferences.setTags(normalizedTags);
             updateRegistration();
         }
     }
 
-    /**
-     * Normalizes a set of tags. Each tag will be trimmed of white space and any tag that
-     * is empty, null, or exceeds {@link #MAX_TAG_LENGTH} will be dropped.
-     *
-     * @param tags The set of tags to normalize.
-     * @return The set of normalized, valid tags.
-     */
-    private Set<String> normalizeTags(Set<String> tags) {
-        if (tags == null) {
-            return null;
-        }
 
-        Set<String> normalizedTags = new HashSet<>();
-
-        for (String tag : tags) {
-            if (tag == null) {
-                Logger.debug("PushManager - Null tag was removed from set.");
-                continue;
-            }
-
-            tag = tag.trim();
-            if (tag.length() <= 0 || tag.length() > MAX_TAG_LENGTH) {
-                Logger.error("Tag with zero or greater than max length was removed from set: " + tag);
-                continue;
-            }
-
-            normalizedTags.add(tag);
-        }
-
-        return normalizedTags;
-    }
 
     /**
      * Returns the current alias for this application's channel.
@@ -553,7 +521,7 @@ public class PushManager extends BaseManager {
      */
     public Set<String> getTags() {
         Set<String> tags = preferences.getTags();
-        Set<String> normalizedTags = this.normalizeTags(tags);
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
 
         //to prevent the getTags call from constantly logging tag set failures, sync tags
         if (tags.size() != normalizedTags.size()) {
