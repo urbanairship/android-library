@@ -1099,12 +1099,13 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test init starts named user update service.
+     * Test init starts named user and tags update service.
      */
     @Test
     public void testInitStartNamedUserUpdateService() {
         pushManager.init();
         verify(mockNamedUser).startUpdateService();
+        verify(mockNamedUser).startUpdateTagsService();
     }
 
     /**

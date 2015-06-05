@@ -39,6 +39,23 @@ public class TagGroupsEditorTest {
         assertEquals("Expect size to be 1", 1, editor.tagsToAdd.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToAdd.get(tagGroup).size());
         assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+
+        editor.removeTags(tagGroup, "tag1");
+
+        assertEquals("Expect size to be 2", 2, editor.tagsToAdd.get(tagGroup).size());
+        assertEquals("Expect size to be 1", 1, editor.tagsToRemove.size());
+        assertEquals("Expect size to be 1", 1, editor.tagsToRemove.get(tagGroup).size());
+
+        editor.addTags(tagGroup, "tag1");
+
+        assertEquals("Expect size to be 3", 3, editor.tagsToAdd.get(tagGroup).size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+
+        editor.removeTags(tagGroup, "tag1", "tag2", "tag3");
+
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+        assertEquals("Expect size to be 3", 3, editor.tagsToRemove.get(tagGroup).size());
     }
 
     /**
@@ -69,8 +86,14 @@ public class TagGroupsEditorTest {
         expectedTags.add("tag3");
 
         editor.addTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
-
         assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
+
+        editor.addTags(tagGroup, " tag3 ", " tag 4 ", " tag 5 ");
+        expectedTags.add("tag 4");
+        expectedTags.add("tag 5");
+
+        expectedTags.removeAll(editor.tagsToAdd.get(tagGroup));
+        assertEquals("Expect expectedTags size to be 0", 0, expectedTags.size());
     }
 
     /**
@@ -88,6 +111,11 @@ public class TagGroupsEditorTest {
         assertEquals("Expect size to be 1", 1, editor.tagsToRemove.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToRemove.get(tagGroup).size());
         assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
+
+        editor.removeTags(tagGroup, "tag4");
+
+        assertEquals("Expect size to be 4", 4, editor.tagsToRemove.get(tagGroup).size());
+
     }
 
     /**
@@ -101,8 +129,14 @@ public class TagGroupsEditorTest {
         expectedTags.add("tag3");
 
         editor.removeTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
-
         assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
+
+        editor.removeTags(tagGroup, " tag3 ", " tag 4 ", " tag 5 ");
+        expectedTags.add("tag 4");
+        expectedTags.add("tag 5");
+
+        expectedTags.removeAll(editor.tagsToRemove.get(tagGroup));
+        assertEquals("Expect expectedTags size to be 0", 0, expectedTags.size());
     }
 
     /**

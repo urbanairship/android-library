@@ -238,4 +238,28 @@ public class NamedUserTest extends BaseTestCase {
         Assert.assertEquals("Pending add tags should be empty", emptyTags, namedUser.getPendingAddTagGroups());
         Assert.assertEquals("Pending remove tags should be empty", emptyTags, namedUser.getPendingRemoveTagGroups());
     }
+
+    /**
+     * Test startUpdateService starts the update named user service.
+     */
+    @Test
+    public void testStartUpdateService() {
+
+        namedUser.startUpdateService();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Update Named User Service", PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+    }
+
+    /**
+     * Test startUpdateTagsService starts the update named user tags service.
+     */
+    @Test
+    public void testStartUpdateTagsService() {
+
+        namedUser.startUpdateTagsService();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Update Named User Tags Service", PushService.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
+    }
 }

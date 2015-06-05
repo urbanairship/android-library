@@ -232,6 +232,16 @@ public class NamedUser {
     }
 
     /**
+     * Start service for named user tags update.
+     */
+    void startUpdateTagsService() {
+        Context ctx = UAirship.getApplicationContext();
+        Intent i = new Intent(ctx, PushService.class);
+        i.setAction(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        ctx.startService(i);
+    }
+
+    /**
      *  Returns the pending tag group.
      *
      *  @param tagGroupKey The tag group key string.

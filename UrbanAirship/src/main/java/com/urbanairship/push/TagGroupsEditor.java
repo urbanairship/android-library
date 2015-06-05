@@ -87,9 +87,9 @@ public abstract class TagGroupsEditor {
             if (tagsToAdd.get(tagGroup).size() == 0) {
                 tagsToAdd.remove(tagGroup);
             }
+        } else {
+            tagsToAdd.put(tagGroup, new HashSet<>(normalizedTags));
         }
-
-        tagsToAdd.put(tagGroup, new HashSet<>(normalizedTags));
 
         return this;
     }
@@ -137,9 +137,9 @@ public abstract class TagGroupsEditor {
             if (tagsToRemove.get(tagGroup).size() == 0) {
                 tagsToRemove.remove(tagGroup);
             }
+        } else {
+            tagsToRemove.put(tagGroup, new HashSet<>(normalizedTags));
         }
-
-        tagsToRemove.put(tagGroup, new HashSet<>(normalizedTags));
 
         return this;
     }
