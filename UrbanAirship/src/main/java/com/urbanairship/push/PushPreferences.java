@@ -35,6 +35,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONArray;
@@ -44,7 +45,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -444,7 +444,6 @@ class PushPreferences {
      * @return The pending tag groups.
      */
     Map<String, Set<String>> getPendingTagGroups(String tagGroupKey) {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
         JsonValue tagGroupsJsonValue = null;
         try {
             tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(tagGroupKey, null));
@@ -453,21 +452,7 @@ class PushPreferences {
             preferenceDataStore.remove(tagGroupKey);
         }
 
-        if (tagGroupsJsonValue != null && tagGroupsJsonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> groupEntry : tagGroupsJsonValue.getMap()) {
-                Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
-                if (!tags.isEmpty()) {
-                    tagGroups.put(groupEntry.getKey(), tags);
-                }
-            }
-        }
-
-        return tagGroups;
+        return JSONUtils.convertToTagsMap(tagGroupsJsonValue);
     }
 
     /**

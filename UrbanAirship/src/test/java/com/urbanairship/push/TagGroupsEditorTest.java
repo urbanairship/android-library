@@ -16,12 +16,7 @@ public class TagGroupsEditorTest {
 
     @Before
     public void setUp() {
-        editor = new TagGroupsEditor() {
-            @Override
-            public void apply() {
-
-            }
-        };
+        editor = new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
     }
 
     /**

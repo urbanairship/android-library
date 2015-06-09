@@ -634,36 +634,12 @@ public class PushService extends IntentService {
 
         Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
         if (addTagsBundle != null) {
-            for (String group : addTagsBundle.keySet()) {
-                List<String> tags = addTagsBundle.getStringArrayList(group);
-
-                if (pendingAddTags.containsKey(group)) {
-                    pendingAddTags.get(group).addAll(tags);
-                } else {
-                    pendingAddTags.put(group, new HashSet<>(tags));
-                }
-
-                if (pendingRemoveTags.containsKey(group)) {
-                    pendingRemoveTags.get(group).removeAll(tags);
-                }
-            }
+            combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
         }
 
         Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
         if (removeTagsBundle != null) {
-            for (String group : removeTagsBundle.keySet()) {
-                List<String> tags = removeTagsBundle.getStringArrayList(group);
-
-                if (pendingRemoveTags.containsKey(group)) {
-                    pendingRemoveTags.get(group).addAll(tags);
-                } else {
-                    pendingRemoveTags.put(group, new HashSet<>(tags));
-                }
-
-                if (pendingAddTags.containsKey(group)) {
-                    pendingAddTags.get(group).removeAll(tags);
-                }
-            }
+            combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
         }
 
         String channelId = UAirship.shared().getPushManager().getChannelId();
@@ -749,36 +725,12 @@ public class PushService extends IntentService {
 
         Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
         if (addTagsBundle != null) {
-            for (String group : addTagsBundle.keySet()) {
-                List<String> tags = addTagsBundle.getStringArrayList(group);
-
-                if (pendingAddTags.containsKey(group)) {
-                    pendingAddTags.get(group).addAll(tags);
-                } else {
-                    pendingAddTags.put(group, new HashSet<>(tags));
-                }
-
-                if (pendingRemoveTags.containsKey(group)) {
-                    pendingRemoveTags.get(group).removeAll(tags);
-                }
-            }
+            combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
         }
 
         Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
         if (removeTagsBundle != null) {
-            for (String group : removeTagsBundle.keySet()) {
-                List<String> tags = removeTagsBundle.getStringArrayList(group);
-
-                if (pendingRemoveTags.containsKey(group)) {
-                    pendingRemoveTags.get(group).addAll(tags);
-                } else {
-                    pendingRemoveTags.put(group, new HashSet<>(tags));
-                }
-
-                if (pendingAddTags.containsKey(group)) {
-                    pendingAddTags.get(group).removeAll(tags);
-                }
-            }
+            combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
         }
 
         String namedUserId = namedUser.getId();
@@ -1046,5 +998,28 @@ public class PushService extends IntentService {
             tagGroupsClient = new TagGroupsAPIClient(UAirship.shared().getAirshipConfigOptions());
         }
         return tagGroupsClient;
+    }
+
+    /**
+     * Combine the tags from bundle with the pending tags.
+     *
+     * @param tagsBundle The tags bundle.
+     * @param tagsToAdd The pending tags to add tags to.
+     * @param tagsToRemove The pending tags to remove tags from.
+     */
+    private void combineTags(Bundle tagsBundle, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
+        for (String group : tagsBundle.keySet()) {
+            List<String> tags = tagsBundle.getStringArrayList(group);
+
+            if (tagsToAdd.containsKey(group)) {
+                tagsToAdd.get(group).addAll(tags);
+            } else {
+                tagsToAdd.put(group, new HashSet<>(tags));
+            }
+
+            if (tagsToRemove.containsKey(group)) {
+                tagsToRemove.get(group).removeAll(tags);
+            }
+        }
     }
 }

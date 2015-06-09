@@ -525,7 +525,7 @@ public class PushServiceTest extends BaseTestCase {
     }
 
     /**
-     * Test update channel tag groups succeeds if the status is 400 and clears pending tags.
+     * Test update channel tag groups fails if the status is 400 and clears pending tags.
      */
     @Test
     public void testUpdateChannelTagGroupsBadRequest() {
@@ -548,5 +548,120 @@ public class PushServiceTest extends BaseTestCase {
         Map<String, Set<String>> emptyTags = new HashMap<>();
         assertEquals("Pending add tags should be empty", emptyTags, pushPref.getPendingAddTagGroups());
         assertEquals("Pending remove tags should be empty", emptyTags, pushPref.getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test update named user tags succeeds if the status is 200 and clears pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsSucceed() {
+        // Set up a 200 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateNamedUserTags(fakeNamedUserId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        pushManager.getNamedUser().setId(fakeNamedUserId);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateNamedUserTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags cleared
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+        assertEquals("Pending add tags should be empty", emptyTags, pushManager.getNamedUser().getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be empty", emptyTags, pushManager.getNamedUser().getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test update named user tags without named user ID fails and save pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsNoChannel() {
+        pushManager.getNamedUser().setId(null);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateNamedUserTags not called when named user ID doesn't exist
+        Mockito.verify(tagGroupsClient, Mockito.times(0)).updateNamedUserTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags saved
+        assertEquals("Pending add tags should be saved", pendingAddTags, pushManager.getNamedUser().getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushManager.getNamedUser().getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test update named user tags fails if the status is 500 and save pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsServerError() {
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateNamedUserTags(fakeNamedUserId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        pushManager.getNamedUser().setId(fakeNamedUserId);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateNamedUserTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags saved
+        assertEquals("Pending add tags should be saved", pendingAddTags, pushManager.getNamedUser().getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be saved", pendingRemoveTags, pushManager.getNamedUser().getPendingRemoveTagGroups());
+    }
+
+    /**
+     * Test don't update named user tags if both pendingAddTags and pendingRemoveTags are empty.
+     */
+    @Test
+    public void testNoUpdateNamedUserWithEmptyTags() {
+        pushManager.getNamedUser().setId(fakeNamedUserId);
+
+        Bundle emptyTagsBundle = new Bundle();
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, emptyTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, emptyTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateNamedUserTags not called when both pendingAddTags and pendingRemoveTags are empty
+        Mockito.verify(tagGroupsClient, Mockito.times(0)).updateNamedUserTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+    }
+
+    /**
+     * Test update named user tags fails if the status is 400 and clears pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsBadRequest() {
+        // Set up a 400 response
+        Response response = Mockito.mock(Response.class);
+        when(tagGroupsClient.updateNamedUserTags(fakeNamedUserId, pendingAddTags, pendingRemoveTags)).thenReturn(response);
+        when(response.getStatus()).thenReturn(400);
+
+        pushManager.getNamedUser().setId(fakeNamedUserId);
+
+        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        pushService.onHandleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(tagGroupsClient, Mockito.times(1)).updateNamedUserTags(Mockito.any(String.class), Mockito.any(HashMap.class), Mockito.any(HashMap.class));
+
+        // Verify pending tags cleared
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+        assertEquals("Pending add tags should be empty", emptyTags, pushManager.getNamedUser().getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be empty", emptyTags, pushManager.getNamedUser().getPendingRemoveTagGroups());
     }
 }

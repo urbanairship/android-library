@@ -25,9 +25,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.content.Intent;
+import android.os.Bundle;
+
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,12 +42,15 @@ import java.util.Set;
 /**
  * Interface used for modifying tag groups.
  */
-public abstract class TagGroupsEditor {
+public class TagGroupsEditor {
 
+    private final String action;
     protected Map<String, Set<String>> tagsToAdd = new HashMap<>();
     protected Map<String, Set<String>> tagsToRemove = new HashMap<>();
 
-    TagGroupsEditor() {}
+    TagGroupsEditor(String action) {
+        this.action = action;
+    }
 
     /**
      * Add tags to the tag group.
@@ -147,5 +155,31 @@ public abstract class TagGroupsEditor {
     /**
      * Apply the tag group changes.
      */
-    public abstract void apply();
+    public void apply() {
+        if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
+            Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
+            return;
+        }
+
+        Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
+                .setAction(action)
+                .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
+                .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
+
+        UAirship.getApplicationContext().startService(i);
+    }
+
+    /**
+     * Helper method to convert map to bundle.
+     *
+     * @param map The map to convert.
+     * @return The bundle.
+     */
+    Bundle convertToBundle(Map<String, Set<String>> map) {
+        Bundle tagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+            tagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        return tagsBundle;
+    }
 }

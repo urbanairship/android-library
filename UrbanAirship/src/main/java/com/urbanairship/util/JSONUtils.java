@@ -25,14 +25,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.util;
 
+import com.urbanairship.json.JsonValue;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A class containing utility methods related to JSON data.
@@ -113,5 +117,28 @@ public class JSONUtils {
         }
 
         return objects;
+    }
+
+    /**
+     * Converts a JSONValue to a Tags Map
+     */
+    public static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
+        Map<String, Set<String>> tagGroups = new HashMap<>();
+
+        if (jsonValue != null && jsonValue.isJsonMap()) {
+            for (Map.Entry<String, JsonValue> groupEntry : jsonValue.getMap()) {
+                Set<String> tags = new HashSet<>();
+                for (JsonValue tag : groupEntry.getValue().getList()) {
+                    if (tag.isString()) {
+                        tags.add(tag.getString());
+                    }
+                }
+                if (!tags.isEmpty()) {
+                    tagGroups.put(groupEntry.getKey(), tags);
+                }
+            }
+        }
+
+        return tagGroups;
     }
 }

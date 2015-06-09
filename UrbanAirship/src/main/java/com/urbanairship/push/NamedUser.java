@@ -27,18 +27,15 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -149,33 +146,7 @@ public class NamedUser {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor() {
-            @Override
-            public void apply() {
-
-                if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
-                    Logger.info("Skipping named user tags update because tags to add and tags to remove are both empty.");
-                    return;
-                }
-
-                Bundle addTags = new Bundle();
-                for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
-                    addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
-
-                Bundle removeTags = new Bundle();
-                for (Map.Entry<String, Set<String>> entry : tagsToRemove.entrySet()) {
-                    removeTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
-
-                Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
-                        .setAction(PushService.ACTION_UPDATE_NAMED_USER_TAGS)
-                        .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTags)
-                        .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTags);
-
-                UAirship.getApplicationContext().startService(i);
-            }
-        };
+        return new TagGroupsEditor(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
     }
 
     /**
@@ -248,7 +219,6 @@ public class NamedUser {
      *  @return The pending tag groups.
      */
     Map<String, Set<String>> getPendingTagGroups(String tagGroupKey) {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
         JsonValue tagGroupsJsonValue = null;
         try {
             tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(tagGroupKey, null));
@@ -257,21 +227,7 @@ public class NamedUser {
             preferenceDataStore.remove(tagGroupKey);
         }
 
-        if (tagGroupsJsonValue != null && tagGroupsJsonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> groupEntry : tagGroupsJsonValue.getMap()) {
-                Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
-                if (!tags.isEmpty()) {
-                    tagGroups.put(groupEntry.getKey(), tags);
-                }
-            }
-        }
-
-        return tagGroups;
+        return JSONUtils.convertToTagsMap(tagGroupsJsonValue);
     }
     /**
      * Returns the pending add tag groups.

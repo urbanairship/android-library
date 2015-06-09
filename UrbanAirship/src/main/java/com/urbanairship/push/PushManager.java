@@ -29,7 +29,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -50,7 +49,6 @@ import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -670,33 +668,7 @@ public class PushManager extends BaseManager {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor() {
-            @Override
-            public void apply() {
-
-                if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
-                    Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
-                    return;
-                }
-
-                Bundle addTags = new Bundle();
-                for (Map.Entry<String, Set<String>> entry : tagsToAdd.entrySet()) {
-                    addTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
-
-                Bundle removeTags = new Bundle();
-                for (Map.Entry<String, Set<String>> entry : tagsToRemove.entrySet()) {
-                    removeTags.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-                }
-
-                Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
-                        .setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS)
-                        .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTags)
-                        .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTags);
-
-                UAirship.getApplicationContext().startService(i);
-            }
-        };
+        return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
     }
 
     /**
