@@ -632,18 +632,19 @@ public class PushService extends IntentService {
         Map<String, Set<String>> pendingAddTags = pushPreferences.getPendingAddTagGroups();
         Map<String, Set<String>> pendingRemoveTags = pushPreferences.getPendingRemoveTagGroups();
 
+        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
         Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
         if (addTagsBundle != null) {
             combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
         }
 
+        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
         Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
         if (removeTagsBundle != null) {
             combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
         }
 
         String channelId = UAirship.shared().getPushManager().getChannelId();
-
         if (channelId == null) {
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
             Logger.error("Failed to update tag groups due to null channel ID. Saved pending tag groups.");
@@ -656,8 +657,6 @@ public class PushService extends IntentService {
         }
 
         Response response = getTagGroupsClient().updateChannelTags(channelId, pendingAddTags, pendingRemoveTags);
-
-        // if fail, save pending
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
@@ -669,18 +668,7 @@ public class PushService extends IntentService {
             pushPreferences.setPendingTagGroupsChanges(null, null);
             Logger.info("Update tag groups succeeded with status: " + response.getStatus());
             tagGroupsBackOff = 0;
-            JsonValue responseJson = JsonValue.NULL;
-            try {
-                responseJson = JsonValue.parseString(response.getResponseBody());
-            } catch (JsonException e) {
-                Logger.error("Unable to parse tag group response", e);
-            }
-
-            if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
-                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
-                    Logger.warn("Tag Groups update: " + warning.getString());
-                }
-            }
+            parseResponseBody(response.getResponseBody());
         } else {
             Logger.error("Update tag groups failed with status: " + response.getStatus());
             tagGroupsBackOff = 0;
@@ -723,11 +711,13 @@ public class PushService extends IntentService {
         Map<String, Set<String>> pendingAddTags = namedUser.getPendingAddTagGroups();
         Map<String, Set<String>> pendingRemoveTags = namedUser.getPendingRemoveTagGroups();
 
+        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
         Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
         if (addTagsBundle != null) {
             combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
         }
 
+        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
         Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
         if (removeTagsBundle != null) {
             combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
@@ -746,8 +736,6 @@ public class PushService extends IntentService {
         }
 
         Response response = getTagGroupsClient().updateNamedUserTags(namedUserId, pendingAddTags, pendingRemoveTags);
-
-        // if fail, save pending
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
@@ -759,18 +747,7 @@ public class PushService extends IntentService {
             namedUser.setPendingTagGroupsChanges(null, null);
             Logger.info("Update named user tags succeeded with status: " + response.getStatus());
             namedUserTagsBackOff = 0;
-            JsonValue responseJson = JsonValue.NULL;
-            try {
-                responseJson = JsonValue.parseString(response.getResponseBody());
-            } catch (JsonException e) {
-                Logger.error("Unable to parse named user tags response", e);
-            }
-
-            if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
-                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
-                    Logger.warn("Named User Tags update: " + warning.getString());
-                }
-            }
+            parseResponseBody(response.getResponseBody());
         } else {
             Logger.error("Update named user tags failed with status: " + response.getStatus());
             namedUserTagsBackOff = 0;
@@ -1011,14 +988,37 @@ public class PushService extends IntentService {
         for (String group : tagsBundle.keySet()) {
             List<String> tags = tagsBundle.getStringArrayList(group);
 
+            // Add tags to tagsToAdd.
             if (tagsToAdd.containsKey(group)) {
                 tagsToAdd.get(group).addAll(tags);
             } else {
                 tagsToAdd.put(group, new HashSet<>(tags));
             }
 
+            // Remove tags from tagsToRemove.
             if (tagsToRemove.containsKey(group)) {
                 tagsToRemove.get(group).removeAll(tags);
+            }
+        }
+    }
+
+    /**
+     * Parse response body.
+     *
+     * @param responseBody The response body string.
+     */
+    private void parseResponseBody(String responseBody) {
+        JsonValue responseJson = JsonValue.NULL;
+        try {
+            responseJson = JsonValue.parseString(responseBody);
+        } catch (JsonException e) {
+            Logger.error("Unable to parse tag group response", e);
+        }
+
+        // Check for any warnings in the response and log them if they exist.
+        if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
+            for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
+                Logger.warn("Tag Groups update: " + warning.getString());
             }
         }
     }

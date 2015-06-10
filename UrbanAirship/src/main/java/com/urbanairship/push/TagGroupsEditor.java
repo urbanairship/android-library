@@ -71,34 +71,10 @@ public class TagGroupsEditor {
      * @return The TagGroupsEditor
      */
     public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
-        if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.warn("The tag group ID string cannot be null.");
+        if (!isValid(tagGroup, tags)) {
             return this;
         }
-
-        if (tags.isEmpty()) {
-            Logger.warn("The tags cannot be empty");
-            return this;
-        }
-
-        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
-
-        if (tagsToRemove.containsKey(tagGroup)) {
-            tagsToRemove.get(tagGroup).removeAll(normalizedTags);
-            if (tagsToRemove.get(tagGroup).size() == 0) {
-                tagsToRemove.remove(tagGroup);
-            }
-        }
-
-        if (tagsToAdd.containsKey(tagGroup)) {
-            tagsToAdd.get(tagGroup).addAll(normalizedTags);
-            if (tagsToAdd.get(tagGroup).size() == 0) {
-                tagsToAdd.remove(tagGroup);
-            }
-        } else {
-            tagsToAdd.put(tagGroup, new HashSet<>(normalizedTags));
-        }
-
+        updateTags(tagsToAdd, tagsToRemove, tagGroup, tags);
         return this;
     }
 
@@ -121,34 +97,10 @@ public class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
-        if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.warn("The tag group ID string cannot be null.");
+        if (!isValid(tagGroup, tags)) {
             return this;
         }
-
-        if (tags.isEmpty()) {
-            Logger.warn("The tags cannot be empty");
-            return this;
-        }
-
-        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
-
-        if (tagsToAdd.containsKey(tagGroup)) {
-            tagsToAdd.get(tagGroup).removeAll(normalizedTags);
-            if (tagsToAdd.get(tagGroup).size() == 0) {
-                tagsToAdd.remove(tagGroup);
-            }
-        }
-
-        if (tagsToRemove.containsKey(tagGroup)) {
-            tagsToRemove.get(tagGroup).addAll(normalizedTags);
-            if (tagsToRemove.get(tagGroup).size() == 0) {
-                tagsToRemove.remove(tagGroup);
-            }
-        } else {
-            tagsToRemove.put(tagGroup, new HashSet<>(normalizedTags));
-        }
-
+        updateTags(tagsToRemove, tagsToAdd, tagGroup, tags);
         return this;
     }
 
@@ -170,7 +122,7 @@ public class TagGroupsEditor {
     }
 
     /**
-     * Helper method to convert map to bundle.
+     * Convert map to bundle.
      *
      * @param map The map to convert.
      * @return The bundle.
@@ -181,5 +133,60 @@ public class TagGroupsEditor {
             tagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
         return tagsBundle;
+    }
+
+    /**
+     * Check for valid values.
+     *
+     * @param tagGroup The tag group string.
+     * @param tags The set of tags.
+     */
+    boolean isValid(String tagGroup, Set<String> tags) {
+        boolean valid = true;
+        if (UAStringUtil.isEmpty(tagGroup)) {
+            Logger.warn("The tag group ID string cannot be null.");
+            valid = false;
+        }
+
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
+        if (normalizedTags.isEmpty()) {
+            Logger.warn("The tags cannot be empty");
+            valid = false;
+        }
+        return valid;
+    }
+
+    /**
+     * Update tagsToAdd and tagsToRemove.
+     *
+     * @param tagsToAdd The tags to be added to.
+     * @param tagsToRemove The tags to be removed from.
+     * @param tagGroup The tag group string.
+     * @param tags The set of tags.
+     */
+    void updateTags(Map<String, Set<String>> tagsToAdd,
+                    Map<String, Set<String>> tagsToRemove,
+                    String tagGroup,
+                    Set<String> tags) {
+
+        Set<String> normalizedTags = UAStringUtil.normalizeTags(tags);
+
+        // Check if tagsToRemove contain any tags to add.
+        if (tagsToRemove.containsKey(tagGroup)) {
+            tagsToRemove.get(tagGroup).removeAll(normalizedTags);
+            if (tagsToRemove.get(tagGroup).size() == 0) {
+                tagsToRemove.remove(tagGroup);
+            }
+        }
+
+        // Combine the tags to be added with tagsToAdd.
+        if (tagsToAdd.containsKey(tagGroup)) {
+            tagsToAdd.get(tagGroup).addAll(normalizedTags);
+            if (tagsToAdd.get(tagGroup).size() == 0) {
+                tagsToAdd.remove(tagGroup);
+            }
+        } else {
+            tagsToAdd.put(tagGroup, new HashSet<>(normalizedTags));
+        }
     }
 }
