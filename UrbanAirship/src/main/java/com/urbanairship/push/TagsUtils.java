@@ -25,6 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 
 import java.util.HashMap;
@@ -36,6 +37,8 @@ import java.util.Set;
  * A class containing utility methods related to tags.
  */
 class TagsUtils {
+
+    private static final int MAX_TAG_LENGTH = 127;
 
     /**
      * Converts a JSONValue to a Tags Map
@@ -58,5 +61,37 @@ class TagsUtils {
         }
 
         return tagGroups;
+    }
+
+    /**
+     * Normalizes a set of tags. Each tag will be trimmed of white space and any tag that
+     * is empty, null, or exceeds {@link #MAX_TAG_LENGTH} will be dropped.
+     *
+     * @param tags The set of tags to normalize.
+     * @return The set of normalized, valid tags.
+     */
+    public static Set<String> normalizeTags(Set<String> tags) {
+        if (tags == null) {
+            return null;
+        }
+
+        Set<String> normalizedTags = new HashSet<>();
+
+        for (String tag : tags) {
+            if (tag == null) {
+                Logger.debug("Null tag was removed from set.");
+                continue;
+            }
+
+            tag = tag.trim();
+            if (tag.length() <= 0 || tag.length() > MAX_TAG_LENGTH) {
+                Logger.error("Tag with zero or greater than max length was removed from set: " + tag);
+                continue;
+            }
+
+            normalizedTags.add(tag);
+        }
+
+        return normalizedTags;
     }
 }
