@@ -96,10 +96,14 @@ public abstract class NotificationFactory {
     static final String EXTRA_PAGES_KEY = "extra_pages";
 
     /**
-     * Creates a <code>Notification</code> for use in the notification bar,
-     * optionally triggering vibration and sound based on the user's preferences.
+     * Creates a <code>Notification</code> for an incoming push message.
      * <p/>
-     * If no notification should be displayed for this payload, return <code>null</code>.
+     * In order to handle notification opens, the application should register a broadcast receiver
+     * that extends {@link com.urbanairship.push.BaseIntentReceiver}. When the notification is opened
+     * it will call {@link com.urbanairship.push.BaseIntentReceiver#onNotificationOpened(Context, PushMessage, int)}
+     * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
+     * or {@code false} is returned, an open will be handled by either starting the launcher activity or
+     * by sending the notification's content intent if it is present.
      *
      * @param message The push message.
      * @param notificationId The notification ID.

@@ -125,18 +125,9 @@ public class CoreReceiver extends BroadcastReceiver {
         // Clear the in-app message if it matches the push send Id
         clearInAppMessage(message.getSendId());
 
-        PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
-        if (contentIntent != null) {
-            try {
-                contentIntent.send();
-            } catch (PendingIntent.CanceledException e) {
-                Logger.debug("Failed to send notification's contentIntent, already canceled.");
-            }
-        }
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
+                .putExtras(intent.getExtras())
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
@@ -164,7 +155,6 @@ public class CoreReceiver extends BroadcastReceiver {
 
         int notificationId = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
         boolean isForegroundAction = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
-        String actionPayload = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD);
         String description = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION);
 
         Logger.info("Notification opened ID: " + notificationId + " action button Id: " + notificationActionId);
@@ -185,11 +175,7 @@ public class CoreReceiver extends BroadcastReceiver {
         UAirship.shared().getAnalytics().addEvent(event);
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, notificationActionId)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, isForegroundAction)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD, actionPayload)
+                .putExtras(intent.getExtras())
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
@@ -225,8 +211,7 @@ public class CoreReceiver extends BroadcastReceiver {
         }
 
         Intent dismissIntent = new Intent(PushManager.ACTION_NOTIFICATION_DISMISSED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId)
+                .putExtras(intent.getExtras())
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
@@ -273,10 +258,22 @@ public class CoreReceiver extends BroadcastReceiver {
 
         } else {
 
-            if (getResultCode() != BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED && options.autoLaunchApplication) {
-                // Set the result if its an ordered broadcast
-                if (launchApplication(context) && isOrderedBroadcast()) {
-                    setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+            if (getResultCode() != BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED) {
+                PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
+                if (contentIntent != null) {
+                    try {
+                        contentIntent.send();
+                        if (isOrderedBroadcast()) {
+                            setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+                        }
+                    } catch (PendingIntent.CanceledException e) {
+                        Logger.debug("Failed to send notification's contentIntent, already canceled.");
+                    }
+                } else if (options.autoLaunchApplication) {
+                    // Set the result if its an ordered broadcast
+                    if (launchApplication(context) && isOrderedBroadcast()) {
+                        setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+                    }
                 }
             }
 
