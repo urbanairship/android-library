@@ -132,6 +132,10 @@ public class NamedUser {
             // Update the change token.
             updateChangeToken();
 
+            // When named user ID change, clear pending named user tags.
+            Logger.debug("NamedUser - Clear pending named user tags.");
+            startClearPendingTagsService();
+
             Logger.debug("NamedUser - Start service to update named user.");
             startUpdateService();
         } else {
@@ -198,6 +202,16 @@ public class NamedUser {
         Context ctx = UAirship.getApplicationContext();
         Intent i = new Intent(ctx, PushService.class);
         i.setAction(PushService.ACTION_UPDATE_NAMED_USER);
+        ctx.startService(i);
+    }
+
+    /**
+     * Start service to clear pending named user tags.
+     */
+    void startClearPendingTagsService() {
+        Context ctx = UAirship.getApplicationContext();
+        Intent i = new Intent(ctx, PushService.class);
+        i.setAction(PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
         ctx.startService(i);
     }
 

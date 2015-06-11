@@ -664,4 +664,23 @@ public class PushServiceTest extends BaseTestCase {
         assertEquals("Pending add tags should be empty", emptyTags, pushManager.getNamedUser().getPendingAddTagGroups());
         assertEquals("Pending remove tags should be empty", emptyTags, pushManager.getNamedUser().getPendingRemoveTagGroups());
     }
+
+    /**
+     *  Test clear pending named user tags.
+     */
+    @Test
+    public void testClearPendingNamedUserTags() {
+        // Set non-empty pending tags
+        namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
+        assertEquals("Pending add tags should match", pendingAddTags, namedUser.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should match", pendingRemoveTags, namedUser.getPendingRemoveTagGroups());
+
+        Intent intent = new Intent(PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+        pushService.onHandleIntent(intent);
+
+        // Verify pending tags cleared
+        Map<String, Set<String>> emptyTags = new HashMap<>();
+        assertEquals("Pending add tags should be empty", emptyTags, namedUser.getPendingAddTagGroups());
+        assertEquals("Pending remove tags should be empty", emptyTags, namedUser.getPendingRemoveTagGroups());
+    }
 }

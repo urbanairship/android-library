@@ -65,9 +65,13 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(fakeNamedUserId);
 
-        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Intent action should be clearing pending named user tags",
+                PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+
+        startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be to update named user",
-                intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
+                PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
 
@@ -92,9 +96,13 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(null);
 
-        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Intent action should be clearing pending named user tags",
+                PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+
+        startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be to update named user",
-                intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
+                PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
         assertNull("Named user ID should be null", namedUser.getId());
     }
 
@@ -261,5 +269,16 @@ public class NamedUserTest extends BaseTestCase {
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Expect Update Named User Tags Service", PushService.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
+    }
+
+    /**
+     * Test startClearPendingTagsService starts the clear named user tags service.
+     */
+    @Test
+    public void testStartClearPendingTagsService() {
+        namedUser.startClearPendingTagsService();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Clear Pending Tags Service", PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
     }
 }

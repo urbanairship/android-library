@@ -142,6 +142,11 @@ public class PushService extends IntentService {
     static final String ACTION_RETRY_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER_TAGS";
 
     /**
+     * Action to clear the pending named user tags.
+     */
+    static final String ACTION_CLEAR_PENDING_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_CLEAR_PENDING_NAMED_USER_TAGS";
+
+    /**
      * Extra containing tag groups to add to channel tag groups or named user tags.
      *
      * @hide
@@ -273,6 +278,9 @@ public class PushService extends IntentService {
                     break;
                 case ACTION_RETRY_UPDATE_NAMED_USER_TAGS:
                     onRetryUpdateNamedUserTags(intent);
+                    break;
+                case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
+                    onClearPendingNamedUserTags();
                     break;
             }
         } finally {
@@ -765,6 +773,14 @@ public class PushService extends IntentService {
                 namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
             }
         }
+    }
+
+    /**
+     * Clear pending named user tags.
+     */
+    private void onClearPendingNamedUserTags() {
+        PushManager pushManager = UAirship.shared().getPushManager();
+        pushManager.getNamedUser().setPendingTagGroupsChanges(null, null);
     }
 
     /**
