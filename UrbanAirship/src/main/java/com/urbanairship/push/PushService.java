@@ -668,7 +668,7 @@ public class PushService extends IntentService {
             pushPreferences.setPendingTagGroupsChanges(null, null);
             Logger.info("Update tag groups succeeded with status: " + response.getStatus());
             tagGroupsBackOff = 0;
-            parseResponseBody(response.getResponseBody());
+            logTagResponseWarnings(response.getResponseBody());
         } else {
             Logger.error("Update tag groups failed with status: " + response.getStatus());
             tagGroupsBackOff = 0;
@@ -747,7 +747,7 @@ public class PushService extends IntentService {
             namedUser.setPendingTagGroupsChanges(null, null);
             Logger.info("Update named user tags succeeded with status: " + response.getStatus());
             namedUserTagsBackOff = 0;
-            parseResponseBody(response.getResponseBody());
+            logTagResponseWarnings(response.getResponseBody());
         } else {
             Logger.error("Update named user tags failed with status: " + response.getStatus());
             namedUserTagsBackOff = 0;
@@ -1003,11 +1003,11 @@ public class PushService extends IntentService {
     }
 
     /**
-     * Parse response body.
+     * Log the response warnings if they exist.
      *
      * @param responseBody The response body string.
      */
-    private void parseResponseBody(String responseBody) {
+    private void logTagResponseWarnings(String responseBody) {
         JsonValue responseJson = JsonValue.NULL;
         try {
             responseJson = JsonValue.parseString(responseBody);
