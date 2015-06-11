@@ -226,7 +226,7 @@ public class NamedUser {
             preferenceDataStore.remove(tagGroupKey);
         }
 
-        return TagsUtils.convertToTagsMap(tagGroupsJsonValue);
+        return TagUtils.convertToTagsMap(tagGroupsJsonValue);
     }
     /**
      * Returns the pending add tag groups.

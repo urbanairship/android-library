@@ -36,7 +36,7 @@ import java.util.Set;
 /**
  * A class containing utility methods related to tags.
  */
-class TagsUtils {
+class TagUtils {
 
     private static final int MAX_TAG_LENGTH = 127;
 

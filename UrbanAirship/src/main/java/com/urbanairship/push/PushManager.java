@@ -352,7 +352,7 @@ public class PushManager extends BaseManager {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = TagsUtils.normalizeTags(tags);
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
         // only update server w/ registration call if
         // at least one of the values has changed
@@ -486,7 +486,7 @@ public class PushManager extends BaseManager {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = TagsUtils.normalizeTags(tags);
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
         if (!normalizedTags.equals(preferences.getTags())) {
             preferences.setTags(normalizedTags);
             updateRegistration();
@@ -522,7 +522,7 @@ public class PushManager extends BaseManager {
      */
     public Set<String> getTags() {
         Set<String> tags = preferences.getTags();
-        Set<String> normalizedTags = TagsUtils.normalizeTags(tags);
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
         //to prevent the getTags call from constantly logging tag set failures, sync tags
         if (tags.size() != normalizedTags.size()) {

@@ -55,7 +55,7 @@ public class TagUtilsTest extends BaseTestCase {
 
         JsonValue jsonValue = JsonValue.wrap(tagGroups);
 
-        Map<String, Set<String>> map = TagsUtils.convertToTagsMap(jsonValue);
+        Map<String, Set<String>> map = TagUtils.convertToTagsMap(jsonValue);
         assertEquals("Map size mismatch", map.size(), tagGroups.size());
         assertTrue("Value mismatch", map.containsValue(tags));
     }
@@ -66,9 +66,9 @@ public class TagUtilsTest extends BaseTestCase {
     @Test
     public void testConvertNullToTagsMap() throws JsonException {
         Map<String, Set<String>> emptyMap = new HashMap<>();
-        assertEquals("Should be emptyMap", emptyMap, TagsUtils.convertToTagsMap(null));
+        assertEquals("Should be emptyMap", emptyMap, TagUtils.convertToTagsMap(null));
 
         JsonValue jsonString = JsonValue.parseString("non-JsonMap");
-        assertEquals("Should be emptyMap", emptyMap, TagsUtils.convertToTagsMap(jsonString));
+        assertEquals("Should be emptyMap", emptyMap, TagUtils.convertToTagsMap(jsonString));
     }
 }

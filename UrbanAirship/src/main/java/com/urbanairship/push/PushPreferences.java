@@ -451,7 +451,7 @@ class PushPreferences {
             preferenceDataStore.remove(tagGroupKey);
         }
 
-        return TagsUtils.convertToTagsMap(tagGroupsJsonValue);
+        return TagUtils.convertToTagsMap(tagGroupsJsonValue);
     }
 
     /**

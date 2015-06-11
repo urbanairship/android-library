@@ -148,7 +148,7 @@ public class TagGroupsEditor {
             valid = false;
         }
 
-        Set<String> normalizedTags = TagsUtils.normalizeTags(tags);
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
         if (normalizedTags.isEmpty()) {
             Logger.warn("The tags cannot be empty");
             valid = false;
@@ -169,7 +169,7 @@ public class TagGroupsEditor {
                     String tagGroup,
                     Set<String> tags) {
 
-        Set<String> normalizedTags = TagsUtils.normalizeTags(tags);
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
         // Check if tagsToRemove contain any tags to add.
         if (tagsToRemove.containsKey(tagGroup)) {
