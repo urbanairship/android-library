@@ -26,19 +26,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.util;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -162,36 +157,6 @@ public class JSONUtilsTest extends BaseTestCase {
         assertEquals("Value mismatch", childObjectMap.get("object"), "value");
     }
 
-    /**
-     * Test converting a JsonValue to a tags map
-     */
-    @Test
-    public void testConvertToTagsMap() throws JsonException {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-        Set<String> tags = new HashSet<>();
-        tags.add("tag1");
-        tags.add("tag2");
-        tags.add("tag3");
-        tagGroups.put("tagGroup", tags);
-
-        JsonValue jsonValue = JsonValue.wrap(tagGroups);
-
-        Map<String, Set<String>> map = JSONUtils.convertToTagsMap(jsonValue);
-        assertEquals("Map size mismatch", map.size(), tagGroups.size());
-        assertTrue("Value mismatch", map.containsValue(tags));
-    }
-
-    /**
-     * Test converting a null and non-JsonMap returns empty map
-     */
-    @Test
-    public void testConvertNullToTagsMap() throws JsonException {
-        Map<String, Set<String>> emptyMap = new HashMap<>();
-        assertEquals("Should be emptyMap", emptyMap, JSONUtils.convertToTagsMap(null));
-
-        JsonValue jsonString = JsonValue.parseString("non-JsonMap");
-        assertEquals("Should be emptyMap", emptyMap, JSONUtils.convertToTagsMap(jsonString));
-    }
 
     /**
      * Helper method that creates a json array with the passed in values

@@ -33,7 +33,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.JSONUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Map;
@@ -227,7 +226,7 @@ public class NamedUser {
             preferenceDataStore.remove(tagGroupKey);
         }
 
-        return JSONUtils.convertToTagsMap(tagGroupsJsonValue);
+        return TagsUtils.convertToTagsMap(tagGroupsJsonValue);
     }
     /**
      * Returns the pending add tag groups.
