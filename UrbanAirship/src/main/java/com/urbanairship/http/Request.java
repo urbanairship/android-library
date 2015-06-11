@@ -179,7 +179,7 @@ public class Request {
 
             if (!UAStringUtil.isEmpty(user) && !UAStringUtil.isEmpty(password)) {
                 String credentials = user + ":" + password;
-                conn.setRequestProperty("Authorization", Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP));
+                conn.setRequestProperty("Authorization", "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP));
             }
 
             // Create the form content
