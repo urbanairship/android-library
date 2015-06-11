@@ -882,6 +882,15 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+    * Test set trimmed alias
+    */
+    @Test
+    public void testTrimmedAlias() {
+        pushManager.setAlias("    whitespace_test_alias    ");
+        verify(mockPushPreferences).setAlias("whitespace_test_alias");
+    }
+
+    /**
      * Tests that we can set and get tags.
      */
     @Test
