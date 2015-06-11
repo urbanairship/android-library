@@ -448,6 +448,11 @@ public class PushManager extends BaseManager {
      * @param alias The alias, <code>null</code> to remove
      */
     public void setAlias(String alias) {
+
+        if (alias != null) {
+            alias = alias.trim();
+        }
+
         if (!UAStringUtil.equals(alias, preferences.getAlias())) {
             preferences.setAlias(alias);
             updateRegistration();
