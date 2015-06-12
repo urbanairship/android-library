@@ -247,9 +247,10 @@ public class PushManager extends BaseManager {
         // Start named user update
         this.namedUser.startUpdateService();
 
-
-        // Start named user tags update
-        this.namedUser.startUpdateTagsService();
+        // Update named user tags if we have a named user
+        if (namedUser.getId() != null) {
+            this.namedUser.startUpdateTagsService();
+        }
     }
 
     /**
@@ -991,6 +992,7 @@ public class PushManager extends BaseManager {
     static String getSecureId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
+
     /**
      * Starts the push service to update tag groups.
      */
