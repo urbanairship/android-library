@@ -135,16 +135,23 @@ public class UAirship {
                 throw new IllegalStateException("Take off must be called before shared()");
             }
 
-            try {
-                airshipLock.wait();
-            } catch (InterruptedException e) {
-                Logger.error("Failed to wait for UAirship instance.", e);
-            }
+            boolean interrupted = false;
 
-            if (!isFlying) {
-                return null;
-            } else {
+            try {
+                while (!isFlying) {
+                    try {
+                        airshipLock.wait();
+                    } catch (InterruptedException ignored) {
+                        interrupted = true;
+                    }
+                }
+
                 return sharedAirship;
+            } finally {
+                if (interrupted) {
+                    // Restore the interrupted status
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
