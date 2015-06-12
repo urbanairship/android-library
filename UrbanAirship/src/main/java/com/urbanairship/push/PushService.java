@@ -610,6 +610,8 @@ public class PushService extends IntentService {
             // the associate request succeeded so we set the associatedId.
             namedUser.setLastUpdatedToken(changeToken);
             namedUserBackOff = 0;
+
+            namedUser.startUpdateTagsService();
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
             Logger.error("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
