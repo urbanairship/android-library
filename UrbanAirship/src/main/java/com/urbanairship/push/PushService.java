@@ -443,6 +443,8 @@ public class PushService extends IntentService {
                 // If setId was called before channel creation, update named user
                 pushManager.getNamedUser().startUpdateService();
 
+                pushManager.updateRegistration();
+                pushManager.startUpdateTagsService();
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());
