@@ -40,7 +40,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The named user is created in the PushManager.
+ * The named user is an alternate method of identifying the device. Once a named
+ * user is associated to the device, it can be used to send push notifications
+ * to the device.
  */
 public class NamedUser {
 
