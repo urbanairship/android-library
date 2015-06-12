@@ -1103,6 +1103,8 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testInitStartNamedUserUpdateService() {
+        when(mockNamedUser.getId()).thenReturn("named user");
+
         pushManager.init();
         verify(mockNamedUser).startUpdateService();
         verify(mockNamedUser).startUpdateTagsService();
@@ -1143,6 +1145,7 @@ public class PushManagerTest extends BaseTestCase {
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
+        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
         pushManager.init();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();

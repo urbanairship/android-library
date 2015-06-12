@@ -74,12 +74,7 @@ public class PushServiceTest extends BaseTestCase {
         }
 
         // Extend it to make onHandleIntent public so we can call it directly
-        pushService = new PushService(client, namedUserClient, tagGroupsClient) {
-            @Override
-            public void onHandleIntent(Intent intent) {
-                super.onHandleIntent(intent);
-            }
-        };
+        pushService = new PushService(client, namedUserClient, tagGroupsClient);
     }
 
     /**

@@ -443,6 +443,8 @@ public class PushService extends IntentService {
                 // If setId was called before channel creation, update named user
                 pushManager.getNamedUser().startUpdateService();
 
+                pushManager.updateRegistration();
+                pushManager.startUpdateTagsService();
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());
@@ -608,6 +610,8 @@ public class PushService extends IntentService {
             // the associate request succeeded so we set the associatedId.
             namedUser.setLastUpdatedToken(changeToken);
             namedUserBackOff = 0;
+
+            namedUser.startUpdateTagsService();
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
             Logger.error("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
@@ -655,7 +659,7 @@ public class PushService extends IntentService {
         String channelId = UAirship.shared().getPushManager().getChannelId();
         if (channelId == null) {
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update tag groups due to null channel ID. Saved pending tag groups.");
+            Logger.debug("Unable to update tag groups until a channel is created.");
             return;
         }
 
