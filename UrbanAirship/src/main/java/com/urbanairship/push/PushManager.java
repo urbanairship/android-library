@@ -233,17 +233,20 @@ public class PushManager extends BaseManager {
         this.preferences.migratePushEnabledSettings();
 
         // Start registration
-        Intent i = new Intent(UAirship.getApplicationContext(), PushService.class);
-        i.setAction(PushService.ACTION_START_REGISTRATION);
-        UAirship.getApplicationContext().startService(i);
+        Intent registrationIntent = new Intent(UAirship.getApplicationContext(), PushService.class)
+                .setAction(PushService.ACTION_START_REGISTRATION);
+
+        UAirship.getApplicationContext().startService(registrationIntent);
+
+        // If we have a channel already check for pending tags
+        if (getChannelId() != null) {
+            startUpdateTagsService();
+        }
+
 
         // Start named user update
         this.namedUser.startUpdateService();
 
-        // Update channel tags
-        Intent intent = new Intent(UAirship.getApplicationContext(), PushService.class);
-        intent.setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        UAirship.getApplicationContext().startService(intent);
 
         // Start named user tags update
         this.namedUser.startUpdateTagsService();
@@ -987,5 +990,13 @@ public class PushManager extends BaseManager {
      */
     static String getSecureId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+    /**
+     * Starts the push service to update tag groups.
+     */
+    void startUpdateTagsService() {
+        Intent tagUpdateIntent = new Intent(UAirship.getApplicationContext(), PushService.class)
+                .setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        UAirship.getApplicationContext().startService(tagUpdateIntent);
     }
 }

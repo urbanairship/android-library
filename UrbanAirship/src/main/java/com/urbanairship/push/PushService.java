@@ -655,7 +655,7 @@ public class PushService extends IntentService {
         String channelId = UAirship.shared().getPushManager().getChannelId();
         if (channelId == null) {
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update tag groups due to null channel ID. Saved pending tag groups.");
+            Logger.debug("Unable to update tag groups until a channel is created.");
             return;
         }
 
