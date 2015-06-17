@@ -193,10 +193,15 @@ public class PushManager extends BaseManager {
 
     private String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
 
+    /**
+     * The default tag group.
+     */
+    private String DEFAULT_TAG_GROUP = "device";
+
     //singleton stuff
     private NotificationFactory notificationFactory;
     private Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
-    private boolean deviceTagsEnabled = true;
+    private boolean channelTagRegistrationEnabled = true;
     private NamedUser namedUser;
 
     PushPreferences preferences;
@@ -413,7 +418,7 @@ public class PushManager extends BaseManager {
     ChannelRegistrationPayload getNextChannelRegistrationPayload() {
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
                 .setAlias(getAlias())
-                .setTags(getDeviceTagsEnabled(), getTags())
+                .setTags(getChannelTagRegistrationEnabled(), getTags())
                 .setOptIn(isOptIn())
                 .setBackgroundEnabled(isPushEnabled() && isPushAvailable())
                 .setUserId(UAirship.shared().getRichPushManager().getRichPushUser().getId())
@@ -560,9 +565,34 @@ public class PushManager extends BaseManager {
      * The default value is <code>true</code>.
      *
      * @return <code>true</code> if tags are enabled on the device, <code>false</code> otherwise.
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #getChannelTagRegistrationEnabled()} instead.
      */
+    @Deprecated
     public boolean getDeviceTagsEnabled() {
-        return deviceTagsEnabled;
+        return getChannelTagRegistrationEnabled();
+    }
+
+    /**
+     * Sets whether tags are enabled on the device. The default value is <code>true</code>.
+     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
+     *
+     * @param enabled A boolean indicating whether tags are enabled on the device.
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #setChannelTagRegistrationEnabled(boolean)} instead.
+     */
+    @Deprecated
+    public void setDeviceTagsEnabled(boolean enabled) {
+        setChannelTagRegistrationEnabled(enabled);
+    }
+
+    /**
+     * Determines whether tags are enabled on the device.
+     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
+     * The default value is <code>true</code>.
+     *
+     * @return <code>true</code> if tags are enabled on the device, <code>false</code> otherwise.
+     */
+    public boolean getChannelTagRegistrationEnabled() {
+        return channelTagRegistrationEnabled;
     }
 
     /**
@@ -571,8 +601,8 @@ public class PushManager extends BaseManager {
      *
      * @param enabled A boolean indicating whether tags are enabled on the device.
      */
-    public void setDeviceTagsEnabled(boolean enabled) {
-        deviceTagsEnabled = enabled;
+    public void setChannelTagRegistrationEnabled(boolean enabled) {
+        channelTagRegistrationEnabled = enabled;
     }
 
     /**
@@ -673,7 +703,27 @@ public class PushManager extends BaseManager {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS) {
+            @Override
+            public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
+                if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
+                    Logger.error("Unable to add tags { " + tags.toString() + " } to device tag group when channelTagRegistrationEnabled is true.");
+                    return this;
+                }
+
+                return super.addTags(tagGroup, tags);
+            }
+
+            @Override
+            public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
+                if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
+                    Logger.error("Unable to remove tags { " + tags.toString() + " } from device tag group when channelTagRegistrationEnabled is true.");
+                    return this;
+                }
+
+                return super.addTags(tagGroup, tags);
+            }
+        };
     }
 
     /**

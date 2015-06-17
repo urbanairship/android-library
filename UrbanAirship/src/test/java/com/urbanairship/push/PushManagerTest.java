@@ -1126,6 +1126,38 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+     * Test adding and removing tags to device tag group pass when channelTagRegistrationEnabled is false.
+     */
+    @Test
+    public void testChannelTagRegistrationDisabled() {
+
+        pushManager.setChannelTagRegistrationEnabled(false);
+        pushManager.editTagGroups()
+                   .addTags("device", "tag1", "tag2", "tag3")
+                   .removeTags("device", "tag3", "tag4", "tag5")
+                   .apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect Update Channel Tag Groups Service", PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+    }
+
+    /**
+     * Test adding and removing tags to device tag group fails when channelTagRegistrationEnabled is true.
+     */
+    @Test
+    public void testChannelTagRegistrationEnabled() {
+
+        pushManager.setChannelTagRegistrationEnabled(true);
+        pushManager.editTagGroups()
+                   .addTags("device", "tag1", "tag2", "tag3")
+                   .removeTags("device", "tag3", "tag4", "tag5")
+                   .apply();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertNull("Update channel tag groups service should not have started", startedIntent);
+    }
+
+    /**
      * Test editTagGroups apply does not start the service when addTags and removeTags are empty.
      */
     @Test
