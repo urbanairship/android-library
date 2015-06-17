@@ -137,12 +137,12 @@ class ChannelRegistrationPayload {
         /**
          * Set tags
          *
-         * @param deviceTagsEnabled A boolean value indicating whether tags are enabled on the device.
+         * @param channelTagRegistrationEnabled A boolean value indicating whether tags are enabled on the device.
          * @param tags A set of tags
-         * @return The builder with deviceTagsEnabled and tags set
+         * @return The builder with channelTagRegistrationEnabled and tags set
          */
-        Builder setTags(boolean deviceTagsEnabled, Set<String> tags) {
-            this.setTags = deviceTagsEnabled;
+        Builder setTags(boolean channelTagRegistrationEnabled, Set<String> tags) {
+            this.setTags = channelTagRegistrationEnabled;
             this.tags = tags;
             return this;
         }
@@ -320,7 +320,7 @@ class ChannelRegistrationPayload {
                    .setUserId(getStringFromJSON(channelJSON, USER_ID_KEY))
                    .setApid(getStringFromJSON(channelJSON, APID_KEY));
 
-            boolean deviceTagsEnabled = false;
+            boolean channelTagRegistrationEnabled = false;
             Set<String> tags = null;
 
             if (channelJSON.has(TAGS_KEY)) {
@@ -332,10 +332,10 @@ class ChannelRegistrationPayload {
             }
 
             if (channelJSON.has(SET_TAGS_KEY)) {
-                deviceTagsEnabled = channelJSON.getBoolean(SET_TAGS_KEY);
+                channelTagRegistrationEnabled = channelJSON.getBoolean(SET_TAGS_KEY);
             }
 
-            builder.setTags(deviceTagsEnabled, tags);
+            builder.setTags(channelTagRegistrationEnabled, tags);
 
             if (json.has(IDENTITY_HINTS_KEY)) {
                 JSONObject identityHintsJSON = json.getJSONObject(IDENTITY_HINTS_KEY);
