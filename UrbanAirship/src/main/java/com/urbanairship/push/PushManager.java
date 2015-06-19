@@ -721,7 +721,7 @@ public class PushManager extends BaseManager {
                     return this;
                 }
 
-                return super.addTags(tagGroup, tags);
+                return super.removeTags(tagGroup, tags);
             }
         };
     }
