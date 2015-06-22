@@ -678,11 +678,16 @@ public class InAppMessageManager extends BaseManager {
                 }
 
                 @Override
-                public void onActivityResumed(final Activity activity) {
+                public void onActivityResumed(Activity activity) {
+                    final WeakReference<Activity> weakReference = new WeakReference<>(activity);
+
                     activityResumedOperation = UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            UAirship.shared().getInAppMessageManager().onActivityResumed(activity);
+                            Activity activity = weakReference.get();
+                            if (activity != null) {
+                                UAirship.shared().getInAppMessageManager().onActivityResumed(activity);
+                            }
                         }
                     });
                 }
