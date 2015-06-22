@@ -20,34 +20,34 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test add tags to the tag group.
+     * Test add tag and remove tag.
      */
     @Test
-    public void testAddTags() {
+    public void testAddTag() {
         Set<String> expectedTags = new HashSet<>();
         expectedTags.add("tag1");
         expectedTags.add("tag2");
         expectedTags.add("tag3");
 
-        editor.addTags(tagGroup, "tag1", "tag2", "tag3");
+        editor.addTag(tagGroup, "tag1").addTag(tagGroup, "tag2").addTag(tagGroup, "tag3");
 
         assertEquals("Expect size to be 1", 1, editor.tagsToAdd.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToAdd.get(tagGroup).size());
         assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
         assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
 
-        editor.removeTags(tagGroup, "tag1");
+        editor.removeTag(tagGroup, "tag1");
 
         assertEquals("Expect size to be 2", 2, editor.tagsToAdd.get(tagGroup).size());
         assertEquals("Expect size to be 1", 1, editor.tagsToRemove.size());
         assertEquals("Expect size to be 1", 1, editor.tagsToRemove.get(tagGroup).size());
 
-        editor.addTags(tagGroup, "tag1");
+        editor.addTag(tagGroup, "tag1");
 
         assertEquals("Expect size to be 3", 3, editor.tagsToAdd.get(tagGroup).size());
         assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
 
-        editor.removeTags(tagGroup, "tag1", "tag2", "tag3");
+        editor.removeTag(tagGroup, "tag1").removeTag(tagGroup, "tag2").removeTag(tagGroup, "tag3");
 
         assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToRemove.get(tagGroup).size());
@@ -80,10 +80,18 @@ public class TagGroupsEditorTest {
         expectedTags.add("tag2");
         expectedTags.add("tag3");
 
-        editor.addTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
+        Set<String> tagsWithSpaces = new HashSet<>();
+        tagsWithSpaces.add(" tag1 ");
+        tagsWithSpaces.add(" tag2 ");
+        tagsWithSpaces.add(" tag3 ");
+
+        editor.addTags(tagGroup, tagsWithSpaces);
         assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
 
-        editor.addTags(tagGroup, " tag3 ", " tag 4 ", " tag 5 ");
+        editor.addTag(tagGroup, " tag 3 ");
+        editor.addTag(tagGroup, " tag 4 ");
+        editor.addTag(tagGroup, " tag 5 ");
+        expectedTags.add("tag 3");
         expectedTags.add("tag 4");
         expectedTags.add("tag 5");
 
@@ -92,22 +100,22 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test remove tags from the tag group.
+     * Test remove tag from the tag group.
      */
     @Test
-    public void testRemoveTags() {
+    public void testRemoveTag() {
         Set<String> expectedTags = new HashSet<>();
         expectedTags.add("tag1");
         expectedTags.add("tag2");
         expectedTags.add("tag3");
 
-        editor.removeTags(tagGroup, "tag1", "tag2", "tag3");
+        editor.removeTag(tagGroup, "tag1").removeTag(tagGroup, "tag2").removeTag(tagGroup, "tag3");
 
         assertEquals("Expect size to be 1", 1, editor.tagsToRemove.size());
         assertEquals("Expect size to be 3", 3, editor.tagsToRemove.get(tagGroup).size());
         assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
 
-        editor.removeTags(tagGroup, "tag4");
+        editor.removeTag(tagGroup, "tag4");
 
         assertEquals("Expect size to be 4", 4, editor.tagsToRemove.get(tagGroup).size());
 
@@ -123,10 +131,18 @@ public class TagGroupsEditorTest {
         expectedTags.add("tag2");
         expectedTags.add("tag3");
 
-        editor.removeTags(tagGroup, " tag1 ", " tag2 ", " tag3 ");
+        Set<String> tagsWithSpaces = new HashSet<>();
+        tagsWithSpaces.add(" tag1 ");
+        tagsWithSpaces.add(" tag2 ");
+        tagsWithSpaces.add(" tag3 ");
+
+        editor.removeTags(tagGroup, tagsWithSpaces);
         assertEquals("Expect tags to match", expectedTags, editor.tagsToRemove.get(tagGroup));
 
-        editor.removeTags(tagGroup, " tag3 ", " tag 4 ", " tag 5 ");
+        editor.removeTag(tagGroup, " tag 3 ");
+        editor.removeTag(tagGroup, " tag 4 ");
+        editor.removeTag(tagGroup, " tag 5 ");
+        expectedTags.add("tag 3");
         expectedTags.add("tag 4");
         expectedTags.add("tag 5");
 
@@ -156,8 +172,13 @@ public class TagGroupsEditorTest {
      */
     @Test
     public void testAddTagsLast() {
-        editor.removeTags(tagGroup, "tag1", "tag2", "tag4");
-        editor.addTags(tagGroup, "tag1", "tag2", "tag3");
+        Set<String> tagsToRemove = new HashSet<>();
+        tagsToRemove.add("tag1");
+        tagsToRemove.add("tag2");
+        tagsToRemove.add("tag4");
+
+        editor.removeTags(tagGroup, tagsToRemove);
+        editor.addTag(tagGroup, "tag1").addTag(tagGroup, "tag2").addTag(tagGroup, "tag3");
 
         // addTags: tag1, tag2, tag3
         assertEquals("Expect size to be 1", 1, editor.tagsToAdd.size());
@@ -172,8 +193,8 @@ public class TagGroupsEditorTest {
      */
     @Test
     public void testRemoveTagsLast() {
-        editor.addTags(tagGroup, "tag1", "tag2", "tag3");
-        editor.removeTags(tagGroup, "tag1", "tag2", "tag4");
+        editor.addTag(tagGroup, "tag1").addTag(tagGroup, "tag2").addTag(tagGroup, "tag3");
+        editor.removeTag(tagGroup, "tag1").removeTag(tagGroup, "tag2").removeTag(tagGroup, "tag4");
 
         // addTags: tag3
         assertEquals("Expect size to be 1", 1, editor.tagsToAdd.size());
@@ -197,14 +218,29 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test adding null tag group does not add tags.
+     * Test adding null tag group or null tag does not add tags.
      */
     @Test
     public void testAddingNullTagGroup() {
-        editor.addTags(null, "tag1");
+        Set<String> tags = new HashSet<>();
+        tags.add("tag1");
+
+        editor.addTag(tagGroup, null);
         assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
 
-        editor.removeTags(null, "tag2");
+        editor.addTag(null, "tag1");
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+        editor.addTags(null, tags);
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+        editor.removeTag(tagGroup, null);
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+
+        editor.removeTag(null, "tag2");
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+
+        editor.removeTags(null, tags);
         assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
     }
 

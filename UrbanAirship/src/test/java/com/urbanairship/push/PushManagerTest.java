@@ -50,7 +50,8 @@ public class PushManagerTest extends BaseTestCase {
     Analytics mockAnalytics;
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
-    private final String fakeNamedUserId = "fakeNamedUserId";
+    private Set<String> tagsToAdd = new HashSet<>();
+    private Set<String> tagsToRemove = new HashSet<>();
 
     PushPreferences mockPushPreferences;
     PushManager pushManager;
@@ -113,6 +114,14 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, mockNotificationManager);
         pushManager.setNotificationFactory(notificationFactory);
+
+        tagsToAdd.add("tag1");
+        tagsToAdd.add("tag2");
+        tagsToAdd.add("tag3");
+
+        tagsToRemove.add("tag3");
+        tagsToRemove.add("tag4");
+        tagsToRemove.add("tag5");
     }
 
     /**
@@ -1117,8 +1126,8 @@ public class PushManagerTest extends BaseTestCase {
     public void testStartUpdateChannelTagService() {
 
         pushManager.editTagGroups()
-                   .addTags("tagGroup", "tag1", "tag2", "tag3")
-                   .removeTags("tagGroup", "tag3", "tag4", "tag5")
+                   .addTags("tagGroup", tagsToAdd)
+                   .removeTags("tagGroup", tagsToRemove)
                    .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
@@ -1133,8 +1142,8 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.setChannelTagRegistrationEnabled(false);
         pushManager.editTagGroups()
-                   .addTags("device", "tag1", "tag2", "tag3")
-                   .removeTags("device", "tag3", "tag4", "tag5")
+                   .addTags("device", tagsToAdd)
+                   .removeTags("device", tagsToRemove)
                    .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
@@ -1149,8 +1158,8 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.setChannelTagRegistrationEnabled(true);
         pushManager.editTagGroups()
-                   .addTags("device", "tag1", "tag2", "tag3")
-                   .removeTags("device", "tag3", "tag4", "tag5")
+                   .addTags("device", tagsToAdd)
+                   .removeTags("device", tagsToRemove)
                    .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
