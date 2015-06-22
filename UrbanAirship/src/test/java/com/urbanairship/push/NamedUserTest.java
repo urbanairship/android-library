@@ -187,8 +187,12 @@ public class NamedUserTest extends BaseTestCase {
     public void testStartUpdateNamedUserTagsService() {
 
         namedUser.editTagGroups()
-                 .addTags("tagGroup", "tag1", "tag2", "tag3")
-                 .removeTags("tagGroup", "tag3", "tag4", "tag5")
+                 .addTag("tagGroup", "tag1")
+                 .addTag("tagGroup", "tag2")
+                 .addTag("tagGroup", "tag3")
+                 .removeTag("tagGroup", "tag3")
+                 .removeTag("tagGroup", "tag4")
+                 .removeTag("tagGroup", "tag5")
                  .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();

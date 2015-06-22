@@ -53,14 +53,14 @@ public class TagGroupsEditor {
     }
 
     /**
-     * Add tags to the tag group.
+     * Add a tag to the tag group.
      *
      * @param tagGroup The tag group string.
-     * @param tags The tags string.
+     * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor addTags(String tagGroup, String... tags) {
-        return addTags(tagGroup, new HashSet<>(Arrays.asList(tags)));
+    public TagGroupsEditor addTag(String tagGroup, String tag) {
+        return addTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
     }
 
     /**
@@ -79,14 +79,14 @@ public class TagGroupsEditor {
     }
 
     /**
-     * Remove tags from the tag group.
+     * Remove a tag from the tag group.
      *
      * @param tagGroup The tag group string.
-     * @param tags The tags string.
+     * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor removeTags(String tagGroup, String... tags) {
-        return removeTags(tagGroup, new HashSet<>(Arrays.asList(tags)));
+    public TagGroupsEditor removeTag(String tagGroup, String tag) {
+        return removeTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
     }
 
     /**

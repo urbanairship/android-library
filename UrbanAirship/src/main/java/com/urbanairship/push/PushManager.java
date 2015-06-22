@@ -705,6 +705,15 @@ public class PushManager extends BaseManager {
     public TagGroupsEditor editTagGroups() {
         return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS) {
             @Override
+            public TagGroupsEditor addTag(String tagGroup, String tag) {
+                if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
+                    Logger.error("Unable to add tag " + tag + " to device tag group when channelTagRegistrationEnabled is true.");
+                    return this;
+                }
+                return super.addTag(tagGroup, tag);
+            }
+
+            @Override
             public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to add tags { " + tags.toString() + " } to device tag group when channelTagRegistrationEnabled is true.");
@@ -712,6 +721,15 @@ public class PushManager extends BaseManager {
                 }
 
                 return super.addTags(tagGroup, tags);
+            }
+
+            @Override
+            public TagGroupsEditor removeTag(String tagGroup, String tag) {
+                if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
+                    Logger.error("Unable to remove tag " + tag + " from device tag group when channelTagRegistrationEnabled is true.");
+                    return this;
+                }
+                return super.removeTag(tagGroup, tag);
             }
 
             @Override
