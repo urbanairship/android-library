@@ -298,9 +298,10 @@ public class AirshipConfigOptions {
         }
 
         Properties properties = new Properties();
+        InputStream inStream = null;
 
         try {
-            InputStream inStream = assetManager.open(propertiesFile);
+            inStream = assetManager.open(propertiesFile);
             properties.load(inStream);
 
             Class<?> theClass = this.getClass();
@@ -320,6 +321,14 @@ public class AirshipConfigOptions {
 
         } catch (IOException ioe) {
             Logger.error("AirshipConfigOptions - Unable to load properties file " + propertiesFile, ioe);
+        } finally {
+            if (inStream != null) {
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    Logger.error("AirshipConfigOptions - Failed to close input stream.", e);
+                }
+            }
         }
     }
 
