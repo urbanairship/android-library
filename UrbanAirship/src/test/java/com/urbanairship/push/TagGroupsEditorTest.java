@@ -218,18 +218,24 @@ public class TagGroupsEditorTest {
     }
 
     /**
-     * Test adding null tag group does not add tags.
+     * Test adding null tag group or null tag does not add tags.
      */
     @Test
     public void testAddingNullTagGroup() {
         Set<String> tags = new HashSet<>();
         tags.add("tag1");
 
+        editor.addTag(tagGroup, null);
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
         editor.addTag(null, "tag1");
         assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
 
         editor.addTags(null, tags);
         assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+        editor.removeTag(tagGroup, null);
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
 
         editor.removeTag(null, "tag2");
         assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
