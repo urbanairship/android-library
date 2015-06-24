@@ -269,8 +269,8 @@ public class NamedUser {
      * @param pendingRemoveTagGroups The pending remove tag groups.
      */
     void setPendingTagGroupsChanges(Map<String, Set<String>> pendingAddTagGroups, Map<String, Set<String>> pendingRemoveTagGroups) {
-        preferenceDataStore.put(PENDING_ADD_TAG_GROUPS_KEY, pendingAddTagGroups);
-        preferenceDataStore.put(PENDING_REMOVE_TAG_GROUPS_KEY, pendingRemoveTagGroups);
+        preferenceDataStore.put(PENDING_ADD_TAG_GROUPS_KEY, JsonValue.wrap(pendingAddTagGroups, null));
+        preferenceDataStore.put(PENDING_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(pendingRemoveTagGroups, null));
     }
 
 }
