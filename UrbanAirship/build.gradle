@@ -76,14 +76,17 @@ def getDexMethodCount() {
     }
 }
 
-task saveDexMethodCount << {
+task runDexMethodCount << {
+    def count = getDexMethodCount()
+
     File dex = file("${project.buildDir}/dex-counts/release")
     dex.getParentFile().mkdirs()
-    dex.text = "Dex Method Count: ${getDexMethodCount()}"
+    dex.text = "Dex Method Count: ${count}"
+    println("Dex Method Count: ${count}")
 }
 
 project.afterEvaluate {
     prepareDebugDependencies.dependsOn(templatizeNativeBridge)
     prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
-    saveDexMethodCount.dependsOn(assembleRelease)
+    runDexMethodCount.dependsOn(assembleRelease)
 }
