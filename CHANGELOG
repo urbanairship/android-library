@@ -5,7 +5,7 @@ Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.htm
 
 Version 6.1.1 - June 24, 2015
 =============================
- - Fixed tag group retries on Gingerbread and older devices.
+ - Fixed tag group retries.
 
 Version 6.1.0 - June 22, 2015
 =============================
