@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.1.1 - June 24, 2015
+=============================
+ - Fixed tag group retries on Gingerbread and older devices.
+
 Version 6.1.0 - June 22, 2015
 =============================
  - Support for channel and named user tag groups.
