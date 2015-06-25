@@ -32,6 +32,7 @@ import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import org.apache.http.HttpStatus;
@@ -231,14 +232,18 @@ class UserAPIClient {
         if (response == null) {
             return null;
         } else {
-            try {
-                return new MessageListResponse(messagesFromResponse(response.getResponseBody()),
-                        response.getStatus(),
-                        response.getLastModifiedTime());
-            } catch (JSONException e) {
-                Logger.error("Unable to parse messages.");
-                return null;
+
+            ContentValues[] messages = null;
+            if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+                try {
+                    messages = messagesFromResponse(response.getResponseBody());
+                } catch (JSONException e) {
+                    Logger.error("Unable to parse messages.", e);
+                    return null;
+                }
             }
+
+            return new MessageListResponse(messages, response.getStatus(), response.getLastModifiedTime());
         }
 
     }

@@ -361,9 +361,9 @@ public class UserAPIClientTest extends BaseTestCase {
                 .setResponseBody("{ \"ok\" }")
                 .create();
 
-        MessageListResponse messages = client.getMessages("someUserId", "someUserToken", 10000);
+        MessageListResponse response = client.getMessages("someUserId", "someUserToken", 10000);
 
-        assertNull("User response should be null", messages);
+        assertNull("User response should be null", response.getServerMessages());
     }
 
     /**
