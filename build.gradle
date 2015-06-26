@@ -128,7 +128,7 @@ task packageUrbanAirshipRelease << {
 }
 
 packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'UrbanAirship:build', 'docs:build',
-        ':UrbanAirship:saveDexMethodCount')
+        ':UrbanAirship:runDexMethodCount')
 
 task continuousIntegration
 continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', ':UrbanAirship:build',
