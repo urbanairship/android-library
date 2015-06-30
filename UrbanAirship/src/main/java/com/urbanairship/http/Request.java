@@ -30,7 +30,6 @@ import android.util.Base64;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.BufferedReader;
@@ -209,8 +208,10 @@ public class Request {
                     .setLastModified(conn.getLastModified());
 
 
-            if (UAHttpStatusUtil.inSuccessRange(conn.getResponseCode())) {
+            try {
                 responseBuilder.setResponseBody(readEntireStream(conn.getInputStream()));
+            } catch (IOException ex) {
+                responseBuilder.setResponseBody(readEntireStream(conn.getErrorStream()));
             }
 
             return responseBuilder.create();
@@ -239,6 +240,10 @@ public class Request {
     }
 
     private String readEntireStream(InputStream input) throws IOException {
+        if (input == null) {
+            return null;
+        }
+
         BufferedReader br = new BufferedReader(new InputStreamReader(input));
         StringBuilder sb = new StringBuilder();
 

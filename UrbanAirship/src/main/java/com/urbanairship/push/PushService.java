@@ -672,7 +672,7 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update tag groups, will retry. Saved pending tag groups.");
+            Logger.info("Failed to update tag groups, will retry. Saved pending tag groups.");
             tagGroupsBackOff = calculateNextBackOff(tagGroupsBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS, tagGroupsBackOff);
         } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
@@ -680,19 +680,17 @@ public class PushService extends IntentService {
             pushPreferences.setPendingTagGroupsChanges(null, null);
             Logger.info("Update tag groups succeeded with status: " + response.getStatus());
             tagGroupsBackOff = 0;
-            logTagResponseWarnings(response.getResponseBody());
+            logTagGroupResponseIssues(response.getResponseBody());
         } else {
-            Logger.error("Update tag groups failed with status: " + response.getStatus());
+            int status = response.getStatus();
             tagGroupsBackOff = 0;
 
-            if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
+            Logger.info("Update tag groups failed with status: " + status);
+            logTagGroupResponseIssues(response.getResponseBody());
+
+            if (status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
                 // Clear pending
                 pushPreferences.setPendingTagGroupsChanges(null, null);
-                Logger.error("Both add & remove fields are present and the intersection of the tags in these fields is not empty.");
-            } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-                // Clear pending
-                pushPreferences.setPendingTagGroupsChanges(null, null);
-                Logger.error("Secure tag groups require master secret to modify tags, thus not allowed when the app is in server-only mode.");
             } else {
                 // Save pending
                 pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
@@ -751,7 +749,7 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Save pending
             namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update named user tags, will retry. Saved pending tag groups.");
+            Logger.info("Failed to update named user tags, will retry. Saved pending tag groups.");
             namedUserTagsBackOff = calculateNextBackOff(namedUserTagsBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER_TAGS, namedUserTagsBackOff);
         } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
@@ -759,23 +757,22 @@ public class PushService extends IntentService {
             namedUser.setPendingTagGroupsChanges(null, null);
             Logger.info("Update named user tags succeeded with status: " + response.getStatus());
             namedUserTagsBackOff = 0;
-            logTagResponseWarnings(response.getResponseBody());
+            logTagGroupResponseIssues(response.getResponseBody());
         } else {
-            Logger.error("Update named user tags failed with status: " + response.getStatus());
+            int status = response.getStatus();
             namedUserTagsBackOff = 0;
 
-            if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
+            Logger.info("Update named user tags failed with status: " + status);
+            logTagGroupResponseIssues(response.getResponseBody());
+
+            if (status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
                 // Clear pending
                 namedUser.setPendingTagGroupsChanges(null, null);
-                Logger.error("Both add & remove fields are present and the intersection of the tags in these fields is not empty.");
-            } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-                // Clear pending
-                namedUser.setPendingTagGroupsChanges(null, null);
-                Logger.error("Secure tag groups require master secret to modify tags, thus not allowed when the app is in server-only mode.");
             } else {
                 // Save pending
                 namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
             }
+
         }
     }
 
@@ -1023,11 +1020,15 @@ public class PushService extends IntentService {
     }
 
     /**
-     * Log the response warnings if they exist.
+     * Log the response warnings and errors if they exist in the reponse body.
      *
      * @param responseBody The response body string.
      */
-    private void logTagResponseWarnings(String responseBody) {
+    private void logTagGroupResponseIssues(String responseBody) {
+        if (responseBody == null) {
+            return;
+        }
+
         JsonValue responseJson = JsonValue.NULL;
         try {
             responseJson = JsonValue.parseString(responseBody);
@@ -1035,10 +1036,17 @@ public class PushService extends IntentService {
             Logger.error("Unable to parse tag group response", e);
         }
 
-        // Check for any warnings in the response and log them if they exist.
-        if (responseJson.isJsonMap() && responseJson.getMap().containsKey("warnings")) {
-            for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
-                Logger.warn("Tag Groups update: " + warning.getString());
+        if (responseJson.isJsonMap()) {
+            // Check for any warnings in the response and log them if they exist.
+            if (responseJson.getMap().containsKey("warnings")) {
+                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
+                    Logger.info("Tag Groups warnings: " + warning);
+                }
+            }
+
+            // Check for any errors in the response and log them if they exist.
+            if (responseJson.getMap().containsKey("error")) {
+                Logger.info("Tag Groups error: " + responseJson.getMap().get("error"));
             }
         }
     }
