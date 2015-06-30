@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.1.2 - July 1, 2015
+============================
+ - Fixed tag group error logging.
+ - First version available through https://bintray.com/urbanairship.
+
 Version 6.1.1 - June 24, 2015
 =============================
  - Fixed tag group retries.
