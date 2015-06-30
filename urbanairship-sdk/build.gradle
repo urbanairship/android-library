@@ -99,9 +99,12 @@ install {
 }
 
 bintray {
-    // Credentials should be stored in ~/.gradle/gradle.properties
-    user = bintrayUser
-    key =  bintrayApiKey
+
+    if (project.hasProperty("bintrayUser") && project.hasProperty("bintrayApiKey")) {
+        // Credentials should be stored in ~/.gradle/gradle.properties
+        user = bintrayUser
+        key =  bintrayApiKey
+    }
 
     configurations = ['archives']
 
