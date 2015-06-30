@@ -28,7 +28,7 @@ task packageUrbanAirshipRelease << {
     // Unpacked library
     copy {
         println "Staging library."
-        from zipTree(file("${project.findProject('UrbanAirship').buildDir}/outputs/aar/UrbanAirship-release.aar"))
+        from zipTree(file("${project.findProject('urbanairship-sdk').buildDir}/outputs/aar/urbanairship-sdk-release.aar"))
         into file("$buildDir/ua-staging/urbanairship-lib")
         rename "classes.jar", "libs/urbanairship-lib-${airshipVersion}.jar"
         exclude "R.txt", "assets", "aidl"
@@ -36,15 +36,15 @@ task packageUrbanAirshipRelease << {
 
     // Eclipse project.properties file
     File propertiesFile = file("$buildDir/ua-staging/urbanairship-lib/project.properties")
-    propertiesFile.text = "target=android-${project.findProject('UrbanAirship').android.defaultConfig.targetSdkVersion.mApiLevel}\n"
+    propertiesFile.text = "target=android-${project.findProject('urbanairship-sdk').android.defaultConfig.targetSdkVersion.mApiLevel}\n"
     propertiesFile.text += "android.library=true"
 
     // Library as AAR
     copy {
         println "Staging aar."
-        from "${project.findProject('UrbanAirship').buildDir}/outputs/aar/UrbanAirship-release.aar"
+        from "${project.findProject('urbanairship-sdk').buildDir}/outputs/aar/urbanairship-sdk-release.aar"
         into "$buildDir/ua-staging"
-        rename "UrbanAirship-release.aar", "urbanairship-lib-${airshipVersion}.aar"
+        rename "urbanairship-sdk-release.aar", "urbanairship-lib-${airshipVersion}.aar"
     }
 
     // Samples
@@ -62,12 +62,6 @@ task packageUrbanAirshipRelease << {
             from new File(sample.getProjectDir(), "assets/airshipconfig.properties.sample")
             into file("$buildDir/ua-staging/samples/${sample.getName()}/assets")
             rename "airshipconfig.properties.sample", "airshipconfig.properties"
-        }
-
-        // aar
-        copy {
-            from "$buildDir/ua-staging/urbanairship-lib-${airshipVersion}.aar"
-            into file("$buildDir/ua-staging/samples/${sample.getName()}/aars")
         }
     }
 
@@ -90,7 +84,7 @@ task packageUrbanAirshipRelease << {
     // Docs
     copy {
         println "Staging docs."
-        from "${project.findProject(":UrbanAirship").getBuildDir()}/docs/javadoc"
+        from "${project.findProject(":urbanairship-sdk").getBuildDir()}/docs/javadoc"
         into "$buildDir/ua-staging/javadocs"
     }
 
@@ -103,7 +97,7 @@ task packageUrbanAirshipRelease << {
     buildInfo.text += "Java: ${JavaVersion.current()}"
 
     // Dex count
-    File dexCount = file("${project.findProject('UrbanAirship').buildDir}/dex-counts/release")
+    File dexCount = file("${project.findProject('urbanairship-sdk').buildDir}/dex-counts/release")
     if (dexCount.exists()) {
         buildInfo.text += "\n"
         buildInfo.text += dexCount.text
@@ -127,9 +121,9 @@ task packageUrbanAirshipRelease << {
     }.execute()
 }
 
-packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'UrbanAirship:build', 'UrbanAirship:javaDoc',
-        ':UrbanAirship:runDexMethodCount')
+packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:build', 'urbanairship-sdk:javaDoc',
+        'urbanairship-sdk:runDexMethodCount')
 
 task continuousIntegration
-continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', ':UrbanAirship:build',
-        'UrbanAirship:javaDoc', ':UrbanAirship:test', 'packageUrbanAirshipRelease')
+continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', 'urbanairship-sdk:build',
+        'urbanairship-sdk:javaDoc', 'urbanairship-sdk:test', 'packageUrbanAirshipRelease')

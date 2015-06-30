@@ -163,14 +163,20 @@ build
 test:
   Runs all the unit tests.
 
-UrbanAirship:javaDoc:
-  Builds the docs. Generated docs will be created under UrbanAirship/build/docs/javadoc.
+urbanairship-sdk:javaDoc:
+  Builds the docs. Generated docs will be created under urbanairship-sdk/build/docs/javadoc.
 
 packageUrbanAirshipRelease
   Builds the distribution zip. The generated will be created under build/ua-package.
 
 continuousIntegration
   Builds the SDK, samples, docs, generates the distribution zip, and runs all the unit tests.
+
+urbanairship-sdk:bintrayUpload
+  Build the SDK and uploads the release to https://bintray.com/urbanairship/android/urbanairship-sdk. Before
+  you can upload, your bintray credentials must be defined in ~/.gradle/gradle.properties under "bintrayUser" and
+  "bintrayApiKey".
+
 
 To run a gradle command, be in the root of the project folder and run: `./gradlew <TASK>`
 

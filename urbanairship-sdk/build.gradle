@@ -1,3 +1,7 @@
+version = airshipVersion
+group = "com.urbanairship.android"
+description = "Urban Airship Android SDK"
+
 buildscript {
     repositories {
         jcenter()
@@ -5,16 +9,18 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
-        classpath 'com.android.tools.build:gradle:1.2.2'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
     }
 }
-
-apply plugin: 'com.android.library'
-
 
 repositories {
     jcenter()
 }
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 22
@@ -53,13 +59,60 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.9.5'
-    testCompile('org.robolectric:robolectric:3.0-rc2') {
-        exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    }
+    testCompile 'org.robolectric:robolectric:3.0-rc2'
     testCompile 'org.robolectric:shadows-support-v4:3.0-rc2'
 
     doclava("com.google.doclava:doclava:1.0.6")
+}
+
+
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                groupId project.group
+                artifactId 'urbanairship-sdk'
+
+                // Add your description here
+                name project.name
+                description project.description
+                url 'http://www.urbanairship.com'
+            }
+
+            // Work around for https://code.google.com/p/android/issues/detail?id=149268
+            whenConfigured { MavenPom pom ->
+                pom.dependencies.each {
+                    if (it.groupId == 'com.google.android.gms') {
+                        it.optional = true
+                    }
+
+                    if (it.artifactId == 'cardview-v7') {
+                        it.optional = true
+                    }
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    // Credentials should be stored in ~/.gradle/gradle.properties
+    user = bintrayUser
+    key =  bintrayApiKey
+
+    configurations = ['archives']
+
+    pkg {
+        userOrg = 'urbanairship'
+        repo = 'android'
+        name = project.name
+        desc = project.description
+        websiteUrl = 'http://www.urbanairship.com'
+        publish = true
+    }
 }
 
 //generates NativeBridge.java
@@ -128,3 +181,7 @@ task javaDoc(type: Javadoc, dependsOn: 'compileReleaseJava') {
         addStringOption "templatedir", "docs/template"
     }
 }
+
+
+
+
