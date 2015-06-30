@@ -1,1 +1,1 @@
-include ':UrbanAirship', ':samples:PushSample', ':samples:RichPushSample'
+include ':urbanairship-sdk', ':samples:PushSample', ':samples:RichPushSample'
