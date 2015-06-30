@@ -1,0 +1,55 @@
+/* custom */
+
+#header {
+  border-bottom: 3px solid #0767a4;
+}
+
+#search_filtered .jd-selected {
+  background-color: #0767a4;
+}
+
+#masthead-title {
+
+}
+
+div.body {
+  background-color: #f1f7fb;
+  padding-top: 20px !important;
+  font-size: 95%;
+  line-height: 150%;
+}
+
+div.body div { padding: 0 20px !important; }
+
+div.body h1, div.body h2, div.body h3,
+div.body h4, div.body h5, div.body h6 {
+  background: none;
+  color: #95251B;
+  text-shadow: white 0 1px 1px;
+  border-bottom: 1px solid #bccfdb;
+}
+
+div.document {
+  color: #626363 !important;
+  background: #dce9f1;
+
+  background: -moz-linear-gradient(top, #dce9f1, #f1f7fb);
+  background: -webkit-gradient(linear,
+    left top, left bottom, from(#dce9f1), to(#f1f7fb));
+
+  filter: progid:DXImageTransform.Microsoft.Gradient(
+  StartColorStr='#dce9f1', EndColorStr='#f1f7fb', GradientType=0);
+}
+
+div.document h3, div.document h3 a {
+  color: #1a3f52;
+  font-weight: bold;
+  text-shadow: white 0 1px 1px;
+  border-bottom: 1px solid #bccfdb;
+}
+
+div.document a, div.document li {
+  color: #346883;
+  font-weight: bold;
+  text-shadow: white 0 1px 1px;
+}

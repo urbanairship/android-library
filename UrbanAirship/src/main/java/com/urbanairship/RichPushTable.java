@@ -2,6 +2,7 @@ package com.urbanairship;
 
 /**
  * Rich Push Message table definition
+ * @hide
  */
 public final class RichPushTable {
     public static final String COLUMN_NAME_MESSAGE_ID = "message_id";

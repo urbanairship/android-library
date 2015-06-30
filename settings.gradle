@@ -1,1 +1,1 @@
-include ':UrbanAirship', ':samples:PushSample', ':samples:RichPushSample', ':docs'
+include ':UrbanAirship', ':samples:PushSample', ':samples:RichPushSample'

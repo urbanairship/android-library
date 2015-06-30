@@ -101,7 +101,8 @@ public class UAirship {
      * @param context The application context.
      * @param airshipConfigOptions The airship config options.
      * @param preferenceDataStore The preference data store.
-     * @Hide
+     *
+     * @hide
      */
     UAirship(Context context, AirshipConfigOptions airshipConfigOptions, PreferenceDataStore preferenceDataStore) {
         this.airshipConfigOptions = airshipConfigOptions;
@@ -663,7 +664,7 @@ public class UAirship {
      * <li>Android</li>
      * </ol>
      *
-     * @return {@value #AMAZON_PLATFORM} for Amazon or {@value #ANDROID_PLATFORM}
+     * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
      * for Android.
      */
     public int getPlatformType() {

@@ -38,7 +38,7 @@ public abstract class BaseManager {
      * Initialize the manager.
      * Called in {@link UAirship} during takeoff.
      *
-     * @Hide
+     * @hide
      */
     protected void init() {}
 
@@ -46,7 +46,7 @@ public abstract class BaseManager {
      * Tear down the manager.
      * Called in {@link UAirship} during land.
      *
-     * @Hide
+     * @hide
      */
     protected void tearDown() {}
 }

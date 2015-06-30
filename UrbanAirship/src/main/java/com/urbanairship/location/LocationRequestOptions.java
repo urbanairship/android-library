@@ -239,7 +239,7 @@ public class LocationRequestOptions {
         /**
          * Sets the min time between location updates.
          * <p/>
-         * Defaults to {@value #DEFAULT_UPDATE_INTERVAL_MILLISECONDS}
+         * Defaults to {@link #DEFAULT_UPDATE_INTERVAL_MILLISECONDS}
          *
          * @param time The duration.
          * @param unit The unit of duration.
@@ -255,7 +255,7 @@ public class LocationRequestOptions {
         /**
          * Sets the min distance between location updates.
          * <p/>
-         * Defaults to {@value #DEFAULT_UPDATE_INTERVAL_METERS}
+         * Defaults to {@link #DEFAULT_UPDATE_INTERVAL_METERS}
          *
          * @param meters The distance in meters.
          * @return The builder.
@@ -270,7 +270,7 @@ public class LocationRequestOptions {
         /**
          * Sets the priority of the location request.
          * <p/>
-         * Defaults to {@value #DEFAULT_REQUEST_PRIORITY}
+         * Defaults to {@link #DEFAULT_REQUEST_PRIORITY}
          *
          * @param priority The priority.
          * @return The builder.

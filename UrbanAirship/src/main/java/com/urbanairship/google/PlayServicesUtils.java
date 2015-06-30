@@ -111,7 +111,7 @@ public class PlayServicesUtils {
      * but with an additional check if the dependency is also available.
      *
      * @param context The application context.
-     * @return {@value #MISSING_PLAY_SERVICE_DEPENDENCY} if Google Play services dependency is missing,
+     * @return {@link #MISSING_PLAY_SERVICE_DEPENDENCY} if Google Play services dependency is missing,
      * or the errorCode returned by
      * {@link com.google.android.gms.common.GooglePlayServicesUtil#isGooglePlayServicesAvailable(android.content.Context)}
      */

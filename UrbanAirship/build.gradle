@@ -5,6 +5,7 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.android.tools.build:gradle:1.2.2'
     }
 }
 
@@ -38,6 +39,10 @@ android {
     }
 }
 
+configurations {
+    doclava
+}
+
 dependencies {
     compile 'com.android.support:support-v4:22.1.0'
     compile 'com.android.support:cardview-v7:22.1.0'
@@ -53,6 +58,8 @@ dependencies {
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     }
     testCompile 'org.robolectric:shadows-support-v4:3.0-rc2'
+
+    doclava("com.google.doclava:doclava:1.0.6")
 }
 
 //generates NativeBridge.java
@@ -89,4 +96,35 @@ project.afterEvaluate {
     prepareDebugDependencies.dependsOn(templatizeNativeBridge)
     prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
     runDexMethodCount.dependsOn(assembleRelease)
+}
+
+task javaDoc(type: Javadoc, dependsOn: 'compileReleaseJava') {
+    // Title needs to be null for doclava
+    title = null
+
+    source = android.sourceSets.main.java.srcDirs
+
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+
+    // TODO:: Need to figure out how to resolve these dependencies through gradle
+    classpath += files("${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
+    classpath += files("${android.sdkDirectory}/extras/android/support/v4/android-support-v4.jar")
+    classpath += files("${android.sdkDirectory}/extras/android/support/v7/cardview/libs/android-support-v7-cardview.jar")
+    classpath += files("${android.sdkDirectory}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar")
+    classpath += files("libs/amazon-device-messaging-1.0.1.jar")
+
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+
+    options {
+        docletpath = configurations.doclava.files.asType(List)
+        doclet "com.google.doclava.Doclava"
+        bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+        addStringOption "hdf project.name", "Urban Airship Android Library"
+        addStringOption "hdf project.version", airshipVersion
+        addStringOption "apiversion", "v2"
+        addStringOption "federate android", "http://developer.android.com/reference"
+        addStringOption "federationxml android", "docs/android-22.xml"
+        addStringOption "templatedir", "docs/template"
+    }
 }

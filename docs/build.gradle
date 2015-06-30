@@ -1,4 +1,0 @@
-// Include ant to do the deploy packaging step
-ant.properties.airshipVersion = airshipVersion
-ant.properties.buildDir = "${project.getBuildDir()}"
-ant.importBuild 'build.xml'

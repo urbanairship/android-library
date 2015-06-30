@@ -31,7 +31,7 @@ import android.os.Bundle;
 import com.urbanairship.Autopilot;
 
 /**
- * This class is a simple extension of {@link android.app.ListActivity}, suitable for subclassing, that
+ * This class is a simple extension of a ListActivity, suitable for subclassing, that
  * automates calling <code>activityStarted</code> and <code>activityStopped</code> in {@link com.urbanairship.analytics.Analytics}.
  * It is recommended that you subclass this Activity, or {@link com.urbanairship.analytics.InstrumentedActivity}, unless
  * you are already using a specialized Activity that falls outside the scope of these classes.

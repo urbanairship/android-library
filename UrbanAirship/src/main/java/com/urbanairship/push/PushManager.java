@@ -287,7 +287,7 @@ public class PushManager extends BaseManager {
      * User notifications are push notifications that contain an alert message and are
      * intended to be shown to the user.
      *
-     * @note This setting is persisted between application starts, so there is no need to call this
+     * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when a user preference has changed.
      *
      * @param enabled A boolean indicating whether user push is enabled.
@@ -1055,7 +1055,7 @@ public class PushManager extends BaseManager {
      * @param context The application context.
      * @return The Android secure ID.
      *
-     * @Hide
+     * @hide
      */
     static String getSecureId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
