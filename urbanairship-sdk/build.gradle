@@ -114,7 +114,7 @@ bintray {
         name = project.name
         desc = project.description
         websiteUrl = 'http://www.urbanairship.com'
-        publish = true
+        publish = false
     }
 }
 
