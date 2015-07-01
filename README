@@ -1,53 +1,18 @@
 
-Welcome to the Urban Airship client library for Android.
+Welcome to the Urban Airship SDK for Android.
 
-Add the library to your project using Android Studio
-----------------------------------------------------
-Include the urbanairship-lib-x.x.x.aar file as a dependency in the project.
-
-1. Open your project in Android Studio
-2. Go to File -> New Module -> Import from .JAR or .AAR Package
-3. Select the downloaded urbanairship-lib-x.x.x.aar file
-4. Add the Urban Airship library, Android Support v4 library (revision 21 or newer),
-   Android Support v7 CardView library (revision 21 or newer, required for in-app
-   messaging) and Google Play Service GCM and Location (version 7.0 or newer) as
-   dependencies in the build.gradle file:
-
-        dependencies {
-            compile project (':urbanairship-lib-x.x.x')
-            compile 'com.android.support:support-v4:22.0.0'
-
-            // Required for Android push notifications
-            compile 'com.google.android.gms:play-services-gcm:7.0.0'
-
-            // Recommended for in-app messaging
-            compile 'com.android.support:cardview-v7:22.0.0'
-
-            // Recommended if using location services
-            compile 'com.google.android.gms:play-services-location:7.0.0'
-        }
-
-
-5. Sync the project with the gradle file
-
-Add the library to your project using Eclipse
----------------------------------------------
-The Urban Airship library needs to be added as a project with resources. Import
-the "urbanairship-lib" project from the zip. Then include the project and the
-v4 support library as a library dependency. More detailed steps for including
-library projects with resources can are available in the Android Developer docs
-http://developer.android.com/tools/projects/projects-eclipse.html#ReferencingLibraryProject
 
 Documentation
 -------------
 
-For instructions on integrating this library with your Android project, see:
+Instructions on integrating the SDK into your project:
+    https://docs.urbanairship.com/build/push/android.html#urban-airship-sdk-setup
 
-http://docs.urbanairship.com/build/push/android.html#urban-airship-sdk-setup
+Javadocs:
+    https://docs.urbanairship.com/android-lib/reference/packages.html
 
-For Javadoc, see:
-
-https://docs.urbanairship.com/android-lib/reference/packages.html
+Migration guide:
+    https://docs.urbanairship.com/topic-guides/android-migration.html
 
 
 Third Party Packages
