@@ -600,7 +600,7 @@ public class PushService extends IntentService {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
 
-            Logger.error("Update named user failed, will retry.");
+            Logger.info("Update named user failed, will retry.");
             namedUserBackOff = calculateNextBackOff(namedUserBackOff);
             scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
         } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
@@ -613,11 +613,11 @@ public class PushService extends IntentService {
 
             namedUser.startUpdateTagsService();
         } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.error("Update named user failed with status: " + response.getStatus() +
+            Logger.info("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
             namedUserBackOff = 0;
         } else {
-            Logger.error("Update named user failed with status: " + response.getStatus());
+            Logger.info("Update named user failed with status: " + response.getStatus());
             namedUserBackOff = 0;
         }
     }
@@ -736,7 +736,7 @@ public class PushService extends IntentService {
         String namedUserId = namedUser.getId();
         if (namedUserId == null) {
             namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.error("Failed to update named user tags due to null named user ID. Saved pending tag groups.");
+            Logger.verbose("Failed to update named user tags due to null named user ID. Saved pending tag groups.");
             return;
         }
 
