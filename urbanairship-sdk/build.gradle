@@ -2,18 +2,6 @@ version = airshipVersion
 group = "com.urbanairship.android"
 description = "Urban Airship Android SDK"
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.1'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
-    }
-}
-
 repositories {
     jcenter()
 }
@@ -34,7 +22,7 @@ android {
         minSdkVersion 8
         targetSdkVersion 22
 
-        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${airshipVersion}\""
+        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""
 
         consumerProguardFiles 'consumer-proguard.txt'
     }
@@ -64,8 +52,6 @@ dependencies {
 
     doclava("com.google.doclava:doclava:1.0.6")
 }
-
-
 
 install {
     repositories.mavenInstaller {
@@ -99,8 +85,7 @@ install {
 }
 
 bintray {
-
-    if (project.hasProperty("bintrayUser") && project.hasProperty("bintrayApiKey")) {
+    if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayApiKey')) {
         // Credentials should be stored in ~/.gradle/gradle.properties
         user = bintrayUser
         key =  bintrayApiKey
@@ -110,12 +95,22 @@ bintray {
 
     pkg {
         userOrg = 'urbanairship'
-        repo = 'android'
         name = project.name
         desc = project.description
         websiteUrl = 'http://www.urbanairship.com'
-        publish = false
     }
+}
+
+task bintrayUploadRelease {
+    bintray.pkg.repo = 'android'
+    bintray.pkg.publish = false
+    finalizedBy 'bintrayUpload'
+}
+
+task bintrayUploadInternal {
+    bintray.pkg.repo = 'android-internal'
+    bintray.pkg.publish = true
+    finalizedBy 'bintrayUpload'
 }
 
 //generates NativeBridge.java
@@ -152,6 +147,7 @@ project.afterEvaluate {
     prepareDebugDependencies.dependsOn(templatizeNativeBridge)
     prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
     runDexMethodCount.dependsOn(assembleRelease)
+    bintrayUpload.dependsOn(assembleRelease)
 }
 
 task javaDoc(type: Javadoc, dependsOn: 'compileReleaseJava') {
@@ -184,7 +180,3 @@ task javaDoc(type: Javadoc, dependsOn: 'compileReleaseJava') {
         addStringOption "templatedir", "docs/template"
     }
 }
-
-
-
-

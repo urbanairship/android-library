@@ -172,7 +172,12 @@ packageUrbanAirshipRelease
 continuousIntegration
   Builds the SDK, samples, docs, generates the distribution zip, and runs all the unit tests.
 
-urbanairship-sdk:bintrayUpload
+bintrayUploadInternal
+  Build the SDK and uploads the release to https://bintray.com/urbanairship/android-internal/urbanairship-sdk. Before
+  you can upload, your bintray credentials must be defined in ~/.gradle/gradle.properties under "bintrayUser" and
+  "bintrayApiKey".
+
+bintrayUploadRelease
   Build the SDK and uploads the release to https://bintray.com/urbanairship/android/urbanairship-sdk. Before
   you can upload, your bintray credentials must be defined in ~/.gradle/gradle.properties under "bintrayUser" and
   "bintrayApiKey".
