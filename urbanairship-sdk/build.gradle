@@ -102,16 +102,21 @@ bintray {
 }
 
 task bintrayUploadRelease {
-    bintray.pkg.repo = 'android'
-    bintray.pkg.publish = false
+    doFirst {
+        bintrayUpload.repoName = 'android'
+        bintrayUpload.publish = false
+    }
     finalizedBy 'bintrayUpload'
 }
 
 task bintrayUploadInternal {
-    bintray.pkg.repo = 'android-internal'
-    bintray.pkg.publish = true
+    doFirst {
+        bintrayUpload.repoName = 'android-internal'
+        bintrayUpload.publish = true
+    }
     finalizedBy 'bintrayUpload'
 }
+
 
 //generates NativeBridge.java
 task templatizeNativeBridge(type: Exec) {
