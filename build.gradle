@@ -1,4 +1,18 @@
 import java.text.SimpleDateFormat
+import org.apache.http.entity.FileEntity
+import groovyx.net.http.RESTClient
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
+    }
+}
 
 def gitRevision(dir) {
     try {
@@ -110,7 +124,6 @@ task packageUrbanAirshipRelease << {
         buildInfo.text += additionalBuildInfo.text
     }
 
-
     // Pack it up.
     task("zipRelease", type: Zip) {
         println "Creating package zip."
@@ -120,6 +133,34 @@ task packageUrbanAirshipRelease << {
         archiveName "ua-android-lib-${airshipVersion}.zip"
     }.execute()
 }
+
+
+def uploadRelease(String repo, boolean publish) {
+    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipVersion}/distributions/ua-android-lib-${airshipVersion}.zip?publish=${publish ? 1 : 0}"
+    def file = new File("$buildDir/ua-package/ua-android-lib-${airshipVersion}.zip")
+
+    def rest = new RESTClient(url)
+
+    rest.encoder.'application/zip' = { Object data ->
+        def entity = new FileEntity((File)data, "application/zip");
+        entity.setContentType("application/zip");
+        return entity
+    }
+
+    rest.auth.basic(bintrayUser, bintrayApiKey)
+    rest.put(body: file, requestContentType: 'application/zip')
+}
+
+task bintrayUploadInternal << {
+    uploadRelease("android-internal", true)
+}
+
+task bintrayUploadRelease << {
+    uploadRelease("android", false)
+}
+
+bintrayUploadInternal.dependsOn("packageUrbanAirshipRelease")
+bintrayUploadRelease.dependsOn("packageUrbanAirshipRelease")
 
 packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:build', 'urbanairship-sdk:javaDoc',
         'urbanairship-sdk:runDexMethodCount')
