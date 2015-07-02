@@ -134,6 +134,13 @@ task packageUrbanAirshipRelease << {
     }.execute()
 }
 
+def uploadBuildInfo(String repo, boolean publish) {
+    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipVersion}/distributions/BUILD_INFO-${airshipVersion}?publish=${publish ? 1 : 0}"
+    def file = new File("$buildDir/ua-staging/BUILD_INFO")
+    def rest = new RESTClient(url)
+    rest.auth.basic(bintrayUser, bintrayApiKey)
+    rest.put(body: file.text, requestContentType: 'text/plain')
+}
 
 def uploadRelease(String repo, boolean publish) {
     def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipVersion}/distributions/ua-android-lib-${airshipVersion}.zip?publish=${publish ? 1 : 0}"
@@ -153,10 +160,12 @@ def uploadRelease(String repo, boolean publish) {
 
 task bintrayUploadInternal << {
     uploadRelease("android-internal", true)
+    uploadBuildInfo("android-internal", true)
 }
 
 task bintrayUploadRelease << {
     uploadRelease("android", false)
+    uploadBuildInfo("android", false)
 }
 
 bintrayUploadInternal.dependsOn("packageUrbanAirshipRelease", 'urbanairship-sdk:bintrayUploadInternal')
