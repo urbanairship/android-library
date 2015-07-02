@@ -67,10 +67,10 @@ Version 5.1.6 - March 5, 2015
 Version 5.1.5 - January 27, 2015
 ================================
  - Fixed a regression introduced in 5.1.4 where the LocationService will cause a NPE if started with a null intent.
- 
- Samples
- -------
-  - Fixed the Rich Push Sample's deep linking.
+
+Samples
+-------
+ - Fixed the Rich Push Sample's deep linking.
 
 Version 5.1.4 - December 31, 2014
 =================================
@@ -106,8 +106,8 @@ Version 5.1.0 - November 3, 2014
  - The default notification flags are no longer applied after the notification factory. Instead, they are
    now expected to be set in the factory.
 
- Samples
- -------
+Samples
+-------
  - Fixed the CoreReceiver priority in AndroidManifest.xml for Push Sample and Rich Push Sample by
    moving the priority from the receiver to the receiver's intent filter.
  - Rich Push Sample has been updated with material design and simplified navigation.
@@ -185,7 +185,8 @@ Version 4.0.3 - July 21, 2014
  - Add if-modified-since header and accept 304 not modified responses for Rich Application message listing.
  - Remove any usage of addJavascriptInterface for Android devices older than API 17 to prevent abuse of upstream security issue CVE-2012-6636.
 
-Samples Changes:
+Samples Changes
+---------------
  - Updated to use the latest Android Gradle plugin and build tools.
 
 Version 4.0.2 - April 30, 2014
@@ -195,7 +196,8 @@ Version 4.0.2 - April 30, 2014
    implicit intents. Thank you to Yu-Cheng Lin for reporting this issue.
  - Added ability to set the intent receiver for location updates on UALocationManager.
 
-Push Sample Changes:
+Push Sample Changes
+-------------------
  - Use local broadcast receiver from the support package to broadcast intents to
  the application.
 
@@ -217,14 +219,16 @@ provide proper auth and inject the javascript bridge.
 - Deprecated Javascript interface methods isMessageRead, markMessageRead, markMessageUnread,
 navigateTo, getViewWidth, getViewHeight, and getDeviceOrientation.
 
-Rich Push Sample Changes:
+Rich Push Sample Changes
+------------------------
  - Updated AndroidManifest.xml for Actions.
  - Added custom Landing Page layout and styles.
  - Added MessagePagerFragment to display Rich Application Pages in a view pager.
  - Refactored inbox sample code to move most of the logic to fragments.
  - Added deep linking.
 
-Push Sample Changes:
+Push Sample Changes
+-------------------
  - Updated AndroidManifest.xml for Actions.
  - Added deep linking.
 
@@ -245,7 +249,8 @@ Version 3.3.0 - January 15, 2014
 - Remove unused RichPushManager listener callbacks.
 - Prevent multiple APID registration when database read and write failures occur.
 
-Sample changes:
+Sample changes
+--------------
 - Remove action bar sherlock dependency, replaced with AppCompat in the android support v7 library.
 - Added calls to the webkit's onPause/onResume methods for api >= 11 when displaying a rich push message.
 - Android Gradle plugin support (Gradle 1.9 with the plugin 0.7.0).
@@ -298,7 +303,8 @@ Version 3.0.0 - June 10, 2013
 - Fixed security exception crash when registering with GCM.
 - Fixed javascript bridge on devices targetting API 17 because of missing annotation.
 
-Rich Push Sample changes:
+Rich Push Sample changes
+------------------------
 - New preferences screen using built-in Android preferences
   - Added Advanced Settings: APID, UserID, Set Alias, Add Tags
 - Updated the Home and Inbox layouts
@@ -307,7 +313,8 @@ Rich Push Sample changes:
 - Added a custom Inbox style notification builder
 - Added automated ui tests
 
-Push Sample changes:
+Push Sample changes
+-------------------
 - Added extra preferences screen using built-in Android preferences
 
 Version 2.1.4 - April 4, 2013
@@ -381,7 +388,7 @@ Version 2.0.2 - November 13, 2012
 - Added checks for duplicate messages based on the UA canonical push ID
 
 Version 2.0.1 - October 31, 2012
-===============================+
+================================
 - Fixed a crash issue during push receipt.
 
 Version 2.0.0 RC2 - October 12, 2012
