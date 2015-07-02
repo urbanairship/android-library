@@ -92,7 +92,7 @@ task packageUrbanAirshipRelease << {
         println "Staging README, LICENSE, and CHANGELOG."
         from project.getProjectDir()
         into file("$buildDir/ua-staging")
-        include "README", "LICENSE", "CHANGELOG"
+        include "README.md", "LICENSE", "CHANGELOG"
     }
 
     // Docs

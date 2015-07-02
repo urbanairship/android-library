@@ -1,9 +1,8 @@
+# Android Urban Airship SDK
 
 Welcome to the Urban Airship SDK for Android.
 
-
-Documentation
--------------
+## Documentation
 
 Instructions on integrating the SDK into your project:
     https://docs.urbanairship.com/build/push/android.html#urban-airship-sdk-setup
@@ -14,12 +13,10 @@ Javadocs:
 Migration guide:
     https://docs.urbanairship.com/topic-guides/android-migration.html
 
+## Samples
 
-Third Party Packages
---------------------
-- Gradle - Apache Software License 2.0. Build package only, not included in the binary.
-
-
-Samples
--------
 https://github.com/urbanairship/android-samples
+
+## Third Party Packages
+
+Gradle - Apache Software License 2.0. Build package only, not included in the binary.
