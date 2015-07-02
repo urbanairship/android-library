@@ -159,8 +159,11 @@ task bintrayUploadRelease << {
     uploadRelease("android", false)
 }
 
-bintrayUploadInternal.dependsOn("packageUrbanAirshipRelease")
-bintrayUploadRelease.dependsOn("packageUrbanAirshipRelease")
+bintrayUploadInternal.dependsOn("packageUrbanAirshipRelease", 'urbanairship-sdk:bintrayUploadInternal')
+bintrayUploadInternal.mustRunAfter('urbanairship-sdk:bintrayUpload')
+
+bintrayUploadRelease.dependsOn("packageUrbanAirshipRelease", 'urbanairship-sdk:bintrayUploadRelease')
+bintrayUploadRelease.mustRunAfter('urbanairship-sdk:bintrayUpload')
 
 packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:build', 'urbanairship-sdk:javaDoc',
         'urbanairship-sdk:runDexMethodCount')
