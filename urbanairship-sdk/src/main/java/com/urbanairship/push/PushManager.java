@@ -25,39 +25,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.urbanairship.BaseManager;
-import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionService;
-import com.urbanairship.actions.Situation;
-import com.urbanairship.analytics.PushArrivedEvent;
-import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
-import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -188,8 +173,6 @@ public class PushManager extends BaseManager {
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
-    private static final int MAX_CANONICAL_IDS = 10;
-    private static final int RICH_PUSH_REFRESH_WAIT_TIME_MS = 60000; // 1 minute
 
     private String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
 
@@ -205,7 +188,6 @@ public class PushManager extends BaseManager {
     private NamedUser namedUser;
 
     PushPreferences preferences;
-    NotificationManagerCompat notificationManager;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -216,11 +198,10 @@ public class PushManager extends BaseManager {
      * @hide
      */
     public PushManager(Context context, PreferenceDataStore preferenceDataStore) {
-        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore), NotificationManagerCompat.from(context));
+        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore));
     }
 
-    PushManager(Context context, PushPreferences preferences, NamedUser namedUser, NotificationManagerCompat notificationManager) {
-        this.notificationManager = notificationManager;
+    PushManager(Context context, PushPreferences preferences, NamedUser namedUser) {
         this.preferences = preferences;
         this.notificationFactory = new DefaultNotificationFactory(context);
         this.namedUser = namedUser;
@@ -688,6 +669,15 @@ public class PushManager extends BaseManager {
     }
 
     /**
+     * Store the send ID from the last received push.
+     *
+     * @param sendId The send ID string.
+     */
+    void setLastReceivedSendId(String sendId) {
+        preferences.setLastReceivedSendId(sendId);
+    }
+
+    /**
      * Sets the Quiet Time interval.
      *
      * @param startTime A Date instance indicating when Quiet Time should start.
@@ -788,64 +778,6 @@ public class PushManager extends BaseManager {
         return actionGroupMap.get(id);
     }
 
-    private static void createPushArrivedEvent(String sendId) {
-        if (UAStringUtil.isEmpty(sendId)) {
-            sendId = UUID.randomUUID().toString();
-        }
-        UAirship.shared().getAnalytics().addEvent(new PushArrivedEvent(sendId));
-    }
-
-
-    /**
-     * Check to see if we've seen this ID before. If we have,
-     * return false. If not, add the ID to our history and return true.
-     *
-     * @param canonicalId The canonical push ID for an incoming notification.
-     * @return <code>false</code> if the ID exists in the history, otherwise <code>true</code>.
-     */
-    private boolean isUniqueCanonicalId(String canonicalId) {
-        if (canonicalId == null) {
-            return true;
-        }
-
-        // add the value - return
-        List<String> canonicalIds = preferences.getCanonicalIds();
-
-        if (canonicalIds.contains(canonicalId)) {
-            return false;
-        }
-
-        canonicalIds.add(canonicalId);
-        if (canonicalIds.size() > MAX_CANONICAL_IDS) {
-            List<String> subList = canonicalIds.subList(canonicalIds.size() - MAX_CANONICAL_IDS, canonicalIds.size());
-            preferences.setCanonicalIds(subList);
-        } else {
-            preferences.setCanonicalIds(canonicalIds);
-        }
-
-        return true;
-    }
-
-    /**
-     * Broadcasts an intent to notify the host application of a push message received, but
-     * only if a receiver is set to get the user-defined intent receiver.
-     *
-     * @param message The message that created the notification
-     * @param notificationId The id of the messages created notification
-     */
-    private void sendPushReceivedBroadcast(PushMessage message, Integer notificationId) {
-        Intent intent = new Intent(ACTION_PUSH_RECEIVED)
-                .putExtra(EXTRA_PUSH_MESSAGE, message)
-                .addCategory(UAirship.getPackageName())
-                .setPackage(UAirship.getPackageName());
-
-        if (notificationId != null) {
-            intent.putExtra(EXTRA_NOTIFICATION_ID, notificationId.intValue());
-        }
-
-        UAirship.getApplicationContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
-    }
-
     /**
      * Broadcasts an intent to notify the host application of a registration finished, but
      * only if a receiver is set to get the user-defined intent receiver.
@@ -863,57 +795,6 @@ public class PushManager extends BaseManager {
         }
 
         UAirship.getApplicationContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
-    }
-
-    /**
-     * If alerts are enabled and the application is installed, this method
-     * displays an entry in the Notification bar (if a message is present) and
-     * sends out an intent to the application containing its data.
-     *
-     * @param message Message to deliver
-     */
-    void deliverPush(PushMessage message) {
-        if (!isPushEnabled()) {
-            Logger.info("Received a push when push is disabled! Ignoring.");
-            return;
-        }
-
-        if (!isUniqueCanonicalId(message.getCanonicalPushId())) {
-            Logger.info("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
-            return;
-        }
-
-        preferences.setLastReceivedSendId(message.getSendId());
-        createPushArrivedEvent(message.getSendId());
-
-        // Run any actions for the push
-        Bundle metadata = new Bundle();
-        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Situation.PUSH_RECEIVED, metadata);
-
-        if (message.isPing()) {
-            Logger.verbose("PushManager - Received UA Ping");
-            return;
-        }
-
-        if (message.isExpired()) {
-            Logger.debug("PushManager - Notification expired, ignoring.");
-            return;
-        }
-
-        InAppMessage inAppMessage = message.getInAppMessage();
-        if (inAppMessage != null) {
-            Logger.debug("PushManager - Received a Push with an in-app message.");
-            UAirship.shared().getInAppMessageManager().setPendingMessage(inAppMessage);
-        }
-
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
-            Logger.debug("PushManager - Received a Rich Push.");
-            refreshRichPushMessages();
-        }
-
-        Integer id = show(message, getNotificationFactory());
-        sendPushReceivedBroadcast(message, id);
     }
 
     /**
@@ -962,95 +843,6 @@ public class PushManager extends BaseManager {
     }
 
     /**
-     * Helper method that blocks while the rich push messages are refreshing
-     */
-    private void refreshRichPushMessages() {
-        final Semaphore semaphore = new Semaphore(0);
-        UAirship.shared().getRichPushManager().refreshMessages(new RichPushManager.RefreshMessagesCallback() {
-            @Override
-            public void onRefreshMessages(boolean success) {
-                semaphore.release();
-            }
-        });
-
-        try {
-            semaphore.tryAcquire(RICH_PUSH_REFRESH_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Logger.warn("Interrupted while waiting for rich push messages to refresh");
-        }
-    }
-
-
-    /**
-     * Builds and displays the notification.
-     *
-     * @param message The push message.
-     * @return The notification ID.
-     */
-    private Integer show(PushMessage message, NotificationFactory builder) {
-        if (message == null || builder == null || !getUserNotificationsEnabled()) {
-            return null;
-        }
-
-        Integer notificationId;
-        Notification notification;
-        Context context = UAirship.getApplicationContext();
-
-        try {
-            notificationId = builder.getNextId(message);
-            notification = builder.createNotification(message, notificationId);
-        } catch (Exception e) {
-            Logger.error("Unable to create and display notification.", e);
-            return null;
-        }
-
-        if (notification != null) {
-            if (!isVibrateEnabled() || isInQuietTime()) {
-                // Remove both the vibrate and the DEFAULT_VIBRATE flag
-                notification.vibrate = null;
-                notification.defaults &= ~Notification.DEFAULT_VIBRATE;
-            }
-
-            if (!isSoundEnabled() || isInQuietTime()) {
-                // Remove both the sound and the DEFAULT_SOUND flag
-                notification.sound = null;
-                notification.defaults &= ~Notification.DEFAULT_SOUND;
-            }
-
-            Intent contentIntent = new Intent(context, CoreReceiver.class)
-                    .setAction(ACTION_NOTIFICATION_OPENED_PROXY)
-                    .addCategory(UUID.randomUUID().toString())
-                    .putExtra(EXTRA_PUSH_MESSAGE, message)
-                    .putExtra(EXTRA_NOTIFICATION_ID, notificationId);
-
-            // If the notification already has an intent, add it to the extras to be sent later
-            if (notification.contentIntent != null) {
-                contentIntent.putExtra(EXTRA_NOTIFICATION_CONTENT_INTENT, notification.contentIntent);
-            }
-
-            Intent deleteIntent = new Intent(context, CoreReceiver.class)
-                    .setAction(ACTION_NOTIFICATION_DISMISSED_PROXY)
-                    .addCategory(UUID.randomUUID().toString())
-                    .putExtra(EXTRA_PUSH_MESSAGE, message)
-                    .putExtra(EXTRA_NOTIFICATION_ID, notificationId);
-
-            if (notification.deleteIntent != null) {
-                deleteIntent.putExtra(EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
-            }
-
-            notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
-            notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
-
-            Logger.info("Posting notification " + notification + " with ID " + notificationId);
-            notificationManager.notify(notificationId, notification);
-
-            return notificationId;
-        }
-
-        return null;
-    }
-
-    /**
      * Gets the Android secure ID.
      * @param context The application context.
      * @return The Android secure ID.
@@ -1069,4 +861,5 @@ public class PushManager extends BaseManager {
                 .setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
         UAirship.getApplicationContext().startService(tagUpdateIntent);
     }
+
 }

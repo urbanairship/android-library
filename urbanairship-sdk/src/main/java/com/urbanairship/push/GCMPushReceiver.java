@@ -27,10 +27,10 @@ package com.urbanairship.push;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -41,7 +41,7 @@ import com.urbanairship.util.UAStringUtil;
  * GCMPushReceiver listens for incoming GCM registration responses and messages, then forwards them
  * to the PushService.
  */
-public class GCMPushReceiver extends BroadcastReceiver {
+public class GCMPushReceiver extends WakefulBroadcastReceiver {
 
     @SuppressLint("NewApi")
     @Override
@@ -107,10 +107,11 @@ public class GCMPushReceiver extends BroadcastReceiver {
             Logger.debug("GCMPushReceiver - Received push: " + intent);
 
             // Deliver message to push service
-            Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
-                    .putExtras(intent.getExtras());
+            Intent pushIntent = new Intent(context, PushService.class)
+                    .setAction(PushService.ACTION_PUSH_RECEIVED)
+                    .putExtra(PushService.EXTRA_INTENT, intent);
 
-            PushService.startServiceWithWakeLock(context, pushIntent);
+            WakefulBroadcastReceiver.startWakefulService(context, pushIntent);
         }
     }
 }

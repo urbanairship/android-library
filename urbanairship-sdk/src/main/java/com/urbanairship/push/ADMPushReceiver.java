@@ -26,10 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
@@ -40,7 +40,7 @@ import com.urbanairship.util.UAStringUtil;
 /**
  * ADMPushReceiver listens for incoming ADM registration responses and messages.
  */
-public class ADMPushReceiver extends BroadcastReceiver {
+public class ADMPushReceiver extends WakefulBroadcastReceiver {
 
     @SuppressLint("NewApi")
     @Override
@@ -98,8 +98,10 @@ public class ADMPushReceiver extends BroadcastReceiver {
             }
         }
 
-        Intent finishIntent = new Intent(PushService.ACTION_ADM_REGISTRATION_FINISHED);
-        PushService.startServiceWithWakeLock(context, finishIntent);
+        Intent finishIntent = new Intent(context, PushService.class)
+                .setAction(PushService.ACTION_ADM_REGISTRATION_FINISHED);
+
+        WakefulBroadcastReceiver.startWakefulService(context, finishIntent);
     }
 
     /**
@@ -117,7 +119,10 @@ public class ADMPushReceiver extends BroadcastReceiver {
         }
 
         // Deliver message to push service
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED).putExtras(intent.getExtras());
-        PushService.startServiceWithWakeLock(context, pushIntent);
+        Intent pushIntent = new Intent(context, PushService.class)
+                .setAction(PushService.ACTION_PUSH_RECEIVED)
+                .putExtra(PushService.EXTRA_INTENT, intent);
+
+        WakefulBroadcastReceiver.startWakefulService(context, pushIntent);
     }
 }

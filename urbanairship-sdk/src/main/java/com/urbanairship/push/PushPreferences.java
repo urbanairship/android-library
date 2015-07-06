@@ -39,11 +39,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -67,7 +65,6 @@ class PushPreferences {
     private static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
 
     private static final String LAST_RECEIVED_SEND_ID = KEY_PREFIX + ".LAST_RECEIVED_SEND_ID";
-    private static final String LAST_CANONICAL_IDS_KEY = KEY_PREFIX + ".LAST_CANONICAL_IDS";
     private static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_IDS";
 
     private static final class QuietTime {
@@ -656,40 +653,6 @@ class PushPreferences {
      */
     String getLastReceivedSendId() {
         return preferenceDataStore.getString(LAST_RECEIVED_SEND_ID, null);
-    }
-
-    /**
-     * Returns the canonical IDs.
-     *
-     * @return A list of canonical IDs.
-     */
-    List<String> getCanonicalIds() {
-        List<String> ids = new ArrayList<>();
-        String idString = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null);
-
-        if (idString != null) {
-            try {
-                JSONArray jsonArray = new JSONArray(idString);
-                for (int i = 0; i < jsonArray.length(); ++i) {
-                    ids.add(jsonArray.getString(i));
-                }
-            } catch (JSONException e) {
-                // do nothing. bad item
-            }
-        }
-
-        return ids;
-    }
-
-
-    /**
-     * Sets the canonical IDs.
-     *
-     * @param canonicalIds A list of canonical IDs.
-     */
-    void setCanonicalIds(List<String> canonicalIds) {
-        JSONArray array = new JSONArray(canonicalIds);
-        preferenceDataStore.put(LAST_CANONICAL_IDS_KEY, array.toString());
     }
 
     /**

@@ -25,16 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
-import android.util.SparseArray;
-
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 
 
 /**
@@ -43,11 +36,6 @@ import com.urbanairship.UAirship;
  * @hide
  */
 public class PushService extends BaseIntentService {
-
-    /**
-     * The timeout before a wake lock is released.
-     */
-    private static final long WAKE_LOCK_TIMEOUT_MS = 60 * 1000; // 1 minute
 
     /**
      * Action to start channel and push registration.
@@ -73,6 +61,7 @@ public class PushService extends BaseIntentService {
      * Action sent when a push is received.
      */
     static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.ACTION_PUSH_RECEIVED";
+
 
     /**
      * Action to update named user association or disassociation.
@@ -105,50 +94,20 @@ public class PushService extends BaseIntentService {
     static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
 
     /**
-     * Extra for wake lock ID. Set and removed by the service.
+     * Extra containing the received message intent for {@link #ACTION_PUSH_RECEIVED} intent action.
      */
-    static final String EXTRA_WAKE_LOCK_ID = "com.urbanairship.push.EXTRA_WAKE_LOCK_ID";
-
-    private static final SparseArray<WakeLock> wakeLocks = new SparseArray<>();
-    private static int nextWakeLockID = 0;
+    static String EXTRA_INTENT =  "com.urbanairship.push.EXTRA_INTENT";
 
     private TagGroupServiceDelegate tagGroupServiceDelegate;
     private NamedUserServiceDelegate namedUserServiceDelegate;
     private ChannelServiceDelegate channelServiceDelegate;
+    private IncomingPushServiceDelegate incomingPushServiceDelegate;
 
     /**
      * PushService constructor.
      */
     public PushService() {
         super("PushService");
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        super.onHandleIntent(intent);
-
-        if (intent == null || intent.getAction() == null) {
-            return;
-        }
-
-        Logger.verbose("PushService - Received intent: " + intent.getAction());
-
-
-        String action = intent.getAction();
-        int wakeLockId = intent.getIntExtra(EXTRA_WAKE_LOCK_ID, -1);
-        intent.removeExtra(EXTRA_WAKE_LOCK_ID);
-
-        try {
-            switch (action) {
-                case ACTION_PUSH_RECEIVED:
-                    onPushReceived(intent);
-                    break;
-            }
-        } finally {
-            if (wakeLockId >= 0) {
-                releaseWakeLock(wakeLockId);
-            }
-        }
     }
 
 
@@ -164,6 +123,7 @@ public class PushService extends BaseIntentService {
                     tagGroupServiceDelegate = new TagGroupServiceDelegate(getApplicationContext(), dataStore);
                 }
                 return tagGroupServiceDelegate;
+
             case ACTION_UPDATE_NAMED_USER:
                 if (namedUserServiceDelegate == null) {
                     namedUserServiceDelegate = new NamedUserServiceDelegate(getApplicationContext(), dataStore);
@@ -178,75 +138,14 @@ public class PushService extends BaseIntentService {
                     channelServiceDelegate = new ChannelServiceDelegate(getApplicationContext(), dataStore);
                 }
                 return channelServiceDelegate;
+
+            case ACTION_PUSH_RECEIVED:
+                if (incomingPushServiceDelegate == null) {
+                    incomingPushServiceDelegate = new IncomingPushServiceDelegate(getApplicationContext(), dataStore);
+                }
+                return incomingPushServiceDelegate;
         }
 
         return null;
     }
-
-    /**
-     * The PushMessage will be parsed from the intent and delivered to
-     * the PushManager.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onPushReceived(Intent intent) {
-        PushMessage message = new PushMessage(intent.getExtras());
-        Logger.info("Received push message: " + message);
-        UAirship.shared().getPushManager().deliverPush(message);
-    }
-
-    /**
-     * Start the <code>Push Service</code>.
-     *
-     * @param context The context in which the receiver is running.
-     * @param intent The intent to start the service.
-     */
-    static void startServiceWithWakeLock(final Context context, Intent intent) {
-        intent.setClass(context, PushService.class);
-
-        // Acquire a wake lock and add the id to the intent
-        intent.putExtra(EXTRA_WAKE_LOCK_ID, acquireWakeLock());
-
-        context.startService(intent);
-    }
-
-    /**
-     * Releases a wake lock.
-     *
-     * @param wakeLockId The id of the wake lock to release.
-     */
-    private static synchronized void releaseWakeLock(int wakeLockId) {
-        Logger.verbose("PushService - Releasing wake lock: " + wakeLockId);
-
-        WakeLock wakeLock = wakeLocks.get(wakeLockId);
-
-        if (wakeLock != null) {
-            wakeLocks.remove(wakeLockId);
-
-            if (wakeLock.isHeld()) {
-                wakeLock.release();
-            }
-        }
-    }
-
-    /**
-     * Acquires a new wake lock.
-     *
-     * @return id of the wake lock.
-     */
-    private static synchronized int acquireWakeLock() {
-        Context context = UAirship.getApplicationContext();
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-
-        WakeLock wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "UA_GCM_WAKE_LOCK");
-        wakeLock.setReferenceCounted(false);
-        wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
-
-        wakeLocks.append(++nextWakeLockID, wakeLock);
-
-        Logger.verbose("PushService - Acquired wake lock: " + nextWakeLockID);
-
-        return nextWakeLockID;
-    }
-
 }

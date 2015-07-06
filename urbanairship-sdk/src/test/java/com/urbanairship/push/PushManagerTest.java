@@ -1,22 +1,13 @@
 package com.urbanairship.push;
 
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
-import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
-import com.urbanairship.push.notifications.NotificationFactory;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -28,16 +19,13 @@ import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
@@ -57,63 +45,24 @@ public class PushManagerTest extends BaseTestCase {
     PushManager pushManager;
     NamedUser mockNamedUser;
 
-    private NotificationManagerCompat mockNotificationManager;
-    private Notification notification;
-    private Context context = UAirship.getApplicationContext();
-    private PushMessage pushMessage;
-    private PushMessage backgroundMessage;
-    private NotificationFactory notificationFactory;
 
-    public int constantNotificationId = 123;
-    public int iconDrawableId = UAirship.getAppIcon();
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setup() {
-
-        Bundle extras = new Bundle();
-        extras.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
-        extras.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
-
-        pushMessage = new PushMessage(extras);
-
-        Bundle backgroundMessageExtras = new Bundle();
-        backgroundMessageExtras.putString(PushMessage.EXTRA_PUSH_ID, "anotherPushID");
-
-        backgroundMessage = new PushMessage(backgroundMessageExtras);
-
-        notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .setSmallIcon(iconDrawableId)
-                .build();
-
         mockAnalytics = mock(Analytics.class);
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
         mockPushPreferences = mock(PushPreferences.class);
-        mockNotificationManager = mock(NotificationManagerCompat.class);
 
         mockNamedUser = mock(NamedUser.class);
 
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
-            @Override
-            public Notification createNotification(PushMessage pushMessage, int notificationId) {
-                return notification;
-            }
 
-            @Override
-            public int getNextId(PushMessage pushMessage) {
-                return constantNotificationId;
-            }
-        };
 
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, mockNotificationManager);
-        pushManager.setNotificationFactory(notificationFactory);
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -124,242 +73,7 @@ public class PushManagerTest extends BaseTestCase {
         tagsToRemove.add("tag5");
     }
 
-    /**
-     * Test deliver push notification.
-     */
-    @Test
-    public void testDeliverPush() {
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
 
-        pushManager.deliverPush(pushMessage);
-
-        verify(mockNotificationManager).notify(constantNotificationId, notification);
-
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
-
-        Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push message should match.", pushMessage, intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE));
-        assertEquals("One category should exist.", 1, intent.getCategories().size());
-    }
-
-    /**
-     * Test deliver background notification.
-     */
-    @Test
-    public void testDeliverPushUserPushDisabled() {
-
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(false);
-
-        pushManager.deliverPush(pushMessage);
-
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size() - 1);
-        Bundle extras = i.getExtras();
-        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
-        assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", pushMessage.getCanonicalPushId(), push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
-    }
-
-
-    /**
-     * Test deliver background notification.
-     */
-    @Test
-    public void testDeliverBackgroundPush() {
-
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(false);
-
-        pushManager.deliverPush(backgroundMessage);
-
-        List<Intent> intents = shadowApplication.getBroadcastIntents();
-        Intent i = intents.get(intents.size() - 1);
-        Bundle extras = i.getExtras();
-        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
-        assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", backgroundMessage.getCanonicalPushId(), push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
-    }
-
-    /**
-     * Test handling an exception
-     */
-    @Test
-    public void testDeliverPushException() {
-        Bundle extras = new Bundle();
-        PushMessage pushMessage = new PushMessage(extras);
-
-        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
-            @Override
-            public Notification createNotification(PushMessage pushMessage, int notificationId) {
-                throw new RuntimeException("Unable to create and display notification.");
-            }
-
-            @Override
-            public int getNextId(PushMessage pushMessage) {
-                return 0;
-            }
-        };
-
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        pushManager.setNotificationFactory(notificationFactory);
-        pushManager.deliverPush(pushMessage);
-
-        verify(mockNotificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
-    }
-
-    /**
-     * Test notification content intent
-     */
-    @Test
-    public void testNotificationContentIntent() {
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 1, new Intent(), 0);
-        notification = new NotificationCompat.Builder(context)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .setSmallIcon(iconDrawableId)
-                .setContentIntent(pendingIntent)
-                .build();
-
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        pushManager.deliverPush(pushMessage);
-
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
-
-        Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("One category should exist.", 1, intent.getCategories().size());
-        assertNotNull("The notification content intent is not null.", pendingIntent);
-        assertSame("The notification content intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT));
-    }
-
-
-    /**
-     * Test notification delete intent
-     */
-    @Test
-    public void testNotificationDeleteIntent() {
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 1, new Intent(), 0);
-        notification = new NotificationCompat.Builder(context)
-                .setContentTitle("Test NotificationBuilder Title")
-                .setContentText("Test NotificationBuilder Text")
-                .setAutoCancel(true)
-                .setSmallIcon(iconDrawableId)
-                .setDeleteIntent(pendingIntent)
-                .build();
-
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        pushManager.deliverPush(pushMessage);
-
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
-
-        Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY);
-        assertEquals("One category should exist.", 1, intent.getCategories().size());
-        assertNotNull("The notification delete intent is not null.", pendingIntent);
-        assertSame("The notification delete intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT));
-    }
-
-    /**
-     * Test when sound is disabled the flag for DEFAULT_SOUND is removed and the notification sound
-     * is set to null.
-     */
-    @Test
-    public void testDeliverPushSoundDisabled() {
-        // Enable push
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        // Disable sound
-        when(mockPushPreferences.isSoundEnabled()).thenReturn(false);
-
-        notification.sound = Uri.parse("some://sound");
-        notification.defaults = NotificationCompat.DEFAULT_ALL;
-        pushManager.deliverPush(pushMessage);
-
-        pushManager.deliverPush(pushMessage);
-        assertNull("The notification sound should be null.", notification.sound);
-        assertEquals("The notification defaults should not include DEFAULT_SOUND.",
-                notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
-    }
-
-    /**
-     * Test when sound is disabled the flag for DEFAULT_VIBRATE is removed and the notification vibrate
-     * is set to null.
-     */
-    @Test
-    public void testDeliverPushVibrateDisabled() {
-        // Enable push
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        // Disable vibrate
-        when(mockPushPreferences.isVibrateEnabled()).thenReturn(false);
-
-        notification.defaults = NotificationCompat.DEFAULT_ALL;
-        notification.vibrate = new long[] { 0L, 1L, 200L };
-
-        pushManager.deliverPush(pushMessage);
-        assertNull("The notification sound should be null.", notification.vibrate);
-        assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
-                notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
-    }
-
-    /**
-     * Test delivering a push with an in-app message sets the pending notification.
-     */
-    @Test
-    public void testDeliverPushInAppMessage() {
-        // Enable push
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
-        InAppMessage inAppMessage = new InAppMessage.Builder()
-                .setAlert("oh hi")
-                .setExpiry(1000l)
-                .setId("what")
-                .create();
-
-        PushMessage message = mock(PushMessage.class);
-        when(message.getInAppMessage()).thenReturn(inAppMessage);
-
-        pushManager.deliverPush(message);
-
-        assertEquals(inAppMessage, UAirship.shared().getInAppMessageManager().getPendingMessage());
-    }
-
-    /**
-     * Test the notification defaults: in quiet time.
-     */
-    @Test
-    public void testInQuietTime() {
-        when(mockPushPreferences.isVibrateEnabled()).thenReturn(true);
-        when(mockPushPreferences.isSoundEnabled()).thenReturn(true);
-        when(mockPushPreferences.isInQuietTime()).thenReturn(true);
-
-
-        pushManager.deliverPush(pushMessage);
-        assertNull("The notification sound should be null.", notification.sound);
-        assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
-    }
 
     /**
      * Test enabling push.
