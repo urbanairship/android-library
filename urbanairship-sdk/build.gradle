@@ -98,6 +98,12 @@ bintray {
         name = project.name
         desc = project.description
         websiteUrl = 'http://www.urbanairship.com'
+
+        version {
+            desc = project.description
+            name = project.version
+            released = new Date()
+        }
     }
 }
 
