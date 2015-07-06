@@ -38,6 +38,8 @@ import android.support.v4.content.WakefulBroadcastReceiver;
  * by the service in {@link #getServiceDelegate(String, PreferenceDataStore)}. All intents that have
  * been started using a {@link WakefulBroadcastReceiver#completeWakefulIntent(Intent)} will automatically
  * be released after the delegate has a chance to process the intent.
+ *
+ * @hide
  */
 public abstract class BaseIntentService extends IntentService {
 

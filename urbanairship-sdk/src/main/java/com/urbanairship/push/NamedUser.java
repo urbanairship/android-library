@@ -31,12 +31,8 @@ import android.content.Intent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -66,15 +62,6 @@ public class NamedUser {
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
 
-    /**
-     * The pending add tags.
-     */
-    private static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_ADD_TAG_GROUPS_KEY";
-
-    /**
-     * The pending remove tags.
-     */
-    private static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
 
     private final PreferenceDataStore preferenceDataStore;
 
@@ -226,51 +213,4 @@ public class NamedUser {
         i.setAction(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
         ctx.startService(i);
     }
-
-    /**
-     *  Returns the pending tag group.
-     *
-     *  @param tagGroupKey The tag group key string.
-     *  @return The pending tag groups.
-     */
-    Map<String, Set<String>> getPendingTagGroups(String tagGroupKey) {
-        JsonValue tagGroupsJsonValue = null;
-        try {
-            tagGroupsJsonValue = JsonValue.parseString(preferenceDataStore.getString(tagGroupKey, null));
-        } catch (JsonException e) {
-            Logger.error("Unable to parse pending tag groups.", e);
-            preferenceDataStore.remove(tagGroupKey);
-        }
-
-        return TagUtils.convertToTagsMap(tagGroupsJsonValue);
-    }
-    /**
-     * Returns the pending add tag groups.
-     *
-     * @return The pending add tag groups.
-     */
-    Map<String, Set<String>> getPendingAddTagGroups() {
-        return getPendingTagGroups(PENDING_ADD_TAG_GROUPS_KEY);
-    }
-
-    /**
-     * Returns the pending remove tag groups.
-     *
-     * @return The pending remove tag groups.
-     */
-    Map<String, Set<String>> getPendingRemoveTagGroups() {
-        return getPendingTagGroups(PENDING_REMOVE_TAG_GROUPS_KEY);
-    }
-
-    /**
-     * Stores the pending add and remove tag groups.
-     *
-     * @param pendingAddTagGroups The pending add tag groups.
-     * @param pendingRemoveTagGroups The pending remove tag groups.
-     */
-    void setPendingTagGroupsChanges(Map<String, Set<String>> pendingAddTagGroups, Map<String, Set<String>> pendingRemoveTagGroups) {
-        preferenceDataStore.put(PENDING_ADD_TAG_GROUPS_KEY, JsonValue.wrap(pendingAddTagGroups, null));
-        preferenceDataStore.put(PENDING_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(pendingRemoveTagGroups, null));
-    }
-
 }

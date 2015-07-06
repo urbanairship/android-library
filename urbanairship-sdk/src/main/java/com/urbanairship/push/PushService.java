@@ -26,24 +26,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.app.AlarmManager;
-import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.Autopilot;
+import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -51,15 +48,14 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * Service class for handling push notifications.
+ *
+ * @hide
  */
-public class PushService extends IntentService {
+public class PushService extends BaseIntentService {
 
     /**
      * Max time between channel registration updates.
@@ -122,24 +118,14 @@ public class PushService extends IntentService {
     static final String ACTION_RETRY_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER";
 
     /**
-     * Action to update the channel tag groups.
-     */
-    static final String ACTION_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_TAG_GROUPS";
-
-    /**
-     * Action to retry update channel tag groups.
-     */
-    static final String ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS";
-
-    /**
      * Action to update named user tags.
      */
     static final String ACTION_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER_TAGS";
 
     /**
-     * Action to retry update named user tags.
+     * Action to update the channel tag groups.
      */
-    static final String ACTION_RETRY_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER_TAGS";
+    static final String ACTION_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_TAG_GROUPS";
 
     /**
      * Action to clear the pending named user tags.
@@ -148,17 +134,14 @@ public class PushService extends IntentService {
 
     /**
      * Extra containing tag groups to add to channel tag groups or named user tags.
-     *
-     * @hide
      */
-    public static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
+    static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
 
     /**
      * Extra containing tag groups to remove from channel tag groups or named user tags.
-     *
-     * @hide
      */
-    public static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
+    static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
+
 
     /**
      * Extra for wake lock ID. Set and removed by the service.
@@ -177,15 +160,6 @@ public class PushService extends IntentService {
      */
     private static long namedUserBackOff = 0;
 
-    /**
-     * The delay value used for updating channel tag groups retries.
-     */
-    private static long tagGroupsBackOff = 0;
-
-    /**
-     * The delay value used for updating named user tags retries.
-     */
-    private static long namedUserTagsBackOff = 0;
 
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
@@ -195,8 +169,9 @@ public class PushService extends IntentService {
     private static long pushRegistrationBackOff = 0;
 
 
+    private TagGroupServiceDelegate tagGroupServiceDelegate;
+
     private ChannelAPIClient channelClient;
-    private TagGroupsAPIClient tagGroupsClient;
     private NamedUserAPIClient namedUserClient;
 
     /**
@@ -211,24 +186,17 @@ public class PushService extends IntentService {
      * for testing.
      * @param client The channel api client.
      * @param namedUserClient The named user api client.
-     * @param tagGroupsClient The tag groups api client.
      */
-    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient, TagGroupsAPIClient tagGroupsClient) {
+    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient) {
         super("PushService");
         this.channelClient = client;
         this.namedUserClient = namedUserClient;
-        this.tagGroupsClient = tagGroupsClient;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onCreate() {
-        super.onCreate();
-        Autopilot.automaticTakeOff(getApplicationContext());
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        super.onHandleIntent(intent);
+
         if (intent == null || intent.getAction() == null) {
             return;
         }
@@ -239,7 +207,6 @@ public class PushService extends IntentService {
         String action = intent.getAction();
         int wakeLockId = intent.getIntExtra(EXTRA_WAKE_LOCK_ID, -1);
         intent.removeExtra(EXTRA_WAKE_LOCK_ID);
-
 
         try {
             switch (action) {
@@ -267,27 +234,29 @@ public class PushService extends IntentService {
                 case ACTION_RETRY_UPDATE_NAMED_USER:
                     onRetryUpdateNamedUser(intent);
                     break;
-                case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
-                    onUpdateTagGroups(intent);
-                    break;
-                case ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS:
-                    onRetryUpdateTagGroups(intent);
-                    break;
-                case ACTION_UPDATE_NAMED_USER_TAGS:
-                    onUpdateNamedUserTags(intent);
-                    break;
-                case ACTION_RETRY_UPDATE_NAMED_USER_TAGS:
-                    onRetryUpdateNamedUserTags(intent);
-                    break;
-                case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-                    onClearPendingNamedUserTags();
-                    break;
             }
         } finally {
             if (wakeLockId >= 0) {
                 releaseWakeLock(wakeLockId);
             }
         }
+    }
+
+
+    @Override
+    protected Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore) {
+
+        switch (intentAction) {
+            case ACTION_UPDATE_NAMED_USER_TAGS:
+            case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
+            case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
+                if (tagGroupServiceDelegate == null) {
+                    tagGroupServiceDelegate = new TagGroupServiceDelegate(getApplicationContext(), dataStore);
+                }
+                return tagGroupServiceDelegate;
+        }
+
+        return null;
     }
 
     /**
@@ -631,169 +600,7 @@ public class PushService extends IntentService {
         // Restore the back off if the application was restarted since the last retry.
         namedUserBackOff = intent.getLongExtra(EXTRA_BACK_OFF, namedUserBackOff);
         onUpdateNamedUser();
-    }
-
-    /**
-     * Update the channel tag groups.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onUpdateTagGroups(Intent intent) {
-        PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
-
-        Map<String, Set<String>> pendingAddTags = pushPreferences.getPendingAddTagGroups();
-        Map<String, Set<String>> pendingRemoveTags = pushPreferences.getPendingRemoveTagGroups();
-
-        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
-        if (addTagsBundle != null) {
-            combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
-        }
-
-        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
-        if (removeTagsBundle != null) {
-            combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
-        }
-
-        String channelId = UAirship.shared().getPushManager().getChannelId();
-        if (channelId == null) {
-            pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.debug("Unable to update tag groups until a channel is created.");
-            return;
-        }
-
-        // if pendingAddTags and pendingRemoveTags size are both empty, then skip call to update channel tags.
-        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
-            return;
-        }
-
-        Response response = getTagGroupsClient().updateChannelTags(channelId, pendingAddTags, pendingRemoveTags);
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            // Save pending
-            pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.info("Failed to update tag groups, will retry. Saved pending tag groups.");
-            tagGroupsBackOff = calculateNextBackOff(tagGroupsBackOff);
-            scheduleRetry(ACTION_RETRY_UPDATE_CHANNEL_TAG_GROUPS, tagGroupsBackOff);
-        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            // Clear pending
-            pushPreferences.setPendingTagGroupsChanges(null, null);
-            Logger.info("Update tag groups succeeded with status: " + response.getStatus());
-            tagGroupsBackOff = 0;
-            logTagGroupResponseIssues(response.getResponseBody());
-        } else {
-            int status = response.getStatus();
-            tagGroupsBackOff = 0;
-
-            Logger.info("Update tag groups failed with status: " + status);
-            logTagGroupResponseIssues(response.getResponseBody());
-
-            if (status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-                // Clear pending
-                pushPreferences.setPendingTagGroupsChanges(null, null);
-            } else {
-                // Save pending
-                pushPreferences.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            }
-        }
-    }
-
-    /**
-     * Called when updating channel tag groups previously failed and is being retried.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onRetryUpdateTagGroups(Intent intent) {
-        // Restore the back off if the application was restarted since the last retry.
-        tagGroupsBackOff = intent.getLongExtra(EXTRA_BACK_OFF, tagGroupsBackOff);
-        onUpdateTagGroups(intent);
-    }
-
-    /**
-     * Update named user tags.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onUpdateNamedUserTags(Intent intent) {
-        PushManager pushManager = UAirship.shared().getPushManager();
-        NamedUser namedUser = pushManager.getNamedUser();
-
-        Map<String, Set<String>> pendingAddTags = namedUser.getPendingAddTagGroups();
-        Map<String, Set<String>> pendingRemoveTags = namedUser.getPendingRemoveTagGroups();
-
-        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
-        if (addTagsBundle != null) {
-            combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
-        }
-
-        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
-        if (removeTagsBundle != null) {
-            combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
-        }
-
-        String namedUserId = namedUser.getId();
-        if (namedUserId == null) {
-            namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.verbose("Failed to update named user tags due to null named user ID. Saved pending tag groups.");
-            return;
-        }
-
-        // if pendingAddTags and pendingRemoveTags size are both empty, then skip call to update named user tags.
-        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
-            return;
-        }
-
-        Response response = getTagGroupsClient().updateNamedUserTags(namedUserId, pendingAddTags, pendingRemoveTags);
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            // Save pending
-            namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            Logger.info("Failed to update named user tags, will retry. Saved pending tag groups.");
-            namedUserTagsBackOff = calculateNextBackOff(namedUserTagsBackOff);
-            scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER_TAGS, namedUserTagsBackOff);
-        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            // Clear pending
-            namedUser.setPendingTagGroupsChanges(null, null);
-            Logger.info("Update named user tags succeeded with status: " + response.getStatus());
-            namedUserTagsBackOff = 0;
-            logTagGroupResponseIssues(response.getResponseBody());
-        } else {
-            int status = response.getStatus();
-            namedUserTagsBackOff = 0;
-
-            Logger.info("Update named user tags failed with status: " + status);
-            logTagGroupResponseIssues(response.getResponseBody());
-
-            if (status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-                // Clear pending
-                namedUser.setPendingTagGroupsChanges(null, null);
-            } else {
-                // Save pending
-                namedUser.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-            }
-
-        }
-    }
-
-    /**
-     * Clear pending named user tags.
-     */
-    private void onClearPendingNamedUserTags() {
-        PushManager pushManager = UAirship.shared().getPushManager();
-        pushManager.getNamedUser().setPendingTagGroupsChanges(null, null);
-    }
-
-    /**
-     * Called when update named user tags previously failed and is being retried.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onRetryUpdateNamedUserTags(Intent intent) {
-        // Restore the back off if the application was restarted since the last retry.
-        namedUserTagsBackOff = intent.getLongExtra(EXTRA_BACK_OFF, namedUserTagsBackOff);
-        onUpdateNamedUserTags(intent);
-    }
+   }
 
     /**
      * Get the channel location as a URL
@@ -980,74 +787,5 @@ public class PushService extends IntentService {
             namedUserClient = new NamedUserAPIClient();
         }
         return namedUserClient;
-    }
-
-    /**
-     * Gets the tag groups client. Creates it if it does not exist.
-     *
-     * @return The tag groups API client.
-     */
-    private TagGroupsAPIClient getTagGroupsClient() {
-        if (tagGroupsClient == null) {
-            tagGroupsClient = new TagGroupsAPIClient(UAirship.shared().getAirshipConfigOptions());
-        }
-        return tagGroupsClient;
-    }
-
-    /**
-     * Combine the tags from bundle with the pending tags.
-     *
-     * @param tagsBundle The tags bundle.
-     * @param tagsToAdd The pending tags to add tags to.
-     * @param tagsToRemove The pending tags to remove tags from.
-     */
-    private void combineTags(Bundle tagsBundle, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
-        for (String group : tagsBundle.keySet()) {
-            List<String> tags = tagsBundle.getStringArrayList(group);
-
-            // Add tags to tagsToAdd.
-            if (tagsToAdd.containsKey(group)) {
-                tagsToAdd.get(group).addAll(tags);
-            } else {
-                tagsToAdd.put(group, new HashSet<>(tags));
-            }
-
-            // Remove tags from tagsToRemove.
-            if (tagsToRemove.containsKey(group)) {
-                tagsToRemove.get(group).removeAll(tags);
-            }
-        }
-    }
-
-    /**
-     * Log the response warnings and errors if they exist in the reponse body.
-     *
-     * @param responseBody The response body string.
-     */
-    private void logTagGroupResponseIssues(String responseBody) {
-        if (responseBody == null) {
-            return;
-        }
-
-        JsonValue responseJson = JsonValue.NULL;
-        try {
-            responseJson = JsonValue.parseString(responseBody);
-        } catch (JsonException e) {
-            Logger.error("Unable to parse tag group response", e);
-        }
-
-        if (responseJson.isJsonMap()) {
-            // Check for any warnings in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("warnings")) {
-                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
-                    Logger.info("Tag Groups warnings: " + warning);
-                }
-            }
-
-            // Check for any errors in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("error")) {
-                Logger.info("Tag Groups error: " + responseJson.getMap().get("error"));
-            }
-        }
     }
 }

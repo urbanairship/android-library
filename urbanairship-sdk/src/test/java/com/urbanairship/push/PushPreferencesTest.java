@@ -10,11 +10,6 @@ import com.urbanairship.UAirship;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -100,45 +95,5 @@ public class PushPreferencesTest extends BaseTestCase {
         pushPref.setLastRegistrationTime(System.currentTimeMillis() + 1000000);
         assertEquals("Last registration time should default to 0 if its in the future",
                 0L, pushPref.getLastRegistrationTime());
-    }
-
-    /**
-     * Test set pending tag groups.
-     */
-    @Test
-    public void testPendingTagGroups() {
-        Set<String> addTags = new HashSet<>();
-        addTags.add("tag1");
-        addTags.add("tag2");
-        addTags.add("tag3");
-
-        Map<String, Set<String>> pendingAddTags = new HashMap<>();
-        pendingAddTags.put("tagGroup", addTags);
-
-        Set<String> removeTags = new HashSet<>();
-        removeTags.add("tag3");
-        removeTags.add("tag4");
-        removeTags.add("tag5");
-
-        Map<String, Set<String>> pendingRemoveTags = new HashMap<>();
-        pendingRemoveTags.put("tagGroup", removeTags);
-
-        pushPref.setPendingTagGroupsChanges(pendingAddTags, pendingRemoveTags);
-
-        assertEquals("Pending add tags should match", pendingAddTags, pushPref.getPendingAddTagGroups());
-        assertEquals("Pending remove tags should match", pendingRemoveTags, pushPref.getPendingRemoveTagGroups());
-    }
-
-    /**
-     * Test clear pending tag groups.
-     */
-    @Test
-    public void testClearPendingTagGroups() {
-        Map<String, Set<String>> emptyTags = new HashMap<>();
-
-        pushPref.setPendingTagGroupsChanges(null, null);
-
-        assertEquals("Pending add tags should be empty", emptyTags, pushPref.getPendingAddTagGroups());
-        assertEquals("Pending remove tags should be empty", emptyTags, pushPref.getPendingRemoveTagGroups());
     }
 }
