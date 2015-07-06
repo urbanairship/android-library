@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 public class NamedUserTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
-    private final String fakeToken = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
 
     private AirshipConfigOptions mockAirshipConfigOptions;
     private NamedUser namedUser;
@@ -130,29 +129,6 @@ public class NamedUserTest extends BaseTestCase {
         assertEquals("Intent action should be to update named user",
                 intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
         assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
-    }
-
-    /**
-     * Test update change token.
-     */
-    @Test
-    public void testUpdateChangeToken() {
-        String changeToken = namedUser.getChangeToken();
-        namedUser.updateChangeToken();
-        assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
-    }
-
-    /**
-     * Test set last updated token.
-     */
-    @Test
-    public void testSetLastUpdatedToken() {
-        namedUser.setId(fakeNamedUserId);
-        String lastUpdatedToken = namedUser.getLastUpdatedToken();
-
-        namedUser.setLastUpdatedToken(fakeToken);
-        assertNotSame("Last updated token should not match", namedUser.getLastUpdatedToken(), lastUpdatedToken);
-        assertEquals("Last updated token should match", fakeToken, namedUser.getLastUpdatedToken());
     }
 
     /**

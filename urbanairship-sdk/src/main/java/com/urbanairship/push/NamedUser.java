@@ -43,25 +43,19 @@ import java.util.UUID;
 public class NamedUser {
 
     /**
-     * The named user ID.
-     */
-    private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
-
-    /**
      * The change token tracks the start of setting the named user ID.
      */
     private static final String CHANGE_TOKEN_KEY = "com.urbanairship.nameduser.CHANGE_TOKEN_KEY";
 
     /**
-     * The last updated token tracks when the named user ID was set successfully.
+     * The named user ID.
      */
-    private static final String LAST_UPDATED_TOKEN_KEY = "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY";
+    private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
      * The maximum length of the named user ID string.
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
-
 
     private final PreferenceDataStore preferenceDataStore;
 
@@ -153,7 +147,7 @@ public class NamedUser {
     /**
      * Modify the change token to force an update.
      */
-    void updateChangeToken() {
+    private void updateChangeToken() {
         preferenceDataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString());
     }
 
@@ -164,24 +158,6 @@ public class NamedUser {
         if (UAStringUtil.equals(getId(), null)) {
             setId(null);
         }
-    }
-
-    /**
-     * Sets the last updated named user ID token.
-     *
-     * @param token The last updated named user ID token.
-     */
-    void setLastUpdatedToken(String token) {
-        preferenceDataStore.put(LAST_UPDATED_TOKEN_KEY, token);
-    }
-
-    /**
-     * Gets the last updated named user ID token.
-     *
-     * @return The last updated named user token.
-     */
-    String getLastUpdatedToken() {
-        return preferenceDataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
     }
 
     /**

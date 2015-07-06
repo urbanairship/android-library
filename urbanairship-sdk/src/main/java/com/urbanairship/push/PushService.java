@@ -40,7 +40,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.http.Response;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -113,11 +112,6 @@ public class PushService extends BaseIntentService {
     static final String ACTION_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER";
 
     /**
-     * Action to retry update named user association or disassociation.
-     */
-    static final String ACTION_RETRY_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_RETRY_UPDATE_NAMED_USER";
-
-    /**
      * Action to update named user tags.
      */
     static final String ACTION_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER_TAGS";
@@ -155,11 +149,6 @@ public class PushService extends BaseIntentService {
 
     private static final SparseArray<WakeLock> wakeLocks = new SparseArray<>();
 
-    /**
-     * The delay value used for associate and disassociate named user retries.
-     */
-    private static long namedUserBackOff = 0;
-
 
     private static int nextWakeLockID = 0;
     private static boolean isPushRegistering = false;
@@ -170,9 +159,9 @@ public class PushService extends BaseIntentService {
 
 
     private TagGroupServiceDelegate tagGroupServiceDelegate;
+    private NamedUserServiceDelegate namedUserServiceDelegate;
 
     private ChannelAPIClient channelClient;
-    private NamedUserAPIClient namedUserClient;
 
     /**
      * PushService constructor.
@@ -185,12 +174,10 @@ public class PushService extends BaseIntentService {
      * PushService constructor that specifies the channel and named user client. Used
      * for testing.
      * @param client The channel api client.
-     * @param namedUserClient The named user api client.
      */
-    PushService(ChannelAPIClient client, NamedUserAPIClient namedUserClient) {
+    PushService(ChannelAPIClient client) {
         super("PushService");
         this.channelClient = client;
-        this.namedUserClient = namedUserClient;
     }
 
     @Override
@@ -228,12 +215,6 @@ public class PushService extends BaseIntentService {
                 case ACTION_RETRY_PUSH_REGISTRATION:
                     onRetryPushRegistration(intent);
                     break;
-                case ACTION_UPDATE_NAMED_USER:
-                    onUpdateNamedUser();
-                    break;
-                case ACTION_RETRY_UPDATE_NAMED_USER:
-                    onRetryUpdateNamedUser(intent);
-                    break;
             }
         } finally {
             if (wakeLockId >= 0) {
@@ -254,6 +235,11 @@ public class PushService extends BaseIntentService {
                     tagGroupServiceDelegate = new TagGroupServiceDelegate(getApplicationContext(), dataStore);
                 }
                 return tagGroupServiceDelegate;
+            case ACTION_UPDATE_NAMED_USER:
+                if (namedUserServiceDelegate == null) {
+                    namedUserServiceDelegate = new NamedUserServiceDelegate(getApplicationContext(), dataStore);
+                }
+                return namedUserServiceDelegate;
         }
 
         return null;
@@ -530,79 +516,6 @@ public class PushService extends BaseIntentService {
     }
 
     /**
-     * Update named user ID.
-     */
-    private void onUpdateNamedUser() {
-        PushManager pushManager = UAirship.shared().getPushManager();
-        NamedUser namedUser = pushManager.getNamedUser();
-        String currentId = namedUser.getId();
-        String changeToken = namedUser.getChangeToken();
-        String lastUpdatedToken = namedUser.getLastUpdatedToken();
-
-        if (changeToken == null && lastUpdatedToken == null) {
-            // Skip since no one has set the named user ID. Usually from a new or re-install.
-            Logger.debug("PushService - New or re-install. Skipping.");
-            return;
-        }
-
-        if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
-            // Skip since no change has occurred (token remain the same).
-            Logger.debug("PushService - named user already updated. Skipping.");
-            return;
-        }
-
-        if (UAStringUtil.isEmpty(pushManager.getChannelId())) {
-            Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
-            return;
-        }
-
-        Response response;
-
-        if (currentId == null) {
-            // When currentId is null, disassociate the current named user ID.
-            response = getNamedUserClient().disassociate(pushManager.getChannelId());
-        } else {
-            // When currentId is non-null, associate the currentId.
-            response = getNamedUserClient().associate(currentId, pushManager.getChannelId());
-        }
-
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            // Server error occurred, so retry later.
-
-            Logger.info("Update named user failed, will retry.");
-            namedUserBackOff = calculateNextBackOff(namedUserBackOff);
-            scheduleRetry(ACTION_RETRY_UPDATE_NAMED_USER, namedUserBackOff);
-        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.info("Update named user succeeded with status: " + response.getStatus());
-            // When currentId is null, the disassociate request succeeded so we set the associatedId
-            // to null (removing associatedId from preferenceDataStore). When currentId is non-null,
-            // the associate request succeeded so we set the associatedId.
-            namedUser.setLastUpdatedToken(changeToken);
-            namedUserBackOff = 0;
-
-            namedUser.startUpdateTagsService();
-        } else if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-            Logger.info("Update named user failed with status: " + response.getStatus() +
-                    " This action is not allowed when the app is in server-only mode.");
-            namedUserBackOff = 0;
-        } else {
-            Logger.info("Update named user failed with status: " + response.getStatus());
-            namedUserBackOff = 0;
-        }
-    }
-
-    /**
-     * Called when updating named user previously failed and is being retried.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onRetryUpdateNamedUser(Intent intent) {
-        // Restore the back off if the application was restarted since the last retry.
-        namedUserBackOff = intent.getLongExtra(EXTRA_BACK_OFF, namedUserBackOff);
-        onUpdateNamedUser();
-   }
-
-    /**
      * Get the channel location as a URL
      *
      * @return The channel location URL
@@ -775,17 +688,5 @@ public class PushService extends BaseIntentService {
             channelClient = new ChannelAPIClient();
         }
         return channelClient;
-    }
-
-    /**
-     * Gets the named user client. Creates it if it does not exist.
-     *
-     * @return The named user API client.
-     */
-    private NamedUserAPIClient getNamedUserClient() {
-        if (namedUserClient == null) {
-            namedUserClient = new NamedUserAPIClient();
-        }
-        return namedUserClient;
     }
 }
