@@ -28,10 +28,10 @@ package com.urbanairship.push;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 
-import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -52,7 +52,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
 
-    PushPreferences pushPref;
+    PreferenceDataStore dataStore;
     PushManager pushManager;
     ChannelAPIClient client;
     ChannelServiceDelegate serviceDelegate;
@@ -61,9 +61,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     public void setUp() {
         client = Mockito.mock(ChannelAPIClient.class);
 
-
         pushManager = UAirship.shared().getPushManager();
-        pushPref = pushManager.getPreferences();
+        dataStore = TestApplication.getApplication().preferenceDataStore;
 
         // Extend it to make onHandleIntent public so we can call it directly
         serviceDelegate = new ChannelServiceDelegate(TestApplication.getApplication(),
@@ -80,17 +79,17 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
         // Verify channel doesn't exist in preferences
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_CREATED);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushPref.setAlias("someAlias");
+        pushManager.setAlias("someAlias");
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -99,9 +98,9 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
         serviceDelegate.onHandleIntent(intent);
 
-        assertEquals("Channel ID should exist in preferences", fakeChannelId, pushPref.getChannelId());
+        assertEquals("Channel ID should exist in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should exist in preferences", fakeChannelLocation,
-                pushPref.getChannelLocation());
+                pushManager.getChannelLocation());
     }
 
     /**
@@ -110,23 +109,23 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateRegistrationNullChannelLocation() {
         // Verify channel doesn't exist in preferences
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Only set the channel ID
-        pushPref.setChannelId(fakeChannelId);
+        pushManager.setChannel(fakeChannelId, null);
 
-        assertEquals("Channel ID should be set in preferences", fakeChannelId, pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertEquals("Channel ID should be set in preferences", fakeChannelId, pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_CREATED);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushPref.setAlias("someAlias");
+        pushManager.setAlias("someAlias");
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -135,9 +134,9 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
         serviceDelegate.onHandleIntent(intent);
 
-        assertEquals("Channel ID should match in preferences", fakeChannelId, pushPref.getChannelId());
+        assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
-                pushPref.getChannelLocation());
+                pushManager.getChannelLocation());
     }
 
     /**
@@ -147,11 +146,10 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     public void testCreateChannel200() {
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
 
-        pushPref.setLastRegistrationPayload(null);
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -160,9 +158,9 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
         serviceDelegate.onHandleIntent(intent);
 
-        assertEquals("Channel ID should match in preferences", fakeChannelId, pushPref.getChannelId());
+        assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
-                pushPref.getChannelLocation());
+                pushManager.getChannelLocation());
     }
 
 
@@ -172,17 +170,17 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateRegistrationChannelResponseCodeFail() {
         // Verify channel doesn't exist in preferences
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_NOT_FOUND);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_NOT_FOUND);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushPref.setAlias("someAlias");
+        pushManager.setAlias("someAlias");
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -192,8 +190,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         serviceDelegate.onHandleIntent(intent);
 
         // Verify channel creation failed
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
     }
 
     /**
@@ -202,17 +200,17 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateRegistrationChannelResponseNullChannelId() {
         // Verify channel doesn't exist in preferences
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
-        when(response.getStatus()).thenReturn(HttpStatus.SC_CREATED);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(null);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
-        pushPref.setAlias("someAlias");
+        pushManager.setAlias("someAlias");
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         // Return the response
@@ -222,8 +220,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         serviceDelegate.onHandleIntent(intent);
 
         // Verify channel creation failed
-        assertNull("Channel ID should be null in preferences", pushPref.getChannelId());
-        assertNull("Channel location should be null in preferences", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
     }
 
     /**
@@ -234,17 +232,17 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Set Channel ID and channel location
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        assertEquals("Channel ID should exist in preferences", pushPref.getChannelId(), fakeChannelId);
-        assertEquals("Channel location should exist in preferences", pushPref.getChannelLocation(), fakeChannelLocation);
+        assertEquals("Channel ID should exist in preferences", pushManager.getChannelId(), fakeChannelId);
+        assertEquals("Channel location should exist in preferences", pushManager.getChannelLocation(), fakeChannelLocation);
 
-        long lastRegistrationTime = pushPref.getLastRegistrationTime();
+        long lastRegistrationTime = dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0);
 
         // Set up channel response
         ChannelResponse response = Mockito.mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
 
         // Ensure payload is different, so we don't get a null payload
-        pushPref.setAlias("someAlias");
+        pushManager.setAlias("someAlias");
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
         URL channelLocation = new URL(fakeChannelLocation);
@@ -255,7 +253,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         serviceDelegate.onHandleIntent(intent);
 
         // Verify channel update succeeded
-        assertNotSame("Last registration time should be updated", pushPref.getLastRegistrationTime(), lastRegistrationTime);
+        assertNotSame("Last registration time should be updated", dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0), lastRegistrationTime);
     }
 
     /**
@@ -266,8 +264,6 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Set Channel ID and channel location
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        // Set a last registration payload so we can verify it was cleared
-        pushPref.setLastRegistrationPayload(new ChannelRegistrationPayload.Builder().build());
 
         // Set up a conflict response
         ChannelResponse conflictResponse = Mockito.mock(ChannelResponse.class);
@@ -281,8 +277,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         Mockito.verify(client).updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class));
 
         // Verify the channel was cleared
-        assertNull("Channel ID should be null", pushPref.getChannelId());
-        assertNull("Channel location should be null", pushPref.getChannelLocation());
+        assertNull("Channel ID should be null", pushManager.getChannelId());
+        assertNull("Channel location should be null", pushManager.getChannelLocation());
 
         // Verify the push service intent to update the channel was started
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);

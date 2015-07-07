@@ -38,6 +38,9 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -48,6 +51,16 @@ import java.util.Set;
  * Service delegate for the {@link PushService} to handle channel and push registrations.
  */
 class ChannelServiceDelegate extends BaseIntentService.Delegate {
+
+    /**
+     * Data store key for the last successfully registered channel payload.
+     */
+    private static final String LAST_REGISTRATION_PAYLOAD_KEY = "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD";
+
+    /**
+     * Data store key for the time in milliseconds of last successfully channel registration.
+     */
+    private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
 
     /**
      * Max time between channel registration updates.
@@ -198,7 +211,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         Logger.verbose("ChannelServiceDelegate - Performing channel registration.");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
-        String channelId = pushPreferences.getChannelId();
+        String channelId = pushManager.getChannelId();
         URL channelLocation = getChannelLocationURL();
 
         if (channelLocation != null && !UAStringUtil.isEmpty(channelId)) {
@@ -236,8 +249,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             Logger.info("Channel registration succeeded with status: " + response.getStatus());
 
             // Set the last registration payload and time then notify registration succeeded
-            pushPreferences.setLastRegistrationPayload(payload);
-            pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
+            setLastRegistrationPayload(payload);
             sendRegistrationFinishedBroadcast(true);
             return;
         }
@@ -246,7 +258,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         if (response.getStatus() == HttpURLConnection.HTTP_CONFLICT) {
             // Delete channel and register again.
             pushManager.setChannel(null, null);
-            pushPreferences.setLastRegistrationPayload(null);
+            setLastRegistrationPayload(null);
 
             // Update registration
             Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
@@ -285,8 +297,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
                 // Set the last registration payload and time then notify registration succeeded
                 pushManager.setChannel(response.getChannelId(), response.getChannelLocation());
-                pushPreferences.setLastRegistrationPayload(payload);
-                pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
                 setLastRegistrationPayload(payload);
                 sendRegistrationFinishedBroadcast(true);
 
@@ -324,8 +334,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      */
     private boolean shouldUpdateRegistration(ChannelRegistrationPayload payload) {
         // check time and payload
-        ChannelRegistrationPayload lastSuccessPayload = pushPreferences.getLastRegistrationPayload();
-        long timeSinceLastRegistration = (System.currentTimeMillis() - pushPreferences.getLastRegistrationTime());
+        ChannelRegistrationPayload lastSuccessPayload = getLastRegistrationPayload();
+        long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
         return (!payload.equals(lastSuccessPayload)) ||
                 (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS);
     }
@@ -336,7 +346,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @return The channel location URL
      */
     private URL getChannelLocationURL() {
-        String channelLocationString = pushPreferences.getChannelLocation();
+        String channelLocationString = pushManager.getChannelLocation();
         if (!UAStringUtil.isEmpty(channelLocationString)) {
             try {
                 return new URL(channelLocationString);
@@ -392,7 +402,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         switch (airship.getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
-                if (UAStringUtil.isEmpty(pushPreferences.getGcmId())) {
+                if (UAStringUtil.isEmpty(pushManager.getGcmId())) {
                     return true;
                 }
                 Set<String> senderIds = airship.getAirshipConfigOptions().getGCMSenderIds();
@@ -404,19 +414,69 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     return true;
                 }
 
-                Logger.verbose("ChannelServiceDelegate - GCM already registered with ID: " + pushPreferences.getGcmId());
+                Logger.verbose("ChannelServiceDelegate - GCM already registered with ID: " + pushManager.getGcmId());
                 return false;
 
             case UAirship.AMAZON_PLATFORM:
-                if (UAStringUtil.isEmpty(pushPreferences.getAdmId())) {
+                if (UAStringUtil.isEmpty(pushManager.getAdmId())) {
                     return true;
                 }
 
-                Logger.verbose("ChannelServiceDelegate - ADM already registered with ID: " + pushPreferences.getAdmId());
+                Logger.verbose("ChannelServiceDelegate - ADM already registered with ID: " + pushManager.getAdmId());
                 return false;
         }
 
         return false;
+    }
+
+    /**
+     * Sets the last registration payload
+     *
+     * @param channelPayload A ChannelRegistrationPayload
+     */
+    private void setLastRegistrationPayload(ChannelRegistrationPayload channelPayload) {
+        if (channelPayload == null) {
+            getDataStore().remove(LAST_REGISTRATION_PAYLOAD_KEY);
+            getDataStore().put(LAST_REGISTRATION_TIME_KEY, 0);
+        } else {
+            getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.asJSON().toString());
+            getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
+        }
+    }
+
+    /**
+     * Gets the last registration payload
+     *
+     * @return a ChannelRegistrationPayload
+     */
+    private ChannelRegistrationPayload getLastRegistrationPayload() {
+        String payloadJSON = getDataStore().getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
+        if (UAStringUtil.isEmpty(payloadJSON)) {
+            return null;
+        }
+
+        try {
+            return ChannelRegistrationPayload.createFromJSON(new JSONObject(payloadJSON));
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the last registration time
+     *
+     * @return the last registration time
+     */
+    private long getLastRegistrationTime() {
+        long lastRegistrationTime = getDataStore().getLong(LAST_REGISTRATION_TIME_KEY, 0L);
+
+        // If its in the future reset it
+        if (lastRegistrationTime > System.currentTimeMillis()) {
+            getDataStore().put(LAST_REGISTRATION_TIME_KEY, 0);
+            return 0;
+        }
+
+        return lastRegistrationTime;
     }
 
     /**

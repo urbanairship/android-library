@@ -37,7 +37,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -49,6 +48,7 @@ import java.util.Set;
  */
 class PushPreferences {
     private static final String KEY_PREFIX = "com.urbanairship.push";
+
     private static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
     private static final String USER_NOTIFICATIONS_ENABLED_KEY = KEY_PREFIX + ".USER_NOTIFICATIONS_ENABLED";
 
@@ -79,9 +79,6 @@ class PushPreferences {
     private static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
 
     private static final String GCM_REGISTRATION_ID_KEY = KEY_PREFIX + ".GCM_REGISTRATION_ID_KEY";
-
-    private static final String LAST_REGISTRATION_PAYLOAD_KEY = KEY_PREFIX + ".LAST_REGISTRATION_PAYLOAD";
-    private static final String LAST_REGISTRATION_TIME_KEY = KEY_PREFIX + ".LAST_REGISTRATION_TIME";
 
     private static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
     private static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
@@ -572,59 +569,6 @@ class PushPreferences {
      */
     String getApid() {
         return preferenceDataStore.getString(APID_KEY, null);
-    }
-
-    /**
-     * Gets the last registration payload
-     *
-     * @return a ChannelRegistrationPayload
-     */
-    ChannelRegistrationPayload getLastRegistrationPayload() {
-        String payloadJSON = preferenceDataStore.getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
-        try {
-            return UAStringUtil.isEmpty(payloadJSON) ? null
-                                                     : ChannelRegistrationPayload.createFromJSON(new JSONObject(payloadJSON));
-        } catch (JSONException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Sets the last registration payload
-     *
-     * @param lastRegistrationPayload A ChannelRegistrationPayload
-     */
-    void setLastRegistrationPayload(ChannelRegistrationPayload lastRegistrationPayload) {
-        String payloadString = lastRegistrationPayload == null ? null
-                                                               : lastRegistrationPayload.asJSON().toString();
-
-        preferenceDataStore.put(LAST_REGISTRATION_PAYLOAD_KEY, payloadString);
-    }
-
-    /**
-     * Get the last registration time
-     *
-     * @return the last registration time
-     */
-    long getLastRegistrationTime() {
-        long lastRegistrationTime = preferenceDataStore.getLong(LAST_REGISTRATION_TIME_KEY, 0L);
-
-        // Check if its in the future
-        if (lastRegistrationTime > System.currentTimeMillis()) {
-            lastRegistrationTime = 0;
-            setLastRegistrationTime(0);
-        }
-
-        return lastRegistrationTime;
-    }
-
-    /**
-     * Set the last registration time
-     *
-     * @param lastRegistrationTime The last registration time.
-     */
-    void setLastRegistrationTime(long lastRegistrationTime) {
-        preferenceDataStore.put(LAST_REGISTRATION_TIME_KEY, lastRegistrationTime);
     }
 
     /**

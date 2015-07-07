@@ -787,6 +787,10 @@ public class PushManager extends BaseManager {
         return preferences.getChannelId();
     }
 
+    public String getChannelLocation() {
+        return preferences.getChannelLocation();
+    }
+
     /**
      * Sets the Channel ID and channel location.
      * Also update the user.
@@ -842,5 +846,6 @@ public class PushManager extends BaseManager {
                 .setAction(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
         UAirship.getApplicationContext().startService(tagUpdateIntent);
     }
+
 
 }
