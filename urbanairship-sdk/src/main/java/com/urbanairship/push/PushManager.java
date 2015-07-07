@@ -445,7 +445,7 @@ public class PushManager extends BaseManager {
     public void updateRegistration() {
         Context ctx = UAirship.getApplicationContext();
         Intent i = new Intent(ctx, PushService.class);
-        i.setAction(PushService.ACTION_UPDATE_REGISTRATION);
+        i.setAction(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
         ctx.startService(i);
     }
 

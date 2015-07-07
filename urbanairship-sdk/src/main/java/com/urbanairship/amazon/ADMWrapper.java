@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.amazon;
 
+import android.content.Context;
+
 import com.amazon.device.messaging.ADM;
 import com.amazon.device.messaging.development.ADMManifest;
 import com.urbanairship.Logger;
@@ -58,5 +60,12 @@ class ADMWrapper {
             Logger.error("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
             return false;
         }
+    }
+
+    /**
+     * Wraps {@link com.amazon.device.messaging.ADM#startRegister()}.
+     */
+    public static void startRegistration(Context context) {
+        new ADM(context).startRegister();
     }
 }

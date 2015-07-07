@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.amazon;
 
+import android.content.Context;
+
 import com.urbanairship.Logger;
 
 /**
@@ -61,6 +63,15 @@ public class ADMUtils {
      */
     public static boolean isADMSupported() {
         return isADMAvailable() && ADMWrapper.isSupported();
+    }
+
+    /**
+     * Starts the registration process for ADM.
+     */
+    public static void startRegistration(Context context) {
+        if (isADMSupported()) {
+            ADMWrapper.startRegistration(context);
+        }
     }
 
     /**

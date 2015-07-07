@@ -98,7 +98,7 @@ public class ADMPushReceiver extends BroadcastReceiver {
             }
         }
 
-        Intent finishIntent = new Intent(PushService.ACTION_PUSH_REGISTRATION_FINISHED);
+        Intent finishIntent = new Intent(PushService.ACTION_ADM_REGISTRATION_FINISHED);
         PushService.startServiceWithWakeLock(context, finishIntent);
     }
 

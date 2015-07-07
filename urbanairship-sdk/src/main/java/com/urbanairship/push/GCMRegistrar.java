@@ -25,7 +25,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.content.Intent;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -79,9 +78,6 @@ class GCMRegistrar {
             UAirship.shared().getPushManager().setGcmId(registrationId);
             UAirship.shared().getPushManager().getPreferences().setRegisteredGcmSenderIds(senderIds);
         }
-
-        Intent intent = new Intent(PushService.ACTION_PUSH_REGISTRATION_FINISHED);
-        PushService.startServiceWithWakeLock(UAirship.getApplicationContext(), intent);
 
         return true;
     }

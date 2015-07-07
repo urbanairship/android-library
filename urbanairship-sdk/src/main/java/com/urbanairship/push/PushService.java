@@ -25,29 +25,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.os.SystemClock;
 import android.util.SparseArray;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.util.UAHttpStatusUtil;
-import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Set;
 
 /**
  * Service class for handling push notifications.
@@ -55,21 +43,6 @@ import java.util.Set;
  * @hide
  */
 public class PushService extends BaseIntentService {
-
-    /**
-     * Max time between channel registration updates.
-     */
-    private static final long CHANNEL_REREGISTRATION_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
-
-    /**
-     * The starting back off time for channel and push registration retries.
-     */
-    private static final long STARTING_BACK_OFF_TIME = 10000; // 10 seconds.
-
-    /**
-     * The max back off time for channel and push registration retries.
-     */
-    private static final long MAX_BACK_OFF_TIME = 5120000; // About 85 mins.
 
     /**
      * The timeout before a wake lock is released.
@@ -82,24 +55,19 @@ public class PushService extends BaseIntentService {
     static final String ACTION_START_REGISTRATION = "com.urbanairship.push.ACTION_START_REGISTRATION";
 
     /**
-     * Action notifying the service that push registration has finished.
+     * Action notifying the service that ADM registration has finished.
      */
-    static final String ACTION_PUSH_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_PUSH_REGISTRATION_FINISHED";
+    static final String ACTION_ADM_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_ADM_REGISTRATION_FINISHED";
 
     /**
      * Action to update channel registration.
      */
-    static final String ACTION_UPDATE_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_REGISTRATION";
+    static final String ACTION_UPDATE_PUSH_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_PUSH_REGISTRATION";
 
     /**
-     * Action to retry channel registration.
+     * Action to update channel registration.
      */
-    static final String ACTION_RETRY_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_RETRY_CHANNEL_REGISTRATION";
-
-    /**
-     * Action to retry push registration.
-     */
-    static final String ACTION_RETRY_PUSH_REGISTRATION = "com.urbanairship.push.ACTION_RETRY_PUSH_REGISTRATION";
+    static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
 
     /**
      * Action sent when a push is received.
@@ -136,48 +104,23 @@ public class PushService extends BaseIntentService {
      */
     static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
 
-
     /**
      * Extra for wake lock ID. Set and removed by the service.
      */
     static final String EXTRA_WAKE_LOCK_ID = "com.urbanairship.push.EXTRA_WAKE_LOCK_ID";
 
-    /**
-     * Extra that stores the back off time on the retry intents.
-     */
-    static final String EXTRA_BACK_OFF = "com.urbanairship.push.EXTRA_BACK_OFF";
-
     private static final SparseArray<WakeLock> wakeLocks = new SparseArray<>();
-
-
     private static int nextWakeLockID = 0;
-    private static boolean isPushRegistering = false;
-
-    private static long channelRegistrationBackOff = 0;
-
-    private static long pushRegistrationBackOff = 0;
-
 
     private TagGroupServiceDelegate tagGroupServiceDelegate;
     private NamedUserServiceDelegate namedUserServiceDelegate;
-
-    private ChannelAPIClient channelClient;
+    private ChannelServiceDelegate channelServiceDelegate;
 
     /**
      * PushService constructor.
      */
     public PushService() {
         super("PushService");
-    }
-
-    /**
-     * PushService constructor that specifies the channel and named user client. Used
-     * for testing.
-     * @param client The channel api client.
-     */
-    PushService(ChannelAPIClient client) {
-        super("PushService");
-        this.channelClient = client;
     }
 
     @Override
@@ -200,21 +143,6 @@ public class PushService extends BaseIntentService {
                 case ACTION_PUSH_RECEIVED:
                     onPushReceived(intent);
                     break;
-                case ACTION_PUSH_REGISTRATION_FINISHED:
-                    onPushRegistrationFinished();
-                    break;
-                case ACTION_UPDATE_REGISTRATION:
-                    onUpdateRegistration();
-                    break;
-                case ACTION_START_REGISTRATION:
-                    onStartRegistration();
-                    break;
-                case ACTION_RETRY_CHANNEL_REGISTRATION:
-                    onRetryChannelRegistration(intent);
-                    break;
-                case ACTION_RETRY_PUSH_REGISTRATION:
-                    onRetryPushRegistration(intent);
-                    break;
             }
         } finally {
             if (wakeLockId >= 0) {
@@ -226,6 +154,7 @@ public class PushService extends BaseIntentService {
 
     @Override
     protected Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore) {
+        Logger.verbose("PushService - Service delegate for intent: " + intentAction);
 
         switch (intentAction) {
             case ACTION_UPDATE_NAMED_USER_TAGS:
@@ -240,6 +169,15 @@ public class PushService extends BaseIntentService {
                     namedUserServiceDelegate = new NamedUserServiceDelegate(getApplicationContext(), dataStore);
                 }
                 return namedUserServiceDelegate;
+
+            case ACTION_ADM_REGISTRATION_FINISHED:
+            case ACTION_START_REGISTRATION:
+            case ACTION_UPDATE_CHANNEL_REGISTRATION:
+            case ACTION_UPDATE_PUSH_REGISTRATION:
+                if (channelServiceDelegate == null) {
+                    channelServiceDelegate = new ChannelServiceDelegate(getApplicationContext(), dataStore);
+                }
+                return channelServiceDelegate;
         }
 
         return null;
@@ -255,373 +193,6 @@ public class PushService extends BaseIntentService {
         PushMessage message = new PushMessage(intent.getExtras());
         Logger.info("Received push message: " + message);
         UAirship.shared().getPushManager().deliverPush(message);
-    }
-
-    /**
-     * Starts push registration or it will update channel registration. When
-     * push registration is started, an intent with ACTION_PUSH_REGISTRATION_FINISHED
-     * will be received which will trigger a channel update. While push registration
-     * is in progress, any update registrations will be ignored.
-     */
-    private void onStartRegistration() {
-        if (isPushRegistering) {
-            // This will occur anytime we have multiple processes.
-            return;
-        }
-
-        if (isPushRegistrationAllowed() && needsPushRegistration()) {
-            startPushRegistration();
-        } else {
-            performChannelRegistration();
-        }
-    }
-
-    /**
-     * Updates channel registration.
-     */
-    private void onUpdateRegistration() {
-        if (isPushRegistering) {
-            Logger.verbose("PushService - Push registration in progress, skipping registration update.");
-            return;
-        }
-
-        performChannelRegistration();
-    }
-
-    /**
-     * Called when push registration is finished. Will trigger a channel registration
-     * update.
-     */
-    private void onPushRegistrationFinished() {
-        isPushRegistering = false;
-        performChannelRegistration();
-    }
-
-    /**
-     * Called when a push registration previously failed and is being retried.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onRetryPushRegistration(Intent intent) {
-        // Restore the back off if the application was restarted since the last retry.
-        pushRegistrationBackOff = intent.getLongExtra(EXTRA_BACK_OFF, pushRegistrationBackOff);
-        if (isPushRegistrationAllowed() && needsPushRegistration()) {
-            startPushRegistration();
-        }
-    }
-
-    /**
-     * Called when a channel registration previously failed and is being retried.
-     *
-     * @param intent The value passed to onHandleIntent.
-     */
-    private void onRetryChannelRegistration(Intent intent) {
-        // Restore the back off if the application was restarted since the last retry.
-        channelRegistrationBackOff = intent.getLongExtra(EXTRA_BACK_OFF, channelRegistrationBackOff);
-        performChannelRegistration();
-    }
-
-    /**
-     * Updates a channel.
-     *
-     * @param channelLocation Channel location.
-     * @param payload The ChannelRegistrationPayload payload.
-     */
-    private void updateChannel(URL channelLocation, ChannelRegistrationPayload payload) {
-        PushManager pushManager = UAirship.shared().getPushManager();
-        PushPreferences pushPreferences = pushManager.getPreferences();
-
-        ChannelResponse response = getChannelClient().updateChannelWithPayload(channelLocation, payload);
-
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            // Server error occurred, so retry later.
-            Logger.error("Channel registration failed, will retry.");
-            channelRegistrationBackOff = calculateNextBackOff(channelRegistrationBackOff);
-            scheduleRetry(ACTION_RETRY_CHANNEL_REGISTRATION, channelRegistrationBackOff);
-        } else if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Logger.info("Channel registration succeeded with status: " + response.getStatus());
-
-            // Set the last registration payload and time then notify registration succeeded
-            pushPreferences.setLastRegistrationPayload(payload);
-            pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
-            pushManager.sendRegistrationFinishedBroadcast(true);
-
-            channelRegistrationBackOff = 0;
-        } else if (response.getStatus() == 409) {
-            // 409 Conflict. Delete channel and register again.
-            pushManager.setChannel(null, null);
-            pushPreferences.setLastRegistrationPayload(null);
-            performChannelRegistration();
-        } else {
-            // Got an unexpected status code, so notify registration failed
-            Logger.error("Channel registration failed with status: " + response.getStatus());
-            pushManager.sendRegistrationFinishedBroadcast(false);
-
-            channelRegistrationBackOff = 0;
-        }
-    }
-
-    /**
-     * Actually creates the channel.
-     *
-     * @param payload The ChannelRegistrationPayload payload.
-     */
-    private void createChannel(ChannelRegistrationPayload payload) {
-        PushManager pushManager = UAirship.shared().getPushManager();
-        PushPreferences pushPreferences = pushManager.getPreferences();
-        ChannelResponse response = getChannelClient().createChannelWithPayload(payload);
-
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            // Server error occurred, so retry later.
-            Logger.error("Channel registration failed, will retry.");
-            channelRegistrationBackOff = calculateNextBackOff(channelRegistrationBackOff);
-            scheduleRetry(ACTION_RETRY_CHANNEL_REGISTRATION, channelRegistrationBackOff);
-        } else if (response.getStatus() == HttpURLConnection.HTTP_OK || response.getStatus() == HttpURLConnection.HTTP_CREATED) {
-
-            if (!UAStringUtil.isEmpty(response.getChannelLocation()) && !UAStringUtil.isEmpty(response.getChannelId())) {
-                Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + response.getChannelId());
-
-                // Set the last registration payload and time then notify registration succeeded
-                pushManager.setChannel(response.getChannelId(), response.getChannelLocation());
-                pushPreferences.setLastRegistrationPayload(payload);
-                pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
-                pushManager.sendRegistrationFinishedBroadcast(true);
-
-                if (response.getStatus() == HttpURLConnection.HTTP_OK) {
-                    // 200 means channel previously existed and a named user may be associated to it.
-                    if (UAirship.shared().getAirshipConfigOptions().clearNamedUser) {
-                        // If clearNamedUser is true on re-install, then disassociate if necessary
-                        pushManager.getNamedUser().disassociateNamedUserIfNull();
-                    }
-                }
-
-                // If setId was called before channel creation, update named user
-                pushManager.getNamedUser().startUpdateService();
-
-                pushManager.updateRegistration();
-                pushManager.startUpdateTagsService();
-            } else {
-                Logger.error("Failed to register with channel ID: " + response.getChannelId() +
-                        " channel location: " + response.getChannelLocation());
-                pushManager.sendRegistrationFinishedBroadcast(false);
-            }
-
-            channelRegistrationBackOff = 0;
-        } else {
-            // Got an unexpected status code, so notify registration failed
-            Logger.error("Channel registration failed with status: " + response.getStatus());
-            pushManager.sendRegistrationFinishedBroadcast(false);
-
-            channelRegistrationBackOff = 0;
-        }
-    }
-
-    /**
-     * Performs channel registration. Will either result in updating or creating a channel.
-     */
-    private void performChannelRegistration() {
-        Logger.verbose("PushService - Performing channel registration.");
-        PushManager pushManager = UAirship.shared().getPushManager();
-        PushPreferences pushPreferences = pushManager.getPreferences();
-
-        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
-        if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("PushService - Channel already up to date.");
-            return;
-        }
-
-        String channelId = pushPreferences.getChannelId();
-        URL channelLocation = getChannelLocationURL();
-
-        if (channelLocation != null && !UAStringUtil.isEmpty(channelId)) {
-            updateChannel(channelLocation, payload);
-        } else {
-            createChannel(payload);
-        }
-    }
-
-    /**
-     * Scheduled an intent for the service.
-     *
-     * @param action The action to schedule.
-     * @param delay The delay in milliseconds.
-     */
-    private void scheduleRetry(String action, long delay) {
-        Logger.debug("PushService - Rescheduling " + action + " in " + delay + " milliseconds.");
-
-        Intent intent = new Intent(getApplicationContext(), PushService.class)
-                .setAction(action)
-                .putExtra(EXTRA_BACK_OFF, delay);
-
-        AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
-    }
-
-    /**
-     * Calculate the next back off value.
-     *
-     * @param lastBackOff The last back off value.
-     * @return The next back off value.
-     */
-    private long calculateNextBackOff(long lastBackOff) {
-        long delay = Math.min(lastBackOff * 2, MAX_BACK_OFF_TIME);
-        return Math.max(delay, STARTING_BACK_OFF_TIME);
-    }
-
-    /**
-     * Starts registering for push with GCM.
-     */
-    private void startPushRegistration() {
-
-        isPushRegistering = true;
-
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
-                    Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
-                            "the modular Google Play Services dependencies, make sure the application includes " +
-                            "the com.google.android.gms:play-services-gcm dependency.");
-                    performChannelRegistration();
-                } else {
-                    try {
-                        if (!GCMRegistrar.register()) {
-                            Logger.error("GCM registration failed.");
-                            isPushRegistering = false;
-                            pushRegistrationBackOff = 0;
-                            performChannelRegistration();
-                        }
-                    } catch (IOException e) {
-                        Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
-                        pushRegistrationBackOff = calculateNextBackOff(pushRegistrationBackOff);
-                        scheduleRetry(ACTION_RETRY_PUSH_REGISTRATION, pushRegistrationBackOff);
-                    }
-                }
-                break;
-
-            case UAirship.AMAZON_PLATFORM:
-                if (!ADMRegistrar.register()) {
-                    Logger.error("ADM registration failed.");
-                    isPushRegistering = false;
-                    pushRegistrationBackOff = 0;
-                    performChannelRegistration();
-                }
-                break;
-
-            default:
-                Logger.error("Unknown platform type. Unable to register for push.");
-                isPushRegistering = false;
-                performChannelRegistration();
-        }
-    }
-
-    /**
-     * Get the channel location as a URL
-     *
-     * @return The channel location URL
-     */
-    private URL getChannelLocationURL() {
-        String channelLocationString = UAirship.shared().getPushManager().getPreferences().getChannelLocation();
-        if (!UAStringUtil.isEmpty(channelLocationString)) {
-            try {
-                return new URL(channelLocationString);
-            } catch (MalformedURLException e) {
-                Logger.error("Channel location from preferences was invalid: " + channelLocationString, e);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Check the specified payload and last registration time to determine if registration is required
-     *
-     * @param payload The channel registration payload
-     * @return <code>True</code> if registration is required, <code>false</code> otherwise
-     */
-    private boolean shouldUpdateRegistration(ChannelRegistrationPayload payload) {
-        PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
-
-        // check time and payload
-        ChannelRegistrationPayload lastSuccessPayload = pushPreferences.getLastRegistrationPayload();
-        long timeSinceLastRegistration = (System.currentTimeMillis() - pushPreferences.getLastRegistrationTime());
-        return (!payload.equals(lastSuccessPayload)) ||
-                (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS);
-    }
-
-    /**
-     * Checks if push registration is needed.
-     *
-     * @return <code>true</code> if push registration is needed, otherwise <code>false</code>.
-     */
-    private boolean needsPushRegistration() {
-        PushPreferences pushPreferences = UAirship.shared().getPushManager().getPreferences();
-
-        if (UAirship.getPackageInfo().versionCode != pushPreferences.getAppVersionCode()) {
-            Logger.verbose("PushService - Version code changed to " + UAirship.getPackageInfo().versionCode + ". Push re-registration required.");
-            return true;
-        } else if (!PushManager.getSecureId(getApplicationContext()).equals(pushPreferences.getDeviceId())) {
-            Logger.verbose("PushService - Device ID changed. Push re-registration required.");
-            return true;
-        }
-
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                if (UAStringUtil.isEmpty(pushPreferences.getGcmId())) {
-                    return true;
-                }
-                Set<String> senderIds = UAirship.shared().getAirshipConfigOptions().getGCMSenderIds();
-                Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
-
-                // Unregister if we have different registered sender ids
-                if (registeredGcmSenderIds != null && !registeredGcmSenderIds.equals(senderIds)) {
-                    Logger.verbose("PushService - GCM sender IDs changed. Push re-registration required.");
-                    return true;
-                }
-
-                Logger.verbose("PushService - GCM already registered with ID: " + pushPreferences.getGcmId());
-                return false;
-
-            case UAirship.AMAZON_PLATFORM:
-                if (UAStringUtil.isEmpty(pushPreferences.getAdmId())) {
-                    return true;
-                }
-
-                Logger.verbose("PushService - ADM already registered with ID: " + pushPreferences.getAdmId());
-                return false;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if the push registration is allowed for the current platform.
-     *
-     * @return <code>true</code> if push registration is allowed.
-     */
-    private boolean isPushRegistrationAllowed() {
-        AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                if (!options.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-                    Logger.info("Unable to register for push. GCM transport type is not allowed.");
-                    return false;
-                }
-
-                return true;
-
-            case UAirship.AMAZON_PLATFORM:
-                if (!options.isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-                    Logger.info("Unable to register for push. ADM transport type is not allowed.");
-                    return false;
-                }
-
-                return true;
-
-            default:
-                return false;
-        }
     }
 
     /**
@@ -678,15 +249,4 @@ public class PushService extends BaseIntentService {
         return nextWakeLockID;
     }
 
-    /**
-     * Gets the channel client. Creates it if it does not exist.
-     *
-     * @return The channel API client.
-     */
-    private ChannelAPIClient getChannelClient() {
-        if (channelClient == null) {
-            channelClient = new ChannelAPIClient();
-        }
-        return channelClient;
-    }
 }
