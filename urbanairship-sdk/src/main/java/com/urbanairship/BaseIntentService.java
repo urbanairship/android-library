@@ -81,8 +81,6 @@ public abstract class BaseIntentService extends IntentService {
                 return;
             }
 
-            Logger.debug("BaseIntentService - Received intent action: " + action);
-
             Delegate delegate = getServiceDelegate(action, UAirship.shared().preferenceDataStore);
             if (delegate == null) {
                 Logger.debug("BaseIntentService - No delegate for intent action: " + action);
@@ -198,7 +196,7 @@ public abstract class BaseIntentService extends IntentService {
             intent.putExtra(EXTRA_BACK_OFF_MS, delay);
 
             // Schedule the intent
-            Logger.debug("BaseIntentService - Scheduling intent " + intent.getAction() + " in " + delay + " milliseconds.");
+            Logger.verbose("BaseIntentService - Scheduling intent " + intent.getAction() + " in " + delay + " milliseconds.");
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
