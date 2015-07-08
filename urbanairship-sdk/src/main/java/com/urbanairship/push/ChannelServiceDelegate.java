@@ -28,6 +28,7 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 
+import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
@@ -100,7 +101,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 break;
 
             case PushService.ACTION_ADM_REGISTRATION_FINISHED:
-                onAdmRegistrationFinished();
+                onAdmRegistrationFinished(intent);
                 break;
 
             case PushService.ACTION_UPDATE_CHANNEL_REGISTRATION:
@@ -187,10 +188,32 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     }
 
     /**
-     * Called when push adm registration is finished. Will trigger a channel registration
-     * update.
+     * Called when ADM registration is finished.
+     *
+     * @param intent The received intent.
      */
-    private void onAdmRegistrationFinished() {
+    private void onAdmRegistrationFinished(Intent intent) {
+        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !ADMUtils.isADMAvailable()) {
+            Logger.error("Received intent from invalid transport acting as ADM.");
+            return;
+        }
+
+        Intent admIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        if (admIntent == null) {
+            Logger.error("ChannelServiceDelegate - Received ADM message missing original intent.");
+            return;
+        }
+
+        if (admIntent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
+            Logger.error("ADM error occurred: " + admIntent.getStringExtra(ADMConstants.LowLevel.EXTRA_ERROR));
+        } else {
+            String registrationID = admIntent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
+            if (registrationID != null) {
+                Logger.info("ADM registration successful. Registration ID: " + registrationID);
+                pushManager.setAdmId(registrationID);
+            }
+        }
+
         isPushRegistering = false;
 
         // Update the channel registration

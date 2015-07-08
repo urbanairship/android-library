@@ -25,17 +25,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.util.UAStringUtil;
 
 /**
  * GCMPushReceiver listens for incoming GCM registration responses and messages, then forwards them
@@ -43,7 +39,6 @@ import com.urbanairship.util.UAStringUtil;
  */
 public class GCMPushReceiver extends WakefulBroadcastReceiver {
 
-    @SuppressLint("NewApi")
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
@@ -53,65 +48,16 @@ public class GCMPushReceiver extends WakefulBroadcastReceiver {
         }
 
         Logger.verbose("GCMPushReceiver - Received intent: " + intent.getAction());
-
         if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
-            if (Build.VERSION.SDK_INT >= 11) {
-                final PendingResult pendingResult = goAsync();
-                if (isOrderedBroadcast()) {
-                    pendingResult.setResultCode(Activity.RESULT_OK);
-                }
-
-                UAirship.shared(new UAirship.OnReadyCallback() {
-                    @Override
-                    public void onAirshipReady(UAirship airship) {
-                        handleGCMReceived(airship, context, intent);
-                        pendingResult.finish();
-                    }
-                });
-            } else {
-                handleGCMReceived(UAirship.shared(), context, intent);
-
-                if (isOrderedBroadcast()) {
-                    setResultCode(Activity.RESULT_OK);
-                }
-            }
-        }
-    }
-
-    /**
-     * Handles the incoming GCM Message.
-     * @param airship The airship instance.
-     * @param context The application context.
-     * @param intent The incoming intent.
-     */
-    private void handleGCMReceived(UAirship airship, Context context, Intent intent) {
-        if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
-            Logger.error("GCMPushReceiver - Received intent from invalid transport acting as GCM.");
-            return;
-        }
-
-        if (UAStringUtil.isEmpty(airship.getPushManager().getGcmId())) {
-            Logger.error("GCMPushReceiver - Received intent from GCM without registering.");
-            return;
-        }
-
-        String sender = intent.getStringExtra("from");
-        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
-            Logger.info("Ignoring GCM message from sender: " + sender);
-            return;
-        }
-
-        if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(intent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
-            Logger.info("GCM deleted " + intent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
-        } else {
-            Logger.debug("GCMPushReceiver - Received push: " + intent);
-
-            // Deliver message to push service
             Intent pushIntent = new Intent(context, PushService.class)
-                    .setAction(PushService.ACTION_PUSH_RECEIVED)
+                    .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                     .putExtra(PushService.EXTRA_INTENT, intent);
 
-            WakefulBroadcastReceiver.startWakefulService(context, pushIntent);
+            startWakefulService(context, pushIntent);
+        }
+
+        if (isOrderedBroadcast()) {
+            setResultCode(Activity.RESULT_OK);
         }
     }
 }

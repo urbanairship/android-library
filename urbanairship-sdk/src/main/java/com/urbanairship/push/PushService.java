@@ -58,10 +58,14 @@ public class PushService extends BaseIntentService {
     static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
 
     /**
-     * Action sent when a push is received.
+     * Action sent when a push is received by GCM.
      */
-    static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.ACTION_PUSH_RECEIVED";
+    static final String ACTION_RECEIVE_GCM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_GCM_MESSAGE";
 
+    /**
+     * Action sent when a push is received by ADM.
+     */
+    static final String ACTION_RECEIVE_ADM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_ADM_MESSAGE";
 
     /**
      * Action to update named user association or disassociation.
@@ -94,7 +98,7 @@ public class PushService extends BaseIntentService {
     static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
 
     /**
-     * Extra containing the received message intent for {@link #ACTION_PUSH_RECEIVED} intent action.
+     * Extra containing the received message intent for {@link #ACTION_RECEIVE_ADM_MESSAGE} and {@link #ACTION_RECEIVE_GCM_MESSAGE} intent actions.
      */
     static String EXTRA_INTENT =  "com.urbanairship.push.EXTRA_INTENT";
 
@@ -139,7 +143,8 @@ public class PushService extends BaseIntentService {
                 }
                 return channelServiceDelegate;
 
-            case ACTION_PUSH_RECEIVED:
+            case ACTION_RECEIVE_ADM_MESSAGE:
+            case ACTION_RECEIVE_GCM_MESSAGE:
                 if (incomingPushServiceDelegate == null) {
                     incomingPushServiceDelegate = new IncomingPushServiceDelegate(getApplicationContext(), dataStore);
                 }

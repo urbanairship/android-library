@@ -91,6 +91,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         pushManager = mock(PushManager.class);
         notificationManager = mock(NotificationManagerCompat.class);
 
+        when(pushManager.getGcmId()).thenReturn("GCM ID");
+
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
                 .setContentText("Test NotificationBuilder Text")
@@ -130,7 +132,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPush() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
@@ -153,7 +155,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushUserPushDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
@@ -178,7 +180,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverBackgroundPush() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, silentGcmIntent);
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
@@ -202,7 +204,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushException() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
 
@@ -232,7 +234,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testNotificationContentIntent() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
@@ -264,7 +266,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testNotificationDeleteIntent() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
@@ -296,7 +298,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushSoundDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
@@ -321,7 +323,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushVibrateDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
@@ -352,7 +354,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
                 .toJsonValue()
                 .toString());
 
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
@@ -369,7 +371,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testInQuietTime() {
-        Intent pushIntent = new Intent(PushService.ACTION_PUSH_RECEIVED)
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
                 .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
 
         when(pushManager.isVibrateEnabled()).thenReturn(true);

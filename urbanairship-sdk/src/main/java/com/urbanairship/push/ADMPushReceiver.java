@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -34,8 +35,6 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.util.UAStringUtil;
 
 /**
  * ADMPushReceiver listens for incoming ADM registration responses and messages.
@@ -58,71 +57,25 @@ public class ADMPushReceiver extends WakefulBroadcastReceiver {
             return;
         }
 
-        final PendingResult pendingResult = goAsync();
+        switch (intent.getAction()) {
+            case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
+                Intent pushIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_RECEIVE_ADM_MESSAGE)
+                        .putExtra(PushService.EXTRA_INTENT, intent);
 
-        UAirship.shared(new UAirship.OnReadyCallback() {
-            @Override
-            public void onAirshipReady(UAirship airship) {
-                if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
-                    switch (intent.getAction()) {
-                        case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
-                            handleADMReceivedIntent(airship, context, intent);
-                            break;
-                        case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
-                            handleRegistrationIntent(airship, context, intent);
-                            break;
-                    }
-                } else {
-                    Logger.error("ADMPushReceiver - Received intent from invalid transport acting as ADM.");
-                }
+                startWakefulService(context, pushIntent);
+                break;
+            case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
+                Intent finishIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_ADM_REGISTRATION_FINISHED)
+                        .putExtra(PushService.EXTRA_INTENT, intent);
 
-                pendingResult.finish();
-            }
-        });
-    }
-
-    /**
-     * Handles ADM registration intent.
-     * @param airship The airship instance.
-     * @param context The application context.
-     * @param intent The registration intent.
-     */
-    private void handleRegistrationIntent(UAirship airship, Context context, Intent intent) {
-        if (intent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
-            Logger.error("ADM error occurred: " + intent.getStringExtra(ADMConstants.LowLevel.EXTRA_ERROR));
-        } else {
-            String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
-            if (registrationID != null) {
-                Logger.info("ADM registration successful. Registration ID: " + registrationID);
-                airship.getPushManager().setAdmId(registrationID);
-            }
+                startWakefulService(context, finishIntent);
+                break;
         }
 
-        Intent finishIntent = new Intent(context, PushService.class)
-                .setAction(PushService.ACTION_ADM_REGISTRATION_FINISHED);
-
-        WakefulBroadcastReceiver.startWakefulService(context, finishIntent);
-    }
-
-    /**
-     * Handles ADM push intent.
-     * @param airship The airship instance.
-     * @param context The application context.
-     * @param intent The push intent.
-     */
-    private void handleADMReceivedIntent(UAirship airship, Context context, Intent intent) {
-        Logger.debug("ADMPushReceiver - Received push: " + intent);
-
-        if (UAStringUtil.isEmpty(airship.getPushManager().getAdmId())) {
-            Logger.error("ADMPushReceiver - Received intent from ADM without registering.");
-            return;
+        if (isOrderedBroadcast()) {
+            setResultCode(Activity.RESULT_OK);
         }
-
-        // Deliver message to push service
-        Intent pushIntent = new Intent(context, PushService.class)
-                .setAction(PushService.ACTION_PUSH_RECEIVED)
-                .putExtra(PushService.EXTRA_INTENT, intent);
-
-        WakefulBroadcastReceiver.startWakefulService(context, pushIntent);
     }
 }
