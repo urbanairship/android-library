@@ -264,10 +264,10 @@ public class PushManager extends BaseManager {
 
     /**
      * Enables or disables user notifications.
-     *
+     * <p/>
      * User notifications are push notifications that contain an alert message and are
      * intended to be shown to the user.
-     *
+     * <p/>
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when a user preference has changed.
      *
@@ -377,7 +377,7 @@ public class PushManager extends BaseManager {
             case UAirship.AMAZON_PLATFORM:
                 return !UAStringUtil.isEmpty(getPreferences().getAdmId());
             case UAirship.ANDROID_PLATFORM:
-                return !UAStringUtil.isEmpty(getPreferences().getGcmId());
+                return !UAStringUtil.isEmpty(getPreferences().getGcmToken());
         }
         return false;
     }
@@ -408,11 +408,11 @@ public class PushManager extends BaseManager {
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
                 builder.setDeviceType("android")
-                       .setPushAddress(preferences.getGcmId());
+                       .setPushAddress(getGcmToken());
                 break;
             case UAirship.AMAZON_PLATFORM:
                 builder.setDeviceType("amazon")
-                       .setPushAddress(preferences.getAdmId());
+                       .setPushAddress(getAdmId());
                 break;
         }
 
@@ -485,7 +485,6 @@ public class PushManager extends BaseManager {
     }
 
 
-
     /**
      * Returns the current alias for this application's channel.
      *
@@ -526,7 +525,10 @@ public class PushManager extends BaseManager {
      * Returns the currently registered GCM ID.
      *
      * @return A GCM identifier string, or null if not present.
+     * @deprecated Marked to be removed in 7.0.0. The GCM security token for {@link com.urbanairship.AirshipConfigOptions#gcmSender}
+     * is available with {@link #getGcmToken}.
      */
+    @Deprecated
     public String getGcmId() {
         return preferences.getGcmId();
     }
@@ -816,9 +818,7 @@ public class PushManager extends BaseManager {
      * @param gcmId A GCM identifier string.
      */
     void setGcmId(String gcmId) {
-        preferences.setAppVersionCode(UAirship.getPackageInfo().versionCode);
         preferences.setGcmId(gcmId);
-        preferences.setDeviceId(getSecureId(UAirship.getApplicationContext()));
     }
 
     /**
@@ -834,9 +834,9 @@ public class PushManager extends BaseManager {
 
     /**
      * Gets the Android secure ID.
+     *
      * @param context The application context.
      * @return The Android secure ID.
-     *
      * @hide
      */
     static String getSecureId(Context context) {
@@ -852,5 +852,23 @@ public class PushManager extends BaseManager {
         UAirship.getApplicationContext().startService(tagUpdateIntent);
     }
 
+    /**
+     * Sets the GCM Instance ID token.
+     *
+     * @param token The Instance ID token.
+     */
+    void setGcmToken(String token) {
+        preferences.setGcmToken(token);
+        preferences.setAppVersionCode(UAirship.getPackageInfo().versionCode);
+        preferences.setDeviceId(getSecureId(UAirship.getApplicationContext()));
+    }
 
+    /**
+     * Gets the GCM Instance ID token.
+     *
+     * @return The GCM token.
+     */
+    public String getGcmToken() {
+        return preferences.getGcmToken();
+    }
 }

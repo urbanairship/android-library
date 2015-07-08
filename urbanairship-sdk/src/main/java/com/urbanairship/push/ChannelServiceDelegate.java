@@ -427,6 +427,11 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 if (UAStringUtil.isEmpty(pushManager.getGcmId())) {
                     return true;
                 }
+
+                if (UAStringUtil.isEmpty(pushManager.getGcmToken())) {
+                    return true;
+                }
+
                 Set<String> senderIds = airship.getAirshipConfigOptions().getGCMSenderIds();
                 Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
 

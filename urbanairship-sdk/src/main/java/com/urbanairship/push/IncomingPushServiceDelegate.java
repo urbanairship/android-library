@@ -113,7 +113,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (UAStringUtil.isEmpty(airship.getPushManager().getGcmId())) {
+        if (airship.getPushManager().isPushAvailable()) {
             Logger.error("IncomingPushServiceDelegate - Received intent from GCM without registering.");
             return;
         }
@@ -149,7 +149,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (UAStringUtil.isEmpty(airship.getPushManager().getAdmId())) {
+        if (airship.getPushManager().isPushAvailable()) {
             Logger.error("IncomingPushServiceDelegate - Received intent from ADM without registering.");
             return;
         }
