@@ -238,7 +238,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             // Set the last registration payload and time then notify registration succeeded
             pushPreferences.setLastRegistrationPayload(payload);
             pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
-            pushManager.sendRegistrationFinishedBroadcast(true);
+            sendRegistrationFinishedBroadcast(true);
             return;
         }
 
@@ -258,7 +258,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
-        pushManager.sendRegistrationFinishedBroadcast(false);
+        sendRegistrationFinishedBroadcast(false);
     }
 
     /**
@@ -287,7 +287,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 pushManager.setChannel(response.getChannelId(), response.getChannelLocation());
                 pushPreferences.setLastRegistrationPayload(payload);
                 pushPreferences.setLastRegistrationTime(System.currentTimeMillis());
-                pushManager.sendRegistrationFinishedBroadcast(true);
+                setLastRegistrationPayload(payload);
+                sendRegistrationFinishedBroadcast(true);
 
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                     // 200 means channel previously existed and a named user may be associated to it.
@@ -304,7 +305,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());
-                pushManager.sendRegistrationFinishedBroadcast(false);
+                sendRegistrationFinishedBroadcast(false);
             }
 
             return;
@@ -312,7 +313,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
-        pushManager.sendRegistrationFinishedBroadcast(false);
+        sendRegistrationFinishedBroadcast(false);
     }
 
     /**
@@ -416,5 +417,24 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         }
 
         return false;
+    }
+
+    /**
+     * Broadcasts an intent to notify the host application of a registration finished, but
+     * only if a receiver is set to get the user-defined intent receiver.
+     *
+     * @param isSuccess A boolean indicating whether registration succeeded or not.
+     */
+    private void sendRegistrationFinishedBroadcast(boolean isSuccess) {
+        Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED)
+                .putExtra(PushManager.EXTRA_CHANNEL_ID, pushManager.getChannelId())
+                .addCategory(UAirship.getPackageName())
+                .setPackage(UAirship.getPackageName());
+
+        if (!isSuccess) {
+            intent.putExtra(PushManager.EXTRA_ERROR, true);
+        }
+
+        getContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
     }
 }

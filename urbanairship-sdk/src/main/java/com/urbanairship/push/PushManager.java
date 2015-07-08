@@ -779,25 +779,6 @@ public class PushManager extends BaseManager {
     }
 
     /**
-     * Broadcasts an intent to notify the host application of a registration finished, but
-     * only if a receiver is set to get the user-defined intent receiver.
-     *
-     * @param isSuccess A boolean indicating whether registration succeeded or not.
-     */
-    void sendRegistrationFinishedBroadcast(boolean isSuccess) {
-        Intent intent = new Intent(ACTION_CHANNEL_UPDATED)
-                .putExtra(EXTRA_CHANNEL_ID, getChannelId())
-                .addCategory(UAirship.getPackageName())
-                .setPackage(UAirship.getPackageName());
-
-        if (!isSuccess) {
-            intent.putExtra(EXTRA_ERROR, true);
-        }
-
-        UAirship.getApplicationContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
-    }
-
-    /**
      * Get the Channel ID
      *
      * @return A Channel ID string
