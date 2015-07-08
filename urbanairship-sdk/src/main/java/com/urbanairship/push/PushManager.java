@@ -787,7 +787,12 @@ public class PushManager extends BaseManager {
         return preferences.getChannelId();
     }
 
-    public String getChannelLocation() {
+    /**
+     * Gets the channel location.
+     *
+     * @return The channel location.
+     */
+    String getChannelLocation() {
         return preferences.getChannelLocation();
     }
 

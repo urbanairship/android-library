@@ -258,7 +258,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         if (response.getStatus() == HttpURLConnection.HTTP_CONFLICT) {
             // Delete channel and register again.
             pushManager.setChannel(null, null);
-            setLastRegistrationPayload(null);
 
             // Update registration
             Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
@@ -290,7 +289,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        // 2xx
+        // 200 or 201
         if (response.getStatus() == HttpURLConnection.HTTP_OK || response.getStatus() == HttpURLConnection.HTTP_CREATED) {
             if (!UAStringUtil.isEmpty(response.getChannelLocation()) && !UAStringUtil.isEmpty(response.getChannelId())) {
                 Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + response.getChannelId());
@@ -430,18 +429,14 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     }
 
     /**
-     * Sets the last registration payload
+     * Sets the last registration payload and registration time. The last payload and registration
+     * time are used to prevent duplicate channel updates.
      *
-     * @param channelPayload A ChannelRegistrationPayload
+     * @param channelPayload A ChannelRegistrationPayload.
      */
     private void setLastRegistrationPayload(ChannelRegistrationPayload channelPayload) {
-        if (channelPayload == null) {
-            getDataStore().remove(LAST_REGISTRATION_PAYLOAD_KEY);
-            getDataStore().put(LAST_REGISTRATION_TIME_KEY, 0);
-        } else {
-            getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.asJSON().toString());
-            getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
-        }
+        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.asJSON().toString());
+        getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
     }
 
     /**
