@@ -17,6 +17,7 @@ import java.util.UUID;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -179,10 +180,45 @@ public class UALocationProviderTest extends BaseTestCase {
         };
 
         when(mockAdapterOne.connect()).thenReturn(false);
-        when(mockAdapterOne.requestSingleLocation(options)).thenReturn(request);
-        when(mockAdapterTwo.requestSingleLocation(options)).thenReturn(request);
 
         provider.connect();
         assertNull("Should return null if no connected adapter", provider.requestSingleLocation(options));
     }
+
+
+    /**
+     * Test single request returns null if the adapter throws a security exception.
+     */
+    @Test
+    public void testSingleLocationNoPermissions() {
+        when(mockAdapterOne.connect()).thenReturn(true);
+        when(mockAdapterOne.requestSingleLocation(options)).thenThrow(new SecurityException("Nope"));
+
+        provider.connect();
+        assertNull("Should return null if the adapter throws a security exception.", provider.requestSingleLocation(options));
+    }
+
+    /**
+     * Test requesting location updates handles security exceptions.
+     */
+    @Test
+    public void testRequestLocationUpdatesNoPermissions() {
+        when(mockAdapterOne.connect()).thenReturn(true);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestLocationUpdates(options, pendingIntent);
+
+        provider.connect();
+        provider.requestLocationUpdates(options, pendingIntent);
+    }
+
+    /**
+     * Test canceling location updates handles security exceptions.
+     */
+    @Test
+    public void testCancelLocationUpdatesNoPermissions() {
+        when(mockAdapterOne.connect()).thenReturn(true);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).cancelLocationUpdates(pendingIntent);
+
+        provider.cancelRequests(pendingIntent);
+    }
+
 }
