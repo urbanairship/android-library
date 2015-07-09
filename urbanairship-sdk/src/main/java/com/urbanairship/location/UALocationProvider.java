@@ -185,13 +185,4 @@ class UALocationProvider {
 
         isConnected = false;
     }
-
-    /**
-     * Checks if the provider is connected.
-     *
-     * @return <code>true</code> if connected, <code>false</code> otherwise.
-     */
-    public boolean isConnected() {
-        return isConnected;
-    }
 }
