@@ -41,14 +41,14 @@ interface LocationAdapter {
      * @return PendingResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    public PendingResult<Location> requestSingleLocation(LocationRequestOptions options);
+    PendingResult<Location> requestSingleLocation(LocationRequestOptions options);
 
     /**
      * Cancels location updates.
      *
      * @param intent The pending intent used to start location updates.
      */
-    public void cancelLocationUpdates(PendingIntent intent);
+    void cancelLocationUpdates(PendingIntent intent);
 
     /**
      * Requests location updates.
@@ -56,7 +56,7 @@ interface LocationAdapter {
      * @param options The location request options.
      * @param intent The pending intent used to start location updates.
      */
-    public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent);
+    void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent);
 
     /**
      * Connects the adapter.
@@ -64,10 +64,10 @@ interface LocationAdapter {
      * @return <code>true</code> if the adapter connected,
      * <code>false</code> otherwise.
      */
-    public boolean connect();
+    boolean connect();
 
     /**
      * Disconnects the adapter.
      */
-    public void disconnect();
+    void disconnect();
 }

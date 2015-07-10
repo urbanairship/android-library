@@ -79,10 +79,16 @@ class UALocationProvider {
          */
         for (LocationAdapter adapter : adapters) {
             Logger.verbose("UALocationProvider - Canceling location requests for adapter: " + adapter);
-            if (adapter == connectedAdapter) {
-                adapter.cancelLocationUpdates(intent);
-            } else if (adapter.connect()) {
-                adapter.cancelLocationUpdates(intent);
+
+            if (adapter == connectedAdapter || adapter.connect()) {
+                try {
+                    adapter.cancelLocationUpdates(intent);
+                } catch (SecurityException ex) {
+                    Logger.verbose("Unable to cancel location updates: " + ex.getMessage());
+                }
+            }
+
+            if (adapter != connectedAdapter) {
                 adapter.disconnect();
             }
         }
@@ -106,7 +112,11 @@ class UALocationProvider {
         }
 
         Logger.verbose("UALocationProvider - Requesting location updates: " + options);
-        connectedAdapter.requestLocationUpdates(options, intent);
+        try {
+            connectedAdapter.requestLocationUpdates(options, intent);
+        } catch (SecurityException ex) {
+            Logger.error("Unable to request location updates: " + ex.getMessage());
+        }
     }
 
     /**
@@ -127,7 +137,13 @@ class UALocationProvider {
         }
 
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
-        return connectedAdapter.requestSingleLocation(options);
+
+        try {
+            return connectedAdapter.requestSingleLocation(options);
+        } catch (SecurityException ex) {
+            Logger.error("Unable to request location: " + ex.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -168,14 +184,5 @@ class UALocationProvider {
         }
 
         isConnected = false;
-    }
-
-    /**
-     * Checks if the provider is connected.
-     *
-     * @return <code>true</code> if connected, <code>false</code> otherwise.
-     */
-    public boolean isConnected() {
-        return isConnected;
     }
 }
