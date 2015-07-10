@@ -254,8 +254,11 @@ public class UALocationManager extends BaseManager {
     /**
      * Records a single location using either the foreground request options
      * or the background request options depending on the application's state.
+     *
+     * @return A pending result for the location. The pending result may return a null location if
+     * the request is unable to be made due to insufficient permissions.
      */
-    public PendingResult requestSingleLocation() {
+    public PendingResult<Location> requestSingleLocation() {
         return requestSingleLocation(getLocationRequestOptions());
     }
 
@@ -263,9 +266,11 @@ public class UALocationManager extends BaseManager {
      * Records a single location using custom location request options.
      *
      * @param requestOptions The location request options.
+     * @return A pending result for the location. The pending result may return a null location if
+     * the request is unable to be made due to insufficient permissions.
      * @throws IllegalArgumentException if the requestOptions is null.
      */
-    public PendingResult requestSingleLocation(LocationRequestOptions requestOptions) {
+    public PendingResult<Location> requestSingleLocation(LocationRequestOptions requestOptions) {
         if (requestOptions == null) {
             throw new IllegalArgumentException("Location request options cannot be null or invalid");
         }
@@ -296,17 +301,6 @@ public class UALocationManager extends BaseManager {
     LocationPreferences getPreferences() {
         return preferences;
     }
-
-    /**
-     * Checks if location updates should be enabled.
-     *
-     * @return <code>true</code> if location updates should be enabled,
-     * otherwise <code>false</code>.
-     */
-    boolean isLocationUpdatesNeeded() {
-        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || isAppForegrounded());
-    }
-
 
     /**
      * Updates the service connection. Handles binding and subscribing to
@@ -458,17 +452,6 @@ public class UALocationManager extends BaseManager {
             Logger.debug("UALocationManager - Remote exception when sending message to location service");
         }
         return false;
-    }
-
-
-    /**
-     * Check analytics if the application is in the foreground or not.
-     *
-     * @return <code>true</code> if app is foregrounded, otherwise <code>false</code>.
-     */
-    private static boolean isAppForegrounded() {
-        Analytics analytics = UAirship.shared().getAnalytics();
-        return analytics != null && analytics.isAppInForeground();
     }
 
     /**
