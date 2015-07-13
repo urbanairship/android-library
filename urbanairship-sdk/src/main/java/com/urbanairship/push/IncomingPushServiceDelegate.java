@@ -94,14 +94,73 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (!intent.getAction().equals(PushService.ACTION_PUSH_RECEIVED)) {
+        switch (intent.getAction()) {
+            case PushService.ACTION_RECEIVE_ADM_MESSAGE:
+                onAdmMessageReceived(intent);
+            case PushService.ACTION_RECEIVE_GCM_MESSAGE:
+                onGcmMessageReceived(intent);
+        }
+    }
+
+    /**
+     * Handles incoming GCM messages.
+     *
+     * @param intent The received intent.
+     */
+    private void onGcmMessageReceived(Intent intent) {
+        if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
+            Logger.error("Received intent from invalid transport acting as GCM.");
             return;
         }
 
-        Intent receivedIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
-        if (receivedIntent != null) {
-            processMessage(new PushMessage(receivedIntent.getExtras()));
+        if (airship.getPushManager().isPushAvailable()) {
+            Logger.error("IncomingPushServiceDelegate - Received intent from GCM without registering.");
+            return;
         }
+
+        Intent gcmIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        if (gcmIntent == null) {
+            Logger.error("IncomingPushServiceDelegate - Received GCM message missing original intent.");
+            return;
+        }
+
+        String sender = gcmIntent.getStringExtra("from");
+        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
+            Logger.info("Ignoring GCM message from sender: " + sender);
+            return;
+        }
+
+        if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(gcmIntent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
+            Logger.info("GCM deleted " + gcmIntent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
+            return;
+        }
+
+        processMessage(new PushMessage(gcmIntent.getExtras()));
+    }
+
+    /**
+     * Handles incoming ADM messages.
+     *
+     * @param intent The received intent.
+     */
+    private void onAdmMessageReceived(Intent intent) {
+        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM) {
+            Logger.error("Received intent from invalid transport acting as ADM.");
+            return;
+        }
+
+        if (airship.getPushManager().isPushAvailable()) {
+            Logger.error("IncomingPushServiceDelegate - Received intent from ADM without registering.");
+            return;
+        }
+
+        Intent admIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        if (admIntent == null) {
+            Logger.error("IncomingPushServiceDelegate - Received ADM message missing original intent.");
+            return;
+        }
+
+        processMessage(new PushMessage(admIntent.getExtras()));
     }
 
     /**
@@ -154,7 +213,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         if (!pushManager.getUserNotificationsEnabled()) {
             Logger.info("User notifications disabled. Unable to display notification for message: " + message);
         } else {
-             notificationId = showNotification(message, pushManager.getNotificationFactory());
+            notificationId = showNotification(message, pushManager.getNotificationFactory());
         }
 
         sendPushReceivedBroadcast(message, notificationId);

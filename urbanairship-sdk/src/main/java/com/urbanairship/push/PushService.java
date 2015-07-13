@@ -58,10 +58,14 @@ public class PushService extends BaseIntentService {
     static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
 
     /**
-     * Action sent when a push is received.
+     * Action sent when a push is received by GCM.
      */
-    static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.ACTION_PUSH_RECEIVED";
+    static final String ACTION_RECEIVE_GCM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_GCM_MESSAGE";
 
+    /**
+     * Action sent when a push is received by ADM.
+     */
+    static final String ACTION_RECEIVE_ADM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_ADM_MESSAGE";
 
     /**
      * Action to update named user association or disassociation.
@@ -94,9 +98,15 @@ public class PushService extends BaseIntentService {
     static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
 
     /**
-     * Extra containing the received message intent for {@link #ACTION_PUSH_RECEIVED} intent action.
+     * Extra containing the received message intent for {@link #ACTION_RECEIVE_ADM_MESSAGE} and {@link #ACTION_RECEIVE_GCM_MESSAGE} intent actions.
      */
-    static String EXTRA_INTENT =  "com.urbanairship.push.EXTRA_INTENT";
+    static String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
+
+    /**
+     * Extra flag for {@link #ACTION_UPDATE_PUSH_REGISTRATION} to clear the GCM Instance ID token
+     * when updating push registration.
+     */
+    static String EXTRA_GCM_TOKEN_REFRESH = "com.urbanairship.push.EXTRA_GCM_TOKEN_REFRESH";
 
     private TagGroupServiceDelegate tagGroupServiceDelegate;
     private NamedUserServiceDelegate namedUserServiceDelegate;
@@ -109,7 +119,6 @@ public class PushService extends BaseIntentService {
     public PushService() {
         super("PushService");
     }
-
 
     @Override
     protected Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore) {
@@ -139,7 +148,8 @@ public class PushService extends BaseIntentService {
                 }
                 return channelServiceDelegate;
 
-            case ACTION_PUSH_RECEIVED:
+            case ACTION_RECEIVE_ADM_MESSAGE:
+            case ACTION_RECEIVE_GCM_MESSAGE:
                 if (incomingPushServiceDelegate == null) {
                     incomingPushServiceDelegate = new IncomingPushServiceDelegate(getApplicationContext(), dataStore);
                 }
