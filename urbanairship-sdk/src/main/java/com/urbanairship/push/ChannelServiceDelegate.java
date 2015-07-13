@@ -147,6 +147,12 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         switch (airship.getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
+
+                if (intent.getBooleanExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, false)) {
+                    pushManager.setGcmToken(null);
+                    intent.removeExtra(PushService.EXTRA_GCM_TOKEN_REFRESH);
+                }
+
                 if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
                     Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
                             "the modular Google Play Services dependencies, make sure the application includes " +
@@ -427,6 +433,11 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 if (UAStringUtil.isEmpty(pushManager.getGcmId())) {
                     return true;
                 }
+
+                if (UAStringUtil.isEmpty(pushManager.getGcmToken())) {
+                    return true;
+                }
+
                 Set<String> senderIds = airship.getAirshipConfigOptions().getGCMSenderIds();
                 Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
 

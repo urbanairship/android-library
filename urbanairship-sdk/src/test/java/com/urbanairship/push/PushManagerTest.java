@@ -658,7 +658,7 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("Tags should be equal", new HashSet<String>(), pushManager.getTags());
     }
 
-    /*
+    /**
      * Test set alias
      */
     @Test
@@ -677,6 +677,15 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+     * Test set GCM Instance ID token
+     */
+    @Test
+    public void testSetGcmToken() {
+        pushManager.setGcmToken("fakeGcmToken");
+        verify(mockPushPreferences).setGcmToken("fakeGcmToken");
+    }
+
+    /**
      * Test set ADM ID
      */
     @Test
@@ -691,7 +700,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testOptInPushDisabled() {
         when(mockPushPreferences.isPushEnabled()).thenReturn(false);
-        when(mockPushPreferences.getGcmId()).thenReturn("fakeGcmId");
+        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmId");
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -720,7 +729,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
 
-        when(mockPushPreferences.getGcmId()).thenReturn("fakeGcmId");
+        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmId");
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
     }
@@ -733,7 +742,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getGcmId()).thenReturn(null);
+        when(mockPushPreferences.getGcmToken()).thenReturn(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -760,12 +769,12 @@ public class PushManagerTest extends BaseTestCase {
 
         when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
         when(mockPushPreferences.getChannelLocation()).thenReturn(fakeChannelLocation);
-        when(mockPushPreferences.getGcmId()).thenReturn("GCM_ID");
+        when(mockPushPreferences.getGcmToken()).thenReturn("GCM_TOKEN");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
         assertEquals(payload.asJSON().getJSONObject("channel").get("device_type"), "android");
-        assertEquals(payload.asJSON().getJSONObject("channel").get("push_address"), "GCM_ID");
+        assertEquals(payload.asJSON().getJSONObject("channel").get("push_address"), "GCM_TOKEN");
     }
 
     /**

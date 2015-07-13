@@ -1,10 +1,19 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.urbanairship"
-          android:versionCode="1"
-          android:versionName="1.0">
+<manifest
+    package="com.urbanairship"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <uses-sdk tools:overrideLibrary="com.google.android.gms, com.google.android.gms.location, com.google.android.gms.gcm, com.google.android.gms.maps"/>
 
-    <application/>
+    <application>
+        <service
+            android:name="com.urbanairship.push.UAInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+    </application>
 </manifest>

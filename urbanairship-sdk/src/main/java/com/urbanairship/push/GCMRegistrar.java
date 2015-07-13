@@ -29,6 +29,7 @@ package com.urbanairship.push;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.GCMUtils;
@@ -69,12 +70,15 @@ class GCMRegistrar {
             gcm.unregister();
         }
 
-
         Logger.debug("GCMRegistrar - Registering GCM Sender IDs:  " + senderIds);
         String registrationId = gcm.register(senderIds.toArray(new String[senderIds.size()]));
 
-        if (registrationId != null) {
-            Logger.info("GCM registration successful. Registration ID: " + registrationId);
+        InstanceID instanceID = InstanceID.getInstance(UAirship.getApplicationContext());
+        String token = instanceID.getToken(UAirship.shared().getAirshipConfigOptions().gcmSender, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+
+        if (registrationId != null && token != null) {
+            Logger.info("GCM registration successful security token: " + token + " registration ID: " + registrationId);
+            UAirship.shared().getPushManager().setGcmToken(token);
             UAirship.shared().getPushManager().setGcmId(registrationId);
             UAirship.shared().getPushManager().getPreferences().setRegisteredGcmSenderIds(senderIds);
         }
