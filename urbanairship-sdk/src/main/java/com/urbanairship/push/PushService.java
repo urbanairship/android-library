@@ -100,7 +100,13 @@ public class PushService extends BaseIntentService {
     /**
      * Extra containing the received message intent for {@link #ACTION_RECEIVE_ADM_MESSAGE} and {@link #ACTION_RECEIVE_GCM_MESSAGE} intent actions.
      */
-    static String EXTRA_INTENT =  "com.urbanairship.push.EXTRA_INTENT";
+    static String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
+
+    /**
+     * Extra flag for {@link #ACTION_UPDATE_PUSH_REGISTRATION} to clear the GCM Instance ID token
+     * when updating push registration.
+     */
+    static String EXTRA_GCM_TOKEN_REFRESH = "com.urbanairship.push.EXTRA_GCM_TOKEN_REFRESH";
 
     private TagGroupServiceDelegate tagGroupServiceDelegate;
     private NamedUserServiceDelegate namedUserServiceDelegate;
@@ -113,7 +119,6 @@ public class PushService extends BaseIntentService {
     public PushService() {
         super("PushService");
     }
-
 
     @Override
     protected Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore) {

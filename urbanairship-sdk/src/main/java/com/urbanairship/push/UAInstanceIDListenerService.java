@@ -25,32 +25,41 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
-import com.google.android.gms.gcm.GcmReceiver;
-import com.urbanairship.Autopilot;
+import com.google.android.gms.iid.InstanceIDListenerService;
 import com.urbanairship.Logger;
 
 /**
- * WakefulBroadcastReceiver that receives GCM messages and delivers them to both the application-specific GcmListenerService subclass,
- * and Urban Airship's PushService.
+ * Listens for GCM Security token refresh. If your application needs to be notified when
+ * the security tokens are refreshed, extend {@link UAInstanceIDListenerService} and override
+ * {@link #onTokenRefresh()}. Make sure to call {@code super.onTokenRefresh()}.
+ * <p/>
+ * In the AndroidManifest.xml, add the following under the application entry:
+ * <pre>
+ * {@code
+ * <service android:name="com.urbanairship.push.UAInstanceIDListenerService" tools:node="remove"/>
+ * <service android:name=".YourInstanceIDListenerService" android:exported="false">
+ *     <intent-filter>
+ *         <action android:name="com.google.android.gms.iid.InstanceID"/>
+ *     </intent-filter>
+ * </service>
+ * }
+ * </pre>
  */
-public class GCMPushReceiver extends GcmReceiver {
+public class UAInstanceIDListenerService extends InstanceIDListenerService {
 
     @Override
-    public void onReceive(final Context context, final Intent intent) {
-        super.onReceive(context, intent);
+    public void onTokenRefresh() {
+        super.onTokenRefresh();
 
-        Autopilot.automaticTakeOff(context);
+        Logger.debug("GCM security tokens refreshed.");
 
-        Logger.verbose("GCMPushReceiver - Received intent: " + intent.getAction());
-        if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
-            Intent pushIntent = new Intent(context, PushService.class)
-                    .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                    .putExtra(PushService.EXTRA_INTENT, intent);
+        Intent intent = new Intent(getApplicationContext(), PushService.class)
+                .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION)
+                .putExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, true);
 
-            startWakefulService(context, pushIntent);
-        }
+        WakefulBroadcastReceiver.startWakefulService(getApplicationContext(), intent);
     }
 }

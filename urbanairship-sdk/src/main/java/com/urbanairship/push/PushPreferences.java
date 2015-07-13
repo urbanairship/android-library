@@ -80,6 +80,9 @@ class PushPreferences {
 
     private static final String GCM_REGISTRATION_ID_KEY = KEY_PREFIX + ".GCM_REGISTRATION_ID_KEY";
 
+    private static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
+
+
     private static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
     private static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
 
@@ -432,6 +435,23 @@ class PushPreferences {
      */
     String getGcmId() {
         return preferenceDataStore.getString(GCM_REGISTRATION_ID_KEY, null);
+    }
+
+    /**
+     * Stores a GCM Instance ID token.
+     *
+     * @param token The GCM Instance ID token.
+     */
+    void setGcmToken(String token) {
+        preferenceDataStore.put(GCM_INSTANCE_ID_TOKEN_KEY, token);
+    }
+
+    /**
+     * Returns the GCM Instance ID token.
+     *
+     */
+    String getGcmToken() {
+        return preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
     }
 
     /**

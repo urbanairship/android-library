@@ -135,7 +135,10 @@ public class AirshipConfigOptions {
     /**
      * Additional sender IDs to register with GCM. Only messages sent from the sender {@link #gcmSender} will
      * be handled by Urban Airship.
+     * @deprecated Marked to be removed in 7.0.0. Register additional sender IDs directly with GCM using
+     * {@code InstanceID.getInstance(context).getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)}.
      */
+    @Deprecated
     @PropertyName(name = "additionalGCMSenderIds")
     public String[] additionalGCMSenderIds;
 
@@ -536,10 +539,12 @@ public class AirshipConfigOptions {
     }
 
     /**
-     * Helper method to get the set of GCM sender Ids.
+     * Helper method to get the set of GCM sender IDs.
      *
-     * @return The set of sender ids.
+     * @return The set of sender IDs.
+     * @deprecated Marked to be removed in 7.0.0.
      */
+    @Deprecated
     public Set<String> getGCMSenderIds() {
         Set<String> senderIds = new HashSet<>();
 
