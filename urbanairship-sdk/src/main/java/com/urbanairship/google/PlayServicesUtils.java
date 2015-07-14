@@ -174,6 +174,10 @@ public class PlayServicesUtils {
      * @return <code>true</code> if available, otherwise <code>false</code>.
      */
     public static boolean isFusedLocationDepdendencyAvailable() {
+        if (!isGooglePlayServicesDependencyAvailable()) {
+            return false;
+        }
+
         if (isFusedLocationDependencyAvailable == null) {
             if (!isGooglePlayServicesDependencyAvailable()) {
                 isFusedLocationDependencyAvailable = false;
