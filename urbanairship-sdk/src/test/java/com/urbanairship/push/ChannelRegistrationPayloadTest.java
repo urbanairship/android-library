@@ -1,6 +1,12 @@
 package com.urbanairship.push;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
+
+import junit.framework.Assert;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,8 +37,6 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
 
     private ChannelRegistrationPayload payload;
 
-    // These are just for convenience
-    private JSONObject body;
 
     @Before
     public void setUp() throws Exception {
@@ -56,42 +60,43 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        body = payload.asJSON();
+        JsonMap body = payload.toJsonValue().getMap();
+
 
         // Top level fields
-        assertTrue("Channel should be present in payload.", body.has(ChannelRegistrationPayload.CHANNEL_KEY));
-        assertTrue("Identity hints should be present in payload.", body.has(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
+        assertTrue("Channel should be present in payload.", body.containsKey(ChannelRegistrationPayload.CHANNEL_KEY));
+        assertTrue("Identity hints should be present in payload.", body.containsKey(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
 
-        JSONObject identityHints = body.getJSONObject(ChannelRegistrationPayload.IDENTITY_HINTS_KEY);
-        JSONObject channel = body.getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
+        JsonMap identityHints = body.opt(ChannelRegistrationPayload.IDENTITY_HINTS_KEY).getMap();
+        JsonMap channel = body.opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
 
         // Identity items
-        assertTrue("User ID should be present in payload.", identityHints.has(ChannelRegistrationPayload.USER_ID_KEY));
-        assertEquals("User ID should be fakeUserId.", identityHints.getString(ChannelRegistrationPayload.USER_ID_KEY), testUserId);
+        assertTrue("User ID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.USER_ID_KEY));
+        assertEquals("User ID should be fakeUserId.", identityHints.get(ChannelRegistrationPayload.USER_ID_KEY).getString(), testUserId);
 
-        assertTrue("APID should be present in payload.", identityHints.has(ChannelRegistrationPayload.APID_KEY));
-        assertEquals("APID should match.", identityHints.getString(ChannelRegistrationPayload.APID_KEY), testApid);
+        assertTrue("APID should be present in payload.", identityHints.containsKey(ChannelRegistrationPayload.APID_KEY));
+        assertEquals("APID should match.", identityHints.get(ChannelRegistrationPayload.APID_KEY).getString(), testApid);
 
         // Channel specific items
-        assertTrue("Device type should be present in payload.", channel.has(ChannelRegistrationPayload.DEVICE_TYPE_KEY));
-        assertEquals("Device type should be android.", channel.getString(ChannelRegistrationPayload.DEVICE_TYPE_KEY), testDeviceType);
-        assertTrue("Opt in should be present in payload.", channel.has(ChannelRegistrationPayload.OPT_IN_KEY));
-        assertEquals("Opt in should be true.", channel.getBoolean(ChannelRegistrationPayload.OPT_IN_KEY), testOptIn);
-        assertTrue("Background flag should be present in payload.", channel.has(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY));
-        assertEquals("Background flag should be true.", channel.getBoolean(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY), testBackgroundEnabled);
-        assertTrue("Push address should be present in payload.", channel.has(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
-        assertEquals("Push address should be gcmRegistrationId.", channel.getString(ChannelRegistrationPayload.PUSH_ADDRESS_KEY), testPushAddress);
-        assertTrue("Alias should be present in payload", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
-        assertEquals("Alias should be fakeAlias.", channel.getString(ChannelRegistrationPayload.ALIAS_KEY), testAlias);
-        assertTrue("Set tags should be present in payload", channel.has(ChannelRegistrationPayload.SET_TAGS_KEY));
-        assertEquals("Set tags should be true.", channel.getBoolean(ChannelRegistrationPayload.SET_TAGS_KEY), testSetTags);
-        assertTrue("Tags should be present in payload", channel.has(ChannelRegistrationPayload.TAGS_KEY));
+        assertTrue("Device type should be present in payload.", channel.containsKey(ChannelRegistrationPayload.DEVICE_TYPE_KEY));
+        assertEquals("Device type should be android.", channel.get(ChannelRegistrationPayload.DEVICE_TYPE_KEY).getString(), testDeviceType);
+        assertTrue("Opt in should be present in payload.", channel.containsKey(ChannelRegistrationPayload.OPT_IN_KEY));
+        assertEquals("Opt in should be true.", channel.get(ChannelRegistrationPayload.OPT_IN_KEY).getBoolean(!testOptIn), testOptIn);
+        assertTrue("Background flag should be present in payload.", channel.containsKey(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY));
+        assertEquals("Background flag should be true.", channel.get(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY).getBoolean(!testBackgroundEnabled), testBackgroundEnabled);
+        assertTrue("Push address should be present in payload.", channel.containsKey(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
+        assertEquals("Push address should be gcmRegistrationId.", channel.get(ChannelRegistrationPayload.PUSH_ADDRESS_KEY).getString(), testPushAddress);
+        assertTrue("Alias should be present in payload", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
+        assertEquals("Alias should be fakeAlias.", channel.get(ChannelRegistrationPayload.ALIAS_KEY).getString(), testAlias);
+        assertTrue("Set tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
+        assertEquals("Set tags should be true.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(!testSetTags), testSetTags);
+        assertTrue("Tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
 
         // Check the tags within channel item
-        JSONArray tagsArray = channel.getJSONArray(ChannelRegistrationPayload.TAGS_KEY);
-        assertEquals("Tags size should be 2.", tagsArray.length(), testTags.size());
-        assertTrue("Tags should contain tagOne.", testTags.contains(tagsArray.getString(0)));
-        assertTrue("Tags should contain tagTwo.", testTags.contains(tagsArray.getString(1)));
+        JsonList tags = channel.get(ChannelRegistrationPayload.TAGS_KEY).getList();
+        assertEquals("Tags size should be 2.", tags.size(), testTags.size());
+        assertTrue("Tags should contain tagOne.", testTags.contains(tags.get(0).getString()));
+        assertTrue("Tags should contain tagTwo.", testTags.contains(tags.get(1).getString()));
     }
 
     /**
@@ -99,21 +104,19 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      */
     @Test
     public void testAsJsonEmptyTags() throws JSONException {
-        Set<String> emptyTags = new HashSet<>();
-
         // Create payload with empty tags
-        ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(testSetTags, emptyTags).build();
-        JSONObject body = payload.asJSON();
-        JSONObject channel = body.getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
+        ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(testSetTags, new HashSet<String>()).build();
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
 
         // Verify setTags is true in order for tags to be present in payload
-        assertTrue("Set tags should be present in payload.", channel.has(ChannelRegistrationPayload.SET_TAGS_KEY));
-        assertEquals("Set tags should be true.", channel.getBoolean(ChannelRegistrationPayload.SET_TAGS_KEY), testSetTags);
+        assertTrue("Set tags should be present in payload.", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
+        assertEquals("Set tags should be true.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(!testSetTags), testSetTags);
 
         // Verify tags are present, but empty
-        assertTrue("Tags should be present in payload.", channel.has(ChannelRegistrationPayload.TAGS_KEY));
-        JSONArray tagsArray = channel.getJSONArray(ChannelRegistrationPayload.TAGS_KEY);
-        assertEquals("Tags size should be 0.", tagsArray.length(), emptyTags.size());
+        assertTrue("Tags should be present in payload.", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
+
+        JsonList tags = channel.opt(ChannelRegistrationPayload.TAGS_KEY).getList();
+        Assert.assertTrue("Tags size should be 0.", tags.isEmpty());
     }
 
     /**
@@ -123,15 +126,14 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testAsJsonNoTags() throws JSONException {
         // Create payload with setTags is false
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setTags(false, testTags).build();
-        JSONObject body = payload.asJSON();
-        JSONObject channel = body.getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
 
         // Verify setTags is present and is false
-        assertTrue("Set tags should be present in payload.", channel.has(ChannelRegistrationPayload.SET_TAGS_KEY));
-        assertEquals("Set tags should be false.", channel.getBoolean(ChannelRegistrationPayload.SET_TAGS_KEY), false);
+        assertTrue("Set tags should be present in payload.", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
+        assertEquals("Set tags should be false.", channel.opt(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(true), false);
 
         // Verify tags are not present
-        assertFalse("Tags should not be present in payload.", channel.has(ChannelRegistrationPayload.TAGS_KEY));
+        assertFalse("Tags should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
     }
 
     /**
@@ -141,10 +143,10 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testAsJsonEmptyIdentityHints() throws JSONException {
         // Create empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
-        JSONObject body = payload.asJSON();
+        JsonMap body = payload.toJsonValue().getMap();
 
         // Verify the identity hints section is not included
-        assertFalse("Identity hints should not be present in payload.", body.has(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
+        assertFalse("Identity hints should not be present in payload.", body.containsKey(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
     }
 
     /**
@@ -154,10 +156,10 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testAsJsonEmptyUserId() throws JSONException {
         // Create payload with empty userId
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().setUserId("").build();
-        JSONObject body = payload.asJSON();
+        JsonMap body = payload.toJsonValue().getMap();
 
         // Verify the identity hints section is not included
-        assertFalse("Identity hints should not be present in payload.", body.has(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
+        assertFalse("Identity hints should not be present in payload.", body.containsKey(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
     }
 
     /**
@@ -169,8 +171,8 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setAlias("").build();
 
         // Channel specific items
-        JSONObject channel = payload.asJSON().getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
-        assertFalse("Alias should not be present in payload.", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
+        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
     }
 
     /**
@@ -182,8 +184,8 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setAlias("         ").build();
 
         // Channel specific items
-        JSONObject channel = payload.asJSON().getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
-        assertFalse("Alias should not be present in payload.", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
+        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
     }
 
     /**
@@ -195,10 +197,10 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setAlias("     fakeAlias     ").build();
 
         // Channel specific items
-        JSONObject channel = payload.asJSON().getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
 
-        assertTrue("Alias should be present in payload", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
-        assertEquals("Alias should be fakeAlias.", channel.getString(ChannelRegistrationPayload.ALIAS_KEY), testAlias);
+        assertTrue("Alias should be present in payload", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
+        assertEquals("Alias should be fakeAlias.", channel.get(ChannelRegistrationPayload.ALIAS_KEY).getString(), testAlias);
     }
 
     /**
@@ -210,8 +212,8 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setAlias(null).build();
 
         // Channel specific items
-        JSONObject channel = payload.asJSON().getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
-        assertFalse("Alias should not be present in payload.", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
+        JsonMap channel = payload.toJsonValue().getMap().opt(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
+        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
     }
 
     /**
@@ -221,23 +223,23 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     public void testEmptyBuilder() throws JSONException {
         // Create an empty payload
         ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
-        JSONObject body = payload.asJSON();
+        JsonMap body = payload.toJsonValue().getMap();
 
         // Top level fields
-        assertTrue("Channel should be present in payload.", body.has(ChannelRegistrationPayload.CHANNEL_KEY));
-        assertFalse("Identity hints should not be present in payload.", body.has(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
+        assertTrue("Channel should be present in payload.", body.containsKey(ChannelRegistrationPayload.CHANNEL_KEY));
+        assertFalse("Identity hints should not be present in payload.", body.containsKey(ChannelRegistrationPayload.IDENTITY_HINTS_KEY));
 
         // Channel specific items
-        JSONObject channel = body.getJSONObject(ChannelRegistrationPayload.CHANNEL_KEY);
-        assertTrue("Opt in should be present in payload.", channel.has(ChannelRegistrationPayload.OPT_IN_KEY));
-        assertEquals("Opt in should be false.", channel.getBoolean(ChannelRegistrationPayload.OPT_IN_KEY), false);
-        assertTrue("Background flag should be present in payload.", channel.has(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY));
-        assertEquals("Background flag should be false.", channel.getBoolean(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY), false);
-        assertFalse("Push address should not be present in payload.", channel.has(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
-        assertFalse("Alias should not be present in payload.", channel.has(ChannelRegistrationPayload.ALIAS_KEY));
-        assertTrue("Set tags should be present in payload.", channel.has(ChannelRegistrationPayload.SET_TAGS_KEY));
-        assertEquals("Set tags should be false.", channel.getBoolean(ChannelRegistrationPayload.SET_TAGS_KEY), false);
-        assertFalse("Tags should not be present in payload.", channel.has(ChannelRegistrationPayload.TAGS_KEY));
+        JsonMap channel = body.get(ChannelRegistrationPayload.CHANNEL_KEY).getMap();
+        assertTrue("Opt in should be present in payload.", channel.containsKey(ChannelRegistrationPayload.OPT_IN_KEY));
+        assertEquals("Opt in should be false.", channel.get(ChannelRegistrationPayload.OPT_IN_KEY).getBoolean(true), false);
+        assertTrue("Background flag should be present in payload.", channel.containsKey(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY));
+        assertEquals("Background flag should be false.", channel.get(ChannelRegistrationPayload.BACKGROUND_ENABLED_KEY).getBoolean(true), false);
+        assertFalse("Push address should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.PUSH_ADDRESS_KEY));
+        assertFalse("Alias should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.ALIAS_KEY));
+        assertTrue("Set tags should be present in payload.", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
+        assertEquals("Set tags should be false.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(true), false);
+        assertFalse("Tags should not be present in payload.", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
     }
 
     /**
@@ -330,7 +332,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test payload created from JSON
      */
     @Test
-    public void testCreateFromJSON() {
+    public void testCreateFromJSON() throws JsonException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
                 .setAlias(testAlias)
@@ -340,7 +342,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.createFromJSON(payload.asJSON());
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue().toString());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
     }
 
@@ -348,18 +350,18 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
      * Test payload created from empty JSON
      */
     @Test
-    public void testCreateFromEmptyJSON() {
+    public void testCreateFromEmptyJSON() throws JsonException {
         assertNull("Creating a payload from an empty json object should return null.",
-                ChannelRegistrationPayload.createFromJSON(new JSONObject()));
+                ChannelRegistrationPayload.parseJson(""));
     }
 
     /**
      * Test payload created from null JSON
      */
     @Test
-    public void testCreateFromNullJSON() {
+    public void testCreateFromNullJSON() throws JsonException {
         assertNull("Creating a payload from a null json object should return null.",
-                ChannelRegistrationPayload.createFromJSON(new JSONObject()));
+                ChannelRegistrationPayload.parseJson(null));
     }
 
 }

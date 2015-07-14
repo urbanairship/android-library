@@ -36,11 +36,9 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.amazon.ADMUtils;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -469,7 +467,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param channelPayload A ChannelRegistrationPayload.
      */
     private void setLastRegistrationPayload(ChannelRegistrationPayload channelPayload) {
-        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.asJSON().toString());
+        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.toJsonValue().toString());
         getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
     }
 
@@ -480,13 +478,11 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      */
     private ChannelRegistrationPayload getLastRegistrationPayload() {
         String payloadJSON = getDataStore().getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
-        if (UAStringUtil.isEmpty(payloadJSON)) {
-            return null;
-        }
 
         try {
-            return ChannelRegistrationPayload.createFromJSON(new JSONObject(payloadJSON));
-        } catch (JSONException e) {
+            return ChannelRegistrationPayload.parseJson(payloadJSON);
+        } catch (JsonException e) {
+            Logger.error("ChannelServiceDelegate - Failed to parse payload from JSON.", e);
             return null;
         }
     }

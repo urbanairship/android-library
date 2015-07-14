@@ -773,8 +773,8 @@ public class PushManagerTest extends BaseTestCase {
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
-        assertEquals(payload.asJSON().getJSONObject("channel").get("device_type"), "android");
-        assertEquals(payload.asJSON().getJSONObject("channel").get("push_address"), "GCM_TOKEN");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "android");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "GCM_TOKEN");
     }
 
     /**
@@ -791,8 +791,8 @@ public class PushManagerTest extends BaseTestCase {
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
-        assertEquals(payload.asJSON().getJSONObject("channel").get("device_type"), "amazon");
-        assertEquals(payload.asJSON().getJSONObject("channel").get("push_address"), "ADM_ID");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "amazon");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "ADM_ID");
     }
 
     /**
