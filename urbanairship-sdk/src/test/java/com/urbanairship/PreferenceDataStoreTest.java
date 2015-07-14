@@ -70,40 +70,6 @@ public class PreferenceDataStoreTest extends BaseTestCase {
     }
 
     /**
-     * Test that migrate preferences migrates any shared preferences to a database
-     * store
-     */
-    @Test
-    public void testPreferencesMigration() {
-        SharedPreferences preferences = context.getSharedPreferences("com.urbanairship.push", 0x00000004);
-
-        // Add preferences to be migrated
-        preferences.edit()
-                   .putFloat("migrate.float", 1.0f)
-                   .putLong("migrate.long", 1l)
-                   .putInt("migrate.int", 1)
-                   .putBoolean("migrate.boolean", true)
-                   .putString("migrate.string", "some-string")
-                   .commit();
-
-        // Verify we did it right
-        assertEquals(5, preferences.getAll().size());
-
-        // Migrate the preferences
-        testPrefs.migrateSharedPreferences(context);
-
-        // Verify they are cleared in the shared preferences
-        assertEquals("Preferences should be deleted once migrated", 0, preferences.getAll().size());
-
-        // Verify each preference migrated
-        assertEquals(1.0f, testPrefs.getFloat("migrate.float", 0), 0);
-        assertEquals(1l, testPrefs.getLong("migrate.long", 0));
-        assertEquals(1, testPrefs.getInt("migrate.int", 0));
-        assertTrue(testPrefs.getBoolean("migrate.boolean", false));
-        assertEquals("some-string", testPrefs.getString("migrate.string", null));
-    }
-
-    /**
      * Test get value as a long
      */
     @Test
