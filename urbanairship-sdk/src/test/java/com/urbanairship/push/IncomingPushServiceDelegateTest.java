@@ -91,7 +91,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         pushManager = mock(PushManager.class);
         notificationManager = mock(NotificationManagerCompat.class);
 
-        when(pushManager.getGcmId()).thenReturn("GCM ID");
+        when(pushManager.isPushAvailable()).thenReturn(true);
 
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
