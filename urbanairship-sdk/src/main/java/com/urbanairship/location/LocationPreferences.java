@@ -27,11 +27,7 @@ package com.urbanairship.location;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.concurrent.TimeUnit;
+import com.urbanairship.json.JsonException;
 
 /**
  * Location service preferences.
@@ -76,7 +72,6 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
         }
     }
 
-
     /**
      * Gets the current value of the location updates enabled preference.
      *
@@ -119,19 +114,7 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
      * @param options The LocationRequestOptions to save.
      */
     void setLocationRequestOptions(LocationRequestOptions options) {
-        if (options == null) {
-            preferenceDataStore.put(LOCATION_OPTIONS, null);
-        } else {
-            try {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("priority", options.getPriority());
-                jsonObject.put("minDistance", options.getMinDistance());
-                jsonObject.put("minTime", options.getMinTime());
-                preferenceDataStore.put(LOCATION_OPTIONS, jsonObject.toString());
-            } catch (JSONException e) {
-                Logger.error("LocationPreferences - Failed saving LocationRequestOptions as JSON: " + e.getMessage());
-            }
-        }
+        preferenceDataStore.put(LOCATION_OPTIONS, options.toJsonValue().toString());
     }
 
     /**
@@ -144,13 +127,8 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
 
         if (jsonString != null) {
             try {
-                JSONObject jsonObject = new JSONObject(jsonString);
-                return new LocationRequestOptions.Builder()
-                        .setMinDistance(Float.parseFloat(jsonObject.getString("minDistance")))
-                        .setMinTime(Long.parseLong(jsonObject.getString("minTime")), TimeUnit.MILLISECONDS)
-                        .setPriority(jsonObject.getInt("priority"))
-                        .create();
-            } catch (JSONException e) {
+                return LocationRequestOptions.parseJson(jsonString);
+            } catch (JsonException e) {
                 Logger.error("LocationPreferences - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
             } catch (IllegalArgumentException e) {
                 Logger.error("LocationPreferences - Invalid LocationRequestOptions from JSON: " + e.getMessage());
