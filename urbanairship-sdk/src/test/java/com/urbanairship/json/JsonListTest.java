@@ -36,7 +36,7 @@ public class JsonListTest extends BaseTestCase {
      */
     @Test
     public void testToString() {
-        String expected = "[\"first-value\",\"second-value\",null]";
+        String expected = "[\"first-value\",\"second-value\"]";
         assertEquals(expected, jsonList.toString());
     }
 
