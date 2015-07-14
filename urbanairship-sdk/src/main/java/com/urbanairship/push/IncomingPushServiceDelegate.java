@@ -97,8 +97,10 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         switch (intent.getAction()) {
             case PushService.ACTION_RECEIVE_ADM_MESSAGE:
                 onAdmMessageReceived(intent);
+                break;
             case PushService.ACTION_RECEIVE_GCM_MESSAGE:
                 onGcmMessageReceived(intent);
+                break;
         }
     }
 
@@ -113,7 +115,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (airship.getPushManager().isPushAvailable()) {
+        if (!airship.getPushManager().isPushAvailable()) {
             Logger.error("IncomingPushServiceDelegate - Received intent from GCM without registering.");
             return;
         }
@@ -149,7 +151,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (airship.getPushManager().isPushAvailable()) {
+        if (!airship.getPushManager().isPushAvailable()) {
             Logger.error("IncomingPushServiceDelegate - Received intent from ADM without registering.");
             return;
         }
