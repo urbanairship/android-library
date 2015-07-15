@@ -27,7 +27,6 @@ package com.urbanairship;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -50,7 +49,6 @@ import java.util.concurrent.Executors;
 public final class PreferenceDataStore {
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
-    private static final int MODE_MULTI_PROCESS = 0x00000004;
 
     Executor executor = Executors.newSingleThreadExecutor();
 
@@ -294,42 +292,6 @@ public final class PreferenceDataStore {
         }
 
         return preference;
-    }
-
-    /**
-     * Migrates the old preference data store to the new preferences.
-     * @param context The application context.
-     */
-    void migrateSharedPreferences(Context context) {
-        migratePreferencesFromFileToDb(context, "com.urbanairship.user");
-        migratePreferencesFromFileToDb(context, "com.urbanairship.push");
-    }
-
-    /**
-     * Migrates a specific android shared preference to the new preferences store.
-     * @param context The application context.
-     * @param shareName The shared preferences share name.
-     */
-    private void migratePreferencesFromFileToDb(Context context, String shareName) {
-        Logger.verbose("PreferenceDataStore - Migrating " + shareName);
-        SharedPreferences prefs = context.getSharedPreferences(shareName, MODE_MULTI_PROCESS);
-
-        Map<String, ?> prefsMap = prefs.getAll();
-        Logger.verbose("PreferenceDataStore - Found " + prefsMap.size() + " preferences to migrate.");
-
-        if (prefsMap.size() > 0) {
-            for (Map.Entry<String, ?> entry : prefsMap.entrySet()) {
-                Logger.verbose("PreferenceDataStore - Adding " + entry.getKey() + ":" + entry.getValue() + " to the insert.");
-
-                synchronized (preferences) {
-                    Preference preference = new Preference(entry.getKey(), String.valueOf(entry.getValue()));
-                    preferences.put(entry.getKey(), preference);
-                }
-            }
-
-            Logger.verbose("PreferenceDataStore - Migration finished, deleting " + shareName);
-            prefs.edit().clear().commit();
-        }
     }
 
     /**
