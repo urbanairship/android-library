@@ -38,8 +38,10 @@ configurations {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:22.1.0'
-    compile 'com.android.support:cardview-v7:22.1.0'
+    compile 'com.android.support:support-v4:22.2.0'
+    compile 'com.android.support:cardview-v7:22.2.0'
+    compile 'com.android.support:support-annotations:22.2.0'
+
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
 
