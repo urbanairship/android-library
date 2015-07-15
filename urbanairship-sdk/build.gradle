@@ -161,7 +161,7 @@ project.afterEvaluate {
     bintrayUpload.dependsOn(assembleRelease)
 }
 
-task javaDoc(type: Javadoc, dependsOn: 'compileReleaseJava') {
+task javaDoc(type: Javadoc, dependsOn: 'assembleRelease') {
     // Title needs to be null for doclava
     title = null
 
