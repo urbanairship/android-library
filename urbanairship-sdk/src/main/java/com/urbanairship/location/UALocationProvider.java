@@ -54,7 +54,7 @@ class UALocationProvider {
      */
     public UALocationProvider(Context context) {
         // This is to prevent a log message saying Google Play Services is unavailable on amazon devices.
-        if (PlayServicesUtils.isGooglePlayStoreAvailable() && PlayServicesUtils.isFusedLocationDepdendencyAvailable()) {
+        if (PlayServicesUtils.isGooglePlayStoreAvailable() && PlayServicesUtils.isFusedLocationDependencyAvailable()) {
             adapters.add(new FusedLocationAdapter(context));
         }
 
