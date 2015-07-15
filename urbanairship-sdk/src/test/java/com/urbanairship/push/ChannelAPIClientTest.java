@@ -74,7 +74,7 @@ public class ChannelAPIClientTest extends BaseTestCase {
         ChannelResponse response = client.createChannelWithPayload(payload);
 
         assertNotNull("Channel response should not be null", response);
-        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.asJSON().toString());
+        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
         assertEquals("Channel response status should be 200", HttpURLConnection.HTTP_OK,
                 response.getStatus());
         assertEquals("Channel ID should match with response", "someChannelId",
@@ -98,7 +98,7 @@ public class ChannelAPIClientTest extends BaseTestCase {
         ChannelResponse response = client.createChannelWithPayload(payload);
 
         assertNotNull("Channel response should not be null", response);
-        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.asJSON().toString());
+        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
         assertEquals("Channel response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED,
                 response.getStatus());
     }
@@ -119,7 +119,7 @@ public class ChannelAPIClientTest extends BaseTestCase {
         ChannelResponse response = client.updateChannelWithPayload(channelLocation, payload);
 
         assertNotNull("Channel response should not be null", response);
-        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.asJSON().toString());
+        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
         assertEquals("Channel response status should be 200", HttpURLConnection.HTTP_OK,
                 response.getStatus());
     }
@@ -140,7 +140,7 @@ public class ChannelAPIClientTest extends BaseTestCase {
         ChannelResponse response = client.updateChannelWithPayload(channelLocation, payload);
 
         assertNotNull("Channel response should not be null", response);
-        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.asJSON().toString());
+        assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
         assertEquals("Channel response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED,
                 response.getStatus());
     }

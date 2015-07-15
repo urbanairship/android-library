@@ -25,6 +25,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.location;
 
+import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,7 +41,22 @@ import java.util.concurrent.TimeUnit;
  * The class is modeled after the LocationRequest for the Fused Location Provider,
  * but only supports a subset of the options.
  */
-public class LocationRequestOptions {
+public class LocationRequestOptions implements JsonSerializable {
+
+    /**
+     * JSON key for the min distance.
+     */
+    public static final String MIN_DISTANCE_KEY = "minDistance";
+
+    /**
+     * JSON key for the min time.
+     */
+    public static final String MIN_TIME_KEY = "minTime";
+
+    /**
+     * JSON key for the request priority.
+     */
+    public static final String PRIORITY_KEY = "priority";
 
     /**
      * Default minDistance in meters - 800 meters.
@@ -225,6 +248,42 @@ public class LocationRequestOptions {
                         "PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, " +
                         "PRIORITY_LOW_POWER, or PRIORITY_NO_POWER");
         }
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("priority", getPriority());
+        map.put("minDistance", getMinDistance());
+        map.put("minTime", getMinTime());
+
+        try {
+            return JsonValue.wrap(map);
+        } catch (JsonException e) {
+            Logger.error("LocationRequestOptions - Unable to serialize to JSON.", e);
+            return JsonValue.NULL;
+        }
+    }
+
+    /**
+     * Creates a LocationRequestOptions from a JSON string.
+     * @param json The JSON string.
+     * @return A LocationRequestOptions, or null if the JSON is not a valid object.
+     * @throws JsonException If the string is unable to be parsed to a {@link JsonValue}.
+     */
+    public static LocationRequestOptions parseJson(String json) throws JsonException {
+        JsonMap jsonMap = JsonValue.parseString(json).getMap();
+
+        if (jsonMap == null) {
+            return null;
+        }
+
+        Number minDistance = jsonMap.opt(MIN_DISTANCE_KEY).getNumber();
+        return new LocationRequestOptions.Builder()
+                .setMinDistance(minDistance == null ? DEFAULT_UPDATE_INTERVAL_METERS : minDistance.floatValue())
+                .setMinTime(jsonMap.opt(MIN_TIME_KEY).getLong(DEFAULT_UPDATE_INTERVAL_MILLISECONDS), TimeUnit.MILLISECONDS)
+                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(DEFAULT_REQUEST_PRIORITY))
+                .create();
     }
 
     /**

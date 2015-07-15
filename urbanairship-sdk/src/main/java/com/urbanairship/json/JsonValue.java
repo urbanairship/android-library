@@ -591,7 +591,11 @@ public class JsonValue implements Parcelable {
         List<JsonValue> list = new ArrayList<>(length);
 
         for (int i = 0; i < length; ++i) {
-            list.add(wrap(Array.get(array, i)));
+            Object value = Array.get(array, i);
+            if (value != null) {
+                list.add(wrap(value));
+            }
+
         }
 
         return new JsonValue(new JsonList(list));
@@ -608,7 +612,9 @@ public class JsonValue implements Parcelable {
         List<JsonValue> list = new ArrayList<>();
 
         for (Object obj : collection) {
-            list.add(wrap(obj));
+            if (obj != null) {
+                list.add(wrap(obj));
+            }
         }
 
         return new JsonValue(new JsonList(list));
@@ -629,7 +635,9 @@ public class JsonValue implements Parcelable {
                 throw new JsonException("Only string map keys are accepted.");
             }
 
-            jsonValueMap.put((String) entry.getKey(), wrap(entry.getValue()));
+            if (entry.getValue() != null) {
+                jsonValueMap.put((String) entry.getKey(), wrap(entry.getValue()));
+            }
         }
 
         return new JsonValue(new JsonMap(jsonValueMap));
@@ -646,12 +654,9 @@ public class JsonValue implements Parcelable {
         List<JsonValue> list = new ArrayList<>(jsonArray.length());
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            if (jsonArray.isNull(i)) {
-                list.add(NULL);
-                continue;
+            if (!jsonArray.isNull(i)) {
+                list.add(wrap(jsonArray.opt(i)));
             }
-
-            list.add(wrap(jsonArray.opt(i)));
         }
 
         // Return a JsonValue that contains a JsonList
@@ -672,12 +677,9 @@ public class JsonValue implements Parcelable {
         while (iterator.hasNext()) {
             String key = (String) iterator.next();
 
-            if (jsonObject.isNull(key)) {
-                jsonValueMap.put(key, NULL);
-                continue;
+            if (!jsonObject.isNull(key)) {
+                jsonValueMap.put(key, wrap(jsonObject.opt(key)));
             }
-
-            jsonValueMap.put(key, wrap(jsonObject.opt(key)));
         }
 
         // Return a JsonValue that contains a JsonMap

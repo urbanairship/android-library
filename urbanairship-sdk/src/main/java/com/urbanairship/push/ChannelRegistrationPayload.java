@@ -26,19 +26,23 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelAPIClient.
  */
-class ChannelRegistrationPayload {
+class ChannelRegistrationPayload implements JsonSerializable {
     static final String CHANNEL_KEY = "channel";
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String OPT_IN_KEY = "opt_in";
@@ -60,6 +64,7 @@ class ChannelRegistrationPayload {
     private Set<String> tags;
     private String userId;
     private String apid;
+
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -94,8 +99,8 @@ class ChannelRegistrationPayload {
          * @return The builder with the background push enabled value set.
          */
         Builder setBackgroundEnabled(boolean enabled) {
-             this.backgroundEnabled = enabled;
-             return this;
+            this.backgroundEnabled = enabled;
+            return this;
         }
 
         /**
@@ -187,52 +192,50 @@ class ChannelRegistrationPayload {
         this.apid = builder.apid;
     }
 
-    /**
-     * The ChannelRegistrationPayload as JSON data.
-     *
-     * @return The payload as JSON data.
-     */
-    JSONObject asJSON() {
+    @Override
+    public JsonValue toJsonValue() {
+        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> identityHints = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
 
-        JSONObject payload = new JSONObject();
-        JSONObject channel = new JSONObject();
-        JSONObject identityHints = new JSONObject();
+        // Channel
+        channel.put(DEVICE_TYPE_KEY, deviceType);
+        channel.put(OPT_IN_KEY, optIn);
+        channel.put(BACKGROUND_ENABLED_KEY, backgroundEnabled);
+        channel.put(PUSH_ADDRESS_KEY, pushAddress);
 
-        try {
-            channel.put(DEVICE_TYPE_KEY, deviceType);
-            channel.put(OPT_IN_KEY, optIn);
-            channel.put(BACKGROUND_ENABLED_KEY, backgroundEnabled);
-            channel.put(PUSH_ADDRESS_KEY, pushAddress);
-
-            if (!UAStringUtil.isEmpty(alias)) {
-                channel.put(ALIAS_KEY, alias);
-            }
-
-            channel.put(SET_TAGS_KEY, setTags);
-
-            // If setTags is TRUE, then include the tags
-            if (setTags && tags != null) {
-                channel.put(TAGS_KEY, new JSONArray(tags));
-            }
-            payload.put(CHANNEL_KEY, channel);
-
-            if (!UAStringUtil.isEmpty(userId)) {
-                identityHints.put(USER_ID_KEY, userId);
-            }
-
-            if (!UAStringUtil.isEmpty(apid)) {
-                identityHints.put(APID_KEY, apid);
-            }
-
-            if (identityHints.length() != 0) {
-                payload.put(IDENTITY_HINTS_KEY, identityHints);
-            }
-
-        } catch (Exception ex) {
-            Logger.error("ChannelRegistrationPayload - Failed to create channel registration payload as json", ex);
+        if (!UAStringUtil.isEmpty(alias)) {
+            channel.put(ALIAS_KEY, alias);
         }
 
-        return payload;
+        channel.put(SET_TAGS_KEY, setTags);
+
+        // If setTags is TRUE, then include the tags
+        if (setTags && tags != null) {
+            channel.put(TAGS_KEY, new JSONArray(tags));
+        }
+
+        payload.put(CHANNEL_KEY, channel);
+
+        // Identity hints
+        if (!UAStringUtil.isEmpty(userId)) {
+            identityHints.put(USER_ID_KEY, userId);
+        }
+
+        if (!UAStringUtil.isEmpty(apid)) {
+            identityHints.put(APID_KEY, apid);
+        }
+
+        if (!identityHints.isEmpty()) {
+            payload.put(IDENTITY_HINTS_KEY, identityHints);
+        }
+
+        try {
+            return JsonValue.wrap(payload);
+        } catch (JsonException e) {
+            Logger.error("ChannelRegistrationPayload - Failed to create channel registration payload as json", e);
+            return JsonValue.NULL;
+        }
     }
 
     /**
@@ -242,7 +245,7 @@ class ChannelRegistrationPayload {
      */
     @Override
     public String toString() {
-        return this.asJSON().toString();
+        return this.toJsonValue().toString();
     }
 
     /**
@@ -301,67 +304,48 @@ class ChannelRegistrationPayload {
     /**
      * Creates a ChannelRegistrationPayload from JSON object
      *
-     * @param json The JSON object to create the ChannelRegistrationPayload from
+     * @param jsonString The JSON object to create the ChannelRegistrationPayload from
      * @return The payload as a ChannelRegistrationPayload
      */
-    protected static ChannelRegistrationPayload createFromJSON(JSONObject json) {
-        Builder builder = new Builder();
-        if (json == null || json.length() == 0) {
+    static ChannelRegistrationPayload parseJson(String jsonString) throws JsonException {
+        JsonMap jsonMap = JsonValue.parseString(jsonString).getMap();
+        if (jsonMap == null || jsonMap.isEmpty()) {
             return null;
         }
 
-        try {
-            JSONObject channelJSON = json.getJSONObject(CHANNEL_KEY);
-            builder.setOptIn(channelJSON.getBoolean(OPT_IN_KEY))
-                   .setBackgroundEnabled(channelJSON.getBoolean(BACKGROUND_ENABLED_KEY))
-                   .setDeviceType(getStringFromJSON(channelJSON, DEVICE_TYPE_KEY))
-                   .setPushAddress(getStringFromJSON(channelJSON, PUSH_ADDRESS_KEY))
-                   .setAlias(getStringFromJSON(channelJSON, ALIAS_KEY))
-                   .setUserId(getStringFromJSON(channelJSON, USER_ID_KEY))
-                   .setApid(getStringFromJSON(channelJSON, APID_KEY));
+        Builder builder = new Builder();
 
-            boolean channelTagRegistrationEnabled = false;
+        JsonMap channelJSON = jsonMap.opt(CHANNEL_KEY).getMap();
+        if (channelJSON != null) {
+            builder.setOptIn(channelJSON.opt(OPT_IN_KEY).getBoolean(false))
+                    .setBackgroundEnabled(channelJSON.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
+                    .setDeviceType(channelJSON.opt(DEVICE_TYPE_KEY).getString())
+                    .setPushAddress(channelJSON.opt(PUSH_ADDRESS_KEY).getString())
+                    .setAlias(channelJSON.opt(ALIAS_KEY).getString())
+                    .setUserId(channelJSON.opt(USER_ID_KEY).getString())
+                    .setApid(channelJSON.opt(APID_KEY).getString());
+
             Set<String> tags = null;
-
-            if (channelJSON.has(TAGS_KEY)) {
-                JSONArray tagsJSON = channelJSON.getJSONArray(TAGS_KEY);
+            if (channelJSON.opt(TAGS_KEY).isJsonList()) {
                 tags = new HashSet<>();
-                for (int i = 0; i < tagsJSON.length(); i++) {
-                    tags.add(tagsJSON.getString(i));
+                for (JsonValue tag : channelJSON.get(TAGS_KEY).getList()) {
+                    if (tag.isString()) {
+                        tags.add(tag.getString());
+                    }
                 }
             }
 
-            if (channelJSON.has(SET_TAGS_KEY)) {
-                channelTagRegistrationEnabled = channelJSON.getBoolean(SET_TAGS_KEY);
-            }
+            builder.setTags(channelJSON.opt(SET_TAGS_KEY).getBoolean(false), tags);
+        }
 
-            builder.setTags(channelTagRegistrationEnabled, tags);
+        JsonMap identityHints = jsonMap.opt(IDENTITY_HINTS_KEY).getMap();
 
-            if (json.has(IDENTITY_HINTS_KEY)) {
-                JSONObject identityHintsJSON = json.getJSONObject(IDENTITY_HINTS_KEY);
-                builder.setUserId(getStringFromJSON(identityHintsJSON, USER_ID_KEY))
-                       .setApid(getStringFromJSON(identityHintsJSON, APID_KEY));
-            }
-        } catch (JSONException e) {
-            Logger.error("ChannelRegistrationPayload - Failed to parse payload from JSON.", e);
-            return null;
+        if (identityHints != null) {
+            builder.setUserId(identityHints.opt(USER_ID_KEY).getString())
+                    .setApid(identityHints.opt(APID_KEY).getString());
         }
 
         return builder.build();
-    }
 
-    /**
-     * Get the string value from the JSON object
-     *
-     * @param json The JSON object to get the value from
-     * @param key The string key specified
-     * @return The string value from the JSON object
-     */
-    private static String getStringFromJSON(JSONObject json, String key) {
-        try {
-            return json.has(key) ? json.getString(key) : null;
-        } catch (JSONException e) {
-            return null;
-        }
     }
 }

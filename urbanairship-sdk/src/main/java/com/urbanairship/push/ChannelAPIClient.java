@@ -66,7 +66,7 @@ class ChannelAPIClient {
      * @return channelResponse or null if an error occurred
      */
     ChannelResponse createChannelWithPayload(ChannelRegistrationPayload channelPayload) {
-        String payload = channelPayload.asJSON().toString();
+        String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelAPIClient - Creating channel with payload: " + payload);
         return requestWithPayload(creationURL, "POST", payload);
     }
@@ -84,7 +84,7 @@ class ChannelAPIClient {
             return null;
         }
 
-        String payload = channelPayload.asJSON().toString();
+        String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelAPIClient - Updating channel with payload: " + payload);
         return requestWithPayload(channelLocation, "PUT", payload);
     }

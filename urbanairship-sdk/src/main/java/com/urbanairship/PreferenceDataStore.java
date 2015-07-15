@@ -31,6 +31,9 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -42,7 +45,7 @@ import java.util.concurrent.Executors;
 
 /**
  * PreferenceDataStore stores and retrieves all the Urban Airship preferences through the
- * {@link com.urbanairship.UrbanAirshipProvider}.
+ * {@link UrbanAirshipProvider}.
  *
  * @hide
  */
@@ -68,7 +71,7 @@ public final class PreferenceDataStore {
          *
          * @param key The key of the preference.
          */
-        public void onPreferenceChange(String key);
+        void onPreferenceChange(String key);
     }
 
     /**
@@ -151,26 +154,6 @@ public final class PreferenceDataStore {
         return value == null ? defaultValue : value;
     }
 
-    /**
-     * Get the float preference.
-     *
-     * @param key The preference name.
-     * @param defaultValue The value to return if the preference doesn't exist or
-     * cannot be coerced into a float.
-     * @return The float value for the preference or defaultValue if it doesn't exist.
-     */
-    public float getFloat(String key, float defaultValue) {
-        String value = getPreference(key).get();
-        if (value == null) {
-            return defaultValue;
-        }
-
-        try {
-            return Float.parseFloat(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
 
     /**
      * Get the long preference.
@@ -214,6 +197,21 @@ public final class PreferenceDataStore {
         }
     }
 
+    /**
+     * Get the preference value as a {@link JsonValue}.
+     *
+     * @param key The preference name.
+     * @return The value for the preference if available or {@link JsonValue#NULL} if it doesn't exist.
+     */
+    public JsonValue getJsonValue(String key) {
+        try {
+            return JsonValue.parseString(getPreference(key).get());
+        } catch (JsonException e) {
+            // Should never happen
+            Logger.debug("Unable to parse preference value: " + key, e);
+            return JsonValue.NULL;
+        }
+    }
 
     /**
      * Delete a key/value pair. This method will block on the database write.
@@ -232,18 +230,75 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      */
     public void remove(String key) {
-        put(key, null);
+        getPreference(key).put(null);
     }
 
     /**
-     * Put new or replace an existing preference.
+     * Stores a String value in the preferences.
      *
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, Object value) {
-        String stringValue = value == null ? null : String.valueOf(value);
-        getPreference(key).put(stringValue);
+    public void put(String key, String value) {
+        getPreference(key).put(value);
+    }
+
+    /**
+     * Stores a long value in the preferences.
+     *
+     * @param key The preference name.
+     * @param value The preference value.
+     */
+    public void put(String key, long value) {
+        getPreference(key).put(String.valueOf(value));
+    }
+
+    /**
+     * Stores an int value in the preferences.
+     *
+     * @param key The preference name.
+     * @param value The preference value.
+     */
+    public void put(String key, int value) {
+        getPreference(key).put(String.valueOf(value));
+    }
+
+    /**
+     * Stores a boolean value in the preferences.
+     *
+     * @param key The preference name.
+     * @param value The preference value.
+     */
+    public void put(String key, boolean value) {
+        getPreference(key).put(String.valueOf(value));
+    }
+
+    /**
+     * Stores a {@link JsonValue} value in the preferences.
+     *
+     * @param key The preference name.
+     * @param value The preference value.
+     */
+    public void put(String key, JsonValue value) {
+        if (value == null) {
+            remove(key);
+        } else {
+            getPreference(key).put(value.toString());
+        }
+    }
+
+    /**
+     * Stores a {@link JsonSerializable} value in the preferences.
+     *
+     * @param key The preference name.
+     * @param value The preference value.
+     */
+    public void put(String key, JsonSerializable value) {
+        if (value == null) {
+            remove(key);
+        } else {
+            put(key, value.toJsonValue());
+        }
     }
 
     /**
@@ -255,7 +310,7 @@ public final class PreferenceDataStore {
      * @return <code>true</code> if the preference was successfully saved to
      * the database, otherwise <code>false</code>
      */
-    public boolean putSync(String key, Object value) {
+    public boolean putSync(String key, String value) {
         String stringValue = value == null ? null : String.valueOf(value);
         return getPreference(key).putSync(stringValue);
     }

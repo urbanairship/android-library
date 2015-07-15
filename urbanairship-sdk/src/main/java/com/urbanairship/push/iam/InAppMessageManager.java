@@ -255,7 +255,7 @@ public class InAppMessageManager extends BaseManager {
                     }
                 });
 
-                dataStore.put(PENDING_IN_APP_MESSAGE_KEY, message.toJsonValue().toString());
+                dataStore.put(PENDING_IN_APP_MESSAGE_KEY, message);
 
                 if (currentMessage == null && previous != null) {
                     Logger.debug("InAppMessageManager - pending in-app message replaced.");

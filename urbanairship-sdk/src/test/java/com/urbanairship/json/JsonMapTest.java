@@ -57,7 +57,7 @@ public class JsonMapTest extends BaseTestCase {
      */
     @Test
     public void testToString() throws JSONException {
-        String expected = "{\"some-key\":\"some-value\",\"null-key\":null,\"another-key\":\"another-value\"}";
+        String expected = "{\"some-key\":\"some-value\",\"another-key\":\"another-value\"}";
 
         assertEquals(expected, jsonMap.toString());
     }

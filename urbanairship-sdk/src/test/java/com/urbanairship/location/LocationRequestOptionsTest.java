@@ -1,12 +1,16 @@
 package com.urbanairship.location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.util.concurrent.TimeUnit;
+
+import static junit.framework.Assert.assertEquals;
 
 public class LocationRequestOptionsTest extends BaseTestCase {
 
@@ -47,5 +51,37 @@ public class LocationRequestOptionsTest extends BaseTestCase {
                 "PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, " +
                 "PRIORITY_LOW_POWER, or PRIORITY_NO_POWER");
         new LocationRequestOptions.Builder().setPriority(-1);
+    }
+
+    /**
+     * Test creating a JsonValue from a LocationRequestOptions instance.
+     */
+    @Test
+    public void testToJsonValue() {
+        LocationRequestOptions options = new LocationRequestOptions.Builder()
+                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                .setMinDistance(44.4f)
+                .setMinTime(1111, TimeUnit.MILLISECONDS)
+                .create();
+
+        JsonValue value = options.toJsonValue();
+        assertEquals(44.4f, value.getMap().get(LocationRequestOptions.MIN_DISTANCE_KEY).getNumber().floatValue());
+        assertEquals(1111, value.getMap().get(LocationRequestOptions.MIN_TIME_KEY).getLong(0));
+        assertEquals(LocationRequestOptions.PRIORITY_LOW_POWER, value.getMap().get(LocationRequestOptions.PRIORITY_KEY).getInt(-1));
+    }
+
+    /**
+     * Test creating a LocationRequestOptions from a JsonString.
+     */
+    @Test
+    public void testParseJson() throws JsonException {
+        LocationRequestOptions original = new LocationRequestOptions.Builder()
+                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                .setMinDistance(44.4f)
+                .setMinTime(1111, TimeUnit.MILLISECONDS)
+                .create();
+        
+        LocationRequestOptions fromJson = LocationRequestOptions.parseJson(original.toJsonValue().toString());
+        assertEquals(original, fromJson);
     }
 }
