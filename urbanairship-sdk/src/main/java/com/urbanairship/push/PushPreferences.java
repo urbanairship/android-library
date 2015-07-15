@@ -33,10 +33,8 @@ import android.os.Build;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -384,27 +382,16 @@ class PushPreferences {
      * @return A Set of tag Strings.
      */
     Set<String> getTags() {
-
-        //returns an empty set if no serialized tags are found
         Set<String> tags = new HashSet<>();
 
-        String serializedTags = preferenceDataStore.getString(TAGS_KEY, "[]");
+        JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
 
-        if (serializedTags != null) {
-
-            //deserialize
-            try {
-                JSONArray a = new JSONArray(serializedTags);
-
-                int len = a.length();
-                for (int i = 0; i < len; ++i) {
-                    tags.add(a.getString(i));
+        if (jsonValue.isJsonList()) {
+            for (JsonValue tag : jsonValue.getList()) {
+                if (tag.isString()) {
+                    tags.add(tag.getString());
                 }
-
-            } catch (JSONException e) {
-                // do nothing. bad serialized set.
             }
-
         }
 
         return tags;
@@ -421,10 +408,9 @@ class PushPreferences {
      */
     void setTags(Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
-            preferenceDataStore.put(TAGS_KEY, null);
+            preferenceDataStore.remove(TAGS_KEY);
         } else {
-            JSONArray jsonTags = new JSONArray(tags);
-            preferenceDataStore.put(TAGS_KEY, jsonTags.toString());
+            preferenceDataStore.put(TAGS_KEY, JsonValue.wrap(tags, null));
         }
     }
 
@@ -625,8 +611,7 @@ class PushPreferences {
      * @param senderIds The registered sender IDs.
      */
     void setRegisteredGcmSenderIds(Set<String> senderIds) {
-        JSONArray array = new JSONArray(senderIds);
-        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, array.toString());
+        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, JsonValue.wrap(senderIds, null));
     }
 
     /**
@@ -636,22 +621,17 @@ class PushPreferences {
      */
     Set<String> getRegisteredGcmSenderIds() {
         Set<String> ids = new HashSet<>();
-        String idString = preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);
+        JsonValue jsonValue = preferenceDataStore.getJsonValue(REGISTERED_GCM_SENDER_IDS);
 
-        if (idString != null) {
-            try {
-                JSONArray jsonArray = new JSONArray(idString);
-                for (int i = 0; i < jsonArray.length(); ++i) {
-                    ids.add(jsonArray.getString(i));
+        if (jsonValue.isJsonList()) {
+            for (JsonValue id : jsonValue.getList()) {
+                if (id.isString()) {
+                    ids.add(id.getString());
                 }
-                return ids;
-            } catch (JSONException e) {
-                Logger.error("Unable to parse registered GCM sender Ids", e);
-                preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, null);
             }
         }
 
-        return null;
+        return ids;
     }
 
 }

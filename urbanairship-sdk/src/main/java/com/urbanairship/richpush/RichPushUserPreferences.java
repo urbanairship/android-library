@@ -54,7 +54,7 @@ class RichPushUserPreferences {
             String userToken = encode(password, preferenceDataStore.getString(USER_ID_KEY, null));
 
             if (preferenceDataStore.putSync(USER_TOKEN_KEY, userToken)) {
-                preferenceDataStore.put(USER_PASSWORD_KEY, null);
+                preferenceDataStore.remove(USER_PASSWORD_KEY);
             }
         }
     }

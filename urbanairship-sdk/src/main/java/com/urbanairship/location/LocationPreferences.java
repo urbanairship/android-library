@@ -114,7 +114,7 @@ class LocationPreferences implements PreferenceDataStore.PreferenceChangeListene
      * @param options The LocationRequestOptions to save.
      */
     void setLocationRequestOptions(LocationRequestOptions options) {
-        preferenceDataStore.put(LOCATION_OPTIONS, options.toJsonValue().toString());
+        preferenceDataStore.put(LOCATION_OPTIONS, options);
     }
 
     /**

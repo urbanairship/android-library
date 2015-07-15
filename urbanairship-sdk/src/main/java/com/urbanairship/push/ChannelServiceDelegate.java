@@ -467,7 +467,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param channelPayload A ChannelRegistrationPayload.
      */
     private void setLastRegistrationPayload(ChannelRegistrationPayload channelPayload) {
-        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload.toJsonValue().toString());
+        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload);
         getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
     }
 
