@@ -30,6 +30,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -155,6 +156,7 @@ class EventDataManager extends DataManager {
      * @param count Number of events to return, starts from the oldest to the newest.
      * @return Map of event id to event data
      */
+    @NonNull
     Map<String, String> getEvents(int count) {
         HashMap<String, String> events = new HashMap<>(count);
 

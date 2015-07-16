@@ -53,7 +53,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 
+@SuppressWarnings("ResourceType")
 public class AnalyticsTest extends BaseTestCase {
 
     Analytics analytics;
@@ -184,7 +187,7 @@ public class AnalyticsTest extends BaseTestCase {
         Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
 
         // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
 
         // Verify it did not start the event service to add an event.  Should be
         // done with life cycle calls
@@ -205,7 +208,7 @@ public class AnalyticsTest extends BaseTestCase {
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
 
         // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
     }
 
     /**
@@ -221,7 +224,8 @@ public class AnalyticsTest extends BaseTestCase {
 
 
         // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
+        //noinspection ResourceType
+        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
 
         // Verify it did not start the event service to add an event.  Should be
         // done with life cycle calls
@@ -243,7 +247,7 @@ public class AnalyticsTest extends BaseTestCase {
 
 
         // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.MANUAL_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
     }
 
     /**
@@ -354,7 +358,7 @@ public class AnalyticsTest extends BaseTestCase {
 
 
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.AUTO_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.AUTO_INSTRUMENTATION), anyLong());
     }
 
     /**
@@ -368,7 +372,7 @@ public class AnalyticsTest extends BaseTestCase {
         TestApplication.getApplication().callback.onActivityStopped(activity);
 
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(Mockito.eq(activity), Mockito.eq(ActivityMonitor.Source.AUTO_INSTRUMENTATION), Mockito.anyLong());
+        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.AUTO_INSTRUMENTATION), anyLong());
     }
 
 

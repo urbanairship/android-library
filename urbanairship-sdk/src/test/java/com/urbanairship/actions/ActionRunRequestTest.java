@@ -2,6 +2,7 @@ package com.urbanairship.actions;
 
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.android.internal.util.Predicate;
 import com.urbanairship.BaseTestCase;
@@ -312,7 +313,7 @@ public class ActionRunRequestTest extends BaseTestCase {
         public ActionArguments lastArguments;
 
         @Override
-        public void onFinish(ActionArguments arguments, ActionResult result) {
+        public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
             lastResult = result;
             lastArguments = arguments;
             onFinishCalled = true;

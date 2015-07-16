@@ -25,6 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.urbanairship.Logger;
 import com.urbanairship.push.PushMessage;
 
@@ -58,7 +61,7 @@ public class InteractiveNotificationEvent extends Event {
      * @param buttonDescription The button description.
      * @param isForeground If the action is foreground or not.
      */
-    public InteractiveNotificationEvent(PushMessage message, String buttonId, String buttonDescription, boolean isForeground) {
+    public InteractiveNotificationEvent(@NonNull PushMessage message, @NonNull String buttonId, @Nullable String buttonDescription, boolean isForeground) {
         this.sendId = message.getSendId();
         this.buttonGroupId = message.getInteractiveNotificationType();
         this.buttonId = buttonId;
