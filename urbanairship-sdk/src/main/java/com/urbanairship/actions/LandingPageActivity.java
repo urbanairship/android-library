@@ -113,7 +113,7 @@ public class LandingPageActivity extends Activity {
         }
 
         ActivityInfo info = ManifestUtils.getActivityInfo(getClass());
-        Bundle metadata = info.metaData == null ? new Bundle() : info.metaData;
+        Bundle metadata = info == null || info.metaData == null ? new Bundle() : info.metaData;
 
         webViewBackgroundColor = metadata.getInt(LANDING_PAGE_BACKGROUND_COLOR, -1);
         handler = new Handler();
