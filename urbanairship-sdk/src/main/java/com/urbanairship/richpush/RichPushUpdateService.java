@@ -31,6 +31,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -133,7 +135,7 @@ public class RichPushUpdateService extends IntentService {
      * @param status A boolean indicating whether rich push update succeeded.
      * @param bundle The bundle delivered to the receiver.
      */
-    private void respond(ResultReceiver receiver, boolean status, Bundle bundle) {
+    private void respond(@Nullable ResultReceiver receiver, boolean status, @Nullable Bundle bundle) {
         if (receiver != null) {
             if (bundle == null) {
                 bundle = new Bundle();
@@ -152,7 +154,7 @@ public class RichPushUpdateService extends IntentService {
      * @param receiver The result receiver.
      * @param status A boolean indicating whether rich push update succeeded.
      */
-    private void respond(ResultReceiver receiver, boolean status) {
+    private void respond(@Nullable ResultReceiver receiver, boolean status) {
         this.respond(receiver, status, null);
     }
 
@@ -163,7 +165,7 @@ public class RichPushUpdateService extends IntentService {
      *
      * @param receiver The result receiver.
      */
-    private void messagesUpdate(ResultReceiver receiver) {
+    private void messagesUpdate(@Nullable ResultReceiver receiver) {
         boolean success = this.updateMessages();
         this.respond(receiver, success);
 
@@ -177,7 +179,7 @@ public class RichPushUpdateService extends IntentService {
      *
      * @param receiver The result receiver.
      */
-    private void userUpdate(ResultReceiver receiver) {
+    private void userUpdate(@Nullable ResultReceiver receiver) {
         boolean success;
         if (!RichPushUser.isCreated()) {
             success = this.createUser();
@@ -394,7 +396,7 @@ public class RichPushUpdateService extends IntentService {
      * @param deletedIds A set of deletedId strings.
      * @return <code>true</code> if messages were deleted, otherwise <code>false</code>.
      */
-    private boolean deleteMessagesOnServer(Set<String> deletedIds) {
+    private boolean deleteMessagesOnServer(@NonNull Set<String> deletedIds) {
         JSONObject payload = buildMessagesPayload(DELETE_MESSAGES_KEY, deletedIds);
         return userClient.deleteMessages(payload, getUser().getId(), getUser().getPassword());
     }
@@ -405,7 +407,7 @@ public class RichPushUpdateService extends IntentService {
      * @param readIds A set of readId strings.
      * @return <code>true</code> if messages marked read, otherwise <code>false</code>.
      */
-    private boolean markMessagesReadOnServer(Set<String> readIds) {
+    private boolean markMessagesReadOnServer(@NonNull Set<String> readIds) {
         JSONObject payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, readIds);
         return userClient.markMessagesRead(payload, getUser().getId(), getUser().getPassword());
     }
@@ -413,7 +415,7 @@ public class RichPushUpdateService extends IntentService {
 
     // helpers
 
-    private JSONObject buildMessagesPayload(String root, Set<String> ids) {
+    private JSONObject buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
         try {
             JSONObject payload = new JSONObject();
             payload.put(root, new JSONArray());
