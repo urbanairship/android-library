@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.json;
 
+import android.support.annotation.Nullable;
+
 import com.urbanairship.Logger;
 
 import org.json.JSONException;
@@ -46,7 +48,7 @@ public class JsonList implements Iterable<JsonValue> {
      *
      * @param list A list of JsonValues.
      */
-    public JsonList(List<JsonValue> list) {
+    public JsonList(@Nullable List<JsonValue> list) {
         this.list = list == null ? new ArrayList<JsonValue>() : new ArrayList<>(list);
     }
 

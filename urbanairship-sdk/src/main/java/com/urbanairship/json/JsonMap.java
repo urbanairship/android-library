@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.json;
 
+import android.support.annotation.Nullable;
+
 import com.urbanairship.Logger;
 
 import org.json.JSONException;
@@ -49,7 +51,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
      *
      * @param map A map of strings to JsonValues.
      */
-    public JsonMap(Map<String, JsonValue> map) {
+    public JsonMap(@Nullable Map<String, JsonValue> map) {
         this.map = map == null ? new HashMap<String, JsonValue>() : new HashMap<>(map);
     }
 
