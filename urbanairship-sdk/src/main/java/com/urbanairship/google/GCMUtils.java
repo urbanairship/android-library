@@ -31,6 +31,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -52,7 +53,7 @@ public class GCMUtils {
     /**
      * Validates the manifest for GCM.
      */
-    public static void validateManifest(AirshipConfigOptions options) {
+    public static void validateManifest(@NonNull AirshipConfigOptions options) {
         PackageManager pm = UAirship.getPackageManager();
         String packageName = UAirship.getPackageName();
 
