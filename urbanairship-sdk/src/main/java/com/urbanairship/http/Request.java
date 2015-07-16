@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.http;
 
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.urbanairship.Logger;
@@ -69,7 +70,7 @@ public class Request {
      * @param requestMethod The string request method.
      * @param url The request URL.
      */
-    public Request(String requestMethod, URL url) {
+    public Request(@NonNull String requestMethod, @NonNull URL url) {
         this.requestMethod = requestMethod;
         this.url = url;
 
@@ -84,6 +85,7 @@ public class Request {
      * @param password The user token.
      * @return The request.
      */
+    @NonNull
     public Request setCredentials(String user, String password) {
         this.user = user;
         this.password = password;
@@ -98,6 +100,7 @@ public class Request {
      * @param contentType The string content type.
      * @return The request.
      */
+    @NonNull
     public Request setRequestBody(String body, String contentType) {
         this.body = body;
         this.contentType = contentType;
@@ -110,6 +113,7 @@ public class Request {
      * @param timeMS The time in milliseconds.
      * @return The request.
      */
+    @NonNull
     public Request setIfModifiedSince(long timeMS) {
         this.ifModifiedSince = timeMS;
         return this;
@@ -127,6 +131,7 @@ public class Request {
      * @param value The value of the property.
      * @return The request.
      */
+    @NonNull
     public Request setHeader(String key, String value) {
         if (value == null) {
             responseProperties.remove(key);
@@ -142,6 +147,7 @@ public class Request {
      * @param compressRequestBody A boolean to compress the request body.
      * @return The request.
      */
+    @NonNull
     public Request setCompressRequestBody(boolean compressRequestBody) {
         this.compressRequestBody = compressRequestBody;
         return this;
@@ -231,6 +237,7 @@ public class Request {
      *
      * @return The Urban Airship User Agent.
      */
+    @NonNull
     public static String getUrbanAirshipUserAgent() {
         String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? "amazon" : "android";
 
@@ -255,13 +262,8 @@ public class Request {
             br.close();
         } finally {
             try {
-                if (input != null) {
-                    input.close();
-                }
-
-                if (br != null) {
-                    br.close();
-                }
+                input.close();
+                br.close();
             } catch (Exception e) {
                 Logger.error("Failed to close streams", e);
             }

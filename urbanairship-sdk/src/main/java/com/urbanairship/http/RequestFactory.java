@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.http;
 
+import android.support.annotation.NonNull;
+
 import java.net.URL;
 
 /**
@@ -39,6 +41,7 @@ public class RequestFactory {
      * @param url The request URL.
      * @return The request.
      */
+    @NonNull
     public Request createRequest(String requestMethod, URL url) {
         return new Request(requestMethod, url);
     }
