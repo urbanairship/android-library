@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -71,9 +72,9 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @return The result of the action.
      */
-    final ActionResult run(ActionArguments arguments) {
+    final ActionResult run(@NonNull ActionArguments arguments) {
         try {
-            if (arguments == null || !acceptsArguments(arguments)) {
+            if (!acceptsArguments(arguments)) {
                 Logger.debug("Action " + this + " is unable to accept arguments: " + arguments);
                 return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
             }
@@ -81,9 +82,12 @@ public abstract class Action {
             Logger.info("Running action: " + this + " arguments: " + arguments);
             onStart(arguments);
             ActionResult result = perform(arguments);
+
+            //noinspection ConstantConditions
             if (result == null) {
                 result = ActionResult.newEmptyResult();
             }
+
             onFinish(arguments, result);
             return result;
         } catch (Exception e) {
@@ -100,7 +104,7 @@ public abstract class Action {
      * @return <code>true</code> if the action can perform with the arguments,
      * otherwise <code>false</code>.
      */
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         return true;
     }
 
@@ -109,7 +113,7 @@ public abstract class Action {
      *
      * @param arguments The action arguments.
      */
-    public void onStart(ActionArguments arguments) {
+    public void onStart(@NonNull ActionArguments arguments) {
 
     }
 
@@ -119,7 +123,8 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @return The result of the action.
      */
-    public abstract ActionResult perform(ActionArguments arguments);
+    @NonNull
+    public abstract ActionResult perform(@NonNull ActionArguments arguments);
 
     /**
      * Called after the action performs.
@@ -127,7 +132,7 @@ public abstract class Action {
      * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(ActionArguments arguments, ActionResult result) {
+    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
 
     }
 
@@ -137,7 +142,8 @@ public abstract class Action {
      * @param intent The activity to start.
      * @return The result of the activity in a ActivityResult object.
      */
-    public final ActivityResult startActivityForResult(Intent intent) {
+    @NonNull
+    public final ActivityResult startActivityForResult(@NonNull Intent intent) {
         final ActivityResult result = new ActivityResult();
 
         ResultReceiver receiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {

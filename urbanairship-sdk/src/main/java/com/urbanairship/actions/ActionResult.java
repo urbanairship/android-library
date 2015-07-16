@@ -25,6 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Stores the results of running an {@link com.urbanairship.actions.Action}.
  */
@@ -78,6 +81,7 @@ public final class ActionResult {
     /**
      * Factory method to create an empty result
      */
+    @NonNull
     public static ActionResult newEmptyResult() {
         return new ActionResult(null, null, Status.COMPLETED);
     }
@@ -87,6 +91,7 @@ public final class ActionResult {
      *
      * @param value The result value
      */
+    @NonNull
     public static ActionResult newResult(ActionValue value) {
         return new ActionResult(value, null, Status.COMPLETED);
     }
@@ -96,6 +101,7 @@ public final class ActionResult {
      *
      * @param exception The result value
      */
+    @NonNull
     public static ActionResult newErrorResult(Exception exception) {
         return new ActionResult(null, exception, Status.EXECUTION_ERROR);
     }
@@ -105,6 +111,7 @@ public final class ActionResult {
      *
      * @param status The result's status
      */
+    @NonNull
     static ActionResult newEmptyResultWithStatus(Status status) {
         return new ActionResult(null, null, status);
     }
@@ -127,6 +134,7 @@ public final class ActionResult {
      *
      * @return The result value as an ActionValue.
      */
+    @NonNull
     public ActionValue getValue() {
         return value;
     }
@@ -136,6 +144,7 @@ public final class ActionResult {
      *
      * @return The result exception.
      */
+    @Nullable
     public Exception getException() { return exception; }
 
     /**
@@ -143,6 +152,7 @@ public final class ActionResult {
      *
      * @return The status of the action run.
      */
+    @NonNull
     public Status getStatus() {
         return status;
     }

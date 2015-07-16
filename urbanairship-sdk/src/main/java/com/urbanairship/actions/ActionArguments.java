@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 /**
  * Container for the argument data passed to an {@link com.urbanairship.actions.Action}.
@@ -72,6 +73,7 @@ public final class ActionArguments {
      *
      * @return The value as an Object.
      */
+    @NonNull
     public ActionValue getValue() {
         return value;
     }
@@ -81,6 +83,7 @@ public final class ActionArguments {
      *
      * @return The situation.
      */
+    @NonNull
     public Situation getSituation() {
         return situation;
     }
@@ -91,6 +94,7 @@ public final class ActionArguments {
      *
      * @return The arguments metadata.
      */
+    @NonNull
     public Bundle getMetadata() {
         return metadata;
     }

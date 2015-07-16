@@ -28,6 +28,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -51,6 +54,7 @@ import java.util.concurrent.Executors;
  */
 public class ActionRunRequest {
 
+    @VisibleForTesting
     static Executor executor = Executors.newCachedThreadPool();
 
     private ActionRegistry registry;
@@ -80,6 +84,7 @@ public class ActionRunRequest {
      * from {@link com.urbanairship.UAirship#getActionRegistry()} will be used.
      * @return An action run request.
      */
+    @NonNull
     public static ActionRunRequest createRequest(String actionName, ActionRegistry registry) {
         return new ActionRunRequest(actionName, registry);
     }
@@ -92,7 +97,9 @@ public class ActionRunRequest {
      * @return An action run request.
      * @throws java.lang.IllegalArgumentException if the action is null.
      */
-    public static ActionRunRequest createRequest(Action action) {
+    @NonNull
+    public static ActionRunRequest createRequest(@NonNull Action action) {
+        //noinspection ConstantConditions
         if (action == null) {
             throw new IllegalArgumentException("Unable to run null action");
         }
@@ -106,6 +113,7 @@ public class ActionRunRequest {
      * @param actionName The action name in the registry.
      * @param registry Optional - The action registry to look up the action. Defaults to {@link com.urbanairship.UAirship#getActionRegistry()}
      */
+    @VisibleForTesting
     ActionRunRequest(String actionName, ActionRegistry registry) {
         this.actionName = actionName;
         this.registry = registry;
@@ -116,6 +124,7 @@ public class ActionRunRequest {
      *
      * @param action The action to run.
      */
+    @VisibleForTesting
     ActionRunRequest(Action action) {
         this.action = action;
     }
@@ -126,6 +135,7 @@ public class ActionRunRequest {
      * @param actionValue The action argument's value.
      * @return The request object.
      */
+    @NonNull
     public ActionRunRequest setValue(ActionValue actionValue) {
         this.actionValue = actionValue;
         return this;
@@ -139,6 +149,7 @@ public class ActionRunRequest {
      * @return The request object.
      * @throws IllegalArgumentException if the object is unable to be wrapped in an ActionValue.
      */
+    @NonNull
     public ActionRunRequest setValue(Object object) {
         try {
             this.actionValue = ActionValue.wrap(object);
@@ -154,6 +165,7 @@ public class ActionRunRequest {
      * @param metadata The action argument's metadata.
      * @return The request object.
      */
+    @NonNull
     public ActionRunRequest setMetadata(Bundle metadata) {
         this.metadata = metadata;
         return this;
@@ -165,6 +177,7 @@ public class ActionRunRequest {
      * @param situation The action argument's situation.
      * @return The request object.
      */
+    @NonNull
     public ActionRunRequest setSituation(Situation situation) {
         this.situation = situation;
         return this;
@@ -175,6 +188,7 @@ public class ActionRunRequest {
      *
      * @return The action's result.
      */
+    @NonNull
     public ActionResult runSync() {
         return runSync(createActionArguments());
     }
@@ -185,6 +199,7 @@ public class ActionRunRequest {
      * @param arguments The action arguments.
      * @return The action's result.
      */
+    @NonNull
     private ActionResult runSync(ActionArguments arguments) {
         if (actionName != null) {
             ActionRegistry.Entry entry = lookUpAction(actionName);
@@ -229,7 +244,8 @@ public class ActionRunRequest {
      */
     public void run(final ActionCompletionCallback callback, Looper looper) {
         if (looper == null) {
-            looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+            Looper myLooper = Looper.myLooper();
+            looper = myLooper != null ? myLooper : Looper.getMainLooper();
         }
 
         final ActionArguments arguments = createActionArguments();
@@ -260,6 +276,7 @@ public class ActionRunRequest {
      *
      * @return The action arguments.
      */
+    @NonNull
     private ActionArguments createActionArguments() {
         Bundle metadata = this.metadata == null ? new Bundle() : new Bundle(this.metadata);
         if (actionName != null) {
@@ -275,7 +292,8 @@ public class ActionRunRequest {
      * @param actionName The action name in the registry.
      * @return The action registry entry if found, or null.
      */
-    private ActionRegistry.Entry lookUpAction(String actionName) {
+    @Nullable
+    private ActionRegistry.Entry lookUpAction(@NonNull String actionName) {
         if (this.registry != null) {
             return this.registry.getEntry(actionName);
         }
