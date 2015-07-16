@@ -122,7 +122,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqlLiteStatment(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqlLiteStatement(SQLiteStatement statement, ContentValues values) {
         bind(statement, 1, values.getAsString(Events.COLUMN_NAME_TYPE));
         bind(statement, 2, values.getAsString(Events.COLUMN_NAME_EVENT_ID));
         bind(statement, 3, values.getAsString(Events.COLUMN_NAME_DATA));

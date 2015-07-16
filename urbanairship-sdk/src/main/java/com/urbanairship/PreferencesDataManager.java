@@ -33,7 +33,7 @@ class PreferencesDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqlLiteStatment(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqlLiteStatement(SQLiteStatement statement, ContentValues values) {
         bind(statement, 1, values.getAsString(COLUMN_NAME_KEY));
         bind(statement, 2, values.getAsString(COLUMN_NAME_VALUE));
     }

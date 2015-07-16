@@ -33,6 +33,7 @@ import android.content.pm.ComponentInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.CoreActivity;
@@ -75,7 +76,7 @@ public class ManifestUtils {
      *
      * @param permission Permission to check
      */
-    public static void checkRequiredPermission(String permission) {
+    public static void checkRequiredPermission(@NonNull String permission) {
         if (PackageManager.PERMISSION_DENIED == UAirship.getPackageManager()
                                                         .checkPermission(permission, UAirship.getPackageName())) {
 
@@ -90,7 +91,7 @@ public class ManifestUtils {
      * @param permission Permission to check.
      * @return <code>true</code> if the permission is granted, otherwise <code>false</code>.
      */
-    public static boolean isPermissionGranted(String permission) {
+    public static boolean isPermissionGranted(@NonNull String permission) {
         return PackageManager.PERMISSION_GRANTED == UAirship.getPackageManager()
                                                          .checkPermission(permission, UAirship.getPackageName());
     }
@@ -102,7 +103,7 @@ public class ManifestUtils {
      * @return The service's ComponentInfo, or null if the service
      * is not listed in the manifest
      */
-    public static ComponentInfo getServiceInfo(Class service) {
+    public static ComponentInfo getServiceInfo(@NonNull Class service) {
         ComponentName componentName = new ComponentName(UAirship.getPackageName(),
                 service.getCanonicalName());
         try {
@@ -121,7 +122,7 @@ public class ManifestUtils {
      * @return The activity's ComponentInfo, or null if the activity
      * is not listed in the manifest
      */
-    public static ActivityInfo getActivityInfo(Class activity) {
+    public static ActivityInfo getActivityInfo(@NonNull Class activity) {
         ComponentName componentName = new ComponentName(UAirship.getPackageName(),
                 activity.getCanonicalName());
         try {
@@ -140,7 +141,7 @@ public class ManifestUtils {
      * @return The receiver's ComponentInfo, or null if the receiver
      * is not listed in the manifest
      */
-    public static ComponentInfo getReceiverInfo(Class receiver) {
+    public static ComponentInfo getReceiverInfo(@NonNull Class receiver) {
         ComponentName componentName = new ComponentName(UAirship.getPackageName(),
                 receiver.getCanonicalName());
         try {
@@ -159,7 +160,7 @@ public class ManifestUtils {
      * @return The provider's ComponentInfo, or null if the provider
      * is not listed in the manifest
      */
-    public static ComponentInfo getProviderInfo(String authorityString) {
+    public static ComponentInfo getProviderInfo(@NonNull String authorityString) {
         return UAirship.getPackageManager().resolveContentProvider(authorityString, 0);
     }
 
@@ -170,7 +171,7 @@ public class ManifestUtils {
      * @param permission the permission name to check (e.g. com.google.android.c2dm.permission.RECEIVE)
      * @return <code>true</code>if known, <code>false</code> otherwise
      */
-    public static boolean isPermissionKnown(String permission) {
+    public static boolean isPermissionKnown(@NonNull String permission) {
         try {
             UAirship.getPackageManager().getPermissionInfo(permission, 0);
             return true;
@@ -183,7 +184,7 @@ public class ManifestUtils {
     /**
      * Validates the manifest for Urban Airship components.
      */
-    public static void validateManifest(AirshipConfigOptions airshipConfigOptions) {
+    public static void validateManifest(@NonNull AirshipConfigOptions airshipConfigOptions) {
         ManifestUtils.checkRequiredPermission(Manifest.permission.INTERNET);
         ManifestUtils.checkRequiredPermission(Manifest.permission.ACCESS_NETWORK_STATE);
 
@@ -369,7 +370,7 @@ public class ManifestUtils {
     /**
      * Helper method to validate a BaseIntentReceiver's manifest entry.
      */
-    private static void validateBaseIntentReceiver(ActivityInfo info) {
+    private static void validateBaseIntentReceiver(@NonNull ActivityInfo info) {
         if (info.exported) {
             Logger.error("Receiver " + info.name + " is exported. This might " +
                     "allow outside applications to message the receiver. Make sure the intent is protected by a " +
