@@ -25,6 +25,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.location;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -40,6 +41,9 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresPermission;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
@@ -103,7 +107,7 @@ public class UALocationManager extends BaseManager {
      * @param preferenceDataStore The preferences data store.
      * @hide
      */
-    public UALocationManager(final Context context, PreferenceDataStore preferenceDataStore) {
+    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore) {
         this.context = context.getApplicationContext();
         this.preferences = new LocationPreferences(preferenceDataStore);
         this.messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
@@ -177,6 +181,9 @@ public class UALocationManager extends BaseManager {
      *
      * @param enabled If location updates should be enabled or not.
      */
+    @RequiresPermission(anyOf = {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION})
     public void setLocationUpdatesEnabled(boolean enabled) {
         preferences.setLocationUpdatesEnabled(enabled);
     }
@@ -208,7 +215,7 @@ public class UALocationManager extends BaseManager {
      * @param options The location request options, or null to reset the options to
      * the default settings.
      */
-    public void setLocationRequestOptions(LocationRequestOptions options) {
+    public void setLocationRequestOptions(@Nullable LocationRequestOptions options) {
         preferences.setLocationRequestOptions(options);
     }
 
@@ -218,6 +225,7 @@ public class UALocationManager extends BaseManager {
      *
      * @return The continuous location request options.
      */
+    @NonNull
     public LocationRequestOptions getLocationRequestOptions() {
         LocationRequestOptions options = preferences.getLocationRequestOptions();
         if (options == null) {
@@ -232,7 +240,7 @@ public class UALocationManager extends BaseManager {
      *
      * @param listener A location listener.
      */
-    public void addLocationListener(LocationListener listener) {
+    public void addLocationListener(@NonNull LocationListener listener) {
         synchronized (locationListeners) {
             locationListeners.add(listener);
             updateServiceConnection();
@@ -244,7 +252,7 @@ public class UALocationManager extends BaseManager {
      *
      * @param listener A location listener.
      */
-    public void removeLocationListener(LocationListener listener) {
+    public void removeLocationListener(@NonNull LocationListener listener) {
         synchronized (locationListeners) {
             locationListeners.remove(listener);
             updateServiceConnection();
@@ -258,6 +266,10 @@ public class UALocationManager extends BaseManager {
      * @return A pending result for the location. The pending result may return a null location if
      * the request is unable to be made due to insufficient permissions.
      */
+    @RequiresPermission(anyOf = {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION})
+    @NonNull
     public PendingResult<Location> requestSingleLocation() {
         return requestSingleLocation(getLocationRequestOptions());
     }
@@ -270,7 +282,12 @@ public class UALocationManager extends BaseManager {
      * the request is unable to be made due to insufficient permissions.
      * @throws IllegalArgumentException if the requestOptions is null.
      */
-    public PendingResult<Location> requestSingleLocation(LocationRequestOptions requestOptions) {
+    @RequiresPermission(anyOf = {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION})
+    @NonNull
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions requestOptions) {
+        //noinspection ConstantConditions
         if (requestOptions == null) {
             throw new IllegalArgumentException("Location request options cannot be null or invalid");
         }
@@ -433,7 +450,7 @@ public class UALocationManager extends BaseManager {
      * @param arg1 The message's arg1 field.
      * @param data The message's data field.
      */
-    private boolean sendMessage(int what, int arg1, Bundle data) {
+    private boolean sendMessage(int what, int arg1, @Nullable Bundle data) {
         if (serviceMessenger == null) {
             return false;
         }

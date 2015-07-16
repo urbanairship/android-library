@@ -25,8 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.location;
 
+import android.support.annotation.FloatRange;
+
 import com.urbanairship.Logger;
-import com.urbanairship.location.RegionEvent;
 
 /**
  * A CircularRegion defines a circular region with a radius, latitude and longitude.
@@ -35,7 +36,7 @@ public class CircularRegion {
     /**
      * The maximum radius for a region event in meters.
      */
-    public static final int MAX_RADIUS = 100000;
+    public final static int MAX_RADIUS = 100000;
 
     /**
      * The radius of the circular region in meters.
@@ -59,7 +60,10 @@ public class CircularRegion {
      * @param latitude The latitude of the circular region's center point in degrees.
      * @param longitude The longitude of the circular region's center point in degrees.
      */
-    public CircularRegion (double radius, double latitude, double longitude) {
+    public CircularRegion(@FloatRange(from = 0.0, to = MAX_RADIUS) double radius,
+                          @FloatRange(from = RegionEvent.MIN_LATITUDE, to = RegionEvent.MAX_LATITUDE) double latitude,
+                          @FloatRange(from = RegionEvent.MIN_LONGITUDE, to = RegionEvent.MAX_LONGITUDE) double longitude) {
+
         this.radius = radius;
         this.latitude = latitude;
         this.longitude = longitude;
