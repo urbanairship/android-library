@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.amazon;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 
@@ -68,7 +69,7 @@ public class ADMUtils {
     /**
      * Starts the registration process for ADM.
      */
-    public static void startRegistration(Context context) {
+    public static void startRegistration(@NonNull Context context) {
         if (isADMSupported()) {
             ADMWrapper.startRegistration(context);
         }
