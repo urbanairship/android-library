@@ -50,7 +50,8 @@ abstract class CancelableOperation implements Cancelable, Runnable {
         if (looper != null) {
             this.handler = new Handler(looper);
         } else {
-            this.handler = Looper.myLooper() != null ? new Handler(Looper.myLooper()) : new Handler(Looper.getMainLooper());
+            Looper myLooper = Looper.myLooper();
+            this.handler = myLooper != null ? new Handler(myLooper) : new Handler(Looper.getMainLooper());
         }
 
         internalRunnable = new Runnable() {

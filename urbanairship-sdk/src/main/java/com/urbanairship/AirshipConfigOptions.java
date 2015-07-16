@@ -28,6 +28,7 @@ package com.urbanairship;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
@@ -258,7 +259,7 @@ public class AirshipConfigOptions {
      * @param ctx The application context
      * @return Options populated with the contents of getDefaultPropertiesFilename()
      */
-    public static AirshipConfigOptions loadDefaultOptions(Context ctx) {
+    public static AirshipConfigOptions loadDefaultOptions(@NonNull Context ctx) {
 
         // Use a static initialization method
         // Loading a properties file using reflection in the constructor
@@ -275,7 +276,7 @@ public class AirshipConfigOptions {
      *
      * @param ctx The application context
      */
-    public void loadFromProperties(Context ctx) {
+    public void loadFromProperties(@NonNull Context ctx) {
         this.loadFromProperties(ctx, DEFAULT_PROPERTIES_FILENAME);
     }
 
@@ -285,7 +286,7 @@ public class AirshipConfigOptions {
      * @param ctx The application context
      * @param propertiesFile The properties file
      */
-    public void loadFromProperties(Context ctx, String propertiesFile) {
+    public void loadFromProperties(@NonNull Context ctx, @NonNull String propertiesFile) {
         Resources resources = ctx.getResources();
         AssetManager assetManager = resources.getAssets();
 

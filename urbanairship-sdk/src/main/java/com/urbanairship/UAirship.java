@@ -32,6 +32,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
+import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.amazon.ADMUtils;
@@ -104,7 +107,7 @@ public class UAirship {
      *
      * @hide
      */
-    UAirship(Context context, AirshipConfigOptions airshipConfigOptions, PreferenceDataStore preferenceDataStore) {
+    UAirship(@NonNull Context context, @NonNull AirshipConfigOptions airshipConfigOptions, @NonNull PreferenceDataStore preferenceDataStore) {
         this.airshipConfigOptions = airshipConfigOptions;
         this.preferenceDataStore = preferenceDataStore;
 
@@ -126,6 +129,7 @@ public class UAirship {
      * @return The UAirship singleton.
      * @throws IllegalStateException if takeoff is not called prior to this method.
      */
+    @NonNull
     public static UAirship shared() {
         synchronized (airshipLock) {
             if (isFlying) {
@@ -166,6 +170,7 @@ public class UAirship {
      * @param callback An optional callback
      * @return A cancelable object that can be used to cancel the callback.
      */
+    @NonNull
     public static Cancelable shared(OnReadyCallback callback) {
         return shared(callback, null);
     }
@@ -183,13 +188,13 @@ public class UAirship {
      * does not have a looper associated with it.
      * @return A cancelable object that can be used to cancel the callback.
      */
+    @NonNull
     public static Cancelable shared(final OnReadyCallback callback, Looper looper) {
         CancelableOperation cancelableOperation = new CancelableOperation(looper) {
             @Override
             public void onRun() {
-                UAirship airship = shared();
-                if (callback != null && airship != null) {
-                    callback.onAirshipReady(airship);
+                if (callback != null) {
+                    callback.onAirshipReady(shared());
                 }
             }
         };
@@ -213,7 +218,8 @@ public class UAirship {
      *
      * @param application The application (required)
      */
-    public static void takeOff(Application application) {
+    @MainThread
+    public static void takeOff(@NonNull Application application) {
         takeOff(application, null, null);
     }
 
@@ -226,7 +232,8 @@ public class UAirship {
      * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
      * that performs {@code takeOff}.
      */
-    public static void takeOff(Application application, OnReadyCallback readyCallback) {
+    @MainThread
+    public static void takeOff(@NonNull Application application, @Nullable OnReadyCallback readyCallback) {
         takeOff(application, null, readyCallback);
     }
 
@@ -238,7 +245,8 @@ public class UAirship {
      * will override the options loaded from the <code>.properties</code> file. This parameter
      * is useful for specifying options at runtime.
      */
-    public static void takeOff(Application application, AirshipConfigOptions options) {
+    @MainThread
+    public static void takeOff(@NonNull Application application, @Nullable AirshipConfigOptions options) {
         takeOff(application, options, null);
     }
 
@@ -254,8 +262,9 @@ public class UAirship {
      * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
      * that performs {@code takeOff}.
      */
-    public static void takeOff(final Application application, final AirshipConfigOptions options, final OnReadyCallback readyCallback) {
-        // the context argument is crucial to pretty much everything
+    @MainThread
+    public static void takeOff(@NonNull final Application application, @Nullable final AirshipConfigOptions options, @Nullable final OnReadyCallback readyCallback) {
+        // noinspection ConstantConditions
         if (application == null) {
             throw new IllegalArgumentException("Application argument must not be null");
         }
@@ -314,7 +323,7 @@ public class UAirship {
      * options loaded from the <code>.properties</code> file. This parameter is useful for specifying options at runtime.
      * @param readyCallback Optional ready callback.
      */
-    private static void executeTakeOff(Application application, AirshipConfigOptions options, OnReadyCallback readyCallback) {
+    private static void executeTakeOff(@NonNull Application application, @Nullable AirshipConfigOptions options, @Nullable OnReadyCallback readyCallback) {
         if (options == null) {
             options = AirshipConfigOptions.loadDefaultOptions(application.getApplicationContext());
         }
@@ -728,6 +737,6 @@ public class UAirship {
          *
          * @param airship The UAirship instance.
          */
-        public void onAirshipReady(UAirship airship);
+        void onAirshipReady(UAirship airship);
     }
 }

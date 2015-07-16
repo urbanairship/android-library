@@ -30,6 +30,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
@@ -91,11 +92,9 @@ public final class PreferenceDataStore {
      * Adds a listener for preference changes.
      * @param listener A PreferenceChangeListener.
      */
-    public void addListener(PreferenceChangeListener listener) {
-        if (listener != null) {
-            synchronized (listeners) {
-                listeners.add(listener);
-            }
+    public void addListener(@NonNull PreferenceChangeListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
         }
     }
 
@@ -103,7 +102,7 @@ public final class PreferenceDataStore {
      * Removes a listener for preference changes.
      * @param listener A PreferenceChangeListener.
      */
-    public void removeListener(PreferenceChangeListener listener) {
+    public void removeListener(@NonNull PreferenceChangeListener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
@@ -137,7 +136,7 @@ public final class PreferenceDataStore {
      * @param defaultValue The value to return if the preference doesn't exist.
      * @return The boolean value for the preference or defaultValue if it doesn't exist.
      */
-    public boolean getBoolean(String key, boolean defaultValue) {
+    public boolean getBoolean(@NonNull String key, boolean defaultValue) {
         String value = getPreference(key).get();
         return value == null ? defaultValue : Boolean.valueOf(value);
     }
@@ -149,7 +148,7 @@ public final class PreferenceDataStore {
      * @param defaultValue The value to return if the preference doesn't exist.
      * @return The String value for the preference or defaultValue if it doesn't exist.
      */
-    public String getString(String key, String defaultValue) {
+    public String getString(@NonNull String key, String defaultValue) {
         String value = getPreference(key).get();
         return value == null ? defaultValue : value;
     }
@@ -163,7 +162,7 @@ public final class PreferenceDataStore {
      * cannot be coerced into a long.
      * @return The long value for the preference or defaultValue if it doesn't exist.
      */
-    public long getLong(String key, long defaultValue) {
+    public long getLong(@NonNull String key, long defaultValue) {
         String value = getPreference(key).get();
         if (value == null) {
             return defaultValue;
@@ -184,7 +183,7 @@ public final class PreferenceDataStore {
      * cannot be coerced into an integer.
      * @return The integer value for the preference or defaultValue if it doesn't exist.
      */
-    public int getInt(String key, int defaultValue) {
+    public int getInt(@NonNull String key, int defaultValue) {
         String value = getPreference(key).get();
         if (value == null) {
             return defaultValue;
@@ -203,7 +202,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @return The value for the preference if available or {@link JsonValue#NULL} if it doesn't exist.
      */
-    public JsonValue getJsonValue(String key) {
+    public JsonValue getJsonValue(@NonNull String key) {
         try {
             return JsonValue.parseString(getPreference(key).get());
         } catch (JsonException e) {
@@ -220,7 +219,7 @@ public final class PreferenceDataStore {
      * @return <code>true</code> if the preference was successfully removed from
      * the database, otherwise <code>false</code>
      */
-    public boolean removeSync(String key) {
+    public boolean removeSync(@NonNull String key) {
         return putSync(key, null);
     }
 
@@ -229,7 +228,7 @@ public final class PreferenceDataStore {
      *
      * @param key The preference name.
      */
-    public void remove(String key) {
+    public void remove(@NonNull String key) {
         getPreference(key).put(null);
     }
 
@@ -239,7 +238,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, String value) {
+    public void put(@NonNull String key, String value) {
         getPreference(key).put(value);
     }
 
@@ -249,7 +248,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, long value) {
+    public void put(@NonNull String key, long value) {
         getPreference(key).put(String.valueOf(value));
     }
 
@@ -259,7 +258,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, int value) {
+    public void put(@NonNull String key, int value) {
         getPreference(key).put(String.valueOf(value));
     }
 
@@ -269,7 +268,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, boolean value) {
+    public void put(@NonNull String key, boolean value) {
         getPreference(key).put(String.valueOf(value));
     }
 
@@ -279,7 +278,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, JsonValue value) {
+    public void put(@NonNull String key, JsonValue value) {
         if (value == null) {
             remove(key);
         } else {
@@ -293,7 +292,7 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      * @param value The preference value.
      */
-    public void put(String key, JsonSerializable value) {
+    public void put(@NonNull String key, JsonSerializable value) {
         if (value == null) {
             remove(key);
         } else {
@@ -310,7 +309,7 @@ public final class PreferenceDataStore {
      * @return <code>true</code> if the preference was successfully saved to
      * the database, otherwise <code>false</code>
      */
-    public boolean putSync(String key, String value) {
+    public boolean putSync(@NonNull String key, String value) {
         String stringValue = value == null ? null : String.valueOf(value);
         return getPreference(key).putSync(stringValue);
     }
@@ -320,7 +319,7 @@ public final class PreferenceDataStore {
      *
      * @param key The key of the preference.
      */
-    private void onPreferenceChanged(String key) {
+    private void onPreferenceChanged(@NonNull String key) {
         synchronized (listeners) {
             for (PreferenceChangeListener listener : listeners) {
                 listener.onPreferenceChange(key);
@@ -334,7 +333,7 @@ public final class PreferenceDataStore {
      * @param key The preference key.
      * @return A preference for the key.
      */
-    private Preference getPreference(String key) {
+    private Preference getPreference(@NonNull String key) {
         Preference preference;
 
         synchronized (preferences) {
