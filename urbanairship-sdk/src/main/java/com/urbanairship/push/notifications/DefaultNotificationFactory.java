@@ -29,6 +29,11 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.ColorInt;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
@@ -59,7 +64,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
     }
 
     @Override
-    public Notification createNotification(PushMessage message, int notificationId) {
+    public Notification createNotification(@NonNull PushMessage message, int notificationId) {
         // do not display a notification if there is not an alert
         if (UAStringUtil.isEmpty(message.getAlert())) {
             return null;
@@ -70,7 +75,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
     }
 
     @Override
-    public int getNextId(PushMessage pushMessage) {
+    public int getNextId(@NonNull PushMessage pushMessage) {
         if (constantNotificationId > 0) {
             return constantNotificationId;
         } else {
@@ -86,7 +91,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      * @param defaultStyle The default notification style.
      * @return A NotificationCompat.Builder.
      */
-    protected NotificationCompat.Builder createNotificationBuilder(PushMessage message, int notificationId, NotificationCompat.Style defaultStyle) {
+    protected NotificationCompat.Builder createNotificationBuilder(@NonNull PushMessage message, int notificationId, @Nullable NotificationCompat.Style defaultStyle) {
         String title = UAStringUtil.isEmpty(message.getTitle()) ? getDefaultTitle() : message.getTitle();
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext())
@@ -151,8 +156,6 @@ public class DefaultNotificationFactory extends NotificationFactory {
         return builder;
     }
 
-
-
     /**
      * Set the optional constant notification ID.
      *
@@ -178,7 +181,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      * display the application name as the title. A string resource ID will display the specified
      * string as the title.
      */
-    public void setTitleId(int titleId) {
+    public void setTitleId(@StringRes int titleId) {
         this.titleId = titleId;
     }
 
@@ -187,6 +190,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @return The title as an int.
      */
+    @StringRes
     public int getTitleId() {
         return titleId;
     }
@@ -196,7 +200,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @param smallIconId The small icon ID as an int.
      */
-    public void setSmallIconId(int smallIconId) {
+    public void setSmallIconId(@DrawableRes int smallIconId) {
         this.smallIconId = smallIconId;
     }
 
@@ -205,6 +209,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @return The small icon ID as an int.
      */
+    @DrawableRes
     public int getSmallIconId() {
         return smallIconId;
     }
@@ -232,7 +237,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @param largeIcon The large icon ID as an int.
      */
-    public void setLargeIcon(int largeIcon) {
+    public void setLargeIcon(@DrawableRes int largeIcon) {
         this.largeIcon = largeIcon;
     }
 
@@ -241,6 +246,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @return The large icon ID as a int.
      */
+    @DrawableRes
     public int getLargeIcon() {
         return largeIcon;
     }
@@ -250,7 +256,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @param accentColor The accent color of the main notification icon.
      */
-    public void setColor(int accentColor) {
+    public void setColor(@ColorInt int accentColor) {
         this.accentColor = accentColor;
     }
 
@@ -259,6 +265,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
      *
      * @return The accent color as an int.
      */
+    @ColorInt
     public int getColor() {
         return accentColor;
     }

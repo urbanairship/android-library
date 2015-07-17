@@ -28,6 +28,8 @@ package com.urbanairship.push;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.CallSuper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -73,6 +75,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
     public static int RESULT_ACTIVITY_NOT_LAUNCHED = -1;
 
     @Override
+    @CallSuper
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
@@ -105,7 +108,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The push received intent.
      */
-    private void handlePushReceived(Context context, Intent intent) {
+    private void handlePushReceived(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
         if (message == null) {
             Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
@@ -126,7 +129,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The push opened intent.
      */
-    private void handlePushOpened(Context context, Intent intent) {
+    private void handlePushOpened(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
@@ -156,7 +159,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The registration intent.
      */
-    private void handleRegistrationIntent(Context context, Intent intent) {
+    private void handleRegistrationIntent(@NonNull Context context, @NonNull Intent intent) {
         if (intent.hasExtra(PushManager.EXTRA_ERROR)) {
             onChannelRegistrationFailed(context);
         } else {
@@ -175,7 +178,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification dismissed intent.
      */
-    private void handleDismissedIntent(Context context, Intent intent) {
+    private void handleDismissedIntent(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
@@ -193,14 +196,14 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param channelId The channel ID.
      */
-    protected abstract void onChannelRegistrationSucceeded(Context context, String channelId);
+    protected abstract void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId);
 
     /**
      * Called when channel registration fails.
      *
      * @param context The application context.
      */
-    protected abstract void onChannelRegistrationFailed(Context context);
+    protected abstract void onChannelRegistrationFailed(@NonNull Context context);
 
     /**
      * Called when a push is received.
@@ -209,7 +212,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param message The received push message.
      * @param notificationId The notification ID of the message posted in the notification center.
      */
-    protected abstract void onPushReceived(Context context, PushMessage message, int notificationId);
+    protected abstract void onPushReceived(@NonNull Context context, @NonNull PushMessage message, int notificationId);
 
     /**
      * Called when a push is received that did not result in a notification being posted.
@@ -217,7 +220,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param message The received push message.
      */
-    protected abstract void onBackgroundPushReceived(Context context, PushMessage message);
+    protected abstract void onBackgroundPushReceived(@NonNull Context context, @NonNull PushMessage message);
 
     /**
      * Called when a notification is opened.
@@ -229,7 +232,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * <code>false</code> is returned, and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication}
      * is enabled, the launcher activity will automatically be launched.
      */
-    protected abstract boolean onNotificationOpened(Context context, PushMessage message, int notificationId);
+    protected abstract boolean onNotificationOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId);
 
     /**
      * Called when a notification action button is opened.
@@ -245,7 +248,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication} is enabled, the launcher
      * activity will automatically be launched.
      */
-    protected abstract boolean onNotificationActionOpened(Context context, PushMessage message, int notificationId, String buttonId, boolean isForeground);
+    protected abstract boolean onNotificationActionOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId, @NonNull String buttonId, boolean isForeground);
 
     /**
      * Called when a notification is dismissed from either swiping away the notification or from
@@ -255,5 +258,5 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param message The push message associated with the notification.
      * @param notificationId The notification ID.
      */
-    protected void onNotificationDismissed(Context context, PushMessage message, int notificationId) {}
+    protected void onNotificationDismissed(@NonNull Context context, @NonNull PushMessage message, int notificationId) {}
 }

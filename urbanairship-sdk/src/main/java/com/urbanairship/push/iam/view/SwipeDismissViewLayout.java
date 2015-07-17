@@ -29,6 +29,9 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.Keep;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
@@ -71,7 +74,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
          * Called when a child view was dismissed from a swipe. It is up to the listener to remove
          * or hide the view from the parent.
          */
-        public void onDismissed(View view);
+        void onDismissed(View view);
 
         /**
          * Called when a child view's drag state changes.
@@ -79,7 +82,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
          * @param state The drag state will be either {@code ViewDragHelper.STATE_IDLE},
          * {@code ViewDragHelper.STATE_DRAGGING}, or {@code ViewDragHelper.STATE_SETTLING}.
          */
-        public void onDragStateChanged(View view, int state);
+        void onDragStateChanged(View view, int state);
     }
 
     private ViewDragHelper dragHelper;
@@ -91,7 +94,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      *
      * @param context A Context object used to access application assets.
      */
-    public SwipeDismissViewLayout(Context context) {
+    public SwipeDismissViewLayout(@NonNull Context context) {
         super(context);
         init(context);
     }
@@ -102,7 +105,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public SwipeDismissViewLayout(Context context, AttributeSet attrs) {
+    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
@@ -114,7 +117,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public SwipeDismissViewLayout(Context context, AttributeSet attrs, int defStyle) {
+    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
     }
@@ -130,7 +133,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * look for defaults.
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public SwipeDismissViewLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context);
     }
@@ -140,7 +143,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      *
      * @param context The application context.
      */
-    private void init(Context context) {
+    private void init(@NonNull Context context) {
         if (isInEditMode()) {
             return;
         }
@@ -192,7 +195,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      *
      * @return The view's y translation as a fraction of its height.
      */
-    // TODO:: Prevent proguard from removing this method
+    @Keep
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public float getYFraction() {
         final int height = getHeight();
@@ -208,7 +211,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * <p/>
      * Used to animate a view into the screen with a ObjectAnimator.
      */
-    // TODO:: Prevent proguard from removing this method
+    @Keep
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void setYFraction(final float yFraction) {
 
@@ -238,7 +241,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      *
      * @return The view's x translation as a fraction of its width.
      */
-    // TODO:: Prevent proguard from removing this method
+    @Keep
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public float getXFraction() {
         final int width = getWidth();
@@ -254,7 +257,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * <p/>
      * Used to animate a view into the screen with a ObjectAnimator.
      */
-    // TODO:: Prevent proguard from removing this method
+    @Keep
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void setXFraction(final float xFraction) {
 

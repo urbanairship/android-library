@@ -27,6 +27,8 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -64,7 +66,7 @@ public class NamedUser {
      *
      * @param preferenceDataStore The preferences data store.
      */
-    NamedUser(PreferenceDataStore preferenceDataStore) {
+    NamedUser(@NonNull PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;
     }
 
@@ -94,7 +96,7 @@ public class NamedUser {
      *
      * @param namedUserId The named user ID string.
      */
-    public synchronized void setId(String namedUserId) {
+    public synchronized void setId(@Nullable String namedUserId) {
         String id = null;
         if (namedUserId != null) {
             id = namedUserId.trim();
@@ -140,6 +142,7 @@ public class NamedUser {
      *
      * @return The named user ID change token.
      */
+    @Nullable
     String getChangeToken() {
         return preferenceDataStore.getString(CHANGE_TOKEN_KEY, null);
     }

@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAStringUtil;
 
@@ -40,7 +42,7 @@ class ChannelResponse {
 
     private final Response response;
 
-    public ChannelResponse(Response response) {
+    public ChannelResponse(@NonNull Response response) {
         this.response = response;
     }
 
@@ -59,9 +61,10 @@ class ChannelResponse {
      * @return The Channel ID as a string.
      */
     String getChannelId() {
-        if (response == null || UAStringUtil.isEmpty(response.getResponseBody())) {
+        if (UAStringUtil.isEmpty(response.getResponseBody())) {
             return null;
         }
+
         try {
             return new JSONObject(response.getResponseBody()).getString("channel_id");
         } catch (JSONException e) {

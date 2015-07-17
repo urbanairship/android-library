@@ -69,21 +69,21 @@ public class InAppMessageFragment extends Fragment {
          *
          * @param fragment The resumed fragment.
          */
-        public void onResume(InAppMessageFragment fragment);
+        void onResume(InAppMessageFragment fragment);
 
         /**
          * The fragment was paused.
          *
          * @param fragment The paused fragment.
          */
-        public void onPause(InAppMessageFragment fragment);
+        void onPause(InAppMessageFragment fragment);
 
         /**
          * The fragment is finished displaying the in-app message.
          *
          * @param fragment The fragment.
          */
-        public void onFinish(InAppMessageFragment fragment);
+        void onFinish(InAppMessageFragment fragment);
     }
 
     /**

@@ -28,6 +28,8 @@ package com.urbanairship.push.iam;
 import android.graphics.Color;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
@@ -38,6 +40,8 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -50,6 +54,10 @@ import java.util.concurrent.TimeUnit;
 public class InAppMessage implements Parcelable, JsonSerializable {
 
     private static final long DEFAULT_EXPIRY_MS = 2592000000l; // 30 days
+
+    @IntDef({POSITION_TOP, POSITION_BOTTOM})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Position {}
 
     /**
      * Display the message on top of the screen.
@@ -465,7 +473,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + (buttonActionValues == null ? 0 : buttonActionValues.hashCode());
         result = 31 * result + (secondaryColor == null ? 0 : secondaryColor);
         result = 31 * result + (primaryColor == null ? 0 : primaryColor);
-        result = 31 * result + (durationMilliseconds == null ? 0 : Long.valueOf(durationMilliseconds).hashCode());
+        result = 31 * result + (durationMilliseconds == null ? 0 : durationMilliseconds.hashCode());
         result = 31 * result + position;
         result = 31 * result + Long.valueOf(expiryMS).hashCode();
 
@@ -523,6 +531,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @hide
          */
+        @NonNull
         public Builder setId(String id) {
             this.id = id;
             return this;
@@ -535,6 +544,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param milliseconds The expiry date in milliseconds.
          * @return The builder.
          */
+        @NonNull
         public Builder setExpiry(Long milliseconds) {
             this.expiryMS = milliseconds;
             return this;
@@ -547,6 +557,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param extras The message's extras.
          * @return The builder.
          */
+        @NonNull
         public Builder setExtras(JsonMap extras) {
             this.extras = extras;
             return this;
@@ -558,6 +569,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param actionValues The message's on click action values.
          * @return The builder.
          */
+        @NonNull
         public Builder setClickActionValues(Map<String, ActionValue> actionValues) {
             if (actionValues == null) {
                 this.clickActionValues = null;
@@ -575,6 +587,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param actionValues The button's action values.
          * @return The builder.
          */
+        @NonNull
         public Builder setButtonActionValues(String buttonId, Map<String, ActionValue> actionValues) {
             if (actionValues == null) {
                 buttonActionValues.remove(buttonId);
@@ -590,6 +603,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param buttonGroupId The message's button group ID.
          * @return The builder.
          */
+        @NonNull
         public Builder setButtonGroupId(String buttonGroupId) {
             this.buttonGroupId = buttonGroupId;
             return this;
@@ -601,6 +615,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param alert The message's alert.
          * @return The builder.
          */
+        @NonNull
         public Builder setAlert(String alert) {
             this.alert = alert;
             return this;
@@ -613,6 +628,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @throws IllegalArgumentException if the duration is less than or equal to 0.
          */
+        @NonNull
         public Builder setDuration(Long milliseconds) {
             if (milliseconds != null && milliseconds <= 0) {
                 throw new IllegalArgumentException("Duration must be greater than 0 milliseconds");
@@ -630,7 +646,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          * @throws IllegalArgumentException If the position is not {@link #POSITION_BOTTOM} nor {@link #POSITION_TOP}.
          */
-        public Builder setPosition(int position) {
+        @NonNull
+        public Builder setPosition(@Position int position) {
             if (position != POSITION_TOP && position != POSITION_BOTTOM) {
                 throw new IllegalArgumentException("Position must be either InAppMessage.POSITION_BOTTOM or InAppMessage.POSITION_TOP.");
             }
@@ -645,6 +662,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param color The message's primary color.
          * @return The builder.
          */
+        @NonNull
         public Builder setPrimaryColor(Integer color) {
             this.primaryColor = color;
             return this;
@@ -656,6 +674,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param color The message's secondary color.
          * @return The builder.
          */
+        @NonNull
         public Builder setSecondaryColor(Integer color) {
             this.secondaryColor = color;
             return this;
@@ -666,6 +685,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          *
          * @return The created in-app message.
          */
+        @NonNull
         public InAppMessage create() {
             InAppMessage message = new InAppMessage();
 

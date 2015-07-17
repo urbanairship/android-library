@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push.notifications;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
@@ -54,6 +55,7 @@ public class NotificationActionButtonGroup {
      *
      * @return A list of notification actions.
      */
+    @NonNull
     public List<NotificationActionButton> getNotificationActionButtons() {
         return new ArrayList<>(actionButtons);
     }
@@ -68,6 +70,7 @@ public class NotificationActionButtonGroup {
      * interactive notification action.
      * @return List of Android notification actions.
      */
+    @NonNull
     List<NotificationCompat.Action> createAndroidActions(Context context, PushMessage message, int notificationId, String actionsPayload) {
         final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
@@ -102,6 +105,7 @@ public class NotificationActionButtonGroup {
          * @param action The notification action button to add.
          * @return The builder to allow method chaining.
          */
+        @NonNull
         public Builder addNotificationActionButton(NotificationActionButton action) {
             actionButtons.add(action);
             return this;
@@ -112,6 +116,7 @@ public class NotificationActionButtonGroup {
          *
          * @return The NotificationActionButtonGroup.
          */
+        @NonNull
         public NotificationActionButtonGroup build() {
             return new NotificationActionButtonGroup(actionButtons);
         }

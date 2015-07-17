@@ -29,6 +29,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.CoreActivity;
@@ -86,6 +89,7 @@ public class NotificationActionButton {
      *
      * @return The button's label ID as an int.
      */
+    @StringRes
     public int getLabel() {
         return labelId;
     }
@@ -95,6 +99,7 @@ public class NotificationActionButton {
      *
      * @return The button's icon as an int.
      */
+    @DrawableRes
     public int getIcon() {
         return iconId;
     }
@@ -113,6 +118,7 @@ public class NotificationActionButton {
      *
      * @return The extras as a Bundle.
      */
+    @NonNull
     public Bundle getExtras() {
         return new Bundle(extras);
     }
@@ -201,7 +207,8 @@ public class NotificationActionButton {
          * @param labelId An int value.
          * @return The builder with the labelId value set.
          */
-        public Builder setLabel(int labelId) {
+        @NonNull
+        public Builder setLabel(@StringRes int labelId) {
             this.labelId = labelId;
             return this;
         }
@@ -212,6 +219,7 @@ public class NotificationActionButton {
          * @param description The action description.
          * @return The builder with the description set.
          */
+        @NonNull
         public Builder setDescription(String description) {
             this.description = description;
             return this;
@@ -225,7 +233,8 @@ public class NotificationActionButton {
          * @param iconId An int value.
          * @return The builder with the iconId value set.
          */
-        public Builder setIcon(int iconId) {
+        @NonNull
+        public Builder setIcon(@DrawableRes int iconId) {
             this.iconId = iconId;
             return this;
         }
@@ -236,6 +245,7 @@ public class NotificationActionButton {
          * @param isForegroundAction A boolean value.
          * @return The builder with the isForegroundAction value set.
          */
+        @NonNull
         public Builder setPerformsInForeground(boolean isForegroundAction) {
             this.isForegroundAction = isForegroundAction;
             return this;
@@ -247,7 +257,8 @@ public class NotificationActionButton {
          * @param remoteInput A LocalizableRemoteInput value.
          * @return The builder with the remoteInput value set.
          */
-        public Builder addRemoteInput(LocalizableRemoteInput remoteInput) {
+        @NonNull
+        public Builder addRemoteInput(@NonNull LocalizableRemoteInput remoteInput) {
             if (remoteInputs == null) {
                 remoteInputs = new ArrayList<>();
             }
@@ -261,7 +272,8 @@ public class NotificationActionButton {
          * @param extender A NotificationCompat.Action.Extender value.
          * @return The builder with the extender value added.
          */
-        public Builder extend(NotificationCompat.Action.Extender extender) {
+        @NonNull
+        public Builder extend(@NonNull NotificationCompat.Action.Extender extender) {
             if (extenders == null) {
                 extenders = new ArrayList<>();
             }
@@ -274,6 +286,7 @@ public class NotificationActionButton {
          *
          * @return The notification action.
          */
+        @NonNull
         public NotificationActionButton build() {
             NotificationCompat.Action.Builder builder = new NotificationCompat.Action.Builder(iconId, null, null);
             if (extenders != null) {

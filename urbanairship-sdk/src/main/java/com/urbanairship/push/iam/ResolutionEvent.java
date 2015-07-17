@@ -26,6 +26,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push.iam;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -81,7 +83,7 @@ public class ResolutionEvent extends Event {
      * @param id The in-app message ID.
      * @param resolutionData The resolution data.
      */
-    private ResolutionEvent(String id, Map<String, Object> resolutionData) {
+    private ResolutionEvent(@Nullable String id, @NonNull Map<String, Object> resolutionData) {
         this.id = id;
         this.resolutionData = resolutionData;
     }
@@ -95,7 +97,7 @@ public class ResolutionEvent extends Event {
      * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createButtonClickedResolutionEvent(Context context, InAppMessage message, NotificationActionButton button, long displayMs) {
+    public static ResolutionEvent createButtonClickedResolutionEvent(@NonNull Context context, @NonNull InAppMessage message, @NonNull NotificationActionButton button, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_BUTTON_CLICK);
         resolutionData.put(BUTTON_ID, button.getId());
@@ -118,7 +120,7 @@ public class ResolutionEvent extends Event {
      * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createClickedResolutionEvent(InAppMessage message, long displayMs) {
+    public static ResolutionEvent createClickedResolutionEvent(@NonNull InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_MESSAGE_CLICK);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
@@ -133,7 +135,7 @@ public class ResolutionEvent extends Event {
      * @param replacement The new in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createReplacedResolutionEvent(InAppMessage replaced, InAppMessage replacement) {
+    public static ResolutionEvent createReplacedResolutionEvent(@NonNull InAppMessage replaced, @NonNull InAppMessage replacement) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_REPLACED);
         resolutionData.put(REPLACEMENT_ID, replacement.getId());
@@ -147,7 +149,7 @@ public class ResolutionEvent extends Event {
      * @param message The in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createDirectOpenResolutionEvent(InAppMessage message) {
+    public static ResolutionEvent createDirectOpenResolutionEvent(@NonNull InAppMessage message) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_DIRECT_OPEN);
         return new ResolutionEvent(message.getId(), resolutionData);
@@ -159,7 +161,7 @@ public class ResolutionEvent extends Event {
      * @param message The in-app message.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createExpiredResolutionEvent(InAppMessage message) {
+    public static ResolutionEvent createExpiredResolutionEvent(@NonNull InAppMessage message) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_EXPIRED);
         resolutionData.put(EXPIRY, DateUtils.createIso8601TimeStamp(message.getExpiry()));
@@ -174,7 +176,7 @@ public class ResolutionEvent extends Event {
      * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createUserDismissedResolutionEvent(InAppMessage message, long displayMs) {
+    public static ResolutionEvent createUserDismissedResolutionEvent(@NonNull InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_USER_DISMISSED);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
@@ -189,7 +191,7 @@ public class ResolutionEvent extends Event {
      * @param displayMs How long the in-app message was displayed in milliseconds.
      * @return The ResolutionEvent.
      */
-    public static ResolutionEvent createTimedOutResolutionEvent(InAppMessage message, long displayMs) {
+    public static ResolutionEvent createTimedOutResolutionEvent(@NonNull InAppMessage message, long displayMs) {
         Map<String, Object> resolutionData = new HashMap<>();
         resolutionData.put(RESOLUTION_TYPE, RESOLUTION_TIMED_OUT);
         resolutionData.put(DISPLAY_TIME, millisecondsToSecondsString(displayMs));
