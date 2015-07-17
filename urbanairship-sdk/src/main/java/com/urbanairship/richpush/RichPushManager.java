@@ -33,6 +33,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.BaseManager;
@@ -87,7 +89,7 @@ public class RichPushManager extends BaseManager {
      * @param user The RichPushUser.
      * @param inbox The RichPushInbox.
      */
-    RichPushManager(RichPushUser user, RichPushInbox inbox) {
+    RichPushManager(@NonNull RichPushUser user, @NonNull RichPushInbox inbox) {
         this.user = user;
         this.inbox = inbox;
     }
@@ -135,7 +137,7 @@ public class RichPushManager extends BaseManager {
      *
      * @param listener An object implementing the {@link RichPushManager.Listener} interface.
      */
-    public void addListener(Listener listener) {
+    public void addListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.add(listener);
         }
@@ -146,7 +148,7 @@ public class RichPushManager extends BaseManager {
      *
      * @param listener An object implementing the {@link RichPushManager.Listener} interface.
      */
-    public void removeListener(Listener listener) {
+    public void removeListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
@@ -156,26 +158,24 @@ public class RichPushManager extends BaseManager {
      * A listener interface for receiving event callbacks related to inbox and user updates.
      */
     public interface Listener {
-        public void onUpdateMessages(boolean success);
+        void onUpdateMessages(boolean success);
 
-        public void onUpdateUser(boolean success);
+        void onUpdateUser(boolean success);
     }
 
     /**
      * A callback used to be notified when refreshing messages.
      */
     public interface RefreshMessagesCallback {
-        public void onRefreshMessages(boolean success);
+        void onRefreshMessages(boolean success);
     }
-
-
-    // getters
 
     /**
      * Get the {@link RichPushUser}.
      *
      * @return {@link RichPushUser}.
      */
+    @NonNull
     public synchronized RichPushUser getRichPushUser() {
         return this.user;
     }
@@ -185,6 +185,7 @@ public class RichPushManager extends BaseManager {
      *
      * @return {@link com.urbanairship.richpush.RichPushInbox}.
      */
+    @NonNull
     public synchronized RichPushInbox getRichPushInbox() {
         return this.inbox;
     }
@@ -224,7 +225,7 @@ public class RichPushManager extends BaseManager {
      * @param callback Callback to be notified when the request finishes refreshing
      * the messages.
      */
-    public void refreshMessages(RefreshMessagesCallback callback) {
+    public void refreshMessages(@Nullable RefreshMessagesCallback callback) {
         refreshMessages(true, callback);
     }
 
@@ -242,7 +243,7 @@ public class RichPushManager extends BaseManager {
      * @param callback Callback to be notified when the request finishes refreshing
      * the messages.
      */
-    private void refreshMessages(boolean force, final RefreshMessagesCallback callback) {
+    private void refreshMessages(boolean force, @Nullable final RefreshMessagesCallback callback) {
         if (isRefreshingMessages() && !force) {
             Logger.debug("Skipping refresh messages, messages are already refreshing. Callback will not be triggered.");
             return;
@@ -297,7 +298,7 @@ public class RichPushManager extends BaseManager {
      * @param intentAction The intent action
      * @param receiver The result receiver
      */
-    private void startUpdateService(String intentAction, ResultReceiver receiver) {
+    private void startUpdateService(@NonNull String intentAction, @Nullable ResultReceiver receiver) {
         Logger.debug("RichPushManager - Starting update service.");
         Context context = UAirship.getApplicationContext();
         Intent intent = new Intent(context, RichPushUpdateService.class);
@@ -315,6 +316,7 @@ public class RichPushManager extends BaseManager {
      *
      * @return A new copy of the listeners
      */
+    @NonNull
     private List<Listener> getListeners() {
         synchronized (listeners) {
             return new ArrayList<>(listeners);

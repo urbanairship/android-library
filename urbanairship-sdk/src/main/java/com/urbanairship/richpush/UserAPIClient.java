@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.content.ContentValues;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.RichPushTable;
@@ -75,7 +76,7 @@ class UserAPIClient {
      * @param userPayload The user payload.
      * @return userResponse or null if an error occurred.
      */
-    UserResponse createUser(JSONObject userPayload) {
+    UserResponse createUser(@NonNull JSONObject userPayload) {
         String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
         String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
 
