@@ -56,5 +56,4 @@ public class ChannelIdPreference extends Preference implements UAPreference {
     public void setValue(Object value) {
         setSummary((String) value);
     }
-
 }
