@@ -55,7 +55,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A service that handles requesting location from either the Fused Location
@@ -110,21 +109,10 @@ public class LocationService extends Service {
      */
     private static final int MSG_HANDLE_INTENT = 7;
 
-
     /**
-     * Extra for location request priority.
+     * Extra for location request options.
      */
-    static final String EXTRA_PRIORITY = "com.urbanairship.location.EXTRA_PRIORITY";
-
-    /**
-     * Extra for location request min distance in meters.
-     */
-    static final String EXTRA_MIN_DISTANCE = "com.urbanairship.location.EXTRA_MIN_DISTANCE";
-
-    /**
-     * Extra for location request update min time in milliseconds.
-     */
-    static final String EXTRA_MIN_TIME = "com.urbanairship.location.EXTRA_MIN_TIME";
+    static final String EXTRA_LOCATION_REQUEST_OPTIONS = "com.urbanairship.location.EXTRA_LOCATION_REQUEST_OPTIONS";
 
     /**
      * Action to check if location updates need to be started or stopped.
@@ -266,9 +254,9 @@ public class LocationService extends Service {
         final int requestId = message.arg1;
         final Messenger client = message.replyTo;
 
-        final LocationRequestOptions options = parseRequestOptions(message.getData());
+        final LocationRequestOptions options = message.getData().getParcelable(EXTRA_LOCATION_REQUEST_OPTIONS);
         if (options == null) {
-            Logger.warn("Location service unable to perform single location request. Invalid request options.");
+            Logger.warn("Location service unable to perform single location request. Missing request options.");
             sendClientMessage(client, MSG_SINGLE_REQUEST_RESULT, requestId, null);
             return;
         }
@@ -333,7 +321,7 @@ public class LocationService extends Service {
             return;
         }
 
-        LocationRequestOptions updateOptions = parseRequestOptions(intent.getExtras());
+        LocationRequestOptions updateOptions = intent.getParcelableExtra(EXTRA_LOCATION_REQUEST_OPTIONS);
 
         /*
          * Set the last location options from the location update if
@@ -476,49 +464,6 @@ public class LocationService extends Service {
         return null;
     }
 
-
-    /**
-     * Parses the request options from a data bundle.
-     *
-     * @param data The bundle to parse.
-     * @return LocationRequestOptions from the bundle, or null if it failed
-     * to parse the options.
-     */
-    @Nullable
-    private static LocationRequestOptions parseRequestOptions(@Nullable Bundle data) {
-        if (data == null) {
-            return null;
-        }
-
-        try {
-            //noinspection ResourceType
-            return new LocationRequestOptions.Builder()
-                    .setPriority(data.getInt(EXTRA_PRIORITY))
-                    .setMinDistance(data.getFloat(EXTRA_MIN_DISTANCE))
-                    .setMinTime(data.getLong(EXTRA_MIN_TIME), TimeUnit.MILLISECONDS)
-                    .create();
-        } catch (IllegalArgumentException e) {
-            Logger.error("LocationService - Invalid LocationRequestOptions from Bundle. " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Creates a data bundle from a LocationRequestOptions.
-     *
-     * @param options The LocationRequestOptions.
-     * @return A Bundle with the LocationRequestOptions encoded.
-     */
-    @NonNull
-    static Bundle createRequestOptionsBundle(@NonNull LocationRequestOptions options) {
-        Bundle data = new Bundle();
-        data.putSerializable(LocationService.EXTRA_PRIORITY, options.getPriority());
-        data.putFloat(LocationService.EXTRA_MIN_DISTANCE, options.getMinDistance());
-        data.putLong(LocationService.EXTRA_MIN_TIME, options.getMinTime());
-        return data;
-    }
-
-
     /**
      * Sends the client a message.
      *
@@ -550,10 +495,11 @@ public class LocationService extends Service {
      */
     @NonNull
     private PendingIntent createLocationUpdateIntent(@Nullable LocationRequestOptions options) {
-        Intent intent = new Intent(getApplicationContext(), LocationService.class).setAction(ACTION_LOCATION_UPDATE);
+        Intent intent = new Intent(getApplicationContext(), LocationService.class)
+                .setAction(ACTION_LOCATION_UPDATE);
 
         if (options != null) {
-            intent.putExtras(createRequestOptionsBundle(options));
+            intent.putExtra(EXTRA_LOCATION_REQUEST_OPTIONS, options);
         }
 
         return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
