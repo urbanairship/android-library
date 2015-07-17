@@ -25,11 +25,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONObject;
 
@@ -65,17 +66,7 @@ class NamedUserAPIClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
-    Response associate(String id, String channelId) {
-        if (UAStringUtil.isEmpty(id)) {
-            Logger.error("The named user ID cannot be null.");
-            return null;
-        }
-
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.error("The channel ID cannot be null.");
-            return null;
-        }
-
+    Response associate(@NonNull String id, @NonNull String channelId) {
         JSONObject payload = new JSONObject();
         try {
             payload.put(CHANNEL_KEY, channelId);
@@ -104,12 +95,7 @@ class NamedUserAPIClient {
      * @param channelId The channel ID string.
      * @return The response or null if an error occurred.
      */
-    Response disassociate(String channelId) {
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.error("The channel ID cannot be null.");
-            return null;
-        }
-
+    Response disassociate(@NonNull String channelId) {
         JSONObject payload = new JSONObject();
         try {
             payload.put(CHANNEL_KEY, channelId);
@@ -138,7 +124,7 @@ class NamedUserAPIClient {
      * @param jsonPayload The JSON payload as a string.
      * @return The response or null if an error occurred.
      */
-    private Response request(URL url, String jsonPayload) {
+    private Response request(@NonNull URL url, @NonNull String jsonPayload) {
         String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
         String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
 

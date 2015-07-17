@@ -33,6 +33,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.AnimatorRes;
+import android.support.annotation.IdRes;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.BaseManager;
 import com.urbanairship.Cancelable;
@@ -63,14 +68,14 @@ public class InAppMessageManager extends BaseManager {
          * Called when a new pending message is available.
          * @param message The in-app message.
          */
-        public void onPendingMessageAvailable(InAppMessage message);
+        void onPendingMessageAvailable(InAppMessage message);
 
         /**
          * Called when an InAppMessage is being displayed
          * @param fragment The InAppMessageFragment that will display the in-app message.
          * @param message The in-app message.
          */
-        public void onDisplay(InAppMessageFragment fragment, InAppMessage message);
+        void onDisplay(InAppMessageFragment fragment, InAppMessage message);
     }
 
     // Preference data store keys
@@ -85,18 +90,18 @@ public class InAppMessageManager extends BaseManager {
     /**
      * Activity metadata key to exclude an activity from automatically displaying an in-app message.
      */
-    public static final String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
+    public final static String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
 
     /**
      * The delay before attempting to show an in-app message when an activity resumes.
      */
-    private static long DEFAULT_ACTIVITY_RESUME_DELAY_MS = 3000;
+    private final static long DEFAULT_ACTIVITY_RESUME_DELAY_MS = 3000;
 
     /**
      * A small delay that allows activity configuration changes to happen before we consider the app
      * backgrounded.
      */
-    private static long BACKGROUND_DELAY_MS = 500;
+    private final static long BACKGROUND_DELAY_MS = 500;
 
     // Static properties for lifecycle callbacks
     private static LifeCycleCallbacks lifeCycleCallbacks;
@@ -137,7 +142,7 @@ public class InAppMessageManager extends BaseManager {
      * @param dataStore The preference data store.
      * @hide
      */
-    public InAppMessageManager(PreferenceDataStore dataStore) {
+    public InAppMessageManager(@NonNull PreferenceDataStore dataStore) {
         this.dataStore = dataStore;
         autoDisplayDelayMs = DEFAULT_ACTIVITY_RESUME_DELAY_MS;
         handler = new Handler(Looper.getMainLooper());
@@ -169,7 +174,7 @@ public class InAppMessageManager extends BaseManager {
      * is resumed.
      * @param milliseconds The auto display delay in milliseconds.
      */
-    public void setAutoDisplayDelay(long milliseconds) {
+    public void setAutoDisplayDelay(@IntRange(from = 0, to = Long.MAX_VALUE) long milliseconds) {
         this.autoDisplayDelayMs = milliseconds;
     }
 
@@ -233,7 +238,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @param message The in-app message.
      */
-    public void setPendingMessage(final InAppMessage message) {
+    public void setPendingMessage(@Nullable final InAppMessage message) {
         synchronized (pendingMessageLock) {
             if (message == null) {
                 dataStore.remove(PENDING_IN_APP_MESSAGE_KEY);
@@ -277,6 +282,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @return The pending in-app message.
      */
+    @Nullable
     public InAppMessage getPendingMessage() {
         synchronized (pendingMessageLock) {
             String payload = dataStore.getString(PENDING_IN_APP_MESSAGE_KEY, null);
@@ -299,6 +305,7 @@ public class InAppMessageManager extends BaseManager {
      * @return The current in-app message.
      * @hide
      */
+    @Nullable
     public InAppMessage getCurrentMessage() {
         return currentMessage;
     }
@@ -311,7 +318,7 @@ public class InAppMessageManager extends BaseManager {
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingMessage(Activity activity) {
+    public boolean showPendingMessage(@NonNull Activity activity) {
         return showPendingMessage(activity, android.R.id.content);
     }
 
@@ -325,10 +332,11 @@ public class InAppMessageManager extends BaseManager {
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingMessage(Activity activity, int containerId) {
+    public boolean showPendingMessage(@NonNull Activity activity, @IdRes int containerId) {
         synchronized (pendingMessageLock) {
             InAppMessage pending = getPendingMessage();
 
+            //noinspection ConstantConditions
             if (activity == null || pending == null) {
                 return false;
             }
@@ -363,7 +371,7 @@ public class InAppMessageManager extends BaseManager {
      * activity, otherwise {@code false}.
      */
     @TargetApi(14)
-    public boolean showPendingMessage(Activity activity, int containerId, int enterAnimation, int exitAnimation) {
+    public boolean showPendingMessage(@NonNull Activity activity, @IdRes int containerId, @AnimatorRes int enterAnimation, @AnimatorRes int exitAnimation) {
         final InAppMessage pending;
 
         synchronized (pendingMessageLock) {
@@ -378,6 +386,7 @@ public class InAppMessageManager extends BaseManager {
             }
         }
 
+        //noinspection ConstantConditions
         if (activity == null || pending == null) {
             return false;
         }
@@ -467,7 +476,7 @@ public class InAppMessageManager extends BaseManager {
      * @param listener An object implementing the
      * {@link com.urbanairship.push.iam.InAppMessageManager.Listener } interface.
      */
-    public void addListener(Listener listener) {
+    public void addListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.add(listener);
         }
@@ -479,7 +488,7 @@ public class InAppMessageManager extends BaseManager {
      * @param listener An object implementing the
      * {@link com.urbanairship.push.iam.InAppMessageManager.Listener } interface.
      */
-    public void removeListener(Listener listener) {
+    public void removeListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
@@ -499,6 +508,7 @@ public class InAppMessageManager extends BaseManager {
      * Returns the current in-app message fragment factory.
      * @return The current in-app message fragment factory.
      */
+    @Nullable
     public InAppMessageFragmentFactory getFragmentFactory() {
         return fragmentFactory;
     }
@@ -508,6 +518,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @return The current, resumed activity or null.
      */
+    @Nullable
     private Activity getCurrentActivity() {
         return activityReference == null ? null : activityReference.get();
     }
@@ -540,7 +551,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @param activity The paused activity.
      */
-    void onActivityPaused(Activity activity) {
+    void onActivityPaused(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity paused: " + activity);
         activityReference = null;
         handler.removeCallbacks(displayRunnable);
@@ -551,7 +562,7 @@ public class InAppMessageManager extends BaseManager {
      *
      * @param activity The resumed activity.
      */
-    void onActivityResumed(Activity activity) {
+    void onActivityResumed(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity resumed: " + activity);
 
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());

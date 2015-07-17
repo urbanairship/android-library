@@ -30,6 +30,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.BaseIntentService;
@@ -109,7 +111,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param intent The received intent.
      */
-    private void onGcmMessageReceived(Intent intent) {
+    private void onGcmMessageReceived(@NonNull Intent intent) {
         if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
             Logger.error("Received intent from invalid transport acting as GCM.");
             return;
@@ -145,7 +147,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param intent The received intent.
      */
-    private void onAdmMessageReceived(Intent intent) {
+    private void onAdmMessageReceived(@NonNull Intent intent) {
         if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM) {
             Logger.error("Received intent from invalid transport acting as ADM.");
             return;
@@ -170,7 +172,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param message The push message.
      */
-    private void processMessage(PushMessage message) {
+    private void processMessage(@NonNull PushMessage message) {
         if (!pushManager.isPushEnabled()) {
             Logger.info("Received a push when push is disabled! Ignoring.");
             return;
@@ -227,7 +229,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      * @param message The push message.
      * @param factory The notification factory.
      */
-    private Integer showNotification(PushMessage message, NotificationFactory factory) {
+    private Integer showNotification(@NonNull PushMessage message, @Nullable NotificationFactory factory) {
         Integer notificationId;
         Notification notification;
 
@@ -295,7 +297,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      * @param message The message that created the notification
      * @param notificationId The ID of the messages created notification
      */
-    private void sendPushReceivedBroadcast(PushMessage message, Integer notificationId) {
+    private void sendPushReceivedBroadcast(@NonNull PushMessage message, @Nullable Integer notificationId) {
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
                 .addCategory(UAirship.getPackageName())
@@ -332,7 +334,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param sendId The send ID.
      */
-    private void createPushArrivedEvent(String sendId) {
+    private void createPushArrivedEvent(@Nullable String sendId) {
         if (UAStringUtil.isEmpty(sendId)) {
             sendId = UUID.randomUUID().toString();
         }
@@ -347,7 +349,7 @@ public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      * @param canonicalId The canonical push ID for an incoming notification.
      * @return <code>false</code> if the ID exists in the history, otherwise <code>true</code>.
      */
-    private boolean isUniqueCanonicalId(String canonicalId) {
+    private boolean isUniqueCanonicalId(@Nullable String canonicalId) {
         if (UAStringUtil.isEmpty(canonicalId)) {
             return true;
         }

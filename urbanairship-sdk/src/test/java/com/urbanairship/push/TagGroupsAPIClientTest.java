@@ -95,23 +95,6 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
     }
 
     /**
-     * Test updateNamedUserTags will null named user returns null.
-     */
-    @Test
-    public void testUpdateNamedUserTagsNullNamedUser() {
-
-        Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(tagGroup, tagsToAdd);
-
-        Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(tagGroup, tagsToRemove);
-
-        Response response = client.updateNamedUserTags(null, addTags, removeTags);
-
-        assertNull("Response should be null", response);
-    }
-
-    /**
      * Test updateChannelTags succeeds if status is 200.
      */
     @Test
@@ -144,23 +127,6 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
         assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
         assertEquals("Payload should contain addTags", request.getMap().get("add"), JsonValue.wrap(addTags));
         assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
-    }
-
-    /**
-     * Test updateChannelTags with null channel ID returns null.
-     */
-    @Test
-    public void testUpdateChannelTagsNullChannel() {
-
-        Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(tagGroup, tagsToAdd);
-
-        Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(tagGroup, tagsToRemove);
-
-        Response response = client.updateChannelTags(null, addTags, removeTags);
-
-        assertNull("Response should be null", response);
     }
 
     /**

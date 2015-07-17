@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -87,6 +89,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param optIn A boolean value indicating if optIn is true or false.
          * @return The builder with optIn value set
          */
+        @NonNull
         Builder setOptIn(boolean optIn) {
             this.optIn = optIn;
             return this;
@@ -98,6 +101,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param enabled enabled A boolean value indicating whether background push is enabled.
          * @return The builder with the background push enabled value set.
          */
+        @NonNull
         Builder setBackgroundEnabled(boolean enabled) {
             this.backgroundEnabled = enabled;
             return this;
@@ -109,6 +113,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param alias A string value
          * @return The builder with alias value set
          */
+        @NonNull
         Builder setAlias(String alias) {
             if (alias != null) {
                 alias = alias.trim();
@@ -123,7 +128,8 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param deviceType A string value
          * @return The builder with device type set
          */
-        Builder setDeviceType(String deviceType) {
+        @NonNull
+        Builder setDeviceType(@NonNull String deviceType) {
             this.deviceType = deviceType;
             return this;
         }
@@ -134,6 +140,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param registrationId A string value
          * @return The builder with push address set
          */
+        @NonNull
         Builder setPushAddress(String registrationId) {
             this.pushAddress = registrationId;
             return this;
@@ -146,6 +153,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param tags A set of tags
          * @return The builder with channelTagRegistrationEnabled and tags set
          */
+        @NonNull
         Builder setTags(boolean channelTagRegistrationEnabled, Set<String> tags) {
             this.setTags = channelTagRegistrationEnabled;
             this.tags = tags;
@@ -158,6 +166,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param userId A string value
          * @return The builder with userId value set
          */
+        @NonNull
         Builder setUserId(String userId) {
             this.userId = userId;
             return this;
@@ -170,11 +179,13 @@ class ChannelRegistrationPayload implements JsonSerializable {
          * @param apid A string value
          * @return The builder with apid value set
          */
+        @NonNull
         Builder setApid(String apid) {
             this.apid = apid;
             return this;
         }
 
+        @NonNull
         ChannelRegistrationPayload build() {
             return new ChannelRegistrationPayload(this);
         }

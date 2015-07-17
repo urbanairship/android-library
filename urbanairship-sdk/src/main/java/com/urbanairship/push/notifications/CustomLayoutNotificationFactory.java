@@ -28,6 +28,7 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
@@ -260,7 +261,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
     }
 
     @Override
-    public Notification createNotification(PushMessage pushMessage, int notificationId) {
+    public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
         String alert = pushMessage.getAlert();
         // do not display a notification if there is not an alert
         if (alert == null || alert.length() == 0) {
@@ -336,7 +337,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
     }
 
     @Override
-    public int getNextId(PushMessage pushMessage) {
+    public int getNextId(@NonNull PushMessage pushMessage) {
         if (constantNotificationId > 0) {
             return constantNotificationId;
         } else {

@@ -28,6 +28,8 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.BaseManager;
@@ -304,7 +306,7 @@ public class PushManager extends BaseManager {
      * @see com.urbanairship.push.notifications.SystemNotificationFactory
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationFactory
      */
-    public void setNotificationFactory(NotificationFactory factory) {
+    public void setNotificationFactory(@NonNull NotificationFactory factory) {
         notificationFactory = factory;
     }
 
@@ -338,7 +340,8 @@ public class PushManager extends BaseManager {
      * @see #setAlias(String)
      * @see #setTags(Set)
      */
-    public void setAliasAndTags(String alias, Set<String> tags) {
+    public void setAliasAndTags(@Nullable String alias, @NonNull Set<String> tags) {
+        //noinspection ConstantConditions
         if (tags == null) {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
@@ -443,8 +446,7 @@ public class PushManager extends BaseManager {
      *
      * @param alias The alias, <code>null</code> to remove
      */
-    public void setAlias(String alias) {
-
+    public void setAlias(@Nullable String alias) {
         if (alias != null) {
             alias = alias.trim();
         }
@@ -472,7 +474,8 @@ public class PushManager extends BaseManager {
      *
      * @param tags A set of tag strings.
      */
-    public void setTags(Set<String> tags) {
+    public void setTags(@NonNull Set<String> tags) {
+        //noinspection ConstantConditions
         if (tags == null) {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
@@ -499,6 +502,7 @@ public class PushManager extends BaseManager {
      *
      * @return The named user.
      */
+    @NonNull
     public NamedUser getNamedUser() {
         return namedUser;
     }
@@ -510,6 +514,7 @@ public class PushManager extends BaseManager {
      *
      * @return The current set of tags.
      */
+    @NonNull
     public Set<String> getTags() {
         Set<String> tags = preferences.getTags();
         Set<String> normalizedTags = TagUtils.normalizeTags(tags);
@@ -538,6 +543,7 @@ public class PushManager extends BaseManager {
      *
      * @return An ADM identifier string, or null if not present.
      */
+    @Nullable
     public String getAdmId() {
         return preferences.getAdmId();
     }
@@ -666,6 +672,7 @@ public class PushManager extends BaseManager {
      *
      * @return The send id from the last received push, or null if not found.
      */
+    @Nullable
     public String getLastReceivedSendId() {
         return preferences.getLastReceivedSendId();
     }
@@ -685,7 +692,7 @@ public class PushManager extends BaseManager {
      * @param startTime A Date instance indicating when Quiet Time should start.
      * @param endTime A Date instance indicating when Quiet Time should end.
      */
-    public void setQuietTimeInterval(Date startTime, Date endTime) {
+    public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
         preferences.setQuietTimeInterval(startTime, endTime);
     }
 
@@ -747,7 +754,7 @@ public class PushManager extends BaseManager {
      * @param id The id of the action group.
      * @param group The notification action group.
      */
-    public void addNotificationActionButtonGroup(String id, NotificationActionButtonGroup group) {
+    public void addNotificationActionButtonGroup(@NonNull String id, @NonNull NotificationActionButtonGroup group) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
             Logger.warn("Unable to add any notification button groups that starts with the reserved Urban Airship prefix " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
@@ -761,7 +768,7 @@ public class PushManager extends BaseManager {
      *
      * @param id The id of the button group to remove.
      */
-    public void removeNotificationActionButtonGroup(String id) {
+    public void removeNotificationActionButtonGroup(@NonNull String id) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
             Logger.error("Unable to remove any reserved Urban Airship actions groups that begin with " + UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
@@ -785,6 +792,7 @@ public class PushManager extends BaseManager {
      *
      * @return A Channel ID string
      */
+    @Nullable
     public String getChannelId() {
         return preferences.getChannelId();
     }
@@ -794,6 +802,7 @@ public class PushManager extends BaseManager {
      *
      * @return The channel location.
      */
+    @Nullable
     String getChannelLocation() {
         return preferences.getChannelLocation();
     }
@@ -839,7 +848,7 @@ public class PushManager extends BaseManager {
      * @return The Android secure ID.
      * @hide
      */
-    static String getSecureId(Context context) {
+    static String getSecureId(@NonNull Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
@@ -868,6 +877,7 @@ public class PushManager extends BaseManager {
      *
      * @return The GCM token.
      */
+    @Nullable
     public String getGcmToken() {
         return preferences.getGcmToken();
     }

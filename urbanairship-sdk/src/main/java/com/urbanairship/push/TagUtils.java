@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 
@@ -43,7 +45,8 @@ class TagUtils {
     /**
      * Converts a JSONValue to a Tags Map
      */
-    public static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
+    @NonNull
+    static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
         Map<String, Set<String>> tagGroups = new HashMap<>();
 
         if (jsonValue != null && jsonValue.isJsonMap()) {
@@ -70,7 +73,7 @@ class TagUtils {
      * @param tags The set of tags to normalize.
      * @return The set of normalized, valid tags.
      */
-    public static Set<String> normalizeTags(Set<String> tags) {
+    static Set<String> normalizeTags(Set<String> tags) {
         if (tags == null) {
             return null;
         }

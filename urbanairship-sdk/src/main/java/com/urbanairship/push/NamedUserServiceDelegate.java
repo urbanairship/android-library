@@ -75,6 +75,7 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
         String currentId = namedUser.getId();
         String changeToken = namedUser.getChangeToken();
         String lastUpdatedToken = getDataStore().getString(LAST_UPDATED_TOKEN_KEY, null);
+        String channelId = pushManager.getChannelId();
 
         if (changeToken == null && lastUpdatedToken == null) {
             // Skip since no one has set the named user ID. Usually from a new or re-install.
@@ -88,7 +89,7 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (UAStringUtil.isEmpty(pushManager.getChannelId())) {
+        if (UAStringUtil.isEmpty(channelId)) {
             Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
             return;
         }
@@ -97,10 +98,10 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
 
         if (currentId == null) {
             // When currentId is null, disassociate the current named user ID.
-            response = client.disassociate(pushManager.getChannelId());
+            response = client.disassociate(channelId);
         } else {
             // When currentId is non-null, associate the currentId.
-            response = client.associate(currentId, pushManager.getChannelId());
+            response = client.associate(currentId, channelId);
         }
 
         // 5xx

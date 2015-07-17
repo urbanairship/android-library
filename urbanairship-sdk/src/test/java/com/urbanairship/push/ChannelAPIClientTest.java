@@ -21,7 +21,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -143,16 +142,5 @@ public class ChannelAPIClientTest extends BaseTestCase {
         assertEquals("Channel request should be the JSON payload", testRequest.getRequestBody(), payload.toJsonValue().toString());
         assertEquals("Channel response status should be 501", HttpURLConnection.HTTP_NOT_IMPLEMENTED,
                 response.getStatus());
-    }
-
-    /**
-     * Test update channel with a null channel location does not run
-     */
-    @Test
-    public void testUpdateChannelNullId() throws Exception {
-        ChannelAPIClient client = new ChannelAPIClient();
-        ChannelResponse response = client.updateChannelWithPayload(null, payload);
-
-        assertNull("Channel response should be null", response);
     }
 }

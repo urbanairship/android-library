@@ -27,6 +27,7 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
@@ -45,7 +46,7 @@ public class SystemNotificationFactory extends DefaultNotificationFactory {
     }
 
     @Override
-    public Notification createNotification(PushMessage message, int notificationId) {
+    public Notification createNotification(@NonNull PushMessage message, int notificationId) {
         // do not display a notification if there is not an alert
         if (UAStringUtil.isEmpty(message.getAlert())) {
             return null;

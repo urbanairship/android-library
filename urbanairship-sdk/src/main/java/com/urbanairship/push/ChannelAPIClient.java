@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
@@ -65,7 +67,7 @@ class ChannelAPIClient {
      * @param channelPayload An instance of ChannelRegistrationPayload
      * @return channelResponse or null if an error occurred
      */
-    ChannelResponse createChannelWithPayload(ChannelRegistrationPayload channelPayload) {
+    ChannelResponse createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelAPIClient - Creating channel with payload: " + payload);
         return requestWithPayload(creationURL, "POST", payload);
@@ -78,12 +80,7 @@ class ChannelAPIClient {
      * @param channelPayload An instance of ChannelRegistrationPayload
      * @return channelResponse or null if an error occurred
      */
-    ChannelResponse updateChannelWithPayload(URL channelLocation, ChannelRegistrationPayload channelPayload) {
-        if (channelLocation == null) {
-            Logger.error("ChannelAPIClient - Unable to update a channel with a null channel location.");
-            return null;
-        }
-
+    ChannelResponse updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelAPIClient - Updating channel with payload: " + payload);
         return requestWithPayload(channelLocation, "PUT", payload);
@@ -97,7 +94,7 @@ class ChannelAPIClient {
      * @param jsonPayload JSON payload as a string
      * @return channelResponse or null if an error occurred
      */
-    private ChannelResponse requestWithPayload(URL url, String requestMethod, String jsonPayload) {
+    private ChannelResponse requestWithPayload(@NonNull URL url, @NonNull String requestMethod, @NonNull String jsonPayload) {
         String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
         String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
 
