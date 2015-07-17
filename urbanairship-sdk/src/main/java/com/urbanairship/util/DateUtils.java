@@ -26,6 +26,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.util;
 
 
+import android.support.annotation.NonNull;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -52,7 +54,8 @@ public class DateUtils {
      * to be parsed.
      * @throws java.text.ParseException if the timestamp was unable to be parsed.
      */
-    public static long parseIso8601(String timeStamp) throws ParseException {
+    public static long parseIso8601(@NonNull String timeStamp) throws ParseException {
+        //noinspection ConstantConditions
         if (timeStamp == null) {
             throw new ParseException("Unable to parse null timestamp", -1);
         }
@@ -72,7 +75,7 @@ public class DateUtils {
      * @return The time in milliseconds since Jan. 1, 1970, midnight GMT or the default value
      * if the timestamp was unable to be parsed.
      */
-    public static long parseIso8601(String timeStamp, long defaultValue) {
+    public static long parseIso8601(@NonNull String timeStamp, long defaultValue) {
         try {
             return parseIso8601(timeStamp);
         } catch (ParseException ignored) {

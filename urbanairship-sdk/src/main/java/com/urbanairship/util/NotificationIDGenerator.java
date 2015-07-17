@@ -27,6 +27,7 @@ package com.urbanairship.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.IntRange;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -80,7 +81,7 @@ public class NotificationIDGenerator {
      *
      * @param newRange The number of notifications to display
      */
-    public static void setRange(int newRange) {
+    public static void setRange(@IntRange(from = 0, to = MAX_RANGE) int newRange) {
 
         if (newRange > MAX_RANGE) {
             Logger.error("The maximum numer of notifications allowed is " + MAX_RANGE + ". Limiting alert id range to conform.");
