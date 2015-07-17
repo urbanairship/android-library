@@ -668,6 +668,16 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+     * Tests clearing the alias by setting it to null.
+     */
+    @Test
+    public void testClearAlias() {
+        when(mockPushPreferences.getAlias()).thenReturn("someAliasToClear");
+        pushManager.setAlias(null);
+        verify(mockPushPreferences).setAlias(null);
+    }
+
+    /**
      * Test set GCM ID
      */
     @Test
