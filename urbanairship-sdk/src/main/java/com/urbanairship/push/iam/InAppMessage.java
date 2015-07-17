@@ -30,6 +30,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
@@ -69,182 +70,72 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     public static final int POSITION_BOTTOM = 0;
 
-    private long expiryMS;
-    private String id;
-    private String alert;
-    private JsonMap extras;
-    private Long durationMilliseconds;
-    private Integer primaryColor;
-    private Integer secondaryColor;
+    private final long expiryMS;
+    private final String id;
+    private final String alert;
+    private final Long durationMilliseconds;
+    private final Integer primaryColor;
+    private final Integer secondaryColor;
     private int position;
 
-    private Map<String, ActionValue> clickActionValues;
+    private final String buttonGroupId;
 
-    private String buttonGroupId;
-    private Map<String, Map<String, ActionValue>> buttonActionValues;
+    @NonNull
+    private final Map<String, ActionValue> clickActionValues;
 
+    @NonNull
+    private final JsonMap extras;
+
+    @NonNull
+    private final Map<String, Map<String, ActionValue>> buttonActionValues;
 
     /**
-     * Default constructor
+     * Creates a InAppMessage from a {@link com.urbanairship.push.iam.InAppMessage.Builder}.
+     * @param builder An InAppMessage builder.
      */
-    InAppMessage() {}
-
-    /**
-     * Returns the expiration time in milliseconds since Jan. 1, 1970, midnight GMT.
-     *
-     * @return The expiration time in milliseconds since Jan. 1, 1970, midnight GMT.
-     */
-    public long getExpiry() {
-        return expiryMS;
+    private InAppMessage(Builder builder) {
+        this.expiryMS = builder.expiryMS == null ? System.currentTimeMillis() + DEFAULT_EXPIRY_MS : builder.expiryMS;
+        this.id = builder.id;
+        this.extras = builder.extras == null ? new JsonMap(null) : builder.extras;
+        this.alert = builder.alert;
+        this.durationMilliseconds = builder.durationMilliseconds;
+        this.buttonGroupId = builder.buttonGroupId;
+        this.buttonActionValues = builder.buttonActionValues;
+        this.clickActionValues = builder.clickActionValues == null ? new HashMap<String, ActionValue>() : builder.clickActionValues;
+        this.position = builder.position;
+        this.primaryColor = builder.primaryColor;
+        this.secondaryColor = builder.secondaryColor;
     }
 
     /**
-     * Tests if the message is expired or not.
-     *
-     * @return {@code true} if the message is expired, otherwise {@code false}.
+     * Creates a InAppMessage from a parcel created by {@link com.urbanairship.push.iam.InAppMessage#CREATOR}.
+     * @param parcel The parcel.
      */
-    public boolean isExpired() {
-        return System.currentTimeMillis() > expiryMS;
-    }
+    private InAppMessage(Parcel parcel) {
+        this.id = parcel.readString();
+        this.alert = parcel.readString();
+        this.expiryMS = parcel.readLong();
+        this.position = parcel.readInt();
 
-    /**
-     * Returns the message's ID
-     *
-     * @return The message's ID.
-     */
-    public String getId() {
-        return id;
-    }
+        this.durationMilliseconds = parcel.readByte() == 1 ? parcel.readLong() : null;
+        this.primaryColor = parcel.readByte() == 1 ? parcel.readInt() : null;
+        this.secondaryColor = parcel.readByte() == 1 ? parcel.readInt() : null;
 
-    /**
-     * Returns extras map.
-     *
-     * @return The extras map.
-     */
-    public JsonMap getExtras() {
-        return extras;
-    }
-
-    /**
-     * Returns the message's alert.
-     *
-     * @return The message's alert.
-     */
-    public String getAlert() {
-        return alert;
-    }
-
-    /**
-     * Returns the on click action name to action value map.
-     *
-     * @return The on click action values.
-     */
-    public Map<String, ActionValue> getClickActionValues() {
-        return Collections.unmodifiableMap(clickActionValues);
-    }
-
-    /**
-     * Returns the specified button's action name to action value map.
-     *
-     * @return The button's action values.
-     */
-    public Map<String, ActionValue> getButtonActionValues(String buttonId) {
-        if (buttonActionValues.containsKey(buttonId)) {
-            return Collections.unmodifiableMap(buttonActionValues.get(buttonId));
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Returns the button group ID. The button group can be fetched from {@link com.urbanairship.push.PushManager#getNotificationActionGroup(String)}
-     *
-     * @return The button group ID.
-     */
-    public String getButtonGroupId() {
-        return buttonGroupId;
-    }
-
-    /**
-     * Returns the duration in milliseconds for how long the message should be shown.
-     *
-     * @return The duration of the message in milliseconds.
-     */
-    public Long getDuration() {
-        return durationMilliseconds;
-    }
-
-    /**
-     * Returns the position of the in-app message. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}.
-     *
-     * @return The message's position.
-     */
-    public int getPosition() {
-        return position;
-    }
-
-    /**
-     * Returns the message's primary color.
-     *
-     * @return The message's primary color.
-     */
-    public Integer getPrimaryColor() {
-        return primaryColor;
-    }
-
-    /**
-     * Returns the message's secondary color.
-     *
-     * @return The message's secondary color.
-     */
-    public Integer getSecondaryColor() {
-        return secondaryColor;
-    }
-
-    /**
-     * InAppMessage parcel creator.
-     */
-    public static final Parcelable.Creator<InAppMessage> CREATOR = new Parcelable.Creator<InAppMessage>() {
-
-        @Override
-        public InAppMessage createFromParcel(Parcel in) {
-            InAppMessage inAppMessage = new InAppMessage();
-            inAppMessage.id = in.readString();
-            inAppMessage.alert = in.readString();
-            inAppMessage.expiryMS = in.readLong();
-            inAppMessage.position = in.readInt();
-
-            if (in.readByte() == 1) {
-                inAppMessage.durationMilliseconds = in.readLong();
-            }
-            if (in.readByte() == 1) {
-                inAppMessage.primaryColor = in.readInt();
-            }
-            if (in.readByte() == 1) {
-                inAppMessage.secondaryColor = in.readInt();
-            }
-
-            try {
-                inAppMessage.extras = JsonValue.parseString(in.readString()).getMap();
-            } catch (JsonException e) {
-                Logger.error("InAppMessage - unable to parse extras from parcel.");
-                inAppMessage.extras = new JsonMap(null);
-            }
-
-            inAppMessage.buttonGroupId = in.readString();
-            inAppMessage.buttonActionValues = new HashMap<>();
-            in.readMap(inAppMessage.buttonActionValues, ActionValue.class.getClassLoader());
-
-            inAppMessage.clickActionValues = new HashMap<>();
-            in.readMap(inAppMessage.clickActionValues, ActionValue.class.getClassLoader());
-            return inAppMessage;
+        JsonMap extras = null;
+        try {
+            extras = JsonValue.parseString(parcel.readString()).getMap();
+        } catch (JsonException e) {
+            Logger.error("InAppMessage - unable to parse extras from parcel.");
         }
 
-        @Override
-        public InAppMessage[] newArray(int size) {
-            return new InAppMessage[size];
-        }
-    };
+        this.extras = extras == null ? new JsonMap(null) : extras;
+        this.buttonGroupId = parcel.readString();
+        this.buttonActionValues = new HashMap<>();
+        parcel.readMap(this.buttonActionValues, ActionValue.class.getClassLoader());
+
+        this.clickActionValues = new HashMap<>();
+        parcel.readMap(this.clickActionValues, ActionValue.class.getClassLoader());
+    }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
@@ -288,12 +179,129 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Returns the expiration time in milliseconds since Jan. 1, 1970, midnight GMT.
+     *
+     * @return The expiration time in milliseconds since Jan. 1, 1970, midnight GMT.
+     */
+    public long getExpiry() {
+        return expiryMS;
+    }
+
+    /**
+     * Tests if the message is expired or not.
+     *
+     * @return {@code true} if the message is expired, otherwise {@code false}.
+     */
+    public boolean isExpired() {
+        return System.currentTimeMillis() > expiryMS;
+    }
+
+    /**
+     * Returns the message's ID
+     *
+     * @return The message's ID.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Returns extras map.
+     *
+     * @return The extras map.
+     */
+    @NonNull
+    public JsonMap getExtras() {
+        return extras;
+    }
+
+    /**
+     * Returns the message's alert.
+     *
+     * @return The message's alert.
+     */
+    public String getAlert() {
+        return alert;
+    }
+
+    /**
+     * Returns the on click action name to action value map.
+     *
+     * @return The on click action values.
+     */
+    @NonNull
+    public Map<String, ActionValue> getClickActionValues() {
+        return Collections.unmodifiableMap(clickActionValues);
+    }
+
+    /**
+     * Returns the specified button's action name to action value map.
+     *
+     * @return The button's action values.
+     */
+    @Nullable
+    public Map<String, ActionValue> getButtonActionValues(String buttonId) {
+        if (buttonActionValues.containsKey(buttonId)) {
+            return Collections.unmodifiableMap(buttonActionValues.get(buttonId));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the button group ID. The button group can be fetched from {@link com.urbanairship.push.PushManager#getNotificationActionGroup(String)}
+     *
+     * @return The button group ID.
+     */
+    public String getButtonGroupId() {
+        return buttonGroupId;
+    }
+
+    /**
+     * Returns the duration in milliseconds for how long the message should be shown.
+     *
+     * @return The duration of the message in milliseconds.
+     */
+    public Long getDuration() {
+        return durationMilliseconds;
+    }
+
+    /**
+     * Returns the position of the in-app message. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}.
+     *
+     * @return The message's position.
+     */
+    @Position
+    public int getPosition() {
+        return position;
+    }
+
+    /**
+     * Returns the message's primary color.
+     *
+     * @return The message's primary color.
+     */
+    public Integer getPrimaryColor() {
+        return primaryColor;
+    }
+
+    /**
+     * Returns the message's secondary color.
+     *
+     * @return The message's secondary color.
+     */
+    public Integer getSecondaryColor() {
+        return secondaryColor;
+    }
+
+    /**
      * Creates an in-app message from a JSON payload.
      *
      * @param json The json payload.
      * @return The in-app message, or null if the payload defines an invalid in-app message.
      * @throws JsonException If the JSON payload is unable to parsed.
      */
+    @Nullable
     public static InAppMessage parseJson(String json) throws JsonException {
         JsonMap inAppJson = JsonValue.parseString(json).getMap();
 
@@ -468,9 +476,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + (id == null ? 0 : id.hashCode());
         result = 31 * result + (alert == null ? 0 : alert.hashCode());
         result = 31 * result + (buttonGroupId == null ? 0 : buttonGroupId.hashCode());
-        result = 31 * result + (extras == null ? 0 : extras.hashCode());
-        result = 31 * result + (clickActionValues == null ? 0 : clickActionValues.hashCode());
-        result = 31 * result + (buttonActionValues == null ? 0 : buttonActionValues.hashCode());
+        result = 31 * result + extras.hashCode();
+        result = 31 * result + clickActionValues.hashCode();
+        result = 31 * result + buttonActionValues.hashCode();
         result = 31 * result + (secondaryColor == null ? 0 : secondaryColor);
         result = 31 * result + (primaryColor == null ? 0 : primaryColor);
         result = 31 * result + (durationMilliseconds == null ? 0 : durationMilliseconds.hashCode());
@@ -481,13 +489,33 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * InAppMessage parcel creator.
+     */
+    public static final Parcelable.Creator<InAppMessage> CREATOR = new Parcelable.Creator<InAppMessage>() {
+
+        @Override
+        public InAppMessage createFromParcel(Parcel in) {
+            return new InAppMessage(in);
+        }
+
+        @Override
+        public InAppMessage[] newArray(int size) {
+            return new InAppMessage[size];
+        }
+    };
+
+    /**
      * InAppMessage Builder.
      */
     public static class Builder {
 
+        @Nullable
         private Map<String, ActionValue> clickActionValues;
-        private Map<String, Map<String, ActionValue>> buttonActionValues = new HashMap<>();
+
+        @Nullable
         private JsonMap extras;
+
+        private Map<String, Map<String, ActionValue>> buttonActionValues = new HashMap<>();
 
         private String buttonGroupId;
         private String alert;
@@ -687,21 +715,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          */
         @NonNull
         public InAppMessage create() {
-            InAppMessage message = new InAppMessage();
-
-            message.expiryMS = expiryMS == null ? System.currentTimeMillis() + DEFAULT_EXPIRY_MS : expiryMS;
-            message.id = id;
-            message.extras = extras == null ? new JsonMap(null) : extras;
-            message.alert = alert;
-            message.durationMilliseconds = durationMilliseconds;
-            message.buttonGroupId = buttonGroupId;
-            message.buttonActionValues = buttonActionValues == null ? new HashMap<String, Map<String, ActionValue>>() : buttonActionValues;
-            message.clickActionValues = clickActionValues == null ? new HashMap<String, ActionValue>() : clickActionValues;
-            message.position = position;
-            message.primaryColor = primaryColor;
-            message.secondaryColor = secondaryColor;
-
-            return message;
+            return new InAppMessage(this);
         }
     }
 }
