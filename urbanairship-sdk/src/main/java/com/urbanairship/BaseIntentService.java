@@ -31,6 +31,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 /**
@@ -74,7 +75,6 @@ public abstract class BaseIntentService extends IntentService {
             return;
         }
 
-
         try {
             String action = intent.getAction();
             if (action == null) {
@@ -102,7 +102,7 @@ public abstract class BaseIntentService extends IntentService {
      * @param dataStore The preference data store.
      * @return The worker that is able to handle the specified intent action.
      */
-    protected abstract Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore);
+    protected abstract Delegate getServiceDelegate(@NonNull String intentAction, @NonNull PreferenceDataStore dataStore);
 
     /**
      * Service delegate that handle any incoming intents from the {@link BaseIntentService}.
@@ -150,7 +150,7 @@ public abstract class BaseIntentService extends IntentService {
          * @param intent The intent to be retried.
          * @return The initial backoff time in milliseconds.
          */
-        protected long getInitialBackoff(Intent intent) {
+        protected long getInitialBackoff(@NonNull Intent intent) {
             return DEFAULT_STARTING_BACK_OFF_TIME_MS;
         }
 
@@ -162,7 +162,7 @@ public abstract class BaseIntentService extends IntentService {
          * @param intent The intent to be retried.
          * @return The max backoff time in milliseconds.
          */
-        protected long getMaxBackOff(Intent intent) {
+        protected long getMaxBackOff(@NonNull Intent intent) {
             return DEFAULT_MAX_BACK_OFF_TIME_MS;
         }
 
@@ -174,7 +174,7 @@ public abstract class BaseIntentService extends IntentService {
          *
          * @param intent The intent to retry.
          */
-        public void retryIntent(Intent intent) {
+        public void retryIntent(@NonNull Intent intent) {
             // Copy it so we don't modify the original intent
             intent = new Intent(intent);
 

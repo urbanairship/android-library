@@ -19,8 +19,6 @@ class PreferencesDataManager extends DataManager {
     static final String DATABASE_NAME = "ua_preferences.db";
     static final int DATABASE_VERSION = 1;
 
-    protected static final String WHERE_CLAUSE_KEY = COLUMN_NAME_KEY + " = ?";
-
     public PreferencesDataManager(Context context) {
         super(context, DATABASE_NAME, DATABASE_VERSION);
     }

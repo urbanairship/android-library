@@ -36,6 +36,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -245,11 +246,8 @@ class ChannelCapture extends BaseManager {
      *
      * @return The generated clipboard token.
      */
+    @NonNull
     private String generateToken() {
-        if (UAStringUtil.isEmpty(configOptions.getAppKey()) || UAStringUtil.isEmpty(configOptions.getAppSecret())) {
-            return null;
-        }
-
         byte[] appKeyBytes = configOptions.getAppKey().getBytes();
         byte[] appSecretBytes = configOptions.getAppSecret().getBytes();
 
@@ -269,7 +267,8 @@ class ChannelCapture extends BaseManager {
      * @param channel The channel to copy to the clipboard.
      * @return A pending intent.
      */
-    private PendingIntent createCopyChannelPendingIntent(String channel) {
+    @NonNull
+    private PendingIntent createCopyChannelPendingIntent(@NonNull String channel) {
         Map<String, String> actionValue = new HashMap<>();
         actionValue.put("text", channel);
         actionValue.put("label", "Urban Airship Channel");
@@ -292,7 +291,8 @@ class ChannelCapture extends BaseManager {
      * @param url The url to open.
      * @return A pending intent.
      */
-    private PendingIntent createOpenUrlPendingIntent(String url) {
+    @NonNull
+    private PendingIntent createOpenUrlPendingIntent(@NonNull String url) {
         Map<String, Object> actionPayload = new HashMap<>();
         actionPayload.put("open_external_url_action", url);
 

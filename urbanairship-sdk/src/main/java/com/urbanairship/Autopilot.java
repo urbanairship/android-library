@@ -6,6 +6,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 /**
@@ -50,7 +52,7 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
      * automaticTakeOff might be called from different threads so we need to synchronize on the method
      * to prevent onCreateAirshipConfig from being called multiple times.
      */
-    public static synchronized void automaticTakeOff(Application application) {
+    public static synchronized void automaticTakeOff(@NonNull Application application) {
         if (UAirship.isFlying() || UAirship.isTakingOff()) {
             return;
         }
@@ -118,7 +120,7 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
      *
      * @param context The application context.
      */
-    public static void automaticTakeOff(Context context) {
+    public static void automaticTakeOff(@NonNull Context context) {
         automaticTakeOff((Application) context.getApplicationContext());
     }
 
@@ -130,7 +132,8 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
      * @return The launch options. If null, the options will be loaded from
      * the <code>airshipconfig.properties</code> file.
      */
-    public AirshipConfigOptions createAirshipConfigOptions(Context context) {
+    @Nullable
+    public AirshipConfigOptions createAirshipConfigOptions(@NonNull Context context) {
         return null;
     }
 }

@@ -33,19 +33,19 @@ public interface Cancelable {
     /**
      * Cancels the operation.
      */
-    public void cancel();
+    void cancel();
 
     /**
      * Determines if the operation is canceled or completed.
      *
      * @return <code>true</code> if canceled or completed, otherwise <code>false</code>
      */
-    public boolean isDone();
+    boolean isDone();
 
     /**
      * Determines if the operation is canceled.
      *
      * @return <code>true</code> if canceled, otherwise <code>false</code>
      */
-    public boolean isCanceled();
+    boolean isCanceled();
 }
