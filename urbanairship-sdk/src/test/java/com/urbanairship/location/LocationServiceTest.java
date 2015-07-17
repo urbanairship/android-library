@@ -219,7 +219,8 @@ public class LocationServiceTest extends BaseTestCase {
     @Test
     public void testStartingLocationAfterUpdate() {
         LocationRequestOptions options = locationManager.getLocationRequestOptions();
-        Bundle extras = LocationService.createRequestOptionsBundle(options);
+        Bundle extras = new Bundle();
+        extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
 
         sendIntent(LocationService.ACTION_LOCATION_UPDATE, extras);
 
@@ -238,7 +239,9 @@ public class LocationServiceTest extends BaseTestCase {
     public void testRequestSingleUpdate() throws RemoteException {
         LocationRequestOptions options = LocationRequestOptions.createDefaultOptions();
 
-        Bundle extras = LocationService.createRequestOptionsBundle(options);
+        Bundle extras = new Bundle();
+        extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
+
         final Location location = new Location("Location");
 
         PendingLocationResult request = new PendingLocationResult() {
@@ -285,7 +288,8 @@ public class LocationServiceTest extends BaseTestCase {
     @Test
     public void testRequestSingleUpdateFailed() throws RemoteException {
         LocationRequestOptions options = LocationRequestOptions.createDefaultOptions();
-        Bundle extras = LocationService.createRequestOptionsBundle(options);
+        Bundle extras = new Bundle();
+        extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
 
         Message message = Message.obtain(null, LocationService.MSG_REQUEST_SINGLE_LOCATION);
         message.arg1 = 101;
@@ -338,7 +342,8 @@ public class LocationServiceTest extends BaseTestCase {
     @Test
     public void testCancelSingleUpdate() throws RemoteException {
         LocationRequestOptions options = LocationRequestOptions.createDefaultOptions();
-        Bundle extras = LocationService.createRequestOptionsBundle(options);
+        Bundle extras = new Bundle();
+        extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
         final Location location = new Location("Location");
 
         PendingLocationResult request = new PendingLocationResult() {

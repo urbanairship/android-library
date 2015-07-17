@@ -266,10 +266,10 @@ public class UALocationManager extends BaseManager {
      * @return A pending result for the location. The pending result may return a null location if
      * the request is unable to be made due to insufficient permissions.
      */
+    @NonNull
     @RequiresPermission(anyOf = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION})
-    @NonNull
     public PendingResult<Location> requestSingleLocation() {
         return requestSingleLocation(getLocationRequestOptions());
     }
@@ -282,10 +282,10 @@ public class UALocationManager extends BaseManager {
      * the request is unable to be made due to insufficient permissions.
      * @throws IllegalArgumentException if the requestOptions is null.
      */
+    @NonNull
     @RequiresPermission(anyOf = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION})
-    @NonNull
     public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions requestOptions) {
         //noinspection ConstantConditions
         if (requestOptions == null) {
@@ -555,7 +555,8 @@ public class UALocationManager extends BaseManager {
                 return;
             }
 
-            Bundle data = LocationService.createRequestOptionsBundle(options);
+            Bundle data = new Bundle();
+            data.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
             sendMessage(LocationService.MSG_REQUEST_SINGLE_LOCATION, requestId, data);
         }
     }

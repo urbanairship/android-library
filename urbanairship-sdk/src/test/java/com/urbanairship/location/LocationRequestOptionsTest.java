@@ -1,6 +1,9 @@
 package com.urbanairship.location;
 
+import android.os.Parcel;
+
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -83,5 +86,30 @@ public class LocationRequestOptionsTest extends BaseTestCase {
         
         LocationRequestOptions fromJson = LocationRequestOptions.parseJson(original.toJsonValue().toString());
         assertEquals(original, fromJson);
+    }
+
+    /**
+     * Test saving and reading LocationRequestOptions from a parcel.
+     */
+    @Test
+    public void testParcelable() throws JsonException {
+        LocationRequestOptions original = new LocationRequestOptions.Builder()
+                .setPriority(LocationRequestOptions.PRIORITY_LOW_POWER)
+                .setMinDistance(44.4f)
+                .setMinTime(1111, TimeUnit.MILLISECONDS)
+                .create();
+
+        // Write the options to the parcel
+        Parcel parcel = Parcel.obtain();
+        original.writeToParcel(parcel, 0);
+
+        // Reset the parcel so we can read it
+        parcel.setDataPosition(0);
+
+        // Create the options from the parcel
+        LocationRequestOptions fromParcel = LocationRequestOptions.CREATOR.createFromParcel(parcel);
+
+        // Validate the data
+        assertEquals(original, fromParcel);
     }
 }
