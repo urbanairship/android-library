@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Service delegate for the {@link PushService} to handle incoming push messages.
  */
-public class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
+class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
 
     /**
      * Key to store the push canonical IDs for push deduping.

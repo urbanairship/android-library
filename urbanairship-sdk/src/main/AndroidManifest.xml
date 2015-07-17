@@ -2,12 +2,63 @@
     package="com.urbanairship"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:amazon="http://schemas.amazon.com/apk/res/android"
     android:versionCode="1"
     android:versionName="1.0">
 
     <uses-sdk tools:overrideLibrary="com.google.android.gms, com.google.android.gms.location, com.google.android.gms.gcm, com.google.android.gms.maps"/>
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <permission android:name="${applicationId}.permission.UA_DATA" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.UA_DATA" />
+
+    <!-- GCM -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
+
+    <!-- ADM -->
+    <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE" />
+    <permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" />
+
     <application>
+
+        <!-- ADM -->
+        <amazon:enable-feature
+            android:name="com.amazon.device.messaging"
+            android:required="false" />
+
+        <activity android:name="com.urbanairship.actions.ActionActivity" />
+        <activity android:name="com.urbanairship.CoreActivity" />
+        <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
+            android:name="com.urbanairship.actions.LandingPageActivity"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="message" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="com.urbanairship.push.PushService" android:label="Push Notification Service" />
+        <service android:name="com.urbanairship.analytics.EventService" android:label="Event Service" />
+        <service android:name="com.urbanairship.actions.ActionService" />
+        <service android:name="com.urbanairship.richpush.RichPushUpdateService" />
+        <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
+
         <service
             android:name="com.urbanairship.push.UAInstanceIDListenerService"
             android:exported="false">
@@ -15,5 +66,44 @@
                 <action android:name="com.google.android.gms.iid.InstanceID"/>
             </intent-filter>
         </service>
+
+        <receiver android:name="com.urbanairship.CoreReceiver"
+                  android:exported="false">
+
+            <intent-filter android:priority="-999">
+                <action android:name="com.urbanairship.push.OPENED" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.urbanairship.push.GCMPushReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND">
+
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.urbanairship.push.ADMPushReceiver"
+            android:permission="com.amazon.device.messaging.permission.SEND">
+
+            <intent-filter>
+                <action android:name="com.amazon.device.messaging.intent.REGISTRATION" />
+                <action android:name="com.amazon.device.messaging.intent.RECEIVE" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="com.urbanairship.UrbanAirshipProvider"
+            android:authorities="${applicationId}.urbanairship.provider"
+            android:permission="${applicationId}.permission.UA_DATA"
+            android:exported="true"
+            android:multiprocess="true" />
+
     </application>
 </manifest>

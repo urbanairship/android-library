@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.android.tools.build:gradle:1.3.+'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.1'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
     }
@@ -39,30 +39,47 @@ task cleanPackageUrbanAirshipRelease(type: Delete) {
 }
 
 task packageUrbanAirshipRelease << {
+
+    def urbanAirshipSdkProject = project.findProject('urbanairship-sdk')
+    def urbanAirshipMinSdkVersion = urbanAirshipSdkProject.android.defaultConfig.targetSdkVersion.mApiLevel
+    def samplesProject = project.findProject(':samples')
+
     // Unpacked library
     copy {
         println "Staging library."
-        from zipTree(file("${project.findProject('urbanairship-sdk').buildDir}/outputs/aar/urbanairship-sdk-release.aar"))
+        from zipTree(file("${urbanAirshipSdkProject.buildDir}/outputs/aar/urbanairship-sdk-release.aar"))
         into file("$buildDir/ua-staging/urbanairship-lib")
         rename "classes.jar", "libs/urbanairship-lib-${airshipVersion}.jar"
-        exclude "R.txt", "assets", "aidl"
+        include "proguard.txt", "res/*", "classes.jar"
     }
 
     // Eclipse project.properties file
     File propertiesFile = file("$buildDir/ua-staging/urbanairship-lib/project.properties")
-    propertiesFile.text = "target=android-${project.findProject('urbanairship-sdk').android.defaultConfig.targetSdkVersion.mApiLevel}\n"
+    propertiesFile.text = "target=android-${urbanAirshipMinSdkVersion}\n"
     propertiesFile.text += "android.library=true"
+
+    // Eclipse AndroidManifest.xml
+    File manifestFile = file("$buildDir/ua-staging/urbanairship-lib/AndroidManifest.xml")
+    manifestFile.text = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    manifestFile.text += "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"com.urbanairship\">\n"
+    manifestFile.text += "  <uses-sdk android:minSdkVersion=\"${urbanAirshipMinSdkVersion}\" />\n"
+    manifestFile.text += "  <application />\n"
+    manifestFile.text += "</manifest>\n"
+
+    // Eclipse project should include an empty src directory for some of the build systems
+    new File("$buildDir/ua-staging/urbanairship-lib/src").mkdirs()
+
 
     // Library as AAR
     copy {
         println "Staging aar."
-        from "${project.findProject('urbanairship-sdk').buildDir}/outputs/aar/urbanairship-sdk-release.aar"
+        from "${urbanAirshipSdkProject.buildDir}/outputs/aar/urbanairship-sdk-release.aar"
         into "$buildDir/ua-staging"
         rename "urbanairship-sdk-release.aar", "urbanairship-lib-${airshipVersion}.aar"
     }
 
     // Samples
-    project.findProject(":samples").subprojects.findAll { sample ->
+    samplesProject.subprojects.findAll { sample ->
         println "Staging ${sample.getName()}"
 
         copy {
@@ -82,7 +99,7 @@ task packageUrbanAirshipRelease << {
     // Samples gradle files and README
     copy {
         println "Staging Gradle files and README for samples."
-        from project.findProject(":samples").getProjectDir()
+        from samplesProject.getProjectDir()
         into file("$buildDir/ua-staging/samples")
         include "gradle/**", "gradlew", "gradlew.bat", "settings.gradle", "build.gradle", "README.md"
     }
@@ -98,7 +115,7 @@ task packageUrbanAirshipRelease << {
     // Docs
     copy {
         println "Staging docs."
-        from "${project.findProject(":urbanairship-sdk").getBuildDir()}/docs/javadoc"
+        from "${urbanAirshipSdkProject.buildDir}/docs/javadoc"
         into "$buildDir/ua-staging/javadocs"
     }
 
@@ -111,7 +128,7 @@ task packageUrbanAirshipRelease << {
     buildInfo.text += "Java: ${JavaVersion.current()}"
 
     // Dex count
-    File dexCount = file("${project.findProject('urbanairship-sdk').buildDir}/dex-counts/release")
+    File dexCount = file("${urbanAirshipSdkProject.buildDir}/dex-counts/release")
     if (dexCount.exists()) {
         buildInfo.text += "\n"
         buildInfo.text += dexCount.text
@@ -174,9 +191,9 @@ bintrayUploadInternal.mustRunAfter('urbanairship-sdk:bintrayUpload')
 bintrayUploadRelease.dependsOn("packageUrbanAirshipRelease", 'urbanairship-sdk:bintrayUploadRelease')
 bintrayUploadRelease.mustRunAfter('urbanairship-sdk:bintrayUpload')
 
-packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:build', 'urbanairship-sdk:javaDoc',
+packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:assembleRelease', 'urbanairship-sdk:javaDoc',
         'urbanairship-sdk:runDexMethodCount')
 
 task continuousIntegration
-continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', 'urbanairship-sdk:build',
-        'urbanairship-sdk:javaDoc', 'urbanairship-sdk:test', 'packageUrbanAirshipRelease')
+continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', 'urbanairship-sdk:assembleRelease',
+        'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javaDoc', 'packageUrbanAirshipRelease')
