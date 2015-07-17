@@ -27,6 +27,7 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.location.Location;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.PendingResult;
 
@@ -41,14 +42,14 @@ interface LocationAdapter {
      * @return PendingResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    PendingResult<Location> requestSingleLocation(LocationRequestOptions options);
+    PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options);
 
     /**
      * Cancels location updates.
      *
      * @param intent The pending intent used to start location updates.
      */
-    void cancelLocationUpdates(PendingIntent intent);
+    void cancelLocationUpdates(@NonNull PendingIntent intent);
 
     /**
      * Requests location updates.
@@ -56,7 +57,7 @@ interface LocationAdapter {
      * @param options The location request options.
      * @param intent The pending intent used to start location updates.
      */
-    void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent);
+    void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent);
 
     /**
      * Connects the adapter.

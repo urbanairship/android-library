@@ -24,8 +24,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 package com.urbanairship.location;
+import android.support.annotation.FloatRange;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
-import com.urbanairship.location.RegionEvent;
 
 /**
  * A ProximityRegion defines a proximity region with an identifier, major, minor
@@ -84,7 +87,10 @@ public class ProximityRegion {
      * @param major The major.
      * @param minor The minor.
      */
-    public ProximityRegion(String proximityId, int major, int minor) {
+    public ProximityRegion(@NonNull String proximityId,
+                           @IntRange(from = 0, to = MAX_MAJOR_MINOR_VALUE) int major,
+                           @IntRange(from = 0, to = MAX_MAJOR_MINOR_VALUE) int minor) {
+
         this.proximityId = proximityId;
         this.major = major;
         this.minor = minor;
@@ -96,7 +102,8 @@ public class ProximityRegion {
      * @param latitude The proximity region's latitude.
      * @param longitude The proximity region's longitude.
      */
-    public void setCoordinates(Double latitude, Double longitude) {
+    public void setCoordinates(@FloatRange(from = RegionEvent.MIN_LATITUDE, to = RegionEvent.MAX_LATITUDE) Double latitude,
+                               @FloatRange(from = RegionEvent.MIN_LONGITUDE, to = RegionEvent.MAX_LONGITUDE) Double longitude) {
 
         if (latitude == null || longitude == null) {
             this.latitude = null;
@@ -127,7 +134,7 @@ public class ProximityRegion {
      *
      * @param rssi The proximity region's received signal strength indication.
      */
-    public void setRssi(Integer rssi) {
+    public void setRssi(@IntRange(from = MIN_RSSI, to = MAX_RSSI) Integer rssi) {
         if (rssi == null) {
             this.rssi = null;
             return;
@@ -204,6 +211,7 @@ public class ProximityRegion {
      * @return True if the proximity region is valid, false otherwise.
      */
     public boolean isValid() {
+        //noinspection ConstantConditions
         if (proximityId == null) {
             Logger.error("The proximity ID must not be null.");
             return false;

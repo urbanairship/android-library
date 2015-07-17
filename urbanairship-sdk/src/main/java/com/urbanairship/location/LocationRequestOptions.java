@@ -25,12 +25,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.location;
 
+import android.support.annotation.IntDef;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +76,10 @@ public class LocationRequestOptions implements JsonSerializable {
      * Default priority - PRIORITY_BALANCED_POWER_ACCURACY.
      */
     public static int DEFAULT_REQUEST_PRIORITY = LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
+
+    @IntDef({PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, PRIORITY_NO_POWER})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Priority {}
 
     /**
      * Used with {@link com.urbanairship.location.LocationRequestOptions.Builder#setPriority(int)}
@@ -120,7 +128,7 @@ public class LocationRequestOptions implements JsonSerializable {
      */
     public static final int PRIORITY_NO_POWER = 4;
 
-    private int priority;
+    private @Priority int priority;
     private long minTime;
     private float minDistance;
 
@@ -278,12 +286,13 @@ public class LocationRequestOptions implements JsonSerializable {
             return null;
         }
 
-        Number minDistance = jsonMap.opt(MIN_DISTANCE_KEY).getNumber();
-        return new LocationRequestOptions.Builder()
-                .setMinDistance(minDistance == null ? DEFAULT_UPDATE_INTERVAL_METERS : minDistance.floatValue())
-                .setMinTime(jsonMap.opt(MIN_TIME_KEY).getLong(DEFAULT_UPDATE_INTERVAL_MILLISECONDS), TimeUnit.MILLISECONDS)
-                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(DEFAULT_REQUEST_PRIORITY))
-                .create();
+        Number minDistanceNumber = jsonMap.opt(MIN_DISTANCE_KEY).getNumber();
+
+        float minDistance = minDistanceNumber == null ? DEFAULT_UPDATE_INTERVAL_METERS : minDistanceNumber.floatValue();
+        long minTime = jsonMap.opt(MIN_TIME_KEY).getLong(DEFAULT_UPDATE_INTERVAL_MILLISECONDS);
+        int priority = jsonMap.opt(PRIORITY_KEY).getInt(DEFAULT_REQUEST_PRIORITY);
+
+        return new LocationRequestOptions(priority, minDistance, minTime);
     }
 
     /**
@@ -336,7 +345,7 @@ public class LocationRequestOptions implements JsonSerializable {
          * @throws IllegalArgumentException if priority is not PRIORITY_HIGH_ACCURACY,
          * PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, or PRIORITY_NO_POWER.
          */
-        public Builder setPriority(int priority) {
+        public Builder setPriority(@Priority int priority) {
             verifyPriority(priority);
             this.priority = priority;
             return this;

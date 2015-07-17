@@ -159,6 +159,7 @@ public class UAPreferenceAdapter {
                 airship.getLocationManager().setBackgroundLocationAllowed((Boolean) value);
                 break;
             case LOCATION_UPDATES_ENABLED:
+                //noinspection ResourceType - For missing location permission
                 airship.getLocationManager().setLocationUpdatesEnabled((Boolean) value);
                 break;
             case USER_NOTIFICATIONS_ENABLED:

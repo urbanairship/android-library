@@ -5,6 +5,7 @@ import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -34,7 +35,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public PendingResult<Location> requestSingleLocation(LocationRequestOptions options) {
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
             return null;
@@ -43,7 +44,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void cancelLocationUpdates(PendingIntent intent) {
+    public void cancelLocationUpdates(@NonNull PendingIntent intent) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to cancel location updates.");
             return;
@@ -54,7 +55,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
             return;
@@ -130,7 +131,8 @@ class FusedLocationAdapter implements LocationAdapter {
      * @param settings The LocationRequestOptions.
      * @return A LocationRequest.
      */
-    private LocationRequest createLocationRequest(LocationRequestOptions settings) {
+    @NonNull
+    private LocationRequest createLocationRequest(@NonNull LocationRequestOptions settings) {
         LocationRequest locationRequest = LocationRequest.create()
                                                          .setInterval(settings.getMinTime())
                                                          .setSmallestDisplacement(settings.getMinDistance());

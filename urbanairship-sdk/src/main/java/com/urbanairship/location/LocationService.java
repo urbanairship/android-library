@@ -39,6 +39,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.urbanairship.Autopilot;
@@ -237,7 +239,7 @@ public class LocationService extends Service {
      *
      * @param message The received message.
      */
-    private void onSubscribeUpdates(Message message) {
+    private void onSubscribeUpdates(@NonNull Message message) {
         if (message.replyTo != null) {
             Logger.debug("LocationService - Client subscribed for updates: " + message.replyTo);
             subscribedClients.add(message.replyTo);
@@ -249,7 +251,7 @@ public class LocationService extends Service {
      *
      * @param message The received message.
      */
-    private void onUnsubscribeUpdates(Message message) {
+    private void onUnsubscribeUpdates(@NonNull Message message) {
         if (subscribedClients.remove(message.replyTo)) {
             Logger.debug("LocationService - Client unsubscribed from updates: " + message.replyTo);
         }
@@ -260,7 +262,7 @@ public class LocationService extends Service {
      *
      * @param message The received message.
      */
-    private void onRequestSingleUpdate(final Message message) {
+    private void onRequestSingleUpdate(@NonNull final Message message) {
         final int requestId = message.arg1;
         final Messenger client = message.replyTo;
 
@@ -309,7 +311,7 @@ public class LocationService extends Service {
      *
      * @param message The received message.
      */
-    private void onCancelSingleUpdate(Message message) {
+    private void onCancelSingleUpdate(@NonNull Message message) {
         final int requestId = message.arg1;
         final Messenger client = message.replyTo;
 
@@ -325,7 +327,7 @@ public class LocationService extends Service {
      *
      * @param intent The received intent.
      */
-    private void onLocationUpdate(Intent intent) {
+    private void onLocationUpdate(@NonNull Intent intent) {
         if (!isContinuousLocationUpdatesAllowed() || areUpdatesStopped) {
             // Location is disabled and will be stopped in another intent.
             return;
@@ -389,7 +391,7 @@ public class LocationService extends Service {
      *
      * @param intent The received intent.
      */
-    private void onCheckLocationUpdates(Intent intent) {
+    private void onCheckLocationUpdates(@NonNull Intent intent) {
         int resultCode = 0;
         if (isContinuousLocationUpdatesAllowed()) {
             resultCode = RESULT_LOCATION_UPDATES_STARTED;
@@ -434,7 +436,7 @@ public class LocationService extends Service {
      * @param requestId The request id of the location update.
      * @param pendingResult The pending result.
      */
-    private void addPendingResult(Messenger client, int requestId, PendingResult<Location> pendingResult) {
+    private void addPendingResult(@Nullable Messenger client, int requestId, @NonNull PendingResult<Location> pendingResult) {
         synchronized (pendingResultMap) {
             if (client != null && requestId > 0) {
                 if (!pendingResultMap.containsKey(client)) {
@@ -452,7 +454,7 @@ public class LocationService extends Service {
      * @param requestId The request id of the location update.
      * @return The pending result if removed, or null.
      */
-    private synchronized PendingResult<Location> removePendingResult(Messenger client, int requestId) {
+    private synchronized PendingResult<Location> removePendingResult(@Nullable Messenger client, int requestId) {
         synchronized (pendingResultMap) {
             if (!pendingResultMap.containsKey(client)) {
                 return null;
@@ -482,12 +484,14 @@ public class LocationService extends Service {
      * @return LocationRequestOptions from the bundle, or null if it failed
      * to parse the options.
      */
-    private static LocationRequestOptions parseRequestOptions(Bundle data) {
+    @Nullable
+    private static LocationRequestOptions parseRequestOptions(@Nullable Bundle data) {
         if (data == null) {
             return null;
         }
 
         try {
+            //noinspection ResourceType
             return new LocationRequestOptions.Builder()
                     .setPriority(data.getInt(EXTRA_PRIORITY))
                     .setMinDistance(data.getFloat(EXTRA_MIN_DISTANCE))
@@ -505,7 +509,8 @@ public class LocationService extends Service {
      * @param options The LocationRequestOptions.
      * @return A Bundle with the LocationRequestOptions encoded.
      */
-    static Bundle createRequestOptionsBundle(LocationRequestOptions options) {
+    @NonNull
+    static Bundle createRequestOptionsBundle(@NonNull LocationRequestOptions options) {
         Bundle data = new Bundle();
         data.putSerializable(LocationService.EXTRA_PRIORITY, options.getPriority());
         data.putFloat(LocationService.EXTRA_MIN_DISTANCE, options.getMinDistance());
@@ -524,10 +529,11 @@ public class LocationService extends Service {
      * @return <code>true</code> if the message sent or <code>false</code> if it failed
      * to send because the client has died or the client is null.
      */
-    private boolean sendClientMessage(Messenger client, int what, int arg1, Object obj) {
+    private boolean sendClientMessage(@Nullable Messenger client, int what, int arg1, @Nullable Object obj) {
         if (client == null) {
             return false;
         }
+
         try {
             client.send(Message.obtain(null, what, arg1, 0, obj));
             return true;
@@ -542,7 +548,8 @@ public class LocationService extends Service {
      * @param options The location request options.
      * @return PendingIntent for location updates.
      */
-    private PendingIntent createLocationUpdateIntent(LocationRequestOptions options) {
+    @NonNull
+    private PendingIntent createLocationUpdateIntent(@Nullable LocationRequestOptions options) {
         Intent intent = new Intent(getApplicationContext(), LocationService.class).setAction(ACTION_LOCATION_UPDATE);
 
         if (options != null) {

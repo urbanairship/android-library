@@ -25,12 +25,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.location;
 
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
+
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.Event;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
@@ -128,6 +134,10 @@ public class RegionEvent extends Event {
      */
     private ProximityRegion proximityRegion;
 
+    @IntDef({BOUNDARY_EVENT_ENTER, BOUNDARY_EVENT_EXIT})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Boundary {}
+
     /**
      * Enter boundary event.
      */
@@ -170,7 +180,10 @@ public class RegionEvent extends Event {
      * @param source The source of the region definition.
      * @param boundaryEvent The type of boundary crossing event.
      */
-    public RegionEvent(String regionId, String source, int boundaryEvent) {
+    public RegionEvent(@NonNull @Size(max = MAX_CHARACTER_LENGTH) String regionId,
+                       @NonNull @Size(max = MAX_CHARACTER_LENGTH) String source,
+                       @Boundary int boundaryEvent) {
+
         this.regionId = regionId;
         this.source = source;
         this.boundaryEvent = boundaryEvent;
@@ -276,6 +289,7 @@ public class RegionEvent extends Event {
 
     @Override
     public boolean isValid() {
+        //noinspection ConstantConditions
         if (regionId == null || source == null) {
             Logger.error("The region ID and source must not be null.");
             return false;
