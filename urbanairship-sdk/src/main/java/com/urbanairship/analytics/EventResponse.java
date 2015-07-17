@@ -55,7 +55,7 @@ class EventResponse {
      *
      * @return The maximum total size as an Integer
      */
-    public Integer getMaxTotalSize() {
+    int getMaxTotalSize() {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Total");
             if (headerList != null && headerList.size() > 0) {
@@ -72,7 +72,7 @@ class EventResponse {
      *
      * @return The maximum batch size as an Integer.
      */
-    public Integer getMaxBatchSize() {
+    int getMaxBatchSize() {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Batch");
             if (headerList != null && headerList.size() > 0) {
@@ -89,7 +89,7 @@ class EventResponse {
      *
      * @return The maximum wait time as an Integer.
      */
-    public Integer getMaxWait() {
+    int getMaxWait() {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Wait");
             if (headerList != null && headerList.size() > 0) {
@@ -106,7 +106,7 @@ class EventResponse {
      *
      * @return The minimum batch interval as an Integer.
      */
-    public Integer getMinBatchInterval() {
+    int getMinBatchInterval() {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Min-Batch-Interval");
             if (headerList != null && headerList.size() > 0) {

@@ -28,25 +28,31 @@ package com.urbanairship.analytics;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.util.SparseArray;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * This class monitors all activities
  */
 class ActivityMonitor {
+
+    @IntDef({MANUAL_INSTRUMENTATION, AUTO_INSTRUMENTATION})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Source {}
+
     /**
-     * An enum that specifies how the activity was started and stopped
+     * The activity was instrumented manually
      */
-    enum Source {
-        /**
-         * The activity was instrumented manually
-         */
-        MANUAL_INSTRUMENTATION,
-        /**
-         * The activity was instrumented automatically from lifecycle callbacks
-         */
-        AUTO_INSTRUMENTATION
-    }
+    static final int MANUAL_INSTRUMENTATION = 0;
+
+    /**
+     * The activity was instrumented automatically from lifecycle callbacks
+     */
+    static final int AUTO_INSTRUMENTATION = 1;
 
     private SparseArray<ActivityState> activityStates = new SparseArray<>();
     private Listener listener;
@@ -65,7 +71,7 @@ class ActivityMonitor {
      * @param currentSdkVersion The device SDK version
      * @param analyticsEnabled If analytics is enabled or not
      */
-    public ActivityMonitor(int minSdkVersion, int currentSdkVersion, boolean analyticsEnabled) {
+    ActivityMonitor(int minSdkVersion, int currentSdkVersion, boolean analyticsEnabled) {
         this.minSdkVersion = minSdkVersion;
         this.currentSdkVersion = currentSdkVersion;
         this.analyticsEnabled = analyticsEnabled;
@@ -76,7 +82,7 @@ class ActivityMonitor {
      *
      * @param listener The activity event listener.
      */
-    public void setListener(Listener listener) {
+    void setListener(Listener listener) {
         synchronized (this) {
             this.listener = listener;
         }
@@ -89,7 +95,7 @@ class ActivityMonitor {
      * @param source Specifies how the activity was instrumented
      * @param timeStamp The time the activity started in milliseconds
      */
-    public void activityStarted(Activity activity, Source source, long timeStamp) {
+    void activityStarted(@NonNull Activity activity, @Source int source, long timeStamp) {
         getActivityState(activity).setStarted(source, timeStamp);
         updateForegroundState();
     }
@@ -101,7 +107,7 @@ class ActivityMonitor {
      * @param source Specifies how the activity was instrumented
      * @param timeStamp The time the activity stopped in milliseconds
      */
-    public void activityStopped(Activity activity, Source source, long timeStamp) {
+    void activityStopped(@NonNull Activity activity, @Source int source, long timeStamp) {
         getActivityState(activity).setStopped(source, timeStamp);
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
@@ -118,7 +124,7 @@ class ActivityMonitor {
      * @param activity The specified activity
      * @return ActivityState The state of the activity
      */
-    private ActivityState getActivityState(final Activity activity) {
+    private ActivityState getActivityState(@NonNull final Activity activity) {
         ActivityState state = activityStates.get(activity.hashCode());
         if (state == null) {
             state = new ActivityState(activity.toString(), minSdkVersion, currentSdkVersion, analyticsEnabled);
@@ -173,19 +179,19 @@ class ActivityMonitor {
     /**
      * The listener for activity events.
      */
-    public static abstract class Listener {
+    static abstract class Listener {
         /**
          * Called when the app is foregrounded from an activity.
          *
          * @param timeMS The time the app is foregrounded.
          */
-        public abstract void onForeground(long timeMS);
+        abstract void onForeground(long timeMS);
 
         /**
          * Called when the app is backgrounded from an activity.
          *
          * @param timeMS The time the app is backgrounded.
          */
-        public abstract void onBackground(long timeMS);
+        abstract void onBackground(long timeMS);
     }
 }

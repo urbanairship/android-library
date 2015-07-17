@@ -25,6 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
@@ -162,7 +165,7 @@ public class CustomEvent extends Event {
          * @throws java.lang.IllegalArgumentException if the event name is null, empty, or exceeds 255
          * characters.
          */
-        public Builder(String eventName) {
+        public Builder(@NonNull @Size(max=MAX_CHARACTER_LENGTH) String eventName) {
             if (UAStringUtil.isEmpty(eventName)) {
                 throw new IllegalArgumentException("Event name must not be null or empty.");
             }
@@ -256,10 +259,12 @@ public class CustomEvent extends Event {
          * @return The custom event builder.
          * @throws java.lang.IllegalArgumentException if the transaction ID exceeds 255 characters.
          */
-        public Builder setTransactionId(String transactionId) {
+        public Builder setTransactionId(@NonNull @Size(max=MAX_CHARACTER_LENGTH) String transactionId) {
+            //noinspection ConstantConditions
             if (transactionId != null && transactionId.length() > MAX_CHARACTER_LENGTH) {
                 throw new IllegalArgumentException("Transaction ID is larger than 255 characters.");
             }
+
             this.transactionId = transactionId;
             return this;
         }
@@ -286,11 +291,13 @@ public class CustomEvent extends Event {
          * @return The custom event builder.
          * @throws java.lang.IllegalArgumentException if the interaction ID or type exceeds 255 characters.
          */
-        public Builder setInteraction(String interactionType, String interactionId) {
+        public Builder setInteraction(@NonNull @Size(max=MAX_CHARACTER_LENGTH) String interactionType, @NonNull @Size(max=MAX_CHARACTER_LENGTH) String interactionId) {
+            //noinspection ConstantConditions
             if (interactionId != null && interactionId.length() > MAX_CHARACTER_LENGTH) {
                 throw new IllegalArgumentException("Interaction ID is larger than 255 characters.");
             }
 
+            //noinspection ConstantConditions
             if (interactionType != null && interactionType.length() > MAX_CHARACTER_LENGTH) {
                 throw new IllegalArgumentException("Interaction type is larger than 255 characters.");
             }

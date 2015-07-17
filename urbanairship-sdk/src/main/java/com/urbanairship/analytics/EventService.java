@@ -30,6 +30,7 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -148,7 +149,7 @@ public class EventService extends IntentService {
      * @param intent An intent containing the event's content values to be added
      * to the database.
      */
-    private void addEventFromIntent(Intent intent) {
+    private void addEventFromIntent(@NonNull Intent intent) {
         AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
         EventDataManager dataManager = UAirship.shared().getAnalytics().getDataManager();
 

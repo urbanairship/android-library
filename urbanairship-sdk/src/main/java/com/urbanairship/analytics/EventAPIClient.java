@@ -29,6 +29,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -80,9 +81,8 @@ class EventAPIClient {
      * @param events Specified events
      * @return eventResponse or null if an error occurred
      */
-    public EventResponse sendEvents(Collection<String> events) {
-
-        if (events == null || events.size() == 0) {
+    EventResponse sendEvents(@NonNull Collection<String> events) {
+        if (events.size() == 0) {
             Logger.verbose("EventAPIClient - No events to send.");
             return null;
         }

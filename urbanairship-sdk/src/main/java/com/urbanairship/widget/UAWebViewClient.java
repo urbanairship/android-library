@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
@@ -268,7 +269,7 @@ public class UAWebViewClient extends WebViewClient {
                                        .setSituation(Situation.WEB_VIEW_INVOCATION)
                                        .run(new ActionCompletionCallback() {
                                            @Override
-                                           public void onFinish(ActionArguments arguments, ActionResult result) {
+                                           public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
                                                synchronized (this) {
                                                    if (actionCompletionCallback != null) {
                                                        actionCompletionCallback.onFinish(arguments, result);
@@ -313,7 +314,7 @@ public class UAWebViewClient extends WebViewClient {
                                .setSituation(Situation.WEB_VIEW_INVOCATION)
                                .run(new ActionCompletionCallback() {
                                    @Override
-                                   public void onFinish(ActionArguments arguments, ActionResult result) {
+                                   public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
 
                                        String errorMessage = null;
                                        switch (result.getStatus()) {

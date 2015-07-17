@@ -33,6 +33,8 @@ import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -139,12 +141,12 @@ public class Analytics {
      *
      * @param activity The activity that is currently starting.
      */
-    public static void activityStarted(final Activity activity) {
+    public static void activityStarted(@NonNull final Activity activity) {
         final long timeMS = System.currentTimeMillis();
         UAirship.shared(new UAirship.OnReadyCallback() {
             @Override
             public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.Source.MANUAL_INSTRUMENTATION, timeMS);
+                airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, timeMS);
             }
         });
     }
@@ -156,12 +158,12 @@ public class Analytics {
      *
      * @param activity The activity that is currently stopping.
      */
-    public static void activityStopped(final Activity activity) {
+    public static void activityStopped(@NonNull final Activity activity) {
         final long timeMS = System.currentTimeMillis();
         UAirship.shared(new UAirship.OnReadyCallback() {
             @Override
             public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.Source.MANUAL_INSTRUMENTATION, timeMS);
+                airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, timeMS);
             }
         });
     }
@@ -172,10 +174,9 @@ public class Analytics {
      * @param activity The activity that stopped.
      * @param source The instrumentation source.
      * @param timeMS The time when the activity stopped.
-     * @hide
      */
-    private void reportActivityStopped(Activity activity, ActivityMonitor.Source source, long timeMS) {
-        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
+    private void reportActivityStopped(@NonNull Activity activity, @ActivityMonitor.Source int source, long timeMS) {
+        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.MANUAL_INSTRUMENTATION == source) {
             Logger.warn("activityStopped call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
         }
 
@@ -188,10 +189,9 @@ public class Analytics {
      * @param activity The activity that started.
      * @param source The instrumentation source
      * @param timeMS The time when the activity started.
-     * @hide
      */
-    private void reportActivityStarted(Activity activity, ActivityMonitor.Source source, long timeMS) {
-        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.Source.MANUAL_INSTRUMENTATION == source) {
+    private void reportActivityStarted(@NonNull Activity activity, @ActivityMonitor.Source int source, long timeMS) {
+        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.MANUAL_INSTRUMENTATION == source) {
             Logger.warn("activityStarted call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
         }
 
@@ -249,7 +249,7 @@ public class Analytics {
      *
      * @param location The location to record.
      */
-    public void recordLocation(Location location) {
+    public void recordLocation(@NonNull Location location) {
         recordLocation(location, null, LocationEvent.UpdateType.SINGLE);
     }
 
@@ -260,7 +260,7 @@ public class Analytics {
      * @param options The location request options.
      * @param updateType The update type.
      */
-    public void recordLocation(Location location, LocationRequestOptions options, LocationEvent.UpdateType updateType) {
+    public void recordLocation(@NonNull Location location, @Nullable LocationRequestOptions options, LocationEvent.UpdateType updateType) {
         int requestedAccuracy;
         int distance;
 
@@ -336,7 +336,7 @@ public class Analytics {
      * @hide
      */
     @TargetApi(14)
-    public static void registerLifeCycleCallbacks(Application application) {
+    public static void registerLifeCycleCallbacks(@NonNull Application application) {
         if (lifeCycleCallbacks == null) {
             lifeCycleCallbacks = new LifeCycleCallbacks(application) {
                 @Override
@@ -345,7 +345,7 @@ public class Analytics {
                     UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.Source.AUTO_INSTRUMENTATION, timeStamp);
+                            airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, timeStamp);
                         }
                     });
                 }
@@ -356,7 +356,7 @@ public class Analytics {
                     UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.Source.AUTO_INSTRUMENTATION, timeStamp);
+                            airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, timeStamp);
                         }
                     });
                 }

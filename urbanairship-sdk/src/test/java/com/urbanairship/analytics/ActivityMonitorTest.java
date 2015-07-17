@@ -3,7 +3,6 @@ package com.urbanairship.analytics;
 import android.app.Activity;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.analytics.ActivityMonitor.Source;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +62,7 @@ public class ActivityMonitorTest extends BaseTestCase {
     public void testAddActivityManualInstrumentation() throws Exception {
         // Pre-ICS - Manual instrumentation calls should cause the app to go into foreground
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
         assertEquals(foregroundTimeMS, 100);
         assertTrue(isForeground);
 
@@ -72,7 +71,7 @@ public class ActivityMonitorTest extends BaseTestCase {
         setUp();
 
         // ICS+ - Manual instrumentation calls are ignored for foreground state changes
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         assertFalse(isForeground);
     }
 
@@ -85,7 +84,7 @@ public class ActivityMonitorTest extends BaseTestCase {
     public void testAddActivityAutoInstrumentation() throws Exception {
         // Pre-ICS - Automatic instrumentation calls are ignored for foreground state changes
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, Source.AUTO_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
         assertFalse(isForeground);
 
 
@@ -94,7 +93,7 @@ public class ActivityMonitorTest extends BaseTestCase {
         setUp();
 
         // ICS+ - Automatic instrumentation calls should cause the app to go into foreground
-        activityMonitor.activityStarted(activity, Source.AUTO_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
         assertTrue(isForeground);
         assertEquals(foregroundTimeMS, 200);
     }
@@ -108,9 +107,9 @@ public class ActivityMonitorTest extends BaseTestCase {
     public void testRemoveActivityManualInstrumentation() throws Exception {
         // Pre-ICS - Manual instrumentation calls should cause the app to go into background
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
 
-        activityMonitor.activityStopped(activity, Source.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         activityMonitor.updateForegroundState();
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 200);
@@ -121,9 +120,9 @@ public class ActivityMonitorTest extends BaseTestCase {
         setUp();
 
         // ICS+ - Manual instrumentation calls are ignored for background state changes
-        activityMonitor.activityStarted(activity, Source.AUTO_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
 
-        activityMonitor.activityStopped(activity, Source.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         activityMonitor.updateForegroundState();
         assertTrue(isForeground);
         assertEquals(foregroundTimeMS, 100);
@@ -139,9 +138,9 @@ public class ActivityMonitorTest extends BaseTestCase {
     public void testRemoveActivityAutoInstrumentation() throws Exception {
         // Pre-ICS - Automatic instrumentation calls are ignored for foreground state changes
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
 
-        activityMonitor.activityStopped(activity, Source.AUTO_INSTRUMENTATION, 200);
+        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
         activityMonitor.updateForegroundState();
         assertTrue(isForeground);
         assertEquals(foregroundTimeMS, 100);
@@ -152,9 +151,9 @@ public class ActivityMonitorTest extends BaseTestCase {
         setUp();
 
         // ICS+ - Automatic instrumentation calls should cause the app to go into background
-        activityMonitor.activityStopped(activity, Source.AUTO_INSTRUMENTATION, 100);
+        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
 
-        activityMonitor.activityStopped(activity, Source.AUTO_INSTRUMENTATION, 200);
+        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
         activityMonitor.updateForegroundState();
         assertFalse(isForeground);
     }
@@ -165,10 +164,10 @@ public class ActivityMonitorTest extends BaseTestCase {
     @Test
     public void testRemoveAfterAddMultipleActivity() {
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 100);
-        activityMonitor.activityStarted(activity, Source.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
 
-        activityMonitor.activityStopped(activity, Source.MANUAL_INSTRUMENTATION, 300);
+        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 300);
         activityMonitor.updateForegroundState();
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 300);
@@ -182,16 +181,16 @@ public class ActivityMonitorTest extends BaseTestCase {
         Activity activityOne = new Activity();
         Activity activityTwo = new Activity();
 
-        activityMonitor.activityStarted(activityOne, Source.MANUAL_INSTRUMENTATION, 100);
-        activityMonitor.activityStarted(activityTwo, Source.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activityOne, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activityTwo, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         assertTrue(isForeground);
         assertEquals(foregroundTimeMS, 100);
 
-        activityMonitor.activityStopped(activityOne, Source.MANUAL_INSTRUMENTATION, 300);
+        activityMonitor.activityStopped(activityOne, ActivityMonitor.MANUAL_INSTRUMENTATION, 300);
         activityMonitor.updateForegroundState();
         assertTrue(isForeground);
 
-        activityMonitor.activityStopped(activityTwo, Source.MANUAL_INSTRUMENTATION, 400);
+        activityMonitor.activityStopped(activityTwo, ActivityMonitor.MANUAL_INSTRUMENTATION, 400);
         activityMonitor.updateForegroundState();
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 400);
