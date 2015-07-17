@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push.iam;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Event;
@@ -51,7 +53,7 @@ public class DisplayEvent extends Event {
      *
      * @param message The in-app message.
      */
-    public DisplayEvent(InAppMessage message) {
+    public DisplayEvent(@NonNull InAppMessage message) {
         id = message.getId();
     }
 

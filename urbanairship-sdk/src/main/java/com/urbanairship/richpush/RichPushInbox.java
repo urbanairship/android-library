@@ -29,6 +29,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 
@@ -88,7 +90,7 @@ public class RichPushInbox {
      * A listener interface for receiving event callbacks related to inbox database updates.
      */
     public interface Listener {
-        public void onUpdateInbox();
+        void onUpdateInbox();
     }
 
     /**
@@ -96,7 +98,7 @@ public class RichPushInbox {
      *
      * @param listener An object implementing the {@link RichPushInbox.Listener} interface.
      */
-    public void addListener(Listener listener) {
+    public void addListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.add(listener);
         }
@@ -107,7 +109,7 @@ public class RichPushInbox {
      *
      * @param listener An object implementing the {@link RichPushInbox.Listener} interface.
      */
-    public void removeListener(Listener listener) {
+    public void removeListener(@NonNull Listener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
@@ -127,6 +129,7 @@ public class RichPushInbox {
      *
      * @return A set of message ids.
      */
+    @NonNull
     public Set<String> getMessageIds() {
         return messageCache.getMessageIds();
     }
@@ -154,6 +157,7 @@ public class RichPushInbox {
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
+    @NonNull
     public List<RichPushMessage> getMessages() {
         List<RichPushMessage> messages = messageCache.getMessages();
         Collections.sort(messages, richPushMessageComparator);
@@ -165,6 +169,7 @@ public class RichPushInbox {
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
+    @NonNull
     public List<RichPushMessage> getUnreadMessages() {
         List<RichPushMessage> messages = messageCache.getUnreadMessages();
         Collections.sort(messages, richPushMessageComparator);
@@ -176,6 +181,7 @@ public class RichPushInbox {
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
+    @NonNull
     public List<RichPushMessage> getReadMessages() {
         List<RichPushMessage> messages = messageCache.getReadMessages();
         Collections.sort(messages, richPushMessageComparator);
@@ -188,6 +194,7 @@ public class RichPushInbox {
      * @param messageId The message ID of the desired {@link RichPushMessage}.
      * @return A {@link RichPushMessage} or <code>null</code> if one does not exist.
      */
+    @Nullable
     public RichPushMessage getMessage(String messageId) {
         if (messageId == null) {
             return null;
@@ -202,7 +209,7 @@ public class RichPushInbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesRead(final Set<String> messageIds) {
+    public void markMessagesRead(@NonNull final Set<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -228,7 +235,7 @@ public class RichPushInbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesUnread(final Set<String> messageIds) {
+    public void markMessagesUnread(@NonNull final Set<String> messageIds) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -257,7 +264,7 @@ public class RichPushInbox {
      *
      * @param messageIds A set of message ids.
      */
-    public void deleteMessages(final Set<String> messageIds) {
+    public void deleteMessages(@NonNull final Set<String> messageIds) {
         synchronized (pendingDeletionMessageIds) {
             pendingDeletionMessageIds.addAll(messageIds);
         }
@@ -351,7 +358,7 @@ public class RichPushInbox {
      * @param cursor Cursor pointing to a rich push message.
      * @return RichPushMessage on success, or <code>null</code> if anything went wrong.
      */
-    private RichPushMessage messageFromCursor(Cursor cursor) {
+    private RichPushMessage messageFromCursor(@NonNull Cursor cursor) {
         try {
             return RichPushMessage.messageFromCursor(cursor);
         } catch (JSONException e) {

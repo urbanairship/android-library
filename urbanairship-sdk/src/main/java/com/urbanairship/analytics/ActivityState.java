@@ -1,33 +1,40 @@
 package com.urbanairship.analytics;
 
+import android.support.annotation.IntDef;
+
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.ActivityMonitor.Source;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * This class keeps track of an activity's foreground state
  */
 class ActivityState {
+
+    @IntDef({STARTED, STOPPED, NONE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface State {}
+
     /**
-     * An enum representing the three possible states for an activity
+     * The activity has started.
      */
-    private enum State {
-        /**
-         * The activity has started.
-         */
-        STARTED,
-        /**
-         * The activity has stopped.
-         */
-        STOPPED,
-        /**
-         * The activity's initial state.
-         */
-        NONE
-    }
+    private static final int STARTED = 0;
+
+    /**
+     * The activity has stopped.
+     */
+    private static final int STOPPED = 1;
+
+    /**
+     * The activity's initial state.
+     */
+    private static final int NONE = 2;
 
     final private String activityName;
-    private State autoInstrumentedState = State.NONE;
-    private State manualInstrumentedState = State.NONE;
+    private @State int autoInstrumentedState = NONE;
+    private @State int manualInstrumentedState = NONE;
     private int minSdkVersion;
     private int currentSdkVersion;
     private boolean analyticsEnabled;
@@ -55,10 +62,10 @@ class ActivityState {
      */
     boolean isForeground() {
         if (currentSdkVersion >= 14) {
-            return autoInstrumentedState == State.STARTED;
+            return autoInstrumentedState == STARTED;
         }
 
-        return manualInstrumentedState == State.STARTED;
+        return manualInstrumentedState == STARTED;
     }
 
     /**
@@ -76,14 +83,14 @@ class ActivityState {
      * @param source Specifies how the activity was started manually or automatically
      * @param startTimeMS The timestamp in milliseconds when the activity started.
      */
-    void setStarted(Source source, long startTimeMS) {
-        if (source == Source.MANUAL_INSTRUMENTATION) {
-            if (manualInstrumentedState == State.STARTED && analyticsEnabled) {
+    void setStarted(@Source int source, long startTimeMS) {
+        if (source == ActivityMonitor.MANUAL_INSTRUMENTATION) {
+            if (manualInstrumentedState == STARTED && analyticsEnabled) {
                 Logger.warn("Activity " + activityName + " already added without being removed first. Call Analytics.activityStopped(this) in every activity's onStop() method.");
             }
-            manualInstrumentedState = State.STARTED;
+            manualInstrumentedState = STARTED;
         } else {
-            autoInstrumentedState = State.STARTED;
+            autoInstrumentedState = STARTED;
         }
 
         this.lastModifiedTimeMS = startTimeMS;
@@ -95,19 +102,19 @@ class ActivityState {
      * @param source Specifies how the activity was stopped manually or automatically
      * @param stopTimeMS The timestamp in milliseconds when the activity stopped.
      */
-    void setStopped(Source source, long stopTimeMS) {
-        if (source == Source.MANUAL_INSTRUMENTATION) {
-            if (manualInstrumentedState != State.STARTED && analyticsEnabled) {
+    void setStopped(@Source int source, long stopTimeMS) {
+        if (source == ActivityMonitor.MANUAL_INSTRUMENTATION) {
+            if (manualInstrumentedState != STARTED && analyticsEnabled) {
                 Logger.warn("Activity " + activityName + " removed without being manually added first. Call Analytics.activityStarted(this) in every activity's onStart() method.");
-            } else if (currentSdkVersion >= 14 && autoInstrumentedState == State.NONE && analyticsEnabled) {
+            } else if (currentSdkVersion >= 14 && autoInstrumentedState == NONE && analyticsEnabled) {
                 Logger.warn("Activity " + activityName + " removed in Analytics not during the activity's onStop() method.");
             }
-            manualInstrumentedState = State.STOPPED;
+            manualInstrumentedState = STOPPED;
         } else {
-            if (minSdkVersion < 14 && manualInstrumentedState == State.NONE && analyticsEnabled) {
+            if (minSdkVersion < 14 && manualInstrumentedState == NONE && analyticsEnabled) {
                 Logger.warn("Activity " + activityName + " was not manually added during onStart(). Call Analytics.activityStarted(this) in every activity's onStart() method.");
             }
-            autoInstrumentedState = State.STOPPED;
+            autoInstrumentedState = STOPPED;
         }
 
         this.lastModifiedTimeMS = stopTimeMS;

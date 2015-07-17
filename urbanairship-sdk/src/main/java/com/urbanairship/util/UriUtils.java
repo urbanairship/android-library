@@ -27,6 +27,7 @@ package com.urbanairship.util;
 
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class UriUtils {
      * @param uri The uri to parse
      * @return A map of query parameter name to values
      */
-    public static Map<String, List<String>> getQueryParameters(Uri uri) {
+    public static Map<String, List<String>> getQueryParameters(@NonNull Uri uri) {
         Map<String, List<String>> parameters = new HashMap<>();
 
         String query = uri.getEncodedQuery();
@@ -57,10 +58,6 @@ public class UriUtils {
 
         for (String param : query.split("&")) {
             String[] keyValuePair = param.split("=");
-
-            if (keyValuePair == null) {
-                continue;
-            }
 
             String name = keyValuePair.length >= 1 ? Uri.decode(keyValuePair[0]) : null;
             String value = keyValuePair.length >= 2 ? Uri.decode(keyValuePair[1]) : null;

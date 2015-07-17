@@ -35,5 +35,5 @@ public interface JsonSerializable {
      *
      * @return The object as a JsonValue.
      */
-    public JsonValue toJsonValue();
+    JsonValue toJsonValue();
 }

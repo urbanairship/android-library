@@ -28,6 +28,7 @@ package com.urbanairship.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 
@@ -55,7 +56,7 @@ public class BitmapUtils {
      * @return The scaled bitmap.
      * @throws IOException
      */
-    public static Bitmap fetchScaledBitmap(Context context, URL url, int reqWidth, int reqHeight) throws IOException {
+    public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
         Logger.verbose("BitmapUtils - Fetching image from: " + url);
 
         File outputFile = File.createTempFile("ua_", ".temp", context.getCacheDir());
@@ -128,7 +129,7 @@ public class BitmapUtils {
      * @return <code>true</code> if file was downloaded, <code>false</code> otherwise.
      * @throws IOException
      */
-    private static boolean downloadFile(URL url, File file) throws IOException {
+    private static boolean downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
         Logger.verbose("Downloading file from: " + url + " to: " + file.getAbsolutePath());
 
         InputStream inputStream = null;

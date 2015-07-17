@@ -26,9 +26,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.preference;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.Preference;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -157,6 +159,7 @@ public class UAPreferenceAdapter {
                 airship.getLocationManager().setBackgroundLocationAllowed((Boolean) value);
                 break;
             case LOCATION_UPDATES_ENABLED:
+                //noinspection ResourceType - For missing location permission
                 airship.getLocationManager().setLocationUpdatesEnabled((Boolean) value);
                 break;
             case USER_NOTIFICATIONS_ENABLED:
@@ -221,7 +224,7 @@ public class UAPreferenceAdapter {
      *
      * @param preference UAPreference to track
      */
-    private void trackPreference(final UAPreference preference) {
+    private void trackPreference(@NonNull final UAPreference preference) {
 
         PushManager pushManager = UAirship.shared().getPushManager();
         final UAPreference.PreferenceType preferenceType = preference.getPreferenceType();
@@ -244,7 +247,7 @@ public class UAPreferenceAdapter {
             //If we should have a value, try tracking the preference in a second
             if (pushManager.isPushEnabled() && channelIdRetryCount < CHANNEL_ID_MAX_RETRIES) {
                 channelIdRetryCount++;
-                Handler handler = new Handler();
+                Handler handler = new Handler(Looper.getMainLooper());
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {

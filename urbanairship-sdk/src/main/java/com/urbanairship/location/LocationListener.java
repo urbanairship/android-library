@@ -36,5 +36,5 @@ public interface LocationListener {
      *
      * @param location The new location.
      */
-    public void onLocationChanged(Location location);
+    void onLocationChanged(Location location);
 }

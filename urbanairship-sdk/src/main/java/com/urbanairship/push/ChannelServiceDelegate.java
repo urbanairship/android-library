@@ -27,6 +27,8 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.AirshipConfigOptions;
@@ -140,7 +142,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param intent The push registration update intent.
      */
-    private void onUpdatePushRegistration(Intent intent) {
+    private void onUpdatePushRegistration(@NonNull Intent intent) {
         isPushRegistering = false;
 
         switch (airship.getPlatformType()) {
@@ -196,7 +198,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param intent The received intent.
      */
-    private void onAdmRegistrationFinished(Intent intent) {
+    private void onAdmRegistrationFinished(@NonNull Intent intent) {
         if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !ADMUtils.isADMAvailable()) {
             Logger.error("Received intent from invalid transport acting as ADM.");
             return;
@@ -229,7 +231,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     /**
      * Updates channel registration.
      */
-    private void onUpdateChannelRegistration(Intent intent) {
+    private void onUpdateChannelRegistration(@NonNull Intent intent) {
         if (isPushRegistering) {
             Logger.verbose("ChannelServiceDelegate - Push registration in progress, skipping registration update.");
             return;
@@ -255,7 +257,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param channelLocation Channel location.
      * @param payload The ChannelRegistrationPayload payload.
      */
-    private void updateChannel(Intent intent, URL channelLocation, ChannelRegistrationPayload payload) {
+    private void updateChannel(@NonNull Intent intent, @NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("ChannelServiceDelegate - Channel already up to date.");
             return;
@@ -305,7 +307,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param intent The create channel intent.
      * @param payload The ChannelRegistrationPayload payload.
      */
-    private void createChannel(Intent intent, ChannelRegistrationPayload payload) {
+    private void createChannel(@NonNull Intent intent, @NonNull ChannelRegistrationPayload payload) {
         ChannelResponse response = channelClient.createChannelWithPayload(payload);
 
         // 5xx
@@ -358,7 +360,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param payload The channel registration payload
      * @return <code>True</code> if registration is required, <code>false</code> otherwise
      */
-    private boolean shouldUpdateRegistration(ChannelRegistrationPayload payload) {
+    private boolean shouldUpdateRegistration(@NonNull ChannelRegistrationPayload payload) {
         // check time and payload
         ChannelRegistrationPayload lastSuccessPayload = getLastRegistrationPayload();
         long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
@@ -371,6 +373,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return The channel location URL
      */
+    @Nullable
     private URL getChannelLocationURL() {
         String channelLocationString = pushManager.getChannelLocation();
         if (!UAStringUtil.isEmpty(channelLocationString)) {
@@ -476,6 +479,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return a ChannelRegistrationPayload
      */
+    @Nullable
     private ChannelRegistrationPayload getLastRegistrationPayload() {
         String payloadJSON = getDataStore().getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
 

@@ -29,6 +29,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.analytics.Analytics;
@@ -46,7 +47,7 @@ public class ApplicationMetrics {
         registerBroadcastReceivers(context);
     }
 
-    private void registerBroadcastReceivers(Context context) {
+    private void registerBroadcastReceivers(@NonNull Context context) {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
 

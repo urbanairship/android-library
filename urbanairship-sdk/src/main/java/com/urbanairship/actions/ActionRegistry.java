@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+
 import com.android.internal.util.Predicate;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -61,13 +63,14 @@ public final class ActionRegistry {
      * @param names The names the action will be registered under
      * @return The entry, or null if the action was unable to be registered
      */
-    public Entry registerAction(Action action, String... names) {
+    public Entry registerAction(@NonNull Action action, @NonNull String... names) {
+        //noinspection ConstantConditions
         if (action == null) {
             Logger.error("Unable to register null action");
             return null;
         }
 
-
+        //noinspection ConstantConditions
         if (names == null || names.length == 0) {
             Logger.error("A name is required to register an action");
             return null;
@@ -111,7 +114,7 @@ public final class ActionRegistry {
      * @return An Entry for the name, or null if no entry exists for
      * the given name
      */
-    public Entry getEntry(String name) {
+    public Entry getEntry(@NonNull String name) {
         if (UAStringUtil.isEmpty(name)) {
             return null;
         }
@@ -126,6 +129,7 @@ public final class ActionRegistry {
      *
      * @return Set of registered entries
      */
+    @NonNull
     public Set<Entry> getEntries() {
         synchronized (actionMap) {
             return new HashSet<>(actionMap.values());
@@ -137,7 +141,7 @@ public final class ActionRegistry {
      *
      * @param name The name of the action.
      */
-    public void unregisterAction(String name) {
+    public void unregisterAction(@NonNull String name) {
         if (UAStringUtil.isEmpty(name)) {
             return;
         }
@@ -198,7 +202,6 @@ public final class ActionRegistry {
 
         addTagsEntry.setPredicate(rejectPushReceivedPredicate);
 
-
         Entry removeTagsEntry = registerAction(new RemoveTagsAction(),
                 RemoveTagsAction.DEFAULT_REGISTRY_NAME,
                 RemoveTagsAction.DEFAULT_REGISTRY_SHORT_NAME);
@@ -257,6 +260,7 @@ public final class ActionRegistry {
          * @return The action defined for the situation override, or the
          * default action
          */
+        @NonNull
         public Action getActionForSituation(Situation situation) {
             if (situation == null) {
                 return defaultAction;
@@ -287,12 +291,12 @@ public final class ActionRegistry {
             this.predicate = predicate;
         }
 
-
         /**
          * Gets the default action
          *
          * @return The default action
          */
+        @NonNull
         public Action getDefaultAction() {
             return defaultAction;
         }
@@ -308,6 +312,7 @@ public final class ActionRegistry {
             if (action == null) {
                 return;
             }
+
             this.defaultAction = action;
         }
 
@@ -318,7 +323,8 @@ public final class ActionRegistry {
          * @param action Action for the situation
          * @param situation The situation to override
          */
-        public void addSituationOverride(Action action, Situation situation) {
+        public void addSituationOverride(@NonNull Action action, @NonNull Situation situation) {
+            //noinspection ConstantConditions
             if (situation == null || action == null) {
                 return;
             }
@@ -331,6 +337,7 @@ public final class ActionRegistry {
          *
          * @return A list of names
          */
+        @NonNull
         public List<String> getNames() {
             synchronized (names) {
                 return new ArrayList<>(names);
@@ -342,7 +349,7 @@ public final class ActionRegistry {
          *
          * @param name Name to remove
          */
-        private void removeName(String name) {
+        private void removeName(@NonNull String name) {
             synchronized (names) {
                 names.remove(name);
             }
@@ -353,7 +360,7 @@ public final class ActionRegistry {
          *
          * @param name Name to add
          */
-        private void addName(String name) {
+        private void addName(@NonNull String name) {
             synchronized (names) {
                 names.add(name);
             }

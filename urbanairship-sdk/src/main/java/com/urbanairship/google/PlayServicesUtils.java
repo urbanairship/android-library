@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -71,7 +72,7 @@ public class PlayServicesUtils {
      *
      * @param context The application context.
      */
-    public static void handleAnyPlayServicesError(Context context) {
+    public static void handleAnyPlayServicesError(@NonNull Context context) {
         if (!isGooglePlayServicesDependencyAvailable()) {
             return;
         }
@@ -115,7 +116,7 @@ public class PlayServicesUtils {
      * or the errorCode returned by
      * {@link com.google.android.gms.common.GooglePlayServicesUtil#isGooglePlayServicesAvailable(android.content.Context)}
      */
-    public static int isGooglePlayServicesAvailable(Context context) {
+    public static int isGooglePlayServicesAvailable(@NonNull Context context) {
         if (isGooglePlayServicesDependencyAvailable()) {
             return GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(context);
         } else {

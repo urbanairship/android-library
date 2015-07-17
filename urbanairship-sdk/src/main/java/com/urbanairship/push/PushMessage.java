@@ -3,6 +3,8 @@ package com.urbanairship.push;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
@@ -210,6 +212,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The canonical push ID
      */
+    @Nullable
     public String getCanonicalPushId() {
         return pushBundle.getString(EXTRA_PUSH_ID);
     }
@@ -219,6 +222,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The rich push message ID, or null if its unavailable.
      */
+    @Nullable
     public String getRichPushMessageId() {
         return pushBundle.getString(RichPushManager.RICH_PUSH_KEY);
     }
@@ -228,6 +232,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The notification alert.
      */
+    @Nullable
     public String getAlert() {
         return pushBundle.getString(EXTRA_ALERT);
     }
@@ -237,6 +242,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The push send Id.
      */
+    @Nullable
     public String getSendId() {
         return pushBundle.getString(EXTRA_SEND_ID);
     }
@@ -246,6 +252,7 @@ public class PushMessage implements Parcelable {
      *
      * @return A bundle of all the push extras
      */
+    @NonNull
     public Bundle getPushBundle() {
         return new Bundle(pushBundle);
     }
@@ -266,6 +273,7 @@ public class PushMessage implements Parcelable {
      *
      * @return A map of action name to action value.
      */
+    @NonNull
     public Map<String, ActionValue> getActions() {
         String actionsPayload = pushBundle.getString(EXTRA_ACTIONS);
         Map<String, ActionValue> actions = new HashMap<>();
@@ -296,6 +304,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The notification actions payload.
      */
+    @Nullable
     public String getInteractiveActionsPayload() {
         return pushBundle.getString(EXTRA_INTERACTIVE_ACTIONS);
     }
@@ -305,6 +314,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The interactive notification type.
      */
+    @Nullable
     public String getInteractiveNotificationType() {
         return pushBundle.getString(EXTRA_INTERACTIVE_TYPE);
     }
@@ -314,6 +324,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The title of the notification.
      */
+    @Nullable
     public String getTitle() {
         return pushBundle.getString(EXTRA_TITLE);
     }
@@ -323,6 +334,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The summary of the notification.
      */
+    @Nullable
     public String getSummary() {
         return pushBundle.getString(EXTRA_SUMMARY);
     }
@@ -332,6 +344,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The wearable payload.
      */
+    @Nullable
     public String getWearablePayload() {
         return pushBundle.getString(EXTRA_WEARABLE);
     }
@@ -341,6 +354,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The style payload of the notification.
      */
+    @Nullable
     public String getStylePayload() {
         return pushBundle.getString(EXTRA_STYLE);
     }
@@ -395,6 +409,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The public notification payload.
      */
+    @Nullable
     public String getPublicNotificationPayload() {
         return pushBundle.getString(EXTRA_PUBLIC_NOTIFICATION);
     }
@@ -404,6 +419,7 @@ public class PushMessage implements Parcelable {
      *
      * @return The category of the notification.
      */
+    @Nullable
     public String getCategory() {
         return pushBundle.getString(EXTRA_CATEGORY);
     }
@@ -413,10 +429,15 @@ public class PushMessage implements Parcelable {
      *
      * @return The in-app message.
      */
+    @Nullable
     public InAppMessage getInAppMessage() {
         if (pushBundle.containsKey(EXTRA_IN_APP_MESSAGE)) {
             try {
                 InAppMessage rawMessage = InAppMessage.parseJson(pushBundle.getString(EXTRA_IN_APP_MESSAGE));
+                if (rawMessage == null) {
+                    return null;
+                }
+
                 InAppMessage.Builder builder = new InAppMessage.Builder(rawMessage)
                         .setId(getSendId());
 

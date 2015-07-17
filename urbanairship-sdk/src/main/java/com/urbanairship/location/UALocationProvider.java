@@ -28,6 +28,8 @@ package com.urbanairship.location;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -52,7 +54,7 @@ class UALocationProvider {
      *
      * @param context The application context.
      */
-    public UALocationProvider(Context context) {
+    public UALocationProvider(@NonNull Context context) {
         // This is to prevent a log message saying Google Play Services is unavailable on amazon devices.
         if (PlayServicesUtils.isGooglePlayStoreAvailable() && PlayServicesUtils.isFusedLocationDependencyAvailable()) {
             adapters.add(new FusedLocationAdapter(context));
@@ -70,7 +72,7 @@ class UALocationProvider {
      *
      * @param intent The intent to cancel.
      */
-    public void cancelRequests(PendingIntent intent) {
+    public void cancelRequests(@NonNull PendingIntent intent) {
         Logger.verbose("UALocationProvider - Canceling location requests.");
 
         /*
@@ -102,7 +104,7 @@ class UALocationProvider {
      * @param intent A pending intent to be sent for each location update.
      * @throws IllegalStateException if the provider is not connected.
      */
-    public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
         if (!isConnected) {
             throw new IllegalStateException("Provider must be connected before making requests.");
         }
@@ -127,7 +129,8 @@ class UALocationProvider {
      * @return A pending location result.
      * @throws IllegalStateException if the provider is not connected.
      */
-    public PendingResult<Location> requestSingleLocation(LocationRequestOptions options) {
+    @Nullable
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options) {
         if (!isConnected) {
             throw new IllegalStateException("Provider must be connected before making requests.");
         }

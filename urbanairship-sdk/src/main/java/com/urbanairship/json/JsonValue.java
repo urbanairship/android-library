@@ -27,6 +27,8 @@ package com.urbanairship.json;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
@@ -417,8 +419,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as a string.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(String value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -427,8 +430,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as a char.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(char value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -437,8 +441,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as an int.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(int value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -447,8 +452,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as a long.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(long value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -458,8 +464,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as a boolean.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(boolean value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -468,8 +475,9 @@ public class JsonValue implements Parcelable {
      * @param value The value as a JsonSerializable object.
      * @return The JsonValue object.
      */
+    @NonNull
     public static JsonValue wrap(JsonSerializable value) {
-        return JsonValue.wrap(value, null);
+        return JsonValue.wrap(value, JsonValue.NULL);
     }
 
     /**
@@ -505,7 +513,8 @@ public class JsonValue implements Parcelable {
      * @return The object wrapped in a JsonValue.
      * @throws JsonException If the object is not a supported type or contains an unsupported type.
      */
-    public static JsonValue wrap(Object object) throws JsonException {
+    @NonNull
+    public static JsonValue wrap(@Nullable Object object) throws JsonException {
         if (object == null || object == JSONObject.NULL) {
             return NULL;
         }
@@ -586,7 +595,8 @@ public class JsonValue implements Parcelable {
      * @return The wrapped array.
      * @throws JsonException If the array contains an unwrappable object.
      */
-    private static JsonValue wrapArray(Object array) throws JsonException {
+    @NonNull
+    private static JsonValue wrapArray(@NonNull Object array) throws JsonException {
         final int length = Array.getLength(array);
         List<JsonValue> list = new ArrayList<>(length);
 
@@ -608,7 +618,8 @@ public class JsonValue implements Parcelable {
      * @return The wrapped array.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    private static JsonValue wrapCollection(Collection collection) throws JsonException {
+    @NonNull
+    private static JsonValue wrapCollection(@NonNull Collection collection) throws JsonException {
         List<JsonValue> list = new ArrayList<>();
 
         for (Object obj : collection) {
@@ -627,7 +638,8 @@ public class JsonValue implements Parcelable {
      * @return The wrapped map.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    private static JsonValue wrapMap(Map<?, ?> map) throws JsonException {
+    @NonNull
+    private static JsonValue wrapMap(@NonNull Map<?, ?> map) throws JsonException {
         Map<String, JsonValue> jsonValueMap = new HashMap<>();
 
         for (Map.Entry entry : map.entrySet()) {
@@ -650,7 +662,8 @@ public class JsonValue implements Parcelable {
      * @return The wrapped JSONArray.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    private static JsonValue wrapJSONArray(JSONArray jsonArray) throws JsonException {
+    @NonNull
+    private static JsonValue wrapJSONArray(@NonNull JSONArray jsonArray) throws JsonException {
         List<JsonValue> list = new ArrayList<>(jsonArray.length());
 
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -670,7 +683,8 @@ public class JsonValue implements Parcelable {
      * @return The wrapped JSONObject.
      * @throws JsonException If the collection contains an unwrappable object.
      */
-    private static JsonValue wrapJSONObject(JSONObject jsonObject) throws JsonException {
+    @NonNull
+    private static JsonValue wrapJSONObject(@NonNull JSONObject jsonObject) throws JsonException {
         Map<String, JsonValue> jsonValueMap = new HashMap<>();
 
         Iterator iterator = jsonObject.keys();

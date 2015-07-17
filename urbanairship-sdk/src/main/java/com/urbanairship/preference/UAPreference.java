@@ -34,7 +34,7 @@ public interface UAPreference {
     /**
      * An enum representing the preference type.
      */
-    public enum PreferenceType {
+    enum PreferenceType {
         /**
          * User notifications enabled preference
          */
@@ -96,12 +96,12 @@ public interface UAPreference {
      *
      * @return PreferenceType type of UAPreference.
      */
-    public PreferenceType getPreferenceType();
+    PreferenceType getPreferenceType();
 
     /**
      * Sets the current value of the preference.
      *
      * @param value The value of the preference.
      */
-    public void setValue(Object value);
+    void setValue(Object value);
 }

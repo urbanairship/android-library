@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
 import com.urbanairship.util.UAStringUtil;
@@ -42,16 +43,6 @@ import java.util.List;
  * Manages access to Urban Airship Preferences and Rich Push Message data.
  */
 public final class UrbanAirshipProvider extends ContentProvider {
-
-    /**
-     * The key that pertains to the String array of keys in a broadcast change notification.
-     */
-    public static final String DB_CHANGE_KEYS_KEY = "com.urbanairship.DB_CHANGE_KEYS";
-
-    /**
-     * The key that pertains to the action that caused the DB_CHANGE notification.
-     */
-    public static final String DB_CHANGE_ACTION_KEY = "com.urbanairship.DB_CHANGE_ACTION";
 
     /**
      * The key that defines the keys delimiter.
@@ -310,7 +301,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
      * @param uri The URI of the provider action.
      * @return An array of keys.
      */
-    private String[] getKeys(Uri uri) {
+    private String[] getKeys(@NonNull Uri uri) {
         try {
             return uri.getPathSegments().get(KEYS_LOCATION).split("\\" + KEYS_DELIMITER);
         } catch (IndexOutOfBoundsException e) {
@@ -324,7 +315,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
      * @param uri URI of the provider action.
      * @return Either a preferences or rich push database model depending on the URI.
      */
-    private DatabaseModel getDatabaseModel(Uri uri) {
+    private DatabaseModel getDatabaseModel(@NonNull Uri uri) {
         int type = MATCHER.match(uri);
         switch (type) {
             case RICHPUSH_MESSAGE_URI_TYPE:
@@ -356,7 +347,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param contentUri Base URI, used for notifying changes.
          * @param notificationColumnId Notification column id.
          */
-        private DatabaseModel(DataManager dataManager, String table, Uri contentUri, String notificationColumnId) {
+        private DatabaseModel(@NonNull DataManager dataManager, @NonNull String table, @NonNull Uri contentUri, @NonNull String notificationColumnId) {
 
             this.dataManager = dataManager;
             this.table = table;
@@ -370,7 +361,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param context used to create or open databases.
          * @return A database model configured for rich push messages.
          */
-        static DatabaseModel createRichPushModel(Context context) {
+        static DatabaseModel createRichPushModel(@NonNull Context context) {
             DataManager model = new RichPushDataManager(context);
             return new DatabaseModel(model, RichPushTable.TABLE_NAME, getRichPushContentUri(),
                     RichPushTable.COLUMN_NAME_MESSAGE_ID);
@@ -382,7 +373,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param context used to create or open databases.
          * @return DatabaseModel.
          */
-        static DatabaseModel createPreferencesModel(Context context) {
+        static DatabaseModel createPreferencesModel(@NonNull Context context) {
             DataManager model = new PreferencesDataManager(context);
             return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, getPreferencesContentUri(),
                     PreferencesDataManager.COLUMN_NAME_KEY);
@@ -395,7 +386,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param ids The ids of items that were updated.
          * @param action The type of update action.
          */
-        void notifyDatabaseChange(Context context, String[] ids, String action) {
+        void notifyDatabaseChange(@NonNull Context context, @NonNull String[] ids, @NonNull String action) {
             Uri newUri = Uri.withAppendedPath(contentUri, UAStringUtil.join(Arrays.asList(ids), KEYS_DELIMITER) + "/" + action);
             Logger.verbose("UrbanAirshipProvider - Notifying of change to " + newUri.toString());
             context.getContentResolver().notifyChange(newUri, null);

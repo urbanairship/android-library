@@ -31,6 +31,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -45,6 +46,8 @@ import java.util.List;
  * automatically selecting the best provider based on the request settings. It
  * will reevaluate the best provider when providers are enabled and disabled.
  */
+
+@SuppressWarnings("ResourceType") // For missing location permission
 class StandardLocationAdapter implements LocationAdapter {
 
     /**
@@ -64,7 +67,7 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void requestLocationUpdates(LocationRequestOptions options, PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
         Criteria criteria = createCriteria(options);
 
         List<String> providers = locationManager.getProviders(criteria, false);
@@ -99,13 +102,14 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void cancelLocationUpdates(PendingIntent intent) {
+    public void cancelLocationUpdates(@NonNull PendingIntent intent) {
         Logger.verbose("StandardLocationAdapter - Canceling location updates.");
         locationManager.removeUpdates(intent);
     }
 
     @Override
-    public PendingResult<Location> requestSingleLocation(LocationRequestOptions options) {
+    @NonNull
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options) {
         return new SingleLocationRequest(options);
     }
 
@@ -116,7 +120,7 @@ class StandardLocationAdapter implements LocationAdapter {
      * @param options The locationRequestOptions.
      * @return A criteria created from the supplied options.
      */
-    private Criteria createCriteria(LocationRequestOptions options) {
+    private Criteria createCriteria(@NonNull LocationRequestOptions options) {
 
         Criteria criteria = new Criteria();
 
@@ -146,7 +150,7 @@ class StandardLocationAdapter implements LocationAdapter {
      * @param options The location request options.
      * @return The best provider, or null if one does not exist.
      */
-    private String getBestProvider(Criteria criteria, LocationRequestOptions options) {
+    private String getBestProvider(@NonNull Criteria criteria, @NonNull LocationRequestOptions options) {
         if (options.getPriority() == LocationRequestOptions.PRIORITY_NO_POWER) {
             List<String> availableProviders = locationManager.getProviders(criteria, true);
             if (availableProviders == null) {
@@ -181,7 +185,7 @@ class StandardLocationAdapter implements LocationAdapter {
          *
          * @param options The locationRequestOptions.
          */
-        SingleLocationRequest(final LocationRequestOptions options) {
+        SingleLocationRequest(@NonNull final LocationRequestOptions options) {
 
             this.options = options;
             this.criteria = createCriteria(options);
@@ -274,7 +278,6 @@ class StandardLocationAdapter implements LocationAdapter {
             locationManager.removeUpdates(providerEnabledListeners);
         }
     }
-
 
     /**
      * Android location listener used to listen for changes on the current best provider.

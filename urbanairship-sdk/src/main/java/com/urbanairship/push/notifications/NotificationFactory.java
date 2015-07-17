@@ -28,6 +28,8 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -109,7 +111,8 @@ public abstract class NotificationFactory {
      * @param notificationId The notification ID.
      * @return The notification to display, or <code>null</code> if no notification is desired.
      */
-    public abstract Notification createNotification(PushMessage message, int notificationId);
+    @Nullable
+    public abstract Notification createNotification(@NonNull PushMessage message, int notificationId);
 
     /**
      * Creates a notification ID based on the message and payload.
@@ -121,7 +124,7 @@ public abstract class NotificationFactory {
      * @param pushMessage The push message.
      * @return An integer ID for the next notification.
      */
-    public abstract int getNextId(PushMessage pushMessage);
+    public abstract int getNextId(@NonNull PushMessage pushMessage);
 
     /**
      * Creates a notification extender with actions applied.
@@ -129,7 +132,7 @@ public abstract class NotificationFactory {
      * @param notificationId The notification ID.
      * @return The notification extender.
      */
-    protected final NotificationCompat.Extender createNotificationActionsExtender(PushMessage message, int notificationId) {
+    protected final NotificationCompat.Extender createNotificationActionsExtender(@NonNull PushMessage message, int notificationId) {
         NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(message.getInteractiveNotificationType());
 
         final List<NotificationCompat.Action> androidActions = new ArrayList<>();
@@ -158,7 +161,7 @@ public abstract class NotificationFactory {
      * @return The wearable notification extender.
      * @throws IOException
      */
-    protected final NotificationCompat.WearableExtender createWearableExtender(PushMessage message, int notificationId) throws IOException {
+    protected final NotificationCompat.WearableExtender createWearableExtender(@NonNull PushMessage message, int notificationId) throws IOException {
         NotificationCompat.WearableExtender extender = new NotificationCompat.WearableExtender();
 
         String wearablePayload = message.getWearablePayload();
@@ -216,7 +219,7 @@ public abstract class NotificationFactory {
      * @return The notification style or null if it failed to be created.
      * @throws IOException
      */
-    protected final NotificationCompat.Style createNotificationStyle(PushMessage message) throws IOException {
+    protected final NotificationCompat.Style createNotificationStyle(@NonNull PushMessage message) throws IOException {
         String stylePayload = message.getStylePayload();
         if (stylePayload == null) {
             return null;
@@ -249,7 +252,7 @@ public abstract class NotificationFactory {
      * @param page The JSONObject page.
      * @return The notification with pages.
      */
-    private Notification createWearPage(JSONObject page) {
+    private Notification createWearPage(@NonNull JSONObject page) {
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
 
         String title = page.optString(TITLE_KEY);
@@ -273,7 +276,7 @@ public abstract class NotificationFactory {
      * @param styleJSON The JSONObject style.
      * @return The big text style.
      */
-    private NotificationCompat.Style createBigTextStyle(JSONObject styleJSON) {
+    private NotificationCompat.Style createBigTextStyle(@NonNull JSONObject styleJSON) {
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
 
         String title = styleJSON.optString(TITLE_KEY);
@@ -301,7 +304,7 @@ public abstract class NotificationFactory {
      * @return The big picture style or null if it failed to be created.
      * @throws IOException
      */
-    private NotificationCompat.BigPictureStyle createBigPictureStyle(JSONObject styleJSON) throws IOException {
+    private NotificationCompat.BigPictureStyle createBigPictureStyle(@NonNull JSONObject styleJSON) throws IOException {
         NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
 
         String title = styleJSON.optString(TITLE_KEY);
@@ -331,7 +334,7 @@ public abstract class NotificationFactory {
      * @param styleJSON The JSONObject style.
      * @return The inbox style.
      */
-    private NotificationCompat.InboxStyle createInboxStyle(JSONObject styleJSON) {
+    private NotificationCompat.InboxStyle createInboxStyle(@NonNull JSONObject styleJSON) {
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
 
         String title = styleJSON.optString(TITLE_KEY);
@@ -364,7 +367,7 @@ public abstract class NotificationFactory {
      * @param notificationIcon The notification icon.
      * @return The public version notification or null if it failed to be created.
      */
-    protected final Notification createPublicVersionNotification(PushMessage message, int notificationIcon) {
+    protected final Notification createPublicVersionNotification(@NonNull PushMessage message, int notificationIcon) {
 
         if (!UAStringUtil.isEmpty(message.getPublicNotificationPayload())) {
             try {
@@ -396,7 +399,8 @@ public abstract class NotificationFactory {
      * @return The bitmap, or null if it failed to be fetched.
      * @throws IOException
      */
-    private Bitmap fetchBigImage(URL url) throws IOException {
+    @Nullable
+    private Bitmap fetchBigImage(@Nullable URL url) throws IOException {
         if (url == null) {
             return null;
         }

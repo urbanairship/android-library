@@ -31,6 +31,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -97,6 +100,7 @@ public class ActionService extends Service {
      *
      * @param actionRunRequestFactory The action request factory.
      */
+    @VisibleForTesting
     ActionService(ActionRunRequestFactory actionRunRequestFactory) {
         this.actionRunRequestFactory = actionRunRequestFactory;
     }
@@ -177,7 +181,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(Context context, String actionsPayload, Situation situation, Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull String actionsPayload, @Nullable Situation situation, @Nullable Bundle metadata) {
         Bundle actions = createActionsBundle(actionsPayload);
         if (actions.isEmpty()) {
             return;
@@ -203,7 +207,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(Context context, Map<String, ActionValue> actions, Situation situation, Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull Map<String, ActionValue> actions, @Nullable Situation situation, @Nullable Bundle metadata) {
         if (actions.isEmpty()) {
             return;
         }
@@ -230,7 +234,7 @@ public class ActionService extends Service {
      *
      * @param intent The service intent.
      */
-    private void onRunActions(Intent intent) {
+    private void onRunActions(@NonNull Intent intent) {
         Bundle actions = intent.getBundleExtra(EXTRA_ACTIONS_BUNDLE);
         if (actions == null) {
             actions = new Bundle();
@@ -270,7 +274,7 @@ public class ActionService extends Service {
                                    .setSituation(situation)
                                    .run(new ActionCompletionCallback() {
                                        @Override
-                                       public void onFinish(ActionArguments arguments, ActionResult result) {
+                                       public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
                                            runningActions--;
                                            if (runningActions == 0) {
                                                stopSelf(lastStartId);
@@ -287,7 +291,7 @@ public class ActionService extends Service {
      * @param actionsPayload The action payload.
      * @return A bundle of actions to run.
      */
-    private static Bundle createActionsBundle(String actionsPayload) {
+    private static Bundle createActionsBundle(@NonNull String actionsPayload) {
         Bundle actions = new Bundle();
 
         if (UAStringUtil.isEmpty(actionsPayload)) {

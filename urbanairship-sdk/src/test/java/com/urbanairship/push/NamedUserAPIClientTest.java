@@ -66,26 +66,6 @@ public class NamedUserAPIClientTest extends BaseTestCase {
     }
 
     /**
-     * Test associate with null named user returns null.
-     */
-    @Test
-    public void testAssociateNullNamedUser() {
-        Response response = client.associate(null, fakeChannelId);
-
-        assertNull("Response should be null", response);
-    }
-
-    /**
-     * Test associate with null channel ID returns null.
-     */
-    @Test
-    public void testAssociateNullChannelId() {
-        Response response = client.associate(fakeNamedUserId, null);
-
-        assertNull("Response should be null", response);
-    }
-
-    /**
      * Test disassociate named user from channel request succeeds if status is 200.
      */
     @Test
@@ -99,16 +79,6 @@ public class NamedUserAPIClientTest extends BaseTestCase {
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
-    }
-
-    /**
-     * Test disassociate with null channel ID returns null.
-     */
-    @Test
-    public void testDisassociateNullChannelId() {
-        Response response = client.disassociate(null);
-
-        assertNull("Response should be null", response);
     }
 
     /**

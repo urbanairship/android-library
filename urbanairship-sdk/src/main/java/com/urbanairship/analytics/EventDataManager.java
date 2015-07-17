@@ -30,6 +30,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -122,7 +123,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqlLiteStatment(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqlLiteStatement(SQLiteStatement statement, ContentValues values) {
         bind(statement, 1, values.getAsString(Events.COLUMN_NAME_TYPE));
         bind(statement, 2, values.getAsString(Events.COLUMN_NAME_EVENT_ID));
         bind(statement, 3, values.getAsString(Events.COLUMN_NAME_DATA));
@@ -155,6 +156,7 @@ class EventDataManager extends DataManager {
      * @param count Number of events to return, starts from the oldest to the newest.
      * @return Map of event id to event data
      */
+    @NonNull
     Map<String, String> getEvents(int count) {
         HashMap<String, String> events = new HashMap<>(count);
 

@@ -25,6 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -32,7 +35,6 @@ import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAStringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -78,14 +80,9 @@ class TagGroupsAPIClient {
      * @param removeTags The map of tags to remove.
      * @return The response or null if an error occurred.
      */
-    Response updateNamedUserTags(String namedUserId,
-                                 Map<String, Set<String>> addTags,
-                                 Map<String, Set<String>> removeTags) {
-
-        if (UAStringUtil.isEmpty(namedUserId)) {
-            Logger.error("The named user ID cannot be null.");
-            return null;
-        }
+    Response updateNamedUserTags(@NonNull String namedUserId,
+                                 @NonNull Map<String, Set<String>> addTags,
+                                 @NonNull Map<String, Set<String>> removeTags) {
 
         URL namedUserTagsUrl = getTagURL(NAMED_USER_TAGS_PATH);
         if (namedUserTagsUrl == null) {
@@ -109,14 +106,9 @@ class TagGroupsAPIClient {
      * @param removeTags The map of tags to remove.
      * @return The response or null if an error occurred.
      */
-    Response updateChannelTags(String channelId,
-                               Map<String, Set<String>> addTags,
-                               Map<String, Set<String>> removeTags) {
-
-        if (UAStringUtil.isEmpty(channelId)) {
-            Logger.error("The channel ID cannot be null.");
-            return null;
-        }
+    Response updateChannelTags(@NonNull String channelId,
+                               @NonNull Map<String, Set<String>> addTags,
+                               @NonNull Map<String, Set<String>> removeTags) {
 
         URL channelTagsUrl = getTagURL(CHANNEL_TAGS_PATH);
         if (channelTagsUrl == null) {
@@ -142,8 +134,8 @@ class TagGroupsAPIClient {
      * @param removeTags The map of tags to remove.
      * @return The response or null if an error occurred.
      */
-    private Response request(URL url, String audienceSelector, String audienceId,
-                             Map<String, Set<String>> addTags,  Map<String, Set<String>> removeTags) {
+    private Response request(@NonNull URL url, @NonNull String audienceSelector, @NonNull String audienceId,
+                             @NonNull Map<String, Set<String>> addTags,  @NonNull Map<String, Set<String>> removeTags) {
 
         Map<String, Object> payload = new HashMap<>();
         Map<String, Object> audience = new HashMap<>();
@@ -208,6 +200,7 @@ class TagGroupsAPIClient {
      *
      * @return The tag URL.
      */
+    @Nullable
     URL getTagURL(String urlString) {
         URL tagUrl = null;
         try {

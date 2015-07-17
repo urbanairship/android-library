@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.content.Intent;
+import android.support.annotation.CallSuper;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
@@ -51,6 +52,7 @@ import com.urbanairship.Logger;
 public class UAInstanceIDListenerService extends InstanceIDListenerService {
 
     @Override
+    @CallSuper
     public void onTokenRefresh() {
         super.onTokenRefresh();
 

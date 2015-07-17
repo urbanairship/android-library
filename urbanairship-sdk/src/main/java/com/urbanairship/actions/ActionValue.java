@@ -27,6 +27,7 @@ package com.urbanairship.actions;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -56,6 +57,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as a string.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(String value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -66,6 +68,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as an int.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(int value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -76,6 +79,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as a long.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(long value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -86,6 +90,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as a char.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(char value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -96,6 +101,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as a boolean.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(boolean value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -106,6 +112,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @param value The action's value as a JsonSerializable object.
      * @return The ActionValue object.
      */
+    @NonNull
     public static ActionValue wrap(JsonSerializable value) {
         return new ActionValue(JsonValue.wrap(value));
     }
@@ -118,6 +125,7 @@ public class ActionValue implements JsonSerializable, Parcelable {
      * @throws com.urbanairship.actions.ActionValueException If the object is unable to be wrapped into an
      * action value.
      */
+    @NonNull
     public static ActionValue wrap(Object object) throws ActionValueException {
         try {
             return new ActionValue(JsonValue.wrap(object));

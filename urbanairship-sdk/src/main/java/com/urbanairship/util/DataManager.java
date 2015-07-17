@@ -34,6 +34,8 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 
@@ -54,7 +56,7 @@ public abstract class DataManager {
      * @param name The name of the database
      * @param version The version of the database
      */
-    public DataManager(Context context, final String name, int version) {
+    public DataManager(@NonNull Context context, @NonNull final String name, int version) {
         openHelper = new SQLiteOpenHelper(context, name, null, version) {
 
             @Override
@@ -81,7 +83,7 @@ public abstract class DataManager {
      *
      * @param db The newly created database
      */
-    protected abstract void onCreate(SQLiteDatabase db);
+    protected abstract void onCreate(@NonNull SQLiteDatabase db);
 
     /**
      * Binds values to the statement.  Used for bulk insert.
@@ -89,7 +91,7 @@ public abstract class DataManager {
      * @param statement The statement to bind values to
      * @param values The values to bind
      */
-    protected abstract void bindValuesToSqlLiteStatment(SQLiteStatement statement, ContentValues values);
+    protected abstract void bindValuesToSqlLiteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values);
 
     /**
      * Get the insert statement
@@ -98,13 +100,14 @@ public abstract class DataManager {
      * @param db The database to insert values into
      * @return A constructed SQLiteStatement
      */
-    protected abstract SQLiteStatement getInsertStatement(String table, SQLiteDatabase db);
+    protected abstract SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db);
 
     /**
      * Opens a writable database
      *
      * @return a writable SQLiteDatabase
      */
+    @Nullable
     protected SQLiteDatabase getWritableDatabase() {
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
@@ -126,6 +129,7 @@ public abstract class DataManager {
      *
      * @return a readable SQLiteDatabase
      */
+    @Nullable
     protected SQLiteDatabase getReadableDatabase() {
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
@@ -149,7 +153,7 @@ public abstract class DataManager {
      * @param oldVersion Version of the old database
      * @param newVersion Version of the new database
      */
-    protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         Logger.debug("DataManager - onUpgrade not implemented yet.");
     }
 
@@ -160,10 +164,9 @@ public abstract class DataManager {
      * @param oldVersion Version of the old database
      * @param newVersion Version of the new database
      */
-    protected void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         throw new SQLiteException("Unable to downgrade database");
     }
-
 
     /**
      * Helper to build an insert sql statement
@@ -172,7 +175,8 @@ public abstract class DataManager {
      * @param columns Columns of values to insert
      * @return A SQL insert statement
      */
-    protected String buildInsertStatement(String table, String... columns) {
+    @NonNull
+    protected String buildInsertStatement(@NonNull String table, @NonNull String... columns) {
         StringBuilder sb = new StringBuilder(128);
         sb.append("INSERT INTO ");
         sb.append(table);
@@ -204,7 +208,7 @@ public abstract class DataManager {
      * @param index Index of the value to bind
      * @param value The value to bind
      */
-    protected void bind(SQLiteStatement statement, int index, int value) {
+    protected void bind(@NonNull SQLiteStatement statement, int index, int value) {
         statement.bindLong(index, value);
     }
 
@@ -215,7 +219,7 @@ public abstract class DataManager {
      * @param index Index of the value to bind
      * @param value The value to bind
      */
-    protected void bind(SQLiteStatement statement, int index, Boolean value) {
+    protected void bind(@NonNull SQLiteStatement statement, int index, Boolean value) {
         if (value == null) {
             statement.bindNull(index);
         } else {
@@ -231,7 +235,7 @@ public abstract class DataManager {
      * @param value The value to bind
      * @param defaultValue The value to use if value is null
      */
-    protected void bind(SQLiteStatement statement, int index, Boolean value, Boolean defaultValue) {
+    protected void bind(@NonNull SQLiteStatement statement, int index, Boolean value, Boolean defaultValue) {
         if (value == null) {
             bind(statement, index, defaultValue);
         } else {
@@ -246,7 +250,7 @@ public abstract class DataManager {
      * @param index Index of the value to bind
      * @param value The value to bind
      */
-    protected void bind(SQLiteStatement statement, int index, String value) {
+    protected void bind(@NonNull SQLiteStatement statement, int index, String value) {
         if (value == null) {
             statement.bindNull(index);
         } else {
@@ -262,14 +266,13 @@ public abstract class DataManager {
      * @param value The value to bind
      * @param defaultValue The value to use if value is null
      */
-    protected void bind(SQLiteStatement statement, int index, String value, String defaultValue) {
+    protected void bind(@NonNull SQLiteStatement statement, int index, String value, String defaultValue) {
         if (value == null) {
             bind(statement, index, defaultValue);
         } else {
             bind(statement, index, value);
         }
     }
-
 
     /**
      * Deletes items from the database
@@ -279,7 +282,7 @@ public abstract class DataManager {
      * @param selectionArgs arguments to the WHERE clause
      * @return number of rows deleted, or -1 if an error occurred
      */
-    public int delete(String table, String selection, String[] selectionArgs) {
+    public int delete(@NonNull String table, @Nullable String selection, @Nullable String[] selectionArgs) {
         // If the where clause is null (deletes all rows), set it to "1" so that the delete() call
         // will return the number of rows deleted rather than 0.
         if (selection == null) {
@@ -309,7 +312,7 @@ public abstract class DataManager {
      * @param values An array of values to insert into the database
      * @return A list of the values inserted into the database
      */
-    public List<ContentValues> bulkInsert(String table, ContentValues[] values) {
+    public List<ContentValues> bulkInsert(@NonNull String table, @NonNull ContentValues[] values) {
         SQLiteDatabase db = getWritableDatabase();
         List<ContentValues> inserted = new ArrayList<>();
         if (db == null) {
@@ -347,7 +350,12 @@ public abstract class DataManager {
      * @param values The values to insert into the database
      * @return Row id of the inserted values
      */
-    public long insert(String table, ContentValues values) {
+    public long insert(@NonNull String table, ContentValues values) {
+        SQLiteDatabase db = getWritableDatabase();
+        if (db == null) {
+            return -1;
+        }
+
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
                 return getWritableDatabase().replaceOrThrow(table, null, values);
@@ -368,7 +376,7 @@ public abstract class DataManager {
      * @param selectionArgs arguments to the WHERE clause
      * @return number of rows updated
      */
-    public int update(String table, ContentValues values, String selection,
+    public int update(@NonNull String table, ContentValues values, String selection,
                       String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
@@ -396,12 +404,11 @@ public abstract class DataManager {
      * @param sortOrder How to sort the rows
      * @return A cursor with the query results, or null if anything went wrong
      */
-    public Cursor query(String table, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
+    public Cursor query(@NonNull String table, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
         return query(table, columns, selection, selectionArgs, sortOrder, null);
     }
 
-
-    public Cursor query(String table, String[] columns, String selection, String[] selectionArgs, String sortOrder, String limit) {
+    public Cursor query(@NonNull String table, String[] columns, String selection, String[] selectionArgs, String sortOrder, String limit) {
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             return null;
@@ -440,11 +447,11 @@ public abstract class DataManager {
      * @param values ContentValues to bind to the statement
      * @return <code>true</code> if successful, otherwise <code>false</code>
      */
-    private boolean tryExecuteStatement(SQLiteStatement statement, ContentValues values) {
+    private boolean tryExecuteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values) {
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
                 statement.clearBindings();
-                bindValuesToSqlLiteStatment(statement, values);
+                bindValuesToSqlLiteStatement(statement, values);
                 statement.execute();
                 return true;
             } catch (Exception ex) {

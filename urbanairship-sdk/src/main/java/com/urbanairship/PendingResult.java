@@ -35,8 +35,8 @@ public interface PendingResult<T> {
      *
      * @param <T> The type of result.
      */
-    public interface ResultCallback<T> {
-        public void onResult(T result);
+    interface ResultCallback<T> {
+        void onResult(T result);
     }
 
     /**
@@ -44,25 +44,25 @@ public interface PendingResult<T> {
      *
      * @param resultCallback The result callback.
      */
-    public void onResult(ResultCallback<T> resultCallback);
+    void onResult(ResultCallback<T> resultCallback);
 
     /**
      * Cancels the pending result.
      */
-    public void cancel();
+    void cancel();
 
     /**
      * Returns if the request has been canceled or not.
      *
      * @return <code>true</code> if canceled, <code>false</code> otherwise.
      */
-    public boolean isCanceled();
+    boolean isCanceled();
 
     /**
      * Returns the current state of the result.
      *
      * @return <code>true</code> if done or canceled, <code>false</code> otherwise.
      */
-    public boolean isDone();
+    boolean isDone();
 
 }

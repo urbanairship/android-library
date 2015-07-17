@@ -26,6 +26,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.js;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -107,7 +109,8 @@ public class Whitelist {
      * @return <code>true</code> if the pattern was added successfully, <code>false</code> if the pattern
      * was unable to be added because it was either null or did not match the url-pattern syntax.
      */
-    public boolean addEntry(String pattern) {
+    public boolean addEntry(@NonNull String pattern) {
+        //noinspection ConstantConditions
         if (pattern == null || !VALID_PATTERN.matcher(pattern).matches()) {
             Logger.warn("Invalid whitelist pattern " + pattern);
             return false;
@@ -183,7 +186,7 @@ public class Whitelist {
      * @param escapeWildCards If wild cards '*' should be turned into '.*' or escape
      * @return The input with any regular expression escaped.
      */
-    private String escapeRegEx(String input, boolean escapeWildCards) {
+    private String escapeRegEx(@NonNull String input, boolean escapeWildCards) {
 
         StringBuilder escapedInput = new StringBuilder();
 
@@ -211,7 +214,7 @@ public class Whitelist {
      * @return The default whitelist.
      * @hide
      */
-    public static Whitelist createDefaultWhitelist(AirshipConfigOptions airshipConfigOptions) {
+    public static Whitelist createDefaultWhitelist(@NonNull AirshipConfigOptions airshipConfigOptions) {
         Whitelist whitelist = new Whitelist();
         whitelist.addEntry("https://*.urbanairship.com");
         if (airshipConfigOptions.whitelist != null) {
@@ -227,6 +230,7 @@ public class Whitelist {
      * Helper class that does the actual matching using the scheme and host patterns.
      */
     private class UriPattern {
+
         private Pattern scheme;
         private Pattern host;
         private Pattern path;
@@ -238,12 +242,11 @@ public class Whitelist {
          * @param host The pattern to use for host matching.
          * @param path THe pattern to use for path matching.
          */
-        UriPattern(Pattern scheme, Pattern host, Pattern path) {
+        UriPattern(@Nullable Pattern scheme, @Nullable Pattern host, @Nullable Pattern path) {
             this.scheme = scheme;
             this.host = host;
             this.path = path;
         }
-
 
         /**
          * Checks if a uri matches the pattern.
@@ -251,7 +254,7 @@ public class Whitelist {
          * @param uri The uri to match.
          * @return <code>true</code> if the uri matches, otherwise <code>false</code>.
          */
-        boolean matches(Uri uri) {
+        boolean matches(@NonNull Uri uri) {
             if (scheme != null && (uri.getScheme() == null || !scheme.matcher(uri.getScheme()).matches())) {
                 return false;
             }

@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+
 /**
  * Factory class for creating {@link com.urbanairship.actions.ActionRunRequest}.
  */
@@ -36,6 +38,7 @@ public class ActionRunRequestFactory {
      * @param actionName The action name.
      * @return An action run request.
      */
+    @NonNull
     public ActionRunRequest createActionRequest(String actionName) {
         return ActionRunRequest.createRequest(actionName);
     }

@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.google;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
@@ -46,7 +47,7 @@ class GooglePlayServicesUtilWrapper {
     /**
      * Wraps {@link com.google.android.gms.common.GooglePlayServicesUtil#isGooglePlayServicesAvailable(android.content.Context)}.
      */
-    public static int isGooglePlayServicesAvailable(Context context) {
+    public static int isGooglePlayServicesAvailable(@NonNull Context context) {
         return GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
     }
 }

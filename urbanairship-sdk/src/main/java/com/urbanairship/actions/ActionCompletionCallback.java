@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+
 /**
  * An interface for callbacks signaling the completion of an
  * {@link com.urbanairship.actions.Action}.
@@ -36,5 +38,5 @@ public interface ActionCompletionCallback {
      * @param arguments The action arguments.
      * @param result The result of the action.
      */
-    public void onFinish(ActionArguments arguments, ActionResult result);
+    void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result);
 }

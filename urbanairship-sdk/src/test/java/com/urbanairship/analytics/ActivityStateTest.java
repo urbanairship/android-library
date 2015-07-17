@@ -1,7 +1,6 @@
 package com.urbanairship.analytics;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.analytics.ActivityMonitor.Source;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,12 +40,12 @@ public class ActivityStateTest extends BaseTestCase {
      */
     @Test
     public void testStartedPreIcs() {
-        preIcsState.setStarted(Source.MANUAL_INSTRUMENTATION, 100);
+        preIcsState.setStarted(ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
         assertTrue(preIcsState.isForeground());
         assertEquals(100, preIcsState.getLastModifiedTime());
 
         // Auto should have no effect on isActive
-        preIcsState.setStopped(Source.AUTO_INSTRUMENTATION, 150);
+        preIcsState.setStopped(ActivityMonitor.AUTO_INSTRUMENTATION, 150);
         assertTrue(preIcsState.isForeground());
         assertEquals(150, preIcsState.getLastModifiedTime());
     }
@@ -56,17 +55,17 @@ public class ActivityStateTest extends BaseTestCase {
      */
     @Test
     public void testStoppedPreIcs() {
-        preIcsState.setStopped(Source.MANUAL_INSTRUMENTATION, 100);
+        preIcsState.setStopped(ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
         assertFalse(preIcsState.isForeground());
         assertEquals(100, preIcsState.getLastModifiedTime());
 
-        preIcsState.setStarted(Source.MANUAL_INSTRUMENTATION, 150);
-        preIcsState.setStopped(Source.MANUAL_INSTRUMENTATION, 200);
+        preIcsState.setStarted(ActivityMonitor.MANUAL_INSTRUMENTATION, 150);
+        preIcsState.setStopped(ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         assertFalse(preIcsState.isForeground());
         assertEquals(200, preIcsState.getLastModifiedTime());
 
         // Auto should have no effect on isActive
-        preIcsState.setStarted(Source.AUTO_INSTRUMENTATION, 250);
+        preIcsState.setStarted(ActivityMonitor.AUTO_INSTRUMENTATION, 250);
         assertFalse(preIcsState.isForeground());
         assertEquals(250, preIcsState.getLastModifiedTime());
     }
@@ -76,12 +75,12 @@ public class ActivityStateTest extends BaseTestCase {
      */
     @Test
     public void testStartedIcs() {
-        icsState.setStarted(Source.AUTO_INSTRUMENTATION, 100);
+        icsState.setStarted(ActivityMonitor.AUTO_INSTRUMENTATION, 100);
         assertTrue(icsState.isForeground());
         assertEquals(100, icsState.getLastModifiedTime());
 
         // Manual should have no effect on isActive
-        icsState.setStopped(Source.MANUAL_INSTRUMENTATION, 200);
+        icsState.setStopped(ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
         assertTrue(icsState.isForeground());
         assertEquals(200, icsState.getLastModifiedTime());
     }
@@ -91,17 +90,17 @@ public class ActivityStateTest extends BaseTestCase {
      */
     @Test
     public void testStoppedIcs() {
-        icsState.setStopped(Source.AUTO_INSTRUMENTATION, 100);
+        icsState.setStopped(ActivityMonitor.AUTO_INSTRUMENTATION, 100);
         assertFalse(icsState.isForeground());
         assertEquals(100, icsState.getLastModifiedTime());
 
-        icsState.setStarted(Source.AUTO_INSTRUMENTATION, 100);
-        icsState.setStopped(Source.AUTO_INSTRUMENTATION, 200);
+        icsState.setStarted(ActivityMonitor.AUTO_INSTRUMENTATION, 100);
+        icsState.setStopped(ActivityMonitor.AUTO_INSTRUMENTATION, 200);
         assertFalse(icsState.isForeground());
         assertEquals(200, icsState.getLastModifiedTime());
 
         // Manual should have no effect on isActive
-        icsState.setStarted(Source.MANUAL_INSTRUMENTATION, 100);
+        icsState.setStarted(ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
         assertFalse(icsState.isForeground());
         assertEquals(100, icsState.getLastModifiedTime());
     }

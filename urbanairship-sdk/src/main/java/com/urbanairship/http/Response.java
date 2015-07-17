@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.http;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 import java.util.Map;
 
@@ -182,6 +184,7 @@ public class Response {
          *
          * @return The response.
          */
+        @NonNull
         public Response create() {
             Response response = new Response();
             response.status = status;

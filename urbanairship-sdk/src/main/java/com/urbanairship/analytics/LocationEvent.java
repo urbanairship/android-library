@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import android.location.Location;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
@@ -73,7 +74,7 @@ public class LocationEvent extends Event {
      * @param updateDist The associated update distance.
      * @param isForeground If the location was recorded when the app was foregrounded or not.
      */
-    public LocationEvent(Location location, UpdateType type, int userRequestedAccuracy, int updateDist, boolean isForeground) {
+    public LocationEvent(@NonNull Location location, UpdateType type, int userRequestedAccuracy, int updateDist, boolean isForeground) {
         super();
 
         /*

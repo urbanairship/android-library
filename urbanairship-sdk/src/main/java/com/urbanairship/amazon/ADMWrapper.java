@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.amazon;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.amazon.device.messaging.ADM;
 import com.amazon.device.messaging.development.ADMManifest;
@@ -65,7 +66,7 @@ class ADMWrapper {
     /**
      * Wraps {@link com.amazon.device.messaging.ADM#startRegister()}.
      */
-    public static void startRegistration(Context context) {
+    public static void startRegistration(@NonNull Context context) {
         new ADM(context).startRegister();
     }
 }

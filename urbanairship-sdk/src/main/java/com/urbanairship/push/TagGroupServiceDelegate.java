@@ -28,6 +28,7 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
@@ -236,6 +237,10 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
         for (String group : tagsBundle.keySet()) {
             List<String> tags = tagsBundle.getStringArrayList(group);
 
+            if (tags == null) {
+                continue;
+            }
+
             // Add tags to tagsToAdd.
             if (tagsToAdd.containsKey(group)) {
                 tagsToAdd.get(group).addAll(tags);
@@ -287,7 +292,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
      * @param tagGroupKey The data store key.
      * @param tagGroupChanges The pending tag groups.
      */
-    private void storePendingTagChanges(String tagGroupKey, Map<String, Set<String>> tagGroupChanges) {
+    private void storePendingTagChanges(@NonNull String tagGroupKey, @NonNull Map<String, Set<String>> tagGroupChanges) {
         getDataStore().put(tagGroupKey, JsonValue.wrap(tagGroupChanges, null));
     }
 
@@ -297,6 +302,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
      *  @param tagGroupKey The tag group key string.
      *  @return The pending tag groups.
      */
+    @NonNull
     private Map<String, Set<String>> getPendingTagChanges(String tagGroupKey) {
         JsonValue tagGroupsJsonValue = null;
         try {
