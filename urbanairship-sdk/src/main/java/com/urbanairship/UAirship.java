@@ -280,8 +280,6 @@ public class UAirship {
             }
 
         } else {
-            // In 6.0, we should throw an illegal state exception.
-            // throw new IllegalStateException("takeOff() must be called on the main thread!");
             Logger.error("takeOff() must be called on the main thread!");
         }
 
