@@ -39,7 +39,7 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup;
  */
 public class BannerCardView extends CardView implements Banner {
 
-    private BannerContent content;
+    private final BannerContent content;
 
     /**
      * Construct a banner card view.

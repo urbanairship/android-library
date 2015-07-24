@@ -76,7 +76,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final Long durationMilliseconds;
     private final Integer primaryColor;
     private final Integer secondaryColor;
-    private int position;
+    private final int position;
 
     private final String buttonGroupId;
 
@@ -457,9 +457,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return (id == null ? other.id == null : id.equals(other.id)) &&
                 (alert == null ? other.alert == null : alert.equals(other.alert)) &&
                 (buttonGroupId == null ? other.buttonGroupId == null : buttonGroupId.equals(other.buttonGroupId)) &&
-                (extras == null ? other.extras == null : extras.equals(other.extras)) &&
-                (clickActionValues == null ? other.clickActionValues == null : clickActionValues.equals(other.clickActionValues)) &&
-                (buttonActionValues == null ? other.buttonActionValues == null : buttonActionValues.equals(other.buttonActionValues)) &&
+                (extras.equals(other.extras)) &&
+                (clickActionValues.equals(other.clickActionValues)) &&
+                (buttonActionValues.equals(other.buttonActionValues)) &&
                 (primaryColor == null ? other.primaryColor == null : primaryColor.equals(other.primaryColor)) &&
                 (secondaryColor == null ? other.secondaryColor == null : secondaryColor.equals(other.secondaryColor)) &&
                 (durationMilliseconds == null ? other.durationMilliseconds == null : durationMilliseconds.equals(other.durationMilliseconds)) &&
@@ -515,6 +515,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         @Nullable
         private JsonMap extras;
 
+        @NonNull
         private Map<String, Map<String, ActionValue>> buttonActionValues = new HashMap<>();
 
         private String buttonGroupId;
@@ -560,7 +561,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @hide
          */
         @NonNull
-        public Builder setId(String id) {
+        public Builder setId(@Nullable String id) {
             this.id = id;
             return this;
         }
@@ -573,7 +574,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setExpiry(Long milliseconds) {
+        public Builder setExpiry(@Nullable Long milliseconds) {
             this.expiryMS = milliseconds;
             return this;
         }
@@ -586,7 +587,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setExtras(JsonMap extras) {
+        public Builder setExtras(@Nullable JsonMap extras) {
             this.extras = extras;
             return this;
         }
@@ -598,7 +599,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setClickActionValues(Map<String, ActionValue> actionValues) {
+        public Builder setClickActionValues(@Nullable Map<String, ActionValue> actionValues) {
             if (actionValues == null) {
                 this.clickActionValues = null;
             } else {
@@ -616,7 +617,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setButtonActionValues(String buttonId, Map<String, ActionValue> actionValues) {
+        public Builder setButtonActionValues(@NonNull String buttonId, @Nullable Map<String, ActionValue> actionValues) {
             if (actionValues == null) {
                 buttonActionValues.remove(buttonId);
             } else {
@@ -632,7 +633,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setButtonGroupId(String buttonGroupId) {
+        public Builder setButtonGroupId(@Nullable String buttonGroupId) {
             this.buttonGroupId = buttonGroupId;
             return this;
         }
@@ -644,7 +645,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setAlert(String alert) {
+        public Builder setAlert(@Nullable String alert) {
             this.alert = alert;
             return this;
         }
@@ -657,7 +658,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @throws IllegalArgumentException if the duration is less than or equal to 0.
          */
         @NonNull
-        public Builder setDuration(Long milliseconds) {
+        public Builder setDuration(@Nullable Long milliseconds) {
             if (milliseconds != null && milliseconds <= 0) {
                 throw new IllegalArgumentException("Duration must be greater than 0 milliseconds");
             }
@@ -691,7 +692,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setPrimaryColor(Integer color) {
+        public Builder setPrimaryColor(@Nullable Integer color) {
             this.primaryColor = color;
             return this;
         }
@@ -703,7 +704,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         @NonNull
-        public Builder setSecondaryColor(Integer color) {
+        public Builder setSecondaryColor(@Nullable Integer color) {
             this.secondaryColor = color;
             return this;
         }

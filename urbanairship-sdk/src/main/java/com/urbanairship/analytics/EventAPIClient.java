@@ -60,7 +60,7 @@ class EventAPIClient {
     static final String NOT_ALLOWED = "NOT_ALLOWED";
     static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
 
-    private RequestFactory requestFactory;
+    private final RequestFactory requestFactory;
 
     EventAPIClient() {
         this(new RequestFactory());
@@ -167,7 +167,7 @@ class EventAPIClient {
             request.setHeader("X-UA-Push-Address", channelID);
         }
 
-        Logger.debug("EventAPIClient - Sending analytic events. Request:  " + request.toString() + " Events: " + events);
+        Logger.debug("EventAPIClient - Sending analytic events. Request:  " + request + " Events: " + events);
 
         Response response = request.execute();
 
@@ -236,6 +236,8 @@ class EventAPIClient {
         } else {
             // Code from Android Developer: http://developer.android.com/guide/topics/connectivity/bluetooth.html
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+            //noinspection ResourceType - Suppresses the bluetooth permission warning
             return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
         }
     }

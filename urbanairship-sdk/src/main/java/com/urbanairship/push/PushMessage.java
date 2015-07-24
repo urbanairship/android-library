@@ -165,7 +165,7 @@ public class PushMessage implements Parcelable {
             OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
             OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
-    private Bundle pushBundle;
+    private final Bundle pushBundle;
 
     /**
      * Create a new PushMessage

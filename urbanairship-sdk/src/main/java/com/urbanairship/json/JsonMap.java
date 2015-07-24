@@ -44,7 +44,7 @@ import java.util.Set;
  */
 public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
 
-    private Map<String, JsonValue> map;
+    private final Map<String, JsonValue> map;
 
     /**
      * Creates a JsonMap from a Map.

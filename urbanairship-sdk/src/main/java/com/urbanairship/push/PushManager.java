@@ -176,20 +176,19 @@ public class PushManager extends BaseManager {
     public static final String EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD";
 
 
-    private String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
+    private final String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
 
     /**
      * The default tag group.
      */
-    private String DEFAULT_TAG_GROUP = "device";
+    private final String DEFAULT_TAG_GROUP = "device";
 
     //singleton stuff
     private NotificationFactory notificationFactory;
-    private Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
+    private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean channelTagRegistrationEnabled = true;
-    private NamedUser namedUser;
-
-    PushPreferences preferences;
+    private final NamedUser namedUser;
+    private final PushPreferences preferences;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -715,7 +714,7 @@ public class PushManager extends BaseManager {
             @Override
             public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
-                    Logger.error("Unable to add tags { " + tags.toString() + " } to device tag group when channelTagRegistrationEnabled is true.");
+                    Logger.error("Unable to add tags { " + tags + " } to device tag group when channelTagRegistrationEnabled is true.");
                     return this;
                 }
 
@@ -734,7 +733,7 @@ public class PushManager extends BaseManager {
             @Override
             public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
-                    Logger.error("Unable to remove tags { " + tags.toString() + " } from device tag group when channelTagRegistrationEnabled is true.");
+                    Logger.error("Unable to remove tags { " + tags + " } from device tag group when channelTagRegistrationEnabled is true.");
                     return this;
                 }
 

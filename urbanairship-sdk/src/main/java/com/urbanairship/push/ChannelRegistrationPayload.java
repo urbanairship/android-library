@@ -57,15 +57,15 @@ class ChannelRegistrationPayload implements JsonSerializable {
     static final String USER_ID_KEY = "user_id";
     static final String APID_KEY = "apid";
 
-    private boolean optIn;
-    private boolean backgroundEnabled;
-    private String alias;
-    private String deviceType;
-    private String pushAddress;
-    private boolean setTags;
-    private Set<String> tags;
-    private String userId;
-    private String apid;
+    private final boolean optIn;
+    private final boolean backgroundEnabled;
+    private final String alias;
+    private final String deviceType;
+    private final String pushAddress;
+    private final boolean setTags;
+    private final Set<String> tags;
+    private final String userId;
+    private final String apid;
 
 
     /**

@@ -65,14 +65,14 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * {@link #onNotificationActionOpened(android.content.Context, PushMessage, int, String, boolean)}
      * or {@link #onNotificationOpened(android.content.Context, PushMessage, int)}.
      */
-    public static int RESULT_ACTIVITY_LAUNCHED = 1;
+    public static final int RESULT_ACTIVITY_LAUNCHED = 1;
 
     /**
      * Result code indicating an activity was not launched during
      * {@link #onNotificationActionOpened(android.content.Context, PushMessage, int, String, boolean)}
      * or {@link #onNotificationOpened(android.content.Context, PushMessage, int)}.
      */
-    public static int RESULT_ACTIVITY_NOT_LAUNCHED = -1;
+    public static final int RESULT_ACTIVITY_NOT_LAUNCHED = -1;
 
     @Override
     @CallSuper

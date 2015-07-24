@@ -43,7 +43,7 @@ class RichPushUserPreferences {
     private static final String LAST_UPDATE_TIME = KEY_PREFIX + ".LAST_UPDATE_TIME";
     private static final String LAST_MESSAGE_REFRESH_TIME = KEY_PREFIX + ".LAST_MESSAGE_REFRESH_TIME";
 
-    private PreferenceDataStore preferenceDataStore;
+    private final PreferenceDataStore preferenceDataStore;
 
     RichPushUserPreferences(PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;

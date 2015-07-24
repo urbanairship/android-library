@@ -64,7 +64,7 @@ public class Response {
         builder.append(" ResponseHeaders: ");
 
         if (responseHeaders != null) {
-            builder.append(responseHeaders.toString());
+            builder.append(responseHeaders);
         }
 
         builder.append(" ResponseMessage: ");
@@ -121,7 +121,7 @@ public class Response {
 
         private String responseBody;
         private Map<String, List<String>> responseHeaders;
-        private int status;
+        private final int status;
         private String responseMessage;
         private long lastModified = 0;
 

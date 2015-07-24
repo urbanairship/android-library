@@ -54,7 +54,7 @@ public class PlayServicesUtils {
      * Error code returned by {@link PlayServicesUtils#isGooglePlayServicesDependencyAvailable()}
      * when the Google Play services dependency is missing.
      */
-    public static int MISSING_PLAY_SERVICE_DEPENDENCY = -1;
+    public static final int MISSING_PLAY_SERVICE_DEPENDENCY = -1;
 
 
     private static Boolean isGooglePlayServicesDependencyAvailable;

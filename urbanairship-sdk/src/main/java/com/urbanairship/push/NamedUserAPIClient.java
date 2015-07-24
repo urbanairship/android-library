@@ -47,8 +47,8 @@ class NamedUserAPIClient {
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String NAMED_USER_ID_KEY = "named_user_id";
 
-    protected String urlString;
-    private RequestFactory requestFactory;
+    protected final String urlString;
+    private final RequestFactory requestFactory;
 
     NamedUserAPIClient() {
         this(new RequestFactory());

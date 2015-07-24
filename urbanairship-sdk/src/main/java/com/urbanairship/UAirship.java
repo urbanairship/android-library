@@ -415,9 +415,7 @@ public class UAirship {
             // Block until takeoff is finished
             UAirship airship = UAirship.shared();
 
-            if (airship != null) {
-                airship.tearDown();
-            }
+            airship.tearDown();
 
             isFlying = false;
             isTakingOff = false;

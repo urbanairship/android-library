@@ -13,5 +13,5 @@ import java.lang.annotation.Target;
  * to use when resolving a string property value
  */
 public @interface ConstantClass {
-    public String name();
+    String name();
 }

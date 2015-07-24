@@ -38,7 +38,7 @@ import android.net.Uri;
  */
 public class UrbanAirshipResolver {
 
-    private Context context;
+    private final Context context;
 
     public UrbanAirshipResolver(Context context) {
         this.context = context;

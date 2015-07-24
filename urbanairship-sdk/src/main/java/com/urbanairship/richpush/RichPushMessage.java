@@ -57,7 +57,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     long sentMS;
     Long expirationMS;
 
-    String messageId;
+    final String messageId;
     String messageUrl;
     String messageBodyUrl;
     String messageReadUrl;

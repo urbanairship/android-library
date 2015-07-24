@@ -121,7 +121,7 @@ public class LocalizableRemoteInput {
         private final String resultKey;
         private int labelId;
         private int[] choices;
-        private Bundle extras = new Bundle();
+        private final Bundle extras = new Bundle();
         private boolean allowFreeFormInput = false;
 
         /**

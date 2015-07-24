@@ -2,8 +2,9 @@ package com.urbanairship.util;
 
 import com.urbanairship.BaseTestCase;
 
-import org.apache.http.HttpStatus;
 import org.junit.Test;
+
+import java.net.HttpURLConnection;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -15,7 +16,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInSuccessRangePass() {
-        assertTrue("UAHttpStatusUtil inSuccessRange should return true.", UAHttpStatusUtil.inSuccessRange(HttpStatus.SC_OK));
+        assertTrue("UAHttpStatusUtil inSuccessRange should return true.", UAHttpStatusUtil.inSuccessRange(HttpURLConnection.HTTP_OK));
     }
 
     /**
@@ -23,7 +24,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInSuccessRangeFail() {
-        assertFalse("UAHttpStatusUtil inSuccessRange should return false.", UAHttpStatusUtil.inSuccessRange(HttpStatus.SC_NOT_FOUND));
+        assertFalse("UAHttpStatusUtil inSuccessRange should return false.", UAHttpStatusUtil.inSuccessRange(HttpURLConnection.HTTP_NOT_FOUND));
     }
 
     /**
@@ -47,7 +48,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInRedirectionRangePass() {
-        assertTrue("UAHttpStatusUtil inRedirectionRange should return true.", UAHttpStatusUtil.inRedirectionRange(HttpStatus.SC_MOVED_PERMANENTLY));
+        assertTrue("UAHttpStatusUtil inRedirectionRange should return true.", UAHttpStatusUtil.inRedirectionRange(HttpURLConnection.HTTP_MOVED_PERM));
     }
 
     /**
@@ -55,7 +56,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInRedirectionRangeFail() {
-        assertFalse("UAHttpStatusUtil inRedirectionRange should return false.", UAHttpStatusUtil.inRedirectionRange(HttpStatus.SC_NOT_FOUND));
+        assertFalse("UAHttpStatusUtil inRedirectionRange should return false.", UAHttpStatusUtil.inRedirectionRange(HttpURLConnection.HTTP_NOT_FOUND));
     }
 
     /**
@@ -79,7 +80,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInClientErrorRangePass() {
-        assertTrue("UAHttpStatusUtil inClientErrorRange should return true.", UAHttpStatusUtil.inClientErrorRange(HttpStatus.SC_BAD_REQUEST));
+        assertTrue("UAHttpStatusUtil inClientErrorRange should return true.", UAHttpStatusUtil.inClientErrorRange(HttpURLConnection.HTTP_BAD_REQUEST));
     }
 
     /**
@@ -87,7 +88,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInClientErrorRangeFail() {
-        assertFalse("UAHttpStatusUtil inClientErrorRange should return false.", UAHttpStatusUtil.inClientErrorRange(HttpStatus.SC_OK));
+        assertFalse("UAHttpStatusUtil inClientErrorRange should return false.", UAHttpStatusUtil.inClientErrorRange(HttpURLConnection.HTTP_OK));
     }
 
     /**
@@ -111,7 +112,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInServerErrorRangePass() {
-        assertTrue("UAHttpStatusUtil inServerErrorRange should return true.", UAHttpStatusUtil.inServerErrorRange(HttpStatus.SC_INTERNAL_SERVER_ERROR));
+        assertTrue("UAHttpStatusUtil inServerErrorRange should return true.", UAHttpStatusUtil.inServerErrorRange(HttpURLConnection.HTTP_INTERNAL_ERROR));
     }
 
     /**
@@ -119,7 +120,7 @@ public class UAHttpStatusUtilTest extends BaseTestCase {
      */
     @Test
     public void testInServerErrorRangeFail() {
-        assertFalse("UAHttpStatusUtil inServerErrorRange should return false.", UAHttpStatusUtil.inServerErrorRange(HttpStatus.SC_OK));
+        assertFalse("UAHttpStatusUtil inServerErrorRange should return false.", UAHttpStatusUtil.inServerErrorRange(HttpURLConnection.HTTP_OK));
     }
 
     /**

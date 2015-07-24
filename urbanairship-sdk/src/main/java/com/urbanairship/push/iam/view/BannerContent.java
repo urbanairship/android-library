@@ -32,6 +32,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -58,10 +59,10 @@ class BannerContent implements Banner {
     private static final int ACTION_BUTTON_ICON_SIZE_DP = 32;
 
     private final Context context;
-    private TextView messageTextView;
-    private View actionsDividerView;
-    private ImageButton dismissButton;
-    private ViewGroup actionButtonViewGroup;
+    private final TextView messageTextView;
+    private final View actionsDividerView;
+    private final ImageButton dismissButton;
+    private final ViewGroup actionButtonViewGroup;
     private int primaryColor;
     private int secondaryColor;
     private int actionButtonTextAppearance;
@@ -163,7 +164,7 @@ class BannerContent implements Banner {
                 button.setText(actionButton.getLabel());
             }
 
-            Drawable drawable = resources.getDrawable(actionButton.getIcon());
+            Drawable drawable = ContextCompat.getDrawable(context, actionButton.getIcon());
             drawable.setBounds(0, 0, size, size);
             drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
             button.setCompoundDrawables(drawable, null, null, null);

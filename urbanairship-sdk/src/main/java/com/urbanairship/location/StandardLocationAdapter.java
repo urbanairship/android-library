@@ -173,12 +173,12 @@ class StandardLocationAdapter implements LocationAdapter {
      */
     private class SingleLocationRequest extends PendingLocationResult {
 
-        private Criteria criteria;
-        private LocationRequestOptions options;
+        private final Criteria criteria;
+        private final LocationRequestOptions options;
         private String currentProvider = null;
 
-        private AndroidLocationListener currentProviderListener;
-        private AndroidLocationListener providerEnabledListeners;
+        private final AndroidLocationListener currentProviderListener;
+        private final AndroidLocationListener providerEnabledListeners;
 
         /**
          * SingleLocationRequest constructor.

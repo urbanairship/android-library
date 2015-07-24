@@ -45,8 +45,8 @@ import java.util.Set;
 public class TagGroupsEditor {
 
     private final String action;
-    protected Map<String, Set<String>> tagsToAdd = new HashMap<>();
-    protected Map<String, Set<String>> tagsToRemove = new HashMap<>();
+    protected final Map<String, Set<String>> tagsToAdd = new HashMap<>();
+    protected final Map<String, Set<String>> tagsToRemove = new HashMap<>();
 
     TagGroupsEditor(String action) {
         this.action = action;

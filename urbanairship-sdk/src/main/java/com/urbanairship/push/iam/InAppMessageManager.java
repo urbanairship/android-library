@@ -130,7 +130,8 @@ public class InAppMessageManager extends BaseManager {
                 return;
             }
 
-            if (showPendingMessage(getCurrentActivity())) {
+            Activity currentActivity = getCurrentActivity();
+            if (currentActivity != null && showPendingMessage(currentActivity)) {
                 autoDisplayPendingMessage = false;
             }
         }

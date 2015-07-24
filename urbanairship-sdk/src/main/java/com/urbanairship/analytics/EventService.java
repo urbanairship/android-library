@@ -97,7 +97,7 @@ public class EventService extends IntentService {
 
     private static long backoffMs = 0;
 
-    private EventAPIClient eventClient;
+    private final EventAPIClient eventClient;
 
     public EventService() {
         this("EventService");

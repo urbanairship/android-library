@@ -64,7 +64,7 @@ public class RichPushManager extends BaseManager {
     private final RichPushInbox inbox;
 
     // Number of refresh message requests currently in flight.
-    private AtomicInteger refreshMessageRequestCount = new AtomicInteger();
+    private final AtomicInteger refreshMessageRequestCount = new AtomicInteger();
 
     private final List<Listener> listeners = new ArrayList<>();
 

@@ -72,7 +72,7 @@ public class UALocationManager extends BaseManager {
     private int nextSingleLocationRequestId = 1;
     private final SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
 
-    LocationPreferences preferences;
+    private final LocationPreferences preferences;
 
 
     /**
@@ -83,7 +83,7 @@ public class UALocationManager extends BaseManager {
     /**
      * Handles connections to the location service.
      */
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -522,8 +522,8 @@ public class UALocationManager extends BaseManager {
      */
     private class SingleLocationRequest extends PendingLocationResult {
 
-        private LocationRequestOptions options;
-        private int requestId;
+        private final LocationRequestOptions options;
+        private final int requestId;
 
         /**
          * SingleLocationRequest constructor.

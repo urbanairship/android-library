@@ -22,7 +22,7 @@ import java.util.concurrent.Semaphore;
  */
 class FusedLocationAdapter implements LocationAdapter {
 
-    private Context context;
+    private final Context context;
     private GoogleApiClient client;
 
     /**
@@ -163,8 +163,8 @@ class FusedLocationAdapter implements LocationAdapter {
      */
     private class SingleLocationRequest extends PendingLocationResult {
 
-        private LocationRequest locationRequest;
-        private com.google.android.gms.location.LocationListener fusedLocationListener;
+        private final LocationRequest locationRequest;
+        private final com.google.android.gms.location.LocationListener fusedLocationListener;
 
         /**
          * FusedLocationRequest constructor.

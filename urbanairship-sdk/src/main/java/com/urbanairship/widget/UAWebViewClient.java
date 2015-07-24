@@ -128,7 +128,7 @@ public class UAWebViewClient extends WebViewClient {
      */
     public static final String CLOSE_COMMAND = "close";
 
-    private Map<String, Credentials> authRequestCredentials = new HashMap<>();
+    private final Map<String, Credentials> authRequestCredentials = new HashMap<>();
     private ActionCompletionCallback actionCompletionCallback;
     private final ActionRunRequestFactory actionRunRequestFactory;
     private static SimpleDateFormat dateFormatter;

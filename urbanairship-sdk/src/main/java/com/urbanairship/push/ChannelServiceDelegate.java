@@ -73,7 +73,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     private final UAirship airship;
     private final PushManager pushManager;
     private final PushPreferences pushPreferences;
-    private ChannelAPIClient channelClient;
+    private final ChannelAPIClient channelClient;
 
     public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore) {
         this(context, dataStore, new ChannelAPIClient(), UAirship.shared());

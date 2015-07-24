@@ -89,7 +89,7 @@ class ChannelCapture extends BaseManager {
     private final PushManager pushManager;
     private final NotificationManagerCompat notificationManager;
     private Clipboard clipboard;
-    private BroadcastReceiver broadcastReceiver;
+    private final BroadcastReceiver broadcastReceiver;
 
     Executor executor = Executors.newSingleThreadExecutor();
 

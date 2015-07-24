@@ -36,11 +36,11 @@ import com.urbanairship.http.Response;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -55,7 +55,7 @@ class UserAPIClient {
     private static final String MARK_READ_MESSAGES_PATH = "api/user/%s/messages/unread/";
     private static final String MESSAGES_PATH = "api/user/%s/messages/";
 
-    private RequestFactory requestFactory;
+    private final RequestFactory requestFactory;
 
     UserAPIClient() {
         this(new RequestFactory());
@@ -95,7 +95,7 @@ class UserAPIClient {
         if (response == null) {
             Logger.verbose("UserAPIClient - Failed to receive response for Rich Push user creation.");
             return null;
-        } else if (response.getStatus() == HttpStatus.SC_CREATED) {
+        } else if (response.getStatus() == HttpURLConnection.HTTP_CREATED) {
             String userId;
             String userToken;
             try {
@@ -139,7 +139,7 @@ class UserAPIClient {
                                           .execute();
 
         Logger.verbose("UserAPIClient - Update Rich Push user response: " + response);
-        return response != null && response.getStatus() == HttpStatus.SC_OK;
+        return response != null && response.getStatus() == HttpURLConnection.HTTP_OK;
     }
 
     /**
@@ -169,7 +169,7 @@ class UserAPIClient {
                                           .execute();
 
         Logger.verbose("UserAPIClient - Delete inbox messages response: " + response);
-        return response != null && response.getStatus() == HttpStatus.SC_OK;
+        return response != null && response.getStatus() == HttpURLConnection.HTTP_OK;
     }
 
     /**
@@ -199,7 +199,7 @@ class UserAPIClient {
                                           .execute();
 
         Logger.verbose("UserAPIClient - Mark inbox messages read response: " + response);
-        return response != null && response.getStatus() == HttpStatus.SC_OK;
+        return response != null && response.getStatus() == HttpURLConnection.HTTP_OK;
     }
 
     /**

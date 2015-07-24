@@ -40,7 +40,7 @@ public class PushArrivedEvent extends Event {
 
     static final String TYPE = "push_arrived";
 
-    private String pushId;
+    private final String pushId;
 
     /**
      * Constructor for PushArrivedEvent. You should not instantiate this class directly.

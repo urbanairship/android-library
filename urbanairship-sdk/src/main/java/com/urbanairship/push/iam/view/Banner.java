@@ -36,60 +36,60 @@ public interface Banner {
     /**
      * Listener interface for action button clicks.
      */
-    public interface OnActionClickListener {
+    interface OnActionClickListener {
 
         /**
          * Called when an action button is clicked.
          * @param actionButton The action button.
          */
-        public void onActionClick(NotificationActionButton actionButton);
+        void onActionClick(NotificationActionButton actionButton);
     }
 
     /**
      * Listener interface for dismiss button clicks.
      */
-    public interface OnDismissClickListener {
+    interface OnDismissClickListener {
 
         /**
          * Called when the dismiss button is clicked.
          */
-        public void onDismissClick();
+        void onDismissClick();
     }
 
     /**
      * Sets the listener for dismiss button clicks
      * @param listener The dismiss listener.
      */
-    public void setOnDismissClickListener(OnDismissClickListener listener);
+    void setOnDismissClickListener(OnDismissClickListener listener);
 
     /**
      * Sets the listener for action button clicks
      * @param listener The action button listener.
      */
-    public void setOnActionClickListener(OnActionClickListener listener);
+    void setOnActionClickListener(OnActionClickListener listener);
 
 
     /**
      * Sets the banner's text.
      * @param text Banner's text.
      */
-    public void setText(CharSequence text);
+    void setText(CharSequence text);
 
     /**
      * Sets the action buttons from a {@link NotificationActionButtonGroup}.
      * @param group The notification action button group.
      */
-    public void setNotificationActionButtonGroup(NotificationActionButtonGroup group);
+    void setNotificationActionButtonGroup(NotificationActionButtonGroup group);
 
     /**
      * Sets the primary banner color.
      * @param color The primary color.
      */
-    public void setPrimaryColor(int color);
+    void setPrimaryColor(int color);
 
     /**
      * Sets the secondary banner color.
      * @param color The secondary color.
      */
-    public void setSecondaryColor(int color);
+    void setSecondaryColor(int color);
 }
