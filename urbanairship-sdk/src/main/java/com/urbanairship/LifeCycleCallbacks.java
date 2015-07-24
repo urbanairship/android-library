@@ -37,7 +37,7 @@ import android.os.Bundle;
 @TargetApi(14)
 public abstract class LifeCycleCallbacks {
     private final Application application;
-    private ActivityLifecycleCallbacks activityLifecycleCallbacks;
+    private final ActivityLifecycleCallbacks activityLifecycleCallbacks;
     private boolean isRegistered = false;
 
     /**

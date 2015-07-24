@@ -213,7 +213,7 @@ public class LandingPageAction extends Action {
 
         // Add https scheme if not set
         if (UAStringUtil.isEmpty(uri.getScheme())) {
-            uri = Uri.parse("https://" + uri.toString());
+            uri = Uri.parse("https://" + uri);
         }
 
         return uri;

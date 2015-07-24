@@ -19,5 +19,5 @@ import java.lang.annotation.Target;
  * @author Urban Airship
  */
 public @interface PropertyName {
-    public String name();
+    String name();
 }

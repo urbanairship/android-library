@@ -240,7 +240,7 @@ public final class ActionRegistry {
         private Action defaultAction;
         private Predicate<ActionArguments> predicate;
 
-        private Map<Situation, Action> situationOverrides = new ConcurrentHashMap<>();
+        private final Map<Situation, Action> situationOverrides = new ConcurrentHashMap<>();
 
         /**
          * Entry constructor

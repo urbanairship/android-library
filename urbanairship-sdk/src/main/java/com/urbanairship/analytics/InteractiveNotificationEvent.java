@@ -48,11 +48,11 @@ public class InteractiveNotificationEvent extends Event {
     private static final String FOREGROUND_KEY = "foreground";
     private static final String TYPE = "interactive_notification_action";
 
-    private String sendId;
-    private String buttonGroupId;
-    private String buttonId;
-    private String buttonDescription;
-    private boolean isForeground;
+    private final String sendId;
+    private final String buttonGroupId;
+    private final String buttonId;
+    private final String buttonDescription;
+    private final boolean isForeground;
 
     /**
      * Creates an interactive notification event.

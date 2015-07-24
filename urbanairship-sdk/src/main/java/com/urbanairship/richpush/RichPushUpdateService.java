@@ -40,11 +40,11 @@ import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
-import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -366,11 +366,11 @@ public class RichPushUpdateService extends IntentService {
         Logger.debug("RichPushUpdateService - Inbox message list request received: " + response.getStatus());
 
         switch (response.getStatus()) {
-            case HttpStatus.SC_NOT_MODIFIED:
+            case HttpURLConnection.HTTP_NOT_MODIFIED:
                 Logger.info("Inbox messages already up-to-date. ");
                 return true;
 
-            case HttpStatus.SC_OK:
+            case HttpURLConnection.HTTP_OK:
                 ContentValues[] serverMessages = response.getServerMessages();
                 if (serverMessages == null) {
                     Logger.info("Inbox message list is empty.");

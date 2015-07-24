@@ -134,9 +134,9 @@ public class LocationService extends Service {
     /**
      * Result receiver code indicating continuous location updates have been started.
      */
-    static int RESULT_LOCATION_UPDATES_STARTED = 1;
+    static final int RESULT_LOCATION_UPDATES_STARTED = 1;
 
-    private Set<Messenger> subscribedClients = new HashSet<>();
+    private final Set<Messenger> subscribedClients = new HashSet<>();
     private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
 
     private Messenger messenger;

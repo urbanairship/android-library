@@ -43,7 +43,7 @@ class ChannelAPIClient {
     static final String CHANNEL_CREATION_PATH = "api/channels/";
 
     protected URL creationURL;
-    private RequestFactory requestFactory;
+    private final RequestFactory requestFactory;
 
     ChannelAPIClient() {
         this(new RequestFactory());

@@ -60,7 +60,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
     static final String PREFERENCES_CONTENT_TYPE = MULTIPLE_SUFFIX + "preference";
     static final String PREFERENCES_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "preference";
 
-
     /**
      * The database delete action that is appended to notification Uri's so we have more
      * information about what changed in the database.
@@ -72,12 +71,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
      * information about what changed in the database.
      */
     public static final String INSERT_ACTION = "insert";
-
-    /**
-     * The database replace action that is appended to notification Uri's so we have more
-     * information about what changed in the database.
-     */
-    public static final String REPLACE_ACTION = "replace";
 
     /**
      * The database update action that is appended to notification Uri's so we have more
@@ -334,10 +327,10 @@ public final class UrbanAirshipProvider extends ContentProvider {
      * A class that wraps the two different database sources for the content provider.
      */
     private static class DatabaseModel {
-        DataManager dataManager;
-        String table;
-        Uri contentUri;
-        String notificationColumnId;
+        final DataManager dataManager;
+        final String table;
+        final Uri contentUri;
+        final String notificationColumnId;
 
         /**
          * Hidden DatabaseModel constructor.
@@ -353,7 +346,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
             this.table = table;
             this.contentUri = contentUri;
             this.notificationColumnId = notificationColumnId;
-        }
+         }
 
         /**
          * Creates a rich push database model.
@@ -388,7 +381,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          */
         void notifyDatabaseChange(@NonNull Context context, @NonNull String[] ids, @NonNull String action) {
             Uri newUri = Uri.withAppendedPath(contentUri, UAStringUtil.join(Arrays.asList(ids), KEYS_DELIMITER) + "/" + action);
-            Logger.verbose("UrbanAirshipProvider - Notifying of change to " + newUri.toString());
+            Logger.verbose("UrbanAirshipProvider - Notifying of change to " + newUri);
             context.getContentResolver().notifyChange(newUri, null);
         }
 

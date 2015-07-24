@@ -59,7 +59,7 @@ public class Request {
     protected String body;
     protected String contentType;
 
-    protected Map<String, String> responseProperties;
+    protected final Map<String, String> responseProperties;
     private static final String USER_AGENT_FORMAT = "%s (%s; %s; UrbanAirshipLib-%s/%s; %s; %s)";
     private long ifModifiedSince = 0;
     private boolean compressRequestBody = false;

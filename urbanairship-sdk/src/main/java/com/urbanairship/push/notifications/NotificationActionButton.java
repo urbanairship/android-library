@@ -54,7 +54,7 @@ public class NotificationActionButton {
     private final boolean isForegroundAction;
     private final int iconId;
     private final String description;
-    private List<LocalizableRemoteInput> remoteInputs;
+    private final List<LocalizableRemoteInput> remoteInputs;
 
     private NotificationActionButton(String id, int iconId, int labelId, String description, Bundle extras, boolean isForegroundAction, List<LocalizableRemoteInput> remoteInputs) {
         this.id = id;
@@ -184,7 +184,7 @@ public class NotificationActionButton {
      * Builds the NotificationAction.
      */
     public static class Builder {
-        private String buttonId;
+        private final String buttonId;
         private int labelId = 0;
         private int iconId = 0;
         private boolean isForegroundAction = true;

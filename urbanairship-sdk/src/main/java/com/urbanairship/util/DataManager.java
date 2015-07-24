@@ -47,7 +47,7 @@ import java.util.List;
  */
 public abstract class DataManager {
     private static final int MAX_ATTEMPTS = 3;
-    private SQLiteOpenHelper openHelper;
+    private final SQLiteOpenHelper openHelper;
 
     /**
      * Default Constructor for DataManager

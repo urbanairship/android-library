@@ -69,9 +69,9 @@ public class Analytics {
     private final AnalyticsPreferences preferences;
     private boolean inBackground;
 
-    private int minSdkVersion;
-    private AirshipConfigOptions configOptions;
-    private Context context;
+    private final int minSdkVersion;
+    private final AirshipConfigOptions configOptions;
+    private final Context context;
     private String sessionId;
     private String conversionSendId;
 

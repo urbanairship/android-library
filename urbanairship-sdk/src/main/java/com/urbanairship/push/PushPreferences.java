@@ -90,7 +90,7 @@ class PushPreferences {
 
     private static final String APID_KEY = KEY_PREFIX + ".APID";
 
-    private PreferenceDataStore preferenceDataStore;
+    private final PreferenceDataStore preferenceDataStore;
 
     public PushPreferences(PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;

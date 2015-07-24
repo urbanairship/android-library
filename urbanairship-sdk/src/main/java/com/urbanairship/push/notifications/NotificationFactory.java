@@ -70,7 +70,7 @@ public abstract class NotificationFactory {
     private final static int BIG_IMAGE_HEIGHT_DP = 240;
     private final static double BIG_IMAGE_SCREEN_WIDTH_PERCENT = .75;
 
-    private Context context;
+    private final Context context;
 
     public NotificationFactory(Context context) {
         this.context = context.getApplicationContext();

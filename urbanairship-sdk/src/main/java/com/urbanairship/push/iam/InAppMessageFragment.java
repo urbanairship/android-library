@@ -149,6 +149,11 @@ public class InAppMessageFragment extends Fragment {
         this.setRetainInstance(true);
 
         this.message = getArguments().getParcelable(MESSAGE);
+        if (message == null) {
+            dismiss(false);
+            return;
+        }
+
         this.isDismissed = savedInstance != null && savedInstance.getBoolean(DISMISSED, false);
 
         long duration = message.getDuration() == null ? DEFAULT_DURATION : message.getDuration();

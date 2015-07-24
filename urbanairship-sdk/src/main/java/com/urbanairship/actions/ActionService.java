@@ -93,7 +93,7 @@ public class ActionService extends Service {
     // Number of currently running actions
     private int runningActions = 0;
 
-    private ActionRunRequestFactory actionRunRequestFactory;
+    private final ActionRunRequestFactory actionRunRequestFactory;
 
     /**
      * ActionService constructor, allowing an injectable ActionRunRequestFactory instance.

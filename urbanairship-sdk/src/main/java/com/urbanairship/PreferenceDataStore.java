@@ -57,7 +57,7 @@ public final class PreferenceDataStore {
     Executor executor = Executors.newSingleThreadExecutor();
 
     private final Map<String, Preference> preferences = new HashMap<>();
-    private UrbanAirshipResolver resolver;
+    private final UrbanAirshipResolver resolver;
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
 

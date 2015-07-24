@@ -68,17 +68,17 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     /**
      * Default minDistance in meters - 800 meters.
      */
-    public static float DEFAULT_UPDATE_INTERVAL_METERS = 800;
+    public static final float DEFAULT_UPDATE_INTERVAL_METERS = 800;
 
     /**
      * Default minTime in milliseconds - 5 mins.
      */
-    public static long DEFAULT_UPDATE_INTERVAL_MILLISECONDS = 5 * 60 * 1000;
+    public static final long DEFAULT_UPDATE_INTERVAL_MILLISECONDS = 5 * 60 * 1000;
 
     /**
      * Default priority - PRIORITY_BALANCED_POWER_ACCURACY.
      */
-    public static int DEFAULT_REQUEST_PRIORITY = LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
+    public static final int DEFAULT_REQUEST_PRIORITY = LocationRequestOptions.PRIORITY_BALANCED_POWER_ACCURACY;
 
     @IntDef({PRIORITY_HIGH_ACCURACY, PRIORITY_BALANCED_POWER_ACCURACY, PRIORITY_LOW_POWER, PRIORITY_NO_POWER})
     @Retention(RetentionPolicy.SOURCE)

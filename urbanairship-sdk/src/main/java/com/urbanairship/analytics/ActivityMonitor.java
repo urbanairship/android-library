@@ -54,12 +54,12 @@ class ActivityMonitor {
      */
     static final int AUTO_INSTRUMENTATION = 1;
 
-    private SparseArray<ActivityState> activityStates = new SparseArray<>();
+    private final SparseArray<ActivityState> activityStates = new SparseArray<>();
     private Listener listener;
     private boolean isForeground = false;
-    private int minSdkVersion;
-    private int currentSdkVersion;
-    private boolean analyticsEnabled;
+    private final int minSdkVersion;
+    private final int currentSdkVersion;
+    private final boolean analyticsEnabled;
 
     //a brief delay, to give the app a chance to perform screen rotation cleanup
     private final static int BACKGROUND_DELAY_MS = 2000;

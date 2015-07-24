@@ -38,7 +38,7 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup;
  */
 public class BannerView extends FrameLayout implements Banner {
 
-    private BannerContent content;
+    private final BannerContent content;
 
     /**
      * Construct a banner view.

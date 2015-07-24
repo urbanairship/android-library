@@ -77,9 +77,9 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      */
     private static final int RICH_PUSH_REFRESH_WAIT_TIME_MS = 60000; // 1 minute
 
-    private NotificationManagerCompat notificationManager;
-    private PushManager pushManager;
-    private UAirship airship;
+    private final NotificationManagerCompat notificationManager;
+    private final PushManager pushManager;
+    private final UAirship airship;
 
     public IncomingPushServiceDelegate(Context context, PreferenceDataStore dataStore) {
         this(context, dataStore, UAirship.shared(), NotificationManagerCompat.from(context));

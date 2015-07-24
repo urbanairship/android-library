@@ -37,7 +37,7 @@ import com.urbanairship.util.UAStringUtil;
  */
 public class RichPushUser {
 
-    RichPushUserPreferences preferences;
+    final RichPushUserPreferences preferences;
 
     RichPushUser(PreferenceDataStore preferenceDataStore) {
         this.preferences = new RichPushUserPreferences(preferenceDataStore);

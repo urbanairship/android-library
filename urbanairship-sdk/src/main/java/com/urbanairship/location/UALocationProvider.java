@@ -45,7 +45,7 @@ import java.util.List;
  */
 class UALocationProvider {
 
-    private List<LocationAdapter> adapters = new ArrayList<>();
+    private final List<LocationAdapter> adapters = new ArrayList<>();
     private LocationAdapter connectedAdapter;
     private boolean isConnected = false;
 

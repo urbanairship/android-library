@@ -49,8 +49,8 @@ import java.util.UUID;
  */
 public abstract class Event {
 
-    private String eventId; //a UUID string
-    private String time; //seconds since the epoch
+    private final String eventId; //a UUID string
+    private final String time; //seconds since the epoch
 
     //top level event fields
     static final String TYPE_KEY = "type";

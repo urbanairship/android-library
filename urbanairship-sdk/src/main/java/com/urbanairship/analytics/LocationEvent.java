@@ -57,13 +57,18 @@ public class LocationEvent extends Event {
     /**
      * An enum representing the location update type.
      */
-    public static enum UpdateType {
+    public enum UpdateType {
         CONTINUOUS, SINGLE
     }
 
-    private String provider, latitude, longitude,
-            accuracy, requestedAccuracy, updateDistance, foreground;
-    private UpdateType updateType;
+    private final String provider;
+    private final String latitude;
+    private final String longitude;
+    private final String accuracy;
+    private final String requestedAccuracy;
+    private final String updateDistance;
+    private final String foreground;
+    private final UpdateType updateType;
 
     /**
      * Constructor for LocationEvent.

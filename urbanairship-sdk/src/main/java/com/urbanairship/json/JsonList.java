@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class JsonList implements Iterable<JsonValue> {
 
-    private List<JsonValue> list;
+    private final List<JsonValue> list;
 
     /**
      * Default Constructor.

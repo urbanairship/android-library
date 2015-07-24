@@ -35,9 +35,9 @@ class ActivityState {
     final private String activityName;
     private @State int autoInstrumentedState = NONE;
     private @State int manualInstrumentedState = NONE;
-    private int minSdkVersion;
-    private int currentSdkVersion;
-    private boolean analyticsEnabled;
+    private final int minSdkVersion;
+    private final int currentSdkVersion;
+    private final boolean analyticsEnabled;
     private long lastModifiedTimeMS = 0;
 
     /**

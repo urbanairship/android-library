@@ -30,8 +30,8 @@ package com.urbanairship.richpush;
  */
 class UserResponse {
 
-    private String userId;
-    private String userToken;
+    private final String userId;
+    private final String userToken;
 
     /**
      * Create the user response object.

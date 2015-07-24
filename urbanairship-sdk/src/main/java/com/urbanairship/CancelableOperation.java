@@ -36,7 +36,7 @@ abstract class CancelableOperation implements Cancelable, Runnable {
     private boolean isFinished = false;
     private boolean isRunning = false;
     private boolean isCanceled = false;
-    private Handler handler;
+    private final Handler handler;
 
     private final Runnable internalRunnable;
 
