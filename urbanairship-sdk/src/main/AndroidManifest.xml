@@ -40,17 +40,27 @@
 
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"
-            android:exported="false">
+            android:exported="false"
+            android:theme="@style/LandingPageStyle">
+
+            <meta-data
+                android:name="com.urbanairship.action.LANDING_PAGE_VIEW"
+                android:resource="@layout/ua_activity_landing_page"/>
+
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
 
             <intent-filter>
-                <action android:name="com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION" />
+                <action android:name="com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION"/>
 
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:scheme="message" />
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:scheme="message"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+
         </activity>
 
         <service android:name="com.urbanairship.push.PushService" android:label="Push Notification Service" />
