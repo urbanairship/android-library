@@ -42,7 +42,7 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqlLiteStatement(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqliteStatement(SQLiteStatement statement, ContentValues values) {
         bind(statement, 1, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_ID));
         bind(statement, 2, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_URL));
         bind(statement, 3, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL));

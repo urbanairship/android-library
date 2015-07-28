@@ -86,12 +86,12 @@ public abstract class DataManager {
     protected abstract void onCreate(@NonNull SQLiteDatabase db);
 
     /**
-     * Binds values to the statement.  Used for bulk insert.
+     * Binds values to the statement. Used for bulk insert.
      *
      * @param statement The statement to bind values to
      * @param values The values to bind
      */
-    protected abstract void bindValuesToSqlLiteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values);
+    protected abstract void bindValuesToSqliteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values);
 
     /**
      * Get the insert statement
@@ -438,7 +438,7 @@ public abstract class DataManager {
     }
 
     /**
-     * Tries to execute a SQLiteStatement.  If fails, it will try again till MAX_ATTEMPTS is reached.
+     * Tries to execute a SQLiteStatement. If fails, it will try again till MAX_ATTEMPTS is reached.
      * <p/>
      * Each try, it will clear the bindings of the statement, apply the values and try to execute the
      * statement.
@@ -451,7 +451,7 @@ public abstract class DataManager {
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
                 statement.clearBindings();
-                bindValuesToSqlLiteStatement(statement, values);
+                bindValuesToSqliteStatement(statement, values);
                 statement.execute();
                 return true;
             } catch (Exception ex) {
