@@ -76,7 +76,7 @@ public class UAWebView extends WebView {
      * @param attrs An AttributeSet passed to our parent.
      */
     public UAWebView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        this(context, attrs, android.R.attr.webViewStyle);
     }
 
     /**
