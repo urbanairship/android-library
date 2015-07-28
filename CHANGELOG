@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.1.3 - July 28, 2015
+=============================
+ - Fixed UAWebView not displaying the soft keyboard when interacting with an html input field.
+ - Catches SecurityException when attempting to use UrbanAirship location without the proper location
+   permissions. Useful for Android M when location permissions can be revoked.
+
 Version 6.1.2 - July 1, 2015
 ============================
  - Fixed tag group error logging.
