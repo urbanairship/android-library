@@ -33,7 +33,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:src="@drawable/ua_ic_close"
-        android:contentDescription="close"
+        android:contentDescription="@android:string/ok"
         android:background="@null"
         tools:ignore="OnClick"
         android:onClick="onCloseButtonClick"/>
