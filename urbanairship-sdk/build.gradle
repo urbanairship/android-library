@@ -10,6 +10,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
+// For test coverage reports
+apply plugin: 'jacoco'
+
 android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
