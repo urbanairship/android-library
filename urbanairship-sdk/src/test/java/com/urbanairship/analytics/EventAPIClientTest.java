@@ -26,7 +26,6 @@ import java.util.TimeZone;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -189,24 +188,6 @@ public class EventAPIClientTest extends BaseTestCase {
         assertNull(requestHeaders.get("X-UA-Locale-Language"));
         assertNull(requestHeaders.get("X-UA-Locale-Country"));
         assertNull(requestHeaders.get("X-UA-Locale-Variant"));
-    }
-
-    /**
-     * This verifies the X-UA-Sent-At header.
-     */
-    @Test
-    public void testRequestHeaderSentAtHeader() {
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody(events.toString())
-                .create();
-
-        client.sendEvents(events);
-
-        Map<String, String> requestHeaders = testRequest.getRequestHeaders();
-        double sentAt = Double.parseDouble(requestHeaders.get("X-UA-Sent-At"));
-        double currentTime = System.currentTimeMillis() / 1000.0;
-        assertTrue(sentAt < currentTime && sentAt >= currentTime - 1);
     }
 
     /**
