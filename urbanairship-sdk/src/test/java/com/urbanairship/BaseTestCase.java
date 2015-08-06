@@ -29,6 +29,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
 @RunWith(TestRunner.class)
-@Config(emulateSdk = 18)
+@Config(sdk = 18)
 public abstract class BaseTestCase {
 }

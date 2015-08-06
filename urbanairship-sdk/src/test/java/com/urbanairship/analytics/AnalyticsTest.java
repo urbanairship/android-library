@@ -41,9 +41,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowLocalBroadcastManager;
+import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import java.util.List;
 
@@ -121,7 +120,7 @@ public class AnalyticsTest extends BaseTestCase {
         assertTrue(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app foreground
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.support.v4.Shadows.shadowOf(localBroadcastManager);
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.shadows.support.v4.Shadows.shadowOf(localBroadcastManager);
         List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
         assertEquals("Should of sent a foreground local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_FOREGROUND);
@@ -157,7 +156,7 @@ public class AnalyticsTest extends BaseTestCase {
         assertFalse(analytics.isAppInForeground());
 
         // Verify we sent a broadcast intent for app background
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.support.v4.Shadows.shadowOf(localBroadcastManager);
+        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.shadows.support.v4.Shadows.shadowOf(localBroadcastManager);
         List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
         assertEquals("Should of sent a background local broadcast",
                 broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_BACKGROUND);
@@ -196,22 +195,6 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     /**
-     * Test activity started when life cycle calls disabled
-     */
-    @Test
-    @Config(reportSdk = 10, application = TestApplication.class)
-    public void testActivityStartedLifeCyclesDisabled() {
-        Activity activity = new Activity();
-        Analytics.activityStarted(activity);
-
-        // Activity started is posted on the main looper
-        Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-
-        // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
-    }
-
-    /**
      * Test activity stopped when life cycle calls enabled (API >= 14)
      */
     @Test
@@ -233,22 +216,6 @@ public class AnalyticsTest extends BaseTestCase {
         assertNull("Life cycle events should add the activity events", addEventIntent);
     }
 
-    /**
-     * Test activity stopped when life cycle calls disabled
-     */
-    @Test
-    @Config(reportSdk = 10, application = TestApplication.class)
-    public void testActivityStoppedLifeCyclesDisabled() {
-        Activity activity = new Activity();
-        Analytics.activityStopped(activity);
-
-        // Activity stopped is posted on the main looper
-        Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-
-
-        // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
-    }
 
     /**
      * Test adding an event
