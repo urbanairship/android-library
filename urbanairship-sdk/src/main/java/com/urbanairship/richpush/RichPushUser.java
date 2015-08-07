@@ -66,7 +66,6 @@ public class RichPushUser {
         if (!UAStringUtil.isEmpty(userId) && !UAStringUtil.isEmpty(userToken)) {
             Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
             preferences.setUserCredentials(userId, userToken);
-            setLastMessageRefreshTime(0);
             return true;
         } else {
             Logger.error("RichPushUser - Unable to update user. Missing user ID or token.");
@@ -90,41 +89,5 @@ public class RichPushUser {
      */
     public String getPassword() {
         return preferences.getUserToken();
-    }
-
-    /**
-     * Get the last update time.
-     *
-     * @return The last update time.
-     */
-    long getLastUpdateTime() {
-        return preferences.getLastUpdateTime();
-    }
-
-    /**
-     * Set the last update time.
-     *
-     * @param timeMs The time in milliseconds to set.
-     */
-    void setLastUpdateTime(long timeMs) {
-        preferences.setLastUpdateTime(timeMs);
-    }
-
-    /**
-     * Get the last message refresh time.
-     *
-     * @return The last message refresh time.
-     */
-    long getLastMessageRefreshTime() {
-        return preferences.getLastMessageRefreshTime();
-    }
-
-    /**
-     * Set the last message refresh time.
-     *
-     * @param timeMs The time in milliseconds to set.
-     */
-    void setLastMessageRefreshTime(long timeMs) {
-        preferences.setLastMessageRefreshTime(timeMs);
     }
 }

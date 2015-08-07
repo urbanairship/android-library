@@ -40,8 +40,6 @@ class RichPushUserPreferences {
     private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
-    private static final String LAST_UPDATE_TIME = KEY_PREFIX + ".LAST_UPDATE_TIME";
-    private static final String LAST_MESSAGE_REFRESH_TIME = KEY_PREFIX + ".LAST_MESSAGE_REFRESH_TIME";
 
     private final PreferenceDataStore preferenceDataStore;
 
@@ -86,42 +84,6 @@ class RichPushUserPreferences {
      */
     public String getUserToken() {
         return decode(preferenceDataStore.getString(USER_TOKEN_KEY, null), getUserId());
-    }
-
-    /**
-     * Get the last message refresh time.
-     *
-     * @return The last message refresh time.
-     */
-    public long getLastMessageRefreshTime() {
-        return preferenceDataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0);
-    }
-
-    /**
-     * Set the last message refresh time.
-     *
-     * @param timeMs The time in milliseconds to set.
-     */
-    public void setLastMessageRefreshTime(long timeMs) {
-        preferenceDataStore.put(LAST_MESSAGE_REFRESH_TIME, timeMs);
-    }
-
-    /**
-     * Get the last update time.
-     *
-     * @return The last update time in milliseconds.
-     */
-    public long getLastUpdateTime() {
-        return preferenceDataStore.getLong(LAST_UPDATE_TIME, 0);
-    }
-
-    /**
-     * Set the last update time.
-     *
-     * @param timeMs The time in milliseconds.
-     */
-    public void setLastUpdateTime(long timeMs) {
-        preferenceDataStore.put(LAST_UPDATE_TIME, timeMs);
     }
 
     /**

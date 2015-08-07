@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -121,7 +123,7 @@ public class PushService extends BaseIntentService {
     }
 
     @Override
-    protected Delegate getServiceDelegate(String intentAction, PreferenceDataStore dataStore) {
+    protected Delegate getServiceDelegate(@NonNull String intentAction, @NonNull PreferenceDataStore dataStore) {
         Logger.verbose("PushService - Service delegate for intent: " + intentAction);
 
         switch (intentAction) {

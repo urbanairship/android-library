@@ -25,35 +25,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import android.app.IntentService;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import com.urbanairship.Autopilot;
+import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
-import com.urbanairship.RichPushTable;
-import com.urbanairship.UAirship;
-import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.urbanairship.PreferenceDataStore;
 
 /**
  * Service for updating the {@link RichPushUser} and their messages.
+ *
+ * @hide
  */
-public class RichPushUpdateService extends IntentService {
+public class RichPushUpdateService extends BaseIntentService {
 
     /**
      * Starts the service in order to update just the {@link RichPushMessage}'s messages.
@@ -71,443 +57,67 @@ public class RichPushUpdateService extends IntentService {
     public static final String EXTRA_RICH_PUSH_RESULT_RECEIVER = "com.urbanairship.richpush.RESULT_RECEIVER";
 
     /**
+     * Extra key to indicate if the rich push user needs to be updated forcefully.
+     */
+    public static final String EXTRA_FORCEFULLY = "com.urbanairship.richpush.EXTRA_FORCEFULLY";
+
+    /**
      * Status code indicating an update complete successfully.
      */
     public static final int STATUS_RICH_PUSH_UPDATE_SUCCESS = 0;
 
     /**
-     * Status code indicating an update didn't not complete successfully.
+     * Status code indicating an update did not complete successfully.
      */
     public static final int STATUS_RICH_PUSH_UPDATE_ERROR = 1;
 
-    private static final String DELETE_MESSAGES_KEY = "delete";
-    private static final String MARK_READ_MESSAGES_KEY = "mark_as_read";
-    private static final String MESSAGE_URL = "api/user/%s/messages/message/%s/";
+    static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
 
-    private static final String PAYLOAD_AMAZON_CHANNELS_KEY = "amazon_channels";
-    private static final String PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels";
-    private static final String PAYLOAD_ADD_KEY = "add";
 
-    UserAPIClient userClient;
-    RichPushResolver resolver;
+    private UserRegistrationServiceDelegate userRegistrationServiceDelegate;
+    private InboxServiceDelegate inboxServiceDelegate;
 
+    /**
+     * RichPushUpdateService constructor.
+     */
     public RichPushUpdateService() {
         super("RichPushUpdateService");
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Autopilot.automaticTakeOff(getApplicationContext());
+    protected Delegate getServiceDelegate(@NonNull String intentAction, @NonNull PreferenceDataStore dataStore) {
+        Logger.verbose("RichPushUpdateService - Service delegate for intent: " + intentAction);
 
-        this.userClient = new UserAPIClient();
-        this.resolver = new RichPushResolver(getApplicationContext());
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent == null || intent.getAction() == null) {
-            return;
-        }
-
-        Logger.verbose("RichPushUpdateService - Received intent: " + intent.getAction());
-
-        final ResultReceiver receiver = intent.getParcelableExtra(EXTRA_RICH_PUSH_RESULT_RECEIVER);
-
-        if (ACTION_RICH_PUSH_MESSAGES_UPDATE.equals(intent.getAction())) {
-            //note - this should probably send an error result back
-            if (!RichPushUser.isCreated()) {
-                Logger.debug("RichPushUpdateService - User has not been created, canceling messages update");
-                respond(receiver, false);
-            } else {
-                messagesUpdate(receiver);
-            }
-
-        } else if (ACTION_RICH_PUSH_USER_UPDATE.equals(intent.getAction())) {
-            userUpdate(receiver);
-        }
-    }
-
-    /**
-     * Deliver a result to the receiver with a bundle.
-     *
-     * @param receiver The result receiver.
-     * @param status A boolean indicating whether rich push update succeeded.
-     * @param bundle The bundle delivered to the receiver.
-     */
-    private void respond(@Nullable ResultReceiver receiver, boolean status, @Nullable Bundle bundle) {
-        if (receiver != null) {
-            if (bundle == null) {
-                bundle = new Bundle();
-            }
-            if (status) {
-                receiver.send(STATUS_RICH_PUSH_UPDATE_SUCCESS, bundle);
-            } else {
-                receiver.send(STATUS_RICH_PUSH_UPDATE_ERROR, bundle);
-            }
-        }
-    }
-
-    /**
-     * Deliver a result to the receiver.
-     *
-     * @param receiver The result receiver.
-     * @param status A boolean indicating whether rich push update succeeded.
-     */
-    private void respond(@Nullable ResultReceiver receiver, boolean status) {
-        this.respond(receiver, status, null);
-    }
-
-    // Main entry-points
-
-    /**
-     * Update the inbox messages.
-     *
-     * @param receiver The result receiver.
-     */
-    private void messagesUpdate(@Nullable ResultReceiver receiver) {
-        boolean success = this.updateMessages();
-        this.respond(receiver, success);
-
-        // Do clean up
-        this.handleReadMessages();
-        this.handleDeletedMessages();
-    }
-
-    /**
-     * Update the user.
-     *
-     * @param receiver The result receiver.
-     */
-    private void userUpdate(@Nullable ResultReceiver receiver) {
-        boolean success;
-        if (!RichPushUser.isCreated()) {
-            success = this.createUser();
-        } else {
-            success = this.updateUser();
-        }
-
-        this.respond(receiver, success);
-    }
-
-    //actions
-
-    /**
-     * Create the user.
-     *
-     * @return <code>true</code> if user was created, otherwise <code>false</code>.
-     */
-    private boolean createUser() {
-        JSONObject payload;
-        try {
-            payload = createNewUserPayload();
-        } catch (JSONException e) {
-            Logger.error("Exception constructing JSON data when creating user.", e);
-            return false;
-        }
-
-        Logger.info("Creating Rich Push user.");
-
-        UserResponse response = userClient.createUser(payload);
-        if (response == null) {
-            return false;
-        } else {
-            if (getUser().setUser(response.getUserId(), response.getUserToken())) {
-                Logger.info("Rich Push user created.");
-                getUser().setLastUpdateTime(System.currentTimeMillis());
-                return true;
-            } else {
-                Logger.warn("Rich Push user creation failed.");
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Update the user.
-     *
-     * @return <code>true</code> if user was updated, otherwise <code>false</code>.
-     */
-    private boolean updateUser() {
-        if (UAStringUtil.isEmpty(UAirship.shared().getPushManager().getChannelId())) {
-            Logger.debug("RichPushUpdateService - No Channel. Skipping Rich Push user update.");
-            return false;
-        }
-
-        Logger.info("Updating Rich Push user.");
-
-        JSONObject payload;
-
-        try {
-            payload = createUpdateUserPayload();
-        } catch (JSONException e) {
-            Logger.error("Exception constructing JSON data when updating user.", e);
-            return false;
-        }
-
-        if (userClient.updateUser(payload, getUser().getId(), getUser().getPassword())) {
-            Logger.info("Rich Push user updated.");
-
-            getUser().setLastUpdateTime(System.currentTimeMillis());
-            return true;
-        } else {
-            getUser().setLastUpdateTime(0);
-            return false;
-        }
-    }
-
-    /**
-     * Create the new user payload.
-     *
-     * @return The user payload as a JSON object.
-     */
-    private JSONObject createNewUserPayload() throws JSONException {
-        JSONObject payload = new JSONObject();
-
-        String channelId = UAirship.shared().getPushManager().getChannelId();
-        if (!UAStringUtil.isEmpty(channelId)) {
-            JSONArray array = new JSONArray();
-            array.put(channelId);
-            payload.putOpt(getPayloadChannelsKey(), array);
-        }
-
-        return payload;
-    }
-
-    /**
-     * Create the user update payload.
-     *
-     * @return The user payload as a JSON object.
-     */
-    private JSONObject createUpdateUserPayload() throws JSONException {
-        JSONObject payload = new JSONObject();
-        JSONObject channelPayload = new JSONObject();
-
-        JSONArray channels = new JSONArray();
-        channels.put(UAirship.shared().getPushManager().getChannelId());
-
-        channelPayload.put(PAYLOAD_ADD_KEY, channels);
-        payload.put(getPayloadChannelsKey(), channelPayload);
-
-        return payload;
-    }
-
-    /**
-     * Get the payload channels key based on the platform.
-     *
-     * @return The payload channels key as a string.
-     */
-    private String getPayloadChannelsKey() {
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.AMAZON_PLATFORM:
-                return PAYLOAD_AMAZON_CHANNELS_KEY;
-
-            default:
-                return PAYLOAD_ANDROID_CHANNELS_KEY;
-        }
-    }
-
-    /**
-     * Handle deletion of messages.
-     */
-    private void handleDeletedMessages() {
-        Set<String> idsToDelete = getMessageIdsFromCursor(resolver.getDeletedMessages());
-
-        if (idsToDelete != null && idsToDelete.size() > 0) {
-            Logger.verbose("RichPushUpdateService - Found " + idsToDelete.size() + " messages to delete.");
-
-            // Note: If we can't delete the messages on the server, leave them untouched
-            // and we'll get them next time.
-            if (this.deleteMessagesOnServer(idsToDelete)) {
-                resolver.deleteMessages(idsToDelete);
-            }
-        }
-    }
-
-    /**
-     * Handle marking messages read.
-     */
-    private void handleReadMessages() {
-        Set<String> idsToUpdate = getMessageIdsFromCursor(resolver.getReadUpdatedMessages());
-
-        if (idsToUpdate != null && idsToUpdate.size() > 0) {
-            Logger.verbose("RichPushUpdateService - Found " + idsToUpdate.size() + " messages to mark read.");
-
-            /*
-            Note: If we can't mark the messages read on the server, leave them untouched
-            and we'll get them next time.
-             */
-            if (this.markMessagesReadOnServer(idsToUpdate)) {
-                ContentValues values = new ContentValues();
-                values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, 0);
-                resolver.updateMessages(idsToUpdate, values);
-            }
-        }
-    }
-
-    /**
-     * Update the inbox messages.
-     *
-     * @return <code>true</code> if messages were updated, otherwise <code>false</code>.
-     */
-    private boolean updateMessages() {
-        RichPushUser user = getUser();
-        MessageListResponse response = userClient.getMessages(user.getId(),
-                user.getPassword(),
-                user.getLastMessageRefreshTime());
-
-        Logger.info("Refreshing inbox messages.");
-
-        if (response == null) {
-            Logger.debug("RichPushUpdateService - Inbox message list request failed.");
-            return false;
-        }
-
-        Logger.debug("RichPushUpdateService - Inbox message list request received: " + response.getStatus());
-
-        switch (response.getStatus()) {
-            case HttpURLConnection.HTTP_NOT_MODIFIED:
-                Logger.info("Inbox messages already up-to-date. ");
-                return true;
-
-            case HttpURLConnection.HTTP_OK:
-                ContentValues[] serverMessages = response.getServerMessages();
-                if (serverMessages == null) {
-                    Logger.info("Inbox message list is empty.");
-                } else {
-                    Logger.info("Received " + serverMessages.length + " inbox messages.");
-                    updateInbox(serverMessages);
-                    user.setLastMessageRefreshTime(response.getLastModifiedTimeMS());
+        switch(intentAction) {
+            case ACTION_RICH_PUSH_USER_UPDATE:
+                if (userRegistrationServiceDelegate == null) {
+                    userRegistrationServiceDelegate = new UserRegistrationServiceDelegate(getApplicationContext(), dataStore);
                 }
-                return true;
+                return userRegistrationServiceDelegate;
 
-            default:
-                Logger.info("Unable to update inbox messages.");
-                return false;
+            case ACTION_RICH_PUSH_MESSAGES_UPDATE:
+                if (inboxServiceDelegate == null) {
+                    inboxServiceDelegate = new InboxServiceDelegate(getApplicationContext(), dataStore);
+                }
+                return inboxServiceDelegate;
         }
-    }
-
-
-    // http actions
-
-    /**
-     * Delete the messages on the server.
-     *
-     * @param deletedIds A set of deletedId strings.
-     * @return <code>true</code> if messages were deleted, otherwise <code>false</code>.
-     */
-    private boolean deleteMessagesOnServer(@NonNull Set<String> deletedIds) {
-        JSONObject payload = buildMessagesPayload(DELETE_MESSAGES_KEY, deletedIds);
-        return userClient.deleteMessages(payload, getUser().getId(), getUser().getPassword());
+        return  null;
     }
 
     /**
-     * Mark the messages read on the server.
+     * Helper method to respond to result receiver.
      *
-     * @param readIds A set of readId strings.
-     * @return <code>true</code> if messages marked read, otherwise <code>false</code>.
+     * @param intent The received intent.
+     * @param status If the intent was successful or not.
      */
-    private boolean markMessagesReadOnServer(@NonNull Set<String> readIds) {
-        JSONObject payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, readIds);
-        return userClient.markMessagesRead(payload, getUser().getId(), getUser().getPassword());
-    }
-
-
-    // helpers
-
-    private JSONObject buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
-        try {
-            JSONObject payload = new JSONObject();
-            payload.put(root, new JSONArray());
-            String userId = this.getUser().getId();
-            for (String id : ids) {
-                payload.accumulate(root, this.formatUrl(MESSAGE_URL, new String[] { userId, id }));
-            }
-            Logger.verbose(payload.toString());
-            return payload;
-        } catch (JSONException e) {
-            Logger.info(e.getMessage());
-        }
-        return null;
-    }
-
-    private String formatUrl(String urlFormat, String[] urlParams) {
-        return this.getHostUrl() + String.format(urlFormat, (Object[]) urlParams);
-    }
-
-
-    /**
-     * Get the rich push user.
-     *
-     * @return The rich push user.
-     */
-    private RichPushUser getUser() {
-        return UAirship.shared().getRichPushManager().getRichPushUser();
-    }
-
-    /**
-     * Get the host URL.
-     *
-     * @return The host URL.
-     */
-    private String getHostUrl() {
-        return UAirship.shared().getAirshipConfigOptions().hostURL;
-    }
-
-    /**
-     * Update the Rich Push Inbox.
-     *
-     * @param serverMessages The messages from the server.
-     */
-    private void updateInbox(ContentValues[] serverMessages) {
-        List<ContentValues> messagesToInsert = new ArrayList<>();
-        HashSet<String> serverMessageIds = new HashSet<>();
-
-        for (ContentValues message : serverMessages) {
-            String messageId = message.getAsString("message_id");
-            serverMessageIds.add(messageId);
-
-            if (resolver.updateMessage(messageId, message) != 1) {
-                messagesToInsert.add(message);
+    static void respond(Intent intent, boolean status) {
+        ResultReceiver receiver = intent.getParcelableExtra(EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        if (receiver != null) {
+            if (status) {
+                receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+            } else {
+                receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
             }
         }
-
-        // Bulk insert any new messages
-        if (messagesToInsert.size() > 0) {
-            ContentValues[] messageArray = new ContentValues[messagesToInsert.size()];
-            messagesToInsert.toArray(messageArray);
-            resolver.insertMessages(messageArray);
-        }
-
-        // Delete any messages that did not come down with the message list
-        Set<String> allIds = getMessageIdsFromCursor(resolver.getAllMessages());
-        if (allIds != null) {
-            allIds.removeAll(serverMessageIds);
-            UAirship.shared().getRichPushManager().getRichPushInbox().deleteMessages(allIds);
-        }
-
-        // update the inbox cache
-        UAirship.shared().getRichPushManager().getRichPushInbox().updateCache();
     }
-
-    private Set<String> getMessageIdsFromCursor(Cursor cursor) {
-        if (cursor == null) {
-            return null;
-        }
-
-        Set<String> ids = new HashSet<>(cursor.getCount());
-
-        int messageIdIndex = -1;
-        while (cursor.moveToNext()) {
-            if (messageIdIndex == -1) {
-                messageIdIndex = cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID);
-            }
-            ids.add(cursor.getString(messageIdIndex));
-        }
-
-        cursor.close();
-
-        return ids;
-    }
-
 }

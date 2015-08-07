@@ -39,7 +39,7 @@ import org.robolectric.shadows.ShadowIntent;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -113,37 +113,17 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
     }
 
     /**
-     * Test updateUserIfNecessary
+     * Test updateUser
      */
     @Test
-    public void testUpdateUserIfNecessary() throws InterruptedException {
-        // set last update time to be 25 hours ago
-        long lastUpdateTime = System.currentTimeMillis() - (25 * 60 * 60 * 1000);
-        user.setLastUpdateTime(lastUpdateTime);
-
+    public void testUpdateUserFalse() throws InterruptedException {
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
-        manager.updateUserIfNecessary();
+        manager.updateUser(false);
 
         ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals(intent.getAction(), RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE);
-    }
-
-    /**
-     * Test updateUserIfNecessary not needed
-     */
-    @Test
-    public void testUpdateUserNotNecessary() throws InterruptedException {
-        // set last update time to 1 hour ago
-        long lastUpdateTime = System.currentTimeMillis() - (1 * 60 * 60 * 1000);
-        user.setLastUpdateTime(lastUpdateTime);
-
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
-
-        manager.updateUserIfNecessary();
-        assertNull(application.peekNextStartedService());
     }
 
     /**
@@ -152,10 +132,8 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
      */
     @Test
     public void testRichPushUpdateSuccess() {
-        user.setLastUpdateTime(0);
-
         // Update the user
-        manager.updateUser();
+        manager.updateUser(true);
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
@@ -173,18 +151,13 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
      */
     @Test
     public void testRichPushUpdateError() {
-        user.setLastUpdateTime(0);
-
         // Update the user
-        manager.updateUser();
+        manager.updateUser(true);
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
                                              .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
         receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
-
-        // Verify the error result does not change the last update time
-        assertTrue(0 == user.getLastUpdateTime());
 
         // Verify the listener received a success callback
         assertFalse("Listener should be notified of user update failed.",
@@ -203,7 +176,6 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         ResultReceiver receiver = application.peekNextStartedService()
                                              .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
         receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
-
 
         // Verify the listener received a success callback
         assertTrue("Listener should be notified of user refresh success.",
