@@ -47,7 +47,6 @@ import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.analytics.EventService;
 import com.urbanairship.location.LocationService;
 import com.urbanairship.push.BaseIntentReceiver;
-import com.urbanairship.push.GCMPushReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushService;
 import com.urbanairship.richpush.RichPushUpdateService;
@@ -355,7 +354,6 @@ public class ManifestUtils {
 
             // Receivers
             put(CoreReceiver.class, ManifestUtils.getReceiverInfo(CoreReceiver.class));
-            put(GCMPushReceiver.class, ManifestUtils.getReceiverInfo(GCMPushReceiver.class));
 
             // Providers
             put(UrbanAirshipProvider.class, ManifestUtils.getProviderInfo(UrbanAirshipProvider.getAuthorityString()));
