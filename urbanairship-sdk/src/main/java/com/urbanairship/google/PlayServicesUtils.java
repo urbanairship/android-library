@@ -159,6 +159,7 @@ public class PlayServicesUtils {
             } else {
                 try {
                     Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
+                    Class.forName("com.google.android.gms.gcm.GcmReceiver");
                     isGoogleCloudMessagingDependencyAvailable = true;
                 } catch (ClassNotFoundException e) {
                     isGoogleCloudMessagingDependencyAvailable = false;

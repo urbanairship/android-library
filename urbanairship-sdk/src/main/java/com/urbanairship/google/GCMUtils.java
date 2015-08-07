@@ -81,24 +81,24 @@ public class GCMUtils {
             }
         }
 
-        // GCM intent receiver
-        ComponentInfo gcmReceiver = ManifestUtils.getReceiverInfo(GCMPushReceiver.class);
+        if (PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
+            // GCM intent receiver
+            ComponentInfo gcmReceiver = ManifestUtils.getReceiverInfo(GCMPushReceiver.class);
 
-        if (gcmReceiver != null) {
-            // next check for receive intent filter with matching category
-            Intent receiveIntent = new Intent(GCMConstants.ACTION_GCM_RECEIVE);
-            receiveIntent.addCategory(packageName);
+            if (gcmReceiver != null) {
+                // next check for receive intent filter with matching category
+                Intent receiveIntent = new Intent(GCMConstants.ACTION_GCM_RECEIVE);
+                receiveIntent.addCategory(packageName);
 
-            if (pm.queryBroadcastReceivers(receiveIntent, 0).isEmpty()) {
-                Logger.error("AndroidManifest.xml's " + GCMPushReceiver.class.getCanonicalName() +
-                        " declaration missing required " + receiveIntent.getAction() +
-                        " filter with category = " + packageName);
+                if (pm.queryBroadcastReceivers(receiveIntent, 0).isEmpty()) {
+                    Logger.error("AndroidManifest.xml's " + GCMPushReceiver.class.getCanonicalName() +
+                            " declaration missing required " + receiveIntent.getAction() +
+                            " filter with category = " + packageName);
+                }
+            } else {
+                Logger.error("AndroidManifest.xml missing required receiver: " + GCMPushReceiver.class.getCanonicalName());
             }
-        } else {
-            Logger.error("AndroidManifest.xml missing required receiver: " + GCMPushReceiver.class.getCanonicalName());
-        }
 
-        if (PlayServicesUtils.isGooglePlayServicesDependencyAvailable()) {
             try {
                 // isGooglePlayServicesAvailable throws an exception if the
                 // manifest does not contain the Google Play services version tag.
