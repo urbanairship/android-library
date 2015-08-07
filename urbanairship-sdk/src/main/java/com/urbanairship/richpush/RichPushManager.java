@@ -53,8 +53,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class RichPushManager extends BaseManager {
 
-    static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;//24H
-
     /**
      * The rich push extra that contains the rich push message ID.
      */
@@ -97,7 +95,7 @@ public class RichPushManager extends BaseManager {
     @Override
     protected void init() {
         inbox.updateCache();
-        updateUserIfNecessary();
+        updateUser(false);
 
         foregroundReceiver = new BroadcastReceiver() {
             @Override
@@ -251,7 +249,7 @@ public class RichPushManager extends BaseManager {
 
         final int requestNumber = refreshMessageRequestCount.incrementAndGet();
 
-        startUpdateService(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE, new UpdateResultReceiver() {
+        UpdateResultReceiver resultReceiver = new UpdateResultReceiver() {
             @Override
             public void onUpdate(boolean success) {
                 // if the request number matches the current refresh message
@@ -265,48 +263,57 @@ public class RichPushManager extends BaseManager {
                     callback.onRefreshMessages(success);
                 }
             }
-        });
+        };
+
+        Logger.debug("RichPushManager - Starting update service.");
+        Context context = UAirship.getApplicationContext();
+        Intent intent = new Intent(context, RichPushUpdateService.class)
+                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+
+        context.startService(intent);
     }
 
     /**
      * Sync the user on the device with what's on the server.
+     *
+     * @deprecated Marked to be removed in 7.0.0. Use updateUser(true) instead.
      */
+    @Deprecated
     public void updateUser() {
-        startUpdateService(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE, new UpdateResultReceiver() {
-            @Override
-            public void onUpdate(boolean success) {
-                onUserUpdate(success);
-            }
-        });
+        updateUser(true);
     }
 
     /**
      * Updates the user if the user has not been updated
      * in the last 24hrs.
+     *
+     * @deprecated Marked to be removed in 7.0.0. Use updateUser(false) instead.
      */
+    @Deprecated
     public void updateUserIfNecessary() {
-        long lastUpdateTime = getRichPushUser().getLastUpdateTime();
-        long now = System.currentTimeMillis();
-        if (lastUpdateTime > now || (lastUpdateTime + USER_UPDATE_INTERVAL_MS) < now) {
-            updateUser();
-        }
+        updateUser(false);
     }
 
     /**
-     * Start service for rich push update
+     * Updates the user on the device with what's on the server.
      *
-     * @param intentAction The intent action
-     * @param receiver The result receiver
+     * @param forcefully A boolean indicating if the rich push user needs to be updated.
      */
-    private void startUpdateService(@NonNull String intentAction, @Nullable ResultReceiver receiver) {
+    public void updateUser(boolean forcefully) {
+        UpdateResultReceiver resultReceiver = new UpdateResultReceiver() {
+            @Override
+            public void onUpdate(boolean success) {
+                onUserUpdate(success);
+            }
+        };
+
         Logger.debug("RichPushManager - Starting update service.");
         Context context = UAirship.getApplicationContext();
-        Intent intent = new Intent(context, RichPushUpdateService.class);
-        intent.setAction(intentAction);
-
-        if (receiver != null) {
-            intent.putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, receiver);
-        }
+        Intent intent = new Intent(context, RichPushUpdateService.class)
+                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                .putExtra(RichPushUpdateService.EXTRA_FORCEFULLY, forcefully);
 
         context.startService(intent);
     }

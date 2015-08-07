@@ -163,22 +163,4 @@ public class RichPushUserTest extends RichPushBaseTestCase {
         preferences.setUserCredentials(fakeUserId, null);
         assertNull("User token should be null.", user.getPassword());
     }
-
-    /**
-     * Test getLastUpdateTime default value
-     */
-    @Test
-    public void testGetLastUpdateTimeDefault() {
-        RichPushUser newUser = new RichPushUser(TestApplication.getApplication().preferenceDataStore);
-        assertEquals("Default last update time should be 0.", 0, newUser.getLastUpdateTime());
-    }
-
-    /**
-     * Test getLastUpdateTime
-     */
-    @Test
-    public void testGetLastUpdateTime() {
-        user.setLastUpdateTime(500);
-        assertEquals("Last update time should match.", 500, user.getLastUpdateTime());
-    }
 }

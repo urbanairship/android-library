@@ -31,6 +31,8 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushManager;
@@ -38,15 +40,15 @@ import com.urbanairship.push.PushManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -54,55 +56,39 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
+public class UserRegistrationServiceDelegateTest extends BaseTestCase {
 
     private final String fakeUserId = "someUserId";
     private final String fakeUserToken = "someUserToken";
     private final String fakeChannelId = "ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588";
 
-    RichPushUpdateService updateService;
     AirshipConfigOptions options;
     TestResultReceiver resultReceiver;
     RichPushUserPreferences preferences;
     UserAPIClient mockClient;
     PushManager mockPushManager;
+    PreferenceDataStore dataStore;
 
     RichPushManager richPushManager;
+    private UserRegistrationServiceDelegate serviceDelegate;
 
-    @Override
-    public void setUp() {
-        super.setUp();
-
+    @Before
+    public void setup() {
         mockClient = Mockito.mock(UserAPIClient.class);
         mockPushManager = Mockito.mock(PushManager.class);
-
 
         TestApplication.getApplication().setPushManager(mockPushManager);
 
         options = UAirship.shared().getAirshipConfigOptions();
         resultReceiver = new TestResultReceiver();
-
-        updateService = new RichPushUpdateService() {
-            @Override
-            public void onHandleIntent(Intent intent) {
-                super.onHandleIntent(intent);
-            }
-        };
-
-        updateService.userClient = mockClient;
-
+        dataStore = TestApplication.getApplication().preferenceDataStore;
         richPushManager = UAirship.shared().getRichPushManager();
         preferences = richPushManager.getRichPushUser().preferences;
         // Clear any user or password
         preferences.setUserCredentials(null, null);
 
-
-    }
-
-    @After
-    public void tearDown() {
-        // Clear any user or password
-        preferences.setUserCredentials(null, null);
+        serviceDelegate = new UserRegistrationServiceDelegate(TestApplication.getApplication(), dataStore,
+                mockClient, UAirship.shared());
     }
 
     /**
@@ -136,7 +122,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify user name and user token was set
         assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
@@ -146,7 +132,6 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
     }
-
 
     /**
      * Test create user when PushManager has a android channel.
@@ -179,7 +164,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify user name and user token was set
         assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
@@ -215,7 +200,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify user name and user token was set
         assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
@@ -237,7 +222,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         assertNull("Should not update the user name", richPushManager.getRichPushUser().getId());
         assertNull("Should not update the user token", richPushManager.getRichPushUser().getPassword());
@@ -279,7 +264,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
@@ -317,7 +302,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
@@ -338,7 +323,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify result receiver
         assertEquals("Should return error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
@@ -362,7 +347,7 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
-        updateService.onHandleIntent(intent);
+        serviceDelegate.onHandleIntent(intent);
 
         // Verify result receiver
         assertEquals("Should return error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
@@ -385,5 +370,4 @@ public class RichPushUpdateServiceTest extends RichPushBaseTestCase {
         }
 
     }
-
 }
