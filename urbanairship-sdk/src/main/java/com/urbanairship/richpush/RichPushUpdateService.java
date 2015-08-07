@@ -73,10 +73,6 @@ public class RichPushUpdateService extends BaseIntentService {
 
     static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
 
-
-    private UserRegistrationServiceDelegate userRegistrationServiceDelegate;
-    private InboxServiceDelegate inboxServiceDelegate;
-
     /**
      * RichPushUpdateService constructor.
      */
@@ -90,16 +86,10 @@ public class RichPushUpdateService extends BaseIntentService {
 
         switch(intentAction) {
             case ACTION_RICH_PUSH_USER_UPDATE:
-                if (userRegistrationServiceDelegate == null) {
-                    userRegistrationServiceDelegate = new UserRegistrationServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return userRegistrationServiceDelegate;
+                return new UserRegistrationServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
-                if (inboxServiceDelegate == null) {
-                    inboxServiceDelegate = new InboxServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return inboxServiceDelegate;
+                return new InboxServiceDelegate(getApplicationContext(), dataStore);
         }
         return  null;
     }

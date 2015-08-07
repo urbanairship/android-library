@@ -34,6 +34,9 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * The BaseIntentService delegates all work to a {@link BaseIntentService.Delegate} created
  * by the service in {@link #getServiceDelegate(String, PreferenceDataStore)}. All intents that have
@@ -59,6 +62,8 @@ public abstract class BaseIntentService extends IntentService {
      */
     protected static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 mins.
 
+    private final Map<String, Delegate> delegateMap = new HashMap<>();
+
     public BaseIntentService(String name) {
         super(name);
     }
@@ -81,12 +86,18 @@ public abstract class BaseIntentService extends IntentService {
                 return;
             }
 
-            Delegate delegate = getServiceDelegate(action, UAirship.shared().preferenceDataStore);
+
+            Delegate delegate = delegateMap.get(action);
+            if (delegate == null) {
+                delegate = getServiceDelegate(action, UAirship.shared().preferenceDataStore);
+            }
+
             if (delegate == null) {
                 Logger.debug("BaseIntentService - No delegate for intent action: " + action);
                 return;
             }
 
+            delegateMap.put(action, delegate);
             delegate.onHandleIntent(intent);
         } finally {
             WakefulBroadcastReceiver.completeWakefulIntent(intent);
@@ -96,7 +107,8 @@ public abstract class BaseIntentService extends IntentService {
     /**
      * Gets the worker for the given intent action. The worker's
      * {@link BaseIntentService.Delegate#onHandleIntent(Intent)} will be called
-     * with the received intent.
+     * with the received intent. The delegate returned for the action will be
+     * cached for the lifetime of the service.
      *
      * @param intentAction The intent's action.
      * @param dataStore The preference data store.
