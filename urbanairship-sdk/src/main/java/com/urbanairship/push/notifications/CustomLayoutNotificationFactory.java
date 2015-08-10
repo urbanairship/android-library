@@ -225,12 +225,12 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
      * <p/>
      * For example: <code>R.drawable.notification_icon</code>
      */
-    public final int layoutIconDrawableId = UAirship.getAppIcon();
+    public int layoutIconDrawableId;
 
     /**
      * The icon drawable to display in the status bar.
      */
-    public final int statusBarIconDrawableId = UAirship.getAppIcon();
+    public int statusBarIconDrawableId;
 
 
     /**
@@ -245,7 +245,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
      * If <code>constantNotificationId <= 0</code>, the standard incrementing
      * behavior will be used.
      */
-    public final int constantNotificationId = -1;
+    public int constantNotificationId = -1;
 
     /**
      * An optional sound URI.
@@ -255,9 +255,9 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
      */
     public Uri soundUri;
 
-
     public CustomLayoutNotificationFactory(Context context) {
         super(context);
+        layoutIconDrawableId = statusBarIconDrawableId = context.getApplicationInfo().icon;
     }
 
     @Override
