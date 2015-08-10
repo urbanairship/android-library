@@ -340,6 +340,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 pushManager.getNamedUser().startUpdateService();
                 pushManager.updateRegistration();
                 pushManager.startUpdateTagsService();
+                airship.getRichPushManager().updateUser(true);
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());

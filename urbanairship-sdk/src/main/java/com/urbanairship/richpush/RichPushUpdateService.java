@@ -86,7 +86,7 @@ public class RichPushUpdateService extends BaseIntentService {
 
         switch(intentAction) {
             case ACTION_RICH_PUSH_USER_UPDATE:
-                return new UserRegistrationServiceDelegate(getApplicationContext(), dataStore);
+                return new UserServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
                 return new InboxServiceDelegate(getApplicationContext(), dataStore);

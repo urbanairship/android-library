@@ -31,6 +31,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +47,7 @@ import java.net.URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ChannelServiceDelegateTest extends BaseTestCase {
@@ -56,13 +58,18 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     PushManager pushManager;
     ChannelAPIClient client;
     ChannelServiceDelegate serviceDelegate;
+    RichPushManager richPushManager;
+
 
     @Before
     public void setUp() {
         client = Mockito.mock(ChannelAPIClient.class);
+        richPushManager = Mockito.mock(RichPushManager.class, Mockito.RETURNS_MOCKS);
+        TestApplication.getApplication().setRichPushManager(richPushManager);
 
         pushManager = UAirship.shared().getPushManager();
         dataStore = TestApplication.getApplication().preferenceDataStore;
+
 
         // Extend it to make onHandleIntent public so we can call it directly
         serviceDelegate = new ChannelServiceDelegate(TestApplication.getApplication(),
@@ -161,6 +168,9 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
                 pushManager.getChannelLocation());
+
+        // Verify we update the user
+        verify(richPushManager).updateUser(true);
     }
 
 

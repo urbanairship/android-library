@@ -56,7 +56,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UserRegistrationServiceDelegateTest extends BaseTestCase {
+public class UserServiceDelegateTest extends BaseTestCase {
 
     private final String fakeUserId = "someUserId";
     private final String fakeUserToken = "someUserToken";
@@ -70,7 +70,7 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     PreferenceDataStore dataStore;
 
     RichPushManager richPushManager;
-    private UserRegistrationServiceDelegate serviceDelegate;
+    private UserServiceDelegate serviceDelegate;
 
     @Before
     public void setup() {
@@ -87,7 +87,7 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         // Clear any user or password
         preferences.setUserCredentials(null, null);
 
-        serviceDelegate = new UserRegistrationServiceDelegate(TestApplication.getApplication(), dataStore,
+        serviceDelegate = new UserServiceDelegate(TestApplication.getApplication(), dataStore,
                 mockClient, UAirship.shared());
     }
 
@@ -182,33 +182,13 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     public void testCreateUserNoChannel() throws IOException {
         when(mockPushManager.getChannelId()).thenReturn(null);
 
-        // Set up user response
-        UserResponse response = Mockito.mock(UserResponse.class);
-        when(response.getUserId()).thenReturn(fakeUserId);
-        when(response.getUserToken()).thenReturn(fakeUserToken);
-
-        // Return the response
-        when(mockClient.createUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-
-                return payload.length() == 0; // Empty
-            }
-        }))).thenReturn(response);
-
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
         serviceDelegate.onHandleIntent(intent);
 
-        // Verify user name and user token was set
-        assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
-        assertEquals("Should update the user token", richPushManager.getRichPushUser().getPassword(), fakeUserToken);
-
-        // Verify result receiver
-        assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        // Verify we do not create the user
+        verify(mockClient, times(0)).createUser(any(JSONObject.class));
     }
 
     /**

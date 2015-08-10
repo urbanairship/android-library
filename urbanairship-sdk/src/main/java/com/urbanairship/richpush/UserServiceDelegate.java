@@ -27,6 +27,7 @@ package com.urbanairship.richpush;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
@@ -41,7 +42,7 @@ import org.json.JSONObject;
 /**
  * Service delegate for the {@link RichPushUpdateService} to handle user registrations.
  */
-class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
+class UserServiceDelegate extends BaseIntentService.Delegate {
 
     private static final String LAST_UPDATE_TIME ="com.urbanairship.user.LAST_UPDATE_TIME";
     static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
@@ -54,12 +55,12 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
     private final UAirship airship;
     private final RichPushUser user;
 
-    UserRegistrationServiceDelegate(Context context, PreferenceDataStore dataStore) {
+    UserServiceDelegate(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
         this(context, dataStore, new UserAPIClient(), UAirship.shared());
     }
 
-    UserRegistrationServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                    UserAPIClient userClient, UAirship airship) {
+    UserServiceDelegate(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
+                        @NonNull UserAPIClient userClient, @NonNull UAirship airship) {
         super(context, dataStore);
 
         this.userClient = userClient;
@@ -98,9 +99,15 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
      * @return <code>true</code> if user was created, otherwise <code>false</code>.
      */
     private boolean createUser() {
+        String channelId = airship.getPushManager().getChannelId();
+        if (UAStringUtil.isEmpty(channelId)) {
+            Logger.debug("RichPushServiceDelegate - No Channel. User will be created after channel registrations finishes.");
+            return false;
+        }
+
         JSONObject payload;
         try {
-            payload = createNewUserPayload();
+            payload = createNewUserPayload(channelId);
         } catch (JSONException e) {
             Logger.error("Exception constructing JSON data when creating user.", e);
             return false;
@@ -130,7 +137,9 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
      * @return <code>true</code> if user was updated, otherwise <code>false</code>.
      */
     private boolean updateUser() {
-        if (UAStringUtil.isEmpty(airship.getPushManager().getChannelId())) {
+        String channelId = airship.getPushManager().getChannelId();
+
+        if (UAStringUtil.isEmpty(channelId)) {
             Logger.debug("RichPushServiceDelegate - No Channel. Skipping Rich Push user update.");
             return false;
         }
@@ -140,7 +149,7 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
         JSONObject payload;
 
         try {
-            payload = createUpdateUserPayload();
+            payload = createUpdateUserPayload(channelId);
         } catch (JSONException e) {
             Logger.error("Exception constructing JSON data when updating user.", e);
             return false;
@@ -162,15 +171,11 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return The user payload as a JSON object.
      */
-    private JSONObject createNewUserPayload() throws JSONException {
+    private JSONObject createNewUserPayload(@NonNull String channelId) throws JSONException {
         JSONObject payload = new JSONObject();
-
-        String channelId = airship.getPushManager().getChannelId();
-        if (!UAStringUtil.isEmpty(channelId)) {
-            JSONArray array = new JSONArray();
-            array.put(channelId);
-            payload.putOpt(getPayloadChannelsKey(), array);
-        }
+        JSONArray array = new JSONArray();
+        array.put(channelId);
+        payload.putOpt(getPayloadChannelsKey(), array);
 
         return payload;
     }
@@ -180,12 +185,12 @@ class UserRegistrationServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return The user payload as a JSON object.
      */
-    private JSONObject createUpdateUserPayload() throws JSONException {
+    private JSONObject createUpdateUserPayload(@NonNull String channelId) throws JSONException {
         JSONObject payload = new JSONObject();
         JSONObject channelPayload = new JSONObject();
 
         JSONArray channels = new JSONArray();
-        channels.put(airship.getPushManager().getChannelId());
+        channels.put(channelId);
 
         channelPayload.put(PAYLOAD_ADD_KEY, channels);
         payload.put(getPayloadChannelsKey(), channelPayload);
