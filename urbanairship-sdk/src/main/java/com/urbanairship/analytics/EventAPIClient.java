@@ -30,6 +30,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -71,7 +72,8 @@ class EventAPIClient {
      *
      * @param requestFactory The requestFactory.
      */
-    EventAPIClient(RequestFactory requestFactory) {
+    @VisibleForTesting
+    EventAPIClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
     }
 

@@ -27,6 +27,7 @@ package com.urbanairship.push;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -59,7 +60,7 @@ public class TagGroupsEditor {
      * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor addTag(String tagGroup, String tag) {
+    public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
         return addTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
     }
 
@@ -70,7 +71,7 @@ public class TagGroupsEditor {
      * @param tags The tags set.
      * @return The TagGroupsEditor
      */
-    public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
+    public TagGroupsEditor addTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         if (!isValid(tagGroup, tags)) {
             return this;
         }
@@ -85,7 +86,7 @@ public class TagGroupsEditor {
      * @param tag The tag string.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor removeTag(String tagGroup, String tag) {
+    public TagGroupsEditor removeTag(@NonNull String tagGroup, @NonNull String tag) {
         return removeTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
     }
 
@@ -96,7 +97,7 @@ public class TagGroupsEditor {
      * @param tags The tags set.
      * @return The TagGroupsEditor.
      */
-    public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
+    public TagGroupsEditor removeTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         if (!isValid(tagGroup, tags)) {
             return this;
         }
@@ -127,7 +128,7 @@ public class TagGroupsEditor {
      * @param map The map to convert.
      * @return The bundle.
      */
-    Bundle convertToBundle(Map<String, Set<String>> map) {
+    Bundle convertToBundle(@NonNull Map<String, Set<String>> map) {
         Bundle tagsBundle = new Bundle();
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             tagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));

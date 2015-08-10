@@ -343,7 +343,7 @@ public class AirshipConfigOptions {
      * @param properties properties
      * @return the current value of the property
      */
-    private String getPropertyValue(Field field, Properties properties) {
+    private String getPropertyValue(@NonNull Field field, @NonNull Properties properties) {
         String propertyValue = null;
         PropertyName propertyAnnotation = field.getAnnotation(PropertyName.class);
 
@@ -361,7 +361,7 @@ public class AirshipConfigOptions {
      * @param field field
      * @param propertyValue propertyValue
      */
-    private void setPropertyValue(Field field, String propertyValue) {
+    private void setPropertyValue(@NonNull Field field, @NonNull String propertyValue) {
         try {
             // Parse as boolean if expected
             if (field.getType() == Boolean.TYPE || field.getType() == Boolean.class) {
@@ -393,7 +393,7 @@ public class AirshipConfigOptions {
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      */
-    int parseOptionValues(Field field, String value) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException {
+    int parseOptionValues(@NonNull Field field, @NonNull String value) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException {
         // Accept the integer value in the properties file for backwards compatibility
         try {
             return Integer.valueOf(value);

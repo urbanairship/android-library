@@ -31,6 +31,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
@@ -75,6 +76,7 @@ public abstract class BaseIntentService extends IntentService {
     }
 
     @Override
+    @CallSuper
     protected void onHandleIntent(Intent intent) {
         if (intent == null) {
             return;

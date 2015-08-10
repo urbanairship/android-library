@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions.tags;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
@@ -57,7 +59,7 @@ public class RemoveTagsAction extends BaseTagsAction {
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^-t";
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
         Set<String> tags = getTags(arguments);
         Logger.info("RemoveTagsAction - Removing tags: " + tags);
 

@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -54,7 +55,8 @@ class NamedUserAPIClient {
         this(new RequestFactory());
     }
 
-    NamedUserAPIClient(RequestFactory requestFactory) {
+    @VisibleForTesting
+    NamedUserAPIClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
         this.urlString = UAirship.shared().getAirshipConfigOptions().hostURL + NAMED_USER_PATH;
     }

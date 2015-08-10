@@ -80,7 +80,7 @@ public class Analytics {
      *
      * @hide
      */
-    public Analytics(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions options) {
+    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options) {
         this(context, preferenceDataStore, options, new ActivityMonitor(options.minSdkVersion, Build.VERSION.SDK_INT, options.analyticsEnabled));
     }
 
@@ -92,7 +92,9 @@ public class Analytics {
      * @param options The airship config options
      * @param activityMonitor Optional activityMonitor
      */
-    Analytics(final Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions options, ActivityMonitor activityMonitor) {
+    Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
+              @NonNull AirshipConfigOptions options, @NonNull ActivityMonitor activityMonitor) {
+
         this.preferences = new AnalyticsPreferences(preferenceDataStore);
         this.context = context.getApplicationContext();
 
@@ -213,7 +215,8 @@ public class Analytics {
      *
      * @param event The event to be triggered.
      */
-    public void addEvent(final Event event) {
+    public void addEvent(@NonNull final Event event) {
+        //noinspection ConstantConditions
         if (event == null || !event.isValid()) {
             Logger.warn("Analytics - Invalid event: " + event);
             return;
@@ -296,7 +299,7 @@ public class Analytics {
      * @param sendId The associated send Id String.
      * @hide
      */
-    public void setConversionSendId(String sendId) {
+    public void setConversionSendId(@Nullable String sendId) {
         Logger.debug("Analytics - Setting conversion send ID: " + sendId);
         this.conversionSendId = sendId;
     }

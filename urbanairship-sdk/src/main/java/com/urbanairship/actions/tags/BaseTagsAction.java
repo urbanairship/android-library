@@ -25,15 +25,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions.tags;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import com.urbanairship.json.JsonValue;
 
 /**
  * Abstract tag action class.
@@ -50,7 +51,7 @@ public abstract class BaseTagsAction extends Action {
     }
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         return getTags(arguments) != null;
     }
 
@@ -61,8 +62,8 @@ public abstract class BaseTagsAction extends Action {
      * @return A set of tags from the arguments, or null if no tags
      * could be parsed from the arguments
      */
-    protected Set<String> getTags(ActionArguments arguments) {
-        if (arguments == null || arguments.getValue().isNull()) {
+    protected Set<String> getTags(@NonNull ActionArguments arguments) {
+        if (arguments.getValue().isNull()) {
             return null;
         }
 

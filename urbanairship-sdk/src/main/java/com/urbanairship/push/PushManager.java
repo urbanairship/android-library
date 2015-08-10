@@ -288,7 +288,6 @@ public class PushManager extends BaseManager {
         return preferences.getUserNotificationsEnabled();
     }
 
-
     /**
      * Sets the notification factory used when push notifications are received.
      * <p/>
@@ -703,7 +702,7 @@ public class PushManager extends BaseManager {
     public TagGroupsEditor editTagGroups() {
         return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS) {
             @Override
-            public TagGroupsEditor addTag(String tagGroup, String tag) {
+            public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to add tag " + tag + " to device tag group when channelTagRegistrationEnabled is true.");
                     return this;
@@ -712,7 +711,7 @@ public class PushManager extends BaseManager {
             }
 
             @Override
-            public TagGroupsEditor addTags(String tagGroup, Set<String> tags) {
+            public TagGroupsEditor addTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to add tags { " + tags + " } to device tag group when channelTagRegistrationEnabled is true.");
                     return this;
@@ -722,7 +721,7 @@ public class PushManager extends BaseManager {
             }
 
             @Override
-            public TagGroupsEditor removeTag(String tagGroup, String tag) {
+            public TagGroupsEditor removeTag(@NonNull String tagGroup, @NonNull String tag) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to remove tag " + tag + " from device tag group when channelTagRegistrationEnabled is true.");
                     return this;
@@ -731,7 +730,7 @@ public class PushManager extends BaseManager {
             }
 
             @Override
-            public TagGroupsEditor removeTags(String tagGroup, Set<String> tags) {
+            public TagGroupsEditor removeTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
                     Logger.error("Unable to remove tags { " + tags + " } from device tag group when channelTagRegistrationEnabled is true.");
                     return this;

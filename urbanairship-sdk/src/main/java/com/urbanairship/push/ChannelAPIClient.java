@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -49,7 +50,8 @@ class ChannelAPIClient {
         this(new RequestFactory());
     }
 
-    ChannelAPIClient(RequestFactory requestFactory) {
+    @VisibleForTesting
+    ChannelAPIClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
 
         String urlString = UAirship.shared().getAirshipConfigOptions().hostURL + CHANNEL_CREATION_PATH;

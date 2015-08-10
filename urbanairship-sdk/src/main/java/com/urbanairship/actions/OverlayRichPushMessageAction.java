@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -69,7 +70,7 @@ public class OverlayRichPushMessageAction extends Action {
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case PUSH_OPENED:
             case WEB_VIEW_INVOCATION:
@@ -93,7 +94,7 @@ public class OverlayRichPushMessageAction extends Action {
     }
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
 
         String messageId = arguments.getValue().getString();
 
