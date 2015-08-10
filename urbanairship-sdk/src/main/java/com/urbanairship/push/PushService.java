@@ -110,11 +110,6 @@ public class PushService extends BaseIntentService {
      */
     static final String EXTRA_GCM_TOKEN_REFRESH = "com.urbanairship.push.EXTRA_GCM_TOKEN_REFRESH";
 
-    private TagGroupServiceDelegate tagGroupServiceDelegate;
-    private NamedUserServiceDelegate namedUserServiceDelegate;
-    private ChannelServiceDelegate channelServiceDelegate;
-    private IncomingPushServiceDelegate incomingPushServiceDelegate;
-
     /**
      * PushService constructor.
      */
@@ -130,32 +125,20 @@ public class PushService extends BaseIntentService {
             case ACTION_UPDATE_NAMED_USER_TAGS:
             case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
             case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-                if (tagGroupServiceDelegate == null) {
-                    tagGroupServiceDelegate = new TagGroupServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return tagGroupServiceDelegate;
+                return new TagGroupServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_UPDATE_NAMED_USER:
-                if (namedUserServiceDelegate == null) {
-                    namedUserServiceDelegate = new NamedUserServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return namedUserServiceDelegate;
+                return new NamedUserServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_ADM_REGISTRATION_FINISHED:
             case ACTION_START_REGISTRATION:
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
             case ACTION_UPDATE_PUSH_REGISTRATION:
-                if (channelServiceDelegate == null) {
-                    channelServiceDelegate = new ChannelServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return channelServiceDelegate;
+                return new ChannelServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_RECEIVE_ADM_MESSAGE:
             case ACTION_RECEIVE_GCM_MESSAGE:
-                if (incomingPushServiceDelegate == null) {
-                    incomingPushServiceDelegate = new IncomingPushServiceDelegate(getApplicationContext(), dataStore);
-                }
-                return incomingPushServiceDelegate;
+                return new IncomingPushServiceDelegate(getApplicationContext(), dataStore);
         }
 
         return null;
