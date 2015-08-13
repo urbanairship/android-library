@@ -15,7 +15,7 @@ class ActivityState {
 
     @IntDef({STARTED, STOPPED, NONE})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface State {}
+    @interface State {}
 
     /**
      * The activity has started.

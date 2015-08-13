@@ -27,6 +27,7 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -59,7 +60,7 @@ public class OpenExternalUrlAction extends Action {
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^u";
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue().getString());
 
         Logger.info("Opening URI: " + uri);
@@ -79,11 +80,7 @@ public class OpenExternalUrlAction extends Action {
      * otherwise <code>false</code>.
      */
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
-        if (!super.acceptsArguments(arguments)) {
-            return false;
-        }
-
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case PUSH_OPENED:
             case WEB_VIEW_INVOCATION:

@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -68,11 +69,7 @@ public class ShareAction extends Action {
     }};
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
-        if (!super.acceptsArguments(arguments)) {
-            return false;
-        }
-
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case PUSH_OPENED:
             case WEB_VIEW_INVOCATION:
@@ -85,7 +82,7 @@ public class ShareAction extends Action {
     }
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
         final Context context = UAirship.getApplicationContext();
 
         Intent sharingIntent = new Intent(Intent.ACTION_SEND)

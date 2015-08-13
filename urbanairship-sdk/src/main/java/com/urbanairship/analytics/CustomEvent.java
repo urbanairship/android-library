@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 
 import com.urbanairship.Logger;
@@ -188,7 +189,7 @@ public class CustomEvent extends Event {
          * @throws java.lang.IllegalArgumentException if the event value is not within the valid
          * value range [-2^31, 2^31-1].
          */
-        public Builder setEventValue(BigDecimal value) {
+        public Builder setEventValue(@Nullable BigDecimal value) {
             if (value == null) {
                 this.value = null;
                 return this;
@@ -233,7 +234,7 @@ public class CustomEvent extends Event {
          * @throws java.lang.NumberFormatException if the event value does not contain a valid string representation
          * of a big decimal.
          */
-        public Builder setEventValue(String value) {
+        public Builder setEventValue(@Nullable String value) {
             if (UAStringUtil.isEmpty(value)) {
                 this.value = null;
                 return this;

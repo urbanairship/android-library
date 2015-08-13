@@ -27,6 +27,7 @@ package com.urbanairship.richpush;
 
 import android.content.ContentValues;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
 import com.urbanairship.RichPushTable;
@@ -66,7 +67,8 @@ class UserAPIClient {
      *
      * @param requestFactory The requestFactory.
      */
-    UserAPIClient(RequestFactory requestFactory) {
+    @VisibleForTesting
+    UserAPIClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
     }
 

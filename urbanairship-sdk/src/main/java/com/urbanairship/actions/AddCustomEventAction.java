@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
@@ -64,7 +66,7 @@ public class AddCustomEventAction extends Action {
     public static final String DEFAULT_REGISTRY_NAME = "add_custom_event_action";
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
 
         JsonMap customEventMap = arguments.getValue().getMap();
 

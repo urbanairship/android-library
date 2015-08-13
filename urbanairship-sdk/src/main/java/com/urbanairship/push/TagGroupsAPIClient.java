@@ -27,6 +27,7 @@ package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -61,11 +62,12 @@ class TagGroupsAPIClient {
     private final String appSecret;
     private final RequestFactory requestFactory;
 
-    TagGroupsAPIClient(AirshipConfigOptions configOptions) {
+    TagGroupsAPIClient(@NonNull AirshipConfigOptions configOptions) {
         this(configOptions, new RequestFactory());
     }
 
-    public TagGroupsAPIClient(AirshipConfigOptions configOptions, RequestFactory requestFactory) {
+    @VisibleForTesting
+    public TagGroupsAPIClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
         this.urlString = configOptions.hostURL;
         this.appKey = configOptions.getAppKey();

@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
 
@@ -19,7 +20,7 @@ class PreferencesDataManager extends DataManager {
     static final String DATABASE_NAME = "ua_preferences.db";
     static final int DATABASE_VERSION = 1;
 
-    public PreferencesDataManager(Context context) {
+    public PreferencesDataManager(@NonNull Context context) {
         super(context, DATABASE_NAME, DATABASE_VERSION);
     }
 

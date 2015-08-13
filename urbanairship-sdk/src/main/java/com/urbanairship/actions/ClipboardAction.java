@@ -31,6 +31,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 
@@ -74,7 +75,7 @@ public class ClipboardAction extends Action {
     public static final String TEXT_KEY = "text";
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         if (arguments.getSituation() == Situation.PUSH_RECEIVED) {
             return false;
         }
@@ -87,7 +88,7 @@ public class ClipboardAction extends Action {
     }
 
     @Override
-    public ActionResult perform(final ActionArguments arguments) {
+    public ActionResult perform(@NonNull final ActionArguments arguments) {
 
         // Get the text and label
         final String text, label;

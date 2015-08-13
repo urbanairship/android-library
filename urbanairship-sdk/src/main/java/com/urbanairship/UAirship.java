@@ -32,6 +32,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
+import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -48,6 +49,8 @@ import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.ManifestUtils;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +60,10 @@ import java.util.List;
  * the class on <code>Application.onCreate()</code>.
  */
 public class UAirship {
+
+    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Platform {}
 
     /**
      * Amazon platform type. Only ADM transport will be allowed.
@@ -672,25 +679,37 @@ public class UAirship {
      * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
      * for Android.
      */
+    @Platform
     public int getPlatformType() {
-        int platform = preferenceDataStore.getInt(PLATFORM_KEY, -1);
 
-        if (platform == -1) {
-            if (ADMUtils.isADMAvailable()) {
-                Logger.info("ADM available. Setting platform to Amazon.");
-                platform = AMAZON_PLATFORM;
-            } else if (PlayServicesUtils.isGooglePlayStoreAvailable()) {
-                Logger.info("Google Play Store available. Setting platform to Android.");
-                platform = ANDROID_PLATFORM;
-            } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
-                Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
-                platform = AMAZON_PLATFORM;
-            } else {
-                Logger.info("Defaulting platform to Android.");
-                platform = ANDROID_PLATFORM;
-            }
+        @Platform int platform;
 
-            preferenceDataStore.put(PLATFORM_KEY, platform);
+        switch (preferenceDataStore.getInt(PLATFORM_KEY, -1)) {
+            case AMAZON_PLATFORM:
+                platform = AMAZON_PLATFORM;
+                break;
+
+            case ANDROID_PLATFORM:
+                platform = ANDROID_PLATFORM;
+                break;
+
+            default:
+                if (ADMUtils.isADMAvailable()) {
+                    Logger.info("ADM available. Setting platform to Amazon.");
+                    platform = AMAZON_PLATFORM;
+                } else if (PlayServicesUtils.isGooglePlayStoreAvailable()) {
+                    Logger.info("Google Play Store available. Setting platform to Android.");
+                    platform = ANDROID_PLATFORM;
+                } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
+                    Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
+                    platform = AMAZON_PLATFORM;
+                } else {
+                    Logger.info("Defaulting platform to Android.");
+                    platform = ANDROID_PLATFORM;
+                }
+
+                preferenceDataStore.put(PLATFORM_KEY, platform);
+                break;
         }
 
         return platform;

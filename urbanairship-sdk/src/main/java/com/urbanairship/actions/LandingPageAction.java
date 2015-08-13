@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -96,7 +97,7 @@ public class LandingPageAction extends Action {
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
 
         switch (arguments.getSituation()) {
@@ -160,7 +161,7 @@ public class LandingPageAction extends Action {
      * otherwise <code>false</code>.
      */
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case PUSH_OPENED:
             case PUSH_RECEIVED:
@@ -179,7 +180,7 @@ public class LandingPageAction extends Action {
      * @param arguments The action arguments.
      * @return A landing page Uri, or null if the arguments could not be parsed.
      */
-    protected Uri parseUri(ActionArguments arguments) {
+    protected Uri parseUri(@NonNull ActionArguments arguments) {
         String uriValue;
 
         if (arguments.getValue().getMap() != null) {
@@ -227,7 +228,7 @@ public class LandingPageAction extends Action {
      * @return <code>true</code> if the argument's value contains a payload
      * with CACHE_ON_RECEIVE_KEY set to true, otherwise <code>false</code>.
      */
-    protected boolean shouldCacheOnReceive(ActionArguments arguments) {
+    protected boolean shouldCacheOnReceive(@NonNull ActionArguments arguments) {
         if (arguments.getValue().getMap() != null) {
             return arguments.getValue().getMap().opt(CACHE_ON_RECEIVE_KEY).getBoolean(false);
         }

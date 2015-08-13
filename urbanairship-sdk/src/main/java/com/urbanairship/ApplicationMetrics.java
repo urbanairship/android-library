@@ -42,7 +42,7 @@ public class ApplicationMetrics {
     private static final String LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN";
     private final PreferenceDataStore preferenceDataStore;
 
-    ApplicationMetrics(Context context, PreferenceDataStore preferenceDataStore) {
+    ApplicationMetrics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;
         registerBroadcastReceivers(context);
     }
