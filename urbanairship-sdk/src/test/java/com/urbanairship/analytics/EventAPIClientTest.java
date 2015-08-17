@@ -9,6 +9,8 @@ import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushUser;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +38,7 @@ public class EventAPIClientTest extends BaseTestCase {
     private EventAPIClient client;
     private TestRequest testRequest;
 
+
     @Before
     public void setUp() {
         events.add("{\"some\":\"json\"}");
@@ -44,6 +47,14 @@ public class EventAPIClientTest extends BaseTestCase {
 
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
+
+        RichPushUser richPushUser = Mockito.mock(RichPushUser.class);
+        when(richPushUser.getId()).thenReturn("userId");
+
+        RichPushManager richPushManager = Mockito.mock(RichPushManager.class);
+        when(richPushManager.getRichPushUser()).thenReturn(richPushUser);
+        TestApplication.getApplication().setRichPushManager(richPushManager);
+
 
         client = new EventAPIClient(mockRequestFactory);
     }
@@ -100,7 +111,9 @@ public class EventAPIClientTest extends BaseTestCase {
                 { "X-UA-Timezone", TimeZone.getDefault().getID() },
                 { "X-UA-Locale-Language", "en" },
                 { "X-UA-Locale-Country", "US" },
-                { "X-UA-Locale-Variant", "POSIX" }
+                { "X-UA-Locale-Variant", "POSIX" },
+                { "X-UA-User-ID", "userId" }
+
         };
 
         client.sendEvents(events);

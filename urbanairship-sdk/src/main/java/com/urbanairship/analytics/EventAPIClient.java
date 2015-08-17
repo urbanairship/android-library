@@ -141,11 +141,13 @@ class EventAPIClient {
                                                 Boolean.toString(UAirship.shared().getPushManager().isOptIn()))
                                         .setHeader("X-UA-Channel-Background-Enabled",
                                                 Boolean.toString(UAirship.shared().getPushManager().isPushEnabled() &&
-                                                                UAirship.shared().getPushManager().isPushAvailable()))
+                                                        UAirship.shared().getPushManager().isPushAvailable()))
                                         .setHeader("X-UA-Location-Permission", getLocationPermission())
                                         .setHeader("X-UA-Location-Service-Enabled",
                                                 Boolean.toString(UAirship.shared().getLocationManager().isLocationUpdatesEnabled()))
-                                        .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()));
+                                        .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()))
+                                        .setHeader("X-UA-User-ID", UAirship.shared().getRichPushManager().getRichPushUser().getId());
+
 
         Locale locale = Locale.getDefault();
         if (!UAStringUtil.isEmpty(locale.getLanguage())) {
