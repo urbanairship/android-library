@@ -98,32 +98,6 @@ public class RichPushUserTest extends RichPushBaseTestCase {
     }
 
     /**
-     * Test setUser missing token
-     */
-    @Test
-    public void testSetUserMissingToken() throws JSONException {
-        user.setUser(fakeUserId, null);
-
-        assertNull("User ID should be null.", user.getId());
-        assertNull("User token should be null.", user.getPassword());
-    }
-
-
-    /**
-     * Test setUser missing id
-     */
-    @Test
-    public void testSetUserMissingId() throws JSONException {
-        preferences.setUserCredentials(null, null);
-
-        user.setUser(null, fakeToken);
-
-        assertNull("User ID should be null.", user.getId());
-        assertNull("User token should be null.", user.getPassword());
-    }
-
-
-    /**
      * Test getId
      */
     @Test
