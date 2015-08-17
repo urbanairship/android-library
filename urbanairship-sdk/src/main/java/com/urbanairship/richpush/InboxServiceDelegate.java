@@ -62,6 +62,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
     private static final String DELETE_MESSAGES_KEY = "delete";
     private static final String MARK_READ_MESSAGES_KEY = "mark_as_read";
     private static final String MESSAGE_URL = "api/user/%s/messages/message/%s/";
+    private static final String CHANNEL_ID_HEADER = "X-UA-Channel-ID";
 
     private final UAirship airship;
     private final RichPushUser user;
@@ -120,7 +121,8 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         Response response = requestFactory.createRequest("GET", getMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .setIfModifiedSince( getDataStore().getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0))
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
+                                          .setIfModifiedSince(getDataStore().getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0))
                                           .execute();
 
         Logger.verbose("InboxServiceDelegate - Fetch inbox messages response: " + response);
@@ -226,6 +228,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
@@ -267,6 +270,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
+                                          .setHeader(CHANNEL_ID_HEADER, airship.getPushManager().getChannelId())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 

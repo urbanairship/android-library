@@ -38,6 +38,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +60,8 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     private TestResultReceiver resultReceiver;
 
     private RichPushManager richPushManager;
+    private PushManager pushManager;
+
     private RichPushInbox inbox;
 
     private InboxServiceDelegate serviceDelegate;
@@ -93,6 +96,10 @@ public class InboxServiceDelegateTest extends BaseTestCase {
 
         richPushManager = mock(RichPushManager.class);
         TestApplication.getApplication().setRichPushManager(richPushManager);
+
+        pushManager = mock(PushManager.class);
+        when(pushManager.getChannelId()).thenReturn("channelID");
+        TestApplication.getApplication().setPushManager(pushManager);
 
         inbox = mock(RichPushInbox.class);
         when(richPushManager.getRichPushInbox()).thenReturn(inbox);
@@ -228,6 +235,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         assertEquals("GET", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
         assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
 
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
         assertEquals(600l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
