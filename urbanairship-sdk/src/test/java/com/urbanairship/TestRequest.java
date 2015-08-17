@@ -11,6 +11,7 @@ import java.util.Map;
  */
 public class TestRequest extends Request {
     public Response response;
+    private long ifModifiedSince;
 
     public TestRequest() {
         super(null, null);
@@ -73,5 +74,17 @@ public class TestRequest extends Request {
      */
     public String getRequestMethod() {
         return requestMethod;
+    }
+
+
+    @Override
+    public Request setIfModifiedSince(long milliseconds) {
+        super.setIfModifiedSince(milliseconds);
+        ifModifiedSince = milliseconds;
+        return this;
+    }
+
+    public long getIfModifiedSince() {
+        return ifModifiedSince;
     }
 }

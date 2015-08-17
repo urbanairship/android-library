@@ -815,8 +815,6 @@ public class PushManager extends BaseManager {
     void setChannel(String channelId, String channelLocation) {
         preferences.setChannelId(channelId);
         preferences.setChannelLocation(channelLocation);
-
-        UAirship.shared().getRichPushManager().updateUser(true);
     }
 
     /**

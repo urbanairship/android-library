@@ -33,6 +33,10 @@ import android.support.annotation.NonNull;
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Service for updating the {@link RichPushUser} and their messages.
@@ -86,7 +90,7 @@ public class RichPushUpdateService extends BaseIntentService {
 
         switch(intentAction) {
             case ACTION_RICH_PUSH_USER_UPDATE:
-                return new UserRegistrationServiceDelegate(getApplicationContext(), dataStore);
+                return new UserServiceDelegate(getApplicationContext(), dataStore);
 
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
                 return new InboxServiceDelegate(getApplicationContext(), dataStore);
@@ -109,5 +113,23 @@ public class RichPushUpdateService extends BaseIntentService {
                 receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
             }
         }
+    }
+
+    /**
+     * Gets the URL for inbox/user api calls
+     *
+     * @param path The url path.
+     * @param args Url arguments.
+     * @return The URL or null if an error occurred.
+     */
+    static URL getUserURL(String path, Object... args) {
+        String hostURL = UAirship.shared().getAirshipConfigOptions().hostURL;
+        String urlString = String.format(hostURL + path, args);
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException e) {
+            Logger.error("Invalid userURL", e);
+        }
+        return null;
     }
 }

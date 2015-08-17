@@ -30,65 +30,61 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
 import com.urbanairship.push.PushManager;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import static junit.framework.Assert.assertNull;
 import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UserRegistrationServiceDelegateTest extends BaseTestCase {
+public class UserServiceDelegateTest extends BaseTestCase {
 
-    private final String fakeUserId = "someUserId";
-    private final String fakeUserToken = "someUserToken";
-    private final String fakeChannelId = "ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588";
-
-    AirshipConfigOptions options;
-    TestResultReceiver resultReceiver;
-    RichPushUserPreferences preferences;
-    UserAPIClient mockClient;
-    PushManager mockPushManager;
-    PreferenceDataStore dataStore;
-
-    RichPushManager richPushManager;
-    private UserRegistrationServiceDelegate serviceDelegate;
+    private TestResultReceiver resultReceiver;
+    private PushManager mockPushManager;
+    private RichPushUser richPushuser;
+    private UserServiceDelegate serviceDelegate;
+    private TestRequest testRequest;
 
     @Before
     public void setup() {
-        mockClient = Mockito.mock(UserAPIClient.class);
+        testRequest = new TestRequest();
+
+        RequestFactory requestFactory = new RequestFactory() {
+            public Request createRequest(String requestMethod, URL url) {
+                testRequest.setURL(url);
+                testRequest.setRequestMethod(requestMethod);
+                return testRequest;
+            }
+        };
+
         mockPushManager = Mockito.mock(PushManager.class);
 
         TestApplication.getApplication().setPushManager(mockPushManager);
 
-        options = UAirship.shared().getAirshipConfigOptions();
         resultReceiver = new TestResultReceiver();
-        dataStore = TestApplication.getApplication().preferenceDataStore;
-        richPushManager = UAirship.shared().getRichPushManager();
-        preferences = richPushManager.getRichPushUser().preferences;
+        richPushuser = UAirship.shared().getRichPushManager().getRichPushUser();
         // Clear any user or password
-        preferences.setUserCredentials(null, null);
+        richPushuser.setUser(null, null);
 
-        serviceDelegate = new UserRegistrationServiceDelegate(TestApplication.getApplication(), dataStore,
-                mockClient, UAirship.shared());
+        serviceDelegate = new UserServiceDelegate(TestApplication.getApplication(),
+                TestApplication.getApplication().preferenceDataStore,
+                requestFactory,
+                UAirship.shared());
     }
 
     /**
@@ -97,27 +93,12 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testCreateUserWithAmazonChannel() throws IOException {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn(fakeChannelId);
+        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
-        // Set up user response
-        UserResponse response = Mockito.mock(UserResponse.class);
-        when(response.getUserId()).thenReturn(fakeUserId);
-        when(response.getUserToken()).thenReturn(fakeUserToken);
-
-        // Return the response
-        when(mockClient.createUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-                JSONArray jsonArray = payload.optJSONArray("amazon_channels");
-
-                try {
-                    return jsonArray != null && jsonArray.length() == 1 && jsonArray.getString(0).equals(fakeChannelId);
-                } catch (JSONException e) {
-                    return false;
-                }
-            }
-        }))).thenReturn(response);
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                .setResponseMessage("Created")
+                .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
+                .create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -125,12 +106,18 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         serviceDelegate.onHandleIntent(intent);
 
         // Verify user name and user token was set
-        assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
-        assertEquals("Should update the user token", richPushManager.getRichPushUser().getPassword(), fakeUserToken);
+        assertEquals("someUserId", richPushuser.getId());
+        assertEquals("someUserToken", richPushuser.getPassword());
 
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/", testRequest.getURL().toString());
+        assertEquals("{\"amazon_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}", testRequest.getRequestBody());
+        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
     /**
@@ -139,27 +126,12 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testCreateUserWithAndroidChannel() throws IOException {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
-        when(mockPushManager.getChannelId()).thenReturn(fakeChannelId);
+        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
-        // Set up user response
-        UserResponse response = Mockito.mock(UserResponse.class);
-        when(response.getUserId()).thenReturn(fakeUserId);
-        when(response.getUserToken()).thenReturn(fakeUserToken);
-
-        // Return the response
-        when(mockClient.createUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-                JSONArray jsonArray = payload.optJSONArray("android_channels");
-
-                try {
-                    return jsonArray != null && jsonArray.length() == 1 && jsonArray.getString(0).equals(fakeChannelId);
-                } catch (JSONException e) {
-                    return false;
-                }
-            }
-        }))).thenReturn(response);
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                .setResponseMessage("Created")
+                .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
+                .create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -167,12 +139,18 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         serviceDelegate.onHandleIntent(intent);
 
         // Verify user name and user token was set
-        assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
-        assertEquals("Should update the user token", richPushManager.getRichPushUser().getPassword(), fakeUserToken);
+        assertEquals("someUserId", richPushuser.getId());
+        assertEquals("someUserToken", richPushuser.getPassword());
 
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/", testRequest.getURL().toString());
+        assertEquals("{\"android_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}", testRequest.getRequestBody());
+        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
     /**
@@ -182,33 +160,19 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     public void testCreateUserNoChannel() throws IOException {
         when(mockPushManager.getChannelId()).thenReturn(null);
 
-        // Set up user response
-        UserResponse response = Mockito.mock(UserResponse.class);
-        when(response.getUserId()).thenReturn(fakeUserId);
-        when(response.getUserToken()).thenReturn(fakeUserToken);
-
-        // Return the response
-        when(mockClient.createUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-
-                return payload.length() == 0; // Empty
-            }
-        }))).thenReturn(response);
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_CREATED)
+                .setResponseMessage("Created")
+                .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
+                .create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
         serviceDelegate.onHandleIntent(intent);
 
-        // Verify user name and user token was set
-        assertEquals("Should update the user name", richPushManager.getRichPushUser().getId(), fakeUserId);
-        assertEquals("Should update the user token", richPushManager.getRichPushUser().getPassword(), fakeUserToken);
-
-        // Verify result receiver
-        assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        // Verify we did not create the user
+        assertNull(richPushuser.getId());
+        assertNull(richPushuser.getPassword());
     }
 
     /**
@@ -216,22 +180,22 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testCreateUserFailed() {
-        // Return the response
-        when(mockClient.createUser(any(JSONObject.class))).thenReturn(null);
+        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
+
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
         serviceDelegate.onHandleIntent(intent);
 
-        assertNull("Should not update the user name", richPushManager.getRichPushUser().getId());
-        assertNull("Should not update the user token", richPushManager.getRichPushUser().getPassword());
+        // Verify we did not create the user
+        assertNull(richPushuser.getId());
+        assertNull(richPushuser.getPassword());
 
         // Verify result receiver
-        assertEquals("Should return error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        assertEquals(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, resultReceiver.lastResultCode);
     }
-
 
     /**
      * Test user update on amazon.
@@ -239,27 +203,16 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateUserAmazon() throws IOException {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
+        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a user
-        preferences.setUserCredentials(fakeUserId, fakeUserToken);
+        richPushuser.setUser("someUserId", "someUserToken");
 
-        // Set the Channel
-        when(mockPushManager.getChannelId()).thenReturn(fakeChannelId);
-
-        // Set up the client
-        when(mockClient.updateUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-
-                try {
-                    JSONArray channels = payload.getJSONObject("amazon_channels").getJSONArray("add");
-                    return channels.length() == 1 && channels.getString(0).equals(fakeChannelId);
-                } catch (JSONException e) {
-                    return false;
-                }
-            }
-        }), eq(fakeUserId), eq(fakeUserToken))).thenReturn(true);
+        // Set a successful response
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+                .setResponseMessage("OK")
+                .setResponseBody("{ \"ok\" }")
+                .create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -269,6 +222,12 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/someUserId/", testRequest.getURL().toString());
+        assertEquals("{\"add\":{\"amazon_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
+        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
     /**
@@ -277,27 +236,16 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateUserAndroid() throws IOException {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
+        when(mockPushManager.getChannelId()).thenReturn("ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588");
 
         // Set a user
-        preferences.setUserCredentials(fakeUserId, fakeUserToken);
+        richPushuser.setUser("someUserId", "someUserToken");
 
-        // Set the Channel
-        when(mockPushManager.getChannelId()).thenReturn(fakeChannelId);
-
-        // Set up the client
-        when(mockClient.updateUser(argThat(new ArgumentMatcher<JSONObject>() {
-            @Override
-            public boolean matches(Object argument) {
-                JSONObject payload = (JSONObject) argument;
-
-                try {
-                    JSONArray channels = payload.getJSONObject("android_channels").getJSONArray("add");
-                    return channels.length() == 1 && channels.getString(0).equals(fakeChannelId);
-                } catch (JSONException e) {
-                    return false;
-                }
-            }
-        }), eq(fakeUserId), eq(fakeUserToken))).thenReturn(true);
+        // Set a successful response
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
+                .setResponseMessage("OK")
+                .setResponseBody("{ \"ok\" }")
+                .create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -307,6 +255,12 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/someUserId/", testRequest.getURL().toString());
+        assertEquals("{\"add\":{\"android_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
+        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
     /**
@@ -315,7 +269,7 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateUserNoChannel() throws IOException {
         // Set a user
-        preferences.setUserCredentials(fakeUserId, fakeUserToken);
+        richPushuser.setUser("someUserId", "someUserToken");
 
         // Return a null channel
         when(mockPushManager.getChannelId()).thenReturn(null);
@@ -328,9 +282,6 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
-
-        // Verify we do not update the user
-        verify(mockClient, times(0)).updateUser(any(JSONObject.class), any(String.class), any(String.class));
     }
 
     /**
@@ -339,10 +290,9 @@ public class UserRegistrationServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUpdateUserRequestFail() throws IOException, JSONException {
         // Set a user
-        preferences.setUserCredentials(fakeUserId, fakeUserToken);
+        richPushuser.setUser("someUserId", "someUserToken");
 
-        // Return the response
-        when(mockClient.updateUser(any(JSONObject.class), any(String.class), any(String.class))).thenReturn(false);
+        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create();
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
