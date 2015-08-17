@@ -25,63 +25,89 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import android.content.ContentValues;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.PushManager;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class InboxServiceDelegateTest extends BaseTestCase {
 
-    AirshipConfigOptions options;
-    TestResultReceiver resultReceiver;
-    RichPushUserPreferences preferences;
-    UserAPIClient mockClient;
-    PushManager mockPushManager;
-    PreferenceDataStore dataStore;
-    RichPushResolver resolver;
-    RichPushUser richPushUser;
+    private TestResultReceiver resultReceiver;
 
-    RichPushManager richPushManager;
+    private RichPushManager richPushManager;
+    private RichPushInbox inbox;
+
     private InboxServiceDelegate serviceDelegate;
+
+    private List<TestRequest> requests;
+    private Map<String, Response> responses;
+    private PreferenceDataStore dataStore;
+    private RichPushResolver resolver;
 
     @Before
     public void setup() {
-        mockClient = Mockito.mock(UserAPIClient.class);
-        mockPushManager = Mockito.mock(PushManager.class);
-
-        TestApplication.getApplication().setPushManager(mockPushManager);
-
-        options = UAirship.shared().getAirshipConfigOptions();
         resultReceiver = new TestResultReceiver();
-        dataStore = TestApplication.getApplication().preferenceDataStore;
-        resolver = new RichPushResolver(TestApplication.getApplication());
-        richPushManager = UAirship.shared().getRichPushManager();
-        richPushManager.getRichPushInbox().updateCache();
-        richPushUser = richPushManager.getRichPushUser();
-        preferences = richPushManager.getRichPushUser().preferences;
-        // Clear any user or password
-        preferences.setUserCredentials(null, null);
+        requests = new ArrayList<>();
+        responses = new HashMap();
 
-        serviceDelegate = new InboxServiceDelegate(TestApplication.getApplication(), dataStore,
-                mockClient, resolver, UAirship.shared());
+        RequestFactory requestFactory = new RequestFactory() {
+            public Request createRequest(String requestMethod, URL url) {
+                TestRequest request = new TestRequest();
+                request.setURL(url);
+                request.setRequestMethod(requestMethod);
+                requests.add(request);
+
+                if (responses.containsKey(url.toString())) {
+                    request.response =responses.get(url.toString());
+                }
+
+                return request;
+            }
+        };
+
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+
+        richPushManager = mock(RichPushManager.class);
+        TestApplication.getApplication().setRichPushManager(richPushManager);
+
+        inbox = mock(RichPushInbox.class);
+        when(richPushManager.getRichPushInbox()).thenReturn(inbox);
+
+        RichPushUser user = new RichPushUser(dataStore);
+        user.setUser("fakeUserId", "fakeUserToken");
+        when(richPushManager.getRichPushUser()).thenReturn(user);
+
+        resolver = mock(RichPushResolver.class);
+
+        serviceDelegate = new InboxServiceDelegate(TestApplication.getApplication(),
+                dataStore,
+                requestFactory,
+                resolver,
+                UAirship.shared());
     }
 
     /**
@@ -90,7 +116,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUserNotCreated() {
         // Clear any user or password
-        preferences.setUserCredentials(null, null);
+        richPushManager.getRichPushUser().setUser(null, null);
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -100,6 +126,9 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return an error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
+
+        // Verify no requests were made
+        assertEquals(0, requests.size());
     }
 
     /**
@@ -107,12 +136,11 @@ public class InboxServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testUpdateMessagesNull() {
-        // Fake a user
-        preferences.setUserCredentials("fakeUserId", "fakeUserToken");
-        richPushUser = richPushManager.getRichPushUser();
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
 
-        // Return the response
-        when(mockClient.getMessages(any(String.class), any(String.class), any(Long.class))).thenReturn(null);
+        // Null response
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", null);
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -122,6 +150,15 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return an error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was not updated
+        assertEquals(300l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -129,16 +166,12 @@ public class InboxServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testUpdateMessagesNotModified() {
-        // Fake a user
-        preferences.setUserCredentials("fakeUserId", "fakeUserToken");
-        richPushUser = richPushManager.getRichPushUser();
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
 
-        MessageListResponse response = new MessageListResponse(new ContentValues[] { new ContentValues() },
-                                                               HttpURLConnection.HTTP_NOT_MODIFIED,
-                                                               System.currentTimeMillis());
-
-        // Return the response
-        when(mockClient.getMessages(any(String.class), any(String.class), any(Long.class))).thenReturn(response);
+        // Return a 304 response
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
+                new Response.Builder(HttpURLConnection.HTTP_NOT_MODIFIED).create());
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -148,29 +181,38 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return a success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was not updated
+        assertEquals(300l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
      * Test updateMessages returns success code when response is HTTP_OK.
      */
     @Test
-    public void testUpdateMessagesOk() {
-        // Fake a user
-        preferences.setUserCredentials("fakeUserId", "fakeUserToken");
-        richPushUser = richPushManager.getRichPushUser();
+    public void testUpdateMessages() {
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
 
-        ContentValues contentValues = new ContentValues();
-        contentValues.put("message_id", "some_mesg_id");
-        contentValues.put("message_url", "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/");
-        contentValues.put("message_body_url", "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/");
-        contentValues.put("message_read_url", "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/");
-        contentValues.put("extra", "");
-
-        MessageListResponse response = new MessageListResponse(new ContentValues[] { contentValues },
-                                                               HttpURLConnection.HTTP_OK,
-                                                               System.currentTimeMillis());
-        // Return the response
-        when(mockClient.getMessages(any(String.class), any(String.class), any(Long.class))).thenReturn(response);
+        // Return a 200 message list response with messages
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
+                new Response.Builder(HttpURLConnection.HTTP_OK)
+                        .setResponseMessage("OK")
+                        .setLastModified(600l)
+                        .setResponseBody("{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
+                                "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
+                                "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," +
+                                "\"message_read_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/\"," +
+                                "\"unread\": true, \"message_sent\": \"2010-09-05 12:13 -0000\"," +
+                                "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," +
+                                "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}")
+                        .create());
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -180,6 +222,18 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return a success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
+
+        // Verify the request method and url
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was updated
+        assertEquals(600l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
+
+        // Verify we updated the inbox
+        verify(inbox).updateCache();
     }
 
     /**
@@ -187,15 +241,14 @@ public class InboxServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testUpdateMessagesServerError() {
-        // Fake a user
-        preferences.setUserCredentials("fakeUserId", "fakeUserToken");
-        richPushUser = richPushManager.getRichPushUser();
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
 
-        MessageListResponse response = new MessageListResponse(new ContentValues[] { new ContentValues() },
-                                                               HttpURLConnection.HTTP_INTERNAL_ERROR,
-                                                               System.currentTimeMillis());
-        // Return the response
-        when(mockClient.getMessages(any(String.class), any(String.class), any(Long.class))).thenReturn(response);
+        // Return a 500 internal server error
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
+                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                        .setResponseBody("{ failed }")
+                .create());
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
@@ -205,6 +258,46 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         // Verify result receiver
         assertEquals("Should return an error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
+
+        // Verify the request method and url
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was not updated
+        assertEquals(300l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
+    }
+
+
+    @Test
+    public void testSyncReadMessageState() {
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
+
+        // Return a 500 internal server error
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
+                new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                        .setResponseBody("{ failed }")
+                        .create());
+
+        Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+
+        serviceDelegate.onHandleIntent(intent);
+
+        // Verify result receiver
+        assertEquals("Should return an error code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR,
+                resultReceiver.lastResultCode);
+
+        // Verify the request method and url
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was not updated
+        assertEquals(300l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     class TestResultReceiver extends ResultReceiver {

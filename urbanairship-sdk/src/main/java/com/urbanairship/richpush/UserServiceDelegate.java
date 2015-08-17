@@ -33,16 +33,26 @@ import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Service delegate for the {@link RichPushUpdateService} to handle user registrations.
  */
 class UserServiceDelegate extends BaseIntentService.Delegate {
+
+    private static final String USER_CREATION_PATH = "api/user/";
+    private static final String USER_UPDATE_PATH = "api/user/%s/";
 
     private static final String LAST_UPDATE_TIME ="com.urbanairship.user.LAST_UPDATE_TIME";
     static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
@@ -51,19 +61,19 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
     private static final String PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels";
     private static final String PAYLOAD_ADD_KEY = "add";
 
-    private final UserAPIClient userClient;
     private final UAirship airship;
     private final RichPushUser user;
+    private final RequestFactory requestFactory;
 
     UserServiceDelegate(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
-        this(context, dataStore, new UserAPIClient(), UAirship.shared());
+        this(context, dataStore, new RequestFactory(), UAirship.shared());
     }
 
     UserServiceDelegate(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                        @NonNull UserAPIClient userClient, @NonNull UAirship airship) {
+                        @NonNull RequestFactory requestFactory, @NonNull UAirship airship) {
         super(context, dataStore);
 
-        this.userClient = userClient;
+        this.requestFactory = requestFactory;
         this.airship = airship;
         this.user = airship.getRichPushManager().getRichPushUser();
     }
@@ -101,34 +111,54 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
     private boolean createUser() {
         String channelId = airship.getPushManager().getChannelId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("RichPushServiceDelegate - No Channel. User will be created after channel registrations finishes.");
+            Logger.debug("UserServiceDelegate - No Channel. User will be created after channel registrations finishes.");
             return false;
         }
 
-        JSONObject payload;
+        URL userCreationURL = RichPushUpdateService.getUserURL(USER_CREATION_PATH);
+        if (userCreationURL == null) {
+            return false;
+        }
+
+        String payload = createNewUserPayload(channelId);
+        Logger.verbose("UserServiceDelegate - Creating Rich Push user with payload: " + payload);
+        Response response = requestFactory.createRequest("POST", userCreationURL)
+                                          .setCredentials(airship.getAirshipConfigOptions().getAppKey(), airship.getAirshipConfigOptions().getAppSecret())
+                                          .setRequestBody(payload, "application/json")
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .execute();
+
+        // Check for failure
+        if (response == null || response.getStatus() != HttpURLConnection.HTTP_CREATED) {
+            Logger.verbose("UserServiceDelegate - Rich Push user creation failed: " + response);
+            return false;
+        }
+
+        String userId = null;
+        String userToken = null;
+
         try {
-            payload = createNewUserPayload(channelId);
-        } catch (JSONException e) {
-            Logger.error("Exception constructing JSON data when creating user.", e);
-            return false;
-        }
-
-        Logger.info("Creating Rich Push user.");
-
-        UserResponse response = userClient.createUser(payload);
-        if (response == null) {
-            return false;
-        } else {
-            if (user.setUser(response.getUserId(), response.getUserToken())) {
-                Logger.info("Rich Push user created.");
-                getDataStore().put(LAST_UPDATE_TIME, System.currentTimeMillis());
-                getDataStore().remove(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME);
-                return true;
-            } else {
-                Logger.warn("Rich Push user creation failed.");
-                return false;
+            JsonMap credentials = JsonValue.parseString(response.getResponseBody()).getMap();
+            if (credentials != null) {
+                userId = credentials.get("user_id").getString();
+                userToken = credentials.get("password").getString();
             }
+        } catch (JsonException ex) {
+            Logger.error("UserServiceDelegate - Unable to parse Rich Push user response: " + response);
+            return false;
         }
+
+        if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
+            Logger.error("UserServiceDelegate - Rich Push user creation failed: " + response);
+            return false;
+        }
+
+        Logger.info("Created Rich Push user: " + userId);
+        getDataStore().put(LAST_UPDATE_TIME, System.currentTimeMillis());
+        getDataStore().remove(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME);
+        user.setUser(userId, userToken);
+
+        return true;
     }
 
     /**
@@ -140,30 +170,33 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
         String channelId = airship.getPushManager().getChannelId();
 
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("RichPushServiceDelegate - No Channel. Skipping Rich Push user update.");
+            Logger.debug("UserServiceDelegate - No Channel. Skipping Rich Push user update.");
             return false;
         }
 
-        Logger.info("Updating Rich Push user.");
 
-        JSONObject payload;
-
-        try {
-            payload = createUpdateUserPayload(channelId);
-        } catch (JSONException e) {
-            Logger.error("Exception constructing JSON data when updating user.", e);
+        URL userUpdateURL = RichPushUpdateService.getUserURL(USER_UPDATE_PATH, user.getId());
+        if (userUpdateURL == null) {
             return false;
         }
 
-        if (userClient.updateUser(payload, user.getId(), user.getPassword())) {
+        String payload = createUpdateUserPayload(channelId);
+        Logger.verbose("UserServiceDelegate - Updating user with payload: " + payload);
+        Response response = requestFactory.createRequest("POST", userUpdateURL)
+                                          .setCredentials(user.getId(), user.getPassword())
+                                          .setRequestBody(payload, "application/json")
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .execute();
+
+        Logger.verbose("UserServiceDelegate - Update Rich Push user response: " + response);
+        if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
-
             getDataStore().put(LAST_UPDATE_TIME, System.currentTimeMillis());
             return true;
-        } else {
-            getDataStore().put(LAST_UPDATE_TIME, 0);
-            return false;
         }
+
+        getDataStore().put(LAST_UPDATE_TIME, 0);
+        return false;
     }
 
     /**
@@ -171,13 +204,10 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return The user payload as a JSON object.
      */
-    private JSONObject createNewUserPayload(@NonNull String channelId) throws JSONException {
-        JSONObject payload = new JSONObject();
-        JSONArray array = new JSONArray();
-        array.put(channelId);
-        payload.putOpt(getPayloadChannelsKey(), array);
-
-        return payload;
+    private String createNewUserPayload(@NonNull String channelId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put(getPayloadChannelsKey(), Arrays.asList(channelId));
+        return JsonValue.wrap(payload, JsonValue.NULL).toString();
     }
 
     /**
@@ -185,17 +215,14 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
      *
      * @return The user payload as a JSON object.
      */
-    private JSONObject createUpdateUserPayload(@NonNull String channelId) throws JSONException {
-        JSONObject payload = new JSONObject();
-        JSONObject channelPayload = new JSONObject();
+    private String createUpdateUserPayload(@NonNull String channelId) {
+        Map<String, Object> addChannels = new HashMap<>();
+        addChannels.put(getPayloadChannelsKey(), Arrays.asList(channelId));
 
-        JSONArray channels = new JSONArray();
-        channels.put(channelId);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put(PAYLOAD_ADD_KEY, addChannels);
 
-        channelPayload.put(PAYLOAD_ADD_KEY, channels);
-        payload.put(getPayloadChannelsKey(), channelPayload);
-
-        return payload;
+        return JsonValue.wrap(payload, JsonValue.NULL).toString();
     }
 
     /**

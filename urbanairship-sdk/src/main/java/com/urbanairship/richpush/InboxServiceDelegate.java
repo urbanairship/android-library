@@ -36,12 +36,15 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.Response;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,25 +55,30 @@ import java.util.Set;
  */
 class InboxServiceDelegate extends BaseIntentService.Delegate {
 
+    private static final String DELETE_MESSAGES_PATH = "api/user/%s/messages/delete/";
+    private static final String MARK_READ_MESSAGES_PATH = "api/user/%s/messages/unread/";
+    private static final String MESSAGES_PATH = "api/user/%s/messages/";
+
     private static final String DELETE_MESSAGES_KEY = "delete";
     private static final String MARK_READ_MESSAGES_KEY = "mark_as_read";
     private static final String MESSAGE_URL = "api/user/%s/messages/message/%s/";
 
-    private final UserAPIClient userClient;
     private final UAirship airship;
     private final RichPushUser user;
     private final RichPushResolver resolver;
     private final String hostUrl;
+    private final RequestFactory requestFactory;
+
 
     public InboxServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new UserAPIClient(), new RichPushResolver(context), UAirship.shared());
+        this(context, dataStore, new RequestFactory(), new RichPushResolver(context), UAirship.shared());
     }
 
     public InboxServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                UserAPIClient userClient, RichPushResolver resolver, UAirship airship) {
+                                RequestFactory requestFactory, RichPushResolver resolver, UAirship airship) {
         super(context, dataStore);
 
-        this.userClient = userClient;
+        this.requestFactory = requestFactory;
         this.resolver = resolver;
         this.airship = airship;
         this.user = airship.getRichPushManager().getRichPushUser();
@@ -90,9 +98,8 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
             boolean success = this.updateMessages();
             RichPushUpdateService.respond(intent, success);
 
-            // Do clean up
-            this.handleReadMessages();
-            this.handleDeletedMessages();
+            this.syncReadMessageState();
+            this.syncDeletedMessageState();
         }
     }
 
@@ -102,39 +109,53 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      * @return <code>true</code> if messages were updated, otherwise <code>false</code>.
      */
     private boolean updateMessages() {
-        MessageListResponse response = userClient.getMessages(user.getId(),
-                user.getPassword(),
-                getDataStore().getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
-
         Logger.info("Refreshing inbox messages.");
 
-        if (response == null) {
-            Logger.debug("InboxServiceDelegate - Inbox message list request failed.");
+        URL getMessagesURL = RichPushUpdateService.getUserURL(MESSAGES_PATH, user.getId());
+        if (getMessagesURL == null) {
             return false;
         }
 
-        Logger.debug("InboxServiceDelegate - Inbox message list request received: " + response.getStatus());
+        Logger.verbose("InboxServiceDelegate - Fetching inbox messages.");
+        Response response = requestFactory.createRequest("GET", getMessagesURL)
+                                          .setCredentials(user.getId(), user.getPassword())
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .setIfModifiedSince( getDataStore().getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0))
+                                          .execute();
 
-        switch (response.getStatus()) {
-            case HttpURLConnection.HTTP_NOT_MODIFIED:
-                Logger.info("Inbox messages already up-to-date. ");
-                return true;
+        Logger.verbose("InboxServiceDelegate - Fetch inbox messages response: " + response);
 
-            case HttpURLConnection.HTTP_OK:
-                ContentValues[] serverMessages = response.getServerMessages();
-                if (serverMessages == null) {
-                    Logger.info("Inbox message list is empty.");
-                } else {
-                    Logger.info("Received " + serverMessages.length + " inbox messages.");
-                    updateInbox(serverMessages);
-                    getDataStore().put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, response.getLastModifiedTimeMS());
-                }
-                return true;
+        int status = response == null ? -1 : response.getStatus();
 
-            default:
-                Logger.info("Unable to update inbox messages.");
-                return false;
+        // 304
+        if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+            Logger.info("Inbox messages already up-to-date. ");
+            return true;
         }
+
+        // 200
+        if (status == HttpURLConnection.HTTP_OK) {
+            ContentValues[] serverMessages;
+            try {
+                serverMessages = messagesFromResponse(response.getResponseBody());
+            } catch (JSONException e) {
+                Logger.error("Failed to update inbox. Unable to parse response body: " + response.getResponseBody());
+                return false;
+            }
+
+            if (serverMessages == null) {
+                Logger.info("Inbox message list is empty.");
+            } else {
+                Logger.info("Received " + serverMessages.length + " inbox messages.");
+                updateInbox(serverMessages);
+                getDataStore().put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, response.getLastModifiedTime());
+            }
+
+            return true;
+        }
+
+        Logger.info("Unable to update inbox messages.");
+        return false;
     }
 
 
@@ -175,44 +196,86 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
     }
 
     /**
-     * Handle deletion of messages.
+     * Synchronizes local deleted message state with the server.
      */
-    private void handleDeletedMessages() {
+    private void syncDeletedMessageState() {
         Set<String> idsToDelete = getMessageIdsFromCursor(resolver.getDeletedMessages());
 
-        if (idsToDelete != null && idsToDelete.size() > 0) {
-            Logger.verbose("InboxServiceDelegate - Found " + idsToDelete.size() + " messages to delete.");
+        if (idsToDelete == null || idsToDelete.size() == 0) {
+            // nothing to do
+            return;
+        }
 
-            /*
-             * Note: If we can't delete the messages on the server, leave them untouched
-             * and we'll get them next time.
-             */
-            JSONObject payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
-            if (userClient.deleteMessages(payload, user.getId(), user.getPassword())) {
-                resolver.deleteMessages(idsToDelete);
-            }
+        URL deleteMessagesURL = RichPushUpdateService.getUserURL(DELETE_MESSAGES_PATH, user.getId());
+        if (deleteMessagesURL == null) {
+            return;
+        }
+
+        Logger.verbose("InboxServiceDelegate - Found " + idsToDelete.size() + " messages to delete.");
+
+        /*
+         * Note: If we can't delete the messages on the server, leave them untouched
+         * and we'll get them next time.
+         */
+        JSONObject payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
+        if (payload == null) {
+            return;
+        }
+
+        Logger.verbose("InboxServiceDelegate - Deleting inbox messages with payload: " + payload);
+        Response response = requestFactory.createRequest("POST", deleteMessagesURL)
+                                          .setCredentials(user.getId(), user.getPassword())
+                                          .setRequestBody(payload.toString(), "application/json")
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .execute();
+
+        Logger.verbose("InboxServiceDelegate - Delete inbox messages response: " + response);
+        if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
+            resolver.deleteMessages(idsToDelete);
         }
     }
 
     /**
-     * Handle marking messages read.
+     * Synchronizes local read messages state with the server.
      */
-    private void handleReadMessages() {
+    private void syncReadMessageState() {
         Set<String> idsToUpdate = getMessageIdsFromCursor(resolver.getReadUpdatedMessages());
 
-        if (idsToUpdate != null && idsToUpdate.size() > 0) {
-            Logger.verbose("InboxServiceDelegate - Found " + idsToUpdate.size() + " messages to mark read.");
+        if (idsToUpdate == null || idsToUpdate.size() == 0) {
+            // nothing to do
+            return;
+        }
 
-            /*
-             * Note: If we can't mark the messages read on the server, leave them untouched
-             * and we'll get them next time.
-             */
-            JSONObject payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
-            if (userClient.markMessagesRead(payload, user.getId(), user.getPassword())) {
-                ContentValues values = new ContentValues();
-                values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, 0);
-                resolver.updateMessages(idsToUpdate, values);
-            }
+
+        URL markMessagesReadURL = RichPushUpdateService.getUserURL(MARK_READ_MESSAGES_PATH, user.getId());
+        if (markMessagesReadURL == null) {
+            return;
+        }
+
+        Logger.verbose("InboxServiceDelegate - Found " + idsToUpdate.size() + " messages to mark read.");
+
+        /*
+         * Note: If we can't mark the messages read on the server, leave them untouched
+         * and we'll get them next time.
+         */
+        JSONObject payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
+        if (payload == null) {
+            return;
+        }
+
+        Logger.verbose("InboxServiceDelegate - Marking inbox messages read request with payload: " + payload);
+        Response response = requestFactory.createRequest("POST", markMessagesReadURL)
+                                          .setCredentials(user.getId(), user.getPassword())
+                                          .setRequestBody(payload.toString(), "application/json")
+                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
+                                          .execute();
+
+        Logger.verbose("InboxServiceDelegate - Mark inbox messages read response: " + response);
+
+        if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
+            ContentValues values = new ContentValues();
+            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, 0);
+            resolver.updateMessages(idsToUpdate, values);
         }
     }
 
@@ -264,5 +327,41 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
             Logger.info(e.getMessage());
         }
         return null;
+    }
+
+
+    private ContentValues[] messagesFromResponse(String messagesString) throws JSONException {
+        if (messagesString == null) {
+            return null;
+        }
+
+        JSONArray messagesJsonArray = new JSONObject(messagesString).getJSONArray("messages");
+
+        int count = messagesJsonArray.length();
+        ContentValues[] messages = new ContentValues[count];
+
+        for (int i = 0; i < count; i++) {
+            JSONObject messageJson = messagesJsonArray.getJSONObject(i);
+
+            ContentValues values = new ContentValues();
+            values.put(RichPushTable.COLUMN_NAME_TIMESTAMP, messageJson.getString("message_sent"));
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_ID, messageJson.getString("message_id"));
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_URL, messageJson.getString("message_url"));
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, messageJson.getString("message_body_url"));
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL, messageJson.getString("message_read_url"));
+            values.put(RichPushTable.COLUMN_NAME_TITLE, messageJson.getString("title"));
+            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, messageJson.getBoolean("unread"));
+
+            values.put(RichPushTable.COLUMN_NAME_EXTRA, messageJson.getJSONObject("extra").toString());
+            values.put(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageJson.toString());
+
+            if (messageJson.has("message_expiry")) {
+                values.put(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageJson.getString("message_expiry"));
+            }
+
+            messages[i] = values;
+        }
+
+        return messages;
     }
 }

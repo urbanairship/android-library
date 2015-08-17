@@ -25,6 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -60,17 +62,10 @@ public class RichPushUser {
      *
      * @param userId The user ID from the response
      * @param userToken The user token from the response
-     * @return <code>true</code> if the user updated successfully, <code>false</code> otherwise.
      */
-    boolean setUser(String userId, String userToken) {
-        if (!UAStringUtil.isEmpty(userId) && !UAStringUtil.isEmpty(userToken)) {
-            Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
-            preferences.setUserCredentials(userId, userToken);
-            return true;
-        } else {
-            Logger.error("RichPushUser - Unable to update user. Missing user ID or token.");
-            return false;
-        }
+    void setUser(@NonNull String userId, @NonNull String userToken) {
+        Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
+        preferences.setUserCredentials(userId, userToken);
     }
 
     /**
