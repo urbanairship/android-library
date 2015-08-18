@@ -27,6 +27,7 @@ package com.urbanairship.analytics;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -203,9 +204,20 @@ class EventAPIClient {
      */
     static String getLocationPermission() {
 
-        int locationMode = 0;
-        String locationProviders;
+        // Android Marshmallow
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (UAirship.getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    UAirship.getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                return ALWAYS_ALLOWED;
+            } else {
+                return NOT_ALLOWED;
+            }
+        }
+
+        // KitKat
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            int locationMode = 0;
+
             try {
                 locationMode = Settings.Secure.getInt(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_MODE);
             } catch (Settings.SettingNotFoundException e) {
@@ -218,14 +230,15 @@ class EventAPIClient {
                 return SYSTEM_LOCATION_DISABLED;
             }
 
-        } else {
-            locationProviders = Settings.Secure.getString(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            if (!UAStringUtil.isEmpty(locationProviders)) {
-                return getLocationPermissionForApp();
-            } else {
-                return SYSTEM_LOCATION_DISABLED;
-            }
         }
+
+        String locationProviders = Settings.Secure.getString(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        if (!UAStringUtil.isEmpty(locationProviders)) {
+            return getLocationPermissionForApp();
+        } else {
+            return SYSTEM_LOCATION_DISABLED;
+        }
+
     }
 
     /**
