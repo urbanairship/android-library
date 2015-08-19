@@ -6,7 +6,9 @@ Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.htm
 Version 6.2.0 - August 19, 2015
 ===============================
  - GCM registration now uses Instance ID tokens instead of registration IDs.
- - Added AndroidManifest.xml with Urban Airship SDK entries for manifest merging.
+ - Google Play Services 7.5 or newer is required for GCM registration.
+ - Added AndroidManifest.xml for automatic manifest merging. Existing integration
+   will be required to remove Urban Airship manifest entries from their AndroidManifest.xml.
  - Added annotations using the Android support annotation library to improve code inspection.
  - Added a default landing page theme and layout to display as a modal overlay.
  - Fixed NPE when creating a CustomLayoutNotificationFactory before takeOff.
