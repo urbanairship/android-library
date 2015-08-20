@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.2.1 - August 20, 2015
+===============================
+ - Updated the samples to point to 6.2.1.
+
 Version 6.2.0 - August 19, 2015
 ===============================
  - GCM registration now uses Instance ID tokens instead of registration IDs.
