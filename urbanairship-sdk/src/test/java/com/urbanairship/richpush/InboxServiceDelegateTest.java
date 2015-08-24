@@ -241,7 +241,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         assertEquals(600l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
 
         // Verify we updated the inbox
-        verify(inbox).updateCache();
+        verify(inbox).refresh();
     }
 
     /**

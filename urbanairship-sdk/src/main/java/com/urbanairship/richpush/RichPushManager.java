@@ -94,7 +94,7 @@ public class RichPushManager extends BaseManager {
 
     @Override
     protected void init() {
-        inbox.updateCache();
+        inbox.refresh();
         updateUser(false);
 
         foregroundReceiver = new BroadcastReceiver() {

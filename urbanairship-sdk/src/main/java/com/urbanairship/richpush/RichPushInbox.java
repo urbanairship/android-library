@@ -39,7 +39,10 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,12 +72,17 @@ public class RichPushInbox {
      */
     public static final String MESSAGE_DATA_SCHEME = "message";
 
-    private static final SentAtRichPushMessageComparator richPushMessageComparator = new SentAtRichPushMessageComparator();
-    private final List<String> pendingDeletionMessageIds = new ArrayList<>();
+    private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
+
+    private final static Object inboxLock = new Object();
     private final List<Listener> listeners = new ArrayList<>();
-    private final RichPushMessageCache messageCache = new RichPushMessageCache();
+
+    private final Set<String> deletedMessageIds = new HashSet<>();
+    private final Map<String, RichPushMessage> unreadMessages = new HashMap<>();
+    private final Map<String, RichPushMessage> readMessages = new HashMap<>();
 
     private final RichPushResolver richPushResolver;
+
     final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     RichPushInbox(Context context) {
@@ -86,6 +94,7 @@ public class RichPushInbox {
     }
 
     // API
+
     /**
      * A listener interface for receiving event callbacks related to inbox database updates.
      */
@@ -121,7 +130,9 @@ public class RichPushInbox {
      * @return The number of RichPushMessages currently in the inbox.
      */
     public int getCount() {
-        return messageCache.getMessageCount();
+        synchronized (inboxLock) {
+            return unreadMessages.size() + readMessages.size();
+        }
     }
 
     /**
@@ -131,7 +142,12 @@ public class RichPushInbox {
      */
     @NonNull
     public Set<String> getMessageIds() {
-        return messageCache.getMessageIds();
+        synchronized (inboxLock) {
+            Set<String> messageIds = new HashSet<>(getCount());
+            messageIds.addAll(readMessages.keySet());
+            messageIds.addAll(unreadMessages.keySet());
+            return messageIds;
+        }
     }
 
     /**
@@ -140,7 +156,9 @@ public class RichPushInbox {
      * @return The number of read RichPushMessages currently in the inbox.
      */
     public int getReadCount() {
-        return messageCache.getReadMessageCount();
+        synchronized (inboxLock) {
+            return readMessages.size();
+        }
     }
 
     /**
@@ -149,7 +167,9 @@ public class RichPushInbox {
      * @return The number of unread RichPushMessages currently in the inbox.
      */
     public int getUnreadCount() {
-        return messageCache.getUnreadMessageCount();
+        synchronized (inboxLock) {
+            return unreadMessages.size();
+        }
     }
 
     /**
@@ -159,9 +179,13 @@ public class RichPushInbox {
      */
     @NonNull
     public List<RichPushMessage> getMessages() {
-        List<RichPushMessage> messages = messageCache.getMessages();
-        Collections.sort(messages, richPushMessageComparator);
-        return messages;
+        synchronized (inboxLock) {
+            List<RichPushMessage> messages = new ArrayList<>(getCount());
+            messages.addAll(unreadMessages.values());
+            messages.addAll(readMessages.values());
+            Collections.sort(messages, MESSAGE_COMPARATOR);
+            return messages;
+        }
     }
 
     /**
@@ -171,9 +195,11 @@ public class RichPushInbox {
      */
     @NonNull
     public List<RichPushMessage> getUnreadMessages() {
-        List<RichPushMessage> messages = messageCache.getUnreadMessages();
-        Collections.sort(messages, richPushMessageComparator);
-        return messages;
+        synchronized (inboxLock) {
+            List<RichPushMessage> messages = new ArrayList<>(unreadMessages.values());
+            Collections.sort(messages, MESSAGE_COMPARATOR);
+            return messages;
+        }
     }
 
     /**
@@ -183,9 +209,11 @@ public class RichPushInbox {
      */
     @NonNull
     public List<RichPushMessage> getReadMessages() {
-        List<RichPushMessage> messages = messageCache.getReadMessages();
-        Collections.sort(messages, richPushMessageComparator);
-        return messages;
+        synchronized (inboxLock) {
+            List<RichPushMessage> messages = new ArrayList<>(readMessages.values());
+            Collections.sort(messages, MESSAGE_COMPARATOR);
+            return messages;
+        }
     }
 
     /**
@@ -199,7 +227,13 @@ public class RichPushInbox {
         if (messageId == null) {
             return null;
         }
-        return messageCache.getMessage(messageId);
+
+        synchronized (inboxLock) {
+            if (unreadMessages.containsKey(messageId)) {
+                return unreadMessages.get(messageId);
+            }
+            return readMessages.get(messageId);
+        }
     }
 
     // actions
@@ -217,17 +251,20 @@ public class RichPushInbox {
             }
         });
 
-        synchronized (messageCache) {
+        synchronized (inboxLock) {
             for (String messageId : messageIds) {
-                RichPushMessage message = messageCache.getMessage(messageId);
+
+                RichPushMessage message = unreadMessages.get(messageId);
+
                 if (message != null) {
                     message.unreadClient = false;
-                    messageCache.addMessage(message);
+                    unreadMessages.remove(messageId);
+                    readMessages.put(messageId, message);
                 }
             }
-        }
 
-        notifyListeners();
+            notifyListeners();
+        }
     }
 
     /**
@@ -243,12 +280,15 @@ public class RichPushInbox {
             }
         });
 
-        synchronized (messageCache) {
+        synchronized (inboxLock) {
             for (String messageId : messageIds) {
-                RichPushMessage message = messageCache.getMessage(messageId);
+
+                RichPushMessage message = readMessages.get(messageId);
+
                 if (message != null) {
                     message.unreadClient = true;
-                    messageCache.addMessage(message);
+                    readMessages.remove(messageId);
+                    unreadMessages.put(messageId, message);
                 }
             }
         }
@@ -265,27 +305,22 @@ public class RichPushInbox {
      * @param messageIds A set of message ids.
      */
     public void deleteMessages(@NonNull final Set<String> messageIds) {
-        synchronized (pendingDeletionMessageIds) {
-            pendingDeletionMessageIds.addAll(messageIds);
-        }
-
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 richPushResolver.markMessagesDeleted(messageIds);
-
-                synchronized (pendingDeletionMessageIds) {
-                    pendingDeletionMessageIds.removeAll(messageIds);
-                }
             }
         });
 
-        synchronized (messageCache) {
+        synchronized (inboxLock) {
             for (String messageId : messageIds) {
-                RichPushMessage message = messageCache.getMessage(messageId);
+
+                RichPushMessage message = getMessage(messageId);
                 if (message != null) {
                     message.deleted = true;
-                    messageCache.removeMessage(message);
+                    unreadMessages.remove(messageId);
+                    readMessages.remove(messageId);
+                    deletedMessageIds.add(messageId);
                 }
             }
         }
@@ -294,61 +329,60 @@ public class RichPushInbox {
     }
 
     /**
-     * Updates the cache.
+     * Refreshes the inbox messages from the DB.
      */
-    void updateCache() {
-        updateCacheFromDB();
-        notifyListeners();
-    }
-
-    /**
-     * Updates the richMessageCache from the database.
-     */
-    private void updateCacheFromDB() {
-        List<String> deletedIds;
-        synchronized (pendingDeletionMessageIds) {
-            deletedIds = new ArrayList<>(pendingDeletionMessageIds);
-        }
-
+    void refresh() {
         Cursor inboxCursor = richPushResolver.getAllMessages();
 
         if (inboxCursor == null) {
             return;
         }
 
+        List<RichPushMessage> messageList = new ArrayList<>(inboxCursor.getCount());
+
+        // Read all the messages from the database
         while (inboxCursor.moveToNext()) {
             RichPushMessage message = messageFromCursor(inboxCursor);
-            if (message == null) {
-                continue;
+            if (message != null) {
+                messageList.add(message);
             }
+        }
 
-            synchronized (messageCache) {
-                // If the message is deleted or expired remove it from the cache
-                if (message.isDeleted() || message.isExpired()) {
-                    messageCache.removeMessage(message);
+        // Sync the messages
+        synchronized (inboxLock) {
+
+            // Save the unreadMessageIds
+            Set<String> previousUnreadMessageIds = new HashSet<>(unreadMessages.keySet());
+            Set<String> previousDeletedMessageIds = new HashSet<>(deletedMessageIds);
+
+            // Clear the current messages
+            unreadMessages.clear();
+            readMessages.clear();
+
+            // Process the new messages
+            for (RichPushMessage message : messageList) {
+
+                // Deleted
+                if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {
+                    deletedMessageIds.add(message.getMessageId());
                     continue;
                 }
 
-                if (deletedIds.contains(message.getMessageId())) {
+                // Unread - check the previousUnreadMessageIds if any mark reads are still in process
+                if (message.unreadClient || previousUnreadMessageIds.contains(message.getMessageId())) {
+                    message.unreadClient = true;
+                    unreadMessages.put(message.getMessageId(), message);
                     continue;
                 }
 
-                RichPushMessage oldCachedMessage = messageCache.getMessage(message.getMessageId());
-
-                // Not currently in the cache
-                if (oldCachedMessage == null) {
-                    messageCache.addMessage(message);
-                    continue;
-                }
-
-                // Replace the message with the new one from the db
-                messageCache.removeMessage(oldCachedMessage);
-                message.unreadClient = oldCachedMessage.unreadClient;
-                messageCache.addMessage(message);
+                // Read
+                readMessages.put(message.getMessageId(), message);
             }
         }
 
         inboxCursor.close();
+
+        notifyListeners();
     }
 
     /**
