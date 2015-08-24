@@ -83,7 +83,7 @@ public class RichPushManagerTest extends RichPushBaseTestCase {
         manager.init();
 
         // Verify we updated the inbox
-        verify(mockInbox).updateCache();
+        verify(mockInbox).refresh();
     }
 
     /**

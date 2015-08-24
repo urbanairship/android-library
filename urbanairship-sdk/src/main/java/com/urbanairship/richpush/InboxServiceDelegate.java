@@ -187,14 +187,12 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         }
 
         // Delete any messages that did not come down with the message list
-        Set<String> allIds = getMessageIdsFromCursor(resolver.getAllMessages());
-        if (allIds != null) {
-            allIds.removeAll(serverMessageIds);
-            airship.getRichPushManager().getRichPushInbox().deleteMessages(allIds);
-        }
+        Set<String> deletedMessageIds = getMessageIdsFromCursor(resolver.getAllMessages());
+        deletedMessageIds.removeAll(serverMessageIds);
+        resolver.deleteMessages(deletedMessageIds);
 
         // update the inbox cache
-        airship.getRichPushManager().getRichPushInbox().updateCache();
+        airship.getRichPushManager().getRichPushInbox().refresh();
     }
 
     /**
@@ -203,7 +201,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
     private void syncDeletedMessageState() {
         Set<String> idsToDelete = getMessageIdsFromCursor(resolver.getDeletedMessages());
 
-        if (idsToDelete == null || idsToDelete.size() == 0) {
+        if (idsToDelete.size() == 0) {
             // nothing to do
             return;
         }
@@ -244,7 +242,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
     private void syncReadMessageState() {
         Set<String> idsToUpdate = getMessageIdsFromCursor(resolver.getReadUpdatedMessages());
 
-        if (idsToUpdate == null || idsToUpdate.size() == 0) {
+        if (idsToUpdate.size() == 0) {
             // nothing to do
             return;
         }
@@ -289,9 +287,10 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      * @param cursor The cursor to get the message IDs from.
      * @return The message IDs as a set of strings.
      */
+    @NonNull
     private Set<String> getMessageIdsFromCursor(Cursor cursor) {
         if (cursor == null) {
-            return null;
+            return new HashSet<>();
         }
 
         Set<String> ids = new HashSet<>(cursor.getCount());
