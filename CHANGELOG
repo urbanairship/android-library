@@ -3,6 +3,13 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.2.2 - August 24, 2015
+===============================
+ - Schedules alarms with FLAG_UPDATE_CURRENT instead of FLAG_CANCEL_CURRENT to prevent SecurityExceptions
+   on Samsung devices running Lollipop.
+ - Rich Push API client no longer performs remote deletes when messages are omitted in the message
+   list retrieval. This mitigates an edge case when a user’s inbox contains more than 500 messages.
+
 Version 6.2.1 - August 20, 2015
 ===============================
  - Updated the samples to point to 6.2.1.
