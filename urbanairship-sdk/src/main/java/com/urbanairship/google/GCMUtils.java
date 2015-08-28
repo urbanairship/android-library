@@ -59,11 +59,6 @@ public class GCMUtils {
 
         ManifestUtils.checkRequiredPermission(Manifest.permission.WAKE_LOCK);
 
-        // This permission is required on devices running Android 4.0.3 and lower.
-        if (Build.VERSION.SDK_INT <= 15) {
-            ManifestUtils.checkRequiredPermission(Manifest.permission.GET_ACCOUNTS);
-        }
-
         if (ManifestUtils.isPermissionKnown(PERMISSION_RECEIVE)) {
             ManifestUtils.checkRequiredPermission(PERMISSION_RECEIVE);
         } else {
