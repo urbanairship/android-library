@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.2.3 - August 28, 2015
+===============================
+ - Fixed missing resources in Eclipse style library project.
+ - Fixed malformed rich push user requests introduced in 6.2.0 by correcting the user update payload.
+ - Removed check for android.permission.GET_ACCOUNTS.
+
 Version 6.2.2 - August 24, 2015
 ===============================
  - Schedules alarms with FLAG_UPDATE_CURRENT instead of FLAG_CANCEL_CURRENT to prevent SecurityExceptions
