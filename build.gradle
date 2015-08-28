@@ -50,7 +50,7 @@ task packageUrbanAirshipRelease << {
         from zipTree(file("${urbanAirshipSdkProject.buildDir}/outputs/aar/urbanairship-sdk-release.aar"))
         into file("$buildDir/ua-staging/urbanairship-lib")
         rename "classes.jar", "libs/urbanairship-lib-${airshipVersion}.jar"
-        include "proguard.txt", "res/*", "classes.jar"
+        include "proguard.txt", "res/**", "classes.jar"
     }
 
     // Eclipse project.properties file
