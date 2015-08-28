@@ -58,7 +58,6 @@ public class GCMUtils {
         String packageName = UAirship.getPackageName();
 
         ManifestUtils.checkRequiredPermission(Manifest.permission.WAKE_LOCK);
-        ManifestUtils.checkRequiredPermission(Manifest.permission.GET_ACCOUNTS);
 
         if (ManifestUtils.isPermissionKnown(PERMISSION_RECEIVE)) {
             ManifestUtils.checkRequiredPermission(PERMISSION_RECEIVE);
