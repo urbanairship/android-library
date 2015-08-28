@@ -226,7 +226,7 @@ public class UserServiceDelegateTest extends BaseTestCase {
         // Verify the request
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/someUserId/", testRequest.getURL().toString());
-        assertEquals("{\"add\":{\"amazon_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
+        assertEquals("{\"amazon_channels\":{\"add\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
         assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
@@ -259,7 +259,7 @@ public class UserServiceDelegateTest extends BaseTestCase {
         // Verify the request
         assertEquals("POST", testRequest.getRequestMethod());
         assertEquals("https://device-api.urbanairship.com/api/user/someUserId/", testRequest.getURL().toString());
-        assertEquals("{\"add\":{\"android_channels\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
+        assertEquals("{\"android_channels\":{\"add\":[\"ba7beaaf-b6e9-416c-a1f9-a6ff5a81f588\"]}}", testRequest.getRequestBody());
         assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
     }
 
