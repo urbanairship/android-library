@@ -345,7 +345,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
                 // Send analytics event
                 Intent sendAnalytics = new Intent(getContext(), EventService.class)
-                        .setAction("com.urbanairship.analytics.SEND");
+                        .setAction(com.urbanairship.analytics.EventService.ACTION_SEND);
                 getContext().startService(sendAnalytics);
 
             } else {

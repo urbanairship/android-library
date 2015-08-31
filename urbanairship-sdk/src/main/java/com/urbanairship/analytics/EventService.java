@@ -47,8 +47,10 @@ public class EventService extends IntentService {
 
     /**
      * Intent action to send an event.
+     *
+     * @hide
      */
-    static final String ACTION_SEND = "com.urbanairship.analytics.SEND";
+    public static final String ACTION_SEND = "com.urbanairship.analytics.SEND";
 
     /**
      * Intent action to add an event.
@@ -210,7 +212,7 @@ public class EventService extends IntentService {
         final int eventCount = dataManager.getEventCount();
 
         if (UAirship.shared().getPushManager().getChannelId() == null) {
-            Logger.verbose("EventAPIClient - No channel ID, skipping analytics send.");
+            Logger.debug("EventService - No channel ID, skipping analytics send.");
             return;
         }
 
