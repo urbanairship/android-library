@@ -37,6 +37,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.amazon.ADMUtils;
+import com.urbanairship.analytics.EventService;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -341,6 +342,12 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 pushManager.updateRegistration();
                 pushManager.startUpdateTagsService();
                 airship.getRichPushManager().updateUser(true);
+
+                // Send analytics event
+                Intent sendAnalytics = new Intent(getContext(), EventService.class)
+                        .setAction(com.urbanairship.analytics.EventService.ACTION_SEND);
+                getContext().startService(sendAnalytics);
+
             } else {
                 Logger.error("Failed to register with channel ID: " + response.getChannelId() +
                         " channel location: " + response.getChannelLocation());
