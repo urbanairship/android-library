@@ -209,6 +209,11 @@ public class EventService extends IntentService {
 
         final int eventCount = dataManager.getEventCount();
 
+        if (UAirship.shared().getPushManager().getChannelId() == null) {
+            Logger.verbose("EventAPIClient - No channel ID, skipping analytics send.");
+            return;
+        }
+
         if (eventCount <= 0) {
             Logger.debug("EventService - No events to send. Ending analytics upload.");
             return;
