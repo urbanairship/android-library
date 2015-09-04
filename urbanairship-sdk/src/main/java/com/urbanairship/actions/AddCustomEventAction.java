@@ -101,8 +101,12 @@ public class AddCustomEventAction extends Action {
             }
         }
 
-        eventBuilder.addEvent();
-        return ActionResult.newEmptyResult();
+        CustomEvent event = eventBuilder.addEvent();
+        if (event.isValid()) {
+            return ActionResult.newEmptyResult();
+        } else {
+            return ActionResult.newErrorResult(new IllegalArgumentException("Unable to add custom event. Event is invalid."));
+        }
     }
 
     @Override

@@ -18,6 +18,8 @@ import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.when;
 public class CustomEventTest extends BaseTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
     PushManager pushManager;
     Analytics analytics;
 
@@ -61,65 +64,68 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test creating a custom event with a null event name throws an exception.
+     * Test creating a custom event with a null event makes it invalid.
      */
     @Test
     public void testNullEventName() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder(null);
+        //noinspection ResourceType
+        CustomEvent event = new CustomEvent.Builder(null).create();
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test creating a custom event with an empty event name throws an exception.
+     * Test creating a custom event with an empty event name makes it invalid.
      */
     @Test
     public void testEmptyEventName() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("");
+        //noinspection ResourceType
+        CustomEvent event = new CustomEvent.Builder("").create();
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test creating a custom event with a name longer than 255 characters throws
-     * an exception.
+     * Test creating a custom event with a name longer than 255 characters makes it invalid.
      */
     @Test
     public void testEventNameExceedsMaxLength() {
-        exception.expect(IllegalArgumentException.class);
-        String eventName = createFixedSizeString('a', 256);
-        new CustomEvent.Builder(eventName);
+        CustomEvent event = new CustomEvent.Builder(createFixedSizeString('a', 256)).create();
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting a interaction ID that is longer than 255 characters throws an
-     * exception.
+     * Test setting a interaction ID that is longer than 255 characters makes it invalid
      */
     @Test
     public void testInteractionIDExceedsMaxLength() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name")
-                .setInteraction("interaction type", createFixedSizeString('a', 256));
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setInteraction("interaction type", createFixedSizeString('a', 256))
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting a attribution type that is longer than 255 characters throws an
-     * exception.
+     * Test setting a attribution type that is longer than 255 characters makes it invalid.
      */
     @Test
     public void testInteractionTypeExceedsMaxLength() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name")
-                .setInteraction(createFixedSizeString('a', 256), "interaction id");
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setInteraction(createFixedSizeString('a', 256), "interaction id")
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting a transaction ID that is longer than 255 characters throws an
-     * exception.
+     * Test setting a transaction ID that is longer than 255 characters makes it invalid.
      */
     @Test
     public void testTransactionIDExceedsMaxLength() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name")
-                .setTransactionId(createFixedSizeString('a', 256));
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setTransactionId(createFixedSizeString('a', 256))
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
@@ -336,22 +342,27 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test setting event value above the max allowed throws an exception.
+     * Test setting event value above the max allowed makes the event invalid.
      */
     @Test
     public void testEventValueDoubleAboveMax() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name").setEventValue(Integer.MAX_VALUE + .000001);
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(Integer.MAX_VALUE + .000001)
+                .create();
 
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting event value below the min allowed throws an exception.
+     * Test setting event value below the min allowed makes the event invalid
      */
     @Test
     public void testEventValueDoubleBelowMin() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name").setEventValue(Integer.MIN_VALUE - .000001);
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(Integer.MIN_VALUE - .000001)
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
@@ -364,41 +375,52 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test setting event value above the max allowed throws an exception.
+     * Test setting event value above the max allowed makes the event invalid.
      */
     @Test
     public void testEventValueStringAboveMax() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name").setEventValue(String.valueOf(Integer.MAX_VALUE + 0.000001));
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(String.valueOf(Integer.MAX_VALUE + 0.000001))
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting event value below the min allowed throws an exception.
+     * Test setting event value below the min allowed makes the event invalid
      */
     @Test
     public void testEventValueStringBelowMin() {
-        exception.expect(IllegalArgumentException.class);
-        new CustomEvent.Builder("event name").setEventValue(String.valueOf(Integer.MIN_VALUE - 0.000001));
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(String.valueOf(Integer.MIN_VALUE - 0.000001))
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting event value above the max allowed throws an exception.
+     * Test setting event value above the max allowed makes the event invalid.
      */
     @Test
     public void testEventValueBigDecimalAboveMax() {
-        exception.expect(IllegalArgumentException.class);
-        BigDecimal overMax = new BigDecimal(Integer.MAX_VALUE).add(BigDecimal.valueOf(0.000001));
-        new CustomEvent.Builder("event name").setEventValue(overMax);
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(new BigDecimal(Integer.MAX_VALUE).add(BigDecimal.valueOf(0.000001)))
+                .create();
+
+        assertFalse(event.isValid());
     }
 
     /**
-     * Test setting event value below the min allowed throws an exception.
+     * Test setting event value below the min allowed makes the event invalid.
      */
     @Test
     public void testEventValueBigDecimalBelowMin() {
-        exception.expect(IllegalArgumentException.class);
-        BigDecimal belowMin = new BigDecimal(Integer.MIN_VALUE).subtract(BigDecimal.valueOf(0.000001));
-        new CustomEvent.Builder("event name").setEventValue(belowMin);
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .setEventValue(new BigDecimal(Integer.MIN_VALUE).subtract(BigDecimal.valueOf(0.000001)))
+                .create();
+
+        assertFalse(event.isValid());
+
     }
 
     /**
