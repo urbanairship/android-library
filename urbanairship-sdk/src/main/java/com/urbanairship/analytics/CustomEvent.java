@@ -44,7 +44,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -181,10 +180,6 @@ public class CustomEvent extends Event {
             for (Map.Entry<String, Object> entry : properties.entrySet()) {
                 if (entry.getValue() instanceof Collection) {
                     propertiesPayload.putOpt(entry.getKey(), new JSONArray((Collection) entry.getValue()));
-                } else if (entry.getValue() instanceof Double) {
-                    // Format doubles to something reasonable
-                    double doubleValue = (Double) entry.getValue();
-                    propertiesPayload.putOpt(entry.getKey(), String.format(Locale.US, "%.6f", doubleValue));
                 } else {
                     // Everything else can be stringified
                     propertiesPayload.putOpt(entry.getKey(), JsonValue.wrap(entry.getValue(), JsonValue.NULL).toString());

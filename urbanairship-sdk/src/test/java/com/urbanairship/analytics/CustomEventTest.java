@@ -450,7 +450,7 @@ public class CustomEventTest extends BaseTestCase {
         CustomEvent event = new CustomEvent.Builder("event name")
                 .addProperty("true_boolean", true)
                 .addProperty("false_boolean", false)
-                .addProperty("double", 124.49)
+                .addProperty("double", 1234567.498765)
                 .addProperty("string", "some string value")
                 .addProperty("int", Integer.MIN_VALUE)
                 .addProperty("long", Long.MAX_VALUE)
@@ -462,7 +462,7 @@ public class CustomEventTest extends BaseTestCase {
         // Validate the custom properties
         EventTestUtils.validateNestedEventValue(event, "properties", "true_boolean", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "false_boolean", "false");
-        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.490000");
+        EventTestUtils.validateNestedEventValue(event, "properties", "double", "1234567.498765");
         EventTestUtils.validateNestedEventValue(event, "properties", "string", "\"some string value\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648");
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
@@ -550,7 +550,7 @@ public class CustomEventTest extends BaseTestCase {
         assertTrue(eventBuilder.create().isValid());
 
         // Add a property name above max length
-        eventBuilder.addProperty("exceeds max",  Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE + 1]));
+        eventBuilder.addProperty("exceeds max", Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE + 1]));
 
         // Verify its now invalid
         assertFalse(eventBuilder.create().isValid());

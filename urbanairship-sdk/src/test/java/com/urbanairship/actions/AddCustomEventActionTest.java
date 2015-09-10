@@ -296,7 +296,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name");
 
         EventTestUtils.validateNestedEventValue(event, "properties", "boolean", "true");
-        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.490000");
+        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.49");
         EventTestUtils.validateNestedEventValue(event, "properties", "string", "\"some string value\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648");
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
