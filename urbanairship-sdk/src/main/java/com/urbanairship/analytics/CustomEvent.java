@@ -41,7 +41,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -96,6 +97,11 @@ public class CustomEvent extends Event {
     public static final String LAST_RECEIVED_SEND_ID = "last_received_send_id";
 
     /**
+     * The custom properties key.
+     */
+    public static final String PROPERTIES = "properties";
+
+    /**
      * Max value allowed for the event value before it is converted to a long.
      */
     private static final BigDecimal MAX_VALUE = new BigDecimal(Integer.MAX_VALUE);
@@ -110,6 +116,15 @@ public class CustomEvent extends Event {
      */
     public static final int MAX_CHARACTER_LENGTH = 255;
 
+    /**
+     * The max number of custom properties.
+     */
+    public static final int MAX_PROPERTIES = 20;
+
+    /**
+     * The max size of a collection that is allowed in a custom property.
+     */
+    public static final int MAX_PROPERTY_COLLECTION_SIZE = 20;
 
 
     private final String eventName;
@@ -128,6 +143,7 @@ public class CustomEvent extends Event {
         this.interactionType = UAStringUtil.isEmpty(builder.interactionType) ? null : builder.interactionType;
         this.interactionId = UAStringUtil.isEmpty(builder.interactionId) ? null : builder.interactionId;
         this.sendId = builder.pushSendId;
+        this.properties = new HashMap<>(builder.properties);
     }
 
     @Override
@@ -150,12 +166,33 @@ public class CustomEvent extends Event {
             if (eventValue != null) {
                 data.putOpt(EVENT_VALUE, eventValue.movePointRight(6).longValue());
             }
+
             if (!UAStringUtil.isEmpty(sendId)) {
                 data.putOpt(CONVERSION_SEND_ID, sendId);
             } else if (conversionSendId != null) {
                 data.putOpt(CONVERSION_SEND_ID, conversionSendId);
             } else {
                 data.putOpt(LAST_RECEIVED_SEND_ID, UAirship.shared().getPushManager().getLastReceivedSendId());
+            }
+
+            JSONObject propertiesPayload = new JSONObject();
+
+            // Properties
+            for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                if (entry.getValue() instanceof Collection) {
+                    propertiesPayload.putOpt(entry.getKey(), new JSONArray((Collection) entry.getValue()));
+                } else if (entry.getValue() instanceof Double) {
+                    // Format doubles to something reasonable
+                    double doubleValue = (Double) entry.getValue();
+                    propertiesPayload.putOpt(entry.getKey(), String.format(Locale.US, "%.6f", doubleValue));
+                } else {
+                    // Everything else can be stringified
+                    propertiesPayload.putOpt(entry.getKey(), JsonValue.wrap(entry.getValue(), JsonValue.NULL).toString());
+                }
+            }
+
+            if (propertiesPayload.length() > 0) {
+                data.putOpt(PROPERTIES, propertiesPayload);
             }
 
         } catch (JSONException e) {
@@ -199,6 +236,39 @@ public class CustomEvent extends Event {
             isValid = false;
         }
 
+        if (properties.size() > MAX_PROPERTIES) {
+            Logger.error("Number of custom properties exceeds " + MAX_PROPERTIES);
+            isValid = false;
+        }
+
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            if (entry.getKey().length() > MAX_CHARACTER_LENGTH) {
+                Logger.error("The custom property " + entry.getKey() + " is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+                isValid = false;
+            }
+
+            if (entry.getValue() instanceof Collection) {
+                Collection collection = (Collection) entry.getValue();
+                if (collection.size() > MAX_PROPERTY_COLLECTION_SIZE) {
+                    Logger.error("The custom property " + entry.getKey() + " contains a Collection<String> that is larger than  " + MAX_PROPERTY_COLLECTION_SIZE);
+                    isValid = false;
+                }
+
+                for (Object object : collection) {
+                    String string = String.valueOf(object);
+                    if (string != null && string.length() > MAX_CHARACTER_LENGTH) {
+                        Logger.error("The custom property " + entry.getKey() + " contains a value that is larger than  " + MAX_CHARACTER_LENGTH + " characters.");
+                        isValid = false;
+                    }
+                }
+            } else if (entry.getValue() instanceof String) {
+                String stringValue = (String) entry.getValue();
+                if (stringValue.length() > MAX_CHARACTER_LENGTH) {
+                    Logger.error("The custom property " + entry.getKey() + " contains a value that is larger than  " + MAX_CHARACTER_LENGTH + " characters.");
+                    isValid = false;
+                }
+            }
+        }
 
         return isValid;
     }
@@ -214,11 +284,12 @@ public class CustomEvent extends Event {
         private String interactionType;
         private String interactionId;
         private String pushSendId;
+        private Map<String, Object> properties = new HashMap<>();
 
         /**
          * Creates a new custom event builder
          * <p/>
-         * The event name is must be between 1 and 255 characters or the event will be invalid.
+         * The event name must be between 1 and 255 characters or the event will be invalid.
          *
          * @param eventName The name of the event.
          * @throws java.lang.IllegalArgumentException if the event name is null, empty, or exceeds 255
@@ -232,7 +303,7 @@ public class CustomEvent extends Event {
          * Sets the event value.
          * <p/>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
-         * range [-2^31, 2^31-1]. Any value outside tht range will cause the event to be invalid.
+         * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
          * @param value The event's value as a BigDecimal.
          * @return The custom event builder.
@@ -251,7 +322,7 @@ public class CustomEvent extends Event {
          * Sets the event value.
          * <p/>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
-         * range [-2^31, 2^31-1]. Any value outside tht range will cause the event to be invalid.
+         * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
          * @param value The event's value as a double
          * @return The custom event builder.
@@ -265,7 +336,7 @@ public class CustomEvent extends Event {
          * Sets the event value from a String.
          * <p/>
          * The event's value will be accurate 6 digits after the decimal. The number must fall in the
-         * range [-2^31, 2^31-1]. Any value outside tht range will cause the event to be invalid.
+         * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
          *
          * @param value The event's value as a String.
          * @return The custom event builder.
@@ -346,6 +417,106 @@ public class CustomEvent extends Event {
             if (pushMessage != null) {
                 pushSendId = pushMessage.getSendId();
             }
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name or value
+         * of the property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
+                                   @NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String value) {
+            properties.put(name, value);
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
+         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, int value) {
+            properties.put(name, value);
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
+         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, long value) {
+            properties.put(name, value);
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
+         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         * @throws java.lang.NumberFormatException if the value is infinite or not a number
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, double value) {
+            if (Double.isNaN(value) || Double.isInfinite(value)) {
+                throw new NumberFormatException("Infinity or NaN: " + value);
+            }
+
+            properties.put(name, value);
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name of the
+         * property exceeds {@link #MAX_CHARACTER_LENGTH} it will cause the event to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name, boolean value) {
+            properties.put(name, value);
+            return this;
+        }
+
+        /**
+         * Adds a custom property to the event.
+         * <p/>
+         * If the max number of properties exceeds {@link #MAX_PROPERTIES}, if the name of the
+         * property, or any of the Strings within its value exceeds {@link #MAX_CHARACTER_LENGTH}, or
+         * if the value contains more than {@link #MAX_PROPERTY_COLLECTION_SIZE} it will cause the event
+         * to be invalid.
+         *
+         * @param name The property name.
+         * @param value The property value.
+         * @return The custom event builder.
+         */
+        public Builder addProperty(@NonNull @Size(min = 1, max = MAX_CHARACTER_LENGTH) String name,
+                                   @NonNull @Size(min = 1, max = MAX_PROPERTY_COLLECTION_SIZE) Collection<String> value) {
+
+            properties.put(name, new ArrayList<>(value));
             return this;
         }
 

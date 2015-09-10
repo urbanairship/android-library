@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -123,4 +124,12 @@ public class EventTestUtils {
         assertEquals("Event's value for " + key + " is unexpected.", expectedValue, event.getEventData().getJSONObject(key).getDouble(nestedKey));
     }
 
+    /**
+     * Gets the event's data.
+     * @param event The event.
+     * @return The event's data.
+     */
+    public static JSONObject getEventData(Event event) {
+        return event.getEventData();
+    }
 }

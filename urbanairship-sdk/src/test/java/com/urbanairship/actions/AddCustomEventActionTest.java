@@ -12,11 +12,13 @@ import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.richpush.RichPushMessage;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -215,7 +217,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
 
     /**
-     * Test performing with the PushMessage metadata creates an event with the send id from th message.
+     * Test performing with the PushMessage metadata creates an event with the send id from the message.
      */
     @Test
     public void testPerformPushMessageMetadata() throws JSONException {
@@ -251,6 +253,60 @@ public class AddCustomEventActionTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id");
         EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name");
         EventTestUtils.validateEventValue(event, CustomEvent.CONVERSION_SEND_ID, "send id");
+    }
+
+    /**
+     * Test performing with the PushMessage metadata creates an event with the send id from the message.
+     */
+    @Test
+    public void testPerformWithProperties() throws JSONException {
+        Map<String, Object> map = new HashMap<>();
+        map.put(CustomEvent.TRANSACTION_ID, "transaction id");
+        map.put(CustomEvent.EVENT_VALUE, "123.45");
+        map.put(CustomEvent.INTERACTION_TYPE, "interaction type");
+        map.put(CustomEvent.INTERACTION_ID, "interaction id");
+        map.put(CustomEvent.EVENT_NAME, "event name");
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("boolean", true);
+        properties.put("double", 124.49);
+        properties.put("string", "some string value");
+        properties.put("int", Integer.MIN_VALUE);
+        properties.put("long", Long.MAX_VALUE);
+        properties.put("array", Arrays.asList("string value", true, 124));
+
+        map.put(CustomEvent.PROPERTIES, properties);
+
+        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map);
+
+        ActionResult result = action.perform(args);
+        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+
+        // Verify the event was added
+        ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
+        verify(analytics).addEvent(argumentCaptor.capture());
+
+        // Validate the resulting event
+        CustomEvent event = argumentCaptor.getValue();
+
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id");
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L);
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type");
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id");
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name");
+
+        EventTestUtils.validateNestedEventValue(event, "properties", "boolean", "true");
+        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.490000");
+        EventTestUtils.validateNestedEventValue(event, "properties", "string", "\"some string value\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648");
+        EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
+
+        // Validate the custom String[] property
+        JSONArray array = EventTestUtils.getEventData(event).getJSONObject("properties").getJSONArray("array");
+        assertEquals(3, array.length());
+        assertEquals("string value", array.getString(0));
+        assertEquals("true", array.getString(1));
+        assertEquals("124", array.getString(2));
     }
 }
 

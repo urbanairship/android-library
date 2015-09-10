@@ -8,6 +8,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,6 +17,8 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -437,6 +440,140 @@ public class CustomEventTest extends BaseTestCase {
                 .create();
 
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+    }
+
+    /**
+     * Test properties are all stringified except for arrays of Strings.
+     */
+    @Test
+    public void testPropertiesValues() throws JSONException {
+        CustomEvent event = new CustomEvent.Builder("event name")
+                .addProperty("true_boolean", true)
+                .addProperty("false_boolean", false)
+                .addProperty("double", 124.49)
+                .addProperty("string", "some string value")
+                .addProperty("int", Integer.MIN_VALUE)
+                .addProperty("long", Long.MAX_VALUE)
+                .addProperty("array", Arrays.asList("value", "another value"))
+                .create();
+
+        assertTrue(event.isValid());
+
+        // Validate the custom properties
+        EventTestUtils.validateNestedEventValue(event, "properties", "true_boolean", "true");
+        EventTestUtils.validateNestedEventValue(event, "properties", "false_boolean", "false");
+        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.490000");
+        EventTestUtils.validateNestedEventValue(event, "properties", "string", "\"some string value\"");
+        EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648");
+        EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
+
+        // Validate the custom String[] property
+        JSONArray array = event.getEventData().getJSONObject("properties").getJSONArray("array");
+        assertEquals(2, array.length());
+        assertEquals("value", array.getString(0));
+        assertEquals("another value", array.getString(1));
+    }
+
+    /**
+     * Test adding more than {@link CustomEvent#MAX_PROPERTIES} properties invalidates the event.
+     */
+    @Test
+    public void testPropertiesExceedsMaxCount() throws JSONException {
+        CustomEvent.Builder eventBuilder = new CustomEvent.Builder("event name");
+
+        // Add the max number of events
+        for (int i = 0; i < CustomEvent.MAX_PROPERTIES; i++) {
+            eventBuilder.addProperty(UUID.randomUUID().toString(), "some value");
+        }
+
+        // Verify its still valid
+        assertTrue(eventBuilder.create().isValid());
+
+        // Add another event
+        eventBuilder.addProperty(UUID.randomUUID().toString(), "some value");
+
+        // Verify its now invalid
+        assertFalse(eventBuilder.create().isValid());
+    }
+
+    /**
+     * Test adding a property with a name that exceeds {@link CustomEvent#MAX_CHARACTER_LENGTH} invalidates
+     * the event.
+     */
+    @Test
+    public void testPropertyNameLengthExceedsMaxLength() throws JSONException {
+        // Add a property name at max length
+        CustomEvent.Builder eventBuilder = new CustomEvent.Builder("event name")
+                .addProperty(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH), "value");
+
+        // Make sure its valid
+        assertTrue(eventBuilder.create().isValid());
+
+        // Add a property name above max length
+        eventBuilder.addProperty(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH + 1), "value");
+
+        // Verify its now invalid
+        assertFalse(eventBuilder.create().isValid());
+    }
+
+    /**
+     * Test adding a property with a String value that exceeds {@link CustomEvent#MAX_CHARACTER_LENGTH} invalidates
+     * the event.
+     */
+    @Test
+    public void testPropertyStringValueExceedsMaxLength() throws JSONException {
+        // Add a property value at max length
+        CustomEvent.Builder eventBuilder = new CustomEvent.Builder("event name")
+                .addProperty("at max", createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH));
+
+        // Make sure its valid
+        assertTrue(eventBuilder.create().isValid());
+
+        // Add a property name above max length
+        eventBuilder.addProperty("exceeds max", createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH + 1));
+
+        // Verify its now invalid
+        assertFalse(eventBuilder.create().isValid());
+    }
+
+    /**
+     * Test adding a property with a String[] that is larger than {@link CustomEvent#MAX_PROPERTY_COLLECTION_SIZE}
+     * invalidates the event.
+     */
+    @Test
+    public void testPropertyStringArrayExceedsMaxCount() throws JSONException {
+        // Add a property value at max length
+        CustomEvent.Builder eventBuilder = new CustomEvent.Builder("event name")
+                .addProperty("at max", Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE]));
+
+        // Make sure its valid
+        assertTrue(eventBuilder.create().isValid());
+
+        // Add a property name above max length
+        eventBuilder.addProperty("exceeds max",  Arrays.asList(new String[CustomEvent.MAX_PROPERTY_COLLECTION_SIZE + 1]));
+
+        // Verify its now invalid
+        assertFalse(eventBuilder.create().isValid());
+    }
+
+    /**
+     * Test adding a property with a string array that contains a String value that
+     * exceeds {@link CustomEvent#MAX_CHARACTER_LENGTH} invalidates the event.
+     */
+    @Test
+    public void testPropertyStringArrayValueExceedsMaxLength() throws JSONException {
+        // Add a property value at max length
+        CustomEvent.Builder eventBuilder = new CustomEvent.Builder("event name")
+                .addProperty("at max", Arrays.asList(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH)));
+
+        // Make sure its valid
+        assertTrue(eventBuilder.create().isValid());
+
+        // Add a property name above max length
+        eventBuilder.addProperty("exceeds max", Arrays.asList(createFixedSizeString('a', CustomEvent.MAX_CHARACTER_LENGTH + 1)));
+
+        // Verify its now invalid
+        assertFalse(eventBuilder.create().isValid());
     }
 
     /**
