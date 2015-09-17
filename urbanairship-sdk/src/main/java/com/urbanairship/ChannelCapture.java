@@ -197,10 +197,10 @@ class ChannelCapture extends BaseManager {
             byte[] data = Base64.decode(encoded, Base64.DEFAULT);
             return new String(data, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Logger.error("ClipBoardMagic - Unsupported encoding.", e);
+            Logger.verbose("ClipBoardMagic - Unsupported encoding.");
             return null;
         } catch (IllegalArgumentException e) {
-            Logger.debug("ClipBoardMagic - Failed to decode string " + encoded, e);
+            Logger.verbose("ClipBoardMagic - Failed to decode string.");
             return null;
         }
     }
