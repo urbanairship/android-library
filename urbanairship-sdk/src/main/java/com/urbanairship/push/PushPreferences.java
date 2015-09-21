@@ -42,6 +42,7 @@ class PushPreferences {
 
     private static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
     private static final String USER_NOTIFICATIONS_ENABLED_KEY = KEY_PREFIX + ".USER_NOTIFICATIONS_ENABLED";
+    private static final String PUSH_TOKEN_REGISTRATION_ENABLED_KEY = KEY_PREFIX + ".PUSH_TOKEN_REGISTRATION_ENABLED";
 
     // As of version 5.0.0
     private static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
@@ -72,7 +73,6 @@ class PushPreferences {
     private static final String GCM_REGISTRATION_ID_KEY = KEY_PREFIX + ".GCM_REGISTRATION_ID_KEY";
 
     private static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
-
 
     private static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
     private static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
@@ -150,6 +150,26 @@ class PushPreferences {
      */
     void setPushEnabled(boolean enabled) {
         preferenceDataStore.put(PUSH_ENABLED_KEY, enabled);
+    }
+
+    /**
+     * Determines whether the GCM token or ADM ID is stored during channel registration.
+     *
+     * @return <code>true</code> if the GCM token or ADM ID is stored during channel registration,
+     * <code>false</code> otherwise.
+     */
+    boolean getPushTokenRegistrationEnabled() {
+        return preferenceDataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
+    }
+
+    /**
+     * Sets whether the GCM token or ADM ID is stored during channel registration.
+     *
+     * @param enabled A boolean indicating whether the GCM token or ADM ID is stored during
+     * channel registration
+     */
+    void setPushTokenRegistrationEnabled(boolean enabled) {
+        preferenceDataStore.put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
     }
 
     /**
