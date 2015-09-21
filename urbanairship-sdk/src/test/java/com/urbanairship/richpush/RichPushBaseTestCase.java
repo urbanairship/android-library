@@ -3,7 +3,6 @@ package com.urbanairship.richpush;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.database.Cursor;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.RichPushTable;
@@ -26,23 +25,6 @@ public abstract class RichPushBaseTestCase extends BaseTestCase {
         this.app = RuntimeEnvironment.application;
         this.resolver = app.getApplicationContext().getContentResolver();
         this.richPushResolver = new RichPushResolver(app.getApplicationContext());
-    }
-
-    protected RichPushMessage createRichPushMessage(JSONObject richPushMessageJson) {
-        this.insertRichPushRows(1, richPushMessageJson);
-
-        Cursor cursor = this.richPushResolver.getMessage("1_message_id");
-        cursor.moveToFirst();
-
-        RichPushMessage message = null;
-        try {
-            message = RichPushMessage.messageFromCursor(cursor);
-        } catch (JSONException e) {
-            Assert.fail(e.getMessage());
-        } finally {
-            cursor.close();
-        }
-        return message;
     }
 
     protected void insertRichPushRows(int numberOfRows, JSONObject richPushMessageJson) {
