@@ -38,6 +38,11 @@ import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -140,7 +145,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
             ContentValues[] serverMessages;
             try {
                 serverMessages = messagesFromResponse(response.getResponseBody());
-            } catch (JSONException e) {
+            } catch (JsonException e) {
                 Logger.error("Failed to update inbox. Unable to parse response body: " + response.getResponseBody());
                 return false;
             }
@@ -333,33 +338,47 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
     }
 
 
-    private ContentValues[] messagesFromResponse(String messagesString) throws JSONException {
-        if (messagesString == null) {
+    private ContentValues[] messagesFromResponse(String messagesString) throws JsonException {
+        if (UAStringUtil.isEmpty(messagesString)) {
             return null;
         }
 
-        JSONArray messagesJsonArray = new JSONObject(messagesString).getJSONArray("messages");
+        JsonValue messagePayload = JsonValue.parseString(messagesString);
+        if (!messagePayload.isJsonMap()) {
+            Logger.error("InboxServiceDelegate - Unexpected message list: " + messagesString);
+            return null;
+        }
 
-        int count = messagesJsonArray.length();
-        ContentValues[] messages = new ContentValues[count];
+        JsonList messageList = messagePayload.getMap().get("messages").getList();
+        if (messageList == null) {
+            Logger.error("InboxServiceDelegate - Unexpected message list: " + messagesString);
+            return null;
+        }
 
-        for (int i = 0; i < count; i++) {
-            JSONObject messageJson = messagesJsonArray.getJSONObject(i);
+        ContentValues[] messages = new ContentValues[messageList.size()];
+        for (int i = 0; i < messageList.size(); i++) {
+
+            if (!messageList.get(i).isJsonMap()) {
+                Logger.error("InboxServiceDelegate - Unexpected message payload: " + messageList.get(i));
+                continue;
+            }
+
+            JsonMap messageMap = messageList.get(i).getMap();
 
             ContentValues values = new ContentValues();
-            values.put(RichPushTable.COLUMN_NAME_TIMESTAMP, messageJson.getString("message_sent"));
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_ID, messageJson.getString("message_id"));
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_URL, messageJson.getString("message_url"));
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, messageJson.getString("message_body_url"));
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL, messageJson.getString("message_read_url"));
-            values.put(RichPushTable.COLUMN_NAME_TITLE, messageJson.getString("title"));
-            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, messageJson.getBoolean("unread"));
+            values.put(RichPushTable.COLUMN_NAME_TIMESTAMP, messageMap.opt("message_sent").getString());
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_ID, messageMap.opt("message_id").getString());
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_URL, messageMap.opt("message_url").getString());
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, messageMap.opt("message_body_url").getString());
+            values.put(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL, messageMap.opt("message_read_url").getString());
+            values.put(RichPushTable.COLUMN_NAME_TITLE, messageMap.opt("title").getString());
+            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, messageMap.opt("unread").getBoolean(true));
 
-            values.put(RichPushTable.COLUMN_NAME_EXTRA, messageJson.getJSONObject("extra").toString());
-            values.put(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageJson.toString());
+            values.put(RichPushTable.COLUMN_NAME_EXTRA, messageMap.opt("extra").toString());
+            values.put(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageMap.toString());
 
-            if (messageJson.has("message_expiry")) {
-                values.put(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageJson.getString("message_expiry"));
+            if (messageMap.containsKey("message_expiry")) {
+                values.put(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageMap.opt("message_expiry").getString());
             }
 
             messages[i] = values;

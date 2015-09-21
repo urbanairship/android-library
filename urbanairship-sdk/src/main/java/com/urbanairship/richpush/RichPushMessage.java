@@ -31,6 +31,9 @@ import android.os.Bundle;
 import com.urbanairship.Logger;
 import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
@@ -40,7 +43,7 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Map;
 
 /**
  * The primary data structure for Rich Push messages.
@@ -83,8 +86,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
 
         message.unreadOrigin = cursor.getInt(
                 cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD_ORIG)) == 1;
-        message.extras = jsonToBundle(new JSONObject(
-                cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_EXTRA))));
+        message.extras = jsonToBundle(cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_EXTRA)));
         message.title = cursor.getString(
                 cursor.getColumnIndex(RichPushTable.COLUMN_NAME_TITLE));
 
@@ -118,15 +120,25 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static Bundle jsonToBundle(JSONObject json) throws JSONException {
+    private static Bundle jsonToBundle(String extrasPayload)  {
         Bundle extras = new Bundle();
-        if (json != null) {
-            for (Iterator<String> keysIterator = json.keys(); keysIterator.hasNext(); ) {
-                String key = keysIterator.next();
-                extras.putString(key, json.getString(key));
+        try {
+            JsonMap jsonMap = JsonValue.parseString(extrasPayload).getMap();
+
+            if (jsonMap != null) {
+                for (Map.Entry<String, JsonValue> entry : jsonMap) {
+                    if (entry.getValue().isString()) {
+                        extras.putString(entry.getKey(), entry.getValue().getString());
+                    } else {
+                        extras.putString(entry.getKey(), entry.getValue().toString());
+                    }
+                }
             }
+
+        } catch (JsonException e) {
+            Logger.error("RichPushMessage - Invalid extras: " + extrasPayload);
         }
+
         return extras;
     }
 
