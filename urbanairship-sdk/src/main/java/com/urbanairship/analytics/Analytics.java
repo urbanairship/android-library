@@ -117,7 +117,7 @@ public class Analytics {
 
                 // Send the foreground broadcast
                 LocalBroadcastManager.getInstance(context)
-                        .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+                                     .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
 
                 addEvent(new AppForegroundEvent(timeMS));
             }
@@ -420,5 +420,16 @@ public class Analytics {
      */
     public boolean isEnabled() {
         return configOptions.analyticsEnabled && preferences.isAnalyticsEnabled();
+    }
+
+    /**
+     * Associates identifiers with the device. This will create and add an event
+     * that will be sent up with other analytics events. Previous
+     * associated identifiers will be replaced.
+     *
+     * @param identifiers An {@link AssociatedIdentifiers} instance.
+     */
+    public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
+        addEvent(new AssociateIdentifiersEvent(identifiers));
     }
 }
