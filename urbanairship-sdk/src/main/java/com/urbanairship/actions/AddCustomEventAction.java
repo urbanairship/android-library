@@ -30,10 +30,14 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
 
-import com.urbanairship.json.JsonMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An action that adds a custom event.
@@ -47,6 +51,7 @@ import com.urbanairship.json.JsonMap;
  * <li>{@link com.urbanairship.analytics.CustomEvent#TRANSACTION_ID}: String</li>
  * <li>{@link com.urbanairship.analytics.CustomEvent#INTERACTION_ID}: String</li>
  * <li>{@link com.urbanairship.analytics.CustomEvent#INTERACTION_TYPE}: String</li>
+ * <li>{@link com.urbanairship.analytics.CustomEvent#PROPERTIES}: JsonMap of Strings, Booleans, Numbers, or arrays of Strings</li>
  * </ul>
  * When a custom event action is triggered from a Message Center Rich Push Message, the interaction type
  * and ID will automatically be filled for the message if they are left blank.
@@ -79,6 +84,7 @@ public class AddCustomEventAction extends Action {
         String transactionId = customEventMap.opt(CustomEvent.TRANSACTION_ID).getString();
         String interactionType = customEventMap.opt(CustomEvent.INTERACTION_TYPE).getString();
         String interactionId = customEventMap.opt(CustomEvent.INTERACTION_ID).getString();
+        JsonMap properties = customEventMap.opt(CustomEvent.PROPERTIES).getMap();
 
         CustomEvent.Builder eventBuilder = new CustomEvent.Builder(eventName)
                 .setTransactionId(transactionId)
@@ -101,8 +107,38 @@ public class AddCustomEventAction extends Action {
             }
         }
 
-        eventBuilder.addEvent();
-        return ActionResult.newEmptyResult();
+        if (properties != null) {
+            for (Map.Entry<String, JsonValue> property : properties) {
+                if (property.getValue().isBoolean()) {
+                    eventBuilder.addProperty(property.getKey(), property.getValue().getBoolean(false));
+                } else if (property.getValue().isDouble()) {
+                    eventBuilder.addProperty(property.getKey(), property.getValue().getDouble(0));
+                } else if (property.getValue().isNumber()) {
+                    eventBuilder.addProperty(property.getKey(), property.getValue().getNumber().longValue());
+                } else if (property.getValue().isString()) {
+                    eventBuilder.addProperty(property.getKey(), property.getValue().getString());
+                } else if (property.getValue().isJsonList()) {
+                    List<String> strings = new ArrayList<>();
+
+                    for (JsonValue jsonValue : property.getValue().getList()) {
+                        if (jsonValue.isString()) {
+                            strings.add(jsonValue.getString());
+                        } else {
+                            strings.add(jsonValue.toString());
+                        }
+                    }
+
+                    eventBuilder.addProperty(property.getKey(), strings);
+                }
+            }
+        }
+
+        CustomEvent event = eventBuilder.addEvent();
+        if (event.isValid()) {
+            return ActionResult.newEmptyResult();
+        } else {
+            return ActionResult.newErrorResult(new IllegalArgumentException("Unable to add custom event. Event is invalid."));
+        }
     }
 
     @Override
