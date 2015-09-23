@@ -1,21 +1,29 @@
 package com.urbanairship.richpush;
 
+import android.database.Cursor;
+
 import com.urbanairship.util.Util;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class RichPushMessageTest extends RichPushBaseTestCase {
 
     @Test
-    public void testCursorToMessage() {
-        RichPushMessage message = this.createRichPushMessage(Util.getRichPushMessageJson());
+    public void testCursorToMessage() throws JSONException {
+        insertRichPushRows(1, Util.getRichPushMessageJson());
+
+        Cursor cursor = richPushResolver.getAllMessages();
+        cursor.moveToNext();
+
+        RichPushMessage message = RichPushMessage.messageFromCursor(cursor);
+        cursor.close();
 
         assertEquals("1_message_id", message.getMessageId());
         assertFalse(message.isRead());
@@ -28,7 +36,14 @@ public class RichPushMessageTest extends RichPushBaseTestCase {
     public void testCursorToMessageEmptyExtra() throws JSONException {
         JSONObject richPushMessageJson = Util.getRichPushMessageJson();
         richPushMessageJson.put("extra", new JSONObject());
-        RichPushMessage message = this.createRichPushMessage(richPushMessageJson);
+
+        insertRichPushRows(1, richPushMessageJson);
+
+        Cursor cursor = richPushResolver.getAllMessages();
+        cursor.moveToNext();
+
+        RichPushMessage message = RichPushMessage.messageFromCursor(cursor);
+        cursor.close();
 
         assertNotNull(message.getExtras());
         assertEquals(0, message.getExtras().size());

@@ -25,9 +25,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import android.database.Cursor;
-
-import com.urbanairship.RichPushTable;
 import com.urbanairship.util.Util;
 
 import org.json.JSONException;
@@ -74,27 +71,27 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      */
     @Test
     public void testMarkMessagesDeleted() throws JSONException, InterruptedException {
+        assertEquals(10, inbox.getCount());
+
         HashSet<String> deletedIds = new HashSet<>();
         deletedIds.add("1_message_id");
         deletedIds.add("3_message_id");
         deletedIds.add("6_message_id");
 
         this.inbox.deleteMessages(deletedIds);
+
+        // Force the inbox the refresh
         inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-
-        Cursor cursor = this.richPushResolver.getDeletedMessages();
-        assertEquals(3, cursor.getCount());
-        while (cursor.moveToNext()) {
-            assertTrue(deletedIds.contains(cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID))));
-        }
-
-        // Give the update thread a chance to update the inbox
-        Thread.sleep(100);
+        inbox.refresh();
 
         // Should have 3 less messages
         assertEquals(7, this.inbox.getCount());
         assertEquals(7, this.inbox.getUnreadCount());
         assertEquals(0, this.inbox.getReadCount());
+
+        for (String deletedId : deletedIds) {
+            assertFalse(inbox.getMessageIds().contains(deletedId));
+        }
     }
 
     /**
@@ -109,16 +106,12 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
         markedReadIds.add("6_message_id");
 
         this.inbox.markMessagesRead(markedReadIds);
+
+        // Force the inbox the refresh
         inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
+        inbox.refresh();
 
-        Cursor cursor = richPushResolver.getReadMessages();
-        assertEquals(3, cursor.getCount());
-        while (cursor.moveToNext()) {
-            assertTrue(markedReadIds.contains(cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID))));
-        }
-
-        // Give the update thread a chance to update the inbox
-        Thread.sleep(100);
+        assertEquals(3, inbox.getReadCount());
 
         // Should have 3 read messages
         assertEquals(10, this.inbox.getCount());
@@ -148,20 +141,21 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
 
         // Mark messages read
         inbox.markMessagesRead(messageIds);
+
+        // Force the inbox the refresh
         inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-        assertEquals(3, richPushResolver.getReadMessages().getCount());
-        assertEquals(7, richPushResolver.getUnreadMessages().getCount());
+        inbox.refresh();
+
+        assertEquals(3, inbox.getReadCount());
+        assertEquals(7, inbox.getUnreadCount());
 
         // Mark messages as unread
         inbox.markMessagesUnread(messageIds);
+
+        // Force the inbox the refresh
         inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-
-        assertEquals(0, richPushResolver.getReadMessages().getCount());
-        assertEquals(10, richPushResolver.getUnreadMessages().getCount());
-
-        // Give the update thread a chance to update the inbox
-        Thread.sleep(100);
-
+        inbox.refresh();
+        
         assertEquals(10, this.inbox.getCount());
         assertEquals(10, this.inbox.getUnreadCount());
         assertEquals(0, this.inbox.getReadCount());

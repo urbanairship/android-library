@@ -27,7 +27,6 @@ package com.urbanairship.richpush;
 
 import android.database.Cursor;
 
-import com.urbanairship.RichPushTable;
 import com.urbanairship.util.Util;
 
 import org.junit.Test;
@@ -36,7 +35,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class RichPushResolverTest extends RichPushBaseTestCase {
 
@@ -46,44 +44,11 @@ public class RichPushResolverTest extends RichPushBaseTestCase {
     }
 
     @Test
-    public void testGetMessage() {
-        this.insertRichPushRows(10, Util.getRichPushMessageJson());
-
-        Cursor cursor = this.richPushResolver.getMessage("4_message_id");
-        assertEquals(1, cursor.getCount());
-        cursor.moveToFirst();
-        assertEquals("4_message_id", cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID)));
-        assertTrue("{\"some_key\":\"some_value\"}".equals(
-                cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_EXTRA))));
-        assertTrue(1 == cursor.getInt(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD)));
-        assertEquals("Message title", cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_TITLE)));
-        cursor.close();
-    }
-
-    @Test
     public void testGetAllMessages() {
         this.insertRichPushRows(10, Util.getRichPushMessageJson());
 
         Cursor cursor = this.richPushResolver.getAllMessages();
         assertEquals(10, cursor.getCount());
-        cursor.close();
-    }
-
-    @Test
-    public void testMarkMessageRead() {
-        this.insertRichPushRows(1, Util.getRichPushMessageJson());
-
-        Cursor cursor = this.richPushResolver.getMessage("1_message_id");
-        cursor.moveToFirst();
-        assertTrue(1 == cursor.getInt(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD)));
-        cursor.close();
-
-        int marked = this.richPushResolver.markMessageRead("1_message_id");
-        assertEquals(1, marked);
-
-        cursor = this.richPushResolver.getMessage("1_message_id");
-        cursor.moveToFirst();
-        assertTrue(0 == cursor.getInt(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD)));
         cursor.close();
     }
 
@@ -99,38 +64,8 @@ public class RichPushResolverTest extends RichPushBaseTestCase {
         int updated = this.richPushResolver.markMessagesRead(keys);
         assertEquals(keys.size(), updated);
 
-        Cursor cursor = this.richPushResolver.getUnreadMessages();
-        assertEquals(7, cursor.getCount());
-        cursor.close();
-    }
-
-    @Test
-    public void testReadAndUnreadMessages() {
-        this.insertRichPushRows(10, Util.getRichPushMessageJson());
-
-        this.richPushResolver.markMessageRead("2_message_id");
-        this.richPushResolver.markMessageRead("3_message_id");
-        this.richPushResolver.markMessageRead("3_message_id");
-
-        Cursor cursor = this.richPushResolver.getReadMessages();
-        assertEquals(2, cursor.getCount());
-
-        cursor = this.richPushResolver.getUnreadMessages();
-        assertEquals(8, cursor.getCount());
-
-        cursor.close();
-    }
-
-    @Test
-    public void testDeleteMessage() {
-        this.insertRichPushRows(10, Util.getRichPushMessageJson());
-
-        int deleted = this.richPushResolver.deleteMessage("1_message_id");
-        deleted += this.richPushResolver.deleteMessage("8_message_id");
-        assertEquals(2, deleted);
-
         Cursor cursor = this.richPushResolver.getAllMessages();
-        assertEquals(8, cursor.getCount());
+        assertEquals(10, cursor.getCount());
         cursor.close();
     }
 
