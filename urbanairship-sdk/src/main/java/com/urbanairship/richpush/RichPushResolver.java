@@ -57,23 +57,8 @@ class RichPushResolver extends UrbanAirshipResolver {
         super(context);
     }
 
-    Cursor getMessage(String messageId) {
-        return this.query(UrbanAirshipProvider.getRichPushContentUri(), null, WHERE_CLAUSE_MESSAGE_ID,
-                new String[] { messageId }, null);
-    }
-
     Cursor getAllMessages() {
         return this.query(UrbanAirshipProvider.getRichPushContentUri(), null, null, null, NEWEST_FIRST);
-    }
-
-    Cursor getReadMessages() {
-        return this.query(UrbanAirshipProvider.getRichPushContentUri(), null, WHERE_CLAUSE_READ,
-                new String[] { FALSE_VALUE }, NEWEST_FIRST);
-    }
-
-    Cursor getUnreadMessages() {
-        return this.query(UrbanAirshipProvider.getRichPushContentUri(), null, WHERE_CLAUSE_READ,
-                new String[] { TRUE_VALUE }, NEWEST_FIRST);
     }
 
     Cursor getReadUpdatedMessages() {
@@ -87,18 +72,11 @@ class RichPushResolver extends UrbanAirshipResolver {
                 null);
     }
 
-    int markMessageRead(String messageId) {
-        ContentValues values = new ContentValues();
-        values.put(RichPushTable.COLUMN_NAME_UNREAD, false);
-        return this.updateMessage(messageId, values);
-    }
-
     int markMessagesRead(Set<String> messageIds) {
         ContentValues values = new ContentValues();
         values.put(RichPushTable.COLUMN_NAME_UNREAD, false);
         return this.updateMessages(messageIds, values);
     }
-
 
     int markMessagesUnread(Set<String> messageIds) {
         ContentValues values = new ContentValues();
@@ -112,11 +90,6 @@ class RichPushResolver extends UrbanAirshipResolver {
         return this.updateMessages(messageIds, values);
     }
 
-    int deleteMessage(String messageId) {
-        return this.delete(this.appendMessageIdToUri(messageId), WHERE_CLAUSE_MESSAGE_ID,
-                new String[] { messageId });
-    }
-
     int deleteMessages(Set<String> messageIds) {
         int numberOfmessageIds = messageIds.size();
         return this.delete(this.appendMessageIdsToUri(messageIds),
@@ -125,7 +98,6 @@ class RichPushResolver extends UrbanAirshipResolver {
                 messageIds.toArray(new String[numberOfmessageIds])
                           );
     }
-
 
     int insertMessages(ContentValues[] values) {
         return this.bulkInsert(UrbanAirshipProvider.getRichPushContentUri(), values);
