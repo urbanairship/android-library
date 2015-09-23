@@ -60,7 +60,6 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     private TestResultReceiver resultReceiver;
 
     private RichPushManager richPushManager;
-    private PushManager pushManager;
 
     private RichPushInbox inbox;
 
@@ -69,7 +68,6 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     private List<TestRequest> requests;
     private Map<String, Response> responses;
     private PreferenceDataStore dataStore;
-    private RichPushResolver resolver;
 
     @Before
     public void setup() {
@@ -97,7 +95,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         richPushManager = mock(RichPushManager.class);
         TestApplication.getApplication().setRichPushManager(richPushManager);
 
-        pushManager = mock(PushManager.class);
+        PushManager pushManager = mock(PushManager.class);
         when(pushManager.getChannelId()).thenReturn("channelID");
         TestApplication.getApplication().setPushManager(pushManager);
 
@@ -108,7 +106,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
         user.setUser("fakeUserId", "fakeUserToken");
         when(richPushManager.getRichPushUser()).thenReturn(user);
 
-        resolver = mock(RichPushResolver.class);
+        RichPushResolver resolver = mock(RichPushResolver.class);
 
         serviceDelegate = new InboxServiceDelegate(TestApplication.getApplication(),
                 dataStore,

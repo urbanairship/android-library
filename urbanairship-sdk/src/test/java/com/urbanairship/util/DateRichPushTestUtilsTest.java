@@ -10,7 +10,7 @@ import java.text.ParseException;
 
 import static junit.framework.Assert.assertEquals;
 
-public class DateUtilsTest extends BaseTestCase {
+public class DateRichPushTestUtilsTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

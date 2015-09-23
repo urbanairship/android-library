@@ -3,7 +3,6 @@ package com.urbanairship;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
-import android.content.Intent;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.location.UALocationManager;
@@ -84,12 +83,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
     @Override
     public void prepareTest(Object test) {
 
-    }
-
-    //TODO: Remove this and figure out why sending sticky broadcast crashes
-    @Override
-    public void sendStickyBroadcast(Intent intent) {
-        sendBroadcast(intent);
     }
 
     @Override

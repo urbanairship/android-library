@@ -25,32 +25,43 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import com.urbanairship.util.Util;
+import com.urbanairship.BaseTestCase;
 
 import org.json.JSONException;
+import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class RichPushInboxTest extends RichPushBaseTestCase {
+public class RichPushInboxTest extends BaseTestCase {
 
     RichPushInbox inbox;
 
-    @Override
+    @Before
     public void setUp() {
-        super.setUp();
 
-        this.insertRichPushRows(10, Util.getRichPushMessageJson());
-        this.inbox = new RichPushInbox(this.richPushResolver);
-        this.inbox.refresh();
+        inbox = new RichPushInbox(new RichPushResolver(RuntimeEnvironment.application), new Executor() {
+            @Override
+            public void execute(Runnable runnable) {
+                runnable.run();
+            }
+        });
+
+        // Populate the MCRAP database with 10 messages
+        for (int i = 0; i < 10; i++) {
+            RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
+        }
+
+        inbox.refresh();
     }
 
     /**
@@ -60,9 +71,9 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      */
     @Test
     public void testNewRichPushInbox() {
-        assertEquals(10, this.inbox.getCount());
-        assertEquals(10, this.inbox.getUnreadCount());
-        assertEquals(0, this.inbox.getReadCount());
+        assertEquals(10, inbox.getCount());
+        assertEquals(10, inbox.getUnreadCount());
+        assertEquals(0, inbox.getReadCount());
     }
 
     /**
@@ -78,11 +89,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
         deletedIds.add("3_message_id");
         deletedIds.add("6_message_id");
 
-        this.inbox.deleteMessages(deletedIds);
-
-        // Force the inbox the refresh
-        inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-        inbox.refresh();
+        inbox.deleteMessages(deletedIds);
 
         // Should have 3 less messages
         assertEquals(7, this.inbox.getCount());
@@ -105,18 +112,14 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
         markedReadIds.add("3_message_id");
         markedReadIds.add("6_message_id");
 
-        this.inbox.markMessagesRead(markedReadIds);
-
-        // Force the inbox the refresh
-        inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-        inbox.refresh();
+        inbox.markMessagesRead(markedReadIds);
 
         assertEquals(3, inbox.getReadCount());
 
         // Should have 3 read messages
-        assertEquals(10, this.inbox.getCount());
-        assertEquals(7, this.inbox.getUnreadCount());
-        assertEquals(3, this.inbox.getReadCount());
+        assertEquals(10, inbox.getCount());
+        assertEquals(7, inbox.getUnreadCount());
+        assertEquals(3, inbox.getReadCount());
 
         Map<String, RichPushMessage> readMessages = createIdToMessageMap(inbox.getReadMessages());
         Map<String, RichPushMessage> unreadMessages = createIdToMessageMap(inbox.getUnreadMessages());
@@ -142,23 +145,15 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
         // Mark messages read
         inbox.markMessagesRead(messageIds);
 
-        // Force the inbox the refresh
-        inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-        inbox.refresh();
-
         assertEquals(3, inbox.getReadCount());
         assertEquals(7, inbox.getUnreadCount());
 
         // Mark messages as unread
         inbox.markMessagesUnread(messageIds);
 
-        // Force the inbox the refresh
-        inbox.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-        inbox.refresh();
-        
-        assertEquals(10, this.inbox.getCount());
-        assertEquals(10, this.inbox.getUnreadCount());
-        assertEquals(0, this.inbox.getReadCount());
+        assertEquals(10, inbox.getCount());
+        assertEquals(10, inbox.getUnreadCount());
+        assertEquals(0, inbox.getReadCount());
     }
 
     /**
@@ -168,7 +163,7 @@ public class RichPushInboxTest extends RichPushBaseTestCase {
      * @param messages List of messages to convert
      * @return A map of rich push messages
      */
-    private Map<String, RichPushMessage> createIdToMessageMap(List<RichPushMessage> messages) {
+    private static Map<String, RichPushMessage> createIdToMessageMap(List<RichPushMessage> messages) {
         Map<String, RichPushMessage> messageMap = new HashMap<>();
 
         for (RichPushMessage message : messages) {

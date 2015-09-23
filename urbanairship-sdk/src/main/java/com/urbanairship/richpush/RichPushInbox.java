@@ -26,15 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import com.urbanairship.Logger;
-
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,15 +39,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 
 /**
  * The RichPushInbox singleton provides access to the device's local inbox data.
  * Modifications (e.g., deletions or mark read) will be sent to the Urban Airship
  * server the next time the inbox is synchronized.
- *
- * @author Urban Airship
  */
 public class RichPushInbox {
 
@@ -83,17 +77,16 @@ public class RichPushInbox {
 
     private final RichPushResolver richPushResolver;
 
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Executor executor;
 
     RichPushInbox(Context context) {
-        this(new RichPushResolver(context));
+        this(new RichPushResolver(context), Executors.newSingleThreadExecutor());
     }
 
-    RichPushInbox(RichPushResolver resolver) {
+    RichPushInbox(RichPushResolver resolver, Executor executor) {
         this.richPushResolver = resolver;
+        this.executor = executor;
     }
-
-    // API
 
     /**
      * A listener interface for receiving event callbacks related to inbox database updates.
@@ -332,27 +325,16 @@ public class RichPushInbox {
      * Refreshes the inbox messages from the DB.
      */
     void refresh() {
-        Cursor inboxCursor = richPushResolver.getAllMessages();
 
-        if (inboxCursor == null) {
-            return;
-        }
-
-        List<RichPushMessage> messageList = new ArrayList<>(inboxCursor.getCount());
-
-        // Read all the messages from the database
-        while (inboxCursor.moveToNext()) {
-            RichPushMessage message = messageFromCursor(inboxCursor);
-            if (message != null) {
-                messageList.add(message);
-            }
-        }
+        List<RichPushMessage> messageList = richPushResolver.getMessages();
 
         // Sync the messages
         synchronized (inboxLock) {
 
             // Save the unreadMessageIds
             Set<String> previousUnreadMessageIds = new HashSet<>(unreadMessages.keySet());
+            Set<String> previousReadMessageIds = new HashSet<>(readMessages.keySet());
+
             Set<String> previousDeletedMessageIds = new HashSet<>(deletedMessageIds);
 
             // Clear the current messages
@@ -369,36 +351,29 @@ public class RichPushInbox {
                 }
 
                 // Unread - check the previousUnreadMessageIds if any mark reads are still in process
-                if (message.unreadClient || previousUnreadMessageIds.contains(message.getMessageId())) {
+                if (previousUnreadMessageIds.contains(message.getMessageId())) {
                     message.unreadClient = true;
                     unreadMessages.put(message.getMessageId(), message);
                     continue;
                 }
 
-                // Read
-                readMessages.put(message.getMessageId(), message);
+                // Read - check the previousUnreadMessageIds if any mark reads are still in process
+                if (previousReadMessageIds.contains(message.getMessageId())) {
+                    message.unreadClient = false;
+                    readMessages.put(message.getMessageId(), message);
+                    continue;
+                }
+
+                // Otherwise fallback to the current state
+                if (message.unreadClient) {
+                    unreadMessages.put(message.getMessageId(), message);
+                } else {
+                    readMessages.put(message.getMessageId(), message);
+                }
             }
         }
 
-        inboxCursor.close();
-
         notifyListeners();
-    }
-
-    /**
-     * A helper method to create a rich push message
-     * from a cursor and not worry about any exceptions.
-     *
-     * @param cursor Cursor pointing to a rich push message.
-     * @return RichPushMessage on success, or <code>null</code> if anything went wrong.
-     */
-    private RichPushMessage messageFromCursor(@NonNull Cursor cursor) {
-        try {
-            return RichPushMessage.messageFromCursor(cursor);
-        } catch (JSONException e) {
-            Logger.error("Failed to parse message from the database.", e);
-        }
-        return null;
     }
 
     /**
