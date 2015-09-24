@@ -25,35 +25,32 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 
 import org.json.JSONException;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-public class RichPushUserTest extends RichPushBaseTestCase {
+public class RichPushUserTest extends BaseTestCase {
 
-    private final String fakeUserId = "XfJcGT_XQhqBtEn6opvLNA";
-    private final String fakeToken = "g0GU1-jtQfSmhqaeqcAVZA";
+    private final String fakeUserId = "fakeUserId";
+    private final String fakeToken = "fakeToken";
 
     RichPushUser user;
-    RichPushUserPreferences preferences;
+    PreferenceDataStore dataStore;
 
-    @Override
+    @Before
     public void setUp() {
-        super.setUp();
-        this.user = new RichPushUser(TestApplication.getApplication().preferenceDataStore);
-        this.preferences = user.preferences;
-
-        RichPushManager manager = mock(RichPushManager.class);
-        when(manager.getRichPushUser()).thenReturn(user);
-        TestApplication.getApplication().setRichPushManager(manager);
+        this.dataStore = TestApplication.getApplication().preferenceDataStore;
+        this.user = new RichPushUser(dataStore);
     }
 
     /**
@@ -61,7 +58,7 @@ public class RichPushUserTest extends RichPushBaseTestCase {
      */
     @Test
     public void testIsCreatedTrue() {
-        user.preferences.setUserCredentials(fakeUserId, fakeToken);
+        user.setUser(fakeUserId, fakeToken);
         assertTrue("Should return true.", RichPushUser.isCreated());
     }
 
@@ -71,7 +68,7 @@ public class RichPushUserTest extends RichPushBaseTestCase {
     @Test
     public void testIsCreatedFalse() {
         // Clear any user or user token
-        user.preferences.setUserCredentials(null, null);
+        user.setUser(null, null);
         assertFalse("Should return false.", RichPushUser.isCreated());
     }
 
@@ -80,17 +77,15 @@ public class RichPushUserTest extends RichPushBaseTestCase {
      */
     @Test
     public void testIsCreatedFalseNoUserToken() {
-        user.preferences.setUserCredentials(fakeUserId, null);
+        user.setUser(fakeUserId, null);
         assertFalse("Should return false.", RichPushUser.isCreated());
     }
 
     /**
-     * Test setUser
+     * Test setting and getting the user credentials.
      */
     @Test
-    public void testSetUser() throws JSONException {
-        // Clear any user or user token
-        preferences.setUserCredentials(null, null);
+    public void testUser() throws JSONException {
         user.setUser(fakeUserId, fakeToken);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
@@ -98,43 +93,50 @@ public class RichPushUserTest extends RichPushBaseTestCase {
     }
 
     /**
-     * Test getId
+     * Test setting and getting the user credentials.
      */
     @Test
-    public void testGetId() {
+    public void testUserMissingId() throws JSONException {
+        user.setUser(null, fakeToken);
 
-        // Set user ID
-        preferences.setUserCredentials(fakeUserId, fakeToken);
-        assertEquals("User ID should match.", fakeUserId, user.getId());
+        assertNull(user.getId());
+        assertNull(user.getPassword());
+    }
+
+     /**
+     * Test setting and getting the user credentials.
+     */
+    @Test
+    public void testUserMissingToken() {
+        user.setUser(fakeUserId, null);
+
+        assertNull(user.getId());
+        assertNull(user.getPassword());
     }
 
     /**
-     * Test getId when user doesn't exist
+     * Test user token is obfuscated when stored in preferences.
      */
     @Test
-    public void testGetIdNoUser() {
-        // Set no user ID
-        preferences.setUserCredentials(null, fakeToken);
-        assertNull("User ID should be null.", user.getId());
+    public void testUserTokenObfuscated() {
+        user.setUser(fakeUserId, fakeUserId);
+
+        assertNotEquals(fakeToken, dataStore.getString("com.urbanairship.user.USER_TOKEN", fakeToken));
     }
 
     /**
-     * Test getPassword returns user token
+     * Test migrate old token storage.
      */
     @Test
-    public void testGetPassword() {
-        // Set user
-        preferences.setUserCredentials(fakeUserId, fakeToken);
-        assertEquals("User token should match.", fakeToken, user.getPassword());
-    }
+    public void testMigrateToken() {
+        dataStore.put("com.urbanairship.user.PASSWORD", fakeToken);
+        dataStore.put("com.urbanairship.user.ID", fakeUserId);
 
-    /**
-     * Test getPassword when user token doesn't exist
-     */
-    @Test
-    public void testGetPasswordNull() {
-        // Set no user token
-        preferences.setUserCredentials(fakeUserId, null);
-        assertNull("User token should be null.", user.getPassword());
+        user = new RichPushUser(dataStore);
+
+        assertEquals("User ID should match", fakeUserId, user.getId());
+        assertEquals("User password should match", fakeToken, user.getPassword());
+
+        assertNull(dataStore.getString("com.urbanairship.user.PASSWORD", null));
     }
 }

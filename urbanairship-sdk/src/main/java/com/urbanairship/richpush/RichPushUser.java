@@ -32,17 +32,32 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
+import java.io.UnsupportedEncodingException;
+
 /**
- * A local abstraction of an Urban Airship user. It provides getters and
- * setters for user metadata such as tags and an alias. Changes made to this object will
- * be sent to Urban Airship's servers.
+ * The Urban Airship rich push user.
  */
 public class RichPushUser {
 
-    final RichPushUserPreferences preferences;
+    private static final String KEY_PREFIX = "com.urbanairship.user";
+    private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
+    private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
+    private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
+
+    private final PreferenceDataStore preferences;
 
     RichPushUser(PreferenceDataStore preferenceDataStore) {
-        this.preferences = new RichPushUserPreferences(preferenceDataStore);
+        this.preferences = preferenceDataStore;
+
+        String password = preferences.getString(USER_PASSWORD_KEY, null);
+
+        if (!UAStringUtil.isEmpty(password)) {
+            String userToken = encode(password, preferences.getString(USER_ID_KEY, null));
+
+            if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
+                preferences.remove(USER_PASSWORD_KEY);
+            }
+        }
     }
 
     /**
@@ -65,7 +80,8 @@ public class RichPushUser {
      */
     void setUser(@NonNull String userId, @NonNull String userToken) {
         Logger.debug("RichPushUser - Setting Rich Push user: " + userId);
-        preferences.setUserCredentials(userId, userToken);
+        preferences.put(USER_ID_KEY, userId);
+        preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
     }
 
     /**
@@ -74,7 +90,10 @@ public class RichPushUser {
      * @return A user ID String or null if it doesn't exist.
      */
     public String getId() {
-        return preferences.getUserId();
+        if (preferences.getString(USER_TOKEN_KEY, null) != null) {
+            return preferences.getString(USER_ID_KEY, null);
+        }
+        return null;
     }
 
     /**
@@ -83,6 +102,87 @@ public class RichPushUser {
      * @return A user token String.
      */
     public String getPassword() {
-        return preferences.getUserToken();
+        if (preferences.getString(USER_ID_KEY, null) != null) {
+            return decode(preferences.getString(USER_TOKEN_KEY, null), getId());
+        }
+        return null;
+    }
+
+    /**
+     * Encode the string with the key.
+     *
+     * @param input The string to encode.
+     * @param key The key used to encode the string.
+     * @return The encoded string.
+     */
+    private static String encode(String input, String key) {
+        if (UAStringUtil.isEmpty(input) || UAStringUtil.isEmpty(key)) {
+            return null;
+        }
+
+        // xor the two strings together
+        byte[] bytes = xor(input.getBytes(), key.getBytes());
+
+        // Format the raw byte array as a hex string
+        StringBuilder hexHash = new StringBuilder();
+        for (byte b : bytes) {
+            hexHash.append(String.format("%02x", b));
+        }
+        return hexHash.toString();
+    }
+
+    /**
+     * Decode the string with the key.
+     *
+     * @param encodedString The string to decode.
+     * @param key The key used to decode the string.
+     * @return The decoded string.
+     */
+    private static String decode(String encodedString, String key) {
+
+        if (UAStringUtil.isEmpty(encodedString) || UAStringUtil.isEmpty(key)) {
+            return null;
+        }
+
+        int length = encodedString.length();
+
+        // Make sure we have an even number of chars
+        if (length % 2 != 0) {
+            return null;
+        }
+
+        try {
+            // Decode the encodedString to a byte array
+            byte[] decodedBytes = new byte[length / 2];
+            for (int i = 0; i < length; i += 2) {
+                decodedBytes[i / 2] = Byte.parseByte(encodedString.substring(i, i + 2), 16);
+            }
+            decodedBytes = xor(decodedBytes, key.getBytes());
+
+            return new String(decodedBytes, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Logger.error("RichPushUser - Unable to decode string. " + e.getMessage());
+        } catch (NumberFormatException e) {
+            Logger.error("RichPushUser - String contains invalid hex numbers. " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Compare and return the xor value.
+     *
+     * @param a The byte value.
+     * @param b The byte value.
+     * @return The byte result value.
+     */
+    private static byte[] xor(byte[] a, byte[] b) {
+        byte[] out = new byte[a.length];
+
+        for (int i = 0; i < a.length; i++) {
+            out[i] = (byte) (a[i] ^ b[i % b.length]);
+        }
+
+        return out;
     }
 }
