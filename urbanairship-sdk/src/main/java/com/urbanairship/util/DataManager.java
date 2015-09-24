@@ -33,12 +33,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +51,8 @@ public abstract class DataManager {
     private static final int MAX_ATTEMPTS = 3;
     private final SQLiteOpenHelper openHelper;
 
+    private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";
+
     /**
      * Default Constructor for DataManager
      *
@@ -56,7 +60,32 @@ public abstract class DataManager {
      * @param name The name of the database
      * @param version The version of the database
      */
-    public DataManager(@NonNull Context context, @NonNull final String name, int version) {
+    public DataManager(@NonNull Context context, @NonNull String name, int version) {
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
+            File oldDatabasePath = context.getDatabasePath(name);
+            File newDatabasePath = new File(urbanAirshipNoBackupDirectory, name);
+
+            // Make sure the no backup directory exists
+            if (!urbanAirshipNoBackupDirectory.exists()) {
+                urbanAirshipNoBackupDirectory.mkdirs();
+            }
+
+            // Migrate the existing database if available
+            if (!newDatabasePath.exists() && oldDatabasePath.exists()) {
+                oldDatabasePath.renameTo(newDatabasePath);
+
+                // Move the journal to the new path
+                File journal = context.getDatabasePath(name + "-journal");
+                if (journal.exists()) {
+                    journal.renameTo(new File(urbanAirshipNoBackupDirectory, name + "-journal"));
+                }
+            }
+
+            name = newDatabasePath.getAbsolutePath();
+        }
+
         openHelper = new SQLiteOpenHelper(context, name, null, version) {
 
             @Override
@@ -66,13 +95,13 @@ public abstract class DataManager {
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Upgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Upgrading database " + db + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onUpgrade(db, oldVersion, newVersion);
             }
 
             @Override
             public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                Logger.debug("DataManager - Downgrading database " + name + " from version " + oldVersion + " to " + newVersion);
+                Logger.debug("DataManager - Downgrading database " + db + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
         };
