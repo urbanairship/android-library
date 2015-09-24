@@ -35,7 +35,12 @@ import com.urbanairship.Autopilot;
  * automates calling <code>activityStarted</code> and <code>activityStopped</code> in {@link com.urbanairship.analytics.Analytics}.
  * It is recommended that you subclass this Activity, or {@link com.urbanairship.analytics.InstrumentedListActivity}, unless
  * you are already using a specialized Activity that falls outside the scope of these classes.
+ *
+ * @deprecated Marked to be removed in 7.0.0. Instrumentation is only required for applications that still build for
+ * Android Gingerbread and older. Those application should call {@link Analytics#activityStarted(Activity)} and
+ * {@link Analytics#activityStopped(Activity)} directly in the ``onStart`` and ``onStop`` activity methods.
  */
+@Deprecated
 public class InstrumentedActivity extends Activity {
 
     @Override
