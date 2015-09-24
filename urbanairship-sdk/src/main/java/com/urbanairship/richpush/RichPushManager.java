@@ -97,10 +97,17 @@ public class RichPushManager extends BaseManager {
         inbox.refresh();
         updateUser(false);
 
+
         foregroundReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                refreshMessages();
+                if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
+                    refreshMessages();
+                } else {
+                    Intent serviceIntent = new Intent(context, RichPushUpdateService.class)
+                            .setAction(RichPushUpdateService.ACTION_SYNC_MESSAGE_STATE);
+                    context.startService(serviceIntent);
+                }
             }
         };
 
@@ -108,6 +115,7 @@ public class RichPushManager extends BaseManager {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
+        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
 
         broadcastManager.registerReceiver(foregroundReceiver, filter);
         UAirship.getApplicationContext().registerReceiver(foregroundReceiver, filter);
