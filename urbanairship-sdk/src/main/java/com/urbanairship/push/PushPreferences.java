@@ -25,16 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Build;
-
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -83,10 +76,6 @@ class PushPreferences {
 
     private static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
     private static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
-
-    private final static String SHARED_PREFERENCES_NAME = "com.urbanairship.preferences";
-    private final static String CHANNEL_ID_PREFERENCE_KEY = SHARED_PREFERENCES_NAME + ".CHANNEL_ID";
-    private final static String CHANNEL_LOCATION_PREFERENCE_KEY = SHARED_PREFERENCES_NAME + ".CHANNEL_LOCATION";
 
     private static final String APID_KEY = KEY_PREFIX + ".APID";
 
@@ -509,10 +498,6 @@ class PushPreferences {
      * @return A channel location URL.
      */
     String getChannelLocation() {
-        String channelLocation = preferenceDataStore.getString(CHANNEL_LOCATION_KEY, null);
-        if (UAStringUtil.isEmpty(channelLocation)) {
-            preferenceDataStore.put(CHANNEL_LOCATION_KEY, getSharedPreferences().getString(CHANNEL_LOCATION_PREFERENCE_KEY, null));
-        }
         return preferenceDataStore.getString(CHANNEL_LOCATION_KEY, null);
     }
 
@@ -521,18 +506,8 @@ class PushPreferences {
      *
      * @param channelLocation A channel location URL.
      */
-    @SuppressLint("NewApi")
     void setChannelLocation(String channelLocation) {
         preferenceDataStore.put(CHANNEL_LOCATION_KEY, channelLocation);
-
-        SharedPreferences.Editor editor = getSharedPreferences().edit()
-                                                                .putString(CHANNEL_LOCATION_PREFERENCE_KEY, channelLocation);
-
-        if (Build.VERSION.SDK_INT >= 9) {
-            editor.apply();
-        } else {
-            editor.commit();
-        }
     }
 
     /**
@@ -541,13 +516,7 @@ class PushPreferences {
      * @return a Channel ID string.
      */
     String getChannelId() {
-        if (UAStringUtil.isEmpty(preferenceDataStore.getString(CHANNEL_ID_KEY, null))) {
-            String channelId = getSharedPreferences().getString(CHANNEL_ID_PREFERENCE_KEY, null);
-            preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
-            return channelId;
-        } else {
-            return preferenceDataStore.getString(CHANNEL_ID_KEY, null);
-        }
+        return preferenceDataStore.getString(CHANNEL_ID_KEY, null);
     }
 
     /**
@@ -555,17 +524,8 @@ class PushPreferences {
      *
      * @param value a Channel ID string.
      */
-    @SuppressLint("NewApi")
     void setChannelId(String value) {
         preferenceDataStore.put(CHANNEL_ID_KEY, value);
-        SharedPreferences.Editor editor = getSharedPreferences().edit()
-                                                                .putString(CHANNEL_ID_PREFERENCE_KEY, value);
-
-        if (Build.VERSION.SDK_INT >= 9) {
-            editor.apply();
-        } else {
-            editor.commit();
-        }
     }
 
     /**
@@ -577,15 +537,6 @@ class PushPreferences {
         return preferenceDataStore.getString(APID_KEY, null);
     }
 
-    /**
-     * Returns a SharedPreferences
-     *
-     * @return a SharedPreferences
-     */
-    private SharedPreferences getSharedPreferences() {
-        Context context = UAirship.getApplicationContext();
-        return context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
-    }
 
     /**
      * Store the send id from the last received push.
