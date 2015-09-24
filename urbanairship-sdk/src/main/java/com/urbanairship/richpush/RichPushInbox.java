@@ -422,7 +422,11 @@ public class RichPushInbox {
     static class SentAtRichPushMessageComparator implements Comparator<RichPushMessage> {
         @Override
         public int compare(RichPushMessage lhs, RichPushMessage rhs) {
-            return rhs.getSentDate().compareTo(lhs.getSentDate());
+            if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
+                return lhs.getMessageId().compareTo(rhs.getMessageId());
+            } else {
+                return Long.valueOf(rhs.getSentDateMS()).compareTo(lhs.getSentDateMS());
+            }
         }
     }
 }
