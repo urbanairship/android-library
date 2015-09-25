@@ -93,19 +93,25 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (!RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE.equals(intent.getAction())) {
-            return;
-        }
+        switch (intent.getAction()) {
 
-        if (!RichPushUser.isCreated()) {
-            Logger.debug("InboxServiceDelegate - User has not been created, canceling messages update");
-            RichPushUpdateService.respond(intent, false);
-        } else {
-            boolean success = this.updateMessages();
-            RichPushUpdateService.respond(intent, success);
+            case RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE:
+                if (!RichPushUser.isCreated()) {
+                    Logger.debug("InboxServiceDelegate - User has not been created, canceling messages update");
+                    RichPushUpdateService.respond(intent, false);
+                } else {
+                    boolean success = this.updateMessages();
+                    RichPushUpdateService.respond(intent, success);
 
-            this.syncReadMessageState();
-            this.syncDeletedMessageState();
+                    this.syncReadMessageState();
+                    this.syncDeletedMessageState();
+                }
+                break;
+
+            case RichPushUpdateService.ACTION_SYNC_MESSAGE_STATE:
+                this.syncReadMessageState();
+                this.syncDeletedMessageState();
+                break;
         }
     }
 

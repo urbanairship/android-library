@@ -51,6 +51,11 @@ public class RichPushUpdateService extends BaseIntentService {
     public static final String ACTION_RICH_PUSH_MESSAGES_UPDATE = "com.urbanairship.richpush.MESSAGES_UPDATE";
 
     /**
+     * Starts the service to sync message state.
+     */
+    public static final String ACTION_SYNC_MESSAGE_STATE = "com.urbanairship.richpush.SYNC_MESSAGE_STATE";
+
+    /**
      * Starts the service in order to update just the {@link RichPushUser} itself.
      */
     public static final String ACTION_RICH_PUSH_USER_UPDATE = "com.urbanairship.richpush.USER_UPDATE";
@@ -92,6 +97,7 @@ public class RichPushUpdateService extends BaseIntentService {
             case ACTION_RICH_PUSH_USER_UPDATE:
                 return new UserServiceDelegate(getApplicationContext(), dataStore);
 
+            case ACTION_SYNC_MESSAGE_STATE:
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
                 return new InboxServiceDelegate(getApplicationContext(), dataStore);
         }
