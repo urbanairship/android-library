@@ -39,7 +39,7 @@ import java.util.Set;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
-public class TagUtilsTest extends BaseTestCase {
+public class TagRichPushTestUtilsTest extends BaseTestCase {
 
     /**
      * Test converting a JsonValue to a tags map

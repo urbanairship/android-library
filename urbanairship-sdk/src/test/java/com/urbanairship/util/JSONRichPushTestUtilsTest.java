@@ -38,7 +38,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
-public class JSONUtilsTest extends BaseTestCase {
+public class JSONRichPushTestUtilsTest extends BaseTestCase {
 
     /**
      * Test converting a JSONObject with simple values

@@ -25,13 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import android.database.Cursor;
 import android.os.Bundle;
 
-import com.urbanairship.Logger;
-import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
@@ -40,109 +36,97 @@ import com.urbanairship.util.UAStringUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 
 /**
  * The primary data structure for Rich Push messages.
- *
- * @author Urban Airship
  */
 public class RichPushMessage implements Comparable<RichPushMessage> {
 
+    // JSON KEYS
+    final static String MESSAGE_EXPIRY_KEY = "message_expiry";
+    final static String MESSAGE_ID_KEY = "message_id";
+    final static String MESSAGE_URL_KEY = "message_url";
+    final static String MESSAGE_BODY_URL_KEY = "message_body_url";
+    final static String MESSAGE_READ_URL_KEY = "message_read_url";
+    final static String MESSAGE_SENT_KEY = "message_sent";
+    final static String EXTRA_KEY = "extra";
+    final static String TITLE_KEY = "title";
+    final static String UNREAD_KEY = "unread";
+
+    private boolean unreadOrigin;
+    private Bundle extras;
+    private long sentMS;
+    private Long expirationMS;
+    private String messageId;
+    private String messageUrl;
+    private String messageBodyUrl;
+    private String messageReadUrl;
+    private String title;
+    private JsonValue rawJson;
+
+    // Accessed directly from RichPushInbox
     boolean deleted = false;
     boolean unreadClient;
-    boolean unreadOrigin;
 
-    Bundle extras;
-    long sentMS;
-    Long expirationMS;
-
-    final String messageId;
-    String messageUrl;
-    String messageBodyUrl;
-    String messageReadUrl;
-    String title;
-    JSONObject rawMessageJSON;
-
-
-    RichPushMessage(String messageId) {
-        this.messageId = messageId;
+    private RichPushMessage() {
     }
 
-    /* TODO Would really like a cleaner way of doing these factory methods.
-    Seems kind of difficult without reflection, though and we (maybe?) shouldn't do that.
+    /**
+     * Factory method to create a RichPushMessage.
+     * @param messagePayload The raw message payload.
+     * @param unreadClient flag indicating the read status on the client.
+     * @param deleted flag indication the delete status.
+     * @return A RichPushMessage instance, or {@code null} if the message payload is invalid.
      */
-    static RichPushMessage messageFromCursor(Cursor cursor) throws JSONException {
-        RichPushMessage message = new RichPushMessage(cursor.getString(cursor.getColumnIndex(
-                RichPushTable.COLUMN_NAME_MESSAGE_ID)));
-        message.messageUrl = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_URL));
-        message.messageBodyUrl = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL));
-        message.messageReadUrl = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL));
-        message.unreadClient = cursor.getInt(
-                cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD)) == 1;
+    static RichPushMessage create(JsonValue messagePayload, boolean unreadClient, boolean deleted) {
+        JsonMap messageMap = messagePayload.getMap();
+        if (messageMap == null) {
+            return null;
+        }
 
-        message.unreadOrigin = cursor.getInt(
-                cursor.getColumnIndex(RichPushTable.COLUMN_NAME_UNREAD_ORIG)) == 1;
-        message.extras = jsonToBundle(cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_EXTRA)));
-        message.title = cursor.getString(
-                cursor.getColumnIndex(RichPushTable.COLUMN_NAME_TITLE));
 
-        String timeStamp = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_TIMESTAMP));
-        message.sentMS = getMillisecondsFromTimeStamp(timeStamp, System.currentTimeMillis());
+        RichPushMessage message = new RichPushMessage();
+        message.messageId = messageMap.opt(MESSAGE_ID_KEY).getString();
+        message.messageUrl = messageMap.opt(MESSAGE_URL_KEY).getString();
+        message.messageBodyUrl = messageMap.opt(MESSAGE_BODY_URL_KEY).getString();
+        message.messageReadUrl = messageMap.opt(MESSAGE_READ_URL_KEY).getString();
+        message.title = messageMap.opt(TITLE_KEY).getString();
+        message.unreadOrigin = messageMap.opt(UNREAD_KEY).getBoolean(true);
+        message.rawJson = messagePayload;
 
-        message.deleted = cursor.getInt(
-                cursor.getColumnIndex(RichPushTable.COLUMN_NAME_DELETED)) == 1;
+        String sentMS = messageMap.opt(MESSAGE_SENT_KEY).getString();
+        if (UAStringUtil.isEmpty(sentMS)) {
+            message.sentMS = System.currentTimeMillis();
+        } else {
+            message.sentMS = DateUtils.parseIso8601(sentMS, System.currentTimeMillis());
+        }
 
-        String rawMessageJSON = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
-        message.rawMessageJSON = (rawMessageJSON == null) ? new JSONObject() : new JSONObject(rawMessageJSON);
+        String messageExpiry = messageMap.opt(MESSAGE_EXPIRY_KEY).getString();
+        if (!UAStringUtil.isEmpty(messageExpiry)) {
+            message.expirationMS = DateUtils.parseIso8601(messageExpiry, Long.MAX_VALUE);
+        }
 
-        String expiryTimeStamp = cursor.getString(cursor.getColumnIndex(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP));
-        message.expirationMS = getMillisecondsFromTimeStamp(expiryTimeStamp, null);
+        // Extras
+        message.extras = new Bundle();
+        JsonMap extrasMap = messageMap.opt(EXTRA_KEY).getMap();
+        if (extrasMap != null) {
+            for (Map.Entry<String, JsonValue> entry : extrasMap) {
+                if (entry.getValue().isString()) {
+                    message.extras.putString(entry.getKey(), entry.getValue().getString());
+                } else {
+                    message.extras.putString(entry.getKey(), entry.getValue().toString());
+                }
+            }
+        }
+
+        message.deleted = deleted;
+        message.unreadClient = unreadClient;
 
         return message;
     }
-
-    // helpers
-
-    static Long getMillisecondsFromTimeStamp(String timeStamp, Long defaultValue) {
-        if (UAStringUtil.isEmpty(timeStamp)) {
-            return defaultValue;
-        }
-
-        try {
-            return DateUtils.parseIso8601(timeStamp);
-        } catch (ParseException e) {
-            Logger.error("RichPushMessage - Couldn't parse message date: " + timeStamp + ", defaulting to: " + defaultValue + ".");
-            return defaultValue;
-        }
-    }
-
-    private static Bundle jsonToBundle(String extrasPayload)  {
-        Bundle extras = new Bundle();
-        try {
-            JsonMap jsonMap = JsonValue.parseString(extrasPayload).getMap();
-
-            if (jsonMap != null) {
-                for (Map.Entry<String, JsonValue> entry : jsonMap) {
-                    if (entry.getValue().isString()) {
-                        extras.putString(entry.getKey(), entry.getValue().getString());
-                    } else {
-                        extras.putString(entry.getKey(), entry.getValue().toString());
-                    }
-                }
-            }
-
-        } catch (JsonException e) {
-            Logger.error("RichPushMessage - Invalid extras: " + extrasPayload);
-        }
-
-        return extras;
-    }
-
-    // public getters
 
     /**
      * Get the message's Urban Airship ID.
@@ -267,7 +251,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = false;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            getInbox().markMessagesRead(set);
+            UAirship.shared().getRichPushManager().getRichPushInbox().markMessagesRead(set);
         }
     }
 
@@ -279,7 +263,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            getInbox().markMessagesUnread(set);
+            UAirship.shared().getRichPushManager().getRichPushInbox().markMessagesUnread(set);
         }
     }
 
@@ -291,7 +275,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             deleted = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            getInbox().deleteMessages(set);
+            UAirship.shared().getRichPushManager().getRichPushInbox().deleteMessages(set);
         }
     }
 
@@ -299,9 +283,24 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      * Gets the entire raw message payload as a JSONObject
      *
      * @return The message's payload as a JSONObject
+     * @deprecated Marked to be removed in 7.0.0. Use {@link #getRawMessageJson()} instead.
      */
+    @Deprecated
     public JSONObject getRawMessageJSON() {
-        return this.rawMessageJSON;
+        try {
+            return new JSONObject(rawJson.toString());
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
+    }
+
+    /**
+     * Gets the entire raw message payload as JSON.
+     *
+     * @return The message's payload as JSON.
+     */
+    public JsonValue getRawMessageJson() {
+        return rawJson;
     }
 
     /**
@@ -312,8 +311,6 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     public boolean isDeleted() {
         return this.deleted;
     }
-
-    // Equality checks
 
     @Override
     public int compareTo(RichPushMessage another) {
@@ -332,52 +329,32 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             return true;
         }
 
-        return areObjectsEqual(messageId, that.messageId)
-                && areObjectsEqual(messageBodyUrl, that.messageBodyUrl)
-                && areObjectsEqual(messageReadUrl, that.messageReadUrl)
-                && areObjectsEqual(messageUrl, that.messageUrl)
-                && areObjectsEqual(extras, that.extras)
-                && unreadClient == that.unreadClient
-                && sentMS == that.sentMS;
+        return (messageId == null ? that.messageId == null : messageId.equals(that.messageId)) &&
+                (messageBodyUrl == null ? that.messageBodyUrl == null : messageBodyUrl.equals(that.messageBodyUrl)) &&
+                (messageReadUrl == null ? that.messageReadUrl == null : messageReadUrl.equals(that.messageReadUrl)) &&
+                (messageUrl == null ? that.messageUrl == null : messageUrl.equals(that.messageUrl)) &&
+                (extras == null ? that.extras == null : extras.equals(that.extras)) &&
+                (unreadClient == that.unreadClient) &&
+                (unreadOrigin == that.unreadOrigin) &&
+                (deleted == that.deleted) &&
+                (sentMS == that.sentMS);
     }
 
     @Override
     public int hashCode() {
         int result = 17;
-        result = 37 * result + (this.unreadClient ? 0 : 1);
-        result = 37 * result + (this.deleted ? 0 : 1);
-        return 37 * result + this.messageId.hashCode();
+
+        result = 37 * result + (messageId == null ? 0 : messageId.hashCode());
+        result = 37 * result + (messageBodyUrl == null ? 0 : messageBodyUrl.hashCode());
+        result = 37 * result + (messageReadUrl == null ? 0 : messageReadUrl.hashCode());
+        result = 37 * result + (messageUrl == null ? 0 : messageUrl.hashCode());
+        result = 37 * result + (extras == null ? 0 : extras.hashCode());
+        result = 37 * result + (unreadClient ? 0 : 1);
+        result = 37 * result + (unreadOrigin ? 0 : 1);
+        result = 37 * result + (deleted ? 0 : 1);
+        result = 37 * result + Long.valueOf(sentMS).hashCode();
+
+        return result;
     }
-
-    /**
-     * Helper method to compare 2 possible
-     * null objects
-     *
-     * @param a Object to compare
-     * @param b Object to compare
-     * @return true if both objects are null or the same, false otherwise
-     */
-    private boolean areObjectsEqual(Object a, Object b) {
-        if (a == null && b == null) {
-            return true;
-        }
-
-        if (a == null || b == null) {
-            return false;
-        }
-
-        return a.equals(b);
-    }
-
-    /**
-     * Gets the rich push user's inbox
-     *
-     * @return Current RichPushInbox
-     */
-    private RichPushInbox getInbox() {
-        return UAirship.shared().getRichPushManager().getRichPushInbox();
-    }
-
-
 }
 

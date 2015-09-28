@@ -25,16 +25,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.RichPushTable;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
@@ -42,7 +39,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -148,18 +144,21 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
 
         // 200
         if (status == HttpURLConnection.HTTP_OK) {
-            ContentValues[] serverMessages;
+            JsonList serverMessages = null;
             try {
-                serverMessages = messagesFromResponse(response.getResponseBody());
+                JsonMap responseJson = JsonValue.parseString(response.getResponseBody()).getMap();
+                if (responseJson != null) {
+                    serverMessages = responseJson.get("messages").getList();
+                }
             } catch (JsonException e) {
                 Logger.error("Failed to update inbox. Unable to parse response body: " + response.getResponseBody());
                 return false;
             }
 
-            if (serverMessages == null) {
+            if (serverMessages == null || serverMessages.size() == 0) {
                 Logger.info("Inbox message list is empty.");
             } else {
-                Logger.info("Received " + serverMessages.length + " inbox messages.");
+                Logger.info("Received " + serverMessages.size() + " inbox messages.");
                 updateInbox(serverMessages);
                 getDataStore().put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, response.getLastModifiedTime());
             }
@@ -177,12 +176,22 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param serverMessages The messages from the server.
      */
-    private void updateInbox(ContentValues[] serverMessages) {
-        List<ContentValues> messagesToInsert = new ArrayList<>();
+    private void updateInbox(JsonList serverMessages) {
+        List<JsonValue> messagesToInsert = new ArrayList<>();
         HashSet<String> serverMessageIds = new HashSet<>();
 
-        for (ContentValues message : serverMessages) {
-            String messageId = message.getAsString("message_id");
+        for (JsonValue message : serverMessages) {
+            if (!message.isJsonMap()) {
+                Logger.error("InboxServiceDelegate - Invalid message payload: " + message);
+                continue;
+            }
+
+            String messageId = message.getMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
+            if (messageId == null) {
+                Logger.error("InboxServiceDelegate - Invalid message payload, missing message ID: " + message);
+                continue;
+            }
+
             serverMessageIds.add(messageId);
 
             if (resolver.updateMessage(messageId, message) != 1) {
@@ -192,13 +201,11 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
 
         // Bulk insert any new messages
         if (messagesToInsert.size() > 0) {
-            ContentValues[] messageArray = new ContentValues[messagesToInsert.size()];
-            messagesToInsert.toArray(messageArray);
-            resolver.insertMessages(messageArray);
+            resolver.insertMessages(messagesToInsert);
         }
 
         // Delete any messages that did not come down with the message list
-        Set<String> deletedMessageIds = getMessageIdsFromCursor(resolver.getAllMessages());
+        Set<String> deletedMessageIds = resolver.getMessageIds();
         deletedMessageIds.removeAll(serverMessageIds);
         resolver.deleteMessages(deletedMessageIds);
 
@@ -210,7 +217,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      * Synchronizes local deleted message state with the server.
      */
     private void syncDeletedMessageState() {
-        Set<String> idsToDelete = getMessageIdsFromCursor(resolver.getDeletedMessages());
+        Set<String> idsToDelete = resolver.getDeletedMessageIds();
 
         if (idsToDelete.size() == 0) {
             // nothing to do
@@ -251,7 +258,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      * Synchronizes local read messages state with the server.
      */
     private void syncReadMessageState() {
-        Set<String> idsToUpdate = getMessageIdsFromCursor(resolver.getReadUpdatedMessages());
+        Set<String> idsToUpdate = resolver.getReadUpdatedMessageIds();
 
         if (idsToUpdate.size() == 0) {
             // nothing to do
@@ -286,37 +293,8 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         Logger.verbose("InboxServiceDelegate - Mark inbox messages read response: " + response);
 
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
-            ContentValues values = new ContentValues();
-            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, 0);
-            resolver.updateMessages(idsToUpdate, values);
+            resolver.markMessagesReadOrigin(idsToUpdate);
         }
-    }
-
-    /**
-     * Get the message IDs.
-     *
-     * @param cursor The cursor to get the message IDs from.
-     * @return The message IDs as a set of strings.
-     */
-    @NonNull
-    private Set<String> getMessageIdsFromCursor(Cursor cursor) {
-        if (cursor == null) {
-            return new HashSet<>();
-        }
-
-        Set<String> ids = new HashSet<>(cursor.getCount());
-
-        int messageIdIndex = -1;
-        while (cursor.moveToNext()) {
-            if (messageIdIndex == -1) {
-                messageIdIndex = cursor.getColumnIndex(RichPushTable.COLUMN_NAME_MESSAGE_ID);
-            }
-            ids.add(cursor.getString(messageIdIndex));
-        }
-
-        cursor.close();
-
-        return ids;
     }
 
     /**
@@ -341,55 +319,5 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
             Logger.info(e.getMessage());
         }
         return null;
-    }
-
-
-    private ContentValues[] messagesFromResponse(String messagesString) throws JsonException {
-        if (UAStringUtil.isEmpty(messagesString)) {
-            return null;
-        }
-
-        JsonValue messagePayload = JsonValue.parseString(messagesString);
-        if (!messagePayload.isJsonMap()) {
-            Logger.error("InboxServiceDelegate - Unexpected message list: " + messagesString);
-            return null;
-        }
-
-        JsonList messageList = messagePayload.getMap().get("messages").getList();
-        if (messageList == null) {
-            Logger.error("InboxServiceDelegate - Unexpected message list: " + messagesString);
-            return null;
-        }
-
-        ContentValues[] messages = new ContentValues[messageList.size()];
-        for (int i = 0; i < messageList.size(); i++) {
-
-            if (!messageList.get(i).isJsonMap()) {
-                Logger.error("InboxServiceDelegate - Unexpected message payload: " + messageList.get(i));
-                continue;
-            }
-
-            JsonMap messageMap = messageList.get(i).getMap();
-
-            ContentValues values = new ContentValues();
-            values.put(RichPushTable.COLUMN_NAME_TIMESTAMP, messageMap.opt("message_sent").getString());
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_ID, messageMap.opt("message_id").getString());
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_URL, messageMap.opt("message_url").getString());
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, messageMap.opt("message_body_url").getString());
-            values.put(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL, messageMap.opt("message_read_url").getString());
-            values.put(RichPushTable.COLUMN_NAME_TITLE, messageMap.opt("title").getString());
-            values.put(RichPushTable.COLUMN_NAME_UNREAD_ORIG, messageMap.opt("unread").getBoolean(true));
-
-            values.put(RichPushTable.COLUMN_NAME_EXTRA, messageMap.opt("extra").toString());
-            values.put(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, messageMap.toString());
-
-            if (messageMap.containsKey("message_expiry")) {
-                values.put(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP, messageMap.opt("message_expiry").getString());
-            }
-
-            messages[i] = values;
-        }
-
-        return messages;
     }
 }
