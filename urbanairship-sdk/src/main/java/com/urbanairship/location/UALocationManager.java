@@ -53,6 +53,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.json.JsonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,10 @@ import java.util.List;
  * High level interface for interacting with location.
  */
 public class UALocationManager extends BaseManager {
+
+    static final String LOCATION_UPDATES_ENABLED_KEY = "com.urbanairship.location.LOCATION_UPDATES_ENABLED";
+    static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
+    static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
 
     private final Messenger messenger;
     private final Context context;
@@ -72,8 +77,7 @@ public class UALocationManager extends BaseManager {
     private int nextSingleLocationRequestId = 1;
     private final SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
 
-    private final LocationPreferences preferences;
-
+    private final PreferenceDataStore preferenceDataStore;
 
     /**
      * List of location listeners.
@@ -98,6 +102,25 @@ public class UALocationManager extends BaseManager {
         }
     };
 
+    /**
+     * When preferences are changed on the current process or other processes,
+     * it will trigger the PreferenceChangeListener.  Instead of dealing
+     * with the changes twice (one in the set method, one here), we will
+     * just deal with changes when the listener notifies the manager.
+     */
+    private final PreferenceDataStore.PreferenceChangeListener preferenceChangeListener = new PreferenceDataStore.PreferenceChangeListener() {
+        @Override
+        public void onPreferenceChange(String key) {
+            switch (key) {
+                case BACKGROUND_UPDATES_ALLOWED_KEY:
+                case LOCATION_UPDATES_ENABLED_KEY:
+                case LOCATION_OPTIONS_KEY:
+                    updateServiceConnection();
+                    break;
+            }
+        }
+    };
+
 
     /**
      * Creates a UALocationManager. Normally only one UALocationManager instance should exist, and
@@ -109,25 +132,16 @@ public class UALocationManager extends BaseManager {
      */
     public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore) {
         this.context = context.getApplicationContext();
-        this.preferences = new LocationPreferences(preferenceDataStore);
+        this.preferenceDataStore = preferenceDataStore;
         this.messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
-
-        /*
-         * When preferences are changed on the current process or other processes,
-         * it will trigger the PreferenceChangeListener.  Instead of dealing
-         * with the changes twice (one in the set method, one here), we will
-         * just deal with changes when the listener notifies the manager.
-         */
-        preferences.setListener(new PreferenceDataStore.PreferenceChangeListener() {
-            @Override
-            public void onPreferenceChange(String key) {
-                updateServiceConnection();
-            }
-        });
     }
 
     @Override
     protected void init() {
+
+
+        preferenceDataStore.addListener(preferenceChangeListener);
+
         /*
          * When the app is started because of a location update, takeoff is
          * called causing the UALocationManager to possibly start the location
@@ -160,6 +174,12 @@ public class UALocationManager extends BaseManager {
         }, 1000);
     }
 
+    @Override
+    protected void tearDown() {
+        preferenceDataStore.removeListener(preferenceChangeListener);
+    }
+
+
     /**
      * Checks if continuous location updates is enabled or not.
      * </p>
@@ -170,7 +190,7 @@ public class UALocationManager extends BaseManager {
      * <code>false</code>.
      */
     public boolean isLocationUpdatesEnabled() {
-        return preferences.isLocationUpdatesEnabled();
+        return preferenceDataStore.getBoolean(LOCATION_UPDATES_ENABLED_KEY, false);
     }
 
     /**
@@ -183,9 +203,9 @@ public class UALocationManager extends BaseManager {
      */
     @RequiresPermission(anyOf = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION})
+            Manifest.permission.ACCESS_FINE_LOCATION })
     public void setLocationUpdatesEnabled(boolean enabled) {
-        preferences.setLocationUpdatesEnabled(enabled);
+        preferenceDataStore.put(LOCATION_UPDATES_ENABLED_KEY, enabled);
     }
 
     /**
@@ -196,7 +216,7 @@ public class UALocationManager extends BaseManager {
      * otherwise <code>false</code>.
      */
     public boolean isBackgroundLocationAllowed() {
-        return preferences.isBackgroundLocationAllowed();
+        return preferenceDataStore.getBoolean(BACKGROUND_UPDATES_ALLOWED_KEY, false);
     }
 
     /**
@@ -206,7 +226,7 @@ public class UALocationManager extends BaseManager {
      * @param enabled If background updates are allowed in the background or not.
      */
     public void setBackgroundLocationAllowed(boolean enabled) {
-        preferences.setBackgroundLocationAllowed(enabled);
+        preferenceDataStore.put(BACKGROUND_UPDATES_ALLOWED_KEY, enabled);
     }
 
     /**
@@ -216,7 +236,7 @@ public class UALocationManager extends BaseManager {
      * the default settings.
      */
     public void setLocationRequestOptions(@Nullable LocationRequestOptions options) {
-        preferences.setLocationRequestOptions(options);
+        preferenceDataStore.put(LOCATION_OPTIONS_KEY, options);
     }
 
     /**
@@ -227,10 +247,23 @@ public class UALocationManager extends BaseManager {
      */
     @NonNull
     public LocationRequestOptions getLocationRequestOptions() {
-        LocationRequestOptions options = preferences.getLocationRequestOptions();
+        LocationRequestOptions options = null;
+
+        String jsonString = preferenceDataStore.getString(LOCATION_OPTIONS_KEY, null);
+        if (jsonString != null) {
+            try {
+                options = LocationRequestOptions.parseJson(jsonString);
+            } catch (JsonException e) {
+                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
+            }
+        }
+
         if (options == null) {
             options = new LocationRequestOptions.Builder().create();
         }
+
         return options;
     }
 
@@ -269,7 +302,7 @@ public class UALocationManager extends BaseManager {
     @NonNull
     @RequiresPermission(anyOf = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION})
+            Manifest.permission.ACCESS_FINE_LOCATION })
     public PendingResult<Location> requestSingleLocation() {
         return requestSingleLocation(getLocationRequestOptions());
     }
@@ -285,7 +318,7 @@ public class UALocationManager extends BaseManager {
     @NonNull
     @RequiresPermission(anyOf = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION})
+            Manifest.permission.ACCESS_FINE_LOCATION })
     public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions requestOptions) {
         //noinspection ConstantConditions
         if (requestOptions == null) {
@@ -308,15 +341,6 @@ public class UALocationManager extends BaseManager {
         }
 
         return request;
-    }
-
-    /**
-     * Gets the location preferences.
-     *
-     * @return The location preferences.
-     */
-    LocationPreferences getPreferences() {
-        return preferences;
     }
 
     /**
