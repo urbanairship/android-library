@@ -245,6 +245,14 @@ public class AirshipConfigOptions {
     public boolean autoLaunchApplication = true;
 
     /**
+     * Flag indicating whether channel creation delay is enabled or not.
+     * <p/>
+     * The flag defaults to false.
+     */
+    @PropertyName(name = "channelCreationDelayEnabled")
+    public boolean channelCreationDelayEnabled = false;
+
+    /**
      * Flag indicating whether channel capture feature is enabled or not.
      * <p/>
      * The flag defaults to true.

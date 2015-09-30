@@ -32,6 +32,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseManager;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -189,6 +190,7 @@ public class PushManager extends BaseManager {
     private boolean channelTagRegistrationEnabled = true;
     private final NamedUser namedUser;
     private final PushPreferences preferences;
+    private final AirshipConfigOptions configOptions;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -196,16 +198,18 @@ public class PushManager extends BaseManager {
      *
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
+     * @param configOptions The airship config options.
      * @hide
      */
-    public PushManager(Context context, PreferenceDataStore preferenceDataStore) {
-        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore));
+    public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions) {
+        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore), configOptions);
     }
 
-    PushManager(Context context, PushPreferences preferences, NamedUser namedUser) {
+    PushManager(Context context, PushPreferences preferences, NamedUser namedUser, AirshipConfigOptions configOptions) {
         this.preferences = preferences;
         this.notificationFactory = new DefaultNotificationFactory(context);
         this.namedUser = namedUser;
+        this.configOptions = configOptions;
 
         if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
@@ -216,8 +220,13 @@ public class PushManager extends BaseManager {
 
     @Override
     protected void init() {
-
         this.preferences.migratePushEnabledSettings();
+
+        if (preferences.getChannelId() == null && configOptions.channelCreationDelayEnabled) {
+            preferences.setChannelCreationDelayEnabled(true);
+        } else {
+            preferences.setChannelCreationDelayEnabled(false);
+        }
 
         // Start registration
         Intent registrationIntent = new Intent(UAirship.getApplicationContext(), PushService.class)
@@ -237,6 +246,22 @@ public class PushManager extends BaseManager {
         // Update named user tags if we have a named user
         if (namedUser.getId() != null) {
             this.namedUser.startUpdateTagsService();
+        }
+
+    }
+
+    /**
+     * Enables channel creation if channel creation has been delayed.
+     * <p/>
+     * This setting is persisted between application starts, so there is no need to call this
+     * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
+     * set to <code>true</code> in the airship config.
+     *
+     */
+    public void enableChannelCreation() {
+        if (preferences.isChannelCreationDelayEnabled()) {
+            preferences.setChannelCreationDelayEnabled(false);
+            updateRegistration();
         }
     }
 
@@ -654,6 +679,28 @@ public class PushManager extends BaseManager {
      */
     public boolean isInQuietTime() {
         return preferences.isInQuietTime();
+    }
+
+    /**
+     * Determines whether channel creation is initially disabled, to be enabled later
+     * by enableChannelCreation.
+     *
+     * @return <code>true</code> if channel creation is initially disabled, <code>false</code> otherwise.
+     */
+    boolean isChannelCreationDelayEnabled() {
+        return preferences.isChannelCreationDelayEnabled();
+    }
+
+    /**
+     * Sets channel creation if channel creation has been delayed.
+     * <p/>
+     * This setting is persisted between application starts, so there is no need to call this
+     * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
+     * set to <code>true</code> in the airship config.
+     *
+     */
+     void setChannelCreationDelayEnabled(boolean enabled) {
+        preferences.setChannelCreationDelayEnabled(enabled);
     }
 
     /**

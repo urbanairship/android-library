@@ -123,7 +123,7 @@ public class UAirship {
         this.richPushManager = new RichPushManager(context, preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
         this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
-        this.pushManager = new PushManager(context, preferenceDataStore);
+        this.pushManager = new PushManager(context, preferenceDataStore, airshipConfigOptions);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.channelCapture = new ChannelCapture(context, airshipConfigOptions, this.pushManager);
