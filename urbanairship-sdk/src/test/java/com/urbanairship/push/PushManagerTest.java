@@ -2,6 +2,7 @@ package com.urbanairship.push;
 
 import android.content.Intent;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -24,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
@@ -44,6 +46,7 @@ public class PushManagerTest extends BaseTestCase {
     PushPreferences mockPushPreferences;
     PushManager pushManager;
     NamedUser mockNamedUser;
+    AirshipConfigOptions options;
 
 
 
@@ -52,6 +55,7 @@ public class PushManagerTest extends BaseTestCase {
 
     @Before
     public void setup() {
+
         mockAnalytics = mock(Analytics.class);
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
@@ -61,8 +65,8 @@ public class PushManagerTest extends BaseTestCase {
         mockNamedUser = mock(NamedUser.class);
 
 
-
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser);
+        options = new AirshipConfigOptions();
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -72,7 +76,6 @@ public class PushManagerTest extends BaseTestCase {
         tagsToRemove.add("tag4");
         tagsToRemove.add("tag5");
     }
-
 
 
     /**
@@ -928,4 +931,47 @@ public class PushManagerTest extends BaseTestCase {
         startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Expect update channel tag groups service", PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
     }
+
+    /**
+     * Test delay channel creation.
+     */
+    @Test
+    public void testDelayChannelCreation() {
+        options.channelCreationDelayEnabled = false;
+        pushManager.init();
+        assertFalse(pushManager.isChannelCreationDelayEnabled());
+
+        options.channelCreationDelayEnabled = true;
+        pushManager.init();
+        assertTrue(pushManager.isChannelCreationDelayEnabled());
+
+        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
+        pushManager.init();
+        assertFalse(pushManager.isChannelCreationDelayEnabled());
+    }
+
+    /**
+     * Test enable channel creation.
+     */
+    @Test
+    public void testEnableChannelCreation() {
+        // Enable channel delay
+        options.channelCreationDelayEnabled = true;
+        pushManager.init();
+
+        // Set up shadowApplication to ensure the registration update service is started after
+        // channel creation re-enable
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        shadowApplication.clearStartedServices();
+
+        // Re-enable channel creation to initiate channel registration
+        pushManager.enableChannelCreation();
+
+        // Ensure channel delay enabled is now false
+        assertFalse(pushManager.isChannelCreationDelayEnabled());
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect start registration", PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+    }
+
 }
