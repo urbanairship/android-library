@@ -29,7 +29,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
@@ -131,16 +130,12 @@ public class PlayServicesUtils {
      */
     public static boolean isGooglePlayServicesDependencyAvailable() {
         if (isGooglePlayServicesDependencyAvailable == null) {
-            if (Build.VERSION.SDK_INT < 8) {
+            // Play Services
+            try {
+                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
+                isGooglePlayServicesDependencyAvailable = true;
+            } catch (ClassNotFoundException e) {
                 isGooglePlayServicesDependencyAvailable = false;
-            } else {
-                // Play Services
-                try {
-                    Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-                    isGooglePlayServicesDependencyAvailable = true;
-                } catch (ClassNotFoundException e) {
-                    isGooglePlayServicesDependencyAvailable = false;
-                }
             }
         }
 
