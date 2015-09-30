@@ -308,6 +308,12 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param payload The ChannelRegistrationPayload payload.
      */
     private void createChannel(@NonNull Intent intent, @NonNull ChannelRegistrationPayload payload) {
+
+        if (pushManager.isChannelCreationDelayEnabled()) {
+            Logger.info("Channel registration is currently disabled.");
+            return;
+        }
+
         ChannelResponse response = channelClient.createChannelWithPayload(payload);
 
         // 5xx
