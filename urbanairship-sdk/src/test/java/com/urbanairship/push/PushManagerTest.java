@@ -958,14 +958,22 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testEnableChannelCreation() {
+        PushPreferences pushPref = new PushPreferences(TestApplication.getApplication().preferenceDataStore);
+        pushManager = new PushManager(TestApplication.getApplication(), pushPref, mockNamedUser, options);
+
+        // Enable channel delay
+        options.channelCreationDelayEnabled = true;
         pushManager.init();
 
+        // Set up shadowApplication to ensure the registration update service is started after
+        // channel creation re-enable
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
-        // Disabled channel delay
+        // Re-enable channel creation to initiate channel registration
         pushManager.enableChannelCreation();
 
+        // Ensure channel delay enabled is now false
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
