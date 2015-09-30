@@ -19,6 +19,7 @@ import com.urbanairship.analytics.LocationEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for the Location Service
  */
+@SuppressWarnings("ALL")
 public class LocationServiceTest extends BaseTestCase {
 
     LocationService locationService;
@@ -158,7 +160,7 @@ public class LocationServiceTest extends BaseTestCase {
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
 
         sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
-        verify(mockAnalytics).recordLocation(location, null, LocationEvent.UpdateType.CONTINUOUS);
+        verify(mockAnalytics).recordLocation(eq(location), Mockito.any(LocationRequestOptions.class), eq(LocationEvent.UpdateType.CONTINUOUS));
     }
 
     /**
@@ -218,18 +220,16 @@ public class LocationServiceTest extends BaseTestCase {
      */
     @Test
     public void testStartingLocationAfterUpdate() {
-        LocationRequestOptions options = locationManager.getLocationRequestOptions();
-        Bundle extras = new Bundle();
-        extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
+        locationManager.getPreferenceDataStore().put("com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS", locationManager.getLocationRequestOptions());
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, extras);
+        sendIntent(LocationService.ACTION_LOCATION_UPDATE, null);
 
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Verify no request was made
         verify(mockProvider, times(0)).connect();
         verify(mockProvider, times(0)).cancelRequests(any(PendingIntent.class));
-        verify(mockProvider, times(0)).requestLocationUpdates(eq(options), any(PendingIntent.class));
+        verify(mockProvider, times(0)).requestLocationUpdates(eq(locationManager.getLocationRequestOptions()), any(PendingIntent.class));
     }
 
     /**
