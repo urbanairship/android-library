@@ -344,6 +344,15 @@ public class UALocationManager extends BaseManager {
     }
 
     /**
+     * Gets the PreferenceDataStore.
+     *
+     * @return The PreferenceDataStore.
+     */
+    PreferenceDataStore getPreferenceDataStore() {
+        return preferenceDataStore;
+    }
+
+    /**
      * Updates the service connection. Handles binding and subscribing to
      * the location service.
      */
