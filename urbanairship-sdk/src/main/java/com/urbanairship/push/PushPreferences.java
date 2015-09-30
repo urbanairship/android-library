@@ -56,7 +56,6 @@ class PushPreferences {
     private static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
     private static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
 
-    private static final String DELAY_CHANNEL_CREATION_KEY = KEY_PREFIX + ".DELAY_CHANNEL_CREATION_ENABLED";
     private static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";
     private static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
 
@@ -502,25 +501,6 @@ class PushPreferences {
      */
     String getDeviceId() {
         return preferenceDataStore.getString(DEVICE_ID_KEY, null);
-    }
-
-    /**
-     * Determines whether channel creation is initially disabled, to be enabled later
-     * by enableChannelCreation.
-     *
-     * @return <code>true</code> if channel creation is initially disabled, <code>false</code> otherwise.
-     */
-    boolean isChannelCreationDelayEnabled() {
-        return preferenceDataStore.getBoolean(DELAY_CHANNEL_CREATION_KEY, false);
-    }
-
-    /**
-     * Sets the delayChannelCreation enabled flag.
-     *
-     * @param enabled A boolean indicating whether channel creation is enabled.
-     */
-    void setChannelCreationDelayEnabled(boolean enabled) {
-        preferenceDataStore.put(DELAY_CHANNEL_CREATION_KEY, enabled);
     }
 
     /**

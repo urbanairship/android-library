@@ -937,9 +937,6 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testDelayChannelCreation() {
-        PushPreferences pushPref = new PushPreferences(TestApplication.getApplication().preferenceDataStore);
-        pushManager = new PushManager(TestApplication.getApplication(), pushPref, mockNamedUser, options);
-
         options.channelCreationDelayEnabled = false;
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
@@ -948,7 +945,7 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
-        pushPref.setChannelId("some channel");
+        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
     }
@@ -958,9 +955,6 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testEnableChannelCreation() {
-        PushPreferences pushPref = new PushPreferences(TestApplication.getApplication().preferenceDataStore);
-        pushManager = new PushManager(TestApplication.getApplication(), pushPref, mockNamedUser, options);
-
         // Enable channel delay
         options.channelCreationDelayEnabled = true;
         pushManager.init();

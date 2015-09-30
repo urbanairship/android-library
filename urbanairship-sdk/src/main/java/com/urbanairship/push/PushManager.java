@@ -191,6 +191,8 @@ public class PushManager extends BaseManager {
     private final NamedUser namedUser;
     private final PushPreferences preferences;
     private final AirshipConfigOptions configOptions;
+    private boolean channelCreationDelayEnabled;
+
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -223,9 +225,9 @@ public class PushManager extends BaseManager {
         this.preferences.migratePushEnabledSettings();
 
         if (preferences.getChannelId() == null && configOptions.channelCreationDelayEnabled) {
-            preferences.setChannelCreationDelayEnabled(true);
+            channelCreationDelayEnabled = true;
         } else {
-            preferences.setChannelCreationDelayEnabled(false);
+            channelCreationDelayEnabled = false;
         }
 
         // Start registration
@@ -260,7 +262,7 @@ public class PushManager extends BaseManager {
      */
     public void enableChannelCreation() {
         if (isChannelCreationDelayEnabled()) {
-            preferences.setChannelCreationDelayEnabled(false);
+            channelCreationDelayEnabled = false;
             updateRegistration();
         }
     }
@@ -688,19 +690,7 @@ public class PushManager extends BaseManager {
      * @return <code>true</code> if channel creation is initially disabled, <code>false</code> otherwise.
      */
     boolean isChannelCreationDelayEnabled() {
-        return preferences.isChannelCreationDelayEnabled();
-    }
-
-    /**
-     * Sets channel creation if channel creation has been delayed.
-     * <p/>
-     * This setting is persisted between application starts, so there is no need to call this
-     * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
-     * set to <code>true</code> in the airship config.
-     *
-     */
-     void setChannelCreationDelayEnabled(boolean enabled) {
-        preferences.setChannelCreationDelayEnabled(enabled);
+        return channelCreationDelayEnabled;
     }
 
     /**
