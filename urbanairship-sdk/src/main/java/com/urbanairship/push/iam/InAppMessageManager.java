@@ -81,7 +81,6 @@ public class InAppMessageManager extends BaseManager {
     // Preference data store keys
     private final static String KEY_PREFIX = "com.urbanairship.push.iam.";
     private final static String PENDING_IN_APP_MESSAGE_KEY = KEY_PREFIX + "PENDING_IN_APP_MESSAGE";
-    private final static String DISPLAY_ASAP_KEY = KEY_PREFIX + "DISPLAY_ASAP";
     private final static String AUTO_DISPLAY_ENABLED_KEY = KEY_PREFIX + "AUTO_DISPLAY_ENABLED";
     private final static String LAST_DISPLAYED_ID_KEY = KEY_PREFIX + "LAST_DISPLAYED_ID";
 
@@ -115,6 +114,7 @@ public class InAppMessageManager extends BaseManager {
     private WeakReference<Activity> activityReference;
     private InAppMessageFragment currentFragment;
     private boolean autoDisplayPendingMessage;
+    private boolean displayAsap;
     private InAppMessage currentMessage;
     private final List<Listener> listeners = new ArrayList<>();
     private final Object pendingMessageLock = new Object();
@@ -197,7 +197,7 @@ public class InAppMessageManager extends BaseManager {
      * {@code false}.
      */
     public void setDisplayAsapEnabled(boolean enabled) {
-        dataStore.put(DISPLAY_ASAP_KEY, enabled);
+        displayAsap = enabled;
 
         if (enabled) {
             autoDisplayPendingMessage = true;
@@ -212,7 +212,7 @@ public class InAppMessageManager extends BaseManager {
      * {@code false}.
      */
     public boolean isDisplayAsapEnabled() {
-        return dataStore.getBoolean(DISPLAY_ASAP_KEY, false);
+        return displayAsap;
     }
 
     /**
