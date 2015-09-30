@@ -49,6 +49,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
+import com.urbanairship.json.JsonException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +62,11 @@ import java.util.Set;
  * Provider or standard Android location.
  */
 public class LocationService extends Service {
+
+    /**
+     * Preference data store key to store that last requested options for location updates.
+     */
+    private static final String LAST_REQUESTED_LOCATION_OPTIONS_KEY = "com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS";
 
     /**
      * Command to the service to subscribe to location updates. The Message's
@@ -154,9 +160,8 @@ public class LocationService extends Service {
     static boolean areUpdatesStopped = false;
 
     /**
-     * Stores the last request option updates. We track this value through the
-     * pending intent for location updates so when the application is started
-     * from a location update we do not request updates again using the same
+     * Stores the last updated LocationRequestOptions. We track this value for location updates so when the
+     * application is started from a location update we do not request updates again using the same
      * update options. This avoid double location fixes.
      */
     static LocationRequestOptions lastUpdateOptions = null;
@@ -321,8 +326,6 @@ public class LocationService extends Service {
             return;
         }
 
-        LocationRequestOptions updateOptions = intent.getParcelableExtra(EXTRA_LOCATION_REQUEST_OPTIONS);
-
         /*
          * Set the last location options from the location update if
          * its not already set. This should only happen when the application
@@ -331,7 +334,20 @@ public class LocationService extends Service {
          * started from a location update.
          */
         if (lastUpdateOptions == null) {
-            lastUpdateOptions = updateOptions;
+            String jsonString = UAirship.shared()
+                                        .getLocationManager()
+                                        .getPreferenceDataStore()
+                                        .getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
+
+            if (jsonString != null) {
+                try {
+                    lastUpdateOptions = LocationRequestOptions.parseJson(jsonString);
+                } catch (JsonException e) {
+                    Logger.error("LocationService - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    Logger.error("LocationService - Invalid LocationRequestOptions from JSON: " + e.getMessage());
+                }
+            }
         }
 
         /*
@@ -344,11 +360,19 @@ public class LocationService extends Service {
                     "One of the location providers was enabled or disabled.");
 
             LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
-            PendingIntent pendingIntent = createLocationUpdateIntent(options);
+            PendingIntent pendingIntent = createLocationUpdateIntent();
+
+            // Store the last requested options so we can restore them later
+            // if the application starts from a location update being received.
+            UAirship.shared()
+                    .getLocationManager()
+                    .getPreferenceDataStore()
+                    .put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, options);
 
             locationProvider.connect();
             locationProvider.cancelRequests(pendingIntent);
             locationProvider.requestLocationUpdates(options, pendingIntent);
+
             return;
         }
 
@@ -361,7 +385,11 @@ public class LocationService extends Service {
 
             Logger.info("Received location update: " + location);
 
-            UAirship.shared().getAnalytics().recordLocation(location, updateOptions, LocationEvent.UpdateType.CONTINUOUS);
+            LocationRequestOptions options = lastUpdateOptions == null ? UAirship.shared().getLocationManager().getLocationRequestOptions() : lastUpdateOptions;
+
+            UAirship.shared()
+                    .getAnalytics()
+                    .recordLocation(location, options, LocationEvent.UpdateType.CONTINUOUS);
 
             List<Messenger> clientCopy = new ArrayList<>(subscribedClients);
             for (Messenger client : clientCopy) {
@@ -393,20 +421,28 @@ public class LocationService extends Service {
             if (lastUpdateOptions == null || !lastUpdateOptions.equals(options)) {
                 Logger.debug("LocationService - Starting updates.");
 
+                // Store the last requested options so we can restore them later
+                // if the application starts from a location update being received.
+                UAirship.shared()
+                        .getLocationManager()
+                        .getPreferenceDataStore()
+                        .put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, options);
+
                 lastUpdateOptions = options;
                 areUpdatesStopped = false;
 
-                PendingIntent pendingIntent = createLocationUpdateIntent(options);
+                PendingIntent pendingIntent = createLocationUpdateIntent();
 
                 locationProvider.connect();
                 locationProvider.cancelRequests(pendingIntent);
 
                 locationProvider.requestLocationUpdates(options, pendingIntent);
+
             }
 
         } else if (!areUpdatesStopped) {
             Logger.debug("LocationService - Stopping updates.");
-            locationProvider.cancelRequests(createLocationUpdateIntent(null));
+            locationProvider.cancelRequests(createLocationUpdateIntent());
             lastUpdateOptions = null;
             areUpdatesStopped = true;
         }
@@ -490,17 +526,12 @@ public class LocationService extends Service {
     /**
      * Creates the pending intent for location updates.
      *
-     * @param options The location request options.
      * @return PendingIntent for location updates.
      */
     @NonNull
-    private PendingIntent createLocationUpdateIntent(@Nullable LocationRequestOptions options) {
+    private PendingIntent createLocationUpdateIntent() {
         Intent intent = new Intent(getApplicationContext(), LocationService.class)
                 .setAction(ACTION_LOCATION_UPDATE);
-
-        if (options != null) {
-            intent.putExtra(EXTRA_LOCATION_REQUEST_OPTIONS, options);
-        }
 
         return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
