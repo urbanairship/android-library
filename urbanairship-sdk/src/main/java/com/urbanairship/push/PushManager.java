@@ -259,7 +259,7 @@ public class PushManager extends BaseManager {
      *
      */
     public void enableChannelCreation() {
-        if (preferences.isChannelCreationDelayEnabled()) {
+        if (isChannelCreationDelayEnabled()) {
             preferences.setChannelCreationDelayEnabled(false);
             updateRegistration();
         }
