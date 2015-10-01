@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.3.0 - October 1, 2015
+===============================
+ - Support for custom defined properties in custom events.
+ - Support for setting associated device identifiers for analytics.
+ - Added InstallReceiver to track install attributions.
+ - Urban Airship databases are now automatically excluded from the Android Marshmallow auto backup feature.
+ - InAppMessageManager's display ASAP flag is no longer persisted in a data store.
+ - Google Play Services 8.1.0 or newer is now a required dependency.
+ - Updated the minimum Android SDK version to 10 (Gingerbread).
+ - Fixed location updates when using the fused location provider.
+
 Version 6.2.3 - August 28, 2015
 ===============================
  - Fixed missing resources in Eclipse style library project.
