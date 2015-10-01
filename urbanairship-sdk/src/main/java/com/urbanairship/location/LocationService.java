@@ -66,6 +66,11 @@ public class LocationService extends Service {
     private static final String LAST_REQUESTED_LOCATION_OPTIONS_KEY = "com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS";
 
     /**
+     * The max age in milliseconds of the last location update to send to new subscribers.
+     */
+    private static final long NEW_SUBSCRIBER_LAST_LOCATION_MS = 5000;
+
+    /**
      * Command to the service to subscribe to location updates. The Message's
      * replyTo field must be a Messenger of the client where updates should
      * be sent.
@@ -151,6 +156,8 @@ public class LocationService extends Service {
      */
     static LocationRequestOptions lastUpdateOptions = null;
 
+    private Location lastLocationUpdate;
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -221,6 +228,13 @@ public class LocationService extends Service {
         if (message.replyTo != null) {
             Logger.debug("LocationService - Client subscribed for updates: " + message.replyTo);
             subscribedClients.add(message.replyTo);
+
+            if (lastLocationUpdate != null && (System.currentTimeMillis() - lastLocationUpdate.getTime()) < NEW_SUBSCRIBER_LAST_LOCATION_MS) {
+                if (!sendClientMessage(message.replyTo, MSG_NEW_LOCATION_UPDATE, 0, lastLocationUpdate)) {
+                    // Client died or is unable to receive messages, remove it
+                    subscribedClients.remove(message.replyTo);
+                }
+            }
         }
     }
 
@@ -367,6 +381,8 @@ public class LocationService extends Service {
                                         intent.getParcelableExtra("com.google.android.location.LOCATION"));
 
         if (location != null) {
+
+            lastLocationUpdate = location;
 
             Logger.info("Received location update: " + location);
 
