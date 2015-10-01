@@ -29,6 +29,7 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -173,11 +174,13 @@ public class UAWebViewClient extends WebViewClient {
         webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
     }
 
+    @CallSuper
     @Override
     public boolean shouldOverrideUrlLoading(WebView webView, String url) {
         return interceptUrl(webView, url);
     }
 
+    @CallSuper
     @Override
     public void onLoadResource(WebView webView, String url) {
 
@@ -423,6 +426,7 @@ public class UAWebViewClient extends WebViewClient {
         return decodedActions;
     }
 
+    @CallSuper
     @Override
     public void onPageFinished(final WebView view, String url) {
         if (view == null) {
@@ -448,6 +452,7 @@ public class UAWebViewClient extends WebViewClient {
         return UAirship.shared().getWhitelist().isWhitelisted(url);
     }
 
+    @CallSuper
     @Override
     public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host,
                                           String realm) {
