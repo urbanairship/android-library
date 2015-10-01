@@ -33,11 +33,14 @@ import android.content.Intent;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.location.RegionEvent;
+import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAlarmManager;
@@ -52,6 +55,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 public class EventServiceTest extends BaseTestCase {
@@ -60,9 +64,12 @@ public class EventServiceTest extends BaseTestCase {
     EventAPIClient client;
     EventDataManager dataManager;
     AnalyticsPreferences preferences;
+    PushManager pushManager;
+    String channelId;
 
     @Before
     public void setUp() {
+        pushManager = mock(PushManager.class);
         preferences = mock(AnalyticsPreferences.class);
         dataManager = mock(EventDataManager.class);
 
@@ -71,6 +78,15 @@ public class EventServiceTest extends BaseTestCase {
         when(analytics.getPreferences()).thenReturn(preferences);
 
         TestApplication.getApplication().setAnalytics(analytics);
+        TestApplication.getApplication().setPushManager(pushManager);
+
+        Mockito.when(pushManager.getChannelId()).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return channelId;
+            }
+        });
+        channelId = "some channel ID";
 
         client = mock(EventAPIClient.class);
 
@@ -235,6 +251,36 @@ public class EventServiceTest extends BaseTestCase {
         ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
         assertNotNull("Alarm should be schedule for more uploads", alarm);
+    }
+
+    /**
+     * Test sending events when there's no channel ID present
+     */
+    @Test
+    public void testSendingWithNoChannelID() {
+
+        // Return null when channel ID is expected
+        Mockito.when(pushManager.getChannelId()).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return null;
+            }
+        });
+
+        Map<String, String> events = new HashMap<>();
+        events.put("firstEvent", "{ 'firstEventBody' }");
+
+        // Satisfy event count check to avoid early return.
+        when(dataManager.getEventCount()).thenReturn(1);
+        // Return the event when it asks for 1
+        when(dataManager.getEvents(1)).thenReturn(events);
+
+        // Start the upload process
+        Intent intent = new Intent(EventService.ACTION_SEND);
+        service.onHandleIntent(intent);
+
+        // Verify uploadEvents returns early when no channel ID is present.
+        Mockito.verify(client, never()).sendEvents(events.values());
     }
 
     /**
