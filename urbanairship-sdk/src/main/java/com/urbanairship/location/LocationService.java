@@ -30,7 +30,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -38,7 +37,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -47,7 +45,6 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.json.JsonException;
 
@@ -129,18 +126,6 @@ public class LocationService extends Service {
      * Action used for location updates.
      */
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
-
-
-    /**
-     * Extra for a result receiver for {@link #ACTION_CHECK_LOCATION_UPDATES}. Will return either
-     * {@code 0} (updates not started) or {@link #RESULT_LOCATION_UPDATES_STARTED} (updates started).
-     */
-    static final String EXTRA_RESULT_RECEIVER = "com.urbanairship.location.EXTRA_RESULT_RECEIVER";
-
-    /**
-     * Result receiver code indicating continuous location updates have been started.
-     */
-    static final int RESULT_LOCATION_UPDATES_STARTED = 1;
 
     private final Set<Messenger> subscribedClients = new HashSet<>();
     private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
@@ -321,7 +306,7 @@ public class LocationService extends Service {
      * @param intent The received intent.
      */
     private void onLocationUpdate(@NonNull Intent intent) {
-        if (!isContinuousLocationUpdatesAllowed() || areUpdatesStopped) {
+        if (!UAirship.shared().getLocationManager().isContinuousLocationUpdatesAllowed() || areUpdatesStopped) {
             // Location is disabled and will be stopped in another intent.
             return;
         }
@@ -408,10 +393,7 @@ public class LocationService extends Service {
      * @param intent The received intent.
      */
     private void onCheckLocationUpdates(@NonNull Intent intent) {
-        int resultCode = 0;
-        if (isContinuousLocationUpdatesAllowed()) {
-            resultCode = RESULT_LOCATION_UPDATES_STARTED;
-
+        if (UAirship.shared().getLocationManager().isContinuousLocationUpdatesAllowed()) {
             LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
 
             /*
@@ -445,11 +427,6 @@ public class LocationService extends Service {
             locationProvider.cancelRequests(createLocationUpdateIntent());
             lastUpdateOptions = null;
             areUpdatesStopped = true;
-        }
-
-        ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_RESULT_RECEIVER);
-        if (resultReceiver != null) {
-            resultReceiver.send(resultCode, new Bundle());
         }
     }
 
@@ -536,17 +513,7 @@ public class LocationService extends Service {
         return PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    /**
-     * Checks if location updates should be enabled.
-     *
-     * @return <code>true</code> if location updates should be enabled,
-     * otherwise <code>false</code>.
-     */
-    private boolean isContinuousLocationUpdatesAllowed() {
-        UALocationManager locationManager = UAirship.shared().getLocationManager();
-        Analytics analytics = UAirship.shared().getAnalytics();
-        return locationManager.isLocationUpdatesEnabled() && (locationManager.isBackgroundLocationAllowed() || analytics.isAppInForeground());
-    }
+
 
     /**
      * Service handler to handle communicating with clients through messages.

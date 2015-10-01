@@ -40,7 +40,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
@@ -138,40 +137,22 @@ public class UALocationManager extends BaseManager {
 
     @Override
     protected void init() {
-
-
         preferenceDataStore.addListener(preferenceChangeListener);
 
-        /*
-         * When the app is started because of a location update, takeoff is
-         * called causing the UALocationManager to possibly start the location
-         * service.  When this happens, the start service is on the queue before
-         * the location update.  We need the location update to be processed first
-         * so we can parse the last request options before starting the service.
-         * The last request options allow us to determine if we can skip requesting
-         * updates, preventing possible duplicate location fixes.
-         *
-         */
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        // Set up a broadcast receiver to listen for app foreground events.
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
+        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
+
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
+        broadcastManager.registerReceiver(new BroadcastReceiver() {
             @Override
-            public void run() {
-
-                // Set up a broadcast receiver to listen for app foreground events.
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-                filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-
-                LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
-                broadcastManager.registerReceiver(new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        updateServiceConnection();
-                    }
-                }, filter);
-
+            public void onReceive(Context context, Intent intent) {
                 updateServiceConnection();
             }
-        }, 1000);
+        }, filter);
+
+        updateServiceConnection();
     }
 
     @Override
@@ -357,43 +338,31 @@ public class UALocationManager extends BaseManager {
      * the location service.
      */
     private void updateServiceConnection() {
-        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                if (resultCode == LocationService.RESULT_LOCATION_UPDATES_STARTED) {
-                    onUpdatesStarted();
-                } else {
-                    onUpdatesStopped();
-                }
-            }
 
-            private void onUpdatesStarted() {
-                synchronized (locationListeners) {
-                    if (!locationListeners.isEmpty()) {
-                        if (isBound) {
-                            subscribeUpdates();
-                        } else {
-                            // Once bound we will call updateServiceConnection again.
-                            bindService();
-                        }
+        if (isContinuousLocationUpdatesAllowed()) {
+            synchronized (locationListeners) {
+                if (!locationListeners.isEmpty()) {
+                    if (isBound) {
+                        subscribeUpdates();
+                    } else {
+                        // Once bound we will call updateServiceConnection again.
+                        bindService();
+                        return;
                     }
                 }
             }
-
-            private void onUpdatesStopped() {
-                unsubscribeUpdates();
-                synchronized (singleLocationRequests) {
-                    // unbind service
-                    if (singleLocationRequests.size() == 0) {
-                        unbindService();
-                    }
+        } else {
+            unsubscribeUpdates();
+            synchronized (singleLocationRequests) {
+                // unbind service
+                if (singleLocationRequests.size() == 0) {
+                    unbindService();
                 }
             }
-        };
+        }
 
         Intent intent = new Intent(context, LocationService.class)
-                .setAction(LocationService.ACTION_CHECK_LOCATION_UPDATES)
-                .putExtra(LocationService.EXTRA_RESULT_RECEIVER, resultReceiver);
+                .setAction(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         if (context.startService(intent) == null) {
             Logger.error("Unable to start location service. Check that the location service is added to the manifest.");
@@ -592,5 +561,15 @@ public class UALocationManager extends BaseManager {
             data.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
             sendMessage(LocationService.MSG_REQUEST_SINGLE_LOCATION, requestId, data);
         }
+    }
+
+    /**
+     * Checks if location updates should be enabled.
+     *
+     * @return <code>true</code> if location updates should be enabled,
+     * otherwise <code>false</code>.
+     */
+    boolean isContinuousLocationUpdatesAllowed() {
+        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || UAirship.shared().getAnalytics().isAppInForeground());
     }
 }
