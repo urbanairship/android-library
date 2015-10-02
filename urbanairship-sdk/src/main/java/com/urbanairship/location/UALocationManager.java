@@ -405,8 +405,6 @@ public class UALocationManager extends BaseManager {
             Logger.info("Unsubscribing from continuous location updates.");
             sendMessage(LocationService.MSG_UNSUBSCRIBE_UPDATES, 0, null);
             isSubscribed = false;
-
-            updateServiceConnection();
         }
     }
 
