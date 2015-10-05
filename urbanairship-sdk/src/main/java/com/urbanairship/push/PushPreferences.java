@@ -153,19 +153,19 @@ class PushPreferences {
     }
 
     /**
-     * Determines whether the GCM token or ADM ID is stored during channel registration.
+     * Determines whether the GCM token or ADM ID is sent during channel registration.
      *
-     * @return <code>true</code> if the GCM token or ADM ID is stored during channel registration,
-     * <code>false</code> otherwise.
+     * @return {@code true} if the GCM token or ADM ID is sent during channel registration,
+     * {@code false} otherwise.
      */
     boolean getPushTokenRegistrationEnabled() {
         return preferenceDataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
     }
 
     /**
-     * Sets whether the GCM token or ADM ID is stored during channel registration.
+     * Sets whether the GCM token or ADM ID is sent during channel registration.
      *
-     * @param enabled A boolean indicating whether the GCM token or ADM ID is stored during
+     * @param enabled A boolean indicating whether the GCM token or ADM ID is sent during
      * channel registration
      */
     void setPushTokenRegistrationEnabled(boolean enabled) {

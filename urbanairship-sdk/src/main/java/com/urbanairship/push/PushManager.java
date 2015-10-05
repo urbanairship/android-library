@@ -627,21 +627,21 @@ public class PushManager extends BaseManager {
     }
 
     /**
-     * Determines whether the GCM token or ADM ID is stored during channel registration.
-     * If <code>false</code>, the app will not be able to receive push notifications.
-     * The default value is <code>true</code>.
+     * Determines whether the GCM token or ADM ID is sent during channel registration.
+     * If {@code false}, the app will not be able to receive push notifications.
+     * The default value is {@code true}.
      *
-     * @return <code>true</code> if the GCM token or ADM ID is stored during channel registration,
-     * <code>false</code> otherwise.
+     * @return {@code true} if the GCM token or ADM ID is sent during channel registration,
+     * {@code false} otherwise.
      */
     public boolean getPushTokenRegistrationEnabled() {
         return preferences.getPushTokenRegistrationEnabled();
     }
 
     /**
-     * Sets whether the GCM token or ADM ID is stored during channel registration.
-     * If <code>false</code>, the app will not be able to receive push notifications.
-     * @param enabled A boolean indicating whether the GCM token or ADM ID is stored during
+     * Sets whether the GCM token or ADM ID is sent during channel registration.
+     * If {@code false}, the app will not be able to receive push notifications.
+     * @param enabled A boolean indicating whether the GCM token or ADM ID is sent during
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
