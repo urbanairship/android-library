@@ -312,6 +312,11 @@ public abstract class NotificationFactory {
 
         try {
             URL url = new URL(styleJSON.optString(BIG_PICTURE_KEY));
+            Bitmap bitmap = fetchBigImage(url);
+            if (bitmap == null) {
+                Logger.error("Failed to create big picture style, unable to fetch image: " + url);
+                return null;
+            }
             style.bigPicture(fetchBigImage(url));
         } catch (MalformedURLException e) {
             Logger.error("Malformed big picture URL.", e);
