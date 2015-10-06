@@ -401,12 +401,15 @@ public class PushManager extends BaseManager {
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.AMAZON_PLATFORM:
-                return !UAStringUtil.isEmpty(getPreferences().getAdmId());
-            case UAirship.ANDROID_PLATFORM:
-                return !UAStringUtil.isEmpty(getPreferences().getGcmToken());
+        if (getPushTokenRegistrationEnabled()) {
+            switch (UAirship.shared().getPlatformType()) {
+                case UAirship.AMAZON_PLATFORM:
+                    return !UAStringUtil.isEmpty(getPreferences().getAdmId());
+                case UAirship.ANDROID_PLATFORM:
+                    return !UAStringUtil.isEmpty(getPreferences().getGcmToken());
+            }
         }
+
         return false;
     }
 
@@ -435,12 +438,16 @@ public class PushManager extends BaseManager {
 
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
-                builder.setDeviceType("android")
-                       .setPushAddress(getGcmToken());
+                builder.setDeviceType("android");
+                if (getPushTokenRegistrationEnabled()) {
+                    builder.setPushAddress(getGcmToken());
+                }
                 break;
             case UAirship.AMAZON_PLATFORM:
-                builder.setDeviceType("amazon")
-                       .setPushAddress(getAdmId());
+                builder.setDeviceType("amazon");
+                if (getPushTokenRegistrationEnabled()) {
+                    builder.setPushAddress(getAdmId());
+                }
                 break;
         }
 
@@ -617,6 +624,29 @@ public class PushManager extends BaseManager {
      */
     public void setChannelTagRegistrationEnabled(boolean enabled) {
         channelTagRegistrationEnabled = enabled;
+    }
+
+    /**
+     * Determines whether the GCM token or ADM ID is sent during channel registration.
+     * If {@code false}, the app will not be able to receive push notifications.
+     * The default value is {@code true}.
+     *
+     * @return {@code true} if the GCM token or ADM ID is sent during channel registration,
+     * {@code false} otherwise.
+     */
+    public boolean getPushTokenRegistrationEnabled() {
+        return preferences.getPushTokenRegistrationEnabled();
+    }
+
+    /**
+     * Sets whether the GCM token or ADM ID is sent during channel registration.
+     * If {@code false}, the app will not be able to receive push notifications.
+     * @param enabled A boolean indicating whether the GCM token or ADM ID is sent during
+     * channel registration.
+     */
+    public void setPushTokenRegistrationEnabled(boolean enabled) {
+        preferences.setPushTokenRegistrationEnabled(enabled);
+        updateRegistration();
     }
 
     /**

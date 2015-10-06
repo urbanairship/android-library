@@ -728,6 +728,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
         when(mockPushPreferences.getAdmId()).thenReturn("fakeAdmId");
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
     }
@@ -741,7 +742,7 @@ public class PushManagerTest extends BaseTestCase {
 
         when(mockPushPreferences.isPushEnabled()).thenReturn(true);
         when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
         when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmId");
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
@@ -783,6 +784,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
         when(mockPushPreferences.getChannelLocation()).thenReturn(fakeChannelLocation);
         when(mockPushPreferences.getGcmToken()).thenReturn("GCM_TOKEN");
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
@@ -800,7 +802,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
         when(mockPushPreferences.getChannelLocation()).thenReturn(fakeChannelLocation);
         when(mockPushPreferences.getAdmId()).thenReturn("ADM_ID");
-
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
@@ -974,4 +976,37 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("Expect start registration", PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
     }
 
+    /**
+     * Test isPushAvailable calls getGcmToken when pushTokenRegistrationEnabled is true.
+     */
+    @Test
+    public void testPushTokenRegistrationEnabled() {
+        TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
+
+        pushManager.setPushTokenRegistrationEnabled(true);
+        verify(mockPushPreferences).setPushTokenRegistrationEnabled(true);
+
+        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmToken");
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
+
+        assertTrue(pushManager.isPushAvailable());
+        verify(mockPushPreferences).getPushTokenRegistrationEnabled();
+    }
+
+    /**
+     * Test isPushAvailable does not call getGcmToken when pushTokenRegistrationEnabled is false.
+     */
+    @Test
+    public void testPushTokenRegistrationDisabled() {
+        TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
+
+        pushManager.setPushTokenRegistrationEnabled(false);
+        verify(mockPushPreferences).setPushTokenRegistrationEnabled(false);
+
+        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmToken");
+        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(false);
+
+        assertFalse(pushManager.isPushAvailable());
+        verify(mockPushPreferences).getPushTokenRegistrationEnabled();
+    }
 }
