@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -140,6 +141,11 @@ public class BitmapUtils {
             conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
             conn.setUseCaches(true);
             inputStream = conn.getInputStream();
+
+            if (conn instanceof HttpURLConnection && !UAHttpStatusUtil.inSuccessRange(((HttpURLConnection) conn).getResponseCode())) {
+                Logger.warn("Unable to download file from URL. Received response code: " + ((HttpURLConnection) conn).getResponseCode());
+                return false;
+            }
 
             if (inputStream != null) {
                 outputStream = new FileOutputStream(file);
