@@ -30,7 +30,7 @@
             android:name="com.amazon.device.messaging"
             android:required="false" />
 
-        <activity android:name="com.urbanairship.actions.ActionActivity" />
+        <activity android:name="com.urbanairship.actions.ActionActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name="com.urbanairship.CoreActivity" />
         <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
