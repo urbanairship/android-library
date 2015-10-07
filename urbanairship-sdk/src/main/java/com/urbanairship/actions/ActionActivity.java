@@ -43,6 +43,9 @@ import com.urbanairship.analytics.Analytics;
  */
 public class ActionActivity extends Activity {
 
+    /**
+     * Intent extra holding the permissions.
+     */
     public static final String PERMISSIONS_EXTRA = "com.urbanairship.actions.actionactivity.PERMISSIONS_EXTRA";
 
     /**

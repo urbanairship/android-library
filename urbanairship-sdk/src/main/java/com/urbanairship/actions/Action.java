@@ -139,6 +139,12 @@ public abstract class Action {
 
     }
 
+    /**
+     * Requests permissions.
+     *
+     * @param permissions The permissions to request.
+     * @return The result from requesting permissions.
+     */
     @TargetApi(Build.VERSION_CODES.M)
     public final int[] requestPermissions(@NonNull String... permissions) {
         Context context = UAirship.getApplicationContext();
