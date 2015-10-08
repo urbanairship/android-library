@@ -106,7 +106,7 @@ public class EventAPIClientTest extends BaseTestCase {
                 { "X-UA-App-Key", airshipConfig.getAppKey() },
                 { "X-UA-In-Production", Boolean.toString(airshipConfig.inProduction) },
                 { "X-UA-Device-Model", Build.MODEL },
-                { "X-UA-OS-Version", Build.VERSION.RELEASE },
+                { "X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT) },
                 { "X-UA-Lib-Version", UAirship.getVersion() },
                 { "X-UA-Timezone", TimeZone.getDefault().getID() },
                 { "X-UA-Locale-Language", "en" },

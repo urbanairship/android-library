@@ -135,7 +135,7 @@ class EventAPIClient {
                                         .setHeader("X-UA-App-Key", airshipConfig.getAppKey())
                                         .setHeader("X-UA-In-Production", Boolean.toString(airshipConfig.inProduction))
                                         .setHeader("X-UA-Device-Model", Build.MODEL)
-                                        .setHeader("X-UA-OS-Version", Build.VERSION.RELEASE)
+                                        .setHeader("X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT))
                                         .setHeader("X-UA-Lib-Version", UAirship.getVersion())
                                         .setHeader("X-UA-Timezone", TimeZone.getDefault().getID())
                                         .setHeader("X-UA-Channel-Opted-In",
