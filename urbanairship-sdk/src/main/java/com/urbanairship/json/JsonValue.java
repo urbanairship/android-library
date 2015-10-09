@@ -421,7 +421,7 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(String value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
     }
 
     /**
@@ -432,7 +432,7 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(char value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
     }
 
     /**
@@ -443,7 +443,7 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(int value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
     }
 
     /**
@@ -454,7 +454,7 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(long value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
     }
 
     /**
@@ -466,7 +466,7 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(boolean value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
     }
 
     /**
@@ -477,7 +477,18 @@ public class JsonValue implements Parcelable {
      */
     @NonNull
     public static JsonValue wrap(JsonSerializable value) {
-        return JsonValue.wrap(value, JsonValue.NULL);
+        return JsonValue.wrapOpt(value);
+    }
+
+    /**
+     * Wraps any valid object into a JsonValue. If the object is unable to be wrapped, {@link JsonValue#NULL}
+     * will be returned instead.
+     *
+     * @param object The object to wrap.
+     * @return The object wrapped in a JsonValue or {@link JsonValue#NULL}.
+     */
+    public static JsonValue wrapOpt(Object object) {
+        return wrap(object, JsonValue.NULL);
     }
 
     /**

@@ -439,7 +439,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         actions.put("button_group", buttonGroupId);
         actions.put("button_actions", buttonActionValues);
 
-        return JsonValue.wrap(inApp, JsonValue.NULL);
+        return JsonValue.wrapOpt(inApp);
     }
 
     @Override

@@ -280,7 +280,7 @@ class ChannelCapture extends BaseManager {
                 .setAction(ACTION_CHANNEL_CAPTURE)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID)
-                .putExtra(EXTRA_ACTIONS, JsonValue.wrap(actionPayload, null).toString());
+                .putExtra(EXTRA_ACTIONS, JsonValue.wrapOpt(actionPayload).toString());
 
         return PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, 0);
     }
@@ -300,7 +300,7 @@ class ChannelCapture extends BaseManager {
                 .setAction(ACTION_CHANNEL_CAPTURE)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID)
-                .putExtra(EXTRA_ACTIONS, JsonValue.wrap(actionPayload, null).toString());
+                .putExtra(EXTRA_ACTIONS, JsonValue.wrapOpt(actionPayload).toString());
 
         return PendingIntent.getActivity(context, NOTIFICATION_ID, intent, 0);
     }
