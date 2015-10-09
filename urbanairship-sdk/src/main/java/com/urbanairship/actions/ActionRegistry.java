@@ -230,6 +230,9 @@ public final class ActionRegistry {
         registerAction(new ClipboardAction(),
                 ClipboardAction.DEFAULT_REGISTRY_NAME,
                 ClipboardAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+        registerAction(new ToastAction(),
+                ToastAction.DEFAULT_REGISTRY_NAME);
     }
 
     /**
