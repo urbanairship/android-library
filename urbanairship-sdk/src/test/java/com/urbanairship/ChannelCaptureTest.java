@@ -179,7 +179,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         Intent copyIntent = shadowCopyPendingIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", copyIntent.getAction());
         assertEquals(3000, copyIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
-        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"}}", copyIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
+        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"},\"toast_action\":\"Channel copied to clipboard!\"}", copyIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
 
         // Save action
         Notification.Action saveAction = notification.getActions().get(1);
@@ -222,7 +222,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         Intent contentIntent = shadowPendingContentIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", contentIntent.getAction());
         assertEquals(3000, contentIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
-        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"}}", contentIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
+        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"},\"toast_action\":\"Channel copied to clipboard!\"}", contentIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
 
         // Copy action
         Notification.Action copyAction = notification.getActions().get(0);
@@ -233,7 +233,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         Intent copyIntent = shadowCopyPendingIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", copyIntent.getAction());
         assertEquals(3000, copyIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
-        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"}}", copyIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
+        assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"},\"toast_action\":\"Channel copied to clipboard!\"}", copyIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
     }
 
     /**
