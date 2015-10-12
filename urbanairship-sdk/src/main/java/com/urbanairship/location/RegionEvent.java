@@ -315,4 +315,10 @@ public class RegionEvent extends Event {
 
         return true;
     }
+
+    @Override
+    @Priority
+    protected int getPriority() {
+        return HIGH_PRIORITY;
+    }
 }

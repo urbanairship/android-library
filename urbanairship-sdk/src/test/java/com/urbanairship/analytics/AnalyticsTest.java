@@ -228,6 +228,7 @@ public class AnalyticsTest extends BaseTestCase {
         Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
         Mockito.when(event.getTime()).thenReturn("1000");
         Mockito.when(event.isValid()).thenReturn(true);
+        Mockito.when(event.getPriority()).thenReturn(Event.LOW_PRIORITY);
 
 
         analytics.addEvent(event);
@@ -241,6 +242,8 @@ public class AnalyticsTest extends BaseTestCase {
         assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE), "event-type");
         assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_TIME_STAMP), "1000");
         assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_SESSION_ID), analytics.getSessionId());
+        assertEquals(addEventIntent.getIntExtra(EventService.EXTRA_EVENT_PRIORITY, -100), Event.LOW_PRIORITY);
+
     }
 
     /**
@@ -293,6 +296,7 @@ public class AnalyticsTest extends BaseTestCase {
         Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
         Mockito.when(event.getEventId()).thenReturn("event-id");
         Mockito.when(event.getTime()).thenReturn("1000");
+        Mockito.when(event.getPriority()).thenReturn(Event.HIGH_PRIORITY);
 
         Mockito.when(event.isValid()).thenReturn(false);
 

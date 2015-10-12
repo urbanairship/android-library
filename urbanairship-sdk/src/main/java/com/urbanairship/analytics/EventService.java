@@ -35,7 +35,6 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.location.RegionEvent;
 
 import java.util.Map;
 
@@ -88,14 +87,21 @@ public class EventService extends IntentService {
     static final String EXTRA_EVENT_SESSION_ID = "EXTRA_EVENT_SESSION_ID";
 
     /**
-     * Batch delay for region events in milliseconds.
+     * Intent extra for the event's priority.
      */
-    private static final long REGION_BATCH_DELAY = 1000; // 1s
+    static final String EXTRA_EVENT_PRIORITY = "EXTRA_EVENT_PRIORITY";
+
+
+    /**
+     * Batch delay for high priority events in milliseconds.
+     */
+    private static final long HIGH_PRIORITY_BATCH_DELAY = 1000; // 1s
 
     /**
      * Batch delay for normal priority events in milliseconds.
      */
-    private static final long BATCH_DELAY = 10000; // 10s
+    private static final long NORMAL_PRIORITY_BATCH_DELAY = 10000; // 10s
+
 
     private static long backoffMs = 0;
 
@@ -160,6 +166,7 @@ public class EventService extends IntentService {
         String eventData = intent.getStringExtra(EXTRA_EVENT_DATA);
         String eventTimeStamp = intent.getStringExtra(EXTRA_EVENT_TIME_STAMP);
         String sessionId = intent.getStringExtra(EXTRA_EVENT_SESSION_ID);
+        int priority = intent.getIntExtra(EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
 
         if (eventType == null || eventData == null || eventTimeStamp == null || eventId == null) {
             Logger.warn("Event service unable to add event with missing data.");
@@ -179,25 +186,30 @@ public class EventService extends IntentService {
             Logger.error("EventService - Unable to insert event into database.");
         }
 
-        // In the case of a location event
-        if (LocationEvent.TYPE.equals(eventType) && !UAirship.shared().getAnalytics().isAppInForeground()) {
-            long currentTime = System.currentTimeMillis();
-            long lastSendTime = preferences.getLastSendTime();
-            long sendDelta = currentTime - lastSendTime;
-            long throttleDelta = UAirship.shared().getAirshipConfigOptions().backgroundReportingIntervalMS;
-            long minimumWait = throttleDelta - sendDelta;
+        switch (priority) {
+            case Event.HIGH_PRIORITY:
+                scheduleEventUpload(HIGH_PRIORITY_BATCH_DELAY);
+                break;
 
-            if (minimumWait > getNextSendDelay() && minimumWait > BATCH_DELAY) {
-                Logger.info("LocationEvent was inserted, but may not be updated until " + minimumWait + " ms have passed");
-                scheduleEventUpload(minimumWait);
-            } else {
-                scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
-            }
-        } else if (RegionEvent.TYPE.equals(eventType)) {
-            scheduleEventUpload(REGION_BATCH_DELAY);
-        } else {
-            scheduleEventUpload(Math.max(getNextSendDelay(), BATCH_DELAY));
+            case Event.NORMAL_PRIORITY:
+                scheduleEventUpload(Math.max(getNextSendDelay(), NORMAL_PRIORITY_BATCH_DELAY));
+                break;
+
+            case Event.LOW_PRIORITY:
+            default:
+                if (UAirship.shared().getAnalytics().isAppInForeground()) {
+                    scheduleEventUpload(Math.max(getNextSendDelay(), NORMAL_PRIORITY_BATCH_DELAY));
+                } else {
+                    long currentTime = System.currentTimeMillis();
+                    long lastSendTime = preferences.getLastSendTime();
+                    long sendDelta = currentTime - lastSendTime;
+                    long throttleDelta = UAirship.shared().getAirshipConfigOptions().backgroundReportingIntervalMS;
+                    long minimumWait = Math.max(throttleDelta - sendDelta, getNextSendDelay());
+                    scheduleEventUpload(Math.max(minimumWait, NORMAL_PRIORITY_BATCH_DELAY));
+                }
+                break;
         }
+
     }
 
     /**
@@ -276,6 +288,7 @@ public class EventService extends IntentService {
      * @param milliseconds The milliseconds from the current time to schedule the event upload.
      */
     private void scheduleEventUpload(final long milliseconds) {
+
         long sendTime = System.currentTimeMillis() + milliseconds;
 
         AnalyticsPreferences preferences = UAirship.shared().getAnalytics().getPreferences();
@@ -292,6 +305,8 @@ public class EventService extends IntentService {
 
         // Schedule the alarm if we need to either reschedule or an existing pending intent does not exist
         if (reschedule || PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_NO_CREATE) == null) {
+            Logger.verbose("EventService - Scheduling event uploads in " + milliseconds + "ms.");
+
             PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Reschedule the intent

@@ -125,4 +125,10 @@ public class LocationEvent extends Event {
         return data;
     }
 
+    @Override
+    @Priority
+    protected int getPriority() {
+        return LOW_PRIORITY;
+    }
+
 }
