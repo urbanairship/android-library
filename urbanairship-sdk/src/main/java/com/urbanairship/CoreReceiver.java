@@ -63,20 +63,19 @@ public class CoreReceiver extends BroadcastReceiver {
 
         switch (intent.getAction()) {
             case PushManager.ACTION_NOTIFICATION_OPENED_PROXY:
-                handleNotificationOpenedProxy(context, intent);
+                onNotificationOpenedProxy(context, intent);
                 break;
             case PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY:
-                handleNotificationButtonOpenedProxy(context, intent);
+                onNotificationButtonOpenedProxy(context, intent);
                 break;
             case PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY:
-                handleNotificationDismissedProxy(context, intent);
+                onNotificationDismissedProxy(context, intent);
                 break;
             case PushManager.ACTION_NOTIFICATION_OPENED:
-                handleNotificationOpened(context, intent);
+                onNotificationOpened(context, intent);
                 break;
             case ChannelCapture.ACTION_CHANNEL_CAPTURE:
-                handleChannelCapture(context, intent);
-
+                onChannelCapture(context, intent);
         }
     }
 
@@ -86,7 +85,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    static void handleChannelCapture(Context context, Intent intent) {
+    private void onChannelCapture(Context context, Intent intent) {
         if (intent.hasExtra(ChannelCapture.EXTRA_NOTIFICATION_ID)) {
             int notificationId = intent.getIntExtra(ChannelCapture.EXTRA_NOTIFICATION_ID, -1);
             NotificationManagerCompat.from(context).cancel(notificationId);
@@ -99,7 +98,6 @@ public class CoreReceiver extends BroadcastReceiver {
 
             ActionService.runActions(context, actionPayload, Situation.MANUAL_INVOCATION, null);
         }
-
     }
 
     /**
@@ -108,7 +106,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    static void handleNotificationOpenedProxy(Context context, Intent intent) {
+    private void onNotificationOpenedProxy(Context context, Intent intent) {
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -140,7 +138,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    static void handleNotificationButtonOpenedProxy(Context context, Intent intent) {
+    private void onNotificationButtonOpenedProxy(Context context, Intent intent) {
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -189,7 +187,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void handleNotificationDismissedProxy(Context context, Intent intent) {
+    private void onNotificationDismissedProxy(Context context, Intent intent) {
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
@@ -224,7 +222,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param intent The notification intent.
      */
-    private void handleNotificationOpened(Context context, Intent intent) {
+    private void onNotificationOpened(Context context, Intent intent) {
         AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
 
         PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
