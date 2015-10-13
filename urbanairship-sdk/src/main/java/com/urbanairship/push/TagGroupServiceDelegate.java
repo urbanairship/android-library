@@ -293,7 +293,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
      * @param tagGroupChanges The pending tag groups.
      */
     private void storePendingTagChanges(@NonNull String tagGroupKey, @NonNull Map<String, Set<String>> tagGroupChanges) {
-        getDataStore().put(tagGroupKey, JsonValue.wrap(tagGroupChanges, null));
+        getDataStore().put(tagGroupKey, JsonValue.wrapOpt(tagGroupChanges));
     }
 
     /**

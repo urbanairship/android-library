@@ -182,7 +182,7 @@ public class CustomEvent extends Event {
                     propertiesPayload.putOpt(entry.getKey(), new JSONArray((Collection) entry.getValue()));
                 } else {
                     // Everything else can be stringified
-                    propertiesPayload.putOpt(entry.getKey(), JsonValue.wrap(entry.getValue(), JsonValue.NULL).toString());
+                    propertiesPayload.putOpt(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).toString());
                 }
             }
 

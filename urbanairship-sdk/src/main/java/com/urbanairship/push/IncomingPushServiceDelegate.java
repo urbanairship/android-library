@@ -378,7 +378,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         }
 
         // Store the new list
-        getDataStore().put(LAST_CANONICAL_IDS_KEY, JsonValue.wrap(canonicalIds, null).toString());
+        getDataStore().put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
 
         return true;
     }

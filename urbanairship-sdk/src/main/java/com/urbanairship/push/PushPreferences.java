@@ -419,7 +419,7 @@ class PushPreferences {
         if (tags == null || tags.isEmpty()) {
             preferenceDataStore.remove(TAGS_KEY);
         } else {
-            preferenceDataStore.put(TAGS_KEY, JsonValue.wrap(tags, null));
+            preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(tags));
         }
     }
 
@@ -582,7 +582,7 @@ class PushPreferences {
      * @param senderIds The registered sender IDs.
      */
     void setRegisteredGcmSenderIds(Set<String> senderIds) {
-        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, JsonValue.wrap(senderIds, null));
+        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, JsonValue.wrapOpt(senderIds));
     }
 
     /**

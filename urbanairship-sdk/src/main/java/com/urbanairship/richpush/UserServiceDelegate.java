@@ -207,7 +207,7 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
     private String createNewUserPayload(@NonNull String channelId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put(getPayloadChannelsKey(), Arrays.asList(channelId));
-        return JsonValue.wrap(payload, JsonValue.NULL).toString();
+        return JsonValue.wrapOpt(payload).toString();
     }
 
     /**
@@ -222,7 +222,7 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
         Map<String, Object> payload = new HashMap<>();
         payload.put(getPayloadChannelsKey(), addChannels);
 
-        return JsonValue.wrap(payload, JsonValue.NULL).toString();
+        return JsonValue.wrapOpt(payload).toString();
     }
 
     /**

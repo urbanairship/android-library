@@ -444,7 +444,7 @@ public class PushMessage implements Parcelable {
                 if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
                     if (Collections.disjoint(rawMessage.getClickActionValues().keySet(), INBOX_ACTION_NAMES)) {
                         HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
-                        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId(), null)));
+                        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId())));
                         builder.setClickActionValues(actions);
                     }
                 }
