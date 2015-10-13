@@ -102,6 +102,11 @@ public class EventService extends IntentService {
      */
     private static final long NORMAL_PRIORITY_BATCH_DELAY = 10000; // 10s
 
+    /**
+     * Batch delay for low priority events in milliseconds.
+     */
+    private static final long LOW_PRIORITY_BATCH_DELAY = 30000; // 30s
+
 
     private static long backoffMs = 0;
 
@@ -198,14 +203,14 @@ public class EventService extends IntentService {
             case Event.LOW_PRIORITY:
             default:
                 if (UAirship.shared().getAnalytics().isAppInForeground()) {
-                    scheduleEventUpload(Math.max(getNextSendDelay(), NORMAL_PRIORITY_BATCH_DELAY));
+                    scheduleEventUpload(Math.max(getNextSendDelay(), LOW_PRIORITY_BATCH_DELAY));
                 } else {
                     long currentTime = System.currentTimeMillis();
                     long lastSendTime = preferences.getLastSendTime();
                     long sendDelta = currentTime - lastSendTime;
                     long throttleDelta = UAirship.shared().getAirshipConfigOptions().backgroundReportingIntervalMS;
                     long minimumWait = Math.max(throttleDelta - sendDelta, getNextSendDelay());
-                    scheduleEventUpload(Math.max(minimumWait, NORMAL_PRIORITY_BATCH_DELAY));
+                    scheduleEventUpload(Math.max(minimumWait, LOW_PRIORITY_BATCH_DELAY));
                 }
                 break;
         }
