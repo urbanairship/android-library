@@ -28,7 +28,9 @@ package com.urbanairship.preference;
 
 /**
  * UAPreference interface.
+ * @deprecated Marked to be removed in 7.0.0
  */
+@Deprecated
 public interface UAPreference {
 
     /**

@@ -27,8 +27,10 @@ package com.urbanairship.actions;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
@@ -40,6 +42,11 @@ import com.urbanairship.analytics.Analytics;
  * {@link com.urbanairship.actions.Action#startActivityForResult(android.content.Intent)}.
  */
 public class ActionActivity extends Activity {
+
+    /**
+     * Intent extra holding the permissions.
+     */
+    public static final String PERMISSIONS_EXTRA = "com.urbanairship.actions.actionactivity.PERMISSIONS_EXTRA";
 
     /**
      * Intent extra holding an activity result receiver.
@@ -76,11 +83,16 @@ public class ActionActivity extends Activity {
 
         if (savedInstanceState == null) {
             Intent startActivityIntent = intent.getParcelableExtra(START_ACTIVITY_INTENT_EXTRA);
+            String[] permissions = intent.getStringArrayExtra(PERMISSIONS_EXTRA);
+
             if (startActivityIntent != null) {
                 actionResultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
                 startActivityForResult(startActivityIntent, ++requestCode);
+            } else if (Build.VERSION.SDK_INT >= 23 && permissions != null) {
+                actionResultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
+                requestPermissions(permissions, ++requestCode);
             } else {
-                Logger.warn("ActionActivity - Started without START_ACTIVITY_INTENT_EXTRA extra.");
+                Logger.warn("ActionActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
                 finish();
             }
         }
@@ -96,6 +108,18 @@ public class ActionActivity extends Activity {
 
         super.onActivityResult(requestCode, resultCode, data);
         this.finish();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        if (actionResultReceiver != null) {
+            Bundle bundledData = new Bundle();
+            bundledData.putIntArray(RESULT_INTENT_EXTRA, grantResults);
+            actionResultReceiver.send(Activity.RESULT_OK, bundledData);
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        finish();
     }
 
     @Override

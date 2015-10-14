@@ -25,7 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.preference;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
 import android.preference.DialogPreference;
 import android.text.format.DateFormat;
 import android.util.AttributeSet;
@@ -33,28 +35,37 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TimePicker;
 
+import com.urbanairship.UAirship;
+
 import java.util.Calendar;
 
 /**
  * Abstract DialogPreference that allows setting quiet time that implements UAPreference.
  */
-abstract class QuietTimePickerPreference extends DialogPreference implements UAPreference {
+public abstract class QuietTimePickerPreference extends DialogPreference implements UAPreference {
     private TimePicker timePicker = null;
     private long currentTime = -1;
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        currentTime = getInitialAirshipValue(UAirship.shared());
+    }
 
-    public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        currentTime = getInitialAirshipValue(UAirship.shared());
     }
 
     public QuietTimePickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
+        currentTime = getInitialAirshipValue(UAirship.shared());
     }
 
     @Override
     public View onCreateView(ViewGroup parent) {
         View view = super.onCreateView(parent);
-        view.setContentDescription(getPreferenceType().toString());
+        view.setContentDescription(getContentDescription());
         return view;
     }
 
@@ -81,6 +92,7 @@ abstract class QuietTimePickerPreference extends DialogPreference implements UAP
             long time = calendar.getTimeInMillis();
             if (callChangeListener(time)) {
                 currentTime = time;
+                onApplyAirshipPreference(UAirship.shared(), currentTime);
                 notifyChanged();
             }
         }
@@ -107,15 +119,39 @@ abstract class QuietTimePickerPreference extends DialogPreference implements UAP
     }
 
     @Override
-    public void setValue(Object value) {
-        currentTime = (Long) value;
-        notifyChanged();
-    }
-
-
-    @Override
     protected boolean shouldPersist() {
         return false;
     }
 
+    /**
+     * Gets the initial Urban Airship value for the preference.
+     *
+     * @param airship The {@link UAirship} instance.
+     * @return The initial value for the preference.
+     */
+    protected abstract long getInitialAirshipValue(UAirship airship);
+
+    /**
+     * Called when the preference should be set on Urban Airship.
+     * @param airship The {@link UAirship} instance.
+     * @param time The value of the preference.
+     */
+    protected abstract void onApplyAirshipPreference(UAirship airship, long time);
+
+    /**
+     * Called to get the content description of the preference's view.
+     * @return The content description.
+     */
+    protected abstract String getContentDescription();
+
+    @Override
+    public PreferenceType getPreferenceType() {
+        // Should no longer be used, so doing the quick workaround. Remove this in 7.0.0.
+        return PreferenceType.valueOf(getContentDescription());
+    }
+
+    @Override
+    public void setValue(Object value) {
+        currentTime = (Long) value;
+    }
 }

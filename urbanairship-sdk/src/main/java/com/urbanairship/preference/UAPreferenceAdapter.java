@@ -25,42 +25,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.preference;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.preference.Preference;
-import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
-import android.support.annotation.NonNull;
-
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.preference.UAPreference.PreferenceType;
-import com.urbanairship.push.PushManager;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * An adapter to set Urban Airship preferences from Android preference screens without
  * saving values to the shared preferences.
+ * @deprecated Marked to be removed in 7.0.0. This class is no longer necessary. Urban Airship preferences
+ * will now apply on their own.
  */
+@Deprecated
 public class UAPreferenceAdapter {
-
-    /**
-     * Maximum times to check for Channel ID value when
-     * it should be enabled, yet the Channel ID is not populated
-     */
-    private final static int CHANNEL_ID_MAX_RETRIES = 4;
-
-    /**
-     * Delay in milliseconds for each Channel ID retry
-     * attempts
-     */
-    private final static int CHANNEL_ID_RETRY_DELAY = 1000;
-
-    private final Map<UAPreference.PreferenceType, Object> preferences = new HashMap<>();
-    private int channelIdRetryCount = 0;
 
     /**
      * UAPreferenceAdapter constructor
@@ -68,7 +42,7 @@ public class UAPreferenceAdapter {
      * @param screen PreferenceScreen that contains any UAPreferences.  Only UAPreferences will be affected.
      */
     public UAPreferenceAdapter(PreferenceScreen screen) {
-        checkForUAPreferences(screen);
+        // No longer used
     }
 
     /**
@@ -77,195 +51,6 @@ public class UAPreferenceAdapter {
      * This should be called on the onStop() method of a preference activity.
      */
     public void applyUrbanAirshipPreferences() {
-        for (UAPreference.PreferenceType preferenceType : preferences.keySet()) {
-            Object value = preferences.get(preferenceType);
-            if (value == null) {
-                continue;
-            }
-
-            try {
-                setInternalPreference(preferenceType, value);
-            } catch (Exception ex) {
-                Logger.warn("Unable to set " + preferenceType + ", invalid value " + value, ex);
-            }
-        }
-    }
-
-    /**
-     * Gets the internal UAirship preferences.
-     *
-     * @return Object value of the internal preference.
-     */
-    private Object getInternalPreference(UAPreference.PreferenceType preferenceType) {
-        UAirship airship = UAirship.shared();
-
-        Date[] quietTimes;
-        Object value = null;
-        switch (preferenceType) {
-            case LOCATION_UPDATES_ENABLED:
-                value = airship.getLocationManager().isLocationUpdatesEnabled();
-                break;
-            case LOCATION_BACKGROUND_UPDATES_ALLOWED:
-                value = airship.getLocationManager().isBackgroundLocationAllowed();
-                break;
-            case USER_NOTIFICATIONS_ENABLED:
-                value = airship.getPushManager().getUserNotificationsEnabled();
-                break;
-            case QUIET_TIME_ENABLED:
-                value = airship.getPushManager().isQuietTimeEnabled();
-                break;
-            case QUIET_TIME_END:
-                quietTimes = airship.getPushManager().getQuietTimeInterval();
-                value = quietTimes != null ? quietTimes[1].getTime() : null;
-                break;
-            case QUIET_TIME_START:
-                quietTimes = airship.getPushManager().getQuietTimeInterval();
-                value = quietTimes != null ? quietTimes[0].getTime() : null;
-                break;
-            case SOUND_ENABLED:
-                value = airship.getPushManager().isSoundEnabled();
-                break;
-            case VIBRATE_ENABLED:
-                value = airship.getPushManager().isVibrateEnabled();
-                break;
-            case CHANNEL_ID:
-                value = airship.getPushManager().getChannelId();
-                break;
-            case USER_ID:
-                value = airship.getRichPushManager().getRichPushUser().getId();
-                break;
-            case ANALYTICS_ENABLED:
-                value = airship.getAnalytics().isEnabled();
-                break;
-        }
-
-        return value;
-    }
-
-
-    /**
-     * Sets the internal UAirship preferences.
-     *
-     * @param preferenceType UAPreference.PreferenceType type of preference to set.
-     * @param value Object Value of the preference.
-     */
-    private void setInternalPreference(UAPreference.PreferenceType preferenceType, Object value) {
-        UAirship airship = UAirship.shared();
-
-        Date[] quietTimes;
-
-        switch (preferenceType) {
-            case LOCATION_BACKGROUND_UPDATES_ALLOWED:
-                airship.getLocationManager().setBackgroundLocationAllowed((Boolean) value);
-                break;
-            case LOCATION_UPDATES_ENABLED:
-                //noinspection ResourceType - For missing location permission
-                airship.getLocationManager().setLocationUpdatesEnabled((Boolean) value);
-                break;
-            case USER_NOTIFICATIONS_ENABLED:
-                airship.getPushManager().setUserNotificationsEnabled((Boolean) value);
-                break;
-            case QUIET_TIME_ENABLED:
-                airship.getPushManager().setQuietTimeEnabled((Boolean) value);
-                break;
-            case SOUND_ENABLED:
-                airship.getPushManager().setSoundEnabled((Boolean) value);
-                break;
-            case VIBRATE_ENABLED:
-                airship.getPushManager().setVibrateEnabled((Boolean) value);
-                break;
-            case QUIET_TIME_END:
-                quietTimes = airship.getPushManager().getQuietTimeInterval();
-                Date start = quietTimes != null ? quietTimes[0] : new Date();
-                airship.getPushManager().setQuietTimeInterval(start, new Date((Long) value));
-                break;
-            case QUIET_TIME_START:
-                quietTimes = airship.getPushManager().getQuietTimeInterval();
-                Date end = quietTimes != null ? quietTimes[1] : new Date();
-                airship.getPushManager().setQuietTimeInterval(new Date((Long) value), end);
-                break;
-            case CHANNEL_ID:
-            case USER_ID:
-                // do nothing
-                break;
-            case ANALYTICS_ENABLED:
-                airship.getAnalytics().setEnabled((Boolean) value);
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * Finds any UAPreference, sets its value, and listens for any
-     * value changes.
-     *
-     * @param group PreferenceGroup to check for preferences
-     */
-    private void checkForUAPreferences(PreferenceGroup group) {
-        if (group == null) {
-            return;
-        }
-
-        for (int i = 0; i < group.getPreferenceCount(); i++) {
-            Preference preference = group.getPreference(i);
-
-            if (preference instanceof PreferenceGroup) {
-                checkForUAPreferences((PreferenceGroup) preference);
-            } else if (preference instanceof UAPreference) {
-                trackPreference((UAPreference) preference);
-            }
-        }
-    }
-
-    /**
-     * Tries to track a UAPreference if the service it depends on is enabled,
-     * it has a valid preference type, and is able to have its value set
-     *
-     * @param preference UAPreference to track
-     */
-    private void trackPreference(@NonNull final UAPreference preference) {
-
-        PushManager pushManager = UAirship.shared().getPushManager();
-        final UAPreference.PreferenceType preferenceType = preference.getPreferenceType();
-
-        if (preferenceType == null) {
-            Logger.warn("Preference returned a null preference type. " + "Ignoring preference " + preference);
-            return;
-        }
-
-        // Try to set the initial value if its not null
-        Object defaultValue = getInternalPreference(preferenceType);
-        if (defaultValue != null) {
-            try {
-                preference.setValue(defaultValue);
-            } catch (Exception ex) {
-                Logger.warn("Exception setting value " + defaultValue + ". Ignoring preference " + preference, ex);
-                return;
-            }
-        } else if (preferenceType == PreferenceType.CHANNEL_ID) {
-            //If we should have a value, try tracking the preference in a second
-            if (pushManager.isPushEnabled() && channelIdRetryCount < CHANNEL_ID_MAX_RETRIES) {
-                channelIdRetryCount++;
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        trackPreference(preference);
-                    }
-                }, CHANNEL_ID_RETRY_DELAY);
-
-                return;
-            }
-        }
-
-        // Track any changes to the preference
-        ((Preference) preference).setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                preferences.put(preferenceType, newValue);
-                return true;
-            }
-        });
+        // No longer used
     }
 }
