@@ -25,9 +25,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -137,6 +140,64 @@ public abstract class Action {
     }
 
     /**
+     * Requests permissions.
+     *
+     * @param permissions The permissions to request.
+     * @return The result from requesting permissions.
+     */
+    @TargetApi(Build.VERSION_CODES.M)
+    public final int[] requestPermissions(@NonNull String... permissions) {
+        Context context = UAirship.getApplicationContext();
+
+        boolean permissionsDenied = false;
+
+        final int[] result = new int[permissions.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = context.checkSelfPermission(permissions[i]);
+            if (result[i] == PackageManager.PERMISSION_DENIED) {
+                permissionsDenied = true;
+            }
+        }
+
+        if (!permissionsDenied) {
+            return result;
+        }
+
+        ResultReceiver receiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+            @Override
+            public void onReceiveResult(int resultCode, Bundle resultData) {
+                int[] receiverResults = resultData.getIntArray(ActionActivity.RESULT_INTENT_EXTRA);
+                if (receiverResults != null && receiverResults.length == result.length) {
+                    for (int i = 0; i < result.length; i++) {
+                        result[i] = receiverResults[i];
+                    }
+                }
+
+                synchronized (result) {
+                    result.notify();
+                }
+            }
+        };
+
+        Intent actionIntent = new Intent(context, ActionActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .setPackage(UAirship.getPackageName())
+                .putExtra(ActionActivity.PERMISSIONS_EXTRA, permissions)
+                .putExtra(ActionActivity.RESULT_RECEIVER_EXTRA, receiver);
+
+        synchronized (result) {
+            context.startActivity(actionIntent);
+            try {
+                result.wait();
+            } catch (InterruptedException e) {
+                Logger.error("Thread interrupted when waiting for result from activity.", e);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Starts an activity for a result.
      *
      * @param intent The activity to start.
@@ -175,7 +236,6 @@ public abstract class Action {
 
         return result;
     }
-
 
     /**
      * Wraps the result code and data from starting an activity
