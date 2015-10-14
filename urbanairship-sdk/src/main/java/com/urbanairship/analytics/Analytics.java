@@ -238,7 +238,9 @@ public class Analytics {
                 .putExtra(EventService.EXTRA_EVENT_ID, event.getEventId())
                 .putExtra(EventService.EXTRA_EVENT_DATA, eventPayload)
                 .putExtra(EventService.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                .putExtra(EventService.EXTRA_EVENT_SESSION_ID, sessionId);
+                .putExtra(EventService.EXTRA_EVENT_SESSION_ID, sessionId)
+                .putExtra(EventService.EXTRA_EVENT_PRIORITY, event.getPriority());
+
 
         if (context.startService(i) == null) {
             Logger.warn("Unable to start analytics service. Check that the event service is added to the manifest.");

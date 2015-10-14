@@ -112,6 +112,7 @@ public class EventServiceTest extends BaseTestCase {
         intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
         intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
         intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
 
         service.onHandleIntent(intent);
         // Verify it was added to the data manager
@@ -150,6 +151,7 @@ public class EventServiceTest extends BaseTestCase {
         intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
         intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
         intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
 
         service.onHandleIntent(intent);
         // Verify it was added to the data manager
@@ -317,13 +319,14 @@ public class EventServiceTest extends BaseTestCase {
      * Test adding a region event results in a scheduled alarm
      */
     @Test
-    public void testAddRegionEventSendAfterDelay() {
+    public void testAddingHighPriorityEvents() {
         Intent intent = new Intent(EventService.ACTION_ADD);
         intent.putExtra(EventService.EXTRA_EVENT_TYPE, RegionEvent.TYPE);
         intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
         intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
         intent.putExtra(EventService.EXTRA_EVENT_DATA, "Region Event Data");
         intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.HIGH_PRIORITY);
 
         // Set last send time to year 3005 so we don't upload immediately
         when(preferences.getLastSendTime()).thenReturn(32661446400000l);

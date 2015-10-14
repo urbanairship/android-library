@@ -28,6 +28,7 @@ package com.urbanairship.analytics;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.IntDef;
 import android.telephony.TelephonyManager;
 
 import com.urbanairship.Logger;
@@ -37,6 +38,8 @@ import com.urbanairship.push.PushManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -70,6 +73,26 @@ public abstract class Event {
     static final String LIB_VERSION_KEY = "lib_version";
     static final String PACKAGE_VERSION_KEY = "package_version";
     static final String LAST_SEND_ID_KEY = "last_send_id";
+
+    @IntDef({LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY})
+    @Retention(RetentionPolicy.SOURCE)
+    protected @interface Priority {}
+
+    /**
+     * Low priority event.
+     */
+    protected static final int LOW_PRIORITY = 0;
+
+    /**
+     * Normal priority event.
+     */
+    protected static final int NORMAL_PRIORITY = 1;
+
+    /**
+     * High priority event.
+     */
+    protected static final int HIGH_PRIORITY = 2;
+
 
     /**
      * Constructor for Event.
@@ -280,5 +303,14 @@ public abstract class Event {
      */
     protected static String millisecondsToSecondsString(long milliseconds) {
         return String.format(Locale.US, "%.3f", milliseconds / 1000.0);
+    }
+
+    /**
+     * The event's send priority.
+     * @return The event's send priority.
+     */
+    @Priority
+    protected  int getPriority() {
+        return NORMAL_PRIORITY;
     }
 }
