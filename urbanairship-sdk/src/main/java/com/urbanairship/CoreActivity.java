@@ -29,8 +29,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.urbanairship.push.PushManager;
-
 /**
  * An activity that forwards the notification proxy intents to the CoreReceiver.
  */
@@ -45,14 +43,8 @@ public class CoreActivity extends Activity {
 
         if (intent != null) {
             Logger.verbose("CoreActivity - Received intent: " + intent.getAction());
-
-            if (PushManager.ACTION_NOTIFICATION_OPENED_PROXY.equals(intent.getAction())) {
-                CoreReceiver.handleNotificationOpenedProxy(this, intent);
-            } else if (PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY.equals(intent.getAction())) {
-                CoreReceiver.handleNotificationButtonOpenedProxy(this, intent);
-            } else if (ChannelCapture.ACTION_CHANNEL_CAPTURE.equals(intent.getAction())) {
-                CoreReceiver.handleChannelCapture(this, intent);
-            }
+            CoreReceiver receiver = new CoreReceiver();
+            receiver.onReceive(getApplicationContext(), intent);
         }
 
         finish();
