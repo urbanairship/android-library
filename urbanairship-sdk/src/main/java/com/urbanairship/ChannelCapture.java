@@ -39,10 +39,12 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 
 import com.urbanairship.actions.ClipboardAction;
+import com.urbanairship.actions.ToastAction;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
@@ -222,7 +224,7 @@ class ChannelCapture extends BaseManager {
                 .setContentTitle(appName)
                 .setContentText(channel)
                 .setSmallIcon(R.drawable.ic_urbanairship_notification)
-                .setColor(context.getResources().getColor(R.color.urban_airship_blue))
+                .setColor(ContextCompat.getColor(context, R.color.urban_airship_blue))
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setTicker(context.getString(R.string.ua_channel_notification_ticker))
@@ -275,6 +277,7 @@ class ChannelCapture extends BaseManager {
 
         Map<String, Object> actionPayload = new HashMap<>();
         actionPayload.put(ClipboardAction.DEFAULT_REGISTRY_NAME, actionValue);
+        actionPayload.put(ToastAction.DEFAULT_REGISTRY_NAME, context.getString(R.string.ua_channel_copy_toast));
 
         Intent intent = new Intent(context, CoreReceiver.class)
                 .setAction(ACTION_CHANNEL_CAPTURE)
