@@ -40,7 +40,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
- * A UAProximityRegion defines a proximity region with an identifier, major and minor and optional
+ * A RegionEvent defines a region with an identifier, major and minor and optional
  * proximityRegion and/or circularRegion.
  */
 public class RegionEvent extends Event {

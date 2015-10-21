@@ -67,8 +67,6 @@ public class AnalyticsTest extends BaseTestCase {
 
     @Before
     public void setup() {
-
-
         mockActivityMonitor = Mockito.mock(ActivityMonitor.class);
         ArgumentCaptor<ActivityMonitor.Listener> listenerCapture = ArgumentCaptor.forClass(ActivityMonitor.Listener.class);
 
@@ -80,7 +78,6 @@ public class AnalyticsTest extends BaseTestCase {
 
         shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
-
 
         localBroadcastManager = LocalBroadcastManager.getInstance(TestApplication.getApplication());
         TestApplication.getApplication().setAnalytics(analytics);
@@ -359,4 +356,54 @@ public class AnalyticsTest extends BaseTestCase {
         assertEquals("associate_identifiers", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
     }
 
+    /**
+     * Test that tracking event adds itself on background
+     */
+    @Test
+    public void testTrackingEventBackground () {
+        analytics.setEnabled(true);
+
+        analytics.trackScreen("test_screen");
+
+        // Make call to background
+        activityMonitorListener.onBackground(0);
+
+        // Verify we started the event service to add the event
+        Intent eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
+        assertEquals("screen_tracking", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+    }
+
+    /**
+     * Test that tracking event adds itself upon adding a new screen
+     */
+    @Test
+    public void testTrackingEventAddNewScreen () {
+
+        analytics.trackScreen("test_screen_1");
+
+        // Add another screen
+        analytics.trackScreen("test_screen_2");
+
+        // Verify we started the event service to add the event
+        Intent eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
+        assertEquals("screen_tracking", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+    }
+
+    /**
+     * Test that tracking event ignores duplicate tracking calls for same screen
+     */
+    @Test
+    public void testTrackingEventAddSameScreen() {
+        analytics.setEnabled(true);
+
+        analytics.trackScreen("test_screen_1");
+
+        // Add another screen
+        analytics.trackScreen("test_screen_1");
+
+        // Verify event service to add event is not started
+        assertNull(shadowApplication.getNextStartedService());
+    }
 }
