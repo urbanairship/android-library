@@ -75,6 +75,10 @@ public class Analytics {
     private String sessionId;
     private String conversionSendId;
 
+    private String currentScreen;
+    private String previousScreen;
+    private long screenStartTime;
+
     /**
      * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
      *
@@ -115,6 +119,11 @@ public class Analytics {
 
                 inBackground = false;
 
+                // If the app backgrounded, there should be no current screen
+                if (currentScreen == null) {
+                    trackScreen(previousScreen);
+                }
+
                 // Send the foreground broadcast
                 LocalBroadcastManager.getInstance(context)
                                      .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
@@ -125,6 +134,10 @@ public class Analytics {
             @Override
             public void onBackground(long timeMS) {
                 inBackground = true;
+
+                // Stop tracking screen
+                trackScreen(null);
+
                 addEvent(new AppBackgroundEvent(timeMS));
 
                 // Send the background broadcast
@@ -433,5 +446,31 @@ public class Analytics {
      */
     public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
         addEvent(new AssociateIdentifiersEvent(identifiers));
+    }
+
+    /**
+     * Initiates screen tracking for a specific app screen, must be called once per tracked screen.
+     *
+     * @param screen The screen's string identifier.
+     */
+    public void trackScreen(@Nullable String screen) {
+        // Prevent duplicate calls to track same screen
+        if (currentScreen != null && currentScreen.equals(screen)) {
+            return;
+        }
+
+        // If there's a screen currently being tracked set its stop time and add it to analytics
+        if (currentScreen != null) {
+            ScreenTrackingEvent ste = new ScreenTrackingEvent(currentScreen, previousScreen, screenStartTime, System.currentTimeMillis());
+
+            // Set previous screen to last tracked screen
+            previousScreen = currentScreen;
+
+            // Add screen tracking event to next analytics batch
+            addEvent(ste);
+        }
+
+        currentScreen = screen;
+        screenStartTime = System.currentTimeMillis();
     }
 }
