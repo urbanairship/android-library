@@ -230,9 +230,12 @@ public class AirshipConfigOptions {
     /**
      * The minSdkVersion is the minimum Android API Level required for the application to run.
      * Defaults to <code>4 (DONUT)</code>
+     *
+     * @deprecated Will be removed in 7.0.0. No longer used.
      */
     @PropertyName(name = "minSdkVersion")
     @ConstantClass(name = "android.os.Build.VERSION_CODES")
+    @Deprecated
     public int minSdkVersion = 4;
 
     /**

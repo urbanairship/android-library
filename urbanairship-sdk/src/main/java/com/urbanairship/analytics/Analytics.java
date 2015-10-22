@@ -69,7 +69,6 @@ public class Analytics {
     private final AnalyticsPreferences preferences;
     private boolean inBackground;
 
-    private final int minSdkVersion;
     private final AirshipConfigOptions configOptions;
     private final Context context;
     private String sessionId;
@@ -85,7 +84,7 @@ public class Analytics {
      * @hide
      */
     public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options) {
-        this(context, preferenceDataStore, options, new ActivityMonitor(options.minSdkVersion, Build.VERSION.SDK_INT, options.analyticsEnabled));
+        this(context, preferenceDataStore, options, new ActivityMonitor());
     }
 
     /**
@@ -103,7 +102,6 @@ public class Analytics {
         this.context = context.getApplicationContext();
 
         this.dataManager = new EventDataManager();
-        this.minSdkVersion = options.minSdkVersion;
         this.inBackground = true; //application is starting
 
         this.configOptions = options;
@@ -151,66 +149,44 @@ public class Analytics {
 
     /**
      * Call this in your Activity's <code>onStart</code> method to notify Analytics that the activity has started.
-     * If you are subclassing {@link com.urbanairship.analytics.InstrumentedActivity} or {@link com.urbanairship.analytics.InstrumentedListActivity},
-     * this will be done for you automatically. This is non-blocking and should be called on the application's main thread.
+     * This is non-blocking and should be called on the application's main thread. If your application
+     * targets Android Ice Cream Sandwich (api 14) or above, this method is no longer required.
      *
      * @param activity The activity that is currently starting.
      */
     public static void activityStarted(@NonNull final Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return;
+        }
+
         final long timeMS = System.currentTimeMillis();
         UAirship.shared(new UAirship.OnReadyCallback() {
             @Override
             public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, timeMS);
+                airship.getAnalytics().activityMonitor.activityStarted(activity, timeMS);
             }
         });
     }
 
     /**
      * Call this in your Activity's <code>onStop</code> method to notify Analytics that the activity has stopped.
-     * If you are subclassing {@link com.urbanairship.analytics.InstrumentedActivity} or {@link com.urbanairship.analytics.InstrumentedListActivity},
-     * this will be done for you automatically. This is non-blocking and should be called on the application's main thread.
+     * This is non-blocking and should be called on the application's main thread. If your application
+     * targets Android Ice Cream Sandwich (api 14) or above, this method is no longer required.
      *
      * @param activity The activity that is currently stopping.
      */
     public static void activityStopped(@NonNull final Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return;
+        }
+
         final long timeMS = System.currentTimeMillis();
         UAirship.shared(new UAirship.OnReadyCallback() {
             @Override
             public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, timeMS);
+                airship.getAnalytics().activityMonitor.activityStopped(activity, timeMS);
             }
         });
-    }
-
-    /**
-     * Report an activity stopped.
-     *
-     * @param activity The activity that stopped.
-     * @param source The instrumentation source.
-     * @param timeMS The time when the activity stopped.
-     */
-    private void reportActivityStopped(@NonNull Activity activity, @ActivityMonitor.Source int source, long timeMS) {
-        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.MANUAL_INSTRUMENTATION == source) {
-            Logger.warn("activityStopped call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
-        }
-
-        activityMonitor.activityStopped(activity, source, timeMS);
-    }
-
-    /**
-     * Report an activity started.
-     *
-     * @param activity The activity that started.
-     * @param source The instrumentation source
-     * @param timeMS The time when the activity started.
-     */
-    private void reportActivityStarted(@NonNull Activity activity, @ActivityMonitor.Source int source, long timeMS) {
-        if (minSdkVersion >= 14 && configOptions.analyticsEnabled && ActivityMonitor.MANUAL_INSTRUMENTATION == source) {
-            Logger.warn("activityStarted call is no longer necessary starting with SDK 14 - ICE CREAM SANDWICH. Analytics is auto-instrumented for you.");
-        }
-
-        activityMonitor.activityStarted(activity, source, timeMS);
     }
 
     /**
@@ -363,7 +339,7 @@ public class Analytics {
                     UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().reportActivityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, timeStamp);
+                            airship.getAnalytics().activityMonitor.activityStarted(activity, timeStamp);
                         }
                     });
                 }
@@ -374,7 +350,7 @@ public class Analytics {
                     UAirship.shared(new UAirship.OnReadyCallback() {
                         @Override
                         public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().reportActivityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, timeStamp);
+                            airship.getAnalytics().activityMonitor.activityStopped(activity, timeStamp);
                         }
                     });
                 }

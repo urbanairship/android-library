@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.Robolectric;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,19 +24,13 @@ public class ActivityMonitorTest extends BaseTestCase {
     private long foregroundTimeMS;
     private long backgroundTimeMS;
 
-    private int currentSdkVersion = 4;
-    private boolean analyticsEnabled = true;
 
     @Before
     public void setUp() {
         isForeground = false;
         foregroundTimeMS = 0;
         backgroundTimeMS = 0;
-        // The minSdkVersion is just passed to activity states.  It only changes the
-        // logging behavior inside activity state when it detects an invalid use of
-        // activityStarted/activityStopped.  We currently do not test logging, and if
-        // we did we would test it in the activityState class.
-        activityMonitor = new ActivityMonitor(4, currentSdkVersion, analyticsEnabled);
+        activityMonitor = new ActivityMonitor();
 
         activityMonitor.setListener(new ActivityMonitor.Listener() {
 
@@ -59,44 +54,19 @@ public class ActivityMonitorTest extends BaseTestCase {
      * @throws Exception
      */
     @Test
-    public void testAddActivityManualInstrumentation() throws Exception {
-        // Pre-ICS - Manual instrumentation calls should cause the app to go into foreground
+    public void testActivityStarted() throws Exception {
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, 100);
+        activityMonitor.activityStarted(activity, 200);
+        activityMonitor.activityStarted(activity, 300);
+
+        Robolectric.flushForegroundThreadScheduler();
+
+        // Should only trigger a foreground on the first start
         assertEquals(foregroundTimeMS, 100);
         assertTrue(isForeground);
-
-        // Set up activity monitor in a ICS environment
-        currentSdkVersion = 14;
-        setUp();
-
-        // ICS+ - Manual instrumentation calls are ignored for foreground state changes
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
-        assertFalse(isForeground);
     }
 
-    /**
-     * This test verifies adding an activity calls the onForeground delegate call
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testAddActivityAutoInstrumentation() throws Exception {
-        // Pre-ICS - Automatic instrumentation calls are ignored for foreground state changes
-        Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
-        assertFalse(isForeground);
-
-
-        // Set up activity monitor in a ICS environment
-        currentSdkVersion = 14;
-        setUp();
-
-        // ICS+ - Automatic instrumentation calls should cause the app to go into foreground
-        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
-        assertTrue(isForeground);
-        assertEquals(foregroundTimeMS, 200);
-    }
 
     /**
      * This test verifies removing an activity calls the onBackground delegate call
@@ -104,58 +74,15 @@ public class ActivityMonitorTest extends BaseTestCase {
      * @throws Exception
      */
     @Test
-    public void testRemoveActivityManualInstrumentation() throws Exception {
-        // Pre-ICS - Manual instrumentation calls should cause the app to go into background
+    public void testActivityStopped() throws Exception {
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
+        activityMonitor.activityStarted(activity, 100);
+        activityMonitor.activityStopped(activity, 200);
 
-        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
-        activityMonitor.updateForegroundState();
+        Robolectric.flushForegroundThreadScheduler();
+
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 200);
-
-
-        // Set up activity monitor in a ICS environment
-        currentSdkVersion = 14;
-        setUp();
-
-        // ICS+ - Manual instrumentation calls are ignored for background state changes
-        activityMonitor.activityStarted(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
-
-        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
-        activityMonitor.updateForegroundState();
-        assertTrue(isForeground);
-        assertEquals(foregroundTimeMS, 100);
-
-    }
-
-    /**
-     * This test verifies removing an activity calls the onBackground delegate call
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testRemoveActivityAutoInstrumentation() throws Exception {
-        // Pre-ICS - Automatic instrumentation calls are ignored for foreground state changes
-        Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
-
-        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
-        activityMonitor.updateForegroundState();
-        assertTrue(isForeground);
-        assertEquals(foregroundTimeMS, 100);
-
-
-        // Set up activity monitor in a ICS environment
-        currentSdkVersion = 14;
-        setUp();
-
-        // ICS+ - Automatic instrumentation calls should cause the app to go into background
-        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 100);
-
-        activityMonitor.activityStopped(activity, ActivityMonitor.AUTO_INSTRUMENTATION, 200);
-        activityMonitor.updateForegroundState();
-        assertFalse(isForeground);
     }
 
     /**
@@ -164,11 +91,13 @@ public class ActivityMonitorTest extends BaseTestCase {
     @Test
     public void testRemoveAfterAddMultipleActivity() {
         Activity activity = new Activity();
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
-        activityMonitor.activityStarted(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activity, 100);
+        activityMonitor.activityStarted(activity, 200);
 
-        activityMonitor.activityStopped(activity, ActivityMonitor.MANUAL_INSTRUMENTATION, 300);
-        activityMonitor.updateForegroundState();
+        activityMonitor.activityStopped(activity, 300);
+
+        Robolectric.flushForegroundThreadScheduler();
+
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 300);
     }
@@ -181,17 +110,23 @@ public class ActivityMonitorTest extends BaseTestCase {
         Activity activityOne = new Activity();
         Activity activityTwo = new Activity();
 
-        activityMonitor.activityStarted(activityOne, ActivityMonitor.MANUAL_INSTRUMENTATION, 100);
-        activityMonitor.activityStarted(activityTwo, ActivityMonitor.MANUAL_INSTRUMENTATION, 200);
+        activityMonitor.activityStarted(activityOne, 100);
+        activityMonitor.activityStarted(activityTwo, 200);
+
+        Robolectric.flushForegroundThreadScheduler();
+
         assertTrue(isForeground);
         assertEquals(foregroundTimeMS, 100);
 
-        activityMonitor.activityStopped(activityOne, ActivityMonitor.MANUAL_INSTRUMENTATION, 300);
-        activityMonitor.updateForegroundState();
+        activityMonitor.activityStopped(activityOne, 300);
+
+        Robolectric.flushForegroundThreadScheduler();
+
         assertTrue(isForeground);
 
-        activityMonitor.activityStopped(activityTwo, ActivityMonitor.MANUAL_INSTRUMENTATION, 400);
-        activityMonitor.updateForegroundState();
+        activityMonitor.activityStopped(activityTwo, 400);
+        Robolectric.flushForegroundThreadScheduler();
+
         assertFalse(isForeground);
         assertEquals(backgroundTimeMS, 400);
     }
