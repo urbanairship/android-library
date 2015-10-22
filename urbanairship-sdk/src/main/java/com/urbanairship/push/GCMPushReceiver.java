@@ -40,9 +40,23 @@ public class GCMPushReceiver extends GcmReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        super.onReceive(context, intent);
-
         Autopilot.automaticTakeOff(context);
+
+        // CE-1574: Security exception is sometimes thrown when the GcmReceiver's onReceive tries to start
+        // the instance ID service
+        try {
+            super.onReceive(context, intent);
+        } catch (SecurityException e) {
+            Logger.error("Received security exception from GcmReceiver: ", e);
+
+            if (!GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
+                Intent registrationIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION)
+                        .putExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, true);
+
+                startWakefulService(context, registrationIntent);
+            }
+        }
 
         Logger.verbose("GCMPushReceiver - Received intent: " + intent.getAction());
         if (GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
