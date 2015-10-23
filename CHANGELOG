@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+
+Version 6.3.1 - October 23, 2015
+================================
+- Fixed possible GCM security exception when receiving messages during upgrade.
+- Improved HTTP 301 handling for big picture notifications. 
+
 Version 6.3.0 - October 1, 2015
 ===============================
  - Support for custom defined properties in custom events.
