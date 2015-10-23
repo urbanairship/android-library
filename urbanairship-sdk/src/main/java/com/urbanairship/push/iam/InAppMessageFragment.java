@@ -30,11 +30,13 @@ import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import com.urbanairship.Logger;
@@ -209,7 +211,7 @@ public class InAppMessageFragment extends Fragment {
 
     @SuppressLint("NewAPI")
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
         if (message == null || message.getAlert() == null) {
             dismiss(false);
             return null;
@@ -220,10 +222,11 @@ public class InAppMessageFragment extends Fragment {
         SwipeDismissViewLayout view = (SwipeDismissViewLayout) inflater.inflate(layout, container, false);
 
         // Adjust gravity depending on the message's position
-        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-        layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
-        view.setLayoutParams(layoutParams);
-
+        if (container != null && container instanceof FrameLayout) {
+            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
+            layoutParams.gravity = message.getPosition() == InAppMessage.POSITION_TOP ? Gravity.TOP : Gravity.BOTTOM;
+            view.setLayoutParams(layoutParams);
+        }
 
         view.setListener(new SwipeDismissViewLayout.Listener() {
             @Override
@@ -266,7 +269,7 @@ public class InAppMessageFragment extends Fragment {
             bannerView.setForeground(null);
         }
 
-        Banner banner = (Banner)bannerView;
+        Banner banner = (Banner) bannerView;
         banner.setOnDismissClickListener(new Banner.OnDismissClickListener() {
             @Override
             public void onDismissClick() {
@@ -293,7 +296,7 @@ public class InAppMessageFragment extends Fragment {
             }
         });
 
-        if (message.getPrimaryColor() != null)  {
+        if (message.getPrimaryColor() != null) {
             banner.setPrimaryColor(message.getPrimaryColor());
         }
 
@@ -305,6 +308,45 @@ public class InAppMessageFragment extends Fragment {
 
         NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(message.getButtonGroupId());
         banner.setNotificationActionButtonGroup(group);
+
+        // Only apply window insets fix for Android M and  if we are displaying the in-app message in the default "content" view
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && container != null && container.getId() == android.R.id.content) {
+            view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @SuppressLint("NewApi")
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    if (!ViewCompat.getFitsSystemWindows(v)) {
+                        return;
+                    }
+
+                    switch (message.getPosition()) {
+                        case InAppMessage.POSITION_BOTTOM:
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getActivity().getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) > 0) {
+                                v.dispatchApplyWindowInsets(v.getRootWindowInsets());
+                            }
+                            break;
+
+                        case InAppMessage.POSITION_TOP:
+                            if ((getActivity().getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS) > 0) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    v.dispatchApplyWindowInsets(v.getRootWindowInsets());
+                                } else {
+                                    int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                                    if (resourceId > 0) {
+                                        int height = getResources().getDimensionPixelSize(resourceId);
+                                        v.setPadding(v.getPaddingLeft(), v.getPaddingTop() + height, v.getPaddingRight(), v.getPaddingBottom());
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {}
+            });
+        }
+
 
         return view;
     }
@@ -379,6 +421,7 @@ public class InAppMessageFragment extends Fragment {
 
     /**
      * Helper method to check if the card view dependency is available or not.
+     *
      * @return {@code true} if available, otherwise {@code false}.
      */
     private static boolean checkCardViewDependencyAvailable() {

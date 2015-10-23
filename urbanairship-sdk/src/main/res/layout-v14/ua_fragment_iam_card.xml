@@ -2,6 +2,7 @@
 <com.urbanairship.push.iam.view.SwipeDismissViewLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
+    android:fitsSystemWindows="true"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom">
 
