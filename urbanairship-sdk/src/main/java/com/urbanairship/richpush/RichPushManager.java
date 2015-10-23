@@ -309,10 +309,14 @@ public class RichPushManager extends BaseManager {
      * @param forcefully A boolean indicating if the rich push user needs to be updated.
      */
     public void updateUser(boolean forcefully) {
+        final boolean refreshInbox = !RichPushUser.isCreated();
         UpdateResultReceiver resultReceiver = new UpdateResultReceiver() {
             @Override
             public void onUpdate(boolean success) {
                 onUserUpdate(success);
+                if (success && refreshInbox) {
+                    refreshMessages();
+                }
             }
         };
 
