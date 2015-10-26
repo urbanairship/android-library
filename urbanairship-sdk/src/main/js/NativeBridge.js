@@ -22,11 +22,15 @@ if (typeof UAirship === 'undefined') {
         var callbackKey = 'ua-cb-' + (++callbackID)
 
         actionCallbacks[callbackKey] = function(err, data) {
-          if(err) {
-            return callback(err)
+          if (!callback) {
+            return;
           }
 
-          callback(null, data)
+          if(err) {
+            callback(err)
+          } else {
+            callback(null, data)
+          }
         }
 
         var encodedArgument = encodeURIComponent(JSON.stringify(argument))
