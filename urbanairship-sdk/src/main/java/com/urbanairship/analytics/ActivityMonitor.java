@@ -28,53 +28,40 @@ package com.urbanairship.analytics;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.util.SparseArray;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import com.urbanairship.Logger;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class monitors all activities
  */
 class ActivityMonitor {
 
-    @IntDef({MANUAL_INSTRUMENTATION, AUTO_INSTRUMENTATION})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface Source {}
-
-    /**
-     * The activity was instrumented manually
-     */
-    static final int MANUAL_INSTRUMENTATION = 0;
-
-    /**
-     * The activity was instrumented automatically from lifecycle callbacks
-     */
-    static final int AUTO_INSTRUMENTATION = 1;
-
-    private final SparseArray<ActivityState> activityStates = new SparseArray<>();
-    private Listener listener;
-    private boolean isForeground = false;
-    private final int minSdkVersion;
-    private final int currentSdkVersion;
-    private final boolean analyticsEnabled;
-
-    //a brief delay, to give the app a chance to perform screen rotation cleanup
+    // Brief delay, to give the app a chance to perform screen rotation cleanup
     private final static int BACKGROUND_DELAY_MS = 2000;
 
-    /**
-     * The ActivityMonitor constructor
-     *
-     * @param minSdkVersion The minimum SDK version the application supports
-     * @param currentSdkVersion The device SDK version
-     * @param analyticsEnabled If analytics is enabled or not
-     */
-    ActivityMonitor(int minSdkVersion, int currentSdkVersion, boolean analyticsEnabled) {
-        this.minSdkVersion = minSdkVersion;
-        this.currentSdkVersion = currentSdkVersion;
-        this.analyticsEnabled = analyticsEnabled;
+    private final Set<Integer> startedActivities = new HashSet<>();
+    private final Handler handler;
+    private Listener listener;
+    private long lastActivityStopTimeStamp;
+
+    private final Runnable notifyBackgroundRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (startedActivities.isEmpty()) {
+                synchronized (this) {
+                    if (listener != null) {
+                        listener.onBackground(lastActivityStopTimeStamp);
+                    }
+                }
+            }
+        }
+    };
+
+    ActivityMonitor() {
+        handler = new Handler(Looper.getMainLooper());
     }
 
     /**
@@ -90,89 +77,46 @@ class ActivityMonitor {
 
     /**
      * Tracks when an activity is started
-     *
-     * @param activity The specified activity
-     * @param source Specifies how the activity was instrumented
+     * @param activity The activity
      * @param timeStamp The time the activity started in milliseconds
      */
-    void activityStarted(@NonNull Activity activity, @Source int source, long timeStamp) {
-        getActivityState(activity).setStarted(source, timeStamp);
-        updateForegroundState();
+    void activityStarted(Activity activity, long timeStamp) {
+        if (startedActivities.contains(activity.hashCode())) {
+            Logger.warn("Analytics.startActivity was already called for activity: " + activity);
+            return;
+        }
+
+        handler.removeCallbacks(notifyBackgroundRunnable);
+
+        startedActivities.add(activity.hashCode());
+
+        if (startedActivities.size() == 1) {
+            synchronized (this) {
+                if (listener != null) {
+                    listener.onForeground(timeStamp);
+                }
+            }
+        }
     }
 
     /**
      * Tracks when an activity is stopped
-     *
-     * @param activity The specified activity
-     * @param source Specifies how the activity was instrumented
+     * @param activity The activity
      * @param timeStamp The time the activity stopped in milliseconds
      */
-    void activityStopped(@NonNull Activity activity, @Source int source, long timeStamp) {
-        getActivityState(activity).setStopped(source, timeStamp);
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                updateForegroundState();
-            }
-        }, BACKGROUND_DELAY_MS);
-    }
-
-    /**
-     * Helper method to get the activity state for activity. If it's not found, it creates and returns one.
-     *
-     * @param activity The specified activity
-     * @return ActivityState The state of the activity
-     */
-    private ActivityState getActivityState(@NonNull final Activity activity) {
-        ActivityState state = activityStates.get(activity.hashCode());
-        if (state == null) {
-            state = new ActivityState(activity.toString(), minSdkVersion, currentSdkVersion, analyticsEnabled);
-            activityStates.put(activity.hashCode(), state);
+    void activityStopped(Activity activity, long timeStamp) {
+        if (!startedActivities.contains(activity.hashCode())) {
+            Logger.warn("Analytics.stopActivity called for an activity that was not started: " + activity);
+            return;
         }
 
-        return state;
-    }
+        handler.removeCallbacks(notifyBackgroundRunnable);
 
-    /**
-     * Checks all the activity states to determine the application's foreground state.
-     * Call the delegate's callback if the foreground state changes.
-     */
-    void updateForegroundState() {
-        long lastForegroundTime = 0;
-        long lastBackgroundTime = 0;
+        startedActivities.remove(activity.hashCode());
+        lastActivityStopTimeStamp = timeStamp;
 
-        boolean isAppForegrounded = false;
-
-        for (int i = 0; i < activityStates.size(); i++) {
-            ActivityState state = activityStates.valueAt(i);
-
-            if (state.isForeground()) {
-                isAppForegrounded = true;
-                if (state.getLastModifiedTime() > lastForegroundTime) {
-                    lastForegroundTime = state.getLastModifiedTime();
-                }
-            } else {
-                if (state.getLastModifiedTime() > lastBackgroundTime) {
-                    lastBackgroundTime = state.getLastModifiedTime();
-                }
-            }
-        }
-
-        if (this.isForeground != isAppForegrounded) {
-            this.isForeground = isAppForegrounded;
-
-            synchronized (this) {
-                if (isAppForegrounded) {
-                    if (listener != null) {
-                        listener.onForeground(lastForegroundTime);
-                    }
-                } else {
-                    if (listener != null) {
-                        listener.onBackground(lastBackgroundTime);
-                    }
-                }
-            }
+        if (startedActivities.isEmpty()) {
+            handler.postDelayed(notifyBackgroundRunnable, BACKGROUND_DELAY_MS);
         }
     }
 

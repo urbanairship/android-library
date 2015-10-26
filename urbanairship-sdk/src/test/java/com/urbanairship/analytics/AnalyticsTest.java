@@ -172,49 +172,6 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     /**
-     * Test activity started when life cycle calls enabled (API >= 14)
-     */
-    @Test
-    public void testActivityStartedLifeCyclesEnabled() {
-        Activity activity = new Activity();
-        Analytics.activityStarted(activity);
-
-        // Activity started is posted on the main looper
-        Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
-
-        // Verify that the activity monitor was called with manual instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
-
-        // Verify it did not start the event service to add an event.  Should be
-        // done with life cycle calls
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Life cycle events should add the activity events", addEventIntent);
-    }
-
-    /**
-     * Test activity stopped when life cycle calls enabled (API >= 14)
-     */
-    @Test
-    public void testActivityStoppedLifeCyclesEnabled() {
-        Activity activity = new Activity();
-        Analytics.activityStopped(activity);
-
-        // Activity stopped is posted on the main looper
-        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-
-
-        // Verify that the activity monitor was called with manual instrumentation
-        //noinspection ResourceType
-        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.MANUAL_INSTRUMENTATION), anyLong());
-
-        // Verify it did not start the event service to add an event.  Should be
-        // done with life cycle calls
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Life cycle events should add the activity events", addEventIntent);
-    }
-
-
-    /**
      * Test adding an event
      */
     @Test
@@ -324,9 +281,8 @@ public class AnalyticsTest extends BaseTestCase {
         // The activity started is posted on the looper
         Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
 
-
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), eq(ActivityMonitor.AUTO_INSTRUMENTATION), anyLong());
+        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), anyLong());
     }
 
     /**
@@ -340,7 +296,7 @@ public class AnalyticsTest extends BaseTestCase {
         TestApplication.getApplication().callback.onActivityStopped(activity);
 
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), eq(ActivityMonitor.AUTO_INSTRUMENTATION), anyLong());
+        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
     }
 
     /**
