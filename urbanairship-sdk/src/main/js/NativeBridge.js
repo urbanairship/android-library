@@ -1,53 +1,57 @@
 if (typeof UAirship === 'undefined') {
-    UAirship = (function() {
-      var urbanAirship = (typeof _UAirship === 'object') ? Object.create(_UAirship) : {}
+  UAirship = (function() {
+    var urbanAirship = (typeof _UAirship === 'object') ? Object.create(_UAirship) : {}
 
-      var actionCallbacks = {}
-        , callbackID = 0
+    var actionCallbacks = {}
+      , callbackID = 0
 
-      function invoke(url) {
-        var f = document.createElement('iframe')
-        f.style.display = 'none'
-        f.src = url
+    function invoke(url) {
+      var f = document.createElement('iframe')
+      f.style.display = 'none'
+      f.src = url
 
-        document.body.appendChild(f)
-        f.parentNode.removeChild(f)
-      }
+      document.body.appendChild(f)
+      f.parentNode.removeChild(f)
+    }
 
-      urbanAirship.close = function() {
-        invoke('uairship://close')
-      }
+    urbanAirship.close = function() {
+      invoke('uairship://close')
+    }
 
-      urbanAirship.runAction = function(actionName, argument, callback) {
-        var callbackKey = 'ua-cb-' + (++callbackID)
+    urbanAirship.runAction = function(actionName, argument, callback) {
+      var callbackKey = 'ua-cb-' + (++callbackID)
 
-        actionCallbacks[callbackKey] = function(err, data) {
-          if(err) {
-            return callback(err)
-          }
+      actionCallbacks[callbackKey] = function(err, data) {
+        if (!callback) {
+          return;
+        }
 
+        if(err) {
+          callback(err)
+        } else {
           callback(null, data)
         }
-
-        var encodedArgument = encodeURIComponent(JSON.stringify(argument))
-        invoke('uairship://android-run-action-cb/' + actionName + '/' + encodedArgument + '/' + callbackKey)
       }
 
-      urbanAirship.finishAction = function(err, data, callbackKey) {
-        if(actionCallbacks[callbackKey]) {
-          actionCallbacks[callbackKey](err, data)
-          delete actionCallbacks[callbackKey]
-        }
+      var encodedArgument = encodeURIComponent(JSON.stringify(argument))
+      invoke('uairship://android-run-action-cb/' + actionName + '/' + encodedArgument + '/' + callbackKey)
+    }
+
+    urbanAirship.finishAction = function(err, data, callbackKey) {
+      if(actionCallbacks[callbackKey]) {
+        actionCallbacks[callbackKey](err, data)
+        delete actionCallbacks[callbackKey]
       }
+    }
 
-      return urbanAirship
-    })()
+    return urbanAirship
+  })()
 
-    // Fire the ready event
-    var uaLibraryReadyEvent = document.createEvent('Event')
+  // Fire the ready event
+  var uaLibraryReadyEvent = document.createEvent('Event')
 
-    uaLibraryReadyEvent.initEvent('ualibraryready', true, true)
-    document.dispatchEvent(uaLibraryReadyEvent)
+  uaLibraryReadyEvent.initEvent('ualibraryready', true, true)
+  document.dispatchEvent(uaLibraryReadyEvent)
 
-    UAirship.isReady = true
+  UAirship.isReady = true
 }
