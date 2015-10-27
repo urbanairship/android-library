@@ -191,9 +191,9 @@ bintrayUploadInternal.mustRunAfter('urbanairship-sdk:bintrayUpload')
 bintrayUploadRelease.dependsOn("packageUrbanAirshipRelease", 'urbanairship-sdk:bintrayUploadRelease')
 bintrayUploadRelease.mustRunAfter('urbanairship-sdk:bintrayUpload')
 
-packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:assembleRelease', 'urbanairship-sdk:javaDoc',
+packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanairship-sdk:assembleRelease', 'urbanairship-sdk:javadoc',
         'urbanairship-sdk:runDexMethodCount')
 
 task continuousIntegration
 continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', 'urbanairship-sdk:assembleRelease',
-        'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javaDoc', 'packageUrbanAirshipRelease')
+        'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javadoc', 'packageUrbanAirshipRelease')

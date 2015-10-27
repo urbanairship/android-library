@@ -45,13 +45,13 @@ configurations {
 
 dependencies {
     // Required
-    compile 'com.android.support:support-v4:23.0.1'
-    compile 'com.android.support:support-annotations:23.0.1'
+    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:support-annotations:23.1.0'
     compile 'com.google.android.gms:play-services-gcm:8.1.0'
 
     // Optional
     compile 'com.google.android.gms:play-services-location:8.1.0'
-    compile 'com.android.support:cardview-v7:23.0.1'
+    compile 'com.android.support:cardview-v7:23.1.0'
 
     provided files('libs/amazon-device-messaging-1.0.1.jar')
 
@@ -61,6 +61,36 @@ dependencies {
     testCompile 'org.robolectric:shadows-support-v4:3.0'
 
     doclava("com.google.doclava:doclava:1.0.6")
+}
+
+android.libraryVariants.all { variant ->
+
+    // Add a javadoc task for each variant
+    task("javadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+        title = null
+        source = variant.javaCompile.source
+
+        // The classpaths are not fully available until after assemble task
+        doFirst {
+            classpath += variant.javaCompile.classpath
+            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        }
+
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+
+        options {
+            docletpath = configurations.doclava.files.asType(List)
+            doclet "com.google.doclava.Doclava"
+            bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+            addStringOption "hdf project.name", "Urban Airship Android Library"
+            addStringOption "hdf project.version", airshipVersion
+            addStringOption "apiversion", "v2"
+            addStringOption "federate android", "http://developer.android.com/reference"
+            addStringOption "federationxml android", "docs/android-22.xml"
+            addStringOption "templatedir", "docs/template"
+        }
+    }
 }
 
 install {
@@ -134,6 +164,8 @@ task templatizeNativeBridge(type: Exec) {
     commandLine 'src/main/js/templatize'
 }
 
+task javadoc(dependsOn: 'javadocRelease')
+
 def getDexMethodCount() {
     try {
         def dx = "${android.getSdkDirectory()}/build-tools/${android.getBuildToolsRevision()}/dx"
@@ -164,35 +196,4 @@ project.afterEvaluate {
     prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
     runDexMethodCount.dependsOn(assembleRelease)
     bintrayUpload.dependsOn(assembleRelease)
-}
-
-task javaDoc(type: Javadoc, dependsOn: 'assembleRelease') {
-    // Title needs to be null for doclava
-    title = null
-
-    source = android.sourceSets.main.java.srcDirs
-
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-
-    // TODO:: Need to figure out how to resolve these dependencies through gradle
-    classpath += files("${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
-    classpath += files("${android.sdkDirectory}/extras/android/support/v4/android-support-v4.jar")
-    classpath += files("${android.sdkDirectory}/extras/android/support/v7/cardview/libs/android-support-v7-cardview.jar")
-    classpath += files("${android.sdkDirectory}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar")
-    classpath += files("libs/amazon-device-messaging-1.0.1.jar")
-
-    exclude '**/BuildConfig.java'
-    exclude '**/R.java'
-
-    options {
-        docletpath = configurations.doclava.files.asType(List)
-        doclet "com.google.doclava.Doclava"
-        bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
-        addStringOption "hdf project.name", "Urban Airship Android Library"
-        addStringOption "hdf project.version", airshipVersion
-        addStringOption "apiversion", "v2"
-        addStringOption "federate android", "http://developer.android.com/reference"
-        addStringOption "federationxml android", "docs/android-22.xml"
-        addStringOption "templatedir", "docs/template"
-    }
 }
