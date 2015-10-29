@@ -7,7 +7,8 @@ Version 6.4.0 - October 29, 2015
 ================================
 - Added a flag to disable sending the GCM/ADM token with channel registration.
 - Added support for screen tracking.
-- Location permissions are now automatically requested when using the LocationUpdatesEnabledPreference on Android M.
+- Location permissions are now automatically requested when using the LocationUpdatesEnabledPreference
+  on Android Marshmallow (API 23).
 - Added new toast action that displays text in a toast.
 - Fixed displaying in-app messages with translucent status bars.
 
