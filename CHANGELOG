@@ -3,6 +3,13 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.4.0 - October 29, 2015
+================================
+- Added a flag to disable sending the GCM/ADM token with channel registration.
+- Added support for screen tracking.
+- Location permissions are now automatically requested when using the LocationUpdatesEnabledPreference on Android M.
+- Added new toast action that displays text in a toast.
+- Fixed displaying in-app messages with translucent status bars.
 
 Version 6.3.1 - October 23, 2015
 ================================
