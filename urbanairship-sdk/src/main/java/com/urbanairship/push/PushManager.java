@@ -559,18 +559,6 @@ public class PushManager extends BaseManager {
     }
 
     /**
-     * Returns the currently registered GCM ID.
-     *
-     * @return A GCM identifier string, or null if not present.
-     * @deprecated Marked to be removed in 7.0.0. The GCM security token for {@link com.urbanairship.AirshipConfigOptions#gcmSender}
-     * is available with {@link #getGcmToken}.
-     */
-    @Deprecated
-    public String getGcmId() {
-        return preferences.getGcmId();
-    }
-
-    /**
      * Returns the currently registered ADM ID.
      *
      * @return An ADM identifier string, or null if not present.
@@ -578,31 +566,6 @@ public class PushManager extends BaseManager {
     @Nullable
     public String getAdmId() {
         return preferences.getAdmId();
-    }
-
-    /**
-     * Determines whether tags are enabled on the device.
-     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
-     * The default value is <code>true</code>.
-     *
-     * @return <code>true</code> if tags are enabled on the device, <code>false</code> otherwise.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #getChannelTagRegistrationEnabled()} instead.
-     */
-    @Deprecated
-    public boolean getDeviceTagsEnabled() {
-        return getChannelTagRegistrationEnabled();
-    }
-
-    /**
-     * Sets whether tags are enabled on the device. The default value is <code>true</code>.
-     * If <code>false</code>, no locally specified tags will be sent to the server during registration.
-     *
-     * @param enabled A boolean indicating whether tags are enabled on the device.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #setChannelTagRegistrationEnabled(boolean)} instead.
-     */
-    @Deprecated
-    public void setDeviceTagsEnabled(boolean enabled) {
-        setChannelTagRegistrationEnabled(enabled);
     }
 
     /**
@@ -882,15 +845,6 @@ public class PushManager extends BaseManager {
     void setChannel(String channelId, String channelLocation) {
         preferences.setChannelId(channelId);
         preferences.setChannelLocation(channelLocation);
-    }
-
-    /**
-     * Sets the registered GCM ID.
-     *
-     * @param gcmId A GCM identifier string.
-     */
-    void setGcmId(String gcmId) {
-        preferences.setGcmId(gcmId);
     }
 
     /**

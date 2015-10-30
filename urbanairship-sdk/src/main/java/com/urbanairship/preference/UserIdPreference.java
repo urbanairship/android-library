@@ -13,8 +13,7 @@ import com.urbanairship.UAirship;
 /**
  * The Rich Push User preference.
  */
-@SuppressWarnings("deprecation") // For UAPreference
-public class UserIdPreference extends Preference implements UAPreference {
+public class UserIdPreference extends Preference {
 
     private static final String CONTENT_DESCRIPTION = "USER_ID";
 
@@ -37,15 +36,5 @@ public class UserIdPreference extends Preference implements UAPreference {
         view.setContentDescription(CONTENT_DESCRIPTION);
         setSummary(UAirship.shared().getRichPushManager().getRichPushUser().getId());
         return view;
-    }
-
-    @Override
-    public PreferenceType getPreferenceType() {
-        return PreferenceType.USER_ID;
-    }
-
-    @Override
-    public void setValue(Object value) {
-        setSummary((String) value);
     }
 }

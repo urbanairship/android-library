@@ -40,9 +40,9 @@ import com.urbanairship.UAirship;
 import java.util.Calendar;
 
 /**
- * Abstract DialogPreference that allows setting quiet time that implements UAPreference.
+ * Abstract DialogPreference that allows setting quiet time.
  */
-public abstract class QuietTimePickerPreference extends DialogPreference implements UAPreference {
+public abstract class QuietTimePickerPreference extends DialogPreference {
     private TimePicker timePicker = null;
     private long currentTime = -1;
 
@@ -143,15 +143,4 @@ public abstract class QuietTimePickerPreference extends DialogPreference impleme
      * @return The content description.
      */
     protected abstract String getContentDescription();
-
-    @Override
-    public PreferenceType getPreferenceType() {
-        // Should no longer be used, so doing the quick workaround. Remove this in 7.0.0.
-        return PreferenceType.valueOf(getContentDescription());
-    }
-
-    @Override
-    public void setValue(Object value) {
-        currentTime = (Long) value;
-    }
 }

@@ -38,9 +38,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 
 /**
@@ -134,16 +132,6 @@ public class AirshipConfigOptions {
     public String gcmSender;
 
     /**
-     * Additional sender IDs to register with GCM. Only messages sent from the sender {@link #gcmSender} will
-     * be handled by Urban Airship.
-     * @deprecated Marked to be removed in 7.0.0. Register additional sender IDs directly with GCM using
-     * {@code InstanceID.getInstance(context).getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)}.
-     */
-    @Deprecated
-    @PropertyName(name = "additionalGCMSenderIds")
-    public String[] additionalGCMSenderIds;
-
-    /**
      * The transport types allowed for Push.
      * <p/>
      * Defaults to ADM, GCM.
@@ -226,17 +214,6 @@ public class AirshipConfigOptions {
     @PropertyName(name = "productionLogLevel")
     @ConstantClass(name = "android.util.Log")
     public int productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
-
-    /**
-     * The minSdkVersion is the minimum Android API Level required for the application to run.
-     * Defaults to <code>4 (DONUT)</code>
-     *
-     * @deprecated Will be removed in 7.0.0. No longer used.
-     */
-    @PropertyName(name = "minSdkVersion")
-    @ConstantClass(name = "android.os.Build.VERSION_CODES")
-    @Deprecated
-    public int minSdkVersion = 4;
 
     /**
      * Flag indicating whether or not to launch the launcher activity when a push notification or push
@@ -548,27 +525,6 @@ public class AirshipConfigOptions {
         }
 
         return false;
-    }
-
-    /**
-     * Helper method to get the set of GCM sender IDs.
-     *
-     * @return The set of sender IDs.
-     * @deprecated Marked to be removed in 7.0.0.
-     */
-    @Deprecated
-    public Set<String> getGCMSenderIds() {
-        Set<String> senderIds = new HashSet<>();
-
-        if (!UAStringUtil.isEmpty(gcmSender)) {
-            senderIds.add(gcmSender);
-        }
-
-        if (additionalGCMSenderIds != null) {
-            senderIds.addAll(Arrays.asList(additionalGCMSenderIds));
-        }
-
-        return senderIds;
     }
 
     private boolean isLogLevelValid(int logType) {

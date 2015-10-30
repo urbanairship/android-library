@@ -40,7 +40,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Map;
@@ -69,24 +68,6 @@ public class ActionService extends Service {
      * Intent extra for storing metadata as a bundle.
      */
     public static final String EXTRA_METADATA = "com.urbanairship.actionservice.EXTRA_METADATA";
-
-    /**
-     * Intent extra for storing the actions payload
-     *
-     * @deprecated Marked to be removed in 7.0.0 . Use {@link #EXTRA_ACTIONS_BUNDLE} to specify
-     * the actions as a bundle rather than a JSON string.
-     */
-    @Deprecated
-    public static final String EXTRA_ACTIONS_PAYLOAD = "com.urbanairship.actionservice.EXTRA_ACTIONS_PAYLOAD";
-
-    /**
-     * Intent extra for storing the push bundle that triggered the actions.
-     *
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #EXTRA_METADATA} to specify a bundle with
-     * the PushMessage parcelable stored under the {@link ActionArguments#PUSH_MESSAGE_METADATA} key.
-     */
-    @Deprecated
-    public static final String EXTRA_PUSH_BUNDLE = "com.urbanairship.actionservice.EXTRA_PUSH_BUNDLE";
 
     private int lastStartId = 0;
 
@@ -139,38 +120,6 @@ public class ActionService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    /**
-     * Convenience method for running actions in the action service with added PushMessage metadata.
-     *
-     * @param context The application context.
-     * @param payload Actions payload.
-     * @param situation The current situation.
-     * @param message The push message that triggered the actions.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
-     */
-    @Deprecated
-    public static void runActionsPayload(Context context, String payload, Situation situation, PushMessage message) {
-        Bundle metadata = new Bundle();
-        if (message != null) {
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        }
-
-        runActions(context, payload, situation, metadata);
-    }
-
-    /**
-     * Convenience method for running actions in the action service.
-     *
-     * @param context The application context.
-     * @param payload Actions payload.
-     * @param situation The current situation.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
-     */
-    @Deprecated
-    public static void runActionsPayload(Context context, String payload, Situation situation) {
-        runActions(context, payload, situation, null);
     }
 
     /**
@@ -244,16 +193,6 @@ public class ActionService extends Service {
         Bundle metadata = intent.getBundleExtra(EXTRA_METADATA);
         if (metadata == null) {
             metadata = new Bundle();
-        }
-
-        // TODO: Remove in 7.0.0
-        String actionsPayload = intent.getStringExtra(EXTRA_ACTIONS_PAYLOAD);
-        actions.putAll(createActionsBundle(actionsPayload));
-
-        // TODO: Remove in 7.0.0
-        Bundle pushBundle = intent.getParcelableExtra(EXTRA_PUSH_BUNDLE);
-        if (pushBundle != null) {
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
         }
 
         if (actions.isEmpty()) {

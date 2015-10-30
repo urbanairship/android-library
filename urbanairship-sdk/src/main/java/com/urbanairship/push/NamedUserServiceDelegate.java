@@ -79,13 +79,12 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
 
         if (changeToken == null && lastUpdatedToken == null) {
             // Skip since no one has set the named user ID. Usually from a new or re-install.
-            Logger.debug("NamedUserServiceDelegate - New or re-install. Skipping.");
             return;
         }
 
         if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
             // Skip since no change has occurred (token remain the same).
-            Logger.debug("NamedUserServiceDelegate - named user already updated. Skipping.");
+            Logger.debug("NamedUserServiceDelegate - Named user already updated. Skipping.");
             return;
         }
 

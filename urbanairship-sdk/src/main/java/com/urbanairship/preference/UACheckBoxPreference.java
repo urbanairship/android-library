@@ -43,8 +43,7 @@ import com.urbanairship.UAirship;
 /**
  * Urban Airship check box preference.
  */
-@SuppressWarnings("deprecation") // For UAPreference
-public abstract class UACheckBoxPreference extends CheckBoxPreference implements UAPreference {
+public abstract class UACheckBoxPreference extends CheckBoxPreference {
     protected boolean isChecked = false;
     private static final long PREFERENCE_DELAY_MS = 1000;
 
@@ -142,15 +141,4 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference implements
      * @return The content description.
      */
     protected abstract String getContentDescription();
-
-    @Override
-    public PreferenceType getPreferenceType() {
-        // Should no longer be used, so doing the quick workaround. Remove this in 7.0.0.
-        return PreferenceType.valueOf(getContentDescription());
-    }
-
-    @Override
-    public void setValue(Object value) {
-        setChecked((Boolean) value);
-    }
 }

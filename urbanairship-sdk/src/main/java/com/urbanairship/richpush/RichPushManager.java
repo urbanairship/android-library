@@ -283,27 +283,6 @@ public class RichPushManager extends BaseManager {
     }
 
     /**
-     * Sync the user on the device with what's on the server.
-     *
-     * @deprecated Marked to be removed in 7.0.0. Use updateUser(true) instead.
-     */
-    @Deprecated
-    public void updateUser() {
-        updateUser(true);
-    }
-
-    /**
-     * Updates the user if the user has not been updated
-     * in the last 24hrs.
-     *
-     * @deprecated Marked to be removed in 7.0.0. Use updateUser(false) instead.
-     */
-    @Deprecated
-    public void updateUserIfNecessary() {
-        updateUser(false);
-    }
-
-    /**
      * Updates the user on the device with what's on the server.
      *
      * @param forcefully A boolean indicating if the rich push user needs to be updated.

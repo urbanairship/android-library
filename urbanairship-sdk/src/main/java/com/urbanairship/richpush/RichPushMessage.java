@@ -33,9 +33,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
@@ -276,21 +273,6 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
             UAirship.shared().getRichPushManager().getRichPushInbox().deleteMessages(set);
-        }
-    }
-
-    /**
-     * Gets the entire raw message payload as a JSONObject
-     *
-     * @return The message's payload as a JSONObject
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #getRawMessageJson()} instead.
-     */
-    @Deprecated
-    public JSONObject getRawMessageJSON() {
-        try {
-            return new JSONObject(rawJson.toString());
-        } catch (JSONException e) {
-            return new JSONObject();
         }
     }
 

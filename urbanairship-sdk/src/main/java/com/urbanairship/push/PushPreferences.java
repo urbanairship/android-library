@@ -57,7 +57,8 @@ class PushPreferences {
     private static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
 
     private static final String LAST_RECEIVED_SEND_ID = KEY_PREFIX + ".LAST_RECEIVED_SEND_ID";
-    private static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_IDS";
+    private static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_ID";
+
 
     private static final class QuietTime {
         public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
@@ -70,7 +71,6 @@ class PushPreferences {
 
     private static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
 
-    private static final String GCM_REGISTRATION_ID_KEY = KEY_PREFIX + ".GCM_REGISTRATION_ID_KEY";
 
     private static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
 
@@ -424,15 +424,6 @@ class PushPreferences {
     }
 
     /**
-     * Returns the GCM registration ID currently associated with the device.
-     *
-     * @return A GCM registration ID String.
-     */
-    String getGcmId() {
-        return preferenceDataStore.getString(GCM_REGISTRATION_ID_KEY, null);
-    }
-
-    /**
      * Stores a GCM Instance ID token.
      *
      * @param token The GCM Instance ID token.
@@ -443,19 +434,9 @@ class PushPreferences {
 
     /**
      * Returns the GCM Instance ID token.
-     *
      */
     String getGcmToken() {
         return preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
-    }
-
-    /**
-     * Stores a GCM registration ID to be associated with the device.
-     *
-     * @param id A GCM registration ID String.
-     */
-    void setGcmId(String id) {
-        preferenceDataStore.put(GCM_REGISTRATION_ID_KEY, id);
     }
 
     /**
@@ -577,32 +558,21 @@ class PushPreferences {
     }
 
     /**
-     * Sets the registered sender IDs.
+     * Sets the registered sender IDs
      *
-     * @param senderIds The registered sender IDs.
+     * @param senderId The registered sender ID.
      */
-    void setRegisteredGcmSenderIds(Set<String> senderIds) {
-        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, JsonValue.wrapOpt(senderIds));
+    void setRegisteredGcmSenderId(String senderId) {
+        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, senderId);
     }
 
     /**
-     * Gets the registered sender IDs.
+     * Gets the registered sender ID.
      *
      * @return The registered sender IDs.
      */
-    Set<String> getRegisteredGcmSenderIds() {
-        Set<String> ids = new HashSet<>();
-        JsonValue jsonValue = preferenceDataStore.getJsonValue(REGISTERED_GCM_SENDER_IDS);
-
-        if (jsonValue.isJsonList()) {
-            for (JsonValue id : jsonValue.getList()) {
-                if (id.isString()) {
-                    ids.add(id.getString());
-                }
-            }
-        }
-
-        return ids;
+    String getRegisteredGcmSenderId() {
+        return preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);
     }
 
 }

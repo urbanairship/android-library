@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Set;
 
 /**
  * Service delegate for the {@link PushService} to handle channel and push registrations.
@@ -445,24 +444,18 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         switch (airship.getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
-                if (UAStringUtil.isEmpty(pushManager.getGcmId())) {
-                    return true;
-                }
-
                 if (UAStringUtil.isEmpty(pushManager.getGcmToken())) {
                     return true;
                 }
 
-                Set<String> senderIds = airship.getAirshipConfigOptions().getGCMSenderIds();
-                Set<String> registeredGcmSenderIds = pushPreferences.getRegisteredGcmSenderIds();
 
                 // Unregister if we have different registered sender ids
-                if (registeredGcmSenderIds != null && !registeredGcmSenderIds.equals(senderIds)) {
-                    Logger.verbose("ChannelServiceDelegate - GCM sender IDs changed. Push re-registration required.");
+                if (airship.getAirshipConfigOptions().gcmSender != null && !airship.getAirshipConfigOptions().gcmSender.equals(pushPreferences.getRegisteredGcmSenderId())) {
+                    Logger.verbose("ChannelServiceDelegate - GCM sender ID changed. Push re-registration required.");
                     return true;
                 }
 
-                Logger.verbose("ChannelServiceDelegate - GCM already registered with ID: " + pushManager.getGcmId());
+                Logger.verbose("ChannelServiceDelegate - GCM already registered with ID: " + pushManager.getGcmToken());
                 return false;
 
             case UAirship.AMAZON_PLATFORM:

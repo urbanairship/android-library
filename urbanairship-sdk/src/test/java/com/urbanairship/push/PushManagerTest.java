@@ -681,15 +681,6 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test set GCM ID
-     */
-    @Test
-    public void testSetGcmId() {
-        pushManager.setGcmId("fakeGcmId");
-        verify(mockPushPreferences).setGcmId("fakeGcmId");
-    }
-
-    /**
      * Test set GCM Instance ID token
      */
     @Test

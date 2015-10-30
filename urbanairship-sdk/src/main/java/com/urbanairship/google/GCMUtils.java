@@ -68,8 +68,7 @@ public class GCMUtils {
         // GCM messaging permission (ties messages to this app)
         // This permission is not required on devices with API Level 16 and higher
         ApplicationInfo appInfo = UAirship.getPackageInfo().applicationInfo;
-        if (options.minSdkVersion < 16 ||
-                (appInfo != null && appInfo.targetSdkVersion < 16) || Build.VERSION.SDK_INT < 16) {
+        if ((appInfo != null && appInfo.targetSdkVersion < 16) || Build.VERSION.SDK_INT < 16) {
 
             String permission = packageName + ".permission.C2D_MESSAGE";
 
