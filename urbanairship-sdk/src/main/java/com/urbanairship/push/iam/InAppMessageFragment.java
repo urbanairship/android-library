@@ -42,9 +42,9 @@ import android.widget.FrameLayout;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.push.iam.view.Banner;
 import com.urbanairship.push.iam.view.SwipeDismissViewLayout;
 import com.urbanairship.push.notifications.NotificationActionButton;
@@ -258,7 +258,7 @@ public class InAppMessageFragment extends Fragment {
                 public void onClick(View v) {
                     dismiss(true);
 
-                    runActions(message.getClickActionValues(), Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON);
+                    runActions(message.getClickActionValues(), Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON);
 
                     ResolutionEvent resolutionEvent = ResolutionEvent.createClickedResolutionEvent(message, timer.getRunTime());
                     UAirship.shared().getAnalytics().addEvent(resolutionEvent);
@@ -286,8 +286,8 @@ public class InAppMessageFragment extends Fragment {
                 Logger.info("In-app message button clicked: " + actionButton.getId());
                 dismiss(true);
 
-                Situation situation = actionButton.isForegroundAction() ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON :
-                                      Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                @Action.Situation int situation = actionButton.isForegroundAction() ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON :
+                                      Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
 
                 runActions(message.getButtonActionValues(actionButton.getId()), situation);
 
@@ -443,7 +443,7 @@ public class InAppMessageFragment extends Fragment {
      * @param actionValueMap The action value map.
      * @param situation The actions' situation.
      */
-    private void runActions(Map<String, ActionValue> actionValueMap, Situation situation) {
+    private void runActions(Map<String, ActionValue> actionValueMap, @Action.Situation int situation) {
         if (actionValueMap == null) {
             return;
         }

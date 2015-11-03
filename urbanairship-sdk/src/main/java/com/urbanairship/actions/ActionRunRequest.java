@@ -62,7 +62,7 @@ public class ActionRunRequest {
     private Action action;
     private ActionValue actionValue;
     private Bundle metadata;
-    private Situation situation;
+    private @Action.Situation int situation = Action.SITUATION_MANUAL_INVOCATION;
 
     /**
      * Creates an action run request. The action will not be run
@@ -178,7 +178,7 @@ public class ActionRunRequest {
      * @return The request object.
      */
     @NonNull
-    public ActionRunRequest setSituation(Situation situation) {
+    public ActionRunRequest setSituation(@Action.Situation int situation) {
         this.situation = situation;
         return this;
     }

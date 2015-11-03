@@ -44,7 +44,7 @@ import java.util.Set;
  * <p/>
  * Default Registration Names: ^-t, remove_tags_action
  * <p/>
- * Default Registration Predicate: Rejects Situation.PUSH_RECEIVED
+ * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED
  */
 public class RemoveTagsAction extends BaseTagsAction {
 

@@ -26,10 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions.tags;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
-import com.urbanairship.actions.Situation;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +45,7 @@ import static junit.framework.Assert.assertTrue;
 public class BaseTagsActionTest extends BaseTestCase {
 
     BaseTagsAction action;
-    private Situation[] acceptedSituations;
+    private @Action.Situation int[] acceptedSituations;
 
     @Before
     public void setup() {
@@ -56,11 +56,11 @@ public class BaseTagsActionTest extends BaseTestCase {
             }
         };
 
-        acceptedSituations = new Situation[] {
-                Situation.PUSH_OPENED,
-                Situation.MANUAL_INVOCATION,
-                Situation.WEB_VIEW_INVOCATION,
-                Situation.PUSH_RECEIVED
+        acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_PUSH_RECEIVED
         };
     }
 
@@ -70,20 +70,20 @@ public class BaseTagsActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArguments() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "tag1");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "tag1");
         assertTrue("Single tag is an acceptable argument", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "[tag1,tag2,tag3]");
+        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "[tag1,tag2,tag3]");
         assertTrue("JSON string of tags is an acceptable argument", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, 1);
+        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, 1);
         assertFalse("Integer object is invalid arguments", action.acceptsArguments(args));
 
-        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null);
+        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null);
         assertFalse(action.acceptsArguments(args));
 
         // Check every accepted situation
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             args = ActionTestUtils.createArgs(situation, "tag1");
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -95,13 +95,13 @@ public class BaseTagsActionTest extends BaseTestCase {
      */
     @Test
     public void testGetTags() {
-        ActionArguments singleTagArg = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "tag1");
+        ActionArguments singleTagArg = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "tag1");
         Set<String> tags = action.getTags(singleTagArg);
         assertEquals(1, tags.size());
         assertTrue(tags.contains("tag1"));
 
 
-        ActionArguments collectionArgs = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED,
+        ActionArguments collectionArgs = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED,
                 Arrays.asList("tag1", "tag2", "tag3"));
 
         tags = action.getTags(collectionArgs);
@@ -110,10 +110,10 @@ public class BaseTagsActionTest extends BaseTestCase {
         assertTrue(tags.contains("tag2"));
         assertTrue(tags.contains("tag3"));
 
-        ActionArguments badArgs = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, 1);
+        ActionArguments badArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, 1);
         assertNull(action.getTags(badArgs));
 
-        ActionArguments nullArgs = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, null);
+        ActionArguments nullArgs = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, null);
         assertNull(action.getTags(nullArgs));
     }
 

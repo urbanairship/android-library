@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.shadows.ShadowToast;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,20 +45,30 @@ public class ToastActionTest extends BaseTestCase {
 
     private ToastAction action;
 
-    private EnumSet<Situation> acceptedSituations;
-    private EnumSet<Situation> rejectedSituations;
+    private
+    @Action.Situation
+    int[] acceptedSituations;
+    private
+    @Action.Situation
+    int[] rejectedSituations;
 
     @Before
     public void setup() {
         action = new ToastAction();
 
         // Accepted situations (All - PUSH_RECEIVED)
-        acceptedSituations = EnumSet.allOf(Situation.class);
-        acceptedSituations.remove(Situation.PUSH_RECEIVED);
+        acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+        };
 
         // Rejected situations (All - accepted)
-        rejectedSituations = EnumSet.allOf(Situation.class);
-        rejectedSituations.removeAll(acceptedSituations);
+        rejectedSituations = new int[] {
+                Action.SITUATION_PUSH_RECEIVED
+        };
     }
 
     /**
@@ -71,13 +80,13 @@ public class ToastActionTest extends BaseTestCase {
         toastMap.put("length", Toast.LENGTH_LONG);
         toastMap.put("text", "toast text");
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, toastMap);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, toastMap);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -91,13 +100,13 @@ public class ToastActionTest extends BaseTestCase {
     public void testAcceptsArgumentWithString() {
         String toastText = "oh hi";
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, toastText);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, toastText);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -114,7 +123,7 @@ public class ToastActionTest extends BaseTestCase {
         toastMap.put("length", Toast.LENGTH_LONG);
         toastMap.put("text", "totes");
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, toastMap);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, toastMap);
         ActionResult result = action.perform(args);
 
         assertEquals(args.getValue(), result.getValue());
@@ -129,7 +138,7 @@ public class ToastActionTest extends BaseTestCase {
     @Test
     @SuppressLint("NewApi")
     public void testPerformWithString() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "totes");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "totes");
         ActionResult result = action.perform(args);
 
         assertEquals(args.getValue(), result.getValue());

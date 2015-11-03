@@ -130,7 +130,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(@NonNull Context context, @NonNull String actionsPayload, @Nullable Situation situation, @Nullable Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull String actionsPayload, @Action.Situation int situation, @Nullable Bundle metadata) {
         Bundle actions = createActionsBundle(actionsPayload);
         if (actions.isEmpty()) {
             return;
@@ -139,7 +139,7 @@ public class ActionService extends Service {
         Intent intent = new Intent(ACTION_RUN_ACTIONS)
                 .setClass(context, ActionService.class)
                 .putExtra(EXTRA_ACTIONS_BUNDLE, actions)
-                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
+                .putExtra(EXTRA_SITUATION, situation);
 
         if (metadata != null) {
             intent.putExtra(EXTRA_METADATA, metadata);
@@ -156,7 +156,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(@NonNull Context context, @NonNull Map<String, ActionValue> actions, @Nullable Situation situation, @Nullable Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull Map<String, ActionValue> actions, @Action.Situation int situation, @Nullable Bundle metadata) {
         if (actions.isEmpty()) {
             return;
         }
@@ -169,7 +169,7 @@ public class ActionService extends Service {
         Intent intent = new Intent(ACTION_RUN_ACTIONS)
                 .setClass(context, ActionService.class)
                 .putExtra(EXTRA_ACTIONS_BUNDLE, actionsBundle)
-                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
+                .putExtra(EXTRA_SITUATION, situation);
 
         if (metadata != null) {
             intent.putExtra(EXTRA_METADATA, metadata);
@@ -189,7 +189,34 @@ public class ActionService extends Service {
             actions = new Bundle();
         }
 
-        Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
+        @Action.Situation int situation;
+        switch (intent.getIntExtra(EXTRA_SITUATION, Action.SITUATION_MANUAL_INVOCATION)) {
+            case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
+                situation = Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                break;
+
+            case Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+                situation = Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON;
+                break;
+
+            case Action.SITUATION_PUSH_OPENED:
+                situation = Action.SITUATION_PUSH_OPENED;
+                break;
+
+            case Action.SITUATION_PUSH_RECEIVED:
+                situation = Action.SITUATION_PUSH_RECEIVED;
+                break;
+
+            case Action.SITUATION_WEB_VIEW_INVOCATION:
+                situation = Action.SITUATION_WEB_VIEW_INVOCATION;
+                break;
+
+            case Action.SITUATION_MANUAL_INVOCATION:
+            default:
+                situation = Action.SITUATION_MANUAL_INVOCATION;
+                break;
+        }
+
         Bundle metadata = intent.getBundleExtra(EXTRA_METADATA);
         if (metadata == null) {
             metadata = new Bundle();

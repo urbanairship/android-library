@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,8 +48,8 @@ public class ClipboardActionTest extends BaseTestCase {
 
     private ClipboardAction action;
 
-    private EnumSet<Situation> acceptedSituations;
-    private EnumSet<Situation> rejectedSituations;
+    private @Action.Situation int[] acceptedSituations;
+    private @Action.Situation int[] rejectedSituations;
     private ClipboardManager clipboardManager;
 
     @Before
@@ -59,12 +58,18 @@ public class ClipboardActionTest extends BaseTestCase {
         clipboardManager = (ClipboardManager) RuntimeEnvironment.application.getSystemService(Context.CLIPBOARD_SERVICE);
 
         // Accepted situations (All - PUSH_RECEIVED)
-        acceptedSituations = EnumSet.allOf(Situation.class);
-        acceptedSituations.remove(Situation.PUSH_RECEIVED);
+        acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+        };
 
         // Rejected situations (All - accepted)
-        rejectedSituations = EnumSet.allOf(Situation.class);
-        rejectedSituations.removeAll(acceptedSituations);
+        rejectedSituations = new int[] {
+                Action.SITUATION_PUSH_RECEIVED
+        };
     }
 
     /**
@@ -76,13 +81,13 @@ public class ClipboardActionTest extends BaseTestCase {
         clipboardMap.put("label", "clipboard label");
         clipboardMap.put("text", "clipboard text");
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, clipboardMap);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, clipboardMap);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -96,13 +101,13 @@ public class ClipboardActionTest extends BaseTestCase {
     public void testAcceptsArgumentWithString() {
         String clipboardString = "oh hi";
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, clipboardString);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, clipboardString);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -119,7 +124,7 @@ public class ClipboardActionTest extends BaseTestCase {
         clipboardMap.put("label", "clipboard label");
         clipboardMap.put("text", "clipboard text");
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, clipboardMap);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, clipboardMap);
         ActionResult result = action.perform(args);
 
         assertEquals(args.getValue(), result.getValue());
@@ -135,7 +140,7 @@ public class ClipboardActionTest extends BaseTestCase {
     @Test
     @SuppressLint("NewApi")
     public void testPerformWithString() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "clipboard text");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "clipboard text");
         ActionResult result = action.perform(args);
 
         assertEquals(args.getValue(), result.getValue());

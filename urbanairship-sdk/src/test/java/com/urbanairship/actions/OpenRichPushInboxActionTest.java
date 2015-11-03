@@ -71,22 +71,22 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArguments() {
-        Situation[] situations = new Situation[] {
-                Situation.PUSH_OPENED,
-                Situation.MANUAL_INVOCATION,
-                Situation.WEB_VIEW_INVOCATION,
-                Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        @Action.Situation int[] situations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
         };
 
         // Should accept null value
-        for (Situation situation : situations) {
+        for (@Action.Situation int situation : situations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, null);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
         // Should accept message ID as the action value
-        for (Situation situation : situations) {
+        for (@Action.Situation int situation : situations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "message_id");
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -100,7 +100,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerformNoMessageId() {
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());
@@ -113,7 +113,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void testPerformMessageUnavailable() {
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
 
         when(mockInbox.getMessage("message_id")).thenReturn(null);
 
@@ -133,7 +133,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         when(mockInbox.getMessage("message_id")).thenReturn(message);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
@@ -153,7 +153,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         when(mockInbox.getMessage("message_id")).thenReturn(message);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "message_id"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
@@ -176,7 +176,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
@@ -197,7 +197,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", startedIntent.getAction());
@@ -213,7 +213,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_MESSAGE", "message:the_message_id");
         addResolveInfoForAction("com.urbanairship.VIEW_RICH_PUSH_INBOX", null);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.VIEW_RICH_PUSH_INBOX", startedIntent.getAction());

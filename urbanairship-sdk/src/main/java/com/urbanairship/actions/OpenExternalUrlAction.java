@@ -36,8 +36,8 @@ import com.urbanairship.util.UriUtils;
 /**
  * Action for opening a URL for viewing.
  * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
- * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
+ * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL as a string
  * <p/>
@@ -82,10 +82,10 @@ public class OpenExternalUrlAction extends Action {
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
-            case PUSH_OPENED:
-            case WEB_VIEW_INVOCATION:
-            case MANUAL_INVOCATION:
-            case FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_PUSH_OPENED:
+            case SITUATION_WEB_VIEW_INVOCATION:
+            case SITUATION_MANUAL_INVOCATION:
+            case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
                 return UriUtils.parse(arguments.getValue().getString()) != null;
             default:
                 return false;

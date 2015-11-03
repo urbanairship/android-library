@@ -48,15 +48,15 @@ import java.net.URLEncoder;
 /**
  * Action for launching a Landing Page.
  * <p/>
- * The landing page will not be launched in Situation.PUSH_RECEIVED, instead it will be cached
+ * The landing page will not be launched in SITUATION_PUSH_RECEIVED, instead it will be cached
  * if the action is triggered with a payload that sets "cache_on_receive" to true.
  * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.PUSH_RECEIVED, Situation.WEB_VIEW_INVOCATION,
- * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_PUSH_RECEIVED, SITUATION_WEB_VIEW_INVOCATION,
+ * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL defined as either a String or a Map containing the key
  * "url" that defines the URL. The map argument value can also define a "cache_on_receive" flag
- * to enable or disable caching when a PUSH_RECEIVED. Caching is disabled by default.
+ * to enable or disable caching when a SITUATION_PUSH_RECEIVED. Caching is disabled by default.
  * <p/>
  * <pre>{@code Note: URLs in the format of "u:<content-id>" will be treated as a short url and
  * used to construct a separate url using the content id. }</pre>
@@ -65,7 +65,7 @@ import java.net.URLEncoder;
  * <p/>
  * Default Registration Names: ^p, landing_page_action
  * <p/>
- * Default Registration Predicate: Rejects Situation.PUSH_RECEIVED if the application
+ * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED if the application
  * has not been opened in the last week.
  */
 public class LandingPageAction extends Action {
@@ -92,7 +92,7 @@ public class LandingPageAction extends Action {
 
     /**
      * The payload key for indicating if the landing page should be cached
-     * when triggered in Situation.PUSH_RECEIVED
+     * when triggered in Action.SITUATION_PUSH_RECEIVED
      */
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
@@ -101,7 +101,7 @@ public class LandingPageAction extends Action {
         final Uri uri = parseUri(arguments);
 
         switch (arguments.getSituation()) {
-            case PUSH_RECEIVED:
+            case SITUATION_PUSH_RECEIVED:
                 if (shouldCacheOnReceive(arguments)) {
                     // Cache the landing page by loading the url in a web view
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -154,7 +154,7 @@ public class LandingPageAction extends Action {
 
     /**
      * Checks if the argument's value can be parsed to a URI and if the situation is not
-     * Situation.PUSH_RECEIVED.
+     * Action.SITUATION_PUSH_RECEIVED.
      *
      * @param arguments The action arguments.
      * @return <code>true</code> if the action can perform with the arguments,
@@ -163,11 +163,11 @@ public class LandingPageAction extends Action {
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
-            case PUSH_OPENED:
-            case PUSH_RECEIVED:
-            case WEB_VIEW_INVOCATION:
-            case MANUAL_INVOCATION:
-            case FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_PUSH_OPENED:
+            case SITUATION_PUSH_RECEIVED:
+            case SITUATION_WEB_VIEW_INVOCATION:
+            case SITUATION_MANUAL_INVOCATION:
+            case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
                 return parseUri(arguments) != null;
             default:
                 return false;
