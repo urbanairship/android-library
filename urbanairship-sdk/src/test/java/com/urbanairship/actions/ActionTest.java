@@ -51,7 +51,7 @@ public class ActionTest extends BaseTestCase {
         metadata.putString("metadata_key", "metadata_value");
 
         final ActionResult expectedResult = ActionResult.newResult(ActionValue.wrap("result"));
-        final ActionArguments originalArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", metadata);
+        final ActionArguments originalArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", metadata);
 
 
         // Create a test action that verifies the result, handle, and arguments
@@ -116,7 +116,7 @@ public class ActionTest extends BaseTestCase {
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(false, performResult);
 
-        ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value"));
+        ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value"));
 
         assertTrue("Does not accept arguments should return a 'null' result value", badArgsResult.getValue().isNull());
 
@@ -138,7 +138,7 @@ public class ActionTest extends BaseTestCase {
      */
     @Test
     public void testRunPerformException() throws ActionValueException {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value");
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
 
         final IllegalStateException exception = new IllegalStateException("oh no!");
@@ -168,7 +168,7 @@ public class ActionTest extends BaseTestCase {
      */
     @Test
     public void testRunPerformNullResult() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value");
 
         TestAction action = new TestAction(true, null);
 
@@ -207,7 +207,7 @@ public class ActionTest extends BaseTestCase {
         // for result blocks
         Thread actionThread = new Thread(new Runnable() {
             public void run() {
-                action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "arg"));
+                action.run(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "arg"));
             }
         });
         actionThread.start();

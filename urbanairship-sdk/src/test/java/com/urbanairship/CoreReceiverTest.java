@@ -31,9 +31,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.PushManager;
@@ -97,7 +97,7 @@ public class CoreReceiverTest extends BaseTestCase {
 
                 return ActionService.ACTION_RUN_ACTIONS.equals(intent.getAction()) &&
                         ActionValue.wrap("payload").equals(intent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE).getParcelable("actions")) &&
-                        Situation.MANUAL_INVOCATION.equals(intent.getSerializableExtra(ActionService.EXTRA_SITUATION));
+                        Action.SITUATION_MANUAL_INVOCATION == intent.getIntExtra(ActionService.EXTRA_SITUATION, -1);
             }
         }));
     }

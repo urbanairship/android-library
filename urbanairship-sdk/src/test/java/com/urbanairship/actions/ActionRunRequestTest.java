@@ -221,7 +221,7 @@ public class ActionRunRequestTest extends BaseTestCase {
     }
 
     /**
-     * Test running an action without setting the situation defaults to Situation.MANUAL_INVOCATION
+     * Test running an action without setting the situation defaults to Action.SITUATION_MANUAL_INVOCATION
      */
     @Test
     public void testRunDefaultSituation() {
@@ -230,7 +230,7 @@ public class ActionRunRequestTest extends BaseTestCase {
         ActionRunRequest.createRequest(action).runSync();
 
         assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Situation should default to MANUAL_INVOCATION", Situation.MANUAL_INVOCATION, action.runArgs.getSituation());
+        assertEquals("Situation should default to MANUAL_INVOCATION", Action.SITUATION_MANUAL_INVOCATION, action.runArgs.getSituation());
     }
 
     /**

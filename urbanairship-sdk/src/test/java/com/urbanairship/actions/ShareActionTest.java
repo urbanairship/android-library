@@ -33,19 +33,19 @@ public class ShareActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArgs() {
-        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "share text")));
-        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Situation.PUSH_OPENED, "share text")));
-        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "share text")));
-        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON, "share text")));
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "share text")));
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "share text")));
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "share text")));
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON, "share text")));
     }
 
     /**
-     * Test that it rejects Situation.PUSH_RECEIVED.
+     * Test that it rejects Action.SITUATION_PUSH_RECEIVED.
      */
     @Test
     public void testRejectsPossibleBackgroundSituations() {
-        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "share text")));
-        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON, "share text")));
+        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "share text")));
+        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON, "share text")));
     }
 
     /**
@@ -68,7 +68,7 @@ public class ShareActionTest extends BaseTestCase {
         packageManager.addResolveInfoForIntent(intent, createResolverInfo("com.android.nfc"));
         packageManager.addResolveInfoForIntent(intent, createResolverInfo("com.google.android.apps.docs"));
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "Share text"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "Share text"));
 
         // Verify the chooser intent has the right flags and actions
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
@@ -119,7 +119,7 @@ public class ShareActionTest extends BaseTestCase {
             }
         };
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "Share text"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "Share text"));
 
         // Should still start the intent
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();

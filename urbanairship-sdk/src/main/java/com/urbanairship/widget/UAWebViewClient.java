@@ -38,12 +38,12 @@ import android.webkit.WebViewClient;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.js.NativeBridge;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -269,7 +269,7 @@ public class UAWebViewClient extends WebViewClient {
                 actionRunRequestFactory.createActionRequest(actionName)
                                        .setValue(arg)
                                        .setMetadata(metadata)
-                                       .setSituation(Situation.WEB_VIEW_INVOCATION)
+                                       .setSituation(Action.SITUATION_WEB_VIEW_INVOCATION)
                                        .run(new ActionCompletionCallback() {
                                            @Override
                                            public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
@@ -314,7 +314,7 @@ public class UAWebViewClient extends WebViewClient {
         actionRunRequestFactory.createActionRequest(name)
                                .setMetadata(metadata)
                                .setValue(actionValue)
-                               .setSituation(Situation.WEB_VIEW_INVOCATION)
+                               .setSituation(Action.SITUATION_WEB_VIEW_INVOCATION)
                                .run(new ActionCompletionCallback() {
                                    @Override
                                    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {

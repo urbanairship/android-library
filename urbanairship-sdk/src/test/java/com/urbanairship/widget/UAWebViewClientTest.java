@@ -32,6 +32,7 @@ import android.webkit.WebView;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
@@ -40,7 +41,6 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.actions.StubbedActionRunRequest;
 
 import org.junit.Before;
@@ -114,12 +114,12 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // Verify that the action runner ran the "action" action
         verify(actionRunRequest).setValue(ActionValue.wrap("value"));
-        verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(actionRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that the action runner ran the "anotherAction" action
         verify(anotherActionRunRequest).setValue(eq(ActionValue.wrap("anotherValue")));
-        verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
@@ -140,12 +140,12 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // Verify that the action runner ran the removeTag action
         verify(removeTagRunRequest).setValue(ActionValue.wrap("removeTag"));
-        verify(removeTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(removeTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(removeTagRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(ActionValue.wrap("addTag"));
-        verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(addTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
     }
 
@@ -177,7 +177,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // Verify that the action runner ran the addTag action
         verify(addTagRunRequest).setValue(new ActionValue());
-        verify(addTagRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(addTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
     }
 
@@ -214,7 +214,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("key", "value");
         verify(actionRunRequest).setValue(ActionValue.wrap(expectedMap));
-        verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(actionRunRequest).run(any(ActionCompletionCallback.class));
 
         // Verify that action "anotherAction" ran with a list
@@ -222,7 +222,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         expectedList.add("one");
         expectedList.add("two");
         verify(anotherActionRunRequest).setValue(ActionValue.wrap(expectedList));
-        verify(anotherActionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
@@ -252,7 +252,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verify(actionRunRequest).setValue(new ActionValue());
-        verify(actionRunRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(actionRunRequest).run(any(ActionCompletionCallback.class));
     }
 
@@ -304,7 +304,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testRunActionsCallsCompletionCallback() {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
         client.setActionCompletionCallback(completionCallback);
@@ -401,7 +401,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testActionCallActionNotFound() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_ACTION_NOT_FOUND);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -429,7 +429,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testActionCallActionRejectedArguments() {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_REJECTED_ARGUMENTS);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -457,7 +457,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testActionCallActionExecutionError() {
         final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.STATUS_EXECUTION_ERROR);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -485,7 +485,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testActionCallAction() throws ActionValueException {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
@@ -509,7 +509,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // Verify the action request
         verify(runRequest).run(any(ActionCompletionCallback.class));
-        verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(runRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(runRequest).setValue(ActionValue.wrap(true));
     }
 
@@ -519,7 +519,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testRunActionCallsCompletionCallback() throws ActionValueException {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
-        final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
+        final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
         client.setActionCompletionCallback(completionCallback);

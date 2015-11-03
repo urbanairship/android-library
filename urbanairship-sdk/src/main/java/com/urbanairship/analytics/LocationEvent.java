@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import android.location.Location;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
@@ -34,6 +35,8 @@ import com.urbanairship.util.UAStringUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
@@ -41,6 +44,24 @@ import java.util.Locale;
  * {@link com.urbanairship.analytics.Analytics}.
  */
 public class LocationEvent extends Event {
+
+    @IntDef(value={
+            UPDATE_TYPE_CONTINUOUS,
+            UPDATE_TYPE_SINGLE
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface UpdateType {}
+
+
+    /**
+     * Continuous location update type
+     */
+    public final static int UPDATE_TYPE_CONTINUOUS = 0;
+
+    /**
+     * Single location update type
+     */
+    public final static int UPDATE_TYPE_SINGLE = 1;
 
     static final String TYPE = "location";
 
@@ -54,12 +75,6 @@ public class LocationEvent extends Event {
     static final String FOREGROUND_KEY = "foreground";
     static final String UPDATE_DISTANCE_KEY = "update_dist";
 
-    /**
-     * An enum representing the location update type.
-     */
-    public enum UpdateType {
-        CONTINUOUS, SINGLE
-    }
 
     private final String provider;
     private final String latitude;
@@ -68,7 +83,7 @@ public class LocationEvent extends Event {
     private final String requestedAccuracy;
     private final String updateDistance;
     private final String foreground;
-    private final UpdateType updateType;
+    private final @UpdateType int updateType;
 
     /**
      * Constructor for LocationEvent.
@@ -79,7 +94,7 @@ public class LocationEvent extends Event {
      * @param updateDist The associated update distance.
      * @param isForeground If the location was recorded when the app was foregrounded or not.
      */
-    public LocationEvent(@NonNull Location location, UpdateType type, int userRequestedAccuracy, int updateDist, boolean isForeground) {
+    public LocationEvent(@NonNull Location location, @UpdateType int type, int userRequestedAccuracy, int updateDist, boolean isForeground) {
         super();
 
         /*
@@ -112,7 +127,9 @@ public class LocationEvent extends Event {
             data.put(LATITUDE_KEY, latitude);
             data.put(LONGITUDE_KEY, longitude);
             data.put(REQUESTED_ACCURACY_KEY, requestedAccuracy);
-            data.put(UPDATE_TYPE_KEY, updateType.toString());
+
+
+            data.put(UPDATE_TYPE_KEY, updateType == UPDATE_TYPE_CONTINUOUS ? "CONTINUOUS" : "SINGLE");
             data.put(PROVIDER_KEY, provider);
             data.put(H_ACCURACY_KEY, accuracy);
             data.put(V_ACCURACY_KEY, "NONE");

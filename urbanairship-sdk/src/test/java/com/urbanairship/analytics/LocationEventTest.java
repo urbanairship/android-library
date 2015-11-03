@@ -52,20 +52,20 @@ public class LocationEventTest extends BaseTestCase {
         unknownProviderLocation = createTestLocation("UNKNOWN");
 
 
-        event = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, true);
+        event = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
 
-        backgroundEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, false);
+        backgroundEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, false);
 
-        noRequestedAccuracyEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, -1, 1, true);
-        noUpdateDistanceEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, 1, -1, true);
+        noRequestedAccuracyEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, -1, 1, true);
+        noUpdateDistanceEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, -1, true);
 
-        bogusProviderEvent = new LocationEvent(bogusProviderLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, true);
-        networkProviderEvent = new LocationEvent(networkProviderLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, true);
-        passiveProviderEvent = new LocationEvent(passiveProviderLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, true);
-        unknownProviderEvent = new LocationEvent(unknownProviderLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, true);
+        bogusProviderEvent = new LocationEvent(bogusProviderLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
+        networkProviderEvent = new LocationEvent(networkProviderLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
+        passiveProviderEvent = new LocationEvent(passiveProviderLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
+        unknownProviderEvent = new LocationEvent(unknownProviderLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, true);
 
-        singleUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.SINGLE, 1, 1, true);
-        continuousUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UpdateType.CONTINUOUS, 1, 1, false);
+        singleUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_SINGLE, 1, 1, true);
+        continuousUpdateEvent = new LocationEvent(gpsLocation, LocationEvent.UPDATE_TYPE_CONTINUOUS, 1, 1, false);
     }
 
     @Test
@@ -117,17 +117,17 @@ public class LocationEventTest extends BaseTestCase {
 
     @Test
     public void testContinousUpdateType() throws JSONException {
-        assertEquals(event.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), LocationEvent.UpdateType.CONTINUOUS.toString());
+        assertEquals(event.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), "CONTINUOUS");
     }
 
     @Test
     public void testSingleUpdateType() throws JSONException {
-        assertEquals(singleUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), LocationEvent.UpdateType.SINGLE.toString());
+        assertEquals(singleUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), "SINGLE");
     }
 
     @Test
     public void testChangeUpdateType() throws JSONException {
-        assertEquals(continuousUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), LocationEvent.UpdateType.CONTINUOUS.toString());
+        assertEquals(continuousUpdateEvent.getEventData().get(LocationEvent.UPDATE_TYPE_KEY), "CONTINUOUS");
     }
 
     /**
