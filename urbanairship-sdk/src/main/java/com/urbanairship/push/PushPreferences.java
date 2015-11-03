@@ -558,7 +558,7 @@ class PushPreferences {
     }
 
     /**
-     * Sets the registered sender IDs
+     * Sets the registered sender ID.
      *
      * @param senderId The registered sender ID.
      */
@@ -569,7 +569,7 @@ class PushPreferences {
     /**
      * Gets the registered sender ID.
      *
-     * @return The registered sender IDs.
+     * @return The registered sender ID.
      */
     String getRegisteredGcmSenderId() {
         return preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);

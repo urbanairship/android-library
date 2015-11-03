@@ -449,7 +449,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 }
 
 
-                // Unregister if we have different registered sender ids
+                // Unregister if we have a different registered sender ID
                 if (airship.getAirshipConfigOptions().gcmSender != null && !airship.getAirshipConfigOptions().gcmSender.equals(pushPreferences.getRegisteredGcmSenderId())) {
                     Logger.verbose("ChannelServiceDelegate - GCM sender ID changed. Push re-registration required.");
                     return true;
