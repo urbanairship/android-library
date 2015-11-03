@@ -51,19 +51,19 @@ public final class ActionArguments {
      */
     public static final String REGISTRY_ACTION_NAME_METADATA = "com.urbanairship.REGISTRY_ACTION_NAME";
 
-    private final Situation situation;
+    private final @Action.Situation int situation;
     private final ActionValue value;
     private final Bundle metadata;
 
     /**
      * Constructs ActionArguments.
      *
-     * @param situation The situation. Defaults to {@link Situation#MANUAL_INVOCATION} if null.
+     * @param situation The situation.
      * @param value The argument's value.
      * @param metadata The argument's metadata.
      */
-    public ActionArguments(Situation situation, ActionValue value, Bundle metadata) {
-        this.situation = situation == null ? Situation.MANUAL_INVOCATION : situation;
+    public ActionArguments(@Action.Situation int situation, ActionValue value, Bundle metadata) {
+        this.situation = situation;
         this.value = value == null ? new ActionValue() : value;
         this.metadata = metadata == null ? new Bundle() : new Bundle(metadata);
     }
@@ -83,8 +83,8 @@ public final class ActionArguments {
      *
      * @return The situation.
      */
-    @NonNull
-    public Situation getSituation() {
+    @Action.Situation
+    public int getSituation() {
         return situation;
     }
 

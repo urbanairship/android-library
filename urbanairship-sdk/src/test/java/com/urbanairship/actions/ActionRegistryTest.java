@@ -78,7 +78,7 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test the landing page default predicate rejects Situation.PUSH_RECEIVED
+     * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
      * if the app has not been opened in the last week.
      */
     @Test
@@ -92,11 +92,11 @@ public class ActionRegistryTest extends BaseTestCase {
         when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 8 * 24 * 1000 * 3600);
 
         assertFalse("Should reject PUSH_RECEIVED when the app has not been opened in the week.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
     }
 
     /**
-     * Test the landing page default predicate accepts Situation.PUSH_RECEIVED
+     * Test the landing page default predicate accepts Action.SITUATION_PUSH_RECEIVED
      * if the app has been opened in the last week.
      */
     @Test
@@ -110,12 +110,12 @@ public class ActionRegistryTest extends BaseTestCase {
         when(metrics.getLastOpenTimeMillis()).thenReturn(System.currentTimeMillis() - 6 * 24 * 1000 * 3600);
 
         assertTrue("Should accept PUSH_RECEIVED when the app has been opened in the last week.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
     }
 
     /**
-     * Test the add custom event default predicate rejects Situation.PUSH_RECEIVED and
-     * Situation.PUSH_OPENED.
+     * Test the add custom event default predicate rejects Action.SITUATION_PUSH_RECEIVED and
+     * Action.SITUATION_PUSH_OPENED.
      */
     @Test
     public void testAddCustomEventDefaultPredicateReject() {
@@ -125,15 +125,15 @@ public class ActionRegistryTest extends BaseTestCase {
         assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
 
         assertFalse("Add custom event should reject PUSH_RECEIVED.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
 
         assertFalse("Add custom event should reject PUSH_OPENED.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_OPENED, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "value", null)));
     }
 
     /**
-     * Test the add custom event default predicate accepts Situation.MANUAL_INVOCATION and
-     * Situation.WEB_VIEW_INVOCATION.
+     * Test the add custom event default predicate accepts Action.SITUATION_MANUAL_INVOCATION and
+     * Action.SITUATION_WEB_VIEW_INVOCATION.
      */
     @Test
     public void testAddCustomEventDefaultPredicateAccepts() {
@@ -143,14 +143,14 @@ public class ActionRegistryTest extends BaseTestCase {
         assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
 
         assertTrue("Add custom event should accept MANUAL_INVOCATION.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", null)));
 
         assertTrue("Add custom event should accept WEB_VIEW_INVOCATION.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
     }
 
     /**
-     * Test the landing page default predicate rejects Situation.PUSH_RECEIVED
+     * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
      * if the app has never been opened.
      */
     @Test
@@ -164,7 +164,7 @@ public class ActionRegistryTest extends BaseTestCase {
         when(metrics.getLastOpenTimeMillis()).thenReturn(-1L);
 
         assertFalse("Should not accept PUSH_RECEIVED when the app has never been opened.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, "value", null)));
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
     }
 
     /**
@@ -254,15 +254,15 @@ public class ActionRegistryTest extends BaseTestCase {
         registry.registerAction(defaultAction, "action");
 
         ActionRegistry.Entry entry = registry.registerAction(defaultAction, "action");
-        entry.addSituationOverride(openAction, Situation.PUSH_OPENED);
-        entry.addSituationOverride(receiveAction, Situation.PUSH_RECEIVED);
+        entry.addSituationOverride(openAction, Action.SITUATION_PUSH_OPENED);
+        entry.addSituationOverride(receiveAction, Action.SITUATION_PUSH_RECEIVED);
 
         assertEquals("Should return situation override action",
-                entry.getActionForSituation(Situation.PUSH_OPENED), openAction);
+                entry.getActionForSituation(Action.SITUATION_PUSH_OPENED), openAction);
         assertEquals("Should return situation override action",
-                entry.getActionForSituation(Situation.PUSH_RECEIVED), receiveAction);
+                entry.getActionForSituation(Action.SITUATION_PUSH_RECEIVED), receiveAction);
         assertEquals("Should return default action when no situation overrides exist",
-                entry.getActionForSituation(Situation.MANUAL_INVOCATION), defaultAction);
+                entry.getActionForSituation(Action.SITUATION_MANUAL_INVOCATION), defaultAction);
     }
 
     /**

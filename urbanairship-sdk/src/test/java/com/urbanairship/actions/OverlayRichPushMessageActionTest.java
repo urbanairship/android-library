@@ -39,8 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.util.EnumSet;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -52,8 +50,8 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
     private OverlayRichPushMessageAction action;
 
-    private EnumSet<Situation> acceptedSituations;
-    private EnumSet<Situation> rejectedSituations;
+    private @Action.Situation int[] acceptedSituations;
+    private @Action.Situation int[] rejectedSituations;
     private RichPushInbox mockInbox;
 
     @Before
@@ -61,13 +59,18 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         action = new OverlayRichPushMessageAction();
 
         // Accepted situations (All - PUSH_RECEIVED - BACKGROUND_NOTIFICATION_ACTION_BUTTON)
-        acceptedSituations = EnumSet.allOf(Situation.class);
-        acceptedSituations.remove(Situation.PUSH_RECEIVED);
-        acceptedSituations.remove(Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON);
+        acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        };
 
         // Rejected situations (All - accepted)
-        rejectedSituations = EnumSet.allOf(Situation.class);
-        rejectedSituations.removeAll(acceptedSituations);
+        rejectedSituations = new int[] {
+                Action.SITUATION_PUSH_RECEIVED,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+        };
 
         RichPushManager richPushManager = mock(RichPushManager.class);
         mockInbox = mock(RichPushInbox.class);
@@ -81,13 +84,13 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArgumentMessageId() {
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "the_message_id");
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "the_message_id");
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -103,13 +106,13 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(new Bundle()));
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -125,13 +128,13 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
         }
 
-        for (Situation situation : rejectedSituations) {
+        for (@Action.Situation int situation : rejectedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto", metadata);
             assertFalse("Should reject arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -143,7 +146,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
      */
     @Test
     public void testRejectsNullArgumentValue() {
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, null);
             assertFalse("Should reject null argument value in situation " + situation,
                     action.acceptsArguments(args));
@@ -155,7 +158,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
      */
     @Test
     public void testRejectsPlaceHolderWithNoMetadata() {
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto");
             assertFalse("Should reject MESSAGE_ID when no metadata is available in situation " + situation,
                     action.acceptsArguments(args));
@@ -172,7 +175,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
 
         when(mockInbox.getMessage("the_message_id")).thenReturn(message);
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "the_message_id"));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "the_message_id"));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
@@ -193,7 +196,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());
@@ -212,7 +215,7 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 
-        action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "auto", metadata));
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata));
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedActivity();
         assertEquals("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION", startedIntent.getAction());

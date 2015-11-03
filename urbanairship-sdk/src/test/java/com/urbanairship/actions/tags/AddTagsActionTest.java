@@ -25,10 +25,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
@@ -65,7 +65,7 @@ public class AddTagsActionTest extends BaseTestCase {
 
         when(pushManager.getTags()).thenReturn(existingTags);
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "tagThree");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "tagThree");
         ActionResult result = action.perform(args);
 
         assertTrue("Add tags action should return 'null' result", result.getValue().isNull());

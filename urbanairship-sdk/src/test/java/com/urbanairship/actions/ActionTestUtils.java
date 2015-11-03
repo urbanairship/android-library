@@ -39,7 +39,7 @@ public class ActionTestUtils {
      * @param value The action value.
      * @return ActionArguments that contain the situation and value.
      */
-    public static ActionArguments createArgs(Situation situation, Object value) {
+    public static ActionArguments createArgs(@Action.Situation int situation, Object value) {
         return createArgs(situation, value, null);
     }
 
@@ -50,7 +50,7 @@ public class ActionTestUtils {
      * @param value The action value.
      * @return ActionArguments that contain the situation and value.
      */
-    public static ActionArguments createArgs(Situation situation, ActionValue value) {
+    public static ActionArguments createArgs(@Action.Situation int situation, ActionValue value) {
         return createArgs(situation, value, null);
     }
 
@@ -63,7 +63,7 @@ public class ActionTestUtils {
      * @param metadata The metadata.
      * @return ActionArguments that contain the situation, value, and metadata.
      */
-    public static ActionArguments createArgs(Situation situation, Object value, Bundle metadata) {
+    public static ActionArguments createArgs(@Action.Situation int situation, Object value, Bundle metadata) {
         try {
             return createArgs(situation, ActionValue.wrap(value), metadata);
         } catch (ActionValueException e) {
@@ -81,7 +81,7 @@ public class ActionTestUtils {
      * @param metadata The metadata.
      * @return ActionArguments that contain the situation, value, and metadata.
      */
-    public static ActionArguments createArgs(Situation situation, ActionValue value, Bundle metadata) {
+    public static ActionArguments createArgs(@Action.Situation int situation, ActionValue value, Bundle metadata) {
         return new ActionArguments(situation, value, metadata);
     }
 
@@ -93,7 +93,7 @@ public class ActionTestUtils {
      * @param status The ActionResult status.
      * @return ActionResult that contains the value, exception, and status.
      */
-    public static ActionResult createResult(Object value, Exception exception, ActionResult.Status status) {
+    public static ActionResult createResult(Object value, Exception exception, @ActionResult.Status int status) {
         try {
             return new ActionResult(ActionValue.wrap(value), exception, status);
         } catch (ActionValueException e) {

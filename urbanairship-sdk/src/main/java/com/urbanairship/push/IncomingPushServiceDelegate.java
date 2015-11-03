@@ -39,9 +39,9 @@ import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -199,7 +199,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         // Run any actions for the push
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Situation.PUSH_RECEIVED, metadata);
+        ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
 
         // Store any pending in-app messages
         InAppMessage inAppMessage = message.getInAppMessage();

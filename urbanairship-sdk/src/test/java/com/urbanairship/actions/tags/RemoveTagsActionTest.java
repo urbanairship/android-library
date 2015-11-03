@@ -25,10 +25,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.push.PushManager;
 
 import org.junit.Before;
@@ -69,7 +69,7 @@ public class RemoveTagsActionTest extends BaseTestCase {
 
 
         // Remove tagOne and tagThree
-        ActionArguments args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, Arrays.asList("tagOne", "tagThree"));
         ActionResult result = action.perform(args);
 
         assertTrue("Remove tags action should return 'null' result", result.getValue().isNull());

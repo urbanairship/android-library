@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 public class AddCustomEventActionTest extends BaseTestCase {
 
     AddCustomEventAction action;
-    Situation[] acceptedSituations;
+    @Action.Situation int[] acceptedSituations;
     Analytics analytics;
     RichPushMessage message;
 
@@ -41,13 +41,13 @@ public class AddCustomEventActionTest extends BaseTestCase {
     public void setup() {
         action = new AddCustomEventAction();
 
-        acceptedSituations = new Situation[] {
-                Situation.PUSH_OPENED,
-                Situation.MANUAL_INVOCATION,
-                Situation.WEB_VIEW_INVOCATION,
-                Situation.PUSH_RECEIVED,
-                Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON,
-                Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_PUSH_RECEIVED,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
         };
 
         analytics = mock(Analytics.class);
@@ -73,7 +73,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
         map.put("event_name", "event name");
 
         // Check every accepted situation
-        for (Situation situation : acceptedSituations) {
+        for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, map);
             assertTrue("Should accept arguments in situation " + situation,
                     action.acceptsArguments(args));
@@ -85,7 +85,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArgumentsEmptyArgs() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, null);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null);
         assertFalse("Should reject empty args", action.acceptsArguments(args));
     }
 
@@ -94,7 +94,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArgumentsEmptyMap() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, new HashMap());
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, new HashMap());
         assertFalse("Should reject empty map", action.acceptsArguments(args));
     }
 
@@ -103,7 +103,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
      */
     @Test
     public void testAcceptsArgumentsInvalidValue() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "not valid");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "not valid");
         assertFalse("Should reject non-map action argument values", action.acceptsArguments(args));
     }
 
@@ -119,10 +119,10 @@ public class AddCustomEventActionTest extends BaseTestCase {
         map.put(CustomEvent.INTERACTION_ID, "interaction id");
         map.put(CustomEvent.EVENT_NAME, "event name");
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -151,10 +151,10 @@ public class AddCustomEventActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -182,11 +182,11 @@ public class AddCustomEventActionTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -208,11 +208,11 @@ public class AddCustomEventActionTest extends BaseTestCase {
         // Too large of a value
         map.put(CustomEvent.EVENT_VALUE, Double.toString(Double.MAX_VALUE));
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map);
 
         // Should fail to create the event and result in error
         ActionResult result = action.run(args);
-        assertEquals("Action should of fail", ActionResult.Status.EXECUTION_ERROR, result.getStatus());
+        assertEquals("Action should of fail", ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
     }
 
 
@@ -235,10 +235,10 @@ public class AddCustomEventActionTest extends BaseTestCase {
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.getMessageId());
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
@@ -277,10 +277,10 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         map.put(CustomEvent.PROPERTIES, properties);
 
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map);
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map);
 
         ActionResult result = action.perform(args);
-        assertEquals("Action should of completed", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Action should of completed", ActionResult.STATUS_COMPLETED, result.getStatus());
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);

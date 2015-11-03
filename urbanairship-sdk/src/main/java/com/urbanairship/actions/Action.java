@@ -35,10 +35,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * The base action class that describes an operation to perform.
@@ -63,10 +67,51 @@ import com.urbanairship.UAirship;
  * <p/>
  * Actions that are either long lived or are unable to be interrupted by the device
  * going to sleep should request a wake lock before performing. This is especially
- * important for actions that are performing in Situation.PUSH_RECEIVED, when a
+ * important for actions that are performing in SITUATION_PUSH_RECEIVED, when a
  * push is delivered when the device is not active.
  */
 public abstract class Action {
+
+    @IntDef(value={
+            SITUATION_MANUAL_INVOCATION,
+            SITUATION_PUSH_RECEIVED,
+            SITUATION_PUSH_OPENED,
+            SITUATION_WEB_VIEW_INVOCATION,
+            SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Situation {}
+
+    /**
+     * Situation where an action is manually invoked.
+     */
+    public final static int SITUATION_MANUAL_INVOCATION = 0;
+
+    /**
+     * Situation where an action is triggered when a push is received.
+     */
+    public final static int SITUATION_PUSH_RECEIVED = 1;
+
+    /**
+     * Situation where an action is triggered when a push is opened.
+     */
+    public final static int SITUATION_PUSH_OPENED = 2;
+
+    /**
+     * Situation where an action is triggered from a web view.
+     */
+    public final static int SITUATION_WEB_VIEW_INVOCATION = 3;
+
+    /**
+     * Situation where an action is triggered from a foreground notification action button.
+     */
+    public final static int SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON = 4;
+
+    /**
+     * Situation where an action is triggered from a background notification action button.
+     */
+    public final static int SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON = 5;
 
     /**
      * Performs the action, with pre/post execution calls,
@@ -79,7 +124,7 @@ public abstract class Action {
         try {
             if (!acceptsArguments(arguments)) {
                 Logger.debug("Action " + this + " is unable to accept arguments: " + arguments);
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
             }
 
             Logger.info("Running action: " + this + " arguments: " + arguments);

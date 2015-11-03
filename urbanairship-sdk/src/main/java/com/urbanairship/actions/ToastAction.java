@@ -35,9 +35,9 @@ import com.urbanairship.UAirship;
 /**
  * An action that displays text in a toast.
  * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
- * Situation.MANUAL_INVOCATION, Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON,
- * and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
+ * SITUATION_MANUAL_INVOCATION, SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+ * and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value - A string with the toast text or a map with:
  * <ul>
@@ -68,15 +68,21 @@ public class ToastAction extends Action {
 
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
-        if (arguments.getSituation() == Situation.PUSH_RECEIVED) {
-            return false;
-        }
+        switch (arguments.getSituation()) {
+            case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
+            case Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case Action.SITUATION_PUSH_OPENED:
+            case Action.SITUATION_MANUAL_INVOCATION:
+            case Action.SITUATION_WEB_VIEW_INVOCATION:
+                if (arguments.getValue().getMap() != null) {
+                    return arguments.getValue().getMap().get(TEXT_KEY).isString();
+                }
 
-        if (arguments.getValue().getMap() != null) {
-            return arguments.getValue().getMap().get(TEXT_KEY).isString();
+                return arguments.getValue().getString() != null;
+            case Action.SITUATION_PUSH_RECEIVED:
+            default:
+                return false;
         }
-
-        return arguments.getValue().getString() != null;
     }
 
     @NonNull

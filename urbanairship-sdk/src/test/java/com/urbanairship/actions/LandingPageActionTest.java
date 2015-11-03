@@ -114,13 +114,13 @@ public class LandingPageActionTest extends BaseTestCase {
     private void verifyPerform(Object value, String expectedIntentData) {
         ShadowApplication application = ShadowApplication.getInstance();
 
-        Situation[] situations = new Situation[] {
-                Situation.PUSH_OPENED,
-                Situation.MANUAL_INVOCATION,
-                Situation.WEB_VIEW_INVOCATION
+        @Action.Situation int[] situations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION
         };
 
-        for (Situation situation : situations) {
+        for (@Action.Situation int situation : situations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, value);
 
             ActionResult result = action.perform(args);
@@ -140,15 +140,15 @@ public class LandingPageActionTest extends BaseTestCase {
     }
 
     private void verifyAcceptsArgumentValue(Object value, boolean shouldAccept) {
-        Situation[] situations = new Situation[] {
-                Situation.PUSH_OPENED,
-                Situation.MANUAL_INVOCATION,
-                Situation.WEB_VIEW_INVOCATION,
-                Situation.PUSH_RECEIVED,
-                Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        @Action.Situation int[] situations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_PUSH_RECEIVED,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
         };
 
-        for (Situation situation : situations) {
+        for (@Action.Situation int situation : situations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, value);
             if (shouldAccept) {
                 assertTrue("Should accept arguments in situation " + situation,
