@@ -49,8 +49,8 @@ import com.urbanairship.richpush.RichPushMessage;
  * will attempt to be displayed in a Landing Page by using the intent action
  * {@link LandingPageAction#SHOW_LANDING_PAGE_INTENT_ACTION}.
  * <p/>
- * Accepted situations: Situation.PUSH_OPENED, Situation.WEB_VIEW_INVOCATION,
- * Situation.MANUAL_INVOCATION, and Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
+ * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument values: {@code null} to launch the inbox, the specified message ID, or {@code "auto"}
  * to look for the message ID in the {@link ActionArguments#getMetadata()}.
@@ -76,13 +76,13 @@ public class OpenRichPushInboxAction extends Action {
     @Override
     public boolean acceptsArguments(ActionArguments arguments) {
         switch (arguments.getSituation()) {
-            case PUSH_OPENED:
-            case WEB_VIEW_INVOCATION:
-            case MANUAL_INVOCATION:
-            case FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_PUSH_OPENED:
+            case SITUATION_WEB_VIEW_INVOCATION:
+            case SITUATION_MANUAL_INVOCATION:
+            case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
                 return true;
-            case BACKGROUND_NOTIFICATION_ACTION_BUTTON:
-            case PUSH_RECEIVED:
+            case SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_PUSH_RECEIVED:
             default:
                 return false;
         }

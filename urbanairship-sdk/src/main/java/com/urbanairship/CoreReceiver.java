@@ -32,9 +32,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
-import com.urbanairship.actions.Situation;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
@@ -96,7 +96,7 @@ public class CoreReceiver extends BroadcastReceiver {
             // Run UA actions for the notification action
             Logger.debug("Running actions for notification action: " + actionPayload);
 
-            ActionService.runActions(context, actionPayload, Situation.MANUAL_INVOCATION, null);
+            ActionService.runActions(context, actionPayload, Action.SITUATION_MANUAL_INVOCATION, null);
         }
     }
 
@@ -246,7 +246,7 @@ public class CoreReceiver extends BroadcastReceiver {
                 // Run UA actions for the notification action
                 Logger.debug("Running actions for notification action: " + actionPayload);
 
-                Situation situation = isForeground ? Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON : Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                @Action.Situation int situation = isForeground ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON : Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
 
                 Bundle metadata = new Bundle();
                 metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
@@ -279,7 +279,7 @@ public class CoreReceiver extends BroadcastReceiver {
             Bundle metadata = new Bundle();
             metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
 
-            ActionService.runActions(context, message.getActions(), Situation.PUSH_OPENED, metadata);
+            ActionService.runActions(context, message.getActions(), Action.SITUATION_PUSH_OPENED, metadata);
         }
     }
 

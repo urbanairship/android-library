@@ -160,7 +160,7 @@ public class LocationServiceTest extends BaseTestCase {
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
 
         sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
-        verify(mockAnalytics).recordLocation(eq(location), Mockito.any(LocationRequestOptions.class), eq(LocationEvent.UpdateType.CONTINUOUS));
+        verify(mockAnalytics).recordLocation(eq(location), Mockito.any(LocationRequestOptions.class), eq(LocationEvent.UPDATE_TYPE_CONTINUOUS));
     }
 
     /**
@@ -279,7 +279,7 @@ public class LocationServiceTest extends BaseTestCase {
         }));
 
         // Verify the location was recorded
-        verify(mockAnalytics).recordLocation(location, options, LocationEvent.UpdateType.SINGLE);
+        verify(mockAnalytics).recordLocation(location, options, LocationEvent.UPDATE_TYPE_SINGLE);
     }
 
     /**

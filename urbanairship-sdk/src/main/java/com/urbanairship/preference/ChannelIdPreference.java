@@ -42,8 +42,7 @@ import java.lang.ref.WeakReference;
 /**
  * The Channel ID preference.
  */
-@SuppressWarnings("deprecation") // For UAPreference
-public class ChannelIdPreference extends Preference implements UAPreference {
+public class ChannelIdPreference extends Preference {
 
     /**
      * Maximum times to check for Channel ID value when
@@ -104,15 +103,5 @@ public class ChannelIdPreference extends Preference implements UAPreference {
         View view = super.onCreateView(parent);
         view.setContentDescription(CONTENT_DESCRIPTION);
         return view;
-    }
-
-    @Override
-    public PreferenceType getPreferenceType() {
-        return PreferenceType.CHANNEL_ID;
-    }
-
-    @Override
-    public void setValue(Object value) {
-        setSummary((String)value);
     }
 }

@@ -40,7 +40,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Map;
@@ -69,24 +68,6 @@ public class ActionService extends Service {
      * Intent extra for storing metadata as a bundle.
      */
     public static final String EXTRA_METADATA = "com.urbanairship.actionservice.EXTRA_METADATA";
-
-    /**
-     * Intent extra for storing the actions payload
-     *
-     * @deprecated Marked to be removed in 7.0.0 . Use {@link #EXTRA_ACTIONS_BUNDLE} to specify
-     * the actions as a bundle rather than a JSON string.
-     */
-    @Deprecated
-    public static final String EXTRA_ACTIONS_PAYLOAD = "com.urbanairship.actionservice.EXTRA_ACTIONS_PAYLOAD";
-
-    /**
-     * Intent extra for storing the push bundle that triggered the actions.
-     *
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #EXTRA_METADATA} to specify a bundle with
-     * the PushMessage parcelable stored under the {@link ActionArguments#PUSH_MESSAGE_METADATA} key.
-     */
-    @Deprecated
-    public static final String EXTRA_PUSH_BUNDLE = "com.urbanairship.actionservice.EXTRA_PUSH_BUNDLE";
 
     private int lastStartId = 0;
 
@@ -142,38 +123,6 @@ public class ActionService extends Service {
     }
 
     /**
-     * Convenience method for running actions in the action service with added PushMessage metadata.
-     *
-     * @param context The application context.
-     * @param payload Actions payload.
-     * @param situation The current situation.
-     * @param message The push message that triggered the actions.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
-     */
-    @Deprecated
-    public static void runActionsPayload(Context context, String payload, Situation situation, PushMessage message) {
-        Bundle metadata = new Bundle();
-        if (message != null) {
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        }
-
-        runActions(context, payload, situation, metadata);
-    }
-
-    /**
-     * Convenience method for running actions in the action service.
-     *
-     * @param context The application context.
-     * @param payload Actions payload.
-     * @param situation The current situation.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #runActions(Context, String, Situation, Bundle)} instead.
-     */
-    @Deprecated
-    public static void runActionsPayload(Context context, String payload, Situation situation) {
-        runActions(context, payload, situation, null);
-    }
-
-    /**
      * Convenience method for running actions in the action service.
      *
      * @param context The application context.
@@ -181,7 +130,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(@NonNull Context context, @NonNull String actionsPayload, @Nullable Situation situation, @Nullable Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull String actionsPayload, @Action.Situation int situation, @Nullable Bundle metadata) {
         Bundle actions = createActionsBundle(actionsPayload);
         if (actions.isEmpty()) {
             return;
@@ -190,7 +139,7 @@ public class ActionService extends Service {
         Intent intent = new Intent(ACTION_RUN_ACTIONS)
                 .setClass(context, ActionService.class)
                 .putExtra(EXTRA_ACTIONS_BUNDLE, actions)
-                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
+                .putExtra(EXTRA_SITUATION, situation);
 
         if (metadata != null) {
             intent.putExtra(EXTRA_METADATA, metadata);
@@ -207,7 +156,7 @@ public class ActionService extends Service {
      * @param situation The action situation.
      * @param metadata The action metadata.
      */
-    public static void runActions(@NonNull Context context, @NonNull Map<String, ActionValue> actions, @Nullable Situation situation, @Nullable Bundle metadata) {
+    public static void runActions(@NonNull Context context, @NonNull Map<String, ActionValue> actions, @Action.Situation int situation, @Nullable Bundle metadata) {
         if (actions.isEmpty()) {
             return;
         }
@@ -220,7 +169,7 @@ public class ActionService extends Service {
         Intent intent = new Intent(ACTION_RUN_ACTIONS)
                 .setClass(context, ActionService.class)
                 .putExtra(EXTRA_ACTIONS_BUNDLE, actionsBundle)
-                .putExtra(EXTRA_SITUATION, situation == null ? Situation.MANUAL_INVOCATION : situation);
+                .putExtra(EXTRA_SITUATION, situation);
 
         if (metadata != null) {
             intent.putExtra(EXTRA_METADATA, metadata);
@@ -240,20 +189,37 @@ public class ActionService extends Service {
             actions = new Bundle();
         }
 
-        Situation situation = (Situation) intent.getSerializableExtra(EXTRA_SITUATION);
+        @Action.Situation int situation;
+        switch (intent.getIntExtra(EXTRA_SITUATION, Action.SITUATION_MANUAL_INVOCATION)) {
+            case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
+                situation = Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                break;
+
+            case Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+                situation = Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON;
+                break;
+
+            case Action.SITUATION_PUSH_OPENED:
+                situation = Action.SITUATION_PUSH_OPENED;
+                break;
+
+            case Action.SITUATION_PUSH_RECEIVED:
+                situation = Action.SITUATION_PUSH_RECEIVED;
+                break;
+
+            case Action.SITUATION_WEB_VIEW_INVOCATION:
+                situation = Action.SITUATION_WEB_VIEW_INVOCATION;
+                break;
+
+            case Action.SITUATION_MANUAL_INVOCATION:
+            default:
+                situation = Action.SITUATION_MANUAL_INVOCATION;
+                break;
+        }
+
         Bundle metadata = intent.getBundleExtra(EXTRA_METADATA);
         if (metadata == null) {
             metadata = new Bundle();
-        }
-
-        // TODO: Remove in 7.0.0
-        String actionsPayload = intent.getStringExtra(EXTRA_ACTIONS_PAYLOAD);
-        actions.putAll(createActionsBundle(actionsPayload));
-
-        // TODO: Remove in 7.0.0
-        Bundle pushBundle = intent.getParcelableExtra(EXTRA_PUSH_BUNDLE);
-        if (pushBundle != null) {
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
         }
 
         if (actions.isEmpty()) {

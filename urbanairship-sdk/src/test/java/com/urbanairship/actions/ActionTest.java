@@ -51,7 +51,7 @@ public class ActionTest extends BaseTestCase {
         metadata.putString("metadata_key", "metadata_value");
 
         final ActionResult expectedResult = ActionResult.newResult(ActionValue.wrap("result"));
-        final ActionArguments originalArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value", metadata);
+        final ActionArguments originalArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", metadata);
 
 
         // Create a test action that verifies the result, handle, and arguments
@@ -99,7 +99,7 @@ public class ActionTest extends BaseTestCase {
 
         assertEquals("Action result is unexpected", expectedResult, results);
         assertEquals("Result should have COMPLETED status",
-                ActionResult.Status.COMPLETED, expectedResult.getStatus());
+                ActionResult.STATUS_COMPLETED, expectedResult.getStatus());
 
         // Verify the methods were called
         assertTrue("Action.onStart is not being called", action.onStartCalled);
@@ -116,12 +116,12 @@ public class ActionTest extends BaseTestCase {
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
         TestAction action = new TestAction(false, performResult);
 
-        ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value"));
+        ActionResult badArgsResult = action.run(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value"));
 
         assertTrue("Does not accept arguments should return a 'null' result value", badArgsResult.getValue().isNull());
 
         assertEquals("Result should have an rejected arguemnts status",
-                ActionResult.Status.REJECTED_ARGUMENTS, badArgsResult.getStatus());
+                ActionResult.STATUS_REJECTED_ARGUMENTS, badArgsResult.getStatus());
 
         assertFalse("Does not accept arguments should not call any of the actions perform methods.",
                 action.onStartCalled);
@@ -138,7 +138,7 @@ public class ActionTest extends BaseTestCase {
      */
     @Test
     public void testRunPerformException() throws ActionValueException {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value");
         ActionResult performResult = ActionResult.newResult(ActionValue.wrap("result"));
 
         final IllegalStateException exception = new IllegalStateException("oh no!");
@@ -156,7 +156,7 @@ public class ActionTest extends BaseTestCase {
         assertEquals("Result should pass back exception as the value", exception, result.getException());
         assertTrue("Result should be 'null'", result.getValue().isNull());
         assertEquals("Result should have an error status",
-                ActionResult.Status.EXECUTION_ERROR, result.getStatus());
+                ActionResult.STATUS_EXECUTION_ERROR, result.getStatus());
 
         assertTrue("Action.onStart is not being called", action.onStartCalled);
         assertTrue("Action.perform is not being called", action.performCalled);
@@ -168,7 +168,7 @@ public class ActionTest extends BaseTestCase {
      */
     @Test
     public void testRunPerformNullResult() {
-        ActionArguments args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "value");
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value");
 
         TestAction action = new TestAction(true, null);
 
@@ -176,7 +176,7 @@ public class ActionTest extends BaseTestCase {
         assertNotNull("Result should never be null", result);
         assertTrue("Result should be 'null'", result.getValue().isNull());
         assertEquals("Result should have the COMPLETED status",
-                ActionResult.Status.COMPLETED, result.getStatus());
+                ActionResult.STATUS_COMPLETED, result.getStatus());
     }
 
     /**
@@ -207,7 +207,7 @@ public class ActionTest extends BaseTestCase {
         // for result blocks
         Thread actionThread = new Thread(new Runnable() {
             public void run() {
-                action.run(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "arg"));
+                action.run(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "arg"));
             }
         });
         actionThread.start();

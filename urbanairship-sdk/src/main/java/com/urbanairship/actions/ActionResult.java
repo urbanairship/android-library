@@ -25,43 +25,47 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Stores the results of running an {@link com.urbanairship.actions.Action}.
  */
 public final class ActionResult {
 
+    @IntDef({STATUS_COMPLETED, STATUS_REJECTED_ARGUMENTS, STATUS_ACTION_NOT_FOUND, STATUS_EXECUTION_ERROR})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Status {}
+
     /**
-     * The run status of the action.
+     * The action accepted the arguments and executed without an exception.
      */
-    public enum Status {
-        /**
-         * The action accepted the arguments and executed without an exception.
-         */
-        COMPLETED,
+    public static final int STATUS_COMPLETED = 1;
 
-        /**
-         * The action was not performed because the arguments were rejected by
-         * either the predicate in the registry or the action.
-         */
-        REJECTED_ARGUMENTS,
+    /**
+     * The action was not performed because the arguments were rejected by
+     * either the predicate in the registry or the action.
+     */
+    public static final int STATUS_REJECTED_ARGUMENTS = 2;
 
-        /**
-         * The action was not performed because the action was not found
-         * in the {@link com.urbanairship.actions.ActionRegistry}. This value is
-         * only possible if trying to run an action by name through the
-         * {@link com.urbanairship.actions.ActionRunRequestFactory}.
-         */
-        ACTION_NOT_FOUND,
+    /**
+     * The action was not performed because the action was not found
+     * in the {@link com.urbanairship.actions.ActionRegistry}. This value is
+     * only possible if trying to run an action by name through the
+     * {@link com.urbanairship.actions.ActionRunRequestFactory}.
+     */
+    public static final int STATUS_ACTION_NOT_FOUND = 3;
 
-        /**
-         * The action encountered a runtime exception during execution.  The
-         * exception field will contain the caught exception.
-         */
-        EXECUTION_ERROR
-    }
+    /**
+     * The action encountered a runtime exception during execution. The
+     * exception field will contain the caught exception.
+     */
+    public static final int STATUS_EXECUTION_ERROR = 4;
+
 
     /**
      * The result exception. This value may be null.
@@ -76,14 +80,14 @@ public final class ActionResult {
     /**
      * Run status of the action.
      */
-    private final Status status;
+    private final @Status int status;
 
     /**
      * Factory method to create an empty result
      */
     @NonNull
     public static ActionResult newEmptyResult() {
-        return new ActionResult(null, null, Status.COMPLETED);
+        return new ActionResult(null, null, STATUS_COMPLETED);
     }
 
     /**
@@ -93,7 +97,7 @@ public final class ActionResult {
      */
     @NonNull
     public static ActionResult newResult(ActionValue value) {
-        return new ActionResult(value, null, Status.COMPLETED);
+        return new ActionResult(value, null, STATUS_COMPLETED);
     }
 
     /**
@@ -103,7 +107,7 @@ public final class ActionResult {
      */
     @NonNull
     public static ActionResult newErrorResult(Exception exception) {
-        return new ActionResult(null, exception, Status.EXECUTION_ERROR);
+        return new ActionResult(null, exception, STATUS_EXECUTION_ERROR);
     }
 
     /**
@@ -112,7 +116,7 @@ public final class ActionResult {
      * @param status The result's status
      */
     @NonNull
-    static ActionResult newEmptyResultWithStatus(Status status) {
+    static ActionResult newEmptyResultWithStatus(@Status int status) {
         return new ActionResult(null, null, status);
     }
 
@@ -123,10 +127,10 @@ public final class ActionResult {
      * @param exception The result exception.
      * @param status The run status of the action.
      */
-    ActionResult(ActionValue value, Exception exception, Status status) {
+    ActionResult(ActionValue value, Exception exception, @Status int status) {
         this.value = value == null ? new ActionValue() : value;
         this.exception = exception;
-        this.status = status != null ? status : Status.COMPLETED;
+        this.status = status;
     }
 
     /**
@@ -152,8 +156,8 @@ public final class ActionResult {
      *
      * @return The status of the action run.
      */
-    @NonNull
-    public Status getStatus() {
+    @Status
+    public int getStatus() {
         return status;
     }
 }

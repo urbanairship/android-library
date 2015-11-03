@@ -258,17 +258,6 @@ public class PushMessage implements Parcelable {
     }
 
     /**
-     * Gets the actions payload that runs when the message is received or opened.
-     *
-     * @return The actions payload.
-     * @deprecated Marked to be remove in 7.0.0. Use {@link #getActions()} instead.
-     */
-    @Deprecated
-    public String getActionsPayload() {
-        return pushBundle.getString(EXTRA_ACTIONS);
-    }
-
-    /**
      * Gets the push message's actions.
      *
      * @return A map of action name to action value.

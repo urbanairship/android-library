@@ -169,17 +169,6 @@ public class PlayServicesUtils {
      * Checks if Google Play services dependency is available for Fused Location.
      *
      * @return <code>true</code> if available, otherwise <code>false</code>.
-     * @deprecated Marked to be removed in 7.0.0. Use {@link #isFusedLocationDependencyAvailable()} instead.
-     */
-    @Deprecated
-    public static boolean isFusedLocationDepdendencyAvailable() {
-        return isFusedLocationDependencyAvailable();
-    }
-
-    /**
-     * Checks if Google Play services dependency is available for Fused Location.
-     *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
      */
     public static boolean isFusedLocationDependencyAvailable() {
         if (isFusedLocationDependencyAvailable == null) {

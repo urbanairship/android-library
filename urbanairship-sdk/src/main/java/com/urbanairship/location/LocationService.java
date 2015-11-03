@@ -288,7 +288,7 @@ public class LocationService extends Service {
                 Logger.verbose("LocationService - Single location received for client: " + client + " ID: " + requestId);
                 Logger.info("Received single location update: " + location);
 
-                UAirship.shared().getAnalytics().recordLocation(location, options, LocationEvent.UpdateType.SINGLE);
+                UAirship.shared().getAnalytics().recordLocation(location, options, LocationEvent.UPDATE_TYPE_SINGLE);
 
                 // Send the client the location
                 sendClientMessage(client, MSG_SINGLE_REQUEST_RESULT, requestId, location);
@@ -390,7 +390,7 @@ public class LocationService extends Service {
 
             UAirship.shared()
                     .getAnalytics()
-                    .recordLocation(location, options, LocationEvent.UpdateType.CONTINUOUS);
+                    .recordLocation(location, options, LocationEvent.UPDATE_TYPE_CONTINUOUS);
 
             List<Messenger> clientCopy = new ArrayList<>(subscribedClients);
             for (Messenger client : clientCopy) {

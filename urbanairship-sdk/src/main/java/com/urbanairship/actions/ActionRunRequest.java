@@ -62,7 +62,7 @@ public class ActionRunRequest {
     private Action action;
     private ActionValue actionValue;
     private Bundle metadata;
-    private Situation situation;
+    private @Action.Situation int situation = Action.SITUATION_MANUAL_INVOCATION;
 
     /**
      * Creates an action run request. The action will not be run
@@ -178,7 +178,7 @@ public class ActionRunRequest {
      * @return The request object.
      */
     @NonNull
-    public ActionRunRequest setSituation(Situation situation) {
+    public ActionRunRequest setSituation(@Action.Situation int situation) {
         this.situation = situation;
         return this;
     }
@@ -204,17 +204,17 @@ public class ActionRunRequest {
         if (actionName != null) {
             ActionRegistry.Entry entry = lookUpAction(actionName);
             if (entry == null) {
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
             } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
                 Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
             } else {
                 return entry.getActionForSituation(situation).run(arguments);
             }
         } else if (action != null) {
             return action.run(arguments);
         } else {
-            return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND);
+            return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
         }
     }
 

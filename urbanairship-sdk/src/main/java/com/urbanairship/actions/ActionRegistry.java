@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.actions;
 
 import android.support.annotation.NonNull;
+import android.util.SparseArray;
 
 import com.android.internal.util.Predicate;
 import com.urbanairship.Logger;
@@ -41,7 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Class responsible for runtime-persisting actions and associating them
@@ -181,7 +181,7 @@ public final class ActionRegistry {
         landingPageEntry.setPredicate(new Predicate<ActionArguments>() {
             @Override
             public boolean apply(ActionArguments arguments) {
-                if (Situation.PUSH_RECEIVED.equals(arguments.getSituation())) {
+                if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
                     long lastOpenTime = UAirship.shared().getApplicationMetrics().getLastOpenTimeMillis();
                     return System.currentTimeMillis() - lastOpenTime <= LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS;
                 }
@@ -192,7 +192,7 @@ public final class ActionRegistry {
         Predicate<ActionArguments> rejectPushReceivedPredicate = new Predicate<ActionArguments>() {
             @Override
             public boolean apply(ActionArguments arguments) {
-                return !(Situation.PUSH_RECEIVED.equals(arguments.getSituation()));
+                return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
             }
         };
 
@@ -214,8 +214,8 @@ public final class ActionRegistry {
         addCustomEventEntry.setPredicate(new Predicate<ActionArguments>() {
             @Override
             public boolean apply(ActionArguments arguments) {
-                return (Situation.MANUAL_INVOCATION == arguments.getSituation() ||
-                        Situation.WEB_VIEW_INVOCATION == arguments.getSituation());
+                return Action.SITUATION_MANUAL_INVOCATION == arguments.getSituation() ||
+                        Action.SITUATION_WEB_VIEW_INVOCATION == arguments.getSituation();
             }
         });
 
@@ -243,7 +243,7 @@ public final class ActionRegistry {
         private Action defaultAction;
         private Predicate<ActionArguments> predicate;
 
-        private final Map<Situation, Action> situationOverrides = new ConcurrentHashMap<>();
+        private final SparseArray<Action> situationOverrides = new SparseArray<>();
 
         /**
          * Entry constructor
@@ -264,11 +264,7 @@ public final class ActionRegistry {
          * default action
          */
         @NonNull
-        public Action getActionForSituation(Situation situation) {
-            if (situation == null) {
-                return defaultAction;
-            }
-
+        public Action getActionForSituation(@Action.Situation int situation) {
             Action action = situationOverrides.get(situation);
             if (action != null) {
                 return action;
@@ -326,9 +322,9 @@ public final class ActionRegistry {
          * @param action Action for the situation
          * @param situation The situation to override
          */
-        public void addSituationOverride(@NonNull Action action, @NonNull Situation situation) {
+        public void addSituationOverride(@NonNull Action action, @Action.Situation int situation) {
             //noinspection ConstantConditions
-            if (situation == null || action == null) {
+            if (action == null) {
                 return;
             }
 

@@ -37,7 +37,6 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.util.ManifestUtils;
 
 import java.io.IOException;
-import java.util.Set;
 
 /**
  * Handles GCM registration.
@@ -58,29 +57,15 @@ class GCMRegistrar {
             return false;
         }
 
-        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(UAirship.getApplicationContext());
-
-
-        Set<String> senderIds = UAirship.shared().getAirshipConfigOptions().getGCMSenderIds();
-        Set<String> registeredGcmSenderIds = UAirship.shared().getPushManager().getPreferences().getRegisteredGcmSenderIds();
-
-        // Unregister if we have different registered sender ids
-        if (registeredGcmSenderIds != null &&  !registeredGcmSenderIds.equals(senderIds)) {
-            Logger.debug("GCMRegistrar - Unregistering GCM Sender IDs:  " + registeredGcmSenderIds);
-            gcm.unregister();
-        }
-
-        Logger.debug("GCMRegistrar - Registering GCM Sender IDs:  " + senderIds);
-        String registrationId = gcm.register(senderIds.toArray(new String[senderIds.size()]));
+        String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
 
         InstanceID instanceID = InstanceID.getInstance(UAirship.getApplicationContext());
-        String token = instanceID.getToken(UAirship.shared().getAirshipConfigOptions().gcmSender, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-        if (registrationId != null && token != null) {
-            Logger.info("GCM registration successful security token: " + token + " registration ID: " + registrationId);
+        if (token != null) {
+            Logger.info("GCM registration successful security token: " + token);
             UAirship.shared().getPushManager().setGcmToken(token);
-            UAirship.shared().getPushManager().setGcmId(registrationId);
-            UAirship.shared().getPushManager().getPreferences().setRegisteredGcmSenderIds(senderIds);
+            UAirship.shared().getPushManager().getPreferences().setRegisteredGcmSenderId(senderId);
         }
 
         return true;

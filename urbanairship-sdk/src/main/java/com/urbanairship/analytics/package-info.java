@@ -25,10 +25,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
  * Contains high-level classes for interacting with the Urban Airship Analytics API.
- *
- * This package provides a high level interface to the Urban Airship Analytics API via the
- * <code>Analytics</code>, <code>InstrumentedActivity</code> and <code>InstrumentedListActivity</code> classes.
- *
  */
 package com.urbanairship.analytics;
 

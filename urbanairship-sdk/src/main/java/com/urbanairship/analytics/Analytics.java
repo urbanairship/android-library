@@ -244,7 +244,7 @@ public class Analytics {
      * @param location The location to record.
      */
     public void recordLocation(@NonNull Location location) {
-        recordLocation(location, null, LocationEvent.UpdateType.SINGLE);
+        recordLocation(location, null, LocationEvent.UPDATE_TYPE_SINGLE);
     }
 
     /**
@@ -254,7 +254,7 @@ public class Analytics {
      * @param options The location request options.
      * @param updateType The update type.
      */
-    public void recordLocation(@NonNull Location location, @Nullable LocationRequestOptions options, LocationEvent.UpdateType updateType) {
+    public void recordLocation(@NonNull Location location, @Nullable LocationRequestOptions options, @LocationEvent.UpdateType int updateType) {
         int requestedAccuracy;
         int distance;
 

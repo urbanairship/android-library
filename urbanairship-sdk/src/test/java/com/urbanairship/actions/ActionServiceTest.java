@@ -56,7 +56,7 @@ public class ActionServiceTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString("oh", "hi");
 
-        ActionService.runActions(context, actionsPayload, Situation.WEB_VIEW_INVOCATION, metadata);
+        ActionService.runActions(context, actionsPayload, Action.SITUATION_WEB_VIEW_INVOCATION, metadata);
 
         Intent runActionsIntent = shadowApplication.getNextStartedService();
         assertNotNull(runActionsIntent);
@@ -67,7 +67,7 @@ public class ActionServiceTest extends BaseTestCase {
         Bundle actionBundle = runActionsIntent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE);
         assertEquals(actionBundle.getParcelable("actionName"), ActionValue.wrap("actionValue"));
 
-        assertEquals("Should add the situation", Situation.WEB_VIEW_INVOCATION,
+        assertEquals("Should add the situation", Action.SITUATION_WEB_VIEW_INVOCATION,
                 runActionsIntent.getSerializableExtra(ActionService.EXTRA_SITUATION));
     }
 
@@ -86,7 +86,7 @@ public class ActionServiceTest extends BaseTestCase {
         Bundle metadata = new Bundle();
         metadata.putString("oh", "hi");
 
-        ActionService.runActions(context, actions, Situation.PUSH_OPENED, metadata);
+        ActionService.runActions(context, actions, Action.SITUATION_PUSH_OPENED, metadata);
 
         Intent runActionsIntent = shadowApplication.getNextStartedService();
         assertNotNull(runActionsIntent);
@@ -97,7 +97,7 @@ public class ActionServiceTest extends BaseTestCase {
         Bundle actionBundle = runActionsIntent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE);
         assertEquals(actionBundle.getParcelable("actionName"), ActionValue.wrap("actionValue"));
 
-        assertEquals("Should add the situation", Situation.PUSH_OPENED,
+        assertEquals("Should add the situation", Action.SITUATION_PUSH_OPENED,
                 runActionsIntent.getSerializableExtra(ActionService.EXTRA_SITUATION));
     }
 
@@ -111,7 +111,7 @@ public class ActionServiceTest extends BaseTestCase {
         shadowApplication.clearStartedServices();
 
         String actionsPayload = null;
-        ActionService.runActions(context, actionsPayload, Situation.WEB_VIEW_INVOCATION, null);
+        ActionService.runActions(context, actionsPayload, Action.SITUATION_WEB_VIEW_INVOCATION, null);
 
         Intent runActionsIntent = shadowApplication.getNextStartedService();
         assertNull("Action service should not start with a null actions payload",
@@ -155,14 +155,14 @@ public class ActionServiceTest extends BaseTestCase {
         metadata.putString("oh", "hi");
 
         // Create the intent
-        ActionService.runActions(context, "{ \"actionName\": \"actionValue\" }", Situation.WEB_VIEW_INVOCATION, metadata);
+        ActionService.runActions(context, "{ \"actionName\": \"actionValue\" }", Action.SITUATION_WEB_VIEW_INVOCATION, metadata);
         Intent runActionsIntent = shadowApplication.getNextStartedService();
 
         // Start the service
         service.onStartCommand(runActionsIntent, 0, 1);
 
         verify(runRequest).setValue(ActionValue.wrap("actionValue"));
-        verify(runRequest).setSituation(Situation.WEB_VIEW_INVOCATION);
+        verify(runRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
         verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override

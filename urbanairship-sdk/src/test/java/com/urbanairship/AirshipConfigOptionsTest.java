@@ -12,11 +12,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * This class tests the parsing of each type of configuration
@@ -147,35 +145,5 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         aco.inProduction = true;
         aco.isValid();
         assertEquals(Log.ERROR, aco.productionLogLevel);
-    }
-
-    /**
-     * Test that getGCMSenderIds returns only the main gcm sender id when additional ones are
-     * not defined.
-     */
-    @Test
-    public void testGetGCMSenderIds() {
-        AirshipConfigOptions aco = new AirshipConfigOptions();
-        aco.gcmSender = "sender-1";
-
-        Set<String> ids = aco.getGCMSenderIds();
-        assertEquals(ids.size(), 1);
-        assertTrue(ids.contains("sender-1"));
-    }
-
-    /**
-     * Test that getGCMSenderIds returns all the sender ids.
-     */
-    @Test
-    public void testGetGCMSenderIdsAdditionalIds() {
-        AirshipConfigOptions aco = new AirshipConfigOptions();
-        aco.additionalGCMSenderIds = new String[] { "sender-2", "sender-3" };
-        aco.gcmSender = "sender-1";
-
-        Set<String> ids = aco.getGCMSenderIds();
-        assertEquals(ids.size(), 3);
-        assertTrue(ids.contains("sender-1"));
-        assertTrue(ids.contains("sender-2"));
-        assertTrue(ids.contains("sender-3"));
     }
 }
