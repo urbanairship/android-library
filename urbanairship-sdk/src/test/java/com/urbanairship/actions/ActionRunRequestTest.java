@@ -139,7 +139,7 @@ public class ActionRunRequestTest extends BaseTestCase {
         // Run the action by name
         ActionResult result = ActionRunRequest.createRequest(action).runSync();
         assertTrue("Action failed to run", action.performCalled);
-        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Result status should be COMPLETED", ActionResult.STATUS_COMPLETED, result.getStatus());
     }
 
     /**
@@ -157,7 +157,7 @@ public class ActionRunRequestTest extends BaseTestCase {
 
         assertTrue("Action failed to run", action.performCalled);
         assertEquals("Wrong action name", "action!", action.runArgs.getMetadata().get(ActionArguments.REGISTRY_ACTION_NAME_METADATA));
-        assertEquals("Result status should be COMPLETED", ActionResult.Status.COMPLETED, result.getStatus());
+        assertEquals("Result status should be COMPLETED", ActionResult.STATUS_COMPLETED, result.getStatus());
     }
 
     /**
@@ -215,7 +215,7 @@ public class ActionRunRequestTest extends BaseTestCase {
                 result.getValue().isNull());
 
         assertEquals("Result should have an rejected argument status",
-                ActionResult.Status.REJECTED_ARGUMENTS, result.getStatus());
+                ActionResult.STATUS_REJECTED_ARGUMENTS, result.getStatus());
 
         assertTrue("Callback is not being called", callback.onFinishCalled);
     }
@@ -244,7 +244,7 @@ public class ActionRunRequestTest extends BaseTestCase {
                 result.getValue().isNull());
 
         assertEquals("Result should have an error status",
-                ActionResult.Status.ACTION_NOT_FOUND, result.getStatus());
+                ActionResult.STATUS_ACTION_NOT_FOUND, result.getStatus());
     }
 
     /**

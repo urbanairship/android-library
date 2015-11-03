@@ -321,13 +321,13 @@ public class UAWebViewClient extends WebViewClient {
 
                                        String errorMessage = null;
                                        switch (result.getStatus()) {
-                                           case ACTION_NOT_FOUND:
+                                           case ActionResult.STATUS_ACTION_NOT_FOUND:
                                                errorMessage =  String.format("Action %s not found", name);
                                                break;
-                                           case REJECTED_ARGUMENTS:
+                                           case ActionResult.STATUS_REJECTED_ARGUMENTS:
                                                errorMessage = String.format("Action %s rejected its arguments", name);
                                                break;
-                                           case EXECUTION_ERROR:
+                                           case ActionResult.STATUS_EXECUTION_ERROR:
                                                if (result.getException() != null) {
                                                    errorMessage = result.getException().getMessage();
                                                } else {

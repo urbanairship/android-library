@@ -93,7 +93,7 @@ public class ActionTestUtils {
      * @param status The ActionResult status.
      * @return ActionResult that contains the value, exception, and status.
      */
-    public static ActionResult createResult(Object value, Exception exception, ActionResult.Status status) {
+    public static ActionResult createResult(Object value, Exception exception, @ActionResult.Status int status) {
         try {
             return new ActionResult(ActionValue.wrap(value), exception, status);
         } catch (ActionValueException e) {

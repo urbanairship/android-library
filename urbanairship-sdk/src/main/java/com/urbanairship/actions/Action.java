@@ -79,7 +79,7 @@ public abstract class Action {
         try {
             if (!acceptsArguments(arguments)) {
                 Logger.debug("Action " + this + " is unable to accept arguments: " + arguments);
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS);
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
             }
 
             Logger.info("Running action: " + this + " arguments: " + arguments);

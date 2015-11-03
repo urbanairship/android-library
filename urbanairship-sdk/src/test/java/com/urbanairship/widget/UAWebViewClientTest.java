@@ -303,7 +303,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testRunActionsCallsCompletionCallback() {
-        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
@@ -400,7 +400,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testActionCallActionNotFound() {
-        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.ACTION_NOT_FOUND);
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_ACTION_NOT_FOUND);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
@@ -428,7 +428,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testActionCallActionRejectedArguments() {
-        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.Status.REJECTED_ARGUMENTS);
+        final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_REJECTED_ARGUMENTS);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
@@ -456,7 +456,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testActionCallActionExecutionError() {
-        final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.Status.EXECUTION_ERROR);
+        final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.STATUS_EXECUTION_ERROR);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
@@ -484,7 +484,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testActionCallAction() throws ActionValueException {
-        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
@@ -518,7 +518,7 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     public void testRunActionCallsCompletionCallback() throws ActionValueException {
-        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.Status.COMPLETED);
+        final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Situation.WEB_VIEW_INVOCATION, "what");
 
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
