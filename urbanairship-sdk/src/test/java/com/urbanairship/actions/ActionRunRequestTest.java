@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import com.android.internal.util.Predicate;
 import com.urbanairship.BaseTestCase;
 
 import org.junit.After;
@@ -198,7 +197,7 @@ public class ActionRunRequestTest extends BaseTestCase {
         ActionRegistry.Entry entry = actionRegistry.registerAction(action, "action!");
 
         // Set a predicate that rejects all arguments
-        entry.setPredicate(new Predicate<ActionArguments>() {
+        entry.setPredicate(new ActionRegistry.Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return false;

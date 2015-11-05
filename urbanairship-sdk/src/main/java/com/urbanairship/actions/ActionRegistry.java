@@ -28,7 +28,6 @@ package com.urbanairship.actions;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
-import com.android.internal.util.Predicate;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.tags.AddTagsAction;
@@ -52,6 +51,20 @@ public final class ActionRegistry {
     private final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
 
     private final Map<String, Entry> actionMap = new HashMap<>();
+
+    /**
+     * ActionArgument predicate
+     */
+    interface Predicate {
+
+        /**
+         * Applies the predicate to the action arguments.
+         *
+         * @param arguments The action arguments.
+         * @return {@code true} to accept the arguments, otherwise {@code false}.
+         */
+        boolean apply(ActionArguments arguments);
+    }
 
     /**
      * Registers an action.
@@ -178,7 +191,7 @@ public final class ActionRegistry {
                 LandingPageAction.DEFAULT_REGISTRY_NAME,
                 LandingPageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
-        landingPageEntry.setPredicate(new Predicate<ActionArguments>() {
+        landingPageEntry.setPredicate(new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
@@ -189,7 +202,7 @@ public final class ActionRegistry {
             }
         });
 
-        Predicate<ActionArguments> rejectPushReceivedPredicate = new Predicate<ActionArguments>() {
+        Predicate rejectPushReceivedPredicate = new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
@@ -211,7 +224,7 @@ public final class ActionRegistry {
         Entry addCustomEventEntry = registerAction(new AddCustomEventAction(),
                 AddCustomEventAction.DEFAULT_REGISTRY_NAME);
 
-        addCustomEventEntry.setPredicate(new Predicate<ActionArguments>() {
+        addCustomEventEntry.setPredicate(new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return Action.SITUATION_MANUAL_INVOCATION == arguments.getSituation() ||
@@ -241,7 +254,7 @@ public final class ActionRegistry {
     public final static class Entry {
         private final List<String> names;
         private Action defaultAction;
-        private Predicate<ActionArguments> predicate;
+        private Predicate predicate;
 
         private final SparseArray<Action> situationOverrides = new SparseArray<>();
 
@@ -277,7 +290,7 @@ public final class ActionRegistry {
          *
          * @return The entry's predicate, or null if it is not defined
          */
-        public Predicate<ActionArguments> getPredicate() {
+        public Predicate getPredicate() {
             return predicate;
         }
 
@@ -286,7 +299,7 @@ public final class ActionRegistry {
          *
          * @param predicate A predicate for the entry
          */
-        public void setPredicate(Predicate<ActionArguments> predicate) {
+        public void setPredicate(Predicate predicate) {
             this.predicate = predicate;
         }
 
