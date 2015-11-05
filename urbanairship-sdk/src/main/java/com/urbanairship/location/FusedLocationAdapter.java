@@ -10,10 +10,10 @@ import android.support.annotation.NonNull;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 
 import java.util.concurrent.Semaphore;
 
@@ -35,12 +35,12 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options) {
+    public PendingLocationResult requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
             return null;
         }
-        return new SingleLocationRequest(options);
+        return new SingleLocationRequest(locationCallback, options);
     }
 
     @Override
@@ -169,9 +169,11 @@ class FusedLocationAdapter implements LocationAdapter {
         /**
          * FusedLocationRequest constructor.
          *
+         * @param locationCallback The location callback.
          * @param options LocationRequestOptions options.
          */
-        SingleLocationRequest(LocationRequestOptions options) {
+        SingleLocationRequest(LocationCallback locationCallback, LocationRequestOptions options) {
+            super(locationCallback);
             this.locationRequest = createLocationRequest(options);
             locationRequest.setNumUpdates(1);
 

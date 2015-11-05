@@ -26,32 +26,30 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.location;
 
 import android.location.Location;
+import android.support.annotation.Nullable;
 
-import com.urbanairship.PendingResult;
+import com.urbanairship.Cancelable;
 
 /**
  * Base class for pending single location requests.
  */
-abstract class PendingLocationResult implements PendingResult<Location> {
+abstract class PendingLocationResult implements Cancelable {
 
     private boolean isCanceled;
-    private ResultCallback<Location> resultCallback;
+
+    @Nullable
+    private LocationCallback locationCallback;
+
+    @Nullable
     private Location result;
 
-    @Override
-    public synchronized void onResult(ResultCallback<Location> resultCallback) {
-
-        if (isCanceled || this.resultCallback != null) {
-            return;
-        }
-
-        this.resultCallback = resultCallback;
-
-        if (result != null) {
-            this.resultCallback.onResult(result);
-        }
+    public PendingLocationResult(@Nullable LocationCallback locationCallback) {
+        this.locationCallback = locationCallback;
     }
 
+    /**
+     * Cancels the pending result.
+     */
     @Override
     public synchronized void cancel() {
         if (isCanceled()) {
@@ -73,12 +71,10 @@ abstract class PendingLocationResult implements PendingResult<Location> {
         }
 
         this.result = result;
-        if (resultCallback != null) {
-            resultCallback.onResult(result);
+        if (locationCallback != null) {
+            locationCallback.onResult(result);
         }
-
     }
-
 
     /**
      * Returns if the request has been canceled or not.

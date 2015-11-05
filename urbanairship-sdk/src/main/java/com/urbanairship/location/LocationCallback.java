@@ -1,4 +1,4 @@
-package com.urbanairship;/*
+/*
 Copyright 2009-2015 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -23,46 +23,19 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package com.urbanairship.location;
+
+import android.location.Location;
+
 /**
- * A generic pending result.
- *
- * @param <T> Type of result.
+ * A location callback.
  */
-public interface PendingResult<T> {
+public interface LocationCallback {
 
     /**
-     * Result callback interface.
+     * Called when a new location is received.
      *
-     * @param <T> The type of result.
+     * @param location The new location or null if the request is unable to be made due to insufficient permissions.
      */
-    interface ResultCallback<T> {
-        void onResult(T result);
-    }
-
-    /**
-     * Sets a callback to be called when a result is received.
-     *
-     * @param resultCallback The result callback.
-     */
-    void onResult(ResultCallback<T> resultCallback);
-
-    /**
-     * Cancels the pending result.
-     */
-    void cancel();
-
-    /**
-     * Returns if the request has been canceled or not.
-     *
-     * @return <code>true</code> if canceled, <code>false</code> otherwise.
-     */
-    boolean isCanceled();
-
-    /**
-     * Returns the current state of the result.
-     *
-     * @return <code>true</code> if done or canceled, <code>false</code> otherwise.
-     */
-    boolean isDone();
-
+    void onResult(Location location);
 }

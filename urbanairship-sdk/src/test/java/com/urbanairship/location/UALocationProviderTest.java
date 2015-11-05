@@ -2,6 +2,7 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -35,9 +36,17 @@ public class UALocationProviderTest extends BaseTestCase {
     LocationAdapter mockAdapterOne;
     LocationAdapter mockAdapterTwo;
     LocationRequestOptions options;
+    LocationCallback locationCallback;
 
     @Before
     public void setUp() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onResult(Location location) {
+
+            }
+        };
+
         mockAdapterOne = mock(LocationAdapter.class);
         mockAdapterTwo = mock(LocationAdapter.class);
 
@@ -144,17 +153,17 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationRequest() {
-        PendingLocationResult request = new PendingLocationResult() {
+        PendingLocationResult request = new PendingLocationResult(locationCallback) {
             @Override
             protected void onCancel() {
             }
         };
 
         when(mockAdapterOne.connect()).thenReturn(true);
-        when(mockAdapterOne.requestSingleLocation(options)).thenReturn(request);
+        when(mockAdapterOne.requestSingleLocation(locationCallback, options)).thenReturn(request);
 
         provider.connect();
-        assertEquals("Should return the adapters pending result.", provider.requestSingleLocation(options), request);
+        assertEquals("Should return the adapters pending result.", provider.requestSingleLocation(locationCallback, options), request);
     }
 
     /**
@@ -165,7 +174,7 @@ public class UALocationProviderTest extends BaseTestCase {
     public void testSingleLocationRequestNotConnected() {
         exception.expect(IllegalStateException.class);
         exception.expectMessage("Provider must be connected before making requests.");
-        provider.requestSingleLocation(options);
+        provider.requestSingleLocation(locationCallback, options);
     }
 
     /**
@@ -173,7 +182,7 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationRequestNoAdapter() {
-        PendingLocationResult request = new PendingLocationResult() {
+        PendingLocationResult request = new PendingLocationResult(locationCallback) {
             @Override
             protected void onCancel() {
             }
@@ -182,7 +191,7 @@ public class UALocationProviderTest extends BaseTestCase {
         when(mockAdapterOne.connect()).thenReturn(false);
 
         provider.connect();
-        assertNull("Should return null if no connected adapter", provider.requestSingleLocation(options));
+        assertNull("Should return null if no connected adapter", provider.requestSingleLocation(locationCallback, options));
     }
 
 
@@ -192,10 +201,10 @@ public class UALocationProviderTest extends BaseTestCase {
     @Test
     public void testSingleLocationNoPermissions() {
         when(mockAdapterOne.connect()).thenReturn(true);
-        when(mockAdapterOne.requestSingleLocation(options)).thenThrow(new SecurityException("Nope"));
+        when(mockAdapterOne.requestSingleLocation(locationCallback, options)).thenThrow(new SecurityException("Nope"));
 
         provider.connect();
-        assertNull("Should return null if the adapter throws a security exception.", provider.requestSingleLocation(options));
+        assertNull("Should return null if the adapter throws a security exception.", provider.requestSingleLocation(locationCallback, options));
     }
 
     /**
