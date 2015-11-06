@@ -28,8 +28,6 @@ package com.urbanairship.actions;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
-import com.android.internal.util.Predicate;
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.tags.AddTagsAction;
 import com.urbanairship.actions.tags.RemoveTagsAction;
@@ -54,6 +52,20 @@ public final class ActionRegistry {
     private final Map<String, Entry> actionMap = new HashMap<>();
 
     /**
+     * ActionArgument predicate
+     */
+    interface Predicate {
+
+        /**
+         * Applies the predicate to the action arguments.
+         *
+         * @param arguments The action arguments.
+         * @return {@code true} to accept the arguments, otherwise {@code false}.
+         */
+        boolean apply(ActionArguments arguments);
+    }
+
+    /**
      * Registers an action.
      * <p/>
      * If another entry is registered under specified name, it will be removed from that
@@ -62,26 +74,24 @@ public final class ActionRegistry {
      * @param action The action to register
      * @param names The names the action will be registered under
      * @return The entry, or null if the action was unable to be registered
+     * @throws IllegalArgumentException If the action is null, names is null, or if any of the provided
+     * names is empty.
      */
     public Entry registerAction(@NonNull Action action, @NonNull String... names) {
         //noinspection ConstantConditions
         if (action == null) {
-            Logger.error("Unable to register null action");
-            return null;
+            throw new IllegalArgumentException("Unable to an register a null action");
         }
 
         //noinspection ConstantConditions
         if (names == null || names.length == 0) {
-            Logger.error("A name is required to register an action");
-            return null;
+            throw new IllegalArgumentException("Unable to an action without a name.");
         }
 
         // Validate all the names
         for (String name : names) {
             if (UAStringUtil.isEmpty(name)) {
-                Logger.error("Unable to register action because one or more of" +
-                        " the names was null or empty.");
-                return null;
+                throw new IllegalArgumentException("Unable to register action because one or more of the names was null or empty.");
             }
         }
 
@@ -178,7 +188,7 @@ public final class ActionRegistry {
                 LandingPageAction.DEFAULT_REGISTRY_NAME,
                 LandingPageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
-        landingPageEntry.setPredicate(new Predicate<ActionArguments>() {
+        landingPageEntry.setPredicate(new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
@@ -189,7 +199,7 @@ public final class ActionRegistry {
             }
         });
 
-        Predicate<ActionArguments> rejectPushReceivedPredicate = new Predicate<ActionArguments>() {
+        Predicate rejectPushReceivedPredicate = new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
@@ -211,7 +221,7 @@ public final class ActionRegistry {
         Entry addCustomEventEntry = registerAction(new AddCustomEventAction(),
                 AddCustomEventAction.DEFAULT_REGISTRY_NAME);
 
-        addCustomEventEntry.setPredicate(new Predicate<ActionArguments>() {
+        addCustomEventEntry.setPredicate(new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
                 return Action.SITUATION_MANUAL_INVOCATION == arguments.getSituation() ||
@@ -241,7 +251,7 @@ public final class ActionRegistry {
     public final static class Entry {
         private final List<String> names;
         private Action defaultAction;
-        private Predicate<ActionArguments> predicate;
+        private Predicate predicate;
 
         private final SparseArray<Action> situationOverrides = new SparseArray<>();
 
@@ -277,7 +287,7 @@ public final class ActionRegistry {
          *
          * @return The entry's predicate, or null if it is not defined
          */
-        public Predicate<ActionArguments> getPredicate() {
+        public Predicate getPredicate() {
             return predicate;
         }
 
@@ -286,7 +296,7 @@ public final class ActionRegistry {
          *
          * @param predicate A predicate for the entry
          */
-        public void setPredicate(Predicate<ActionArguments> predicate) {
+        public void setPredicate(Predicate predicate) {
             this.predicate = predicate;
         }
 
