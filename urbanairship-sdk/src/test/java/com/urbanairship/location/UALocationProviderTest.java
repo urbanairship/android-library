@@ -182,12 +182,6 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationRequestNoAdapter() {
-        PendingLocationResult request = new PendingLocationResult(locationCallback) {
-            @Override
-            protected void onCancel() {
-            }
-        };
-
         when(mockAdapterOne.connect()).thenReturn(false);
 
         provider.connect();

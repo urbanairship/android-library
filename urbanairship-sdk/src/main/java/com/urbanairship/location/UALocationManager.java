@@ -272,7 +272,7 @@ public class UALocationManager extends BaseManager {
      * Records a single location using either the foreground request options
      * or the background request options depending on the application's state.
      * <p/>
-     * the request is unable to be made due to insufficient permissions.
+     * The request may fail due to insufficient permissions.
      *
      * @return A cancelable object that can be used to cancel the request.
      */

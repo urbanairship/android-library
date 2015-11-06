@@ -448,7 +448,7 @@ public class LocationService extends Service {
      *
      * @param client The client who made the single location request.
      * @param requestId The request id of the location update.
-     * @param pendingResult The pending result.
+     * @param pendingResult The pending location result.
      */
     private void addPendingResult(@Nullable Messenger client, int requestId, @NonNull PendingLocationResult pendingResult) {
         synchronized (pendingResultMap) {
@@ -466,7 +466,7 @@ public class LocationService extends Service {
      *
      * @param client The client who made the single location request.
      * @param requestId The request id of the location update.
-     * @return The pending result if removed, or null.
+     * @return The pending location result if removed, or null.
      */
     private synchronized PendingLocationResult removePendingResult(@Nullable Messenger client, int requestId) {
         synchronized (pendingResultMap) {
