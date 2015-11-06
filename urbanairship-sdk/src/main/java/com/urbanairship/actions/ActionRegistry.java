@@ -28,7 +28,6 @@ package com.urbanairship.actions;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.tags.AddTagsAction;
 import com.urbanairship.actions.tags.RemoveTagsAction;
@@ -75,26 +74,24 @@ public final class ActionRegistry {
      * @param action The action to register
      * @param names The names the action will be registered under
      * @return The entry, or null if the action was unable to be registered
+     * @throws IllegalArgumentException If the action is null, names is null, or if any of the provided
+     * names is empty.
      */
     public Entry registerAction(@NonNull Action action, @NonNull String... names) {
         //noinspection ConstantConditions
         if (action == null) {
-            Logger.error("Unable to register null action");
-            return null;
+            throw new IllegalArgumentException("Unable to an register a null action");
         }
 
         //noinspection ConstantConditions
         if (names == null || names.length == 0) {
-            Logger.error("A name is required to register an action");
-            return null;
+            throw new IllegalArgumentException("Unable to an action without a name.");
         }
 
         // Validate all the names
         for (String name : names) {
             if (UAStringUtil.isEmpty(name)) {
-                Logger.error("Unable to register action because one or more of" +
-                        " the names was null or empty.");
-                return null;
+                throw new IllegalArgumentException("Unable to register action because one or more of the names was null or empty.");
             }
         }
 

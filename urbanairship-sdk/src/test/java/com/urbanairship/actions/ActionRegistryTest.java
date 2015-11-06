@@ -172,12 +172,9 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testRegisterAction() {
-        Action action = new TestAction();
-        String[] names = new String[] { "who", "are", "we?" };
-
         // Register without a predicate
-        ActionRegistry.Entry entry = registry.registerAction(action, names);
-        validateEntry(entry, names);
+        ActionRegistry.Entry entry = registry.registerAction(new TestAction(), "who", "are", "we?");
+        validateEntry(entry, "who", "are", "we?");
     }
 
     /**
@@ -201,31 +198,35 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test registering a null action and/or empty names
+     * Test registering a null action.
      */
-    @Test
-    public void testRegisterActionInvalid() {
-        int actionCount = registry.getEntries().size();
+    @Test(expected=IllegalArgumentException.class)
+    public void testRegisterNullAction() {
+        registry.registerAction(null, "hi");
+    }
 
-        ActionRegistry.Entry entry = registry.registerAction(null, "hi");
-        assertEquals("Null action should not register", actionCount, registry.getEntries().size());
-        assertNull(entry);
+    /**
+     * Test registering a null action names
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testRegisterNullActionNames() {
+        registry.registerAction(new TestAction(), (String[]) null);
+    }
 
-        entry = registry.registerAction(new TestAction(), (String[]) null);
-        assertEquals("Null name should not register", actionCount, registry.getEntries().size());
-        assertNull(entry);
+    /**
+     * Test registering a empty action name
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testRegisterEmptyActionNames() {
+        registry.registerAction(new TestAction(), "");
+    }
 
-        entry = registry.registerAction(new TestAction(), new String[] {});
-        assertEquals("Empty names should not register", actionCount, registry.getEntries().size());
-        assertNull(entry);
-
-        entry = registry.registerAction(new TestAction(), "");
-        assertEquals("Empty name should not register", actionCount, registry.getEntries().size());
-        assertNull(entry);
-
-        entry = registry.registerAction(new TestAction(), "", "actionName");
-        assertEquals("Empty name should not register", actionCount, registry.getEntries().size());
-        assertNull(entry);
+    /**
+     * Test trying to register multiple names where one is empty.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testRegisterMultipleEmptyActionNames() {
+        registry.registerAction(new TestAction(), "what", "");
     }
 
     /**
