@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.4.1 - November 11, 2015
+=================================
+- Fixed share action dropping the last entry.
+- Fixed rare null pointer exception in our channel capture tool.
+- Added an improved workaround for the GCM security exception.
+
 Version 6.4.0 - October 29, 2015
 ================================
 - Added a flag to disable sending the GCM/ADM token with channel registration.

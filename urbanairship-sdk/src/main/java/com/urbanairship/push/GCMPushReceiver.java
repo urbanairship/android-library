@@ -31,6 +31,7 @@ import android.content.Intent;
 import com.google.android.gms.gcm.GcmReceiver;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages and delivers them to both the application-specific GcmListenerService subclass,
@@ -50,11 +51,12 @@ public class GCMPushReceiver extends GcmReceiver {
             Logger.error("Received security exception from GcmReceiver: ", e);
 
             if (!GCMConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
-                Intent registrationIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION)
-                        .putExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, true);
+                // Trying to do any further registrations with GCM leads to a SecurityException - bad process.
+                // Lets assume the token was trying to be refreshed, so lets clear the token to force
+                // it to be regenerated on next app start and hope GCM is in a better spot.
+                UAirship.shared().getPushManager().setGcmToken(null);
 
-                startWakefulService(context, registrationIntent);
+                return;
             }
         }
 
