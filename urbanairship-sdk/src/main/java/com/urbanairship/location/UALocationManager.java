@@ -45,8 +45,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
 import com.urbanairship.BaseManager;
+import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -271,25 +271,40 @@ public class UALocationManager extends BaseManager {
     /**
      * Records a single location using either the foreground request options
      * or the background request options depending on the application's state.
+     * <p/>
+     * The request may fail due to insufficient permissions.
      *
-     * @return A pending result for the location. The pending result may return a null location if
-     * the request is unable to be made due to insufficient permissions.
+     * @return A cancelable object that can be used to cancel the request.
      */
     @NonNull
-    public PendingResult<Location> requestSingleLocation() {
-        return requestSingleLocation(getLocationRequestOptions());
+    public Cancelable requestSingleLocation() {
+        return requestSingleLocation(null, getLocationRequestOptions());
+    }
+
+    /**
+     * Records a single location using either the foreground request options
+     * or the background request options depending on the application's state.
+     *
+     * @param locationCallback Callback with the location. The result may return a null location if
+     * the request is unable to be made due to insufficient permissions.
+     * @return A cancelable object that can be used to cancel the request.
+     */
+    @NonNull
+    public Cancelable requestSingleLocation(@Nullable LocationCallback locationCallback) {
+        return requestSingleLocation(locationCallback, getLocationRequestOptions());
     }
 
     /**
      * Records a single location using custom location request options.
      *
-     * @param requestOptions The location request options.
-     * @return A pending result for the location. The pending result may return a null location if
+     * @param locationCallback Callback with the location. The result may return a null location if
      * the request is unable to be made due to insufficient permissions.
+     * @param requestOptions The location request options.
+     * @return A cancelable object that can be used to cancel the request.
      * @throws IllegalArgumentException if the requestOptions is null.
      */
     @NonNull
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions requestOptions) {
+    public Cancelable requestSingleLocation(@Nullable LocationCallback locationCallback, @NonNull LocationRequestOptions requestOptions) {
         //noinspection ConstantConditions
         if (requestOptions == null) {
             throw new IllegalArgumentException("Location request options cannot be null or invalid");
@@ -298,7 +313,7 @@ public class UALocationManager extends BaseManager {
         SingleLocationRequest request;
         synchronized (singleLocationRequests) {
             int id = nextSingleLocationRequestId++;
-            request = new SingleLocationRequest(id, requestOptions);
+            request = new SingleLocationRequest(locationCallback, id, requestOptions);
             singleLocationRequests.put(id, request);
         }
 
@@ -517,10 +532,12 @@ public class UALocationManager extends BaseManager {
         /**
          * SingleLocationRequest constructor.
          *
+         * @param callback The location callback.
          * @param requestId The request id.
          * @param options The location request options.
          */
-        SingleLocationRequest(int requestId, LocationRequestOptions options) {
+        SingleLocationRequest(LocationCallback callback, int requestId, LocationRequestOptions options) {
+            super(callback);
             this.requestId = requestId;
             this.options = options;
         }

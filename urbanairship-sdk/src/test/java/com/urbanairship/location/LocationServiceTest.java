@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -47,6 +49,8 @@ public class LocationServiceTest extends BaseTestCase {
     Analytics mockAnalytics;
 
     Handler locationHandler;
+
+    PendingLocationResult pendingLocationResult;
 
     @Before
     public void setup() {
@@ -244,14 +248,19 @@ public class LocationServiceTest extends BaseTestCase {
 
         final Location location = new Location("Location");
 
-        PendingLocationResult request = new PendingLocationResult() {
+        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingLocationResult>() {
             @Override
-            protected void onCancel() {
+            public PendingLocationResult answer(InvocationOnMock invocation) throws Throwable {
+                pendingLocationResult =  new PendingLocationResult((LocationCallback) invocation.getArguments()[0]) {
+                    @Override
+                    protected void onCancel() {
 
+                    }
+                };
+
+                return pendingLocationResult;
             }
-        };
-
-        when(mockProvider.requestSingleLocation(eq(options))).thenReturn(request);
+        });
 
         Message message = Message.obtain(null, LocationService.MSG_REQUEST_SINGLE_LOCATION);
         message.arg1 = 101;
@@ -262,10 +271,10 @@ public class LocationServiceTest extends BaseTestCase {
 
         // Verify the request was made
         verify(mockProvider, times(1)).connect();
-        verify(mockProvider, times(1)).requestSingleLocation(eq(options));
+        verify(mockProvider, times(1)).requestSingleLocation(any(LocationCallback.class), eq(options));
 
         // Set the result
-        request.setResult(location);
+        pendingLocationResult.setResult(location);
 
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
@@ -322,7 +331,7 @@ public class LocationServiceTest extends BaseTestCase {
 
         // Verify no request was made
         verify(mockProvider, times(0)).connect();
-        verify(mockProvider, times(0)).requestSingleLocation(any(LocationRequestOptions.class));
+        verify(mockProvider, times(0)).requestSingleLocation(any(LocationCallback.class), any(LocationRequestOptions.class));
 
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
@@ -346,14 +355,21 @@ public class LocationServiceTest extends BaseTestCase {
         extras.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
         final Location location = new Location("Location");
 
-        PendingLocationResult request = new PendingLocationResult() {
+
+        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingLocationResult>() {
             @Override
-            protected void onCancel() {
+            public PendingLocationResult answer(InvocationOnMock invocation) throws Throwable {
+                pendingLocationResult = new PendingLocationResult((LocationCallback) invocation.getArguments()[0]) {
+                    @Override
+                    protected void onCancel() {
 
+                    }
+                };
+
+                return pendingLocationResult;
             }
-        };
+        });
 
-        when(mockProvider.requestSingleLocation(eq(options))).thenReturn(request);
 
         // Request the update
         Message message = Message.obtain(null, LocationService.MSG_REQUEST_SINGLE_LOCATION);
@@ -369,10 +385,10 @@ public class LocationServiceTest extends BaseTestCase {
         locationHandler.handleMessage(message);
 
         // Verify the request was canceled
-        assertTrue("Request should be canceled", request.isCanceled());
+        assertTrue("Request should be canceled", pendingLocationResult.isCanceled());
 
         // Set the result
-        request.setResult(location);
+        pendingLocationResult.setResult(location);
 
         // Verify the messenger was not notified of the result
         verify(mockMessenger, times(0)).send(any(Message.class));
@@ -447,5 +463,7 @@ public class LocationServiceTest extends BaseTestCase {
         locationService.onStartCommand(intent, 0, 1);
         shadowLooper.runToEndOfTasks();
     }
+
+
 
 }

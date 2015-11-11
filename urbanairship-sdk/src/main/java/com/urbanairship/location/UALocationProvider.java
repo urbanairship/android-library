@@ -27,12 +27,10 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
-import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 import com.urbanairship.google.PlayServicesUtils;
 
 import java.util.ArrayList;
@@ -125,12 +123,13 @@ class UALocationProvider {
     /**
      * Requests a single location update.
      *
+     * @param locationCallback The location callback.
      * @param options The request options.
      * @return A pending location result.
      * @throws IllegalStateException if the provider is not connected.
      */
     @Nullable
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationRequestOptions options) {
+    public PendingLocationResult requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         if (!isConnected) {
             throw new IllegalStateException("Provider must be connected before making requests.");
         }
@@ -143,7 +142,7 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
 
         try {
-            return connectedAdapter.requestSingleLocation(options);
+            return connectedAdapter.requestSingleLocation(locationCallback, options);
         } catch (SecurityException ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
             return null;

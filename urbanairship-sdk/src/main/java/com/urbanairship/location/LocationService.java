@@ -43,7 +43,6 @@ import android.util.SparseArray;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.json.JsonException;
@@ -133,7 +132,7 @@ public class LocationService extends Service {
     static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
 
     private final Set<Messenger> subscribedClients = new HashSet<>();
-    private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
+    private final HashMap<Messenger, SparseArray<PendingLocationResult>> pendingResultMap = new HashMap<>();
 
     private Messenger messenger;
 
@@ -270,18 +269,7 @@ public class LocationService extends Service {
 
 
         locationProvider.connect();
-        PendingResult<Location> pendingResult = locationProvider.requestSingleLocation(options);
-
-        if (pendingResult == null) {
-            Logger.warn("Location service unable to perform single location request. " +
-                    "UALocationProvider failed to request a location.");
-            sendClientMessage(client, MSG_SINGLE_REQUEST_RESULT, requestId, null);
-            return;
-        }
-
-        addPendingResult(client, requestId, pendingResult);
-
-        pendingResult.onResult(new PendingResult.ResultCallback<Location>() {
+        PendingLocationResult pendingResult = locationProvider.requestSingleLocation(new LocationCallback() {
             @Override
             public void onResult(Location location) {
 
@@ -295,7 +283,16 @@ public class LocationService extends Service {
                 // Remove the request
                 removePendingResult(client, requestId);
             }
-        });
+        }, options);
+
+        if (pendingResult == null) {
+            Logger.warn("Location service unable to perform single location request. " +
+                    "UALocationProvider failed to request a location.");
+            sendClientMessage(client, MSG_SINGLE_REQUEST_RESULT, requestId, null);
+            return;
+        }
+
+        addPendingResult(client, requestId, pendingResult);
     }
 
     /**
@@ -307,7 +304,7 @@ public class LocationService extends Service {
         final int requestId = message.arg1;
         final Messenger client = message.replyTo;
 
-        PendingResult<Location> pendingResult = removePendingResult(client, requestId);
+        PendingLocationResult pendingResult = removePendingResult(client, requestId);
         if (pendingResult != null) {
             Logger.debug("LocationService - Canceled single request for client: " + client + " ID: " + requestId);
             pendingResult.cancel();
@@ -451,13 +448,13 @@ public class LocationService extends Service {
      *
      * @param client The client who made the single location request.
      * @param requestId The request id of the location update.
-     * @param pendingResult The pending result.
+     * @param pendingResult The pending location result.
      */
-    private void addPendingResult(@Nullable Messenger client, int requestId, @NonNull PendingResult<Location> pendingResult) {
+    private void addPendingResult(@Nullable Messenger client, int requestId, @NonNull PendingLocationResult pendingResult) {
         synchronized (pendingResultMap) {
             if (client != null && requestId > 0) {
                 if (!pendingResultMap.containsKey(client)) {
-                    pendingResultMap.put(client, new SparseArray<PendingResult<Location>>());
+                    pendingResultMap.put(client, new SparseArray<PendingLocationResult>());
                 }
                 pendingResultMap.get(client).put(requestId, pendingResult);
             }
@@ -469,17 +466,17 @@ public class LocationService extends Service {
      *
      * @param client The client who made the single location request.
      * @param requestId The request id of the location update.
-     * @return The pending result if removed, or null.
+     * @return The pending location result if removed, or null.
      */
-    private synchronized PendingResult<Location> removePendingResult(@Nullable Messenger client, int requestId) {
+    private synchronized PendingLocationResult removePendingResult(@Nullable Messenger client, int requestId) {
         synchronized (pendingResultMap) {
             if (!pendingResultMap.containsKey(client)) {
                 return null;
             }
 
-            SparseArray<PendingResult<Location>> providerSparseArray = pendingResultMap.get(client);
+            SparseArray<PendingLocationResult> providerSparseArray = pendingResultMap.get(client);
             if (providerSparseArray != null) {
-                PendingResult<Location> pendingResult = providerSparseArray.get(requestId);
+                PendingLocationResult pendingResult = providerSparseArray.get(requestId);
 
                 providerSparseArray.remove(requestId);
                 if (providerSparseArray.size() == 0) {
