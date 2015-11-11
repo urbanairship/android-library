@@ -59,9 +59,9 @@ public class ShareActionTest extends BaseTestCase {
                 .putExtra(Intent.EXTRA_TEXT, "Share text");
 
         // Add resolve info for the intent
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("first package"));
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("second package"));
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("third package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("a package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("b package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("c package"));
 
         // Add in the info for the filtered out packages
         packageManager.addResolveInfoForIntent(intent, createResolverInfo("com.android.bluetooth"));
@@ -75,26 +75,26 @@ public class ShareActionTest extends BaseTestCase {
         assertEquals(startedIntent.getAction(), Intent.ACTION_CHOOSER);
         assertEquals(startedIntent.getFlags(), Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        // The action uses the first resolved intent as the base intent
+        // The action uses the last resolved intent as the base intent
         Intent chooserIntent = startedIntent.getParcelableExtra(Intent.EXTRA_INTENT);
         assertEquals(chooserIntent.getStringExtra(Intent.EXTRA_TEXT), "Share text");
         assertEquals(chooserIntent.getAction(), Intent.ACTION_SEND);
-        assertEquals(chooserIntent.getPackage(), "first package");
+        assertEquals(chooserIntent.getPackage(), "c package");
 
         Parcelable[] initialIntents = startedIntent.getParcelableArrayExtra(Intent.EXTRA_INITIAL_INTENTS);
         assertEquals(initialIntents.length, 2);
 
-        // Verify the second package
+        // Verify the first package
         Intent secondChoice = (Intent) initialIntents[0];
         assertEquals(secondChoice.getStringExtra(Intent.EXTRA_TEXT), "Share text");
         assertEquals(secondChoice.getAction(), Intent.ACTION_SEND);
-        assertEquals(secondChoice.getPackage(), "second package");
+        assertEquals(secondChoice.getPackage(), "a package");
 
-        // Verify the third package
+        // Verify the second package
         Intent thirdChoice = (Intent) initialIntents[1];
         assertEquals(thirdChoice.getStringExtra(Intent.EXTRA_TEXT), "Share text");
         assertEquals(thirdChoice.getAction(), Intent.ACTION_SEND);
-        assertEquals(thirdChoice.getPackage(), "third package");
+        assertEquals(thirdChoice.getPackage(), "b package");
     }
 
     /**
@@ -108,9 +108,9 @@ public class ShareActionTest extends BaseTestCase {
                 .putExtra(Intent.EXTRA_TEXT, "Share text");
 
         // Add resolve info for the intent
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("first package"));
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("second package"));
-        packageManager.addResolveInfoForIntent(intent, createResolverInfo("third package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("a package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("b package"));
+        packageManager.addResolveInfoForIntent(intent, createResolverInfo("c package"));
 
         // Create a new share action that excludes all package
         action = new ShareAction() {
@@ -146,6 +146,7 @@ public class ShareActionTest extends BaseTestCase {
         ResolveInfo info = new ResolveInfo();
         info.activityInfo = new ActivityInfo();
         info.activityInfo.packageName = packageName;
+        info.activityInfo.name = "packageName";
         return info;
     }
 }
