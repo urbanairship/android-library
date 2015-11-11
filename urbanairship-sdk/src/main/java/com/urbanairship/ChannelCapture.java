@@ -103,7 +103,7 @@ class ChannelCapture extends BaseManager {
      * @param pushManager The push manager instance.
      */
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager) {
-       this(context, configOptions, pushManager, NotificationManagerCompat.from(context));
+        this(context, configOptions, pushManager, NotificationManagerCompat.from(context));
     }
 
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
@@ -340,6 +340,10 @@ class ChannelCapture extends BaseManager {
 
         @Override
         public String getText() {
+            if (!clipboardManager.hasPrimaryClip()) {
+                return null;
+            }
+
             ClipData primaryClip = clipboardManager.getPrimaryClip();
 
             if (primaryClip != null && primaryClip.getItemCount() > 0) {
@@ -370,6 +374,7 @@ class ChannelCapture extends BaseManager {
         private final android.text.ClipboardManager clipboardManager;
 
         ClipboardFroyo() {
+
             clipboardManager = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         }
 
