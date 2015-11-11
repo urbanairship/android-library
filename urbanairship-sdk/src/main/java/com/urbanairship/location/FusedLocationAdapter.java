@@ -111,7 +111,7 @@ class FusedLocationAdapter implements LocationAdapter {
             semaphore.acquire();
         } catch (InterruptedException ex) {
             Logger.error("FusedLocationAdapter - Exception while connecting to fused location", ex);
-            client.disconnect();
+            disconnect();
             return false;
         }
 
@@ -122,6 +122,10 @@ class FusedLocationAdapter implements LocationAdapter {
     public void disconnect() {
         if (client != null) {
             client.disconnect();
+
+            // Clear the client so we don't only rely on `isConnected`, which seems to not immediately
+            // be updated by disconnect().
+            client = null;
         }
     }
 
