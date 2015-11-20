@@ -9,7 +9,7 @@ import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
 import org.junit.Before;
@@ -51,9 +51,9 @@ public class EventAPIClientTest extends BaseTestCase {
         RichPushUser richPushUser = Mockito.mock(RichPushUser.class);
         when(richPushUser.getId()).thenReturn("userId");
 
-        RichPushManager richPushManager = Mockito.mock(RichPushManager.class);
-        when(richPushManager.getRichPushUser()).thenReturn(richPushUser);
-        TestApplication.getApplication().setRichPushManager(richPushManager);
+        RichPushInbox inbox = Mockito.mock(RichPushInbox.class);
+        when(inbox.getUser()).thenReturn(richPushUser);
+        TestApplication.getApplication().setInbox(inbox);
 
 
         client = new EventAPIClient(mockRequestFactory);

@@ -31,7 +31,7 @@ import android.os.Looper;
 /**
  * A cancelable operation that executes its task on a specific looper.
  */
-abstract class CancelableOperation implements Cancelable, Runnable {
+public abstract class CancelableOperation implements Cancelable, Runnable {
 
     private boolean isFinished = false;
     private boolean isRunning = false;
@@ -46,7 +46,7 @@ abstract class CancelableOperation implements Cancelable, Runnable {
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
      */
-    CancelableOperation(Looper looper) {
+    public CancelableOperation(Looper looper) {
         if (looper != null) {
             this.handler = new Handler(looper);
         } else {

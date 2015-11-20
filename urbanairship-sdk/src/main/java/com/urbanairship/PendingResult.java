@@ -1,4 +1,4 @@
-/*
+package com.urbanairship;/*
 Copyright 2009-2015 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -23,79 +23,88 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.location;
-
-import android.location.Location;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.Cancelable;
-
 /**
- * Base class for pending single location requests.
+ * A generic pending result.
+ *
+ * @param <T> Type of result.
  */
-abstract class PendingLocationResult implements Cancelable {
+public class PendingResult<T> implements Cancelable {
+
+    /**
+     * Result callback interface.
+     *
+     * @param <T> The type of result.
+     */
+    public interface ResultCallback<T> {
+        void onResult(@Nullable T result);
+    }
 
     private boolean isCanceled;
 
     @Nullable
-    private LocationCallback locationCallback;
+    private ResultCallback<T> callback;
 
     @Nullable
-    private Location result;
+    private T result;
 
-    public PendingLocationResult(@Nullable LocationCallback locationCallback) {
-        this.locationCallback = locationCallback;
+
+    public PendingResult(@Nullable ResultCallback<T> callback) {
+        this.callback = callback;
     }
 
     /**
      * Cancels the pending result.
      */
     @Override
-    public synchronized void cancel() {
-        if (isCanceled()) {
-            return;
-        }
+    public void cancel() {
+        synchronized (this) {
+            if (isCanceled()) {
+                return;
+            }
 
-        onCancel();
-        isCanceled = true;
-    }
-
-    /**
-     * Sets the location result.
-     *
-     * @param result The location result.
-     */
-    synchronized void setResult(Location result) {
-        if (isDone()) {
-            return;
-        }
-
-        this.result = result;
-        if (locationCallback != null) {
-            locationCallback.onResult(result);
+            onCancel();
+            isCanceled = true;
         }
     }
 
     /**
-     * Returns if the request has been canceled or not.
-     *
-     * @return <code>true</code> if canceled, <code>false</code> otherwise.
+     * Called when the PendingResult is canceled.
      */
-    public synchronized boolean isCanceled() {
-        return isCanceled;
+    protected void onCancel() {
+
     }
 
     /**
-     * Returns if the pending result is done or not.
+     * Sets the pending result.
      *
-     * @return <code>true</code> if done or canceled, <code>false</code> otherwise.
+     * @param result The pending result.
      */
-    public synchronized boolean isDone() {
-        return isCanceled || result != null;
+    public void setResult(@Nullable T result) {
+        synchronized (this) {
+            if (isDone()) {
+                return;
+            }
+
+            this.result = result;
+            if (callback != null) {
+                callback.onResult(result);
+            }
+        }
     }
 
-    /**
-     * Called when the request has been canceled.
-     */
-    protected abstract void onCancel();
+    @Override
+    public boolean isCanceled() {
+        synchronized (this) {
+            return isCanceled;
+        }
+    }
+
+    @Override
+    public boolean isDone() {
+        synchronized (this) {
+            return isCanceled || result != null;
+        }
+    }
 }

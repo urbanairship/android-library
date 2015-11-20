@@ -11,7 +11,6 @@ import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
-import com.urbanairship.richpush.RichPushManager;
 
 import org.junit.Test;
 
@@ -101,7 +100,7 @@ public class PushMessageTest extends BaseTestCase {
     @Test
     public void testGetRichPushMessageId() {
         Bundle extras = new Bundle();
-        extras.putString(RichPushManager.RICH_PUSH_KEY, "testRichPushID");
+        extras.putString(PushMessage.EXTRA_RICH_PUSH_ID, "testRichPushID");
 
         PushMessage pushMessage = new PushMessage(extras);
         assertEquals("The rich push ID should match.", "testRichPushID",
@@ -415,7 +414,7 @@ public class PushMessageTest extends BaseTestCase {
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
         extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
-        extras.putString(RichPushManager.RICH_PUSH_KEY, "message_id");
+        extras.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message_id");
 
         PushMessage pushMessage = new PushMessage(extras);
         assertEquals(expected, pushMessage.getInAppMessage());
@@ -498,7 +497,7 @@ public class PushMessageTest extends BaseTestCase {
 
         Bundle bundle = new Bundle();
         bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
-        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
         PushMessage message = new PushMessage(bundle);
 
         actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message ID"));
@@ -518,7 +517,7 @@ public class PushMessageTest extends BaseTestCase {
 
         Bundle bundle = new Bundle();
         bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
-        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
         PushMessage message = new PushMessage(bundle);
 
         assertEquals(actions, message.getActions());
@@ -537,7 +536,7 @@ public class PushMessageTest extends BaseTestCase {
 
         Bundle bundle = new Bundle();
         bundle.putString(PushMessage.EXTRA_ACTIONS, JsonValue.wrap(actions).toString());
-        bundle.putString(RichPushManager.RICH_PUSH_KEY, "message ID");
+        bundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message ID");
         PushMessage message = new PushMessage(bundle);
 
         assertEquals(actions, message.getActions());

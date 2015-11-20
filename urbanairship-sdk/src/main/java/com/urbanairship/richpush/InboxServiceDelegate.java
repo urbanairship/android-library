@@ -83,7 +83,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         this.requestFactory = requestFactory;
         this.resolver = resolver;
         this.airship = airship;
-        this.user = airship.getRichPushManager().getRichPushUser();
+        this.user = airship.getInbox().getUser();
         this.hostUrl = airship.getAirshipConfigOptions().hostURL;
     }
 
@@ -210,7 +210,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         resolver.deleteMessages(deletedMessageIds);
 
         // update the inbox cache
-        airship.getRichPushManager().getRichPushInbox().refresh();
+        airship.getInbox().refresh();
     }
 
     /**

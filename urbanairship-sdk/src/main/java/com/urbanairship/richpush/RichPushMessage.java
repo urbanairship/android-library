@@ -248,7 +248,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = false;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getRichPushManager().getRichPushInbox().markMessagesRead(set);
+            UAirship.shared().getInbox().markMessagesRead(set);
         }
     }
 
@@ -260,7 +260,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             unreadClient = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getRichPushManager().getRichPushInbox().markMessagesUnread(set);
+            UAirship.shared().getInbox().markMessagesUnread(set);
         }
     }
 
@@ -272,7 +272,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
             deleted = true;
             HashSet<String> set = new HashSet<>();
             set.add(messageId);
-            UAirship.shared().getRichPushManager().getRichPushInbox().deleteMessages(set);
+            UAirship.shared().getInbox().deleteMessages(set);
         }
     }
 

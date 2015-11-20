@@ -25,6 +25,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
@@ -33,16 +39,32 @@ import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Urban Airship rich push user.
  */
 public class RichPushUser {
 
+    /**
+     * A listener interface for receiving events for user updates.
+     */
+    public interface Listener {
+
+        /**
+         * Called when the user is updated.
+         *
+         * @param success {@code} if the request was successful, otherwise {@code false}.
+         */
+        void onUserUpdated(boolean success);
+    }
+
     private static final String KEY_PREFIX = "com.urbanairship.user";
     private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
     private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
     private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
+    private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
 
@@ -61,14 +83,66 @@ public class RichPushUser {
     }
 
     /**
+     * Subscribe a listener for user update events.
+     *
+     * @param listener An object implementing the {@link Listener} interface.
+     */
+    public void addListener(@NonNull Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Unsubscribe a listener for inbox and user update events.
+     *
+     * @param listener An object implementing the {@link Listener} interface.
+     */
+    public void removeListener(@NonNull Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    /**
+     * Updates the user on the device with what's on the server.
+     *
+     * @param forcefully A boolean indicating if the rich push user needs to be updated.
+     */
+    public void update(boolean forcefully) {
+        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+            @Override
+            protected void onReceiveResult(int resultCode, Bundle resultData) {
+                boolean success = resultCode == RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS;
+
+                synchronized (listeners) {
+                    for (Listener listener : new ArrayList<>(listeners)) {
+                        listener.onUserUpdated(success);
+                    }
+                }
+            }
+        };
+
+        Logger.debug("RichPushManager - Starting update service.");
+        Context context = UAirship.getApplicationContext();
+        Intent intent = new Intent(context, RichPushUpdateService.class)
+                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                .putExtra(RichPushUpdateService.EXTRA_FORCEFULLY, forcefully);
+
+        context.startService(intent);
+    }
+
+
+    /**
      * Returns whether the user has been created.
      *
      * @return <code>true</code> if the user has an id, <code>false</code> otherwise.
      */
     public static boolean isCreated() {
         UAirship airship = UAirship.shared();
-        String userId = airship.getRichPushManager().getRichPushUser().getId();
-        String userToken = airship.getRichPushManager().getRichPushUser().getPassword();
+        String userId = airship.getInbox().getUser().getId();
+        String userToken = airship.getInbox().getUser().getPassword();
         return (!UAStringUtil.isEmpty(userId) && !UAStringUtil.isEmpty(userToken));
     }
 

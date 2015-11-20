@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
@@ -108,7 +109,7 @@ class StandardLocationAdapter implements LocationAdapter {
 
     @Override
     @NonNull
-    public PendingLocationResult requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         return new SingleLocationRequest(locationCallback, options);
     }
 
@@ -170,7 +171,7 @@ class StandardLocationAdapter implements LocationAdapter {
      * Class that encapsulated the actual request to the standard Android
      * location.
      */
-    private class SingleLocationRequest extends PendingLocationResult {
+    private class SingleLocationRequest extends PendingResult<Location> {
 
         private final Criteria criteria;
         private final LocationRequestOptions options;

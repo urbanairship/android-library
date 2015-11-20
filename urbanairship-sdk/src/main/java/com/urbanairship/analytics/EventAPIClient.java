@@ -147,7 +147,7 @@ class EventAPIClient {
                                         .setHeader("X-UA-Location-Service-Enabled",
                                                 Boolean.toString(UAirship.shared().getLocationManager().isLocationUpdatesEnabled()))
                                         .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()))
-                                        .setHeader("X-UA-User-ID", UAirship.shared().getRichPushManager().getRichPushUser().getId());
+                                        .setHeader("X-UA-User-ID", UAirship.shared().getInbox().getUser().getId());
 
 
         Locale locale = Locale.getDefault();

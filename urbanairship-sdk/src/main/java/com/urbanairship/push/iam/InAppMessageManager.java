@@ -39,7 +39,7 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.BaseManager;
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
@@ -57,7 +57,7 @@ import java.util.List;
 /**
  * This class is the primary interface for interacting with in-app messages.
  */
-public class InAppMessageManager extends BaseManager {
+public class InAppMessageManager extends AirshipComponent {
 
     /**
      * Listener for in-app messaging receive and display events.

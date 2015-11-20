@@ -75,7 +75,7 @@ class UserServiceDelegate extends BaseIntentService.Delegate {
 
         this.requestFactory = requestFactory;
         this.airship = airship;
-        this.user = airship.getRichPushManager().getRichPushUser();
+        this.user = airship.getInbox().getUser();
     }
 
     @Override

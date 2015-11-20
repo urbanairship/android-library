@@ -27,10 +27,12 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.google.PlayServicesUtils;
 
 import java.util.ArrayList;
@@ -129,7 +131,7 @@ class UALocationProvider {
      * @throws IllegalStateException if the provider is not connected.
      */
     @Nullable
-    public PendingLocationResult requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+    public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         if (!isConnected) {
             throw new IllegalStateException("Provider must be connected before making requests.");
         }

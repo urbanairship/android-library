@@ -46,7 +46,7 @@ import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
-import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.annotation.Retention;
@@ -99,7 +99,7 @@ public class UAirship {
     ApplicationMetrics applicationMetrics;
     PreferenceDataStore preferenceDataStore;
     PushManager pushManager;
-    RichPushManager richPushManager;
+    RichPushInbox inbox;
     UALocationManager locationManager;
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
@@ -120,7 +120,7 @@ public class UAirship {
 
         this.analytics = new Analytics(context, preferenceDataStore, airshipConfigOptions);
         this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
-        this.richPushManager = new RichPushManager(context, preferenceDataStore);
+        this.inbox = new RichPushInbox(context, preferenceDataStore);
         this.locationManager = new UALocationManager(context, preferenceDataStore);
         this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
         this.pushManager = new PushManager(context, preferenceDataStore, airshipConfigOptions);
@@ -565,11 +565,11 @@ public class UAirship {
      */
     private void init() {
         // Initialize the managers
-        ((BaseManager) this.richPushManager).init();
-        ((BaseManager) this.pushManager).init();
-        ((BaseManager) this.locationManager).init();
-        ((BaseManager) this.inAppMessageManager).init();
-        ((BaseManager) this.channelCapture).init();
+        ((AirshipComponent) this.inbox).init();
+        ((AirshipComponent) this.pushManager).init();
+        ((AirshipComponent) this.locationManager).init();
+        ((AirshipComponent) this.inAppMessageManager).init();
+        ((AirshipComponent) this.channelCapture).init();
 
         this.actionRegistry.registerDefaultActions();
     }
@@ -579,11 +579,11 @@ public class UAirship {
      */
     private void tearDown() {
         // Tear down the managers
-        ((BaseManager) this.richPushManager).tearDown();
-        ((BaseManager) this.pushManager).tearDown();
-        ((BaseManager) this.locationManager).tearDown();
-        ((BaseManager) this.inAppMessageManager).tearDown();
-        ((BaseManager) this.channelCapture).tearDown();
+        ((AirshipComponent) this.inbox).tearDown();
+        ((AirshipComponent) this.pushManager).tearDown();
+        ((AirshipComponent) this.locationManager).tearDown();
+        ((AirshipComponent) this.inAppMessageManager).tearDown();
+        ((AirshipComponent) this.channelCapture).tearDown();
     }
 
     /**
@@ -605,12 +605,12 @@ public class UAirship {
     }
 
     /**
-     * Returns the {@link com.urbanairship.richpush.RichPushManager} instance.
+     * Returns the {@link com.urbanairship.richpush.RichPushInbox} instance.
      *
-     * @return The {@link com.urbanairship.richpush.RichPushManager} instance.
+     * @return The {@link com.urbanairship.richpush.RichPushInbox} instance.
      */
-    public RichPushManager getRichPushManager() {
-        return richPushManager;
+    public RichPushInbox getInbox() {
+        return inbox;
     }
 
     /**

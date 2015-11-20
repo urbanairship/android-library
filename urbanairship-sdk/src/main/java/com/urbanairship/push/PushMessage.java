@@ -14,7 +14,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
-import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -30,6 +29,11 @@ import java.util.Map;
  * or another push notification service
  */
 public class PushMessage implements Parcelable {
+
+    /**
+     * The rich push extra that contains the rich push message ID.
+     */
+    public static final String EXTRA_RICH_PUSH_ID = "_uamid";
 
     /**
      * The ping extra indicates a push meant to test whether the application is active
@@ -224,7 +228,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getRichPushMessageId() {
-        return pushBundle.getString(RichPushManager.RICH_PUSH_KEY);
+        return pushBundle.getString(EXTRA_RICH_PUSH_ID);
     }
 
     /**

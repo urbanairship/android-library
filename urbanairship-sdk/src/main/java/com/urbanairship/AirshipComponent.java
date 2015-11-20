@@ -28,7 +28,7 @@ package com.urbanairship;
 /**
  * Base class for Urban Airship managers.
  */
-public abstract class BaseManager {
+public abstract class AirshipComponent {
 
     /*
      * The only reason for this class is to hide the init and tearDown methods.

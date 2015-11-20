@@ -12,6 +12,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
@@ -50,7 +51,7 @@ public class LocationServiceTest extends BaseTestCase {
 
     Handler locationHandler;
 
-    PendingLocationResult pendingLocationResult;
+    PendingResult<Location> pendingLocationResult;
 
     @Before
     public void setup() {
@@ -248,10 +249,10 @@ public class LocationServiceTest extends BaseTestCase {
 
         final Location location = new Location("Location");
 
-        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingLocationResult>() {
+        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingResult<Location>>() {
             @Override
-            public PendingLocationResult answer(InvocationOnMock invocation) throws Throwable {
-                pendingLocationResult =  new PendingLocationResult((LocationCallback) invocation.getArguments()[0]) {
+            public PendingResult<Location> answer(InvocationOnMock invocation) throws Throwable {
+                pendingLocationResult =  new PendingResult<Location>((LocationCallback) invocation.getArguments()[0]) {
                     @Override
                     protected void onCancel() {
 
@@ -356,10 +357,10 @@ public class LocationServiceTest extends BaseTestCase {
         final Location location = new Location("Location");
 
 
-        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingLocationResult>() {
+        when(mockProvider.requestSingleLocation(any(LocationCallback.class), eq(options))).thenAnswer(new Answer<PendingResult<Location>>() {
             @Override
-            public PendingLocationResult answer(InvocationOnMock invocation) throws Throwable {
-                pendingLocationResult = new PendingLocationResult((LocationCallback) invocation.getArguments()[0]) {
+            public PendingResult<Location> answer(InvocationOnMock invocation) throws Throwable {
+                pendingLocationResult = new PendingResult<Location>((LocationCallback) invocation.getArguments()[0]) {
                     @Override
                     protected void onCancel() {
 
