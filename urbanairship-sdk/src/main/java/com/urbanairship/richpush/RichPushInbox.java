@@ -213,9 +213,9 @@ public class RichPushInbox extends AirshipComponent {
      * Fetches the latest inbox changes from Urban Airship.
      * <p/>
      * Normally this method is not called directly as the message list is automatically fetched when
-     * the application is foregrounds or when a notification with an associated messages is received.
+     * the application foregrounds or when a notification with an associated message is received.
      * <p/>
-     * If the fetch requests completes and changes results in a change to the messages,
+     * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      */
     public void fetchMessages() {
@@ -226,9 +226,9 @@ public class RichPushInbox extends AirshipComponent {
      * Fetches the latest inbox changes from Urban Airship.
      * <p/>
      * Normally this method is not called directly as the message list is automatically fetched when
-     * the application is foregrounds or when a notification with an associated messages is received.
+     * the application foregrounds or when a notification with an associated message is received.
      * <p/>
-     * If the fetch requests completes and changes results in a change to the messages,
+     * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
@@ -242,9 +242,9 @@ public class RichPushInbox extends AirshipComponent {
      * Fetches the latest inbox changes from Urban Airship.
      * <p/>
      * Normally this method is not called directly as the message list is automatically fetched when
-     * the application is foregrounds or when a notification with an associated messages is received.
+     * the application foregrounds or when a notification with an associated message is received.
      * <p/>
-     * If the fetch requests completes and changes results in a change to the messages,
+     * If the fetch request completes and results in a change to the messages,
      * {@link Listener#onInboxUpdated()} will be called.
      *
      * @param force {@code true} to force a sync request even if a request is already in progress.
@@ -280,7 +280,7 @@ public class RichPushInbox extends AirshipComponent {
             }
         };
 
-        Logger.debug("RichPushManager - Starting update service.");
+        Logger.debug("RichPushInbox - Starting update service.");
         Context context = UAirship.getApplicationContext();
         Intent intent = new Intent(context, RichPushUpdateService.class)
                 .setAction(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)

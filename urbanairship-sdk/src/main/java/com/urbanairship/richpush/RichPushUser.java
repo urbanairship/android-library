@@ -123,7 +123,7 @@ public class RichPushUser {
             }
         };
 
-        Logger.debug("RichPushManager - Starting update service.");
+        Logger.debug("RichPushUser - Starting update service.");
         Context context = UAirship.getApplicationContext();
         Intent intent = new Intent(context, RichPushUpdateService.class)
                 .setAction(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
