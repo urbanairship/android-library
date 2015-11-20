@@ -13,7 +13,7 @@ Javadocs:
 Migration guide:
     https://docs.urbanairship.com/topic-guides/android-migration.html
 
-## Samples
+## Sample
 
 https://github.com/urbanairship/android-samples
 
