@@ -54,7 +54,7 @@ public final class ActionRegistry {
     /**
      * ActionArgument predicate
      */
-    interface Predicate {
+    public interface Predicate {
 
         /**
          * Applies the predicate to the action arguments.
