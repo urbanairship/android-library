@@ -65,7 +65,7 @@ import java.util.concurrent.Executors;
  * an argument.
  */
 @TargetApi(Build.VERSION_CODES.FROYO)
-class ChannelCapture extends BaseManager {
+class ChannelCapture extends AirshipComponent {
 
     /**
      * Broadcast action when the clipboard notification is tapped.

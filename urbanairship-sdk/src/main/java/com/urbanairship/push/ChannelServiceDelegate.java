@@ -346,7 +346,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 pushManager.getNamedUser().startUpdateService();
                 pushManager.updateRegistration();
                 pushManager.startUpdateTagsService();
-                airship.getRichPushManager().updateUser(true);
+                airship.getInbox().getUser().update(true);
 
                 // Send analytics event
                 Intent sendAnalytics = new Intent(getContext(), EventService.class)

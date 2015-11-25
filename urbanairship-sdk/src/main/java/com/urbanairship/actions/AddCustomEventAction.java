@@ -100,7 +100,7 @@ public class AddCustomEventAction extends Action {
         // Try to fill in the interaction if its not set
         if (interactionId == null && interactionType == null) {
             String messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
-            RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
+            RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
 
             if (message != null) {
                 eventBuilder.setInteraction(message);

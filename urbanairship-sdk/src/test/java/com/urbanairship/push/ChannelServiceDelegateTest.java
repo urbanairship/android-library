@@ -31,7 +31,8 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushUser;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +48,7 @@ import java.net.URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,14 +60,19 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     PushManager pushManager;
     ChannelAPIClient client;
     ChannelServiceDelegate serviceDelegate;
-    RichPushManager richPushManager;
+    RichPushInbox richPushInbox;
+    RichPushUser richPushUser;
 
 
     @Before
     public void setUp() {
-        client = Mockito.mock(ChannelAPIClient.class);
-        richPushManager = Mockito.mock(RichPushManager.class, Mockito.RETURNS_MOCKS);
-        TestApplication.getApplication().setRichPushManager(richPushManager);
+        client = mock(ChannelAPIClient.class);
+
+        richPushInbox = mock(RichPushInbox.class);
+        TestApplication.getApplication().setInbox(richPushInbox);
+
+        richPushUser = mock(RichPushUser.class);
+        when(richPushInbox.getUser()).thenReturn(richPushUser);
 
         pushManager = UAirship.shared().getPushManager();
         dataStore = TestApplication.getApplication().preferenceDataStore;
@@ -90,7 +97,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
@@ -126,7 +133,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
@@ -152,7 +159,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     @Test
     public void testCreateChannel200() {
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
@@ -170,7 +177,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
                 pushManager.getChannelLocation());
 
         // Verify we update the user
-        verify(richPushManager).updateUser(true);
+        verify(richPushInbox.getUser()).update(true);
     }
 
 
@@ -184,7 +191,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_NOT_FOUND);
         when(response.getChannelId()).thenReturn(fakeChannelId);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
@@ -214,7 +221,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
         when(response.getChannelId()).thenReturn(null);
         when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
@@ -248,7 +255,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         long lastRegistrationTime = dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0);
 
         // Set up channel response
-        ChannelResponse response = Mockito.mock(ChannelResponse.class);
+        ChannelResponse response = mock(ChannelResponse.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
 
         // Ensure payload is different, so we don't get a null payload
@@ -276,7 +283,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
 
 
         // Set up a conflict response
-        ChannelResponse conflictResponse = Mockito.mock(ChannelResponse.class);
+        ChannelResponse conflictResponse = mock(ChannelResponse.class);
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 

@@ -9,7 +9,6 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.json.JSONArray;
@@ -54,14 +53,12 @@ public class AddCustomEventActionTest extends BaseTestCase {
         TestApplication.getApplication().setAnalytics(analytics);
 
 
-        RichPushManager richPushManager = mock(RichPushManager.class);
         RichPushInbox richPushInbox = mock(RichPushInbox.class);
         message = mock(RichPushMessage.class);
         when(message.getMessageId()).thenReturn("message id");
-        when(richPushManager.getRichPushInbox()).thenReturn(richPushInbox);
         when(richPushInbox.getMessage("message id")).thenReturn(message);
 
-        TestApplication.getApplication().setRichPushManager(richPushManager);
+        TestApplication.getApplication().setInbox(richPushInbox);
     }
 
     /**

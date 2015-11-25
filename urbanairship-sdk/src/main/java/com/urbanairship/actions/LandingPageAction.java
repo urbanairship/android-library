@@ -113,8 +113,7 @@ public class LandingPageAction extends Action {
                             if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
                                 String messageId = uri.getSchemeSpecificPart();
                                 RichPushMessage message = UAirship.shared()
-                                                                  .getRichPushManager()
-                                                                  .getRichPushInbox()
+                                                                  .getInbox()
                                                                   .getMessage(messageId);
                                 if (message != null) {
                                     webView.loadRichPushMessage(message);

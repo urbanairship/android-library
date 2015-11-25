@@ -33,7 +33,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.BaseManager;
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -51,7 +51,7 @@ import java.util.Set;
  * This class is the primary interface for customizing the display and behavior
  * of incoming push notifications.
  */
-public class PushManager extends BaseManager {
+public class PushManager extends AirshipComponent {
 
     /**
      * Action sent as a broadcast when a push message is received.
@@ -433,7 +433,7 @@ public class PushManager extends BaseManager {
                 .setTags(getChannelTagRegistrationEnabled(), getTags())
                 .setOptIn(isOptIn())
                 .setBackgroundEnabled(isPushEnabled() && isPushAvailable())
-                .setUserId(UAirship.shared().getRichPushManager().getRichPushUser().getId())
+                .setUserId(UAirship.shared().getInbox().getUser().getId())
                 .setApid(preferences.getApid());
 
         switch (UAirship.shared().getPlatformType()) {

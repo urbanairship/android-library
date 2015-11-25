@@ -48,7 +48,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
-import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -315,9 +315,9 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      */
     private void refreshRichPushMessages() {
         final Semaphore semaphore = new Semaphore(0);
-        airship.getRichPushManager().refreshMessages(new RichPushManager.RefreshMessagesCallback() {
+        airship.getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
             @Override
-            public void onRefreshMessages(boolean success) {
+            public void onFinished(boolean success) {
                 semaphore.release();
             }
         });

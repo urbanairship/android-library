@@ -44,9 +44,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
-import com.urbanairship.BaseManager;
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -58,7 +59,7 @@ import java.util.List;
 /**
  * High level interface for interacting with location.
  */
-public class UALocationManager extends BaseManager {
+public class UALocationManager extends AirshipComponent {
 
     static final String LOCATION_UPDATES_ENABLED_KEY = "com.urbanairship.location.LOCATION_UPDATES_ENABLED";
     static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
@@ -507,7 +508,7 @@ public class UALocationManager extends BaseManager {
 
                     // Send any location requests that we have in flight.
                     synchronized (manager.singleLocationRequests) {
-                        PendingLocationResult request = manager.singleLocationRequests.get(requestId);
+                        PendingResult<Location> request = manager.singleLocationRequests.get(requestId);
                         if (request != null) {
                             request.setResult(location);
                             manager.singleLocationRequests.remove(requestId);
@@ -524,7 +525,7 @@ public class UALocationManager extends BaseManager {
     /**
      * A request for a single location.
      */
-    private class SingleLocationRequest extends PendingLocationResult {
+    private class SingleLocationRequest extends PendingResult<Location> {
 
         private final LocationRequestOptions options;
         private final int requestId;

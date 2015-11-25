@@ -36,7 +36,6 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushManager;
 import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
@@ -59,11 +58,9 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
     public void setup() {
         action = new OpenRichPushInboxAction();
 
-        RichPushManager richPushManager = mock(RichPushManager.class);
         mockInbox = mock(RichPushInbox.class);
 
-        when(richPushManager.getRichPushInbox()).thenReturn(mockInbox);
-        TestApplication.getApplication().setRichPushManager(richPushManager);
+        TestApplication.getApplication().setInbox(mockInbox);
     }
 
     /**
@@ -172,7 +169,7 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         when(mockInbox.getMessage("the_message_id")).thenReturn(message);
 
         Bundle pushBundle = new Bundle();
-        pushBundle.putString(RichPushManager.RICH_PUSH_KEY, "the_message_id");
+        pushBundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "the_message_id");
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, new PushMessage(pushBundle));
 

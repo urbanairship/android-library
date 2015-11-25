@@ -107,7 +107,7 @@ public class OverlayRichPushMessageAction extends Action {
             }
         }
 
-        final RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
+        final RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
             return ActionResult.newErrorResult(new Exception("Unable to find message with ID " + messageId));
         }

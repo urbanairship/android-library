@@ -25,11 +25,26 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
+
+import com.urbanairship.AirshipComponent;
+import com.urbanairship.Cancelable;
+import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
+import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +63,32 @@ import java.util.concurrent.Executors;
  * Modifications (e.g., deletions or mark read) will be sent to the Urban Airship
  * server the next time the inbox is synchronized.
  */
-public class RichPushInbox {
+public class RichPushInbox extends AirshipComponent {
+
+    /**
+     * A listener interface for receiving event callbacks related to inbox updates.
+     */
+    public interface Listener {
+
+        /**
+         * Called when the inbox is updated.
+         */
+        void onInboxUpdated();
+    }
+
+    /**
+     * A callback used to be notified when refreshing messages.
+     */
+    public interface FetchMessagesCallback {
+
+        /**
+         * Called when a request to refresh messages is finished.
+         *
+         * @param success If the request was successful or not.
+         */
+        void onFinished(boolean success);
+    }
+
 
     /**
      * Intent action to view the rich push inbox.
@@ -76,23 +116,75 @@ public class RichPushInbox {
     private final Map<String, RichPushMessage> readMessages = new HashMap<>();
 
     private final RichPushResolver richPushResolver;
-
+    private RichPushUser user;
     private final Executor executor;
 
-    RichPushInbox(Context context) {
-        this(new RichPushResolver(context), Executors.newSingleThreadExecutor());
+    private int fetchCount = 0;
+    private BroadcastReceiver foregroundReceiver;
+    private Context context;
+    private Handler handler = new Handler(Looper.getMainLooper());
+
+
+    public RichPushInbox(Context context, PreferenceDataStore dataStore) {
+        this(context, new RichPushUser(dataStore), new RichPushResolver(context), Executors.newSingleThreadExecutor());
     }
 
-    RichPushInbox(RichPushResolver resolver, Executor executor) {
+    RichPushInbox(Context context, RichPushUser user, RichPushResolver resolver, Executor executor) {
+        this.context = context.getApplicationContext();
+        this.user = user;
         this.richPushResolver = resolver;
         this.executor = executor;
     }
 
-    /**
-     * A listener interface for receiving event callbacks related to inbox database updates.
-     */
-    public interface Listener {
-        void onUpdateInbox();
+    @Override
+    protected void init() {
+        if (UAStringUtil.isEmpty(user.getId())) {
+            final RichPushUser.Listener userListener = new RichPushUser.Listener() {
+                @Override
+                public void onUserUpdated(boolean success) {
+                    if (success) {
+                        user.removeListener(this);
+                        fetchMessages();
+                    }
+                }
+            };
+
+            user.addListener(userListener);
+        }
+
+        user.update(false);
+        refresh();
+
+        foregroundReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
+                    fetchMessages();
+                } else {
+                    Intent serviceIntent = new Intent(context, RichPushUpdateService.class)
+                            .setAction(RichPushUpdateService.ACTION_SYNC_MESSAGE_STATE);
+                    context.startService(serviceIntent);
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
+        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
+
+        LocalBroadcastManager.getInstance(context).registerReceiver(foregroundReceiver, filter);
+    }
+
+    @Override
+    protected void tearDown() {
+        if (foregroundReceiver != null) {
+            LocalBroadcastManager.getInstance(context).unregisterReceiver(foregroundReceiver);
+            foregroundReceiver = null;
+        }
+    }
+
+    public RichPushUser getUser() {
+        return user;
     }
 
     /**
@@ -115,6 +207,88 @@ public class RichPushInbox {
         synchronized (listeners) {
             listeners.remove(listener);
         }
+    }
+
+    /**
+     * Fetches the latest inbox changes from Urban Airship.
+     * <p/>
+     * Normally this method is not called directly as the message list is automatically fetched when
+     * the application foregrounds or when a notification with an associated message is received.
+     * <p/>
+     * If the fetch request completes and results in a change to the messages,
+     * {@link Listener#onInboxUpdated()} will be called.
+     */
+    public void fetchMessages() {
+        fetchMessages(false, null);
+    }
+
+    /**
+     * Fetches the latest inbox changes from Urban Airship.
+     * <p/>
+     * Normally this method is not called directly as the message list is automatically fetched when
+     * the application foregrounds or when a notification with an associated message is received.
+     * <p/>
+     * If the fetch request completes and results in a change to the messages,
+     * {@link Listener#onInboxUpdated()} will be called.
+     *
+     * @param callback Callback to be notified when the request finishes fetching the messages.
+     * @return A cancelable object that can be used to cancel the callback.
+     */
+    public Cancelable fetchMessages(@Nullable final FetchMessagesCallback callback) {
+        return fetchMessages(callback != null, callback);
+    }
+
+    /**
+     * Fetches the latest inbox changes from Urban Airship.
+     * <p/>
+     * Normally this method is not called directly as the message list is automatically fetched when
+     * the application foregrounds or when a notification with an associated message is received.
+     * <p/>
+     * If the fetch request completes and results in a change to the messages,
+     * {@link Listener#onInboxUpdated()} will be called.
+     *
+     * @param force {@code true} to force a sync request even if a request is already in progress.
+     * @param callback Callback to be notified when the request finishes refreshing
+     * the messages. If force is {@code false}, the callback will not be called if a sync request
+     * is already in progress.
+     * @return A cancelable object that can be used to cancel the callback.
+     */
+    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback) {
+
+        final PendingResult<Boolean> pendingResult = new PendingResult<>(new PendingResult.ResultCallback<Boolean>() {
+            @Override
+            public void onResult(@Nullable Boolean result) {
+                if (callback != null) {
+                    callback.onFinished(result != null && result);
+                }
+            }
+        });
+
+        if (fetchCount > 0 && !force) {
+            Logger.debug("Skipping refresh messages, messages are already refreshing. Callback will not be triggered.");
+            pendingResult.cancel();
+            return pendingResult;
+        }
+
+        fetchCount++;
+
+        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.myLooper())) {
+            @Override
+            public void onReceiveResult(int resultCode, Bundle resultData) {
+                fetchCount--;
+                pendingResult.setResult(resultCode == RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS);
+            }
+        };
+
+        Logger.debug("RichPushInbox - Starting update service.");
+        Context context = UAirship.getApplicationContext();
+        Intent intent = new Intent(context, RichPushUpdateService.class)
+                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+
+        context.startService(intent);
+
+        return pendingResult;
     }
 
     /**
@@ -256,7 +430,7 @@ public class RichPushInbox {
                 }
             }
 
-            notifyListeners();
+            notifyInboxUpdated();
         }
     }
 
@@ -286,7 +460,7 @@ public class RichPushInbox {
             }
         }
 
-        notifyListeners();
+        notifyInboxUpdated();
     }
 
     /**
@@ -318,7 +492,7 @@ public class RichPushInbox {
             }
         }
 
-        notifyListeners();
+        notifyInboxUpdated();
     }
 
     /**
@@ -373,21 +547,20 @@ public class RichPushInbox {
             }
         }
 
-        notifyListeners();
+        notifyInboxUpdated();
     }
 
     /**
      * Notifies all of the registered listeners that the
      * inbox updated.
      */
-    private void notifyListeners() {
-        final Handler handler = new Handler(Looper.getMainLooper());
+    private void notifyInboxUpdated() {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 synchronized (listeners) {
                     for (Listener listener : new ArrayList<>(listeners)) {
-                        listener.onUpdateInbox();
+                        listener.onInboxUpdated();
                     }
                 }
             }
