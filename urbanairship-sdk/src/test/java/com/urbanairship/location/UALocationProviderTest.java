@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
@@ -153,7 +154,7 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationRequest() {
-        PendingLocationResult request = new PendingLocationResult(locationCallback) {
+        PendingResult<Location> request = new PendingResult<Location>(locationCallback) {
             @Override
             protected void onCancel() {
             }

@@ -59,8 +59,6 @@ public class InboxServiceDelegateTest extends BaseTestCase {
 
     private TestResultReceiver resultReceiver;
 
-    private RichPushManager richPushManager;
-
     private RichPushInbox inbox;
 
     private InboxServiceDelegate serviceDelegate;
@@ -92,19 +90,16 @@ public class InboxServiceDelegateTest extends BaseTestCase {
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        richPushManager = mock(RichPushManager.class);
-        TestApplication.getApplication().setRichPushManager(richPushManager);
-
         PushManager pushManager = mock(PushManager.class);
         when(pushManager.getChannelId()).thenReturn("channelID");
         TestApplication.getApplication().setPushManager(pushManager);
 
         inbox = mock(RichPushInbox.class);
-        when(richPushManager.getRichPushInbox()).thenReturn(inbox);
+        TestApplication.getApplication().setInbox(inbox);
 
         RichPushUser user = new RichPushUser(dataStore);
         user.setUser("fakeUserId", "fakeUserToken");
-        when(richPushManager.getRichPushUser()).thenReturn(user);
+        when(inbox.getUser()).thenReturn(user);
 
         RichPushResolver resolver = mock(RichPushResolver.class);
 
@@ -121,7 +116,7 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     @Test
     public void testUserNotCreated() {
         // Clear any user or password
-        richPushManager.getRichPushUser().setUser(null, null);
+        inbox.getUser().setUser(null, null);
 
         Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                 .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);

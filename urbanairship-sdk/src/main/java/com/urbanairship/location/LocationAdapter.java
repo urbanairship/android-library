@@ -26,7 +26,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.location;
 
 import android.app.PendingIntent;
+import android.location.Location;
 import android.support.annotation.NonNull;
+
+import com.urbanairship.PendingResult;
 
 /**
  * The common interface for communicating with different location sources.
@@ -40,7 +43,7 @@ interface LocationAdapter {
      * @return PendingLocationResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    PendingLocationResult requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options);
+    PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options);
 
     /**
      * Cancels location updates.

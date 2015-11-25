@@ -25,13 +25,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import android.os.Bundle;
+import android.os.ResultReceiver;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 
+import junit.framework.Assert;
+
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowIntent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,11 +55,18 @@ public class RichPushUserTest extends BaseTestCase {
 
     RichPushUser user;
     PreferenceDataStore dataStore;
+    ShadowApplication application;
+    TestUserListener listener;
 
     @Before
     public void setUp() {
-        this.dataStore = TestApplication.getApplication().preferenceDataStore;
-        this.user = new RichPushUser(dataStore);
+        dataStore = TestApplication.getApplication().preferenceDataStore;
+        user = new RichPushUser(dataStore);
+        listener = new TestUserListener();
+        user.addListener(listener);
+
+        application = Shadows.shadowOf(RuntimeEnvironment.application);
+        application.clearStartedServices();
     }
 
     /**
@@ -139,4 +155,70 @@ public class RichPushUserTest extends BaseTestCase {
 
         assertNull(dataStore.getString("com.urbanairship.user.PASSWORD", null));
     }
+
+
+    /**
+     * Test update
+     */
+    @Test
+    public void testUpdateUserFalse() throws InterruptedException {
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
+        application.clearStartedServices();
+
+        user.update(false);
+
+        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
+        Assert.assertEquals(intent.getAction(), RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE);
+    }
+
+    /**
+     * Tests update user starts the rich push service and notifies the listener
+     * on a success result
+     */
+    @Test
+    public void testRichPushUpdateSuccess() {
+        // Update the user
+        user.update(true);
+
+        // Send result to the receiver
+        ResultReceiver receiver = application.peekNextStartedService()
+                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+
+        // Verify the listener received a success callback
+        assertTrue("Listener should be notified of user update success.",
+                listener.lastUpdateUserResult);
+    }
+
+    /**
+     * Tests update user starts the rich push service and notifies the listener
+     * on an error result
+     */
+    @Test
+    public void testRichPushUpdateError() {
+        // Update the user
+        user.update(true);
+
+        // Send result to the receiver
+        ResultReceiver receiver = application.peekNextStartedService()
+                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+
+        // Verify the listener received a success callback
+        assertFalse("Listener should be notified of user update failed.",
+                listener.lastUpdateUserResult);
+    }
+
+    /**
+     * Listener that captures the last update user result
+     */
+    private class TestUserListener implements RichPushUser.Listener {
+        Boolean lastUpdateUserResult = null;
+
+        @Override
+        public void onUserUpdated(boolean success) {
+            lastUpdateUserResult = success;
+        }
+    }
+
 }

@@ -77,7 +77,7 @@ public class UserServiceDelegateTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(mockPushManager);
 
         resultReceiver = new TestResultReceiver();
-        richPushuser = UAirship.shared().getRichPushManager().getRichPushUser();
+        richPushuser = UAirship.shared().getInbox().getUser();
         // Clear any user or password
         richPushuser.setUser(null, null);
 

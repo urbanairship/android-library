@@ -102,7 +102,7 @@ public class OpenRichPushInboxAction extends Action {
             }
         }
 
-        final RichPushMessage message = UAirship.shared().getRichPushManager().getRichPushInbox().getMessage(messageId);
+        final RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
 
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override

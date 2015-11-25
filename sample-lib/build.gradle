@@ -1,0 +1,22 @@
+
+apply plugin: 'com.android.application'
+
+
+android {
+    sourceSets {
+        main {
+            manifest.srcFile 'sample/app/src/main/AndroidManifest.xml'
+            java.srcDirs = ['sample/app/src/main/java']
+            resources.srcDirs = ['sample/app/src/res']
+            res.srcDirs = ['sample/app/src/main/res']
+            assets.srcDirs = ['sample/app/src/main/assets']
+        }
+    }
+}
+
+dependencies {
+    compile project(':urbanairship-sdk')
+}
+
+apply from: 'sample/app/build.gradle'
+

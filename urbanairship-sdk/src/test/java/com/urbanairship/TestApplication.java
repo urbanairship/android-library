@@ -7,7 +7,7 @@ import android.content.ContentProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.richpush.RichPushManager;
+import com.urbanairship.richpush.RichPushInbox;
 
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.TestLifecycleApplication;
@@ -101,7 +101,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().locationManager = locationManager;
     }
 
-    public void setRichPushManager(RichPushManager richPushManager) {
-        UAirship.shared().richPushManager = richPushManager;
+    public void setInbox(RichPushInbox inbox) {
+        UAirship.shared().inbox = inbox;
     }
 }

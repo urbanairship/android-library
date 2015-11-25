@@ -508,7 +508,7 @@ public class UAWebViewClient extends WebViewClient {
           .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
           .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
           .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
-          .append(createGetter("getUserId", UAirship.shared().getRichPushManager().getRichPushUser().getId()));
+          .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()));
 
         // Append native bridge
         sb.append(NativeBridge.getJavaScriptSource());

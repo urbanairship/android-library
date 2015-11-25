@@ -40,9 +40,10 @@ task cleanPackageUrbanAirshipRelease(type: Delete) {
 
 task packageUrbanAirshipRelease << {
 
+
     def urbanAirshipSdkProject = project.findProject('urbanairship-sdk')
     def urbanAirshipMinSdkVersion = urbanAirshipSdkProject.android.defaultConfig.targetSdkVersion.mApiLevel
-    def samplesProject = project.findProject(':samples')
+    def sampleProject = project.findProject('sample-lib')
 
     // Unpacked library
     copy {
@@ -78,30 +79,12 @@ task packageUrbanAirshipRelease << {
         rename "urbanairship-sdk-release.aar", "urbanairship-lib-${airshipVersion}.aar"
     }
 
-    // Samples
-    samplesProject.subprojects.findAll { sample ->
-        println "Staging ${sample.getName()}"
-
-        copy {
-            from sample.getProjectDir()
-            into file("$buildDir/ua-staging/samples/${sample.getName()}")
-            exclude "build", "**/*.iml", "**/api_key.txt", "**/.DS_STORE", "**/airshipconfig.properties",
-                    "**/airshipconfig.properties.sample", "lint.xml", "**.sample"
-        }
-
-        copy {
-            from new File(sample.getProjectDir(), "assets/airshipconfig.properties.sample")
-            into file("$buildDir/ua-staging/samples/${sample.getName()}/assets")
-            rename "airshipconfig.properties.sample", "airshipconfig.properties"
-        }
-    }
-
-    // Samples gradle files and README
+    // Sample
     copy {
-        println "Staging Gradle files and README for samples."
-        from samplesProject.getProjectDir()
-        into file("$buildDir/ua-staging/samples")
-        include "gradle/**", "gradlew", "gradlew.bat", "settings.gradle", "build.gradle", "README.md"
+        from "${sampleProject.getProjectDir()}/sample"
+        into file("$buildDir/ua-staging/sample")
+        exclude "build", "**/*.iml", "**/api_key.txt", "**/.DS_STORE", "**/airshipconfig.properties",
+                "lint.xml", "**.sample"
     }
 
     // README, LICENSE, and CHANGELOG
@@ -124,7 +107,7 @@ task packageUrbanAirshipRelease << {
     buildInfo.text = "Urban Airship SDK v${airshipVersion} \n\n"
     buildInfo.text += "Build time: ${timeStamp()} \n"
     buildInfo.text += "SDK commit: ${gitRevision(".")} \n"
-    buildInfo.text += "Samples commit: ${gitRevision("samples")} \n"
+    buildInfo.text += "Sample: ${gitRevision("samples")} \n"
     buildInfo.text += "Java: ${JavaVersion.current()}"
 
     // Dex count
@@ -195,5 +178,5 @@ packageUrbanAirshipRelease.dependsOn('cleanPackageUrbanAirshipRelease', 'urbanai
         'urbanairship-sdk:runDexMethodCount')
 
 task continuousIntegration
-continuousIntegration.dependsOn(':samples:PushSample:build', ':samples:RichPushSample:build', 'urbanairship-sdk:assembleRelease',
+continuousIntegration.dependsOn(':sample-lib:build', 'urbanairship-sdk:assembleRelease',
         'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javadoc', 'packageUrbanAirshipRelease')

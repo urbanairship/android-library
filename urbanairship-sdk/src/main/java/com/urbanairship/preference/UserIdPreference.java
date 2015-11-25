@@ -34,7 +34,7 @@ public class UserIdPreference extends Preference {
     public View onCreateView(ViewGroup parent) {
         View view = super.onCreateView(parent);
         view.setContentDescription(CONTENT_DESCRIPTION);
-        setSummary(UAirship.shared().getRichPushManager().getRichPushUser().getId());
+        setSummary(UAirship.shared().getInbox().getUser().getId());
         return view;
     }
 }

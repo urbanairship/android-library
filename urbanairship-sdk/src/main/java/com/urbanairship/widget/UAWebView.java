@@ -255,7 +255,7 @@ public class UAWebView extends WebView {
             return;
         }
 
-        RichPushUser user = UAirship.shared().getRichPushManager().getRichPushUser();
+        RichPushUser user = UAirship.shared().getInbox().getUser();
 
         // Send authorization in the headers if the web view supports it
         if (Build.VERSION.SDK_INT >= 8) {
