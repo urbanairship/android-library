@@ -29,6 +29,6 @@
 
     <string name="ua_notification_button_copy">Copy</string>
     <string name="ua_notification_button_save">Save</string>
-
+    <string name="ua_empty_message_list_string">No messages</string>
 
 </resources>

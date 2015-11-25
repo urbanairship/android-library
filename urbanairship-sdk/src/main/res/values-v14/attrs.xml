@@ -5,6 +5,7 @@
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for in-app message banners -->
         <attr name="inAppMessageBannerStyle" format="reference" />
+        <attr name="inboxActivityStyle" format="reference" />
     </declare-styleable>
 
     <!-- Redefine CardView attributes so we can define them without causing missing

@@ -25,29 +25,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.actions;
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
 /**
- * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage}.
- * <p/>
- * In order to view the inbox, the action will attempt to start an activity with intent action
- * {@code com.urbanairship.VIEW_RICH_PUSH_INBOX}.
- * <p/>
- * To view messages, the intent will use the action
- * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE} with the message ID supplied as the data
- * in the form of {@code message:<MESSAGE_ID>}. If an activity is unable to be started, the message
- * will attempt to be displayed in a Landing Page by using the intent action
- * {@link LandingPageAction#SHOW_LANDING_PAGE_INTENT_ACTION}.
+ * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
+ * either {@link RichPushInbox#startMessageActivity(String)} or {@link RichPushInbox#startInboxActivity()}.
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
@@ -108,9 +96,9 @@ public class OpenRichPushInboxAction extends Action {
             @Override
             public void run() {
                 if (message != null) {
-                    startInboxMessageActivity(UAirship.getApplicationContext(), message);
+                    UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
                 } else {
-                    startInboxActivity(UAirship.getApplicationContext());
+                    UAirship.shared().getInbox().startInboxActivity();
                 }
             }
         });
@@ -118,59 +106,5 @@ public class OpenRichPushInboxAction extends Action {
         return ActionResult.newEmptyResult();
     }
 
-    /**
-     * Called when an activity should be started to view a {@link RichPushMessage}.
-     *
-     * @param context The application context.
-     * @param message The rich push message.
-     */
-    private void startInboxMessageActivity(Context context, RichPushMessage message) {
-        Intent intent = new Intent()
-                .setPackage(UAirship.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, message.getMessageId(), null));
 
-        // Try VIEW_MESSAGE_INTENT_ACTION first
-        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
-        if (intent.resolveActivity(context.getPackageManager()) == null) {
-
-            // Fallback to SHOW_LANDING_PAGE_INTENT_ACTION
-            intent.setAction(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION);
-            if (intent.resolveActivity(context.getPackageManager()) == null) {
-
-                // Log an error about the missing manifest entry
-                Logger.error("Unable to view the inbox message. Add the intent filter to an activity that " +
-                        "can handle viewing an inbox message: <intent-filter>" +
-                        "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_MESSAGE\" />" +
-                        "<data android:scheme=\"message\"/><category android:name=\"android.intent.category.DEFAULT\" />" +
-                        "</intent-filter>");
-
-                return;
-            }
-        }
-
-        context.startActivity(intent);
-    }
-
-    /**
-     * Called when an activity should be started to view the {@link RichPushInbox}.
-     *
-     * @param context The application context.
-     */
-    private void startInboxActivity(Context context) {
-        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
-                .setPackage(UAirship.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        if (intent.resolveActivity(context.getPackageManager()) == null) {
-            Logger.error("Unable to view the inbox. Add the intent filter to an activity that " +
-                    "can handle viewing the inbox: <intent-filter>" +
-                    "<action android:name=\"com.urbanairship.VIEW_RICH_PUSH_INBOX\" />" +
-                    "<category android:name=\"android.intent.category.DEFAULT\" /></intent-filter>");
-
-            return;
-        }
-
-        context.startActivity(intent);
-    }
 }
