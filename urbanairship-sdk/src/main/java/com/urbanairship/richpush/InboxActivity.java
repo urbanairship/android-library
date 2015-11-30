@@ -49,10 +49,11 @@ public class InboxActivity extends FragmentActivity {
         TypedArray a = obtainStyledAttributes(R.styleable.Theme);
         if (a.hasValue(R.styleable.Theme_inboxActivityStyle)) {
             setTheme(a.getResourceId(R.styleable.Theme_inboxActivityStyle, -1));
-            a.recycle();
         } else {
             setTheme(R.style.InboxActivityStyle);
         }
+
+        a.recycle();
 
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.ua_activity_inbox);
