@@ -45,7 +45,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.util.UAStringUtil;
 
@@ -195,7 +194,7 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Starts an activity that can display the Message Center. An implicit intent with the intent action
+     * Starts an activity that can display the Message Center. An implicit intent with the intent
      * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} will be attempted first. If the intent
      * fails to start an activity, the {@link InboxActivity} will be started instead.
      */
@@ -218,11 +217,10 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Starts an activity that can display a {@link RichPushMessage}. An implicit intent with the intent action
+     * Starts an activity that can display a {@link RichPushMessage}. An implicit intent with the intent
      * action {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE} with the message ID supplied as the data
      * in the form of {@code message:<MESSAGE_ID>} will be attempted first. If the intent
-     * fails to start an activity, the message will be displayed using the {@link com.urbanairship.actions.LandingPageActivity}
-     * instead.
+     * fails to start an activity, the {@link MessageActivity} will be started instead.
      *
      * @param messageId An ID of a {@link RichPushMessage} to display.
      */

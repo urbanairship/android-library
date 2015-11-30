@@ -58,7 +58,7 @@ public class MessageFragment extends Fragment {
 
     /**
      * Creates a new MessageFragment
-     * @param messageId The message's id to display
+     * @param messageId The message's ID to display
      * @return messageFragment new MessageFragment
      */
     public static MessageFragment newInstance(String messageId) {

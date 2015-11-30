@@ -64,8 +64,8 @@ public class MessagePagerFragment extends Fragment {
     };
 
     /**
-     * Listener for the message pager fragment.  Hosting activities must implement
-     * the listener or a IllegalStateException will be thrown.
+     * Listener for the message pager fragment. Hosting activities must implement
+     * the listener or an IllegalStateException will be thrown.
      */
     public interface OnMessageChangedListener {
         void onMessageChanged(RichPushMessage message);

@@ -66,7 +66,7 @@ public class MessageActivity extends FragmentActivity {
             String messageId = null;
 
             // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
-            // id encoded in the intent's data in the form of "message:<MESSAGE_ID>
+            // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
             if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
                 messageId = getIntent().getData().getSchemeSpecificPart();
             }

@@ -35,7 +35,7 @@ import com.urbanairship.richpush.RichPushMessage;
 
 /**
  * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
- * either {@link RichPushInbox#startMessageActivity(String)} or {@link RichPushInbox#startInboxActivity()}.
+ * either {@link RichPushInbox#startInboxActivity()} or {@link RichPushInbox#startMessageActivity(String)}.
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
