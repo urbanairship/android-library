@@ -1,4 +1,4 @@
-version = airshipVersion
+version = airshipProperties.version
 group = "com.urbanairship.android"
 description = "Urban Airship Android SDK"
 
@@ -84,13 +84,15 @@ android.libraryVariants.all { variant ->
             doclet "com.google.doclava.Doclava"
             bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
             addStringOption "hdf project.name", "Urban Airship Android Library"
-            addStringOption "hdf project.version", airshipVersion
+            addStringOption "hdf project.version", project.version
             addStringOption "apiversion", "v2"
             addStringOption "federate android", "http://developer.android.com/reference"
             addStringOption "federationxml android", "docs/android-22.xml"
             addStringOption "templatedir", "docs/template"
         }
     }
+
+
 }
 
 install {

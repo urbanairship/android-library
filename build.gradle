@@ -2,6 +2,13 @@ import java.text.SimpleDateFormat
 import org.apache.http.entity.FileEntity
 import groovyx.net.http.RESTClient
 
+allprojects {
+    ext {
+        airshipProperties = new Properties()
+        airshipProperties.load(new FileInputStream("airship.properties"))
+    }
+}
+
 buildscript {
     repositories {
         jcenter()
@@ -50,7 +57,7 @@ task packageUrbanAirshipRelease << {
         println "Staging library."
         from zipTree(file("${urbanAirshipSdkProject.buildDir}/outputs/aar/urbanairship-sdk-release.aar"))
         into file("$buildDir/ua-staging/urbanairship-lib")
-        rename "classes.jar", "libs/urbanairship-lib-${airshipVersion}.jar"
+        rename "classes.jar", "libs/urbanairship-lib-${airshipProperties.version}.jar"
         include "proguard.txt", "res/**", "classes.jar"
     }
 
@@ -76,7 +83,7 @@ task packageUrbanAirshipRelease << {
         println "Staging aar."
         from "${urbanAirshipSdkProject.buildDir}/outputs/aar/urbanairship-sdk-release.aar"
         into "$buildDir/ua-staging"
-        rename "urbanairship-sdk-release.aar", "urbanairship-lib-${airshipVersion}.aar"
+        rename "urbanairship-sdk-release.aar", "urbanairship-lib-${airshipProperties.version}.aar"
     }
 
     // Sample
@@ -104,7 +111,7 @@ task packageUrbanAirshipRelease << {
 
     // Build info file
     File buildInfo = file("$buildDir/ua-staging/BUILD_INFO")
-    buildInfo.text = "Urban Airship SDK v${airshipVersion} \n\n"
+    buildInfo.text = "Urban Airship SDK v${airshipProperties.version} \n\n"
     buildInfo.text += "Build time: ${timeStamp()} \n"
     buildInfo.text += "SDK commit: ${gitRevision(".")} \n"
     buildInfo.text += "Sample: ${gitRevision("samples")} \n"
@@ -130,12 +137,12 @@ task packageUrbanAirshipRelease << {
         destinationDir file("$buildDir/ua-package")
         from file("$buildDir/ua-staging")
         include "**/*"
-        archiveName "ua-android-lib-${airshipVersion}.zip"
+        archiveName "ua-android-lib-${airshipProperties.version}.zip"
     }.execute()
 }
 
 def uploadBuildInfo(String repo, boolean publish) {
-    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipVersion}/distributions/BUILD_INFO-${airshipVersion}?publish=${publish ? 1 : 0}"
+    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipProperties.version}/distributions/BUILD_INFO-${airshipProperties.version}?publish=${publish ? 1 : 0}"
     def file = new File("$buildDir/ua-staging/BUILD_INFO")
     def rest = new RESTClient(url)
     rest.auth.basic(bintrayUser, bintrayApiKey)
@@ -143,8 +150,8 @@ def uploadBuildInfo(String repo, boolean publish) {
 }
 
 def uploadRelease(String repo, boolean publish) {
-    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipVersion}/distributions/ua-android-lib-${airshipVersion}.zip?publish=${publish ? 1 : 0}"
-    def file = new File("$buildDir/ua-package/ua-android-lib-${airshipVersion}.zip")
+    def url =  "https://api.bintray.com/content/urbanairship/${repo}/urbanairship-sdk/${airshipProperties.version}/distributions/ua-android-lib-${airshipProperties.version}.zip?publish=${publish ? 1 : 0}"
+    def file = new File("$buildDir/ua-package/ua-android-lib-${airshipProperties.version}.zip")
 
     def rest = new RESTClient(url)
 
