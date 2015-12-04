@@ -56,7 +56,7 @@ import java.util.TimeZone;
 /**
  * A client that handles uploading analytic events
  */
-class EventAPIClient {
+class EventApiClient {
 
     static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
     static final String NOT_ALLOWED = "NOT_ALLOWED";
@@ -64,17 +64,17 @@ class EventAPIClient {
 
     private final RequestFactory requestFactory;
 
-    EventAPIClient() {
+    EventApiClient() {
         this(new RequestFactory());
     }
 
     /**
-     * Create the EventAPIClient
+     * Create the EventApiClient
      *
      * @param requestFactory The requestFactory.
      */
     @VisibleForTesting
-    EventAPIClient(@NonNull RequestFactory requestFactory) {
+    EventApiClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
     }
 
@@ -86,12 +86,12 @@ class EventAPIClient {
      */
     EventResponse sendEvents(@NonNull Collection<String> events) {
         if (events.size() == 0) {
-            Logger.verbose("EventAPIClient - No events to send.");
+            Logger.verbose("EventApiClient - No events to send.");
             return null;
         }
 
         if (!Network.isConnected()) {
-            Logger.verbose("EventAPIClient - No network connectivity available. Unable to send events.");
+            Logger.verbose("EventApiClient - No network connectivity available. Unable to send events.");
             return null;
         }
 
@@ -101,7 +101,7 @@ class EventAPIClient {
             try {
                 eventJSON.put(new JSONObject(eventPayload));
             } catch (JSONException e) {
-                Logger.error("EventAPIClient - Invalid eventPayload.", e);
+                Logger.error("EventApiClient - Invalid eventPayload.", e);
             }
         }
 
@@ -112,7 +112,7 @@ class EventAPIClient {
         try {
             analyticsServerUrl = new URL(url);
         } catch (MalformedURLException e) {
-            Logger.error("EventAPIClient - Invalid analyticsServer: " + url, e);
+            Logger.error("EventApiClient - Invalid analyticsServer: " + url, e);
         }
 
         String deviceFamily;
@@ -172,12 +172,12 @@ class EventAPIClient {
             request.setHeader("X-UA-Push-Address", channelID);
         }
 
-        Logger.debug("EventAPIClient - Sending analytic events. Request:  " + request + " Events: " + events);
+        Logger.debug("EventApiClient - Sending analytic events. Request:  " + request + " Events: " + events);
 
         Response response = request.execute();
 
 
-        Logger.debug("EventAPIClient - Analytic event send response: " + response);
+        Logger.debug("EventApiClient - Analytic event send response: " + response);
 
 
         return response == null ? null : new EventResponse(response);
@@ -221,7 +221,7 @@ class EventAPIClient {
             try {
                 locationMode = Settings.Secure.getInt(UAirship.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_MODE);
             } catch (Settings.SettingNotFoundException e) {
-                Logger.debug("EventAPIClient - Settings not found.");
+                Logger.debug("EventApiClient - Settings not found.");
             }
 
             if (locationMode != Settings.Secure.LOCATION_MODE_OFF) {

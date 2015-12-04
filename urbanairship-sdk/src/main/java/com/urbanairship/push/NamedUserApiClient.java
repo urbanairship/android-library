@@ -41,7 +41,7 @@ import java.net.URL;
 /**
  * A high level abstraction for performing Named User API association and disassociation.
  */
-class NamedUserAPIClient {
+class NamedUserApiClient {
 
     static final String NAMED_USER_PATH = "api/named_users";
     static final String CHANNEL_KEY = "channel_id";
@@ -51,12 +51,12 @@ class NamedUserAPIClient {
     protected final String urlString;
     private final RequestFactory requestFactory;
 
-    NamedUserAPIClient() {
+    NamedUserApiClient() {
         this(new RequestFactory());
     }
 
     @VisibleForTesting
-    NamedUserAPIClient(@NonNull RequestFactory requestFactory) {
+    NamedUserApiClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
         this.urlString = UAirship.shared().getAirshipConfigOptions().hostURL + NAMED_USER_PATH;
     }

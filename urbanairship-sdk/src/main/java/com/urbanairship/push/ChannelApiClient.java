@@ -39,19 +39,19 @@ import java.net.URL;
 /**
  * A high level abstraction for performing Channel API creation and updates.
  */
-class ChannelAPIClient {
+class ChannelApiClient {
 
     static final String CHANNEL_CREATION_PATH = "api/channels/";
 
     protected URL creationURL;
     private final RequestFactory requestFactory;
 
-    ChannelAPIClient() {
+    ChannelApiClient() {
         this(new RequestFactory());
     }
 
     @VisibleForTesting
-    ChannelAPIClient(@NonNull RequestFactory requestFactory) {
+    ChannelApiClient(@NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
 
         String urlString = UAirship.shared().getAirshipConfigOptions().hostURL + CHANNEL_CREATION_PATH;
@@ -59,7 +59,7 @@ class ChannelAPIClient {
             this.creationURL = new URL(urlString);
         } catch (MalformedURLException e) {
             this.creationURL = null;
-            Logger.error("ChannelAPIClient - Invalid hostURL    ", e);
+            Logger.error("ChannelApiClient - Invalid hostURL    ", e);
         }
     }
 
@@ -71,7 +71,7 @@ class ChannelAPIClient {
      */
     ChannelResponse createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelAPIClient - Creating channel with payload: " + payload);
+        Logger.verbose("ChannelApiClient - Creating channel with payload: " + payload);
         return requestWithPayload(creationURL, "POST", payload);
     }
 
@@ -84,7 +84,7 @@ class ChannelAPIClient {
      */
     ChannelResponse updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
-        Logger.verbose("ChannelAPIClient - Updating channel with payload: " + payload);
+        Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);
         return requestWithPayload(channelLocation, "PUT", payload);
     }
 
@@ -107,11 +107,11 @@ class ChannelAPIClient {
                                           .execute();
 
         if (response == null) {
-            Logger.debug("ChannelAPIClient - Failed to receive channel response.");
+            Logger.debug("ChannelApiClient - Failed to receive channel response.");
             return null;
         }
 
-        Logger.verbose("ChannelAPIClient - Received channel response: " + response);
+        Logger.verbose("ChannelApiClient - Received channel response: " + response);
         return new ChannelResponse(response);
     }
 }

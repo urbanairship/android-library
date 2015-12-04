@@ -86,7 +86,7 @@
         </receiver>
 
         <receiver
-            android:name="com.urbanairship.push.GCMPushReceiver"
+            android:name=".push.GcmPushReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
 
             <intent-filter>
@@ -97,7 +97,7 @@
         </receiver>
 
         <receiver
-            android:name="com.urbanairship.push.ADMPushReceiver"
+            android:name=".push.AdmPushReceiver"
             android:permission="com.amazon.device.messaging.permission.SEND">
 
             <intent-filter>

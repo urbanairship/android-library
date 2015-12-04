@@ -28,7 +28,7 @@ package com.urbanairship.push;
 /**
  * Common GCM Constants used by Urban Airship.
  */
-public interface GCMConstants {
+public interface GcmConstants {
     /**
      * This intent action indicates a push notification has been received from GCM.
      */

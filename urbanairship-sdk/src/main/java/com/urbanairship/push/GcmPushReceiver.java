@@ -25,57 +25,48 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.push;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
-import com.amazon.device.messaging.ADMConstants;
+import com.google.android.gms.gcm.GcmReceiver;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 
 /**
- * ADMPushReceiver listens for incoming ADM registration responses and messages.
+ * WakefulBroadcastReceiver that receives GCM messages and delivers them to both the application-specific GcmListenerService subclass,
+ * and Urban Airship's PushService.
  */
-public class ADMPushReceiver extends WakefulBroadcastReceiver {
+public class GcmPushReceiver extends GcmReceiver {
 
-    @SuppressLint("NewApi")
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
-        if (intent == null || intent.getAction() == null) {
-            return;
+        // CE-1574: Security exception is sometimes thrown when the GcmReceiver's onReceive tries to start
+        // the instance ID service
+        try {
+            super.onReceive(context, intent);
+        } catch (SecurityException e) {
+            Logger.error("Received security exception from GcmReceiver: ", e);
+
+            if (!GcmConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
+                // Trying to do any further registrations with GCM leads to a SecurityException - bad process.
+                // Lets assume the token was trying to be refreshed, so lets clear the token to force
+                // it to be regenerated on next app start and hope GCM is in a better spot.
+                UAirship.shared().getPushManager().setGcmToken(null);
+
+                return;
+            }
         }
 
-        Logger.verbose("ADMPushReceiver - Received intent: " + intent.getAction());
+        Logger.verbose("GcmPushReceiver - Received intent: " + intent.getAction());
+        if (GcmConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
+            Intent pushIntent = new Intent(context, PushService.class)
+                    .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
+                    .putExtra(PushService.EXTRA_INTENT, intent);
 
-        if (Build.VERSION.SDK_INT < 15) {
-            Logger.error("ADMPushReceiver - Received intent from ADM transport on an unsupported API version.");
-            return;
-        }
-
-        switch (intent.getAction()) {
-            case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
-                Intent pushIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_RECEIVE_ADM_MESSAGE)
-                        .putExtra(PushService.EXTRA_INTENT, intent);
-
-                startWakefulService(context, pushIntent);
-                break;
-            case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
-                Intent finishIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_ADM_REGISTRATION_FINISHED)
-                        .putExtra(PushService.EXTRA_INTENT, intent);
-
-                startWakefulService(context, finishIntent);
-                break;
-        }
-
-        if (isOrderedBroadcast()) {
-            setResultCode(Activity.RESULT_OK);
+            startWakefulService(context, pushIntent);
         }
     }
 }

@@ -36,7 +36,7 @@ import com.urbanairship.BaseIntentService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.amazon.ADMUtils;
+import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.EventService;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.json.JsonException;
@@ -73,14 +73,14 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     private final UAirship airship;
     private final PushManager pushManager;
     private final PushPreferences pushPreferences;
-    private final ChannelAPIClient channelClient;
+    private final ChannelApiClient channelClient;
 
     public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new ChannelAPIClient(), UAirship.shared());
+        this(context, dataStore, new ChannelApiClient(), UAirship.shared());
     }
 
     public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                  ChannelAPIClient channelClient, UAirship airship) {
+                                  ChannelApiClient channelClient, UAirship airship) {
         super(context, dataStore);
 
         this.channelClient = channelClient;
@@ -161,7 +161,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 }
 
                 try {
-                    if (!GCMRegistrar.register()) {
+                    if (!GcmRegistrar.register()) {
                         Logger.error("GCM registration failed.");
                     }
                 } catch (IOException e) {
@@ -173,8 +173,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 break;
 
             case UAirship.AMAZON_PLATFORM:
-                if (ADMUtils.isADMSupported()) {
-                    ADMUtils.startRegistration(getContext());
+                if (AdmUtils.isAdmSupported()) {
+                    AdmUtils.startRegistration(getContext());
                     isPushRegistering = true;
                 } else {
                     Logger.error("ADM is not supported on this device.");
@@ -199,7 +199,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param intent The received intent.
      */
     private void onAdmRegistrationFinished(@NonNull Intent intent) {
-        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !ADMUtils.isADMAvailable()) {
+        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !AdmUtils.isAdmAvailable()) {
             Logger.error("Received intent from invalid transport acting as ADM.");
             return;
         }
@@ -241,7 +241,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         String channelId = pushManager.getChannelId();
-        URL channelLocation = getChannelLocationURL();
+        URL channelLocation = getChannelLocationUrl();
 
         if (channelLocation != null && !UAStringUtil.isEmpty(channelId)) {
             updateChannel(intent, channelLocation, payload);
@@ -387,7 +387,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @return The channel location URL
      */
     @Nullable
-    private URL getChannelLocationURL() {
+    private URL getChannelLocationUrl() {
         String channelLocationString = pushManager.getChannelLocation();
         if (!UAStringUtil.isEmpty(channelLocationString)) {
             try {

@@ -26,7 +26,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class TagGroupsAPIClientTest extends BaseTestCase {
+public class TagGroupsApiClientTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
@@ -36,7 +36,7 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
     private Set<String> tagsToRemove;
     private TestRequest testRequest;
 
-    private TagGroupsAPIClient client;
+    private TagGroupsApiClient client;
     
     @Before
     public void setUp() {
@@ -50,7 +50,7 @@ public class TagGroupsAPIClientTest extends BaseTestCase {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        client = new TagGroupsAPIClient(configOptions, mockRequestFactory);
+        client = new TagGroupsApiClient(configOptions, mockRequestFactory);
 
         tagsToAdd = new HashSet<>();
         tagsToAdd.add("tag1");

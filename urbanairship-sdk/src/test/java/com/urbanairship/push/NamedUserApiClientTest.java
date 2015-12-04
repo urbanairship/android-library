@@ -22,12 +22,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class NamedUserAPIClientTest extends BaseTestCase {
+public class NamedUserApiClientTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private AirshipConfigOptions mockAirshipConfigOptions;
-    private NamedUserAPIClient client;
+    private NamedUserApiClient client;
     private TestRequest testRequest;
 
     @Before
@@ -46,7 +46,7 @@ public class NamedUserAPIClientTest extends BaseTestCase {
         // Set hostURL
         UAirship.shared().getAirshipConfigOptions().hostURL = "https://go-demo.urbanairship.com/";
 
-        client = new NamedUserAPIClient(mockRequestFactory);
+        client = new NamedUserApiClient(mockRequestFactory);
     }
 
     /**
@@ -90,7 +90,7 @@ public class NamedUserAPIClientTest extends BaseTestCase {
         // Set hostURL
         UAirship.shared().getAirshipConfigOptions().hostURL = "files://thisIsMalformed";
 
-        NamedUserAPIClient client2 = new NamedUserAPIClient(mockRequestFactory);
+        NamedUserApiClient client2 = new NamedUserApiClient(mockRequestFactory);
 
         Response response = client2.associate(fakeNamedUserId, fakeChannelId);
         assertNull("Response should be null", response);

@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
 public class EventServiceTest extends BaseTestCase {
 
     EventService service;
-    EventAPIClient client;
+    EventApiClient client;
     EventDataManager dataManager;
     AnalyticsPreferences preferences;
     PushManager pushManager;
@@ -88,7 +88,7 @@ public class EventServiceTest extends BaseTestCase {
         });
         channelId = "some channel ID";
 
-        client = mock(EventAPIClient.class);
+        client = mock(EventApiClient.class);
 
         // Extend it to make onHandleIntent public so we can call it directly
         service = new EventService("EventService", client) {

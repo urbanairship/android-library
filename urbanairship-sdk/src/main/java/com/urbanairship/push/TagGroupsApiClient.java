@@ -46,7 +46,7 @@ import java.util.Set;
 /**
  * A high level abstraction for performing tag groups operations.
  */
-class TagGroupsAPIClient {
+class TagGroupsApiClient {
 
     private static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
     private static final String NAMED_USER_TAGS_PATH = "api/named_users/tags/";
@@ -62,12 +62,12 @@ class TagGroupsAPIClient {
     private final String appSecret;
     private final RequestFactory requestFactory;
 
-    TagGroupsAPIClient(@NonNull AirshipConfigOptions configOptions) {
+    TagGroupsApiClient(@NonNull AirshipConfigOptions configOptions) {
         this(configOptions, new RequestFactory());
     }
 
     @VisibleForTesting
-    public TagGroupsAPIClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+    public TagGroupsApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
         this.urlString = configOptions.hostURL;
         this.appKey = configOptions.getAppKey();

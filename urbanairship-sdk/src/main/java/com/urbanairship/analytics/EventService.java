@@ -110,17 +110,17 @@ public class EventService extends IntentService {
 
     private static long backoffMs = 0;
 
-    private final EventAPIClient eventClient;
+    private final EventApiClient eventClient;
 
     public EventService() {
         this("EventService");
     }
 
     public EventService(String serviceName) {
-        this(serviceName, new EventAPIClient());
+        this(serviceName, new EventApiClient());
     }
 
-    EventService(String serviceName, EventAPIClient eventClient) {
+    EventService(String serviceName, EventApiClient eventClient) {
         super(serviceName);
         this.eventClient = eventClient;
     }
