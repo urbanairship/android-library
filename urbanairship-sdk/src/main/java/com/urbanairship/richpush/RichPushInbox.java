@@ -29,6 +29,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -183,9 +185,68 @@ public class RichPushInbox extends AirshipComponent {
         }
     }
 
+    /**
+     * Returns the {@link RichPushUser}.
+     * @return The {@link RichPushUser}.
+     */
     public RichPushUser getUser() {
         return user;
     }
+
+    /**
+     * Starts an activity that can display the Message Center. An implicit intent with the intent
+     * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} will be attempted first. If the intent
+     * fails to start an activity, the {@link InboxActivity} will be started instead.
+     */
+    public void startInboxActivity() {
+        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
+                .setPackage(context.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            // Fallback to our InboxActivity
+            intent.setClass(context, InboxActivity.class);
+        }
+
+        if (intent.resolveActivity(context.getPackageManager()) == null) {
+            Logger.error("Failed to display inbox. No activities available.");
+            return;
+        }
+
+        context.startActivity(intent);
+    }
+
+    /**
+     * Starts an activity that can display a {@link RichPushMessage}. An implicit intent with the intent
+     * action {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE} with the message ID supplied as the data
+     * in the form of {@code message:<MESSAGE_ID>} will be attempted first. If the intent
+     * fails to start an activity, the {@link MessageActivity} will be started instead.
+     *
+     * @param messageId An ID of a {@link RichPushMessage} to display.
+     */
+    public void startMessageActivity(@NonNull String messageId) {
+        Intent intent = new Intent()
+                .setPackage(context.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
+
+        // Try VIEW_MESSAGE_INTENT_ACTION first
+        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
+
+
+        if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            // Fallback to our MessageActivity
+            intent.setClass(context, MessageActivity.class);
+        }
+
+        if (intent.resolveActivity(context.getPackageManager()) == null) {
+            Logger.error("Failed to display message. No activities available.");
+            return;
+        }
+
+        context.startActivity(intent);
+    }
+
 
     /**
      * Subscribe a listener for inbox update event callbacks.
