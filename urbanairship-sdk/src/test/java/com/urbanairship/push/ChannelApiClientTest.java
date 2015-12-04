@@ -25,13 +25,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class ChannelAPIClientTest extends BaseTestCase {
+public class ChannelApiClientTest extends BaseTestCase {
 
 
     // Empty payload
     private ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
     private AirshipConfigOptions mockAirshipConfigOptions;
-    private ChannelAPIClient client;
+    private ChannelApiClient client;
     private TestRequest testRequest;
 
 
@@ -51,7 +51,7 @@ public class ChannelAPIClientTest extends BaseTestCase {
         // Set hostURL
         UAirship.shared().getAirshipConfigOptions().hostURL = "https://go-demo.urbanairship.com/";
 
-        client = new ChannelAPIClient(mockRequestFactory);
+        client = new ChannelApiClient(mockRequestFactory);
     }
 
     /**

@@ -134,8 +134,8 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        if (GCMConstants.GCM_DELETED_MESSAGES_VALUE.equals(gcmIntent.getStringExtra(GCMConstants.EXTRA_GCM_MESSAGE_TYPE))) {
-            Logger.info("GCM deleted " + gcmIntent.getStringExtra(GCMConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
+        if (GcmConstants.GCM_DELETED_MESSAGES_VALUE.equals(gcmIntent.getStringExtra(GcmConstants.EXTRA_GCM_MESSAGE_TYPE))) {
+            Logger.info("GCM deleted " + gcmIntent.getStringExtra(GcmConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
             return;
         }
 

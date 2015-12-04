@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
 
 public class NamedUserServiceDelegateTest extends BaseTestCase {
 
-    private NamedUserAPIClient namedUserClient;
+    private NamedUserApiClient namedUserClient;
     private NamedUser namedUser;
     private PushManager pushManager;
     private PreferenceDataStore dataStore;
@@ -60,7 +60,7 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        namedUserClient = Mockito.mock(NamedUserAPIClient.class);
+        namedUserClient = Mockito.mock(NamedUserApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
         dataStore = TestApplication.getApplication().preferenceDataStore;

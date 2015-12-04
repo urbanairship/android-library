@@ -32,7 +32,6 @@ import android.content.pm.PackageInfo;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 
 import java.util.List;
 
@@ -190,15 +189,15 @@ public class PlayServicesUtils {
     /**
      * Checks if the Google Play Store package is installed on the device.
      *
+     * @param context The application context.
      * @return <code>true</code> if Google Play Store package is installed on the device,
      * otherwise <code>false</code>
      */
-    public static boolean isGooglePlayStoreAvailable() {
-        List<PackageInfo> packages = UAirship.getPackageManager().getInstalledPackages(0);
+    public static boolean isGooglePlayStoreAvailable(@NonNull Context context) {
+        List<PackageInfo> packages = context.getPackageManager().getInstalledPackages(0);
         for (PackageInfo packageInfo : packages) {
             if (packageInfo.packageName.equals(GOOGLE_PLAY_STORE_PACKAGE) ||
                     packageInfo.packageName.equals(GOOGLE_PLAY_STORE_PACKAGE_OLD)) {
-
                 return true;
             }
         }

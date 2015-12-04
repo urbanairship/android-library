@@ -72,15 +72,15 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
 
     private final PushManager pushManager;
     private final NamedUser namedUser;
-    private final TagGroupsAPIClient client;
+    private final TagGroupsApiClient client;
 
     public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new TagGroupsAPIClient(UAirship.shared().getAirshipConfigOptions()),
+        this(context, dataStore, new TagGroupsApiClient(UAirship.shared().getAirshipConfigOptions()),
                 UAirship.shared().getPushManager(), UAirship.shared().getPushManager().getNamedUser());
     }
 
     public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                   TagGroupsAPIClient client, PushManager pushManager, NamedUser namedUser) {
+                                   TagGroupsApiClient client, PushManager pushManager, NamedUser namedUser) {
 
         super(context, dataStore);
 

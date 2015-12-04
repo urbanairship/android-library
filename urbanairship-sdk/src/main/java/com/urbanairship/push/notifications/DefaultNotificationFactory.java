@@ -38,7 +38,7 @@ import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.NotificationIDGenerator;
+import com.urbanairship.util.NotificationIdGenerator;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
         if (constantNotificationId > 0) {
             return constantNotificationId;
         } else {
-            return NotificationIDGenerator.nextID();
+            return NotificationIdGenerator.nextID();
         }
     }
 

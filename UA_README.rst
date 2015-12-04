@@ -111,7 +111,7 @@ Receivers:
     </receiver>
 
     <!-- ADM -->
-    <receiver android:name="com.urbanairship.push.ADMPushReceiver"
+    <receiver android:name="com.urbanairship.push.AdmPushReceiver"
         android:permission="com.amazon.device.messaging.permission.SEND">
 
         <intent-filter>
@@ -123,7 +123,7 @@ Receivers:
 
     <!-- GCM -->
     <receiver
-        android:name="com.urbanairship.push.GCMPushReceiver"
+        android:name="com.urbanairship.push.GcmPushReceiver"
         android:permission="com.google.android.c2dm.permission.SEND">
         <intent-filter>
             <action android:name="com.google.android.c2dm.intent.RECEIVE" />

@@ -32,7 +32,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.google.GCMUtils;
+import com.urbanairship.google.GcmUtils;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.util.ManifestUtils;
 
@@ -41,7 +41,7 @@ import java.io.IOException;
 /**
  * Handles GCM registration.
  */
-class GCMRegistrar {
+class GcmRegistrar {
 
     /**
      * Starts the registration process for GCM
@@ -53,7 +53,7 @@ class GCMRegistrar {
         Logger.verbose("Registering with GCM.");
 
         // Check if GCM is available
-        if (!isGCMAvailable()) {
+        if (!isGcmAvailable()) {
             return false;
         }
 
@@ -77,7 +77,7 @@ class GCMRegistrar {
      * @return <code>true</code> If GCM is available for the application,
      * otherwise <code>false</code>
      */
-    private static boolean isGCMAvailable() {
+    private static boolean isGcmAvailable() {
         if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
             Logger.error("Google Play services for GCM is unavailable.");
             return false;
@@ -97,8 +97,8 @@ class GCMRegistrar {
 
         // Check for permissions - the emulator will not have them, nor with devices without the Google stack
         // such as the Kindle Fire.
-        if (!ManifestUtils.isPermissionKnown(GCMUtils.PERMISSION_RECEIVE)) {
-            Logger.error(GCMUtils.PERMISSION_RECEIVE + " is unknown to PackageManager. " +
+        if (!ManifestUtils.isPermissionKnown(GcmUtils.PERMISSION_RECEIVE)) {
+            Logger.error(GcmUtils.PERMISSION_RECEIVE + " is unknown to PackageManager. " +
                     "Note that an AVD emulator may not support GCM.");
 
             Logger.error("If you're running in an emulator, you need to install " +

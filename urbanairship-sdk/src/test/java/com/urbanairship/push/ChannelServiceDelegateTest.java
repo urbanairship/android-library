@@ -58,7 +58,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
 
     PreferenceDataStore dataStore;
     PushManager pushManager;
-    ChannelAPIClient client;
+    ChannelApiClient client;
     ChannelServiceDelegate serviceDelegate;
     RichPushInbox richPushInbox;
     RichPushUser richPushUser;
@@ -66,7 +66,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        client = mock(ChannelAPIClient.class);
+        client = mock(ChannelApiClient.class);
 
         richPushInbox = mock(RichPushInbox.class);
         TestApplication.getApplication().setInbox(richPushInbox);

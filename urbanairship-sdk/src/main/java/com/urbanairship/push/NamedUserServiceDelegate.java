@@ -50,16 +50,16 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
      */
     static final String LAST_UPDATED_TOKEN_KEY = "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY";
 
-    private final NamedUserAPIClient client;
+    private final NamedUserApiClient client;
     private final NamedUser namedUser;
     private final PushManager pushManager;
 
     public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new NamedUserAPIClient(), UAirship.shared().getPushManager(),
+        this(context, dataStore, new NamedUserApiClient(), UAirship.shared().getPushManager(),
                 UAirship.shared().getPushManager().getNamedUser());
     }
 
-    public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore, NamedUserAPIClient client, PushManager pushManager, NamedUser namedUser) {
+    public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore, NamedUserApiClient client, PushManager pushManager, NamedUser namedUser) {
         super(context, dataStore);
         this.client = client;
         this.namedUser = namedUser;

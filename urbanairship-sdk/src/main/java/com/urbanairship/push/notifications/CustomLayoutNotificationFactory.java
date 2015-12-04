@@ -35,7 +35,7 @@ import android.widget.RemoteViews;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.NotificationIDGenerator;
+import com.urbanairship.util.NotificationIdGenerator;
 
 import java.io.IOException;
 
@@ -341,7 +341,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
         if (constantNotificationId > 0) {
             return constantNotificationId;
         } else {
-            return NotificationIDGenerator.nextID();
+            return NotificationIdGenerator.nextID();
         }
     }
 

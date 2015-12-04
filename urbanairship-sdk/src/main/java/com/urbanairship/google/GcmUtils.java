@@ -36,14 +36,14 @@ import android.support.annotation.NonNull;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.GCMConstants;
-import com.urbanairship.push.GCMPushReceiver;
+import com.urbanairship.push.GcmConstants;
+import com.urbanairship.push.GcmPushReceiver;
 import com.urbanairship.util.ManifestUtils;
 
 /**
  * Util methods for GCM.
  */
-public class GCMUtils {
+public class GcmUtils {
 
     /**
      * Required permission to receive GCM messages.
@@ -81,20 +81,20 @@ public class GCMUtils {
 
         if (PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
             // GCM intent receiver
-            ComponentInfo gcmReceiver = ManifestUtils.getReceiverInfo(GCMPushReceiver.class);
+            ComponentInfo gcmReceiver = ManifestUtils.getReceiverInfo(GcmPushReceiver.class);
 
             if (gcmReceiver != null) {
                 // next check for receive intent filter with matching category
-                Intent receiveIntent = new Intent(GCMConstants.ACTION_GCM_RECEIVE);
+                Intent receiveIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE);
                 receiveIntent.addCategory(packageName);
 
                 if (pm.queryBroadcastReceivers(receiveIntent, 0).isEmpty()) {
-                    Logger.error("AndroidManifest.xml's " + GCMPushReceiver.class.getCanonicalName() +
+                    Logger.error("AndroidManifest.xml's " + GcmPushReceiver.class.getCanonicalName() +
                             " declaration missing required " + receiveIntent.getAction() +
                             " filter with category = " + packageName);
                 }
             } else {
-                Logger.error("AndroidManifest.xml missing required receiver: " + GCMPushReceiver.class.getCanonicalName());
+                Logger.error("AndroidManifest.xml missing required receiver: " + GcmPushReceiver.class.getCanonicalName());
             }
 
             try {

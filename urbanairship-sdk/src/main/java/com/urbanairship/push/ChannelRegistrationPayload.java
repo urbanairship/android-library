@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Model object encapsulating the data relevant to a creation or updates processed by ChannelAPIClient.
+ * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
  */
 class ChannelRegistrationPayload implements JsonSerializable {
     static final String CHANNEL_KEY = "channel";

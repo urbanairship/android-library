@@ -35,7 +35,7 @@ import com.urbanairship.UAirship;
 /**
  * An auto-incrementing notification ID generator.
  */
-public class NotificationIDGenerator {
+public class NotificationIdGenerator {
 
     private static final String SHARED_PREFERENCES_FILE = "com.urbanairship.notificationidgenerator";
 
@@ -125,17 +125,17 @@ public class NotificationIDGenerator {
         //store a new next id: increment by one, unless we're already at the maximum
         int nextId = ++id;
         if (nextId < start + range) {
-            Logger.verbose("NotificationIDGenerator - Incrementing notification ID count");
+            Logger.verbose("NotificationIdGenerator - Incrementing notification ID count");
             putInt(NEXT_ID_KEY, nextId);
         }
 
         //in which case, cycle
         else {
-            Logger.verbose("NotificationIDGenerator - Resetting notification ID count");
+            Logger.verbose("NotificationIdGenerator - Resetting notification ID count");
             putInt(NEXT_ID_KEY, start);
         }
 
-        Logger.verbose("NotificationIDGenerator - Notification ID: " + id);
+        Logger.verbose("NotificationIdGenerator - Notification ID: " + id);
 
         return id;
     }

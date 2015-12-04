@@ -32,10 +32,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class EventAPIClientTest extends BaseTestCase {
+public class EventApiClientTest extends BaseTestCase {
 
     private List<String> events = new ArrayList<>();
-    private EventAPIClient client;
+    private EventApiClient client;
     private TestRequest testRequest;
 
 
@@ -56,7 +56,7 @@ public class EventAPIClientTest extends BaseTestCase {
         TestApplication.getApplication().setInbox(inbox);
 
 
-        client = new EventAPIClient(mockRequestFactory);
+        client = new EventApiClient(mockRequestFactory);
     }
 
     /**

@@ -80,11 +80,11 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
     @Before
     public void setup() {
 
-        alertingGcmIntent = new Intent(GCMConstants.ACTION_GCM_RECEIVE)
+        alertingGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
                 .putExtra(PushMessage.EXTRA_ALERT, "Test Push Alert!")
                 .putExtra(PushMessage.EXTRA_PUSH_ID, "testPushID");
 
-        silentGcmIntent = new Intent(GCMConstants.ACTION_GCM_RECEIVE)
+        silentGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
                 .putExtra(PushMessage.EXTRA_PUSH_ID, "silentPushID");
 
         pushPreferences = mock(PushPreferences.class);

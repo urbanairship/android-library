@@ -28,61 +28,45 @@ package com.urbanairship.amazon;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amazon.device.messaging.ADM;
+import com.amazon.device.messaging.development.ADMManifest;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 
 /**
- * Util methods for ADM.
+ * Wrapper around ADM methods.
  */
-public class ADMUtils {
-
-    private static Boolean isADMAvailable;
+class AdmWrapper {
 
     /**
-     * Checks if ADM is available on the device.
-     *
-     * @return <code>true</code> if ADM is available.
-     */
-    public static boolean isADMAvailable() {
-        if (isADMAvailable != null) {
-            return isADMAvailable;
-        }
-
-        try {
-            Class.forName("com.amazon.device.messaging.ADM");
-            isADMAvailable = true;
-        } catch (ClassNotFoundException e) {
-            isADMAvailable = false;
-        }
-
-        return isADMAvailable;
-    }
-
-    /**
-     * Checks if ADM is available and supported on the device.
-     *
-     * @return <code>true</code> if ADM is available and supported.
-     */
-    public static boolean isADMSupported() {
-        return isADMAvailable() && ADMWrapper.isSupported();
-    }
-
-    /**
-     * Starts the registration process for ADM.
-     */
-    public static void startRegistration(@NonNull Context context) {
-        if (isADMSupported()) {
-            ADMWrapper.startRegistration(context);
-        }
-    }
-
-    /**
-     * Validates the manifest for ADM.
+     * Wraps {@link com.amazon.device.messaging.development.ADMManifest#checkManifestAuthoredProperly(android.content.Context)}.
      */
     public static void validateManifest() {
-        if (isADMAvailable()) {
-            ADMWrapper.validateManifest();
-        } else {
-            Logger.warn("ADM is not available on this device.");
+        try {
+            ADMManifest.checkManifestAuthoredProperly(UAirship.getApplicationContext());
+        } catch (RuntimeException ex) {
+            Logger.error("AndroidManifest invalid ADM setup.", ex);
         }
+    }
+
+    /**
+     * Wraps {@link com.amazon.device.messaging.ADM#isSupported()}.
+     *
+     * @return The value returned by {@link com.amazon.device.messaging.ADM#isSupported()}.
+     */
+    public static boolean isSupported() {
+        try {
+            return new ADM(UAirship.getApplicationContext()).isSupported();
+        } catch (RuntimeException ex) {
+            Logger.error("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
+            return false;
+        }
+    }
+
+    /**
+     * Wraps {@link com.amazon.device.messaging.ADM#startRegister()}.
+     */
+    public static void startRegistration(@NonNull Context context) {
+        new ADM(context).startRegister();
     }
 }

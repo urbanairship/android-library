@@ -38,9 +38,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.actions.ActionRegistry;
-import com.urbanairship.amazon.ADMUtils;
+import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.google.GCMUtils;
+import com.urbanairship.google.GcmUtils;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -694,10 +694,10 @@ public class UAirship {
                 break;
 
             default:
-                if (ADMUtils.isADMAvailable()) {
+                if (AdmUtils.isAdmAvailable()) {
                     Logger.info("ADM available. Setting platform to Amazon.");
                     platform = AMAZON_PLATFORM;
-                } else if (PlayServicesUtils.isGooglePlayStoreAvailable()) {
+                } else if (PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
                     Logger.info("Google Play Store available. Setting platform to Android.");
                     platform = ANDROID_PLATFORM;
                 } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
@@ -724,7 +724,7 @@ public class UAirship {
         switch (sharedAirship.getPlatformType()) {
             case ANDROID_PLATFORM:
                 if (airshipConfigOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-                    GCMUtils.validateManifest(airshipConfigOptions);
+                    GcmUtils.validateManifest(airshipConfigOptions);
                 } else {
                     Logger.error("Android platform detected but GCM transport is disabled. " +
                             "The device will not be able to receive push notifications.");
@@ -733,7 +733,7 @@ public class UAirship {
 
             case AMAZON_PLATFORM:
                 if (airshipConfigOptions.isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-                    ADMUtils.validateManifest();
+                    AdmUtils.validateManifest();
                 } else {
                     Logger.error("Amazon platform detected but ADM transport is disabled. " +
                             "The device will not be able to receive push notifications.");

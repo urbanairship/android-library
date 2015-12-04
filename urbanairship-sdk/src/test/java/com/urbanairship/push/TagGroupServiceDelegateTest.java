@@ -57,7 +57,7 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
     private Bundle addTagsBundle;
     private Bundle removeTagsBundle;
 
-    private TagGroupsAPIClient tagGroupsClient;
+    private TagGroupsApiClient tagGroupsClient;
     private NamedUser namedUser;
     private PushManager pushManager;
     private PreferenceDataStore dataStore;
@@ -65,7 +65,7 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        tagGroupsClient = Mockito.mock(TagGroupsAPIClient.class);
+        tagGroupsClient = Mockito.mock(TagGroupsApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
         dataStore = TestApplication.getApplication().preferenceDataStore;
