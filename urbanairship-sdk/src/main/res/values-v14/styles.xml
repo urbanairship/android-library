@@ -98,7 +98,7 @@
         <item name="android:background">@drawable/ua_iam_background</item>
     </style>
 
-    <style name="InboxActivityStyle" parent="android:Theme.Holo.Light"/>
+    <style name="InboxActivityStyle" parent="android:Theme.Holo.Light.DarkActionBar"/>
 
 </resources>
 

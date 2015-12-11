@@ -56,6 +56,7 @@ public class InboxViewAdapter extends BaseAdapter {
 
     /**
      * Creates a ViewBinder
+     *
      * @param context The application context
      * @param layout The layout for each line item
      */
@@ -77,7 +78,7 @@ public class InboxViewAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return position;
+        return items.get(position).getMessageId().hashCode();
     }
 
     @Override
@@ -95,6 +96,7 @@ public class InboxViewAdapter extends BaseAdapter {
 
     /**
      * Called when a {@link RichPushMessage} needs to be bound to the view.
+     *
      * @param view The view.
      * @param message The message.
      * @param position The message's position in the list.
@@ -118,6 +120,7 @@ public class InboxViewAdapter extends BaseAdapter {
 
     /**
      * Sets the current items in the adapter to the collection.
+     *
      * @param collection Collection of items
      */
     public void set(Collection<RichPushMessage> collection) {
@@ -131,9 +134,16 @@ public class InboxViewAdapter extends BaseAdapter {
 
     /**
      * Returns the context.
+     *
      * @return The context.
      */
     protected Context getContext() {
         return context;
+    }
+
+
+    @Override
+    public boolean hasStableIds() {
+        return true;
     }
 }

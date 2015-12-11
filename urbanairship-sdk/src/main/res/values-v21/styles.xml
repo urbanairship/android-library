@@ -14,6 +14,6 @@
         <item name="android:windowTranslucentStatus">true</item>
     </style>
 
-    <style name="InboxActivityStyle" parent="android:Theme.Material.Light"/>
+    <style name="InboxActivityStyle" parent="android:Theme.Material.Light.DarkActionBar"/>
 
 </resources>
