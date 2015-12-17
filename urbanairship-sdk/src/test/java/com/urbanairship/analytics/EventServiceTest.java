@@ -256,6 +256,39 @@ public class EventServiceTest extends BaseTestCase {
     }
 
     /**
+     * Test event batching only sends a max of 500 events.
+     */
+    @Test
+    public void testSendEventMaxCount() {
+        Map<String, String> events = new HashMap<>();
+        for (int i = 0; i < 500; i++) {
+            events.put("event " + i, "{ 'body' }");
+        }
+
+        when(preferences.getMaxBatchSize()).thenReturn(100000);
+        when(dataManager.getDatabaseSize()).thenReturn(100000);
+        when(dataManager.getEventCount()).thenReturn(1000);
+
+        // Return the event when it asks for 1
+        when(dataManager.getEvents(500)).thenReturn(events);
+
+        // Set up the response
+        EventResponse response = mock(EventResponse.class);
+        when(response.getStatus()).thenReturn(200);
+        when(client.sendEvents(events.values())).thenReturn(response);
+
+        // Start the upload process
+        Intent intent = new Intent(EventService.ACTION_SEND);
+        service.onHandleIntent(intent);
+
+        // Check clients receives the events
+        Mockito.verify(client).sendEvents(events.values());
+
+        // Check data manager deletes events
+        Mockito.verify(dataManager).deleteEvents(events.keySet());
+    }
+
+    /**
      * Test sending events when there's no channel ID present
      */
     @Test

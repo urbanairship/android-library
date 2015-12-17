@@ -103,6 +103,12 @@ public class EventService extends IntentService {
     private static final long NORMAL_PRIORITY_BATCH_DELAY = 10000; // 10s
 
     /**
+     * Max batch event count.
+     */
+    private static final int MAX_BATCH_EVENT_COUNT = 500;
+
+
+    /**
      * Batch delay for low priority events in milliseconds.
      */
     private static final long LOW_PRIORITY_BATCH_DELAY = 30000; // 30s
@@ -241,7 +247,8 @@ public class EventService extends IntentService {
         final int avgSize = dataManager.getDatabaseSize() / eventCount;
 
         //pull enough events to fill a batch (roughly)
-        Map<String, String> events = dataManager.getEvents(preferences.getMaxBatchSize() / avgSize);
+        int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferences.getMaxBatchSize() / avgSize);
+        Map<String, String> events = dataManager.getEvents(batchEventCount);
 
         EventResponse response = eventClient.sendEvents(events.values());
 
@@ -249,6 +256,7 @@ public class EventService extends IntentService {
 
         if (isSuccess) {
             Logger.info("Analytic events uploaded successfully.");
+
             dataManager.deleteEvents(events.keySet());
             backoffMs = 0;
         } else {
