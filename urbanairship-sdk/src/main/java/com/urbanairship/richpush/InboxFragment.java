@@ -38,11 +38,9 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
-import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-
-import java.util.List;
+import com.urbanairship.Cancelable;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
@@ -50,87 +48,89 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class InboxFragment extends Fragment {
 
-    private InboxViewAdapter adapter;
-    private Cancelable fetchMessagesOperation;
-
-    /**
-     * Listens for message opens
-     */
-    public interface OnMessageClickListener {
-        void onMessageClick(RichPushMessage message, View view, int position);
-        boolean onMessageLongClick(RichPushMessage message, View view, int position);
-    }
-
     private SwipeRefreshLayout refreshLayout;
-    private AbsListView listView;
-
-    private OnMessageClickListener onMessageClickListener;
+    private AbsListView absListView;
     private RichPushInbox richPushInbox;
     private boolean isManualRefreshing = false;
+    private InboxViewAdapter adapter;
+    private Cancelable fetchMessagesOperation;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
         public void onInboxUpdated() {
-            updateRichPushMessages();
+            adapter.set(richPushInbox.getMessages());
+
         }
     };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Set the InboxMessageAdapter
         setRetainInstance(true);
-
         this.richPushInbox = UAirship.shared().getInbox();
+        this.adapter = createMessageViewAdapter();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_inbox, container, false);
         refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
-        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                onRefreshMessages();
-            }
-        });
 
-        listView = (AbsListView) view.findViewById(R.id.list_view);
-        this.adapter = createMessageViewAdapter();
-        listView.setAdapter(adapter);
-        listView.setEmptyView(view.findViewById(R.id.empty_message));
+        if (refreshLayout != null) {
+            refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    onRefreshMessages();
+                }
+            });
+        }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        absListView = (AbsListView) view.findViewById(R.id.list_view);
+
+        absListView.setAdapter(adapter);
+        absListView.setEmptyView(view.findViewById(R.id.empty_message));
+
+        absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                onMessageClick((RichPushMessage) adapter.getItem(position), view, position);
+                UAirship.shared().getInbox().startMessageActivity(getMessage(position).getMessageId());
             }
         });
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                return onMessageLongClick((RichPushMessage) adapter.getItem(position), view, position);
-            }
-        });
+        onAbsListViewCreated(absListView);
 
         return view;
     }
 
+    /**
+     * Called when the {@link AbsListView} is created.
+     *
+     * @param listView The {@link AbsListView}.
+     */
+    protected void onAbsListViewCreated(AbsListView listView) {
+
+    }
+
+    /**
+     * Called when the {@link InboxViewAdapter} needs to be created
+     * for the {@link AbsListView}.
+     *
+     * @return A {@link InboxViewAdapter} for the list view.
+     */
     protected InboxViewAdapter createMessageViewAdapter() {
-        return new InboxViewAdapter(getContext(), R.layout.ua_inbox_list_item);
+        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        // Set latest messages
-        updateRichPushMessages();
-
-        // Listen for any rich push message changes
         richPushInbox.addListener(inboxListener);
+
+        // Set latest messages
+        adapter.set(richPushInbox.getMessages());
+
+        getAbsListView().invalidate();
     }
 
     @Override
@@ -145,22 +145,10 @@ public class InboxFragment extends Fragment {
         }
     }
 
-    public void onMessageClick(RichPushMessage message, View view, int position) {
-        if (onMessageClickListener != null) {
-            this.onMessageClickListener.onMessageClick(message, view, position);
-        } else {
-            richPushInbox.startMessageActivity(message.getMessageId());
-        }
-    }
-
-    public boolean onMessageLongClick(RichPushMessage message, View view, int position) {
-        if (onMessageClickListener != null) {
-            return this.onMessageLongClick(message, view, position);
-        }
-        return false;
-    }
-
-    public void onRefreshMessages() {
+    /**
+     * Called when the messages list is refreshing.
+     */
+    private void onRefreshMessages() {
         this.isManualRefreshing = true;
 
         if (fetchMessagesOperation != null) {
@@ -188,16 +176,48 @@ public class InboxFragment extends Fragment {
         }
     }
 
-    public void setOnMessageClickListener(OnMessageClickListener listener) {
-        this.onMessageClickListener = listener;
+
+    /**
+     * Returns the {@link AbsListView} for the fragment.
+     *
+     * @return The {@link AbsListView}.
+     */
+    public AbsListView getAbsListView() {
+        if (absListView == null && getView() != null) {
+            absListView = (AbsListView) getView().findViewById(R.id.list_view);
+        }
+
+        return absListView;
     }
 
     /**
-     * Grabs the latest messages from the rich push inbox, and syncs them
-     * with the inbox fragment and message view pager if available
+     * Returns a the {@link RichPushMessage} at a given position.
+     *
+     * @param position The list position.
+     * @return The {@link RichPushMessage} at a given position.
      */
-    private void updateRichPushMessages() {
-        List<RichPushMessage> messages = richPushInbox.getMessages();
-        adapter.set(messages);
+    public RichPushMessage getMessage(int position) {
+        if (adapter.getCount() > position) {
+            return (RichPushMessage) adapter.getItem(position);
+        }
+        return null;
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // Tear down any selection in progress
+        absListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
+    }
+
+    /**
+     * Returns the {@link InboxViewAdapter} for the list view.
+     *
+     * @return The {@link InboxViewAdapter} for the list view.
+     */
+    public InboxViewAdapter getAdapter() {
+        return adapter;
+    }
+
 }

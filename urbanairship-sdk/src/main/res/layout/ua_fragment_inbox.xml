@@ -12,8 +12,6 @@
 
 
         <ListView
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
             android:clipToPadding="false"
             android:scrollbarStyle="outsideOverlay"
             android:id="@+id/list_view"

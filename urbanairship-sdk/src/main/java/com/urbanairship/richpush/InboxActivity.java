@@ -32,6 +32,8 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -65,21 +67,21 @@ public class InboxActivity extends FragmentActivity {
 
         final MessagePagerFragment messagePagerFragment = (MessagePagerFragment) getSupportFragmentManager().findFragmentById(R.id.message_pager_fragment);
         inboxFragment = (InboxFragment) getSupportFragmentManager().findFragmentById(R.id.inbox_fragment);
-        inboxFragment.setOnMessageClickListener(new InboxFragment.OnMessageClickListener() {
+        inboxFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onMessageClick(RichPushMessage message, View view, int position) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                RichPushMessage message = inboxFragment.getMessage(position);
+
                 if (messagePagerFragment != null) {
                     messagePagerFragment.setCurrentMessage(message.getMessageId());
                 } else {
                     UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
                 }
             }
-
-            @Override
-            public boolean onMessageLongClick(RichPushMessage message, View view, int position) {
-                return false;
-            }
         });
+
+        inboxFragment.getAbsListView().setMultiChoiceModeListener(new InboxMultiChoiceModeListener(inboxFragment));
+        inboxFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
     }
 
     @Override
