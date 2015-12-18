@@ -18,6 +18,16 @@
         android:descendantFocusability="blocksDescendants"
         android:orientation="horizontal">
 
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:focusable="false"
+            android:layout_marginRight="16dp"
+            android:src="@drawable/ua_image_placeholder"
+            android:focusableInTouchMode="false" />
+
         <TextView
             android:id="@+id/title"
             style="@android:style/TextAppearance.Medium"
