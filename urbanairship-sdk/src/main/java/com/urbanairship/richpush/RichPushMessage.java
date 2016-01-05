@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
@@ -73,6 +74,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
 
     /**
      * Factory method to create a RichPushMessage.
+     *
      * @param messagePayload The raw message payload.
      * @param unreadClient flag indicating the read status on the client.
      * @param deleted flag indication the delete status.
@@ -292,6 +294,22 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
      */
     public boolean isDeleted() {
         return this.deleted;
+    }
+
+
+    /**
+     * Gets the list icon URL if available.
+     *
+     * @return The list icon URL if available, otherwise {@code null}.
+     */
+    @Nullable
+    public String getListIconUrl() {
+        JsonValue icons = getRawMessageJson().getMap().get("icons");
+        if (icons != null && icons.isJsonMap()) {
+            return icons.getMap().opt("list_icon").getString();
+        }
+
+        return null;
     }
 
     @Override

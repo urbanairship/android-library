@@ -27,14 +27,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
-
-import com.urbanairship.R;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,11 +40,8 @@ import java.util.List;
 /**
  * A generic base adapter that binds items to views using the ViewBinder interface.
  */
-public class InboxViewAdapter extends BaseAdapter {
+public abstract class InboxViewAdapter extends BaseAdapter {
 
-    private class MessageViewHolder {
-        public TextView titleView;
-    }
 
     private final List<RichPushMessage> items;
     private final Context context;
@@ -101,22 +94,7 @@ public class InboxViewAdapter extends BaseAdapter {
      * @param message The message.
      * @param position The message's position in the list.
      */
-    protected void bindView(View view, RichPushMessage message, int position) {
-        MessageViewHolder viewHolder = (MessageViewHolder) view.getTag();
-        if (viewHolder == null) {
-            viewHolder = new MessageViewHolder();
-            viewHolder.titleView = (TextView) view.findViewById(R.id.title);
-            view.setTag(viewHolder);
-        }
-
-        viewHolder.titleView.setText(message.getTitle());
-
-        if (message.isRead()) {
-            viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-        } else {
-            viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-        }
-    }
+    protected abstract void bindView(View view, RichPushMessage message, int position);
 
     /**
      * Sets the current items in the adapter to the collection.

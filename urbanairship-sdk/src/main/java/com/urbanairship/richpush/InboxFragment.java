@@ -27,6 +27,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -36,6 +37,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.urbanairship.R;
@@ -54,12 +57,17 @@ public class InboxFragment extends Fragment {
     private boolean isManualRefreshing = false;
     private InboxViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
+    private ImageLoader imageLoader;
+
+    private class MessageViewHolder {
+        public TextView titleView;
+        public ImageView imageView;
+    }
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
         public void onInboxUpdated() {
             adapter.set(richPushInbox.getMessages());
-
         }
     };
 
@@ -118,7 +126,34 @@ public class InboxFragment extends Fragment {
      * @return A {@link InboxViewAdapter} for the list view.
      */
     protected InboxViewAdapter createMessageViewAdapter() {
-        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox);
+        imageLoader = new ImageLoader(getContext());
+        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox) {
+            @Override
+            protected void bindView(View view, RichPushMessage message, int position) {
+
+                MessageViewHolder viewHolder = (MessageViewHolder) view.getTag();
+                if (viewHolder == null) {
+                    viewHolder = new MessageViewHolder();
+                    viewHolder.titleView = (TextView) view.findViewById(R.id.title);
+                    viewHolder.imageView = (ImageView) view.findViewById(R.id.image);
+                    view.setTag(viewHolder);
+                }
+
+                if (viewHolder.titleView != null) {
+                    viewHolder.titleView.setText(message.getTitle());
+
+                    if (message.isRead()) {
+                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+                    } else {
+                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                    }
+                }
+
+                if (viewHolder.imageView != null) {
+                    imageLoader.load(message.getListIconUrl(), R.drawable.ua_image_placeholder, viewHolder.imageView);
+                }
+            }
+        };
     }
 
     @Override
