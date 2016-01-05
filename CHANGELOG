@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.4.2 - January 5, 2016
+===============================
+- Added a check that Google Play Services version is greater than 8.1.
+- Fixed a possible crash when a device has too many installed apps during the Google Play Store availability check.
+
 Version 6.4.1 - November 11, 2015
 =================================
 - Fixed share action dropping the last entry.

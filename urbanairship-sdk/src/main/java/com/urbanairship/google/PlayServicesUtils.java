@@ -28,12 +28,13 @@ package com.urbanairship.google;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 
-import java.util.List;
+import java.lang.reflect.Modifier;
 
 /**
  * A utility class to help verify and resolve Google Play services issues.
@@ -58,6 +59,7 @@ public class PlayServicesUtils {
     private static Boolean isGooglePlayServicesDependencyAvailable;
     private static Boolean isGoogleCloudMessagingDependencyAvailable;
     private static Boolean isFusedLocationDependencyAvailable;
+    private static Boolean isGooglePlayStoreAvailable;
 
 
     /**
@@ -176,7 +178,8 @@ public class PlayServicesUtils {
             } else {
                 try {
                     Class.forName("com.google.android.gms.location.LocationServices");
-                    isFusedLocationDependencyAvailable = true;
+                    Class googleApiClientClass = Class.forName("com.google.android.gms.common.api.GoogleApiClient");
+                    isFusedLocationDependencyAvailable = !Modifier.isInterface(googleApiClientClass.getModifiers());
                 } catch (ClassNotFoundException e) {
                     isFusedLocationDependencyAvailable = false;
                 }
@@ -194,14 +197,25 @@ public class PlayServicesUtils {
      * otherwise <code>false</code>
      */
     public static boolean isGooglePlayStoreAvailable(@NonNull Context context) {
-        List<PackageInfo> packages = context.getPackageManager().getInstalledPackages(0);
-        for (PackageInfo packageInfo : packages) {
-            if (packageInfo.packageName.equals(GOOGLE_PLAY_STORE_PACKAGE) ||
-                    packageInfo.packageName.equals(GOOGLE_PLAY_STORE_PACKAGE_OLD)) {
-                return true;
-            }
+        if (isGooglePlayStoreAvailable == null) {
+            isGooglePlayStoreAvailable = isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE) || isPackageAvailable(context, GOOGLE_PLAY_STORE_PACKAGE_OLD);
         }
+        return isGooglePlayStoreAvailable;
+    }
 
-        return false;
+    /**
+     * Checks if a given package is installed on the device.
+     * @param context The application context.
+     * @param packageName The name of the package as a string.
+     * @return <code>true</code> if the given package is installed on the device,
+     * otherwise <code>false</code>
+     */
+    private static boolean isPackageAvailable(Context context, String packageName) {
+        try {
+            UAirship.getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (NameNotFoundException e) {
+            return false;
+        }
     }
 }
