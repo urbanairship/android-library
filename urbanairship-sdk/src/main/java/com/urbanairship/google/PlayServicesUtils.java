@@ -34,6 +34,7 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 /**
@@ -188,7 +189,8 @@ public class PlayServicesUtils {
             } else {
                 try {
                     Class.forName("com.google.android.gms.location.LocationServices");
-                    isFusedLocationDependencyAvailable = true;
+                    Class googleApiClientClass = Class.forName("com.google.android.gms.common.api.GoogleApiClient");
+                    isFusedLocationDependencyAvailable = !Modifier.isInterface(googleApiClientClass.getModifiers());
                 } catch (ClassNotFoundException e) {
                     isFusedLocationDependencyAvailable = false;
                 }
