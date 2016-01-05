@@ -1,9 +1,0 @@
-#Organize Import Order
-#Thu Jan 24 15:02:29 PST 2013
-6=javax
-5=java
-4=org
-3=net
-2=junit
-1=com
-0=android
