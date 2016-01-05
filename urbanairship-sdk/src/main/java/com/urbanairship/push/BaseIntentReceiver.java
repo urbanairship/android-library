@@ -48,7 +48,6 @@ import com.urbanairship.Logger;
         <action android:name="com.urbanairship.push.RECEIVED" />
         <action android:name="com.urbanairship.push.DISMISSED" />
 
-        <!-- Replace }${applicationId} {@code with the package name for eclipse. -->
         <category android:name=}${applicationId} {@code />
     </intent-filter>
  </receiver>

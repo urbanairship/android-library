@@ -61,7 +61,7 @@ android-sdk, then to run it:  `ant`.  To clean it: `ant clean`.
 Any file in the test directory will be run as tests if it ends with "Test".
 "BaseTest" is excluded though.
 
-Eclipse:
+Android Studio:
 Should just be able to select the project and click run.
 
 

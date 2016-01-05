@@ -166,11 +166,8 @@ test:
 urbanairship-sdk:javaDoc:
   Builds the docs. Generated docs will be created under urbanairship-sdk/build/docs/javadoc.
 
-packageUrbanAirshipRelease
-  Builds the distribution zip. The generated will be created under build/ua-package.
-
 continuousIntegration
-  Builds the SDK, samples, docs, generates the distribution zip, and runs all the unit tests.
+  Builds the SDK, samples, docs, and runs all the unit tests.
 
 bintrayUploadInternal
   Build the SDK and uploads the release to https://bintray.com/urbanairship/android-internal/urbanairship-sdk. Before
@@ -182,7 +179,6 @@ bintrayUploadRelease
   you can upload, your bintray credentials must be defined in ~/.gradle/gradle.properties under "bintrayUser" and
   "bintrayApiKey".
 
-
 To run a gradle command, be in the root of the project folder and run: `./gradlew <TASK>`
 
 ==================
@@ -192,29 +188,3 @@ There are some useful tools in the android-lib/tools folder:
 
 - ``lc`` - a fancy color ``adb -v time`` wrapper
 - ``lcgrep`` - a fancier lc + grep wrapper. you can pass it any grep arguments e.g., ``lcgrep -i pushsample``
-
-=============
-Eclipse Setup
-=============
-
-Eclipse currently does not support gradle, but you can still use Eclipse for samples and ui automator tests.  If you do
-use Eclipse still, you need to make sure it uses the our style settings.  It is recommended to use the latest ADT bundle
-that includes Eclipse with common Android SDK plugins: http://developer.android.com/sdk/installing/bundle.html
-
-########
-Settings
-########
-
-The ``android-lib/tools/settings`` folder contains Eclipse-specific settings. Import them to ensure that we're all using
-the same formatting.
-
-- ``save_settings.rst`` is the set of Save Actions your editor should support
-- ``ua_android_eclipse_formatter.xml`` is the set of Code Formatting styles Eclipse should use. Install at
-  ``Eclipse->Preferences->Java->Code Style->Formatter``
-- ``ua_android_eclipse_import_order.importorder`` sets the preferred import order. We use the Android standard ordering.
-  Install at ``Preferences->Java->Code Style->Organize Imports``
-
-
-
-
-
