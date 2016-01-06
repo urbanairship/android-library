@@ -32,7 +32,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 
 import java.lang.reflect.Modifier;
 
@@ -212,7 +211,7 @@ public class PlayServicesUtils {
      */
     private static boolean isPackageAvailable(Context context, String packageName) {
         try {
-            UAirship.getPackageManager().getPackageInfo(packageName, 0);
+            context.getPackageManager().getPackageInfo(packageName, 0);
             return true;
         } catch (NameNotFoundException e) {
             return false;
