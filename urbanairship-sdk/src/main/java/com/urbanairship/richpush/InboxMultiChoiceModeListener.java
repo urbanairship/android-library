@@ -60,7 +60,7 @@ public class InboxMultiChoiceModeListener implements AbsListView.MultiChoiceMode
     public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
         int count = inboxFragment.getAbsListView().getCheckedItemCount();
         mode.setTitle(inboxFragment.getResources().getQuantityString(R.plurals.ua_selected_count, count, count));
-        inboxFragment.getAbsListView().getAdapter();
+        inboxFragment.getAdapter().notifyDataSetChanged();
         mode.invalidate();
     }
 

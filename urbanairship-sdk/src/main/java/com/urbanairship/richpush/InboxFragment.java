@@ -32,18 +32,22 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.Cancelable;
+
+import java.util.Date;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
@@ -58,10 +62,13 @@ public class InboxFragment extends Fragment {
     private InboxViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
+    private String currentMessageId;
 
     private class MessageViewHolder {
-        public TextView titleView;
-        public ImageView imageView;
+        TextView titleView;
+        TextView dateView;
+        ImageView imageView;
+        CheckBox checkBox;
     }
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
@@ -105,6 +112,7 @@ public class InboxFragment extends Fragment {
             }
         });
 
+
         onAbsListViewCreated(absListView);
 
         return view;
@@ -127,15 +135,17 @@ public class InboxFragment extends Fragment {
      */
     protected InboxViewAdapter createMessageViewAdapter() {
         imageLoader = new ImageLoader(getContext());
-        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox) {
+        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox_icon) {
             @Override
-            protected void bindView(View view, RichPushMessage message, int position) {
+            protected void bindView(View view, RichPushMessage message, final int position) {
 
                 MessageViewHolder viewHolder = (MessageViewHolder) view.getTag();
                 if (viewHolder == null) {
                     viewHolder = new MessageViewHolder();
                     viewHolder.titleView = (TextView) view.findViewById(R.id.title);
+                    viewHolder.dateView = (TextView) view.findViewById(R.id.date);
                     viewHolder.imageView = (ImageView) view.findViewById(R.id.image);
+                    viewHolder.checkBox = (CheckBox) view.findViewById(R.id.checkbox);
                     view.setTag(viewHolder);
                 }
 
@@ -149,8 +159,32 @@ public class InboxFragment extends Fragment {
                     }
                 }
 
+                if (viewHolder.dateView != null) {
+                    Date date = message.getSentDate();
+                    viewHolder.dateView.setText(DateFormat.getDateFormat(getActivity()).format(date));
+
+                }
+
                 if (viewHolder.imageView != null) {
-                    imageLoader.load(message.getListIconUrl(), R.drawable.ua_image_placeholder, viewHolder.imageView);
+                    imageLoader.load(message.getListIconUrl(), R.drawable.ua_ic_image_placeholder, viewHolder.imageView);
+                }
+
+                if (viewHolder.checkBox != null) {
+                    final CheckBox checkBox = viewHolder.checkBox;
+                    checkBox.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            getAbsListView().setItemChecked(position, checkBox.isChecked());
+                        }
+                    });
+
+                    checkBox.setChecked(getAbsListView().isItemChecked(position));
+                }
+
+                if (message.getMessageId().equals(currentMessageId)) {
+                    view.setBackgroundResource(R.drawable.ua_item_inbox_background_highlighted);
+                } else {
+                    view.setBackgroundResource(R.drawable.ua_item_inbox_background);
                 }
             }
         };
@@ -255,4 +289,15 @@ public class InboxFragment extends Fragment {
         return adapter;
     }
 
+    /**
+     * Sets the current message ID to be highlighted.
+     *
+     * @param messageId The current message ID or {@code null} to clear the message.
+     */
+    void setCurrentMessageId(String messageId) {
+        currentMessageId = messageId;
+        if (getAdapter() != null) {
+            getAdapter().notifyDataSetChanged();
+        }
+    }
 }

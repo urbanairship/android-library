@@ -36,7 +36,6 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 
 /**
  * Displays the Urban Airship Message Center using {@link InboxFragment}.
@@ -67,18 +66,33 @@ public class InboxActivity extends FragmentActivity {
 
         final MessagePagerFragment messagePagerFragment = (MessagePagerFragment) getSupportFragmentManager().findFragmentById(R.id.message_pager_fragment);
         inboxFragment = (InboxFragment) getSupportFragmentManager().findFragmentById(R.id.inbox_fragment);
-        inboxFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                RichPushMessage message = inboxFragment.getMessage(position);
 
-                if (messagePagerFragment != null) {
-                    messagePagerFragment.setCurrentMessage(message.getMessageId());
-                } else {
-                    UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
+        if (messagePagerFragment != null) {
+            inboxFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    RichPushMessage message = inboxFragment.getMessage(position);
+                    if (message != null) {
+                        messagePagerFragment.setCurrentMessage(message.getMessageId());
+                        inboxFragment.setCurrentMessageId(message.getMessageId());
+                    }
                 }
-            }
-        });
+            });
+
+            messagePagerFragment.setOnMessageChangedListener(new MessagePagerFragment.OnMessageChangedListener() {
+                @Override
+                public void onMessageChanged(RichPushMessage message) {
+                    if (message != null) {
+                        inboxFragment.setCurrentMessageId(message.getMessageId());
+                    } else {
+                        inboxFragment.setCurrentMessageId(null);
+                    }
+                }
+            });
+
+
+            inboxFragment.setCurrentMessageId(messagePagerFragment.getCurrentMessageId());
+        }
 
         inboxFragment.getAbsListView().setMultiChoiceModeListener(new InboxMultiChoiceModeListener(inboxFragment));
         inboxFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
