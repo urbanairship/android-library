@@ -32,6 +32,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -242,7 +243,12 @@ class BannerContent implements Banner {
     private void applyTextStyle(Context context, TextView textView, int textAppearance) {
         // Apply text appearance first before the color or type face.
         if (textAppearance != -1) {
-            textView.setTextAppearance(context, textAppearance);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                textView.setTextAppearance(textAppearance);
+            } else {
+                //noinspection deprecation
+                textView.setTextAppearance(context, textAppearance);
+            }
         }
 
         // Called after setting the text appearance so we can keep style defined in the text appearance

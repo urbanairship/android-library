@@ -26,6 +26,8 @@ package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.format.DateFormat;
@@ -37,8 +39,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.urbanairship.R;
-
-import java.util.Date;
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * Message Center item view.
@@ -55,27 +56,27 @@ class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
+    private Typeface typeface;
+    private int defaultTitleTypeStyle;
 
     public MessageItemView(Context context) {
-        super(context);
-        init(context, null, 0);
+        this(context, null, R.attr.messageCenterStyle);
     }
 
     public MessageItemView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs, 0);
+        this(context, attrs, R.attr.messageCenterStyle);
     }
 
     public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr, R.style.MessageCenter);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
-        init(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -87,11 +88,42 @@ class MessageItemView extends FrameLayout {
      * @param defStyleAttr An attribute in the current theme that contains a
      * reference to a style resource that supplies default values for
      * the view. Can be 0 to not look for defaults.
+     * @param defStyleRes A resource identifier of a style resource that
+     * supplies default values for the view, used only if
+     * defStyleAttr is 0 or can not be found in the theme. Can be 0
+     * to not look for defaults.
      */
-    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        View contentView = View.inflate(context, R.layout.ua_item_mc_content, this);
+    private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        int contentLayout = R.layout.ua_item_mc_content;
+        int dateTextAppearance = -1;
+        int titleTextAppearance = -1;
+
+        if (attrs != null) {
+            TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
+
+            String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
+            if (!UAStringUtil.isEmpty(fontPath)) {
+                typeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+            }
+
+            if (attributes.getBoolean(R.styleable.MessageCenter_messageIconEnabled, false)) {
+                contentLayout = R.layout.ua_item_mc_icon_content;
+            }
+
+            dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageDateTextAppearance, -1);
+            titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageTitleTextAppearance, -1);
+            attributes.recycle();
+        }
+
+        View contentView = View.inflate(context, contentLayout, this);
+
         titleView = (TextView) contentView.findViewById(R.id.title);
+        applyTextStyle(titleView, titleTextAppearance);
+        defaultTitleTypeStyle = titleView.getTypeface().getStyle();
+
         dateView = (TextView) contentView.findViewById(R.id.date);
+        applyTextStyle(dateView, dateTextAppearance);
+
         iconView = (ImageView) contentView.findViewById(R.id.image);
         if (iconView != null) {
             iconView.setOnClickListener(new OnClickListener() {
@@ -125,23 +157,19 @@ class MessageItemView extends FrameLayout {
      * @param imageLoader An imageloader to load the icon view.
      */
     void updateMessage(RichPushMessage message, ImageLoader imageLoader) {
-        if (titleView != null) {
-            titleView.setText(message.getTitle());
+        titleView.setText(message.getTitle());
+        dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
-            if (message.isRead()) {
-                titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-            } else {
-                titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-            }
+        if (message.isRead()) {
+            Typeface typeface = titleView.getTypeface();
+            titleView.setTypeface(typeface, Typeface.BOLD);
+        } else {
+            Typeface typeface = titleView.getTypeface();
+            titleView.setTypeface(typeface, defaultTitleTypeStyle);
         }
 
         if (checkBox != null) {
             checkBox.setChecked(isActivated());
-        }
-
-        if (dateView != null) {
-            Date date = message.getSentDate();
-            dateView.setText(DateFormat.getDateFormat(getContext()).format(date));
         }
 
         if (iconView != null) {
@@ -189,4 +217,39 @@ class MessageItemView extends FrameLayout {
         }
     }
 
+    /**
+     * Helper method to apply custom text view styles.
+     * *
+     *
+     * @param textView The text view.
+     * @param textAppearance Optional text appearance.
+     */
+    private void applyTextStyle(TextView textView, int textAppearance) {
+        // Apply text appearance first before the color or type face.
+        if (textAppearance != -1) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                textView.setTextAppearance(textAppearance);
+            } else {
+                //noinspection deprecation
+                textView.setTextAppearance(getContext(), textAppearance);
+            }
+        }
+
+        // Called after setting the text appearance so we can keep style defined in the text appearance
+        if (typeface != null) {
+            int style = -1;
+            if (textView.getTypeface() != null) {
+                style = textView.getTypeface().getStyle();
+            }
+
+            textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+
+            if (style >= 0) {
+                textView.setTypeface(typeface, style);
+            } else {
+                textView.setTypeface(typeface);
+            }
+        }
+
+    }
 }

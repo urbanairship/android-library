@@ -5,7 +5,9 @@
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for in-app message banners -->
         <attr name="inAppMessageBannerStyle" format="reference" />
-        <attr name="inboxActivityStyle" format="reference" />
+
+        <!-- Attribute to allow style override for the Message Center -->
+        <attr name="messageCenterStyle" format="reference" />
     </declare-styleable>
 
     <!-- Redefine CardView attributes so we can define them without causing missing
@@ -43,8 +45,13 @@
         <attr name="bannerActionButtonTextAppearance" format="reference"/>
     </declare-styleable>
 
-    <!-- Style attribute for selection -->
-    <declare-styleable name="UAHighlightState">
+    <!-- Style attributes for Message Center  -->
+    <declare-styleable name="MessageCenter">
+        <attr name="messageFontPath" format="string"/>
+        <attr name="messageTitleTextAppearance" format="reference"/>
+        <attr name="messageDateTextAppearance" format="reference"/>
+        <attr name="messageIconEnabled" format="boolean"/>
+
         <!-- The list view item is highlighted when needing to differentiate from activation -->
         <attr name="state_highlighted" format="boolean" />
     </declare-styleable>
