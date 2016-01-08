@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 6.4.3 - January 8, 2016
+===============================
+- Fixed background push calling the wrong com.urbanairship.push.BaseIntentReceiver callback.
+
 Version 6.4.2 - January 5, 2016
 ===============================
 - Added a check that Google Play Services version is greater than 8.1.
