@@ -162,10 +162,10 @@ class MessageItemView extends FrameLayout {
 
         if (message.isRead()) {
             Typeface typeface = titleView.getTypeface();
-            titleView.setTypeface(typeface, Typeface.BOLD);
+            titleView.setTypeface(typeface, defaultTitleTypeStyle);
         } else {
             Typeface typeface = titleView.getTypeface();
-            titleView.setTypeface(typeface, defaultTitleTypeStyle);
+            titleView.setTypeface(typeface, defaultTitleTypeStyle | Typeface.BOLD);
         }
 
         if (checkBox != null) {
