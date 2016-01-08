@@ -27,27 +27,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.CheckBox;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-
-import java.util.Date;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
@@ -63,13 +56,6 @@ public class InboxFragment extends Fragment {
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
     private String currentMessageId;
-
-    private class MessageViewHolder {
-        TextView titleView;
-        TextView dateView;
-        ImageView imageView;
-        CheckBox checkBox;
-    }
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
@@ -135,56 +121,20 @@ public class InboxFragment extends Fragment {
      */
     protected InboxViewAdapter createMessageViewAdapter() {
         imageLoader = new ImageLoader(getContext());
-        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox_icon) {
+        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox) {
             @Override
             protected void bindView(View view, RichPushMessage message, final int position) {
+                if (view instanceof MessageItemView) {
+                    MessageItemView itemView = (MessageItemView) view;
 
-                MessageViewHolder viewHolder = (MessageViewHolder) view.getTag();
-                if (viewHolder == null) {
-                    viewHolder = new MessageViewHolder();
-                    viewHolder.titleView = (TextView) view.findViewById(R.id.title);
-                    viewHolder.dateView = (TextView) view.findViewById(R.id.date);
-                    viewHolder.imageView = (ImageView) view.findViewById(R.id.image);
-                    viewHolder.checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-                    view.setTag(viewHolder);
-                }
-
-                if (viewHolder.titleView != null) {
-                    viewHolder.titleView.setText(message.getTitle());
-
-                    if (message.isRead()) {
-                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-                    } else {
-                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                    }
-                }
-
-                if (viewHolder.dateView != null) {
-                    Date date = message.getSentDate();
-                    viewHolder.dateView.setText(DateFormat.getDateFormat(getActivity()).format(date));
-
-                }
-
-                if (viewHolder.imageView != null) {
-                    imageLoader.load(message.getListIconUrl(), R.drawable.ua_ic_image_placeholder, viewHolder.imageView);
-                }
-
-                if (viewHolder.checkBox != null) {
-                    final CheckBox checkBox = viewHolder.checkBox;
-                    checkBox.setOnClickListener(new View.OnClickListener() {
+                    itemView.updateMessage(message, imageLoader);
+                    itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
+                    itemView.setSelectionListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            getAbsListView().setItemChecked(position, checkBox.isChecked());
+                        public void onClick(View v) {
+                            getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
                         }
                     });
-
-                    checkBox.setChecked(getAbsListView().isItemChecked(position));
-                }
-
-                if (message.getMessageId().equals(currentMessageId)) {
-                    view.setBackgroundResource(R.drawable.ua_item_inbox_background_highlighted);
-                } else {
-                    view.setBackgroundResource(R.drawable.ua_item_inbox_background);
                 }
             }
         };
