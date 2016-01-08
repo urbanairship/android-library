@@ -27,7 +27,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -37,13 +36,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.Cancelable;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
@@ -58,11 +55,7 @@ public class InboxFragment extends Fragment {
     private InboxViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
-
-    private class MessageViewHolder {
-        public TextView titleView;
-        public ImageView imageView;
-    }
+    private String currentMessageId;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
@@ -105,6 +98,7 @@ public class InboxFragment extends Fragment {
             }
         });
 
+
         onAbsListViewCreated(absListView);
 
         return view;
@@ -129,28 +123,18 @@ public class InboxFragment extends Fragment {
         imageLoader = new ImageLoader(getContext());
         return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox) {
             @Override
-            protected void bindView(View view, RichPushMessage message, int position) {
+            protected void bindView(View view, RichPushMessage message, final int position) {
+                if (view instanceof MessageItemView) {
+                    MessageItemView itemView = (MessageItemView) view;
 
-                MessageViewHolder viewHolder = (MessageViewHolder) view.getTag();
-                if (viewHolder == null) {
-                    viewHolder = new MessageViewHolder();
-                    viewHolder.titleView = (TextView) view.findViewById(R.id.title);
-                    viewHolder.imageView = (ImageView) view.findViewById(R.id.image);
-                    view.setTag(viewHolder);
-                }
-
-                if (viewHolder.titleView != null) {
-                    viewHolder.titleView.setText(message.getTitle());
-
-                    if (message.isRead()) {
-                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-                    } else {
-                        viewHolder.titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                    }
-                }
-
-                if (viewHolder.imageView != null) {
-                    imageLoader.load(message.getListIconUrl(), R.drawable.ua_image_placeholder, viewHolder.imageView);
+                    itemView.updateMessage(message, imageLoader);
+                    itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
+                    itemView.setSelectionListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
+                        }
+                    });
                 }
             }
         };
@@ -255,4 +239,15 @@ public class InboxFragment extends Fragment {
         return adapter;
     }
 
+    /**
+     * Sets the current message ID to be highlighted.
+     *
+     * @param messageId The current message ID or {@code null} to clear the message.
+     */
+    void setCurrentMessageId(String messageId) {
+        currentMessageId = messageId;
+        if (getAdapter() != null) {
+            getAdapter().notifyDataSetChanged();
+        }
+    }
 }

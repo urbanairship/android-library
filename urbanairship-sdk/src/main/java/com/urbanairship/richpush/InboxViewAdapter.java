@@ -26,7 +26,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.richpush;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +42,7 @@ import java.util.List;
 /**
  * A generic base adapter that binds items to views using the ViewBinder interface.
  */
+@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public abstract class InboxViewAdapter extends BaseAdapter {
 
 
@@ -119,9 +122,9 @@ public abstract class InboxViewAdapter extends BaseAdapter {
         return context;
     }
 
-
     @Override
     public boolean hasStableIds() {
         return true;
     }
+
 }

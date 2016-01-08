@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:state_activated="true"
+        android:color="#00698f"
+        android:alpha="0.1" />
+
+    <item
+        android:state_selected="true"
+        android:color="#00698f"
+        android:alpha="0.1" />
+
+    <item app:state_highlighted="true"
+          android:color="#00698f"
+          android:alpha="0.3" />
+    <item
+        android:color="@android:color/transparent" />
+</selector>

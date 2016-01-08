@@ -64,8 +64,7 @@ public class MessagePagerFragment extends Fragment {
     };
 
     /**
-     * Listener for the message pager fragment. Hosting activities must implement
-     * the listener or an IllegalStateException will be thrown.
+     * Listener for the message pager fragment.
      */
     public interface OnMessageChangedListener {
         void onMessageChanged(RichPushMessage message);
@@ -176,7 +175,18 @@ public class MessagePagerFragment extends Fragment {
         RichPushMessage message = richPushInbox.getMessage(messageId);
 
         if (message == null) {
-            return;
+            if (messages.size() == 0) {
+                currentMessageId = null;
+
+                if (listener != null) {
+                    listener.onMessageChanged(null);
+                }
+
+                return;
+            }
+
+            int index = Math.min(messages.size() - 1, messagePager.getCurrentItem());
+            message = messages.get(index);
         }
 
         message.markRead();

@@ -42,4 +42,10 @@
         <!-- The banner action button text appearance -->
         <attr name="bannerActionButtonTextAppearance" format="reference"/>
     </declare-styleable>
+
+    <!-- Style attribute for selection -->
+    <declare-styleable name="UAHighlightState">
+        <!-- The list view item is highlighted when needing to differentiate from activation -->
+        <attr name="state_highlighted" format="boolean" />
+    </declare-styleable>
 </resources>
