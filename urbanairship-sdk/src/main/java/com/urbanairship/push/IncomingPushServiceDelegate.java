@@ -230,7 +230,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      * @param factory The notification factory.
      */
     private Integer showNotification(@NonNull PushMessage message, @Nullable NotificationFactory factory) {
-        Integer notificationId;
+        int notificationId;
         Notification notification;
 
         if (factory == null) {
@@ -246,46 +246,48 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return null;
         }
 
-        if (notification != null) {
-            if (!pushManager.isVibrateEnabled() || pushManager.isInQuietTime()) {
-                // Remove both the vibrate and the DEFAULT_VIBRATE flag
-                notification.vibrate = null;
-                notification.defaults &= ~Notification.DEFAULT_VIBRATE;
-            }
-
-            if (!pushManager.isSoundEnabled() || pushManager.isInQuietTime()) {
-                // Remove both the sound and the DEFAULT_SOUND flag
-                notification.sound = null;
-                notification.defaults &= ~Notification.DEFAULT_SOUND;
-            }
-
-            Intent contentIntent = new Intent(getContext(), CoreReceiver.class)
-                    .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
-                    .addCategory(UUID.randomUUID().toString())
-                    .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                    .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
-
-            // If the notification already has an intent, add it to the extras to be sent later
-            if (notification.contentIntent != null) {
-                contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, notification.contentIntent);
-            }
-
-            Intent deleteIntent = new Intent(getContext(), CoreReceiver.class)
-                    .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
-                    .addCategory(UUID.randomUUID().toString())
-                    .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
-                    .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
-
-            if (notification.deleteIntent != null) {
-                deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
-            }
-
-            notification.contentIntent = PendingIntent.getBroadcast(getContext(), 0, contentIntent, 0);
-            notification.deleteIntent = PendingIntent.getBroadcast(getContext(), 0, deleteIntent, 0);
-
-            Logger.info("Posting notification " + notification + " with ID " + notificationId);
-            notificationManager.notify(notificationId, notification);
+        if (notification == null) {
+            return null;
         }
+
+        if (!pushManager.isVibrateEnabled() || pushManager.isInQuietTime()) {
+            // Remove both the vibrate and the DEFAULT_VIBRATE flag
+            notification.vibrate = null;
+            notification.defaults &= ~Notification.DEFAULT_VIBRATE;
+        }
+
+        if (!pushManager.isSoundEnabled() || pushManager.isInQuietTime()) {
+            // Remove both the sound and the DEFAULT_SOUND flag
+            notification.sound = null;
+            notification.defaults &= ~Notification.DEFAULT_SOUND;
+        }
+
+        Intent contentIntent = new Intent(getContext(), CoreReceiver.class)
+                .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
+                .addCategory(UUID.randomUUID().toString())
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
+
+        // If the notification already has an intent, add it to the extras to be sent later
+        if (notification.contentIntent != null) {
+            contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, notification.contentIntent);
+        }
+
+        Intent deleteIntent = new Intent(getContext(), CoreReceiver.class)
+                .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
+                .addCategory(UUID.randomUUID().toString())
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
+
+        if (notification.deleteIntent != null) {
+            deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
+        }
+
+        notification.contentIntent = PendingIntent.getBroadcast(getContext(), 0, contentIntent, 0);
+        notification.deleteIntent = PendingIntent.getBroadcast(getContext(), 0, deleteIntent, 0);
+
+        Logger.info("Posting notification " + notification + " with ID " + notificationId);
+        notificationManager.notify(notificationId, notification);
 
         return notificationId;
     }

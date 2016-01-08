@@ -186,7 +186,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(false);
+        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+        notification = null;
 
         serviceDelegate.onHandleIntent(pushIntent);
 
@@ -196,7 +197,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
         assertEquals("Push ID should equal pushMessage ID", "silentPushID", push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
+        assertEquals("No notification ID should be present", -1, extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1));
     }
 
     /**
