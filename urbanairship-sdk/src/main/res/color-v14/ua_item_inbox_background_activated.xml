@@ -3,16 +3,14 @@
           xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:state_activated="true"
-        android:color="#00698f"
-        android:alpha="0.1" />
+        android:color="?android:colorMultiSelectHighlight"/>
 
     <item
         android:state_selected="true"
-        android:color="#00698f"
-        android:alpha="0.1" />
+        android:color="?android:colorMultiSelectHighlight"/>
 
     <item app:state_highlighted="true"
-          android:color="#00698f"
+          android:color="?android:colorActivatedHighlight"
           android:alpha="0.3" />
     <item
         android:color="@android:color/transparent" />

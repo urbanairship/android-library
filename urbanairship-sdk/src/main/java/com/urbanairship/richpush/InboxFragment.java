@@ -27,20 +27,27 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
+import android.content.res.TypedArray;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.ViewUtils;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
@@ -87,9 +94,10 @@ public class InboxFragment extends Fragment {
         }
 
         absListView = (AbsListView) view.findViewById(R.id.list_view);
-
         absListView.setAdapter(adapter);
-        absListView.setEmptyView(view.findViewById(R.id.empty_message));
+
+        View emptyListView = view.findViewById(R.id.empty_message);
+        absListView.setEmptyView(emptyListView);
 
         absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -99,18 +107,37 @@ public class InboxFragment extends Fragment {
         });
 
 
-        onAbsListViewCreated(absListView);
+        TypedArray attributes = getContext()
+                .getTheme()
+                .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
+
+        if (emptyListView != null && emptyListView instanceof TextView) {
+            TextView textView = (TextView) emptyListView;
+            int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageEmptyMessageTextAppearance, -1);
+
+            Typeface typeface = null;
+            String fontPath = attributes.getString(R.styleable.MessageCenter_messageFontPath);
+            if (!UAStringUtil.isEmpty(fontPath)) {
+
+                typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
+            }
+
+            ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
+        }
+
+        if (absListView instanceof ListView) {
+            ListView listView = (ListView) absListView;
+
+            int color = attributes.getColor(R.styleable.MessageCenter_messageDividerTint, -1);
+            if (color != -1) {
+                DrawableCompat.setTint(listView.getDivider(), color);
+            }
+        }
+
+        attributes.recycle();
+
 
         return view;
-    }
-
-    /**
-     * Called when the {@link AbsListView} is created.
-     *
-     * @param listView The {@link AbsListView}.
-     */
-    protected void onAbsListViewCreated(AbsListView listView) {
-
     }
 
     /**

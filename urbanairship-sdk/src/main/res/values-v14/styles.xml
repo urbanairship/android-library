@@ -99,7 +99,6 @@
     </style>
 
 
-
     <!--- MESSAGE CENTER -->
 
     <!-- Item Container -->
@@ -136,6 +135,7 @@
         <item name="android:focusable">false</item>
         <item name="android:focusableInTouchMode">false</item>
         <item name="android:src">@drawable/ua_ic_image_placeholder</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
     </style>
 
     <!-- Item Title -->
@@ -164,9 +164,12 @@
     <!-- Message Center Style-->
     <style name="MessageCenter.Item.Title.TextAppearance" parent="@android:style/TextAppearance.Medium"/>
     <style name="MessageCenter.Item.Date.TextAppearance" parent="@android:style/TextAppearance.Small"/>
+    <style name="MessageCenter.EmptyMessage.TextAppearance" parent="@android:style/TextAppearance.Small"/>
+
     <style name="MessageCenter" parent="android:Theme.Holo.Light.DarkActionBar">
         <item name="messageTitleTextAppearance">@style/MessageCenter.Item.Title.TextAppearance</item>
         <item name="messageDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
+        <item name="messageEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
         <item name="messageIconEnabled">false</item>
     </style>
 
