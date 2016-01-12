@@ -113,12 +113,11 @@ public class InboxFragment extends Fragment {
 
         if (emptyListView != null && emptyListView instanceof TextView) {
             TextView textView = (TextView) emptyListView;
-            int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageEmptyMessageTextAppearance, -1);
+            int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
 
             Typeface typeface = null;
-            String fontPath = attributes.getString(R.styleable.MessageCenter_messageFontPath);
+            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterFontPath);
             if (!UAStringUtil.isEmpty(fontPath)) {
-
                 typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
             }
 
@@ -128,7 +127,7 @@ public class InboxFragment extends Fragment {
         if (absListView instanceof ListView) {
             ListView listView = (ListView) absListView;
 
-            int color = attributes.getColor(R.styleable.MessageCenter_messageDividerTint, -1);
+            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerTint, -1);
             if (color != -1) {
                 DrawableCompat.setTint(listView.getDivider(), color);
             }

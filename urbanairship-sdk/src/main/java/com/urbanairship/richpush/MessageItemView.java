@@ -98,25 +98,26 @@ class MessageItemView extends FrameLayout {
      */
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         int contentLayout = R.layout.ua_item_mc_content;
-        int dateTextAppearance = -1;
-        int titleTextAppearance = -1;
+        int dateTextAppearance;
+        int titleTextAppearance;
 
-        if (attrs != null) {
-            TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
+        TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
-            String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
-            if (!UAStringUtil.isEmpty(fontPath)) {
-                customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
-            }
-
-            if (attributes.getBoolean(R.styleable.MessageCenter_messageIconEnabled, false)) {
-                contentLayout = R.layout.ua_item_mc_icon_content;
-            }
-
-            dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageDateTextAppearance, -1);
-            titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageTitleTextAppearance, -1);
-            attributes.recycle();
+        String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
+        if (!UAStringUtil.isEmpty(fontPath)) {
+            customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
         }
+
+        if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
+            contentLayout = R.layout.ua_item_mc_icon_content;
+        }
+
+        dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
+        titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
+
+        }
+
+        attributes.recycle();
 
         View contentView = View.inflate(context, contentLayout, this);
 
