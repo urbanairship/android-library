@@ -115,6 +115,9 @@ class MessageItemView extends FrameLayout {
         dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
         titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
 
+        int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
+        if (background > 0) {
+            setBackgroundResource(background);
         }
 
         attributes.recycle();

@@ -50,6 +50,9 @@
         <!-- Path to a font to use for the message center -->
         <attr name="messageCenterFontPath" format="string"/>
 
+        <!-- Message item's background -->
+        <attr name="messageCenterItemBackground" format="reference"/>
+
         <!-- Message title text appearance -->
         <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
 

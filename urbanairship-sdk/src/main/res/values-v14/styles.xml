@@ -172,6 +172,7 @@
         <item name="messageCenterItemDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
         <item name="messageCenterEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
         <item name="messageCenterItemIconEnabled">false</item>
+        <item name="messageCenterItemBackground">@drawable/ua_item_inbox_background</item>
     </style>
 
 </resources>
