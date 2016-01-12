@@ -62,6 +62,9 @@
         <!-- Empty Message Center message text appearance -->
         <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
 
+        <!-- Empty Message Center message text -->
+        <attr name="messageCenterEmptyMessageText" format="string"/>
+
         <!-- Empty Message Center list divider tint -->
         <attr name="messageCenterDividerTint" format="color"/>
 

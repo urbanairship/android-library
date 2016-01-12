@@ -122,6 +122,9 @@ public class InboxFragment extends Fragment {
             }
 
             ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
+
+            String text = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageText);
+            textView.setText(text);
         }
 
         if (absListView instanceof ListView) {
