@@ -31,6 +31,7 @@ import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -63,6 +64,9 @@ public class InboxFragment extends Fragment {
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
     private String currentMessageId;
+
+    @DrawableRes
+    private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
@@ -136,6 +140,8 @@ public class InboxFragment extends Fragment {
             }
         }
 
+        placeHolder = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemIconPlaceholder, placeHolder);
+
         attributes.recycle();
 
 
@@ -156,7 +162,7 @@ public class InboxFragment extends Fragment {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
-                    itemView.updateMessage(message, imageLoader);
+                    itemView.updateMessage(message, placeHolder, imageLoader);
                     itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
                     itemView.setSelectionListener(new View.OnClickListener() {
                         @Override

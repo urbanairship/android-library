@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -167,9 +168,10 @@ class MessageItemView extends FrameLayout {
      * Updates the view's message.
      *
      * @param message The message.
-     * @param imageLoader An imageloader to load the icon view.
+     * @param placeholder Image place holder.
+     * @param imageLoader An {@link ImageLoader} to load the icon view.
      */
-    void updateMessage(RichPushMessage message, ImageLoader imageLoader) {
+    void updateMessage(RichPushMessage message, @DrawableRes int placeholder, ImageLoader imageLoader) {
         titleView.setText(message.getTitle());
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
@@ -184,7 +186,7 @@ class MessageItemView extends FrameLayout {
         }
 
         if (iconView != null) {
-            imageLoader.load(message.getListIconUrl(), R.drawable.ua_ic_image_placeholder, iconView);
+            imageLoader.load(message.getListIconUrl(), placeholder, iconView);
         }
     }
 

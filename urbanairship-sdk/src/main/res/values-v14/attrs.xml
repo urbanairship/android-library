@@ -65,11 +65,14 @@
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string"/>
 
-        <!-- Empty Message Center list divider tint -->
+        <!-- Message Center list divider tint -->
         <attr name="messageCenterDividerTint" format="color"/>
 
         <!-- If the Message Center should display message icons or not -->
         <attr name="messageCenterItemIconEnabled" format="boolean"/>
+
+        <!-- Icon placeholder -->
+        <attr name="messageCenterItemIconPlaceholder" format="reference"/>
 
         <!-- The list view item is highlighted when needing to differentiate from activation -->
         <attr name="state_highlighted" format="boolean" />
