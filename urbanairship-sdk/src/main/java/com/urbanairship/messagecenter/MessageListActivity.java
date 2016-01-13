@@ -23,7 +23,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
@@ -39,14 +39,15 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 
 import com.urbanairship.R;
+import com.urbanairship.richpush.RichPushMessage;
 
 /**
- * Displays the Urban Airship Message Center using {@link InboxFragment}.
+ * Displays the Urban Airship Message Center using {@link MessageListFragment}.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class InboxActivity extends FragmentActivity {
+public class MessageListActivity extends FragmentActivity {
 
-    InboxFragment inboxFragment;
+    MessageListFragment messageListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,24 +61,24 @@ public class InboxActivity extends FragmentActivity {
         attributes.recycle();
 
         super.onCreate(savedInstanceState);
-        super.setContentView(R.layout.ua_activity_inbox);
+        super.setContentView(R.layout.ua_activity_mc);
 
-        if (Build.VERSION.SDK_INT >= 14 && getActionBar() != null) {
+        if (getActionBar() != null) {
             getActionBar().setDisplayHomeAsUpEnabled(true);
             getActionBar().setHomeButtonEnabled(true);
         }
 
         final MessagePagerFragment messagePagerFragment = (MessagePagerFragment) getSupportFragmentManager().findFragmentById(R.id.message_pager_fragment);
-        inboxFragment = (InboxFragment) getSupportFragmentManager().findFragmentById(R.id.inbox_fragment);
+        messageListFragment = (MessageListFragment) getSupportFragmentManager().findFragmentById(R.id.message_list_fragment);
 
         if (messagePagerFragment != null) {
-            inboxFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            messageListFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    RichPushMessage message = inboxFragment.getMessage(position);
+                    RichPushMessage message = messageListFragment.getMessage(position);
                     if (message != null) {
                         messagePagerFragment.setCurrentMessage(message.getMessageId());
-                        inboxFragment.setCurrentMessageId(message.getMessageId());
+                        messageListFragment.setCurrentMessageId(message.getMessageId());
                     }
                 }
             });
@@ -86,9 +87,9 @@ public class InboxActivity extends FragmentActivity {
                 @Override
                 public void onMessageChanged(RichPushMessage message) {
                     if (message != null) {
-                        inboxFragment.setCurrentMessageId(message.getMessageId());
+                        messageListFragment.setCurrentMessageId(message.getMessageId());
                     } else {
-                        inboxFragment.setCurrentMessageId(null);
+                        messageListFragment.setCurrentMessageId(null);
                     }
                 }
             });
@@ -105,11 +106,11 @@ public class InboxActivity extends FragmentActivity {
                 attributes.recycle();
             }
 
-            inboxFragment.setCurrentMessageId(messagePagerFragment.getCurrentMessageId());
+            messageListFragment.setCurrentMessageId(messagePagerFragment.getCurrentMessageId());
         }
 
-        inboxFragment.getAbsListView().setMultiChoiceModeListener(new InboxMultiChoiceModeListener(inboxFragment));
-        inboxFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        messageListFragment.getAbsListView().setMultiChoiceModeListener(new MessageMultiChoiceModeListener(messageListFragment));
+        messageListFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
     }
 
     @Override

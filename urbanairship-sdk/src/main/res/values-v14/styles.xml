@@ -173,7 +173,7 @@
         <item name="messageCenterEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
         <item name="messageCenterItemIconEnabled">false</item>
         <item name="messageCenterEmptyMessageText">@string/ua_empty_message_list_string</item>
-        <item name="messageCenterItemBackground">@drawable/ua_item_inbox_background</item>
+        <item name="messageCenterItemBackground">@drawable/ua_item_mc_background</item>
     </style>
 
 </resources>

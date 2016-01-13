@@ -10,8 +10,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <fragment
-        android:id="@+id/inbox_fragment"
-        android:name="com.urbanairship.richpush.InboxFragment"
+        android:id="@+id/message_list_fragment"
+        android:name="com.urbanairship.messagecenter.MessageListFragment"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="320dp"
 
@@ -19,7 +19,7 @@
 
     <fragment
         android:id="@+id/message_pager_fragment"
-        android:name="com.urbanairship.richpush.MessagePagerFragment"
+        android:name="com.urbanairship.messagecenter.MessagePagerFragment"
         xmlns:android="http://schemas.android.com/apk/res/android"
 
         android:layout_width="fill_parent"

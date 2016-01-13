@@ -24,13 +24,15 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+
+import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.List;
 

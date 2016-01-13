@@ -24,7 +24,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -33,6 +33,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+
+import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +45,7 @@ import java.util.List;
  * A generic base adapter that binds items to views using the ViewBinder interface.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public abstract class InboxViewAdapter extends BaseAdapter {
+public abstract class MessageViewAdapter extends BaseAdapter {
 
 
     private final List<RichPushMessage> items;
@@ -56,7 +58,7 @@ public abstract class InboxViewAdapter extends BaseAdapter {
      * @param context The application context
      * @param layout The layout for each line item
      */
-    public InboxViewAdapter(Context context, int layout) {
+    public MessageViewAdapter(Context context, int layout) {
         this.context = context;
         this.layout = layout;
         this.items = new ArrayList<>();
