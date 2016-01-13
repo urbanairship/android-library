@@ -27,7 +27,6 @@ package com.urbanairship.richpush;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.format.DateFormat;
@@ -40,6 +39,7 @@ import android.widget.TextView;
 
 import com.urbanairship.R;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.ViewUtils;
 
 /**
  * Message Center item view.
@@ -56,8 +56,11 @@ class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
-    private Typeface typeface;
-    private int defaultTitleTypeStyle;
+    private Typeface customTypeface;
+
+    private Typeface titleTypeface;
+    private Typeface titleReadTypeface;
+
 
     public MessageItemView(Context context) {
         this(context, null, R.attr.messageCenterStyle);
@@ -95,34 +98,44 @@ class MessageItemView extends FrameLayout {
      */
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         int contentLayout = R.layout.ua_item_mc_content;
-        int dateTextAppearance = -1;
-        int titleTextAppearance = -1;
+        int dateTextAppearance;
+        int titleTextAppearance;
 
-        if (attrs != null) {
-            TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
+        TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
-            String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
-            if (!UAStringUtil.isEmpty(fontPath)) {
-                typeface = Typeface.createFromAsset(context.getAssets(), fontPath);
-            }
-
-            if (attributes.getBoolean(R.styleable.MessageCenter_messageIconEnabled, false)) {
-                contentLayout = R.layout.ua_item_mc_icon_content;
-            }
-
-            dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageDateTextAppearance, -1);
-            titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageTitleTextAppearance, -1);
-            attributes.recycle();
+        String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
+        if (!UAStringUtil.isEmpty(fontPath)) {
+            customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
         }
+
+        if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
+            contentLayout = R.layout.ua_item_mc_icon_content;
+        }
+
+        dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
+        titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
+
+        int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
+        if (background > 0) {
+            setBackgroundResource(background);
+        }
+
+        attributes.recycle();
 
         View contentView = View.inflate(context, contentLayout, this);
 
         titleView = (TextView) contentView.findViewById(R.id.title);
-        applyTextStyle(titleView, titleTextAppearance);
-        defaultTitleTypeStyle = titleView.getTypeface().getStyle();
+        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, customTypeface);
+        if (titleView.getTypeface() != null) {
+            titleReadTypeface = titleView.getTypeface();
+            titleTypeface = Typeface.create(titleView.getTypeface(), titleView.getTypeface().getStyle() | Typeface.BOLD);
+        } else {
+            titleReadTypeface = Typeface.DEFAULT;
+            titleTypeface = Typeface.DEFAULT_BOLD;
+        }
 
         dateView = (TextView) contentView.findViewById(R.id.date);
-        applyTextStyle(dateView, dateTextAppearance);
+        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, customTypeface);
 
         iconView = (ImageView) contentView.findViewById(R.id.image);
         if (iconView != null) {
@@ -161,11 +174,9 @@ class MessageItemView extends FrameLayout {
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
         if (message.isRead()) {
-            Typeface typeface = titleView.getTypeface();
-            titleView.setTypeface(typeface, defaultTitleTypeStyle);
+            titleView.setTypeface(titleReadTypeface);
         } else {
-            Typeface typeface = titleView.getTypeface();
-            titleView.setTypeface(typeface, defaultTitleTypeStyle | Typeface.BOLD);
+            titleView.setTypeface(titleTypeface);
         }
 
         if (checkBox != null) {
@@ -217,39 +228,5 @@ class MessageItemView extends FrameLayout {
         }
     }
 
-    /**
-     * Helper method to apply custom text view styles.
-     * *
-     *
-     * @param textView The text view.
-     * @param textAppearance Optional text appearance.
-     */
-    private void applyTextStyle(TextView textView, int textAppearance) {
-        // Apply text appearance first before the color or type face.
-        if (textAppearance != -1) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                textView.setTextAppearance(textAppearance);
-            } else {
-                //noinspection deprecation
-                textView.setTextAppearance(getContext(), textAppearance);
-            }
-        }
 
-        // Called after setting the text appearance so we can keep style defined in the text appearance
-        if (typeface != null) {
-            int style = -1;
-            if (textView.getTypeface() != null) {
-                style = textView.getTypeface().getStyle();
-            }
-
-            textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-
-            if (style >= 0) {
-                textView.setTypeface(typeface, style);
-            } else {
-                textView.setTypeface(typeface);
-            }
-        }
-
-    }
 }

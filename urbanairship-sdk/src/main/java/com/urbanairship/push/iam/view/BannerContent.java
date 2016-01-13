@@ -28,11 +28,9 @@ package com.urbanairship.push.iam.view;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
-import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -47,6 +45,7 @@ import com.urbanairship.R;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.ViewUtils;
 
 /**
  * Helper class to manage the banner view's content. Common code between the
@@ -234,38 +233,14 @@ class BannerContent implements Banner {
     /**
      * Helper method to apply custom text view styles.
      *
-     * secondaryColor and typeFace need to be set before calling this method.
+     * secondaryColor and typeface need to be set before calling this method.
      *
      * @param context The view's context.
      * @param textView The text view.
      * @param textAppearance Optional text appearance.
      */
     private void applyTextStyle(Context context, TextView textView, int textAppearance) {
-        // Apply text appearance first before the color or type face.
-        if (textAppearance != -1) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                textView.setTextAppearance(textAppearance);
-            } else {
-                //noinspection deprecation
-                textView.setTextAppearance(context, textAppearance);
-            }
-        }
-
-        // Called after setting the text appearance so we can keep style defined in the text appearance
-        if (typeface != null) {
-            int style = -1;
-            if (textView.getTypeface() != null) {
-                style = textView.getTypeface().getStyle();
-            }
-
-            textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-
-            if (style >= 0) {
-                textView.setTypeface(typeface, style);
-            } else {
-                textView.setTypeface(typeface);
-            }
-        }
+        ViewUtils.applyTextStyle(context, textView, textAppearance, typeface);
 
         // Called after setting the text appearance to override the color
         textView.setTextColor(secondaryColor);
