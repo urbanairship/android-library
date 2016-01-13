@@ -2,18 +2,16 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:alpha="0.12"
-        android:color="@android:color/black"
+        android:color="?android:attr/colorControlHighlight"
         android:state_activated="true"/>
 
     <item
-        android:alpha="0.12"
-        android:color="@android:color/black"
+        android:color="?android:attr/colorControlHighlight"
         android:state_selected="true"/>
 
     <item
         android:alpha="0.2"
-        android:color="?android:colorControlActivated"
+        android:color="?android:attr/colorFocusedHighlight"
         app:state_highlighted="true"/>
 
     <item
