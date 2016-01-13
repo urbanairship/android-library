@@ -121,7 +121,7 @@ public class InboxFragment extends Fragment {
             int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
 
             Typeface typeface = null;
-            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterFontPath);
+            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageFontPath);
             if (!UAStringUtil.isEmpty(fontPath)) {
                 typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
             }

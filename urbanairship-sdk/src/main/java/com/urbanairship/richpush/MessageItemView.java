@@ -57,7 +57,9 @@ class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
-    private Typeface customTypeface;
+
+    private Typeface titleFont;
+    private Typeface dateFont;
 
     private Typeface titleTypeface;
     private Typeface titleReadTypeface;
@@ -104,9 +106,14 @@ class MessageItemView extends FrameLayout {
 
         TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
-        String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
-        if (!UAStringUtil.isEmpty(fontPath)) {
-            customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+        String titleFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemTitleFontPath);
+        if (!UAStringUtil.isEmpty(titleFontPath)) {
+            titleFont = Typeface.createFromAsset(context.getAssets(), titleFontPath);
+        }
+
+        String dateFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemDateFontPath);
+        if (!UAStringUtil.isEmpty(dateFontPath)) {
+            dateFont = Typeface.createFromAsset(context.getAssets(), dateFontPath);
         }
 
         if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
@@ -126,7 +133,7 @@ class MessageItemView extends FrameLayout {
         View contentView = View.inflate(context, contentLayout, this);
 
         titleView = (TextView) contentView.findViewById(R.id.title);
-        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, customTypeface);
+        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, titleFont);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
             titleTypeface = Typeface.create(titleView.getTypeface(), titleView.getTypeface().getStyle() | Typeface.BOLD);
@@ -136,7 +143,7 @@ class MessageItemView extends FrameLayout {
         }
 
         dateView = (TextView) contentView.findViewById(R.id.date);
-        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, customTypeface);
+        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, dateFont);
 
         iconView = (ImageView) contentView.findViewById(R.id.image);
         if (iconView != null) {

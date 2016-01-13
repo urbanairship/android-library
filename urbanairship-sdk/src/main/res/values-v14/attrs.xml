@@ -50,23 +50,29 @@
 
     <!-- Style attributes for Message Center  -->
     <declare-styleable name="MessageCenter">
-        <!-- Path to a font to use for the message center -->
-        <attr name="messageCenterFontPath" format="string"/>
-
         <!-- Message item's background -->
         <attr name="messageCenterItemBackground" format="reference"/>
 
         <!-- Message title text appearance -->
         <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
 
+        <!-- Message title assets font path -->
+        <attr name="messageCenterItemTitleFontPath" format="string"/>
+
         <!-- Message date text appearance -->
         <attr name="messageCenterItemDateTextAppearance" format="reference"/>
+
+        <!-- Message date assets font path -->
+        <attr name="messageCenterItemDateFontPath" format="string"/>
 
         <!-- Empty Message Center message text appearance -->
         <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
 
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string"/>
+
+        <!-- Empty Message Center message assets font path -->
+        <attr name="messageCenterEmptyMessageFontPath" format="string"/>
 
         <!-- Message Center list divider color -->
         <attr name="messageCenterDividerColor" format="color"/>
