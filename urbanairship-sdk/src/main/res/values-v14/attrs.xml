@@ -68,8 +68,8 @@
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string"/>
 
-        <!-- Message Center list divider tint -->
-        <attr name="messageCenterDividerTint" format="color"/>
+        <!-- Message Center list divider color -->
+        <attr name="messageCenterDividerColor" format="color"/>
 
         <!-- If the Message Center should display message icons or not -->
         <attr name="messageCenterItemIconEnabled" format="boolean"/>

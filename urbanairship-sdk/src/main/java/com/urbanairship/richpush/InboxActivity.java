@@ -27,6 +27,7 @@ package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -95,9 +96,10 @@ public class InboxActivity extends FragmentActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 LinearLayout container = (LinearLayout) findViewById(R.id.container);
                 attributes = getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
-                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerTint, -1);
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
                 if (color != -1) {
                     DrawableCompat.setTint(container.getDividerDrawable(), color);
+                    DrawableCompat.setTintMode(container.getDividerDrawable(), PorterDuff.Mode.SRC);
                 }
 
                 attributes.recycle();

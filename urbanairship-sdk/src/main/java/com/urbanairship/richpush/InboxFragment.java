@@ -28,6 +28,7 @@ package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -134,9 +135,10 @@ public class InboxFragment extends Fragment {
         if (absListView instanceof ListView) {
             ListView listView = (ListView) absListView;
 
-            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerTint, -1);
+            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
             if (color != -1) {
                 DrawableCompat.setTint(listView.getDivider(), color);
+                DrawableCompat.setTintMode(listView.getDivider(), PorterDuff.Mode.SRC);
             }
         }
 
