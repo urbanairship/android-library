@@ -166,11 +166,14 @@
     <style name="MessageCenter.Item.Date.TextAppearance" parent="@android:style/TextAppearance.Small"/>
     <style name="MessageCenter.EmptyMessage.TextAppearance" parent="@android:style/TextAppearance.Small"/>
 
+
     <style name="MessageCenter" parent="android:Theme.Holo.Light.DarkActionBar">
-        <item name="messageTitleTextAppearance">@style/MessageCenter.Item.Title.TextAppearance</item>
-        <item name="messageDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
-        <item name="messageEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
-        <item name="messageIconEnabled">false</item>
+        <item name="messageCenterItemTitleTextAppearance">@style/MessageCenter.Item.Title.TextAppearance</item>
+        <item name="messageCenterItemDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
+        <item name="messageCenterEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
+        <item name="messageCenterItemIconEnabled">false</item>
+        <item name="messageCenterEmptyMessageText">@string/ua_empty_message_list_string</item>
+        <item name="messageCenterItemBackground">@drawable/ua_item_inbox_background</item>
     </style>
 
 </resources>

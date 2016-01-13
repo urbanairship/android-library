@@ -47,15 +47,32 @@
 
     <!-- Style attributes for Message Center  -->
     <declare-styleable name="MessageCenter">
-        <!-- Path to a font to use for the message center-->
-        <attr name="messageFontPath" format="string"/>
-        <attr name="messageTitleTextAppearance" format="reference"/>
-        <attr name="messageDateTextAppearance" format="reference"/>
-        <attr name="messageEmptyMessageTextAppearance" format="reference"/>
-        <attr name="messageDividerTint" format="color"/>
-        <attr name="messageIconEnabled" format="boolean"/>
+        <!-- Path to a font to use for the message center -->
+        <attr name="messageCenterFontPath" format="string"/>
+
+        <!-- Message item's background -->
+        <attr name="messageCenterItemBackground" format="reference"/>
+
+        <!-- Message title text appearance -->
+        <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
+
+        <!-- Message date text appearance -->
+        <attr name="messageCenterItemDateTextAppearance" format="reference"/>
+
+        <!-- Empty Message Center message text appearance -->
+        <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
+
+        <!-- Empty Message Center message text -->
+        <attr name="messageCenterEmptyMessageText" format="string"/>
+
+        <!-- Empty Message Center list divider tint -->
+        <attr name="messageCenterDividerTint" format="color"/>
+
+        <!-- If the Message Center should display message icons or not -->
+        <attr name="messageCenterItemIconEnabled" format="boolean"/>
 
         <!-- The list view item is highlighted when needing to differentiate from activation -->
         <attr name="state_highlighted" format="boolean" />
+
     </declare-styleable>
 </resources>
