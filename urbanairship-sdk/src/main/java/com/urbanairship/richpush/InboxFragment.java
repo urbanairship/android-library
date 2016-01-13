@@ -28,9 +28,11 @@ package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -63,6 +65,9 @@ public class InboxFragment extends Fragment {
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
     private String currentMessageId;
+
+    @DrawableRes
+    private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
@@ -116,7 +121,7 @@ public class InboxFragment extends Fragment {
             int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
 
             Typeface typeface = null;
-            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterFontPath);
+            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageFontPath);
             if (!UAStringUtil.isEmpty(fontPath)) {
                 typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
             }
@@ -130,11 +135,14 @@ public class InboxFragment extends Fragment {
         if (absListView instanceof ListView) {
             ListView listView = (ListView) absListView;
 
-            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerTint, -1);
+            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
             if (color != -1) {
                 DrawableCompat.setTint(listView.getDivider(), color);
+                DrawableCompat.setTintMode(listView.getDivider(), PorterDuff.Mode.SRC);
             }
         }
+
+        placeHolder = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemIconPlaceholder, placeHolder);
 
         attributes.recycle();
 
@@ -156,7 +164,7 @@ public class InboxFragment extends Fragment {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
-                    itemView.updateMessage(message, imageLoader);
+                    itemView.updateMessage(message, placeHolder, imageLoader);
                     itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
                     itemView.setSelectionListener(new View.OnClickListener() {
                         @Override

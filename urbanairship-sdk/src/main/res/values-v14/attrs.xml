@@ -47,17 +47,20 @@
 
     <!-- Style attributes for Message Center  -->
     <declare-styleable name="MessageCenter">
-        <!-- Path to a font to use for the message center -->
-        <attr name="messageCenterFontPath" format="string"/>
-
         <!-- Message item's background -->
         <attr name="messageCenterItemBackground" format="reference"/>
 
         <!-- Message title text appearance -->
         <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
 
+        <!-- Message title assets font path -->
+        <attr name="messageCenterItemTitleFontPath" format="string"/>
+
         <!-- Message date text appearance -->
         <attr name="messageCenterItemDateTextAppearance" format="reference"/>
+
+        <!-- Message date assets font path -->
+        <attr name="messageCenterItemDateFontPath" format="string"/>
 
         <!-- Empty Message Center message text appearance -->
         <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
@@ -65,14 +68,24 @@
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string"/>
 
-        <!-- Empty Message Center list divider tint -->
-        <attr name="messageCenterDividerTint" format="color"/>
+        <!-- Empty Message Center message assets font path -->
+        <attr name="messageCenterEmptyMessageFontPath" format="string"/>
+
+        <!-- Message Center list divider color -->
+        <attr name="messageCenterDividerColor" format="color"/>
 
         <!-- If the Message Center should display message icons or not -->
         <attr name="messageCenterItemIconEnabled" format="boolean"/>
 
-        <!-- The list view item is highlighted when needing to differentiate from activation -->
-        <attr name="state_highlighted" format="boolean" />
+        <!-- Icon placeholder -->
+        <attr name="messageCenterItemIconPlaceholder" format="reference"/>
 
     </declare-styleable>
+
+    <!-- Style attributes for view states  -->
+    <declare-styleable name="States">
+        <!-- The list view item is highlighted when needing to differentiate from activation -->
+        <attr name="ua_state_highlighted" format="boolean" />
+    </declare-styleable>
+
 </resources>

@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -47,7 +48,7 @@ import com.urbanairship.util.ViewUtils;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 class MessageItemView extends FrameLayout {
 
-    private static final int[] STATE_HIGHLIGHTED = { R.attr.state_highlighted };
+    private static final int[] STATE_HIGHLIGHTED = { R.attr.ua_state_highlighted };
 
     private TextView titleView;
     private TextView dateView;
@@ -56,7 +57,9 @@ class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
-    private Typeface customTypeface;
+
+    private Typeface titleFont;
+    private Typeface dateFont;
 
     private Typeface titleTypeface;
     private Typeface titleReadTypeface;
@@ -103,9 +106,14 @@ class MessageItemView extends FrameLayout {
 
         TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
-        String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
-        if (!UAStringUtil.isEmpty(fontPath)) {
-            customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+        String titleFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemTitleFontPath);
+        if (!UAStringUtil.isEmpty(titleFontPath)) {
+            titleFont = Typeface.createFromAsset(context.getAssets(), titleFontPath);
+        }
+
+        String dateFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemDateFontPath);
+        if (!UAStringUtil.isEmpty(dateFontPath)) {
+            dateFont = Typeface.createFromAsset(context.getAssets(), dateFontPath);
         }
 
         if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
@@ -125,7 +133,7 @@ class MessageItemView extends FrameLayout {
         View contentView = View.inflate(context, contentLayout, this);
 
         titleView = (TextView) contentView.findViewById(R.id.title);
-        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, customTypeface);
+        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, titleFont);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
             titleTypeface = Typeface.create(titleView.getTypeface(), titleView.getTypeface().getStyle() | Typeface.BOLD);
@@ -135,7 +143,7 @@ class MessageItemView extends FrameLayout {
         }
 
         dateView = (TextView) contentView.findViewById(R.id.date);
-        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, customTypeface);
+        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, dateFont);
 
         iconView = (ImageView) contentView.findViewById(R.id.image);
         if (iconView != null) {
@@ -167,9 +175,10 @@ class MessageItemView extends FrameLayout {
      * Updates the view's message.
      *
      * @param message The message.
-     * @param imageLoader An imageloader to load the icon view.
+     * @param placeholder Image place holder.
+     * @param imageLoader An {@link ImageLoader} to load the icon view.
      */
-    void updateMessage(RichPushMessage message, ImageLoader imageLoader) {
+    void updateMessage(RichPushMessage message, @DrawableRes int placeholder, ImageLoader imageLoader) {
         titleView.setText(message.getTitle());
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
@@ -184,7 +193,7 @@ class MessageItemView extends FrameLayout {
         }
 
         if (iconView != null) {
-            imageLoader.load(message.getListIconUrl(), R.drawable.ua_ic_image_placeholder, iconView);
+            imageLoader.load(message.getListIconUrl(), placeholder, iconView);
         }
     }
 
