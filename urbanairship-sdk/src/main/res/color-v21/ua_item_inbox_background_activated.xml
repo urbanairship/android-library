@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:color="?android:attr/colorControlHighlight"
+        android:state_activated="true"/>
+
+    <item
+        android:color="?android:attr/colorControlHighlight"
+        android:state_selected="true"/>
+
+    <item
+        android:alpha="0.2"
+        android:color="?android:attr/colorFocusedHighlight"
+        app:state_highlighted="true"/>
+
+    <item
+        android:color="@android:color/transparent"/>
+</selector>

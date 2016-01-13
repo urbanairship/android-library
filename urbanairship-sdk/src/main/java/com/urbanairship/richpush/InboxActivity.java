@@ -30,10 +30,12 @@ import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 
 import com.urbanairship.R;
 
@@ -47,14 +49,14 @@ public class InboxActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        TypedArray a = obtainStyledAttributes(R.styleable.Theme);
-        if (a.hasValue(R.styleable.Theme_inboxActivityStyle)) {
-            setTheme(a.getResourceId(R.styleable.Theme_inboxActivityStyle, -1));
+        TypedArray attributes = obtainStyledAttributes(R.styleable.Theme);
+        if (attributes.hasValue(R.styleable.Theme_messageCenterStyle)) {
+            setTheme(attributes.getResourceId(R.styleable.Theme_messageCenterStyle, -1));
         } else {
-            setTheme(R.style.InboxActivityStyle);
+            setTheme(R.style.MessageCenter);
         }
 
-        a.recycle();
+        attributes.recycle();
 
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.ua_activity_inbox);
@@ -90,6 +92,16 @@ public class InboxActivity extends FragmentActivity {
                 }
             });
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                LinearLayout container = (LinearLayout) findViewById(R.id.container);
+                attributes = getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerTint, -1);
+                if (color != -1) {
+                    DrawableCompat.setTint(container.getDividerDrawable(), color);
+                }
+
+                attributes.recycle();
+            }
 
             inboxFragment.setCurrentMessageId(messagePagerFragment.getCurrentMessageId());
         }
@@ -100,7 +112,7 @@ public class InboxActivity extends FragmentActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case android.R.id.home:
                 this.finish();
                 return true;

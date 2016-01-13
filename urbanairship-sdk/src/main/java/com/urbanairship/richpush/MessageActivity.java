@@ -46,10 +46,10 @@ public class MessageActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         TypedArray a = obtainStyledAttributes(R.styleable.Theme);
-        if (a.hasValue(R.styleable.Theme_inboxActivityStyle)) {
-            setTheme(a.getResourceId(R.styleable.Theme_inboxActivityStyle, -1));
+        if (a.hasValue(R.styleable.Theme_messageCenterStyle)) {
+            setTheme(a.getResourceId(R.styleable.Theme_messageCenterStyle, -1));
         } else {
-            setTheme(R.style.InboxActivityStyle);
+            setTheme(R.style.MessageCenter);
         }
 
         a.recycle();

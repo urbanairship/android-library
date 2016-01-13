@@ -26,6 +26,7 @@ package com.urbanairship.richpush;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.format.DateFormat;
@@ -37,8 +38,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.urbanairship.R;
-
-import java.util.Date;
+import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.ViewUtils;
 
 /**
  * Message Center item view.
@@ -55,27 +56,30 @@ class MessageItemView extends FrameLayout {
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
+    private Typeface customTypeface;
+
+    private Typeface titleTypeface;
+    private Typeface titleReadTypeface;
+
 
     public MessageItemView(Context context) {
-        super(context);
-        init(context, null, 0);
+        this(context, null, R.attr.messageCenterStyle);
     }
 
     public MessageItemView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs, 0);
+        this(context, attrs, R.attr.messageCenterStyle);
     }
 
     public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr, R.style.MessageCenter);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MessageItemView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
-        init(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -87,11 +91,52 @@ class MessageItemView extends FrameLayout {
      * @param defStyleAttr An attribute in the current theme that contains a
      * reference to a style resource that supplies default values for
      * the view. Can be 0 to not look for defaults.
+     * @param defStyleRes A resource identifier of a style resource that
+     * supplies default values for the view, used only if
+     * defStyleAttr is 0 or can not be found in the theme. Can be 0
+     * to not look for defaults.
      */
-    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        View contentView = View.inflate(context, R.layout.ua_item_mc_content, this);
+    private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        int contentLayout = R.layout.ua_item_mc_content;
+        int dateTextAppearance;
+        int titleTextAppearance;
+
+        TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
+
+        String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
+        if (!UAStringUtil.isEmpty(fontPath)) {
+            customTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+        }
+
+        if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
+            contentLayout = R.layout.ua_item_mc_icon_content;
+        }
+
+        dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
+        titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
+
+        int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
+        if (background > 0) {
+            setBackgroundResource(background);
+        }
+
+        attributes.recycle();
+
+        View contentView = View.inflate(context, contentLayout, this);
+
         titleView = (TextView) contentView.findViewById(R.id.title);
+        ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, customTypeface);
+        if (titleView.getTypeface() != null) {
+            titleReadTypeface = titleView.getTypeface();
+            titleTypeface = Typeface.create(titleView.getTypeface(), titleView.getTypeface().getStyle() | Typeface.BOLD);
+        } else {
+            titleReadTypeface = Typeface.DEFAULT;
+            titleTypeface = Typeface.DEFAULT_BOLD;
+        }
+
         dateView = (TextView) contentView.findViewById(R.id.date);
+        ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, customTypeface);
+
         iconView = (ImageView) contentView.findViewById(R.id.image);
         if (iconView != null) {
             iconView.setOnClickListener(new OnClickListener() {
@@ -125,23 +170,17 @@ class MessageItemView extends FrameLayout {
      * @param imageLoader An imageloader to load the icon view.
      */
     void updateMessage(RichPushMessage message, ImageLoader imageLoader) {
-        if (titleView != null) {
-            titleView.setText(message.getTitle());
+        titleView.setText(message.getTitle());
+        dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
-            if (message.isRead()) {
-                titleView.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-            } else {
-                titleView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-            }
+        if (message.isRead()) {
+            titleView.setTypeface(titleReadTypeface);
+        } else {
+            titleView.setTypeface(titleTypeface);
         }
 
         if (checkBox != null) {
             checkBox.setChecked(isActivated());
-        }
-
-        if (dateView != null) {
-            Date date = message.getSentDate();
-            dateView.setText(DateFormat.getDateFormat(getContext()).format(date));
         }
 
         if (iconView != null) {
@@ -188,5 +227,6 @@ class MessageItemView extends FrameLayout {
             return super.onCreateDrawableState(extraSpace);
         }
     }
+
 
 }
