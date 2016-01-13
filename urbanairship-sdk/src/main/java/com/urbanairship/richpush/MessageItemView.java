@@ -48,7 +48,7 @@ import com.urbanairship.util.ViewUtils;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 class MessageItemView extends FrameLayout {
 
-    private static final int[] STATE_HIGHLIGHTED = { R.attr.state_highlighted };
+    private static final int[] STATE_HIGHLIGHTED = { R.attr.ua_state_highlighted };
 
     private TextView titleView;
     private TextView dateView;

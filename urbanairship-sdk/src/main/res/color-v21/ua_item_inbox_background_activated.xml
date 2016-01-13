@@ -12,7 +12,7 @@
     <item
         android:alpha="0.2"
         android:color="?android:attr/colorFocusedHighlight"
-        app:state_highlighted="true"/>
+        app:ua_state_highlighted="true"/>
 
     <item
         android:color="@android:color/transparent"/>

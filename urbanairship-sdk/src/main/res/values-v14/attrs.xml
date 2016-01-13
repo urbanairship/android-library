@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- The list view item is highlighted when needing to differentiate from activation -->
+    <attr name="ua_state_highlighted" format="boolean" />
+
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for in-app message banners -->
@@ -74,8 +77,6 @@
         <!-- Icon placeholder -->
         <attr name="messageCenterItemIconPlaceholder" format="reference"/>
 
-        <!-- The list view item is highlighted when needing to differentiate from activation -->
-        <attr name="state_highlighted" format="boolean" />
-
+        <attr name="ua_state_highlighted" />
     </declare-styleable>
 </resources>
