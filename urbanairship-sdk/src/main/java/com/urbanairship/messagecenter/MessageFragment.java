@@ -47,7 +47,7 @@ import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
 /**
- * Fragment that displays a rich push message in a RichPushMessageView
+ * Fragment that displays a {@link RichPushMessage}.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageFragment extends Fragment {
@@ -59,6 +59,7 @@ public class MessageFragment extends Fragment {
 
     /**
      * Creates a new MessageFragment
+     *
      * @param messageId The message's ID to display
      * @return messageFragment new MessageFragment
      */
@@ -75,7 +76,7 @@ public class MessageFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        String messageId = getArguments().getString(MESSAGE_ID_KEY);
+        String messageId = getMessageId();
         message = UAirship.shared().getInbox().getMessage(messageId);
 
         if (message == null) {
@@ -116,6 +117,7 @@ public class MessageFragment extends Fragment {
         if (message != null) {
             Logger.info("Loading message: " + message.getMessageId());
             webView.loadRichPushMessage(message);
+            message.markRead();
         }
     }
 
@@ -149,21 +151,30 @@ public class MessageFragment extends Fragment {
         }
 
         webView.animate()
-                .alpha(1f)
-                .setDuration(200)
-                .setListener(null);
+               .alpha(1f)
+               .setDuration(200)
+               .setListener(null);
 
         // Animate the loading view to 0% opacity. After the animation ends,
         // set its visibility to GONE as an optimization step (it won't
         // participate in layout passes, etc.)
         progressBar.animate()
-                .alpha(0f)
-                .setDuration(200)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                });
+                   .alpha(0f)
+                   .setDuration(200)
+                   .setListener(new AnimatorListenerAdapter() {
+                       @Override
+                       public void onAnimationEnd(Animator animation) {
+                           progressBar.setVisibility(View.GONE);
+                       }
+                   });
+    }
+
+    /**
+     * Returns the fragment's {@link RichPushMessage} ID.
+     *
+     * @return The {@link RichPushMessage} ID.
+     */
+    public String getMessageId() {
+        return getArguments().getString(MESSAGE_ID_KEY);
     }
 }

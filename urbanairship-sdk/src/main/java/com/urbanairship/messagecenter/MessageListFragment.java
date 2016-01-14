@@ -66,6 +66,7 @@ public class MessageListFragment extends Fragment {
     private ImageLoader imageLoader;
     private String currentMessageId;
 
+
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
@@ -75,6 +76,7 @@ public class MessageListFragment extends Fragment {
             adapter.set(richPushInbox.getMessages());
         }
     };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -268,12 +270,15 @@ public class MessageListFragment extends Fragment {
         return adapter;
     }
 
-    /**
-     * Sets the current message ID to be highlighted.
-     *
-     * @param messageId The current message ID or {@code null} to clear the message.
-     */
-    void setCurrentMessageId(String messageId) {
+    void setCurrentMessage(String messageId) {
+        if (currentMessageId == null && messageId == null) {
+            return;
+        }
+
+        if (currentMessageId != null && currentMessageId.equals(messageId)) {
+            return;
+        }
+
         currentMessageId = messageId;
         if (getAdapter() != null) {
             getAdapter().notifyDataSetChanged();
