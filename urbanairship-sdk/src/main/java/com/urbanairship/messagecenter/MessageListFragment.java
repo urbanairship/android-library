@@ -43,7 +43,6 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.R;
@@ -62,7 +61,6 @@ public class MessageListFragment extends Fragment {
     private SwipeRefreshLayout refreshLayout;
     private AbsListView absListView;
     private RichPushInbox richPushInbox;
-    private boolean isManualRefreshing = false;
     private MessageViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
@@ -207,8 +205,6 @@ public class MessageListFragment extends Fragment {
      * Called when the messages list is refreshing.
      */
     private void onRefreshMessages() {
-        this.isManualRefreshing = true;
-
         if (fetchMessagesOperation != null) {
             fetchMessagesOperation.cancel();
         }
@@ -216,12 +212,6 @@ public class MessageListFragment extends Fragment {
         fetchMessagesOperation = richPushInbox.fetchMessages(new RichPushInbox.FetchMessagesCallback() {
             @Override
             public void onFinished(boolean success) {
-                if (isManualRefreshing && !success) {
-                    Toast.makeText(getActivity(), "Failed to update messages!", Toast.LENGTH_LONG).show();
-                }
-
-                isManualRefreshing = false;
-
                 if (refreshLayout != null) {
                     refreshLayout.setRefreshing(false);
                 }
