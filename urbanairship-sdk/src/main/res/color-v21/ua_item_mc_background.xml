@@ -11,7 +11,7 @@
 
     <item
         android:alpha="0.2"
-        android:color="?android:attr/colorFocusedHighlight"
+        android:color="?android:attr/colorAccent"
         app:ua_state_highlighted="true"/>
 
     <item
