@@ -24,7 +24,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 
 import android.annotation.TargetApi;
@@ -38,6 +38,8 @@ import android.view.ViewGroup;
 
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 
 import java.util.List;
 
@@ -156,7 +158,7 @@ public class MessagePagerFragment extends Fragment {
 
     /**
      * Grabs the latest messages from the rich push inbox, and syncs them
-     * with the inbox fragment and message view pager if available
+     * with the {@link RichPushInbox} and message view pager if available
      */
     private void updateRichPushMessages() {
         this.messages = UAirship.shared().getInbox().getMessages();

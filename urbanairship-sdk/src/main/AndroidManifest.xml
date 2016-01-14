@@ -34,8 +34,8 @@
         <activity android:name="com.urbanairship.CoreActivity" />
         <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <activity android:name=".richpush.MessageActivity" />
-        <activity android:name=".richpush.InboxActivity" />
+        <activity android:name=".messagecenter.MessageActivity" />
+        <activity android:name=".messagecenter.MessageListActivity" />
 
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"

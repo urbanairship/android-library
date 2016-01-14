@@ -24,7 +24,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
@@ -34,6 +34,8 @@ import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 
 import com.urbanairship.R;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 
 /**
  * Manages the message view pager and display messages
@@ -81,7 +83,7 @@ public class MessageActivity extends FragmentActivity {
         pagerFragment.setOnMessageChangedListener(new MessagePagerFragment.OnMessageChangedListener() {
             @Override
             public void onMessageChanged(RichPushMessage message) {
-                if (Build.VERSION.SDK_INT >= 14 && getActionBar() != null) {
+                if (getActionBar() != null) {
                     getActionBar().setTitle(message.getTitle());
                 }
             }

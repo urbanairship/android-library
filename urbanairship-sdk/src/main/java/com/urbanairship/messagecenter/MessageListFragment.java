@@ -24,7 +24,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.richpush;
+package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
@@ -48,6 +48,8 @@ import android.widget.Toast;
 import com.urbanairship.Cancelable;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.ViewUtils;
 
@@ -55,13 +57,13 @@ import com.urbanairship.util.ViewUtils;
  * Fragment that displays the Urban Airship Message Center.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class InboxFragment extends Fragment {
+public class MessageListFragment extends Fragment {
 
     private SwipeRefreshLayout refreshLayout;
     private AbsListView absListView;
     private RichPushInbox richPushInbox;
     private boolean isManualRefreshing = false;
-    private InboxViewAdapter adapter;
+    private MessageViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
     private String currentMessageId;
@@ -86,7 +88,7 @@ public class InboxFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.ua_fragment_inbox, container, false);
+        View view = inflater.inflate(R.layout.ua_fragment_message_list, container, false);
         refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
 
         if (refreshLayout != null) {
@@ -151,14 +153,14 @@ public class InboxFragment extends Fragment {
     }
 
     /**
-     * Called when the {@link InboxViewAdapter} needs to be created
+     * Called when the {@link MessageViewAdapter} needs to be created
      * for the {@link AbsListView}.
      *
-     * @return A {@link InboxViewAdapter} for the list view.
+     * @return A {@link MessageViewAdapter} for the list view.
      */
-    protected InboxViewAdapter createMessageViewAdapter() {
+    protected MessageViewAdapter createMessageViewAdapter() {
         imageLoader = new ImageLoader(getContext());
-        return new InboxViewAdapter(getContext(), R.layout.ua_item_inbox) {
+        return new MessageViewAdapter(getContext(), R.layout.ua_item_mc) {
             @Override
             protected void bindView(View view, RichPushMessage message, final int position) {
                 if (view instanceof MessageItemView) {
@@ -268,11 +270,11 @@ public class InboxFragment extends Fragment {
     }
 
     /**
-     * Returns the {@link InboxViewAdapter} for the list view.
+     * Returns the {@link MessageViewAdapter} for the list view.
      *
-     * @return The {@link InboxViewAdapter} for the list view.
+     * @return The {@link MessageViewAdapter} for the list view.
      */
-    public InboxViewAdapter getAdapter() {
+    public MessageViewAdapter getAdapter() {
         return adapter;
     }
 
