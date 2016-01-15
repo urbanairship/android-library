@@ -29,7 +29,10 @@
 
     <string name="ua_notification_button_copy">Copy</string>
     <string name="ua_notification_button_save">Save</string>
-    <string name="ua_empty_message_list_string">No messages</string>
+    <string name="ua_empty_message_list">No messages</string>
+    <string name="ua_message_not_selected">No message selected</string>
+    <string name="ua_mc_failed_to_load">There’s been a connection issue. Please try again…</string>
+    <string name="ua_retry_button">Retry</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">

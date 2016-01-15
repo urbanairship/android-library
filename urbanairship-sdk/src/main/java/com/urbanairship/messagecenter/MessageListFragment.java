@@ -49,7 +49,6 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.ViewUtils;
 
 /**
@@ -66,6 +65,7 @@ public class MessageListFragment extends Fragment {
     private ImageLoader imageLoader;
     private String currentMessageId;
 
+
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
@@ -76,10 +76,10 @@ public class MessageListFragment extends Fragment {
         }
     };
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         this.richPushInbox = UAirship.shared().getInbox();
         this.adapter = createMessageViewAdapter();
     }
@@ -119,13 +119,7 @@ public class MessageListFragment extends Fragment {
         if (emptyListView != null && emptyListView instanceof TextView) {
             TextView textView = (TextView) emptyListView;
             int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
-
-            Typeface typeface = null;
-            String fontPath = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageFontPath);
-            if (!UAStringUtil.isEmpty(fontPath)) {
-                typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
-            }
-
+            Typeface typeface = ViewUtils.createTypeface(getContext(), textAppearance);
             ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
 
             String text = attributes.getString(R.styleable.MessageCenter_messageCenterEmptyMessageText);
@@ -268,12 +262,15 @@ public class MessageListFragment extends Fragment {
         return adapter;
     }
 
-    /**
-     * Sets the current message ID to be highlighted.
-     *
-     * @param messageId The current message ID or {@code null} to clear the message.
-     */
-    void setCurrentMessageId(String messageId) {
+    void setCurrentMessage(String messageId) {
+        if (currentMessageId == null && messageId == null) {
+            return;
+        }
+
+        if (currentMessageId != null && currentMessageId.equals(messageId)) {
+            return;
+        }
+
         currentMessageId = messageId;
         if (getAdapter() != null) {
             getAdapter().notifyDataSetChanged();

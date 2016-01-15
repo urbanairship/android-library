@@ -1,7 +1,6 @@
 /*
 Copyright 2009-2015 Urban Airship Inc. All rights reserved.
 
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
@@ -27,56 +26,55 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
+import android.content.res.TypedArray;
 import android.os.Build;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.view.MenuItem;
 
-import com.urbanairship.richpush.RichPushMessage;
-
-import java.util.List;
+import com.urbanairship.R;
 
 /**
- * Pager adapter that manages the message fragments. Activities that attach
- * this fragment must implement MessageFragmentAdapter.Listener.
+ * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class MessageFragmentAdapter extends FragmentStatePagerAdapter {
-
-    private List<RichPushMessage> messages;
-
-    public MessageFragmentAdapter(FragmentManager manager) {
-        super(manager);
-    }
+public class MessageCenterActivity extends FragmentActivity {
 
     @Override
-    public Fragment getItem(int position) {
-        if (messages == null || position >= messages.size()) {
-            return null;
+    protected void onCreate(Bundle savedInstanceState) {
+        TypedArray attributes = obtainStyledAttributes(R.styleable.Theme);
+        if (attributes.hasValue(R.styleable.Theme_messageCenterStyle)) {
+            setTheme(attributes.getResourceId(R.styleable.Theme_messageCenterStyle, -1));
+        } else {
+            setTheme(R.style.MessageCenter);
         }
-        String messageId = messages.get(position).getMessageId();
-        return MessageFragment.newInstance(messageId);
-    }
 
-    @Override
-    public int getCount() {
-        if (messages == null) {
-            return 0;
+        attributes.recycle();
+
+        super.onCreate(savedInstanceState);
+
+        if (getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+            getActionBar().setHomeButtonEnabled(true);
         }
-        return messages.size();
+
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(android.R.id.content, new MessageCenterFragment())
+                    .commit();
+        }
     }
 
     @Override
-    public int getItemPosition(Object object) {
-        return POSITION_NONE;
-    }
-
-    /**
-     * Set the list of rich push messages
-     * @param messages The current list of rich push messages to display
-     */
-    public void setRichPushMessages(List<RichPushMessage> messages) {
-        this.messages = messages;
-        this.notifyDataSetChanged();
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+        }
+        return false;
     }
 }
+
+

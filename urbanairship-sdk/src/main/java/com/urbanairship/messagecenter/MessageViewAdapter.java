@@ -128,5 +128,4 @@ public abstract class MessageViewAdapter extends BaseAdapter {
     public boolean hasStableIds() {
         return true;
     }
-
 }

@@ -34,6 +34,7 @@ import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 
 import com.urbanairship.R;
+import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
@@ -43,7 +44,7 @@ import com.urbanairship.richpush.RichPushMessage;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageActivity extends FragmentActivity {
 
-    private static final String FRAGMENT_TAG = "MessagePagerFragment";
+    private static final String FRAGMENT_TAG = "MessageFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,31 +64,32 @@ public class MessageActivity extends FragmentActivity {
             getActionBar().setHomeButtonEnabled(true);
         }
 
-        MessagePagerFragment pagerFragment = (MessagePagerFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (pagerFragment == null) {
-            String messageId = null;
+        String messageId = null;
 
-            // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
-            // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
-            if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
-                messageId = getIntent().getData().getSchemeSpecificPart();
-            }
+        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
+        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
+        if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
+            messageId = getIntent().getData().getSchemeSpecificPart();
+        }
 
-            pagerFragment = MessagePagerFragment.newInstance(messageId);
+        RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
+        if (message == null) {
+            finish();
+            return;
+        }
+
+        MessageFragment messageFragment = (MessageFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
+        if (messageFragment == null) {
+            messageFragment = MessageFragment.newInstance(messageId);
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, pagerFragment, FRAGMENT_TAG)
+                    .add(android.R.id.content, messageFragment, FRAGMENT_TAG)
                     .commit();
         }
 
-        pagerFragment.setOnMessageChangedListener(new MessagePagerFragment.OnMessageChangedListener() {
-            @Override
-            public void onMessageChanged(RichPushMessage message) {
-                if (getActionBar() != null) {
-                    getActionBar().setTitle(message.getTitle());
-                }
-            }
-        });
+
+
+        setTitle(message.getTitle());
     }
 
     @Override

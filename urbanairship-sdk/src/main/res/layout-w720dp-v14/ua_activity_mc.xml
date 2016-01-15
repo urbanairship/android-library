@@ -13,17 +13,15 @@
         android:id="@+id/message_list_fragment"
         android:name="com.urbanairship.messagecenter.MessageListFragment"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="320dp"
+        android:layout_width="300dp"
 
         android:layout_height="match_parent"/>
 
-    <fragment
-        android:id="@+id/message_pager_fragment"
-        android:name="com.urbanairship.messagecenter.MessagePagerFragment"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"/>
+    <FrameLayout
+        android:id="@+id/message_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"/>
 
 </LinearLayout>
 

@@ -16,11 +16,14 @@
 
     <!-- Message Center Style-->
     <style name="MessageCenter" parent="android:Theme.Material.Light.DarkActionBar">
+        <item name="messageNotSelectedText">@string/ua_message_not_selected</item>
+        <item name="messageNotSelectedTextAppearance">@style/MessageCenter.MessageNotSelected.TextAppearance</item>
+
         <item name="messageCenterItemTitleTextAppearance">@style/MessageCenter.Item.Title.TextAppearance</item>
         <item name="messageCenterItemDateTextAppearance">@style/MessageCenter.Item.Date.TextAppearance</item>
         <item name="messageCenterEmptyMessageTextAppearance">@style/MessageCenter.EmptyMessage.TextAppearance</item>
         <item name="messageCenterItemIconEnabled">false</item>
-        <item name="messageCenterEmptyMessageText">@string/ua_empty_message_list_string</item>
+        <item name="messageCenterEmptyMessageText">@string/ua_empty_message_list</item>
         <item name="messageCenterItemBackground">@drawable/ua_item_mc_background</item>
     </style>
 

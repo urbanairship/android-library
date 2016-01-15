@@ -46,7 +46,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.messagecenter.MessageListActivity;
+import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.messagecenter.MessageActivity;
 import com.urbanairship.util.UAStringUtil;
 
@@ -198,7 +198,7 @@ public class RichPushInbox extends AirshipComponent {
     /**
      * Starts an activity that can display the Message Center. An implicit intent with the intent
      * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} will be attempted first. If the intent
-     * fails to start an activity, the {@link MessageListActivity} will be started instead.
+     * fails to start an activity, the {@link MessageCenterActivity} will be started instead.
      */
     public void startInboxActivity() {
         Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
@@ -206,8 +206,8 @@ public class RichPushInbox extends AirshipComponent {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // Fallback to our MessageListActivity
-            intent.setClass(context, MessageListActivity.class);
+            // Fallback to our MessageCenterActivity
+            intent.setClass(context, MessageCenterActivity.class);
         }
 
         if (intent.resolveActivity(context.getPackageManager()) == null) {
@@ -234,7 +234,6 @@ public class RichPushInbox extends AirshipComponent {
 
         // Try VIEW_MESSAGE_INTENT_ACTION first
         intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
-
 
         if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             // Fallback to our MessageActivity

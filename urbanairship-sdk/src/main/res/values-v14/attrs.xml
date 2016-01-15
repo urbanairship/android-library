@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <declare-styleable name="TextAppearance">
+        <!-- Font path -->
+        <attr name="urbanAirshipFontPath" format="string"/>
+    </declare-styleable>
+
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for in-app message banners -->
-        <attr name="inAppMessageBannerStyle" format="reference" />
+        <attr name="inAppMessageBannerStyle" format="reference"/>
 
         <!-- Attribute to allow style override for the Message Center -->
-        <attr name="messageCenterStyle" format="reference" />
+        <attr name="messageCenterStyle" format="reference"/>
     </declare-styleable>
 
     <!-- Redefine CardView attributes so we can define them without causing missing
     attribute errors if the consuming application does not depend on the card support library. -->
     <declare-styleable name="CardView">
         <!-- Background color for CardView. -->
-        <attr name="optCardBackgroundColor" format="color" />
+        <attr name="optCardBackgroundColor" format="color"/>
         <!-- Corner radius for CardView. -->
-        <attr name="optCardCornerRadius" format="dimension" />
+        <attr name="optCardCornerRadius" format="dimension"/>
         <!-- Elevation for CardView. -->
-        <attr name="optCardElevation" format="dimension" />
+        <attr name="optCardElevation" format="dimension"/>
     </declare-styleable>
 
     <!-- Style attributes for in-app message banners -->
@@ -53,23 +58,21 @@
         <!-- Message title text appearance -->
         <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
 
-        <!-- Message title assets font path -->
-        <attr name="messageCenterItemTitleFontPath" format="string"/>
-
         <!-- Message date text appearance -->
         <attr name="messageCenterItemDateTextAppearance" format="reference"/>
 
-        <!-- Message date assets font path -->
-        <attr name="messageCenterItemDateFontPath" format="string"/>
+        <!-- Text appearance for the message not selected message when displaying the Message Center
+          in a split view -->
+        <attr name="messageNotSelectedTextAppearance" format="reference"/>
+
+        <!-- Text for the message not selected message when displaying the Message Center in a split view -->
+        <attr name="messageNotSelectedText" format="string"/>
 
         <!-- Empty Message Center message text appearance -->
         <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
 
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string"/>
-
-        <!-- Empty Message Center message assets font path -->
-        <attr name="messageCenterEmptyMessageFontPath" format="string"/>
 
         <!-- Message Center list divider color -->
         <attr name="messageCenterDividerColor" format="color"/>
@@ -82,10 +85,11 @@
 
     </declare-styleable>
 
+
     <!-- Style attributes for view states  -->
     <declare-styleable name="States">
         <!-- The list view item is highlighted when needing to differentiate from activation -->
-        <attr name="ua_state_highlighted" format="boolean" />
+        <attr name="ua_state_highlighted" format="boolean"/>
     </declare-styleable>
 
 </resources>
