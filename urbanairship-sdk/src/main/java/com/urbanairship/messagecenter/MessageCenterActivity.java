@@ -35,7 +35,7 @@ import android.view.MenuItem;
 import com.urbanairship.R;
 
 /**
- * Displays the Urban Airship Message Center using {@link MessageListFragment}.
+ * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageCenterActivity extends FragmentActivity {
