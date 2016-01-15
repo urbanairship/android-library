@@ -41,6 +41,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -67,7 +68,7 @@ class BannerContent implements Banner {
     private int secondaryColor;
     private int actionButtonTextAppearance;
 
-    private Typeface typeface;
+    private Typeface buttonTypeface;
 
 
     private Banner.OnDismissClickListener dismissClickListener;
@@ -104,9 +105,14 @@ class BannerContent implements Banner {
         if (attrs != null) {
             TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.BannerView, defStyleAttr, R.style.InAppMessage_Banner);
 
+            Typeface bannerTypeface = null;
             String fontPath = attributes.getString(R.styleable.BannerView_bannerFontPath);
             if (!UAStringUtil.isEmpty(fontPath)) {
-                typeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+                try {
+                    bannerTypeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+                } catch (RuntimeException e) {
+                    Logger.error("Failed to load font path: " + fontPath);
+                }
             }
 
             int defaultPrimary = context.getResources().getColor(R.color.ua_iam_primary);
@@ -125,9 +131,17 @@ class BannerContent implements Banner {
             }
 
             this.actionButtonTextAppearance = attributes.getResourceId(R.styleable.BannerView_bannerActionButtonTextAppearance, -1);
+            buttonTypeface = ViewUtils.createTypeface(context, actionButtonTextAppearance);
+            if (buttonTypeface == null) {
+                buttonTypeface = bannerTypeface;
+            }
 
             int textAppearance = attributes.getResourceId(R.styleable.BannerView_bannerTextAppearance, -1);
-            applyTextStyle(context, messageTextView, textAppearance);
+            Typeface messageTypeface = ViewUtils.createTypeface(context, textAppearance);
+            if (messageTypeface == null) {
+                messageTypeface = bannerTypeface;
+            }
+            applyTextStyle(context, messageTextView, textAppearance, messageTypeface);
 
             attributes.recycle();
         }
@@ -169,7 +183,7 @@ class BannerContent implements Banner {
             drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
             button.setCompoundDrawables(drawable, null, null, null);
 
-            applyTextStyle(context, button, actionButtonTextAppearance);
+            applyTextStyle(context, button, actionButtonTextAppearance, buttonTypeface);
 
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -238,8 +252,9 @@ class BannerContent implements Banner {
      * @param context The view's context.
      * @param textView The text view.
      * @param textAppearance Optional text appearance.
+     * @param typeface Optional typeface.
      */
-    private void applyTextStyle(Context context, TextView textView, int textAppearance) {
+    private void applyTextStyle(Context context, TextView textView, int textAppearance, Typeface typeface) {
         ViewUtils.applyTextStyle(context, textView, textAppearance, typeface);
 
         // Called after setting the text appearance to override the color
