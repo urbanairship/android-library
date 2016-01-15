@@ -26,9 +26,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.messagecenter;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
@@ -37,6 +34,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
@@ -56,6 +54,9 @@ public class MessageFragment extends Fragment {
     private UAWebView webView;
     private ProgressBar progressBar;
     private RichPushMessage message;
+    private View errorPage;
+
+    private Integer error = null;
 
     /**
      * Creates a new MessageFragment
@@ -74,7 +75,6 @@ public class MessageFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
 
         String messageId = getMessageId();
         message = UAirship.shared().getInbox().getMessage(messageId);
@@ -89,17 +89,24 @@ public class MessageFragment extends Fragment {
         View view = inflater.inflate(R.layout.ua_fragment_message, container, false);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         webView = (UAWebView) view.findViewById(R.id.message_view);
+        webView.setAlpha(0);
 
         // Workaround render issue with older android devices
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        if (Build.VERSION.SDK_INT >= 12) {
-            webView.setAlpha(0);
-        } else {
-            webView.setVisibility(View.INVISIBLE);
-        }
+        errorPage = view.findViewById(R.id.error_page);
+
+        Button retryButton = (Button) view.findViewById(R.id.retry_button);
+        retryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showProgress();
+                error = null;
+                webView.loadRichPushMessage(message);
+            }
+        });
 
         // Set a custom RichPushWebViewClient view client to listen for the page finish
         // Note: UAWebViewClient is required to load the proper auth and to
@@ -109,7 +116,20 @@ public class MessageFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                showMessage();
+
+                if (error != null) {
+                    showErrorPage();
+                } else {
+                    message.markRead();
+                    showMessage();
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (message != null && failingUrl != null && failingUrl.equals(message.getMessageBodyUrl())) {
+                    error = errorCode;
+                }
             }
         });
 
@@ -120,58 +140,78 @@ public class MessageFragment extends Fragment {
     public void onStart() {
         super.onStart();
         if (message != null) {
+            showProgress();
             Logger.info("Loading message: " + message.getMessageId());
             webView.loadRichPushMessage(message);
-            message.markRead();
         }
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onResume() {
         super.onResume();
-        if (Build.VERSION.SDK_INT >= 11) {
-            webView.onResume();
-        }
+        webView.onResume();
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onPause() {
         super.onPause();
-        if (Build.VERSION.SDK_INT >= 11) {
-            webView.onPause();
-        }
+        webView.onPause();
     }
 
     /**
-     * Reveals the message.
+     * Shows the progress bar
      */
-    @SuppressLint("NewApi")
-    private void showMessage() {
-        if (Build.VERSION.SDK_INT < 12) {
-            webView.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
-            return;
+    private void showProgress() {
+        if (errorPage.getVisibility() == View.VISIBLE) {
+            errorPage.animate()
+                     .alpha(0f)
+                     .setDuration(200)
+                     .setListener(null);
         }
 
+        webView.animate()
+               .alpha(0f)
+               .setDuration(200)
+               .setListener(null);
+
+        progressBar.animate()
+                   .alpha(1f)
+                   .setDuration(200)
+                   .setListener(null);
+    }
+    /**
+     * Shows the message.
+     */
+    private void showMessage() {
         webView.animate()
                .alpha(1f)
                .setDuration(200)
                .setListener(null);
 
-        // Animate the loading view to 0% opacity. After the animation ends,
-        // set its visibility to GONE as an optimization step (it won't
-        // participate in layout passes, etc.)
         progressBar.animate()
                    .alpha(0f)
                    .setDuration(200)
-                   .setListener(new AnimatorListenerAdapter() {
-                       @Override
-                       public void onAnimationEnd(Animator animation) {
-                           progressBar.setVisibility(View.GONE);
-                       }
-                   });
+                   .setListener(null);
+    }
+
+    /**
+     * Shows the error page.
+     */
+    private void showErrorPage() {
+        if (errorPage.getVisibility() == View.GONE) {
+            errorPage.setAlpha(0);
+            errorPage.setVisibility(View.VISIBLE);
+        }
+
+        errorPage.animate()
+               .alpha(1f)
+               .setDuration(200)
+               .setListener(null);
+
+        progressBar.animate()
+                   .alpha(0f)
+                   .setDuration(200)
+                   .setListener(null);
     }
 
     /**
