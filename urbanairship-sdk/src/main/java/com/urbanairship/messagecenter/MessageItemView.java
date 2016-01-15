@@ -40,7 +40,6 @@ import android.widget.TextView;
 
 import com.urbanairship.R;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.ViewUtils;
 
 /**
@@ -107,22 +106,15 @@ class MessageItemView extends FrameLayout {
 
         TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
-        String titleFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemTitleFontPath);
-        if (!UAStringUtil.isEmpty(titleFontPath)) {
-            titleFont = Typeface.createFromAsset(context.getAssets(), titleFontPath);
-        }
-
-        String dateFontPath = attributes.getString(R.styleable.MessageCenter_messageCenterItemDateFontPath);
-        if (!UAStringUtil.isEmpty(dateFontPath)) {
-            dateFont = Typeface.createFromAsset(context.getAssets(), dateFontPath);
-        }
-
         if (attributes.getBoolean(R.styleable.MessageCenter_messageCenterItemIconEnabled, false)) {
             contentLayout = R.layout.ua_item_mc_icon_content;
         }
 
         dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
+        dateFont = ViewUtils.createTypeface(context, dateTextAppearance);
+
         titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
+        titleFont = ViewUtils.createTypeface(context, titleTextAppearance);
 
         int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
         if (background > 0) {

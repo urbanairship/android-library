@@ -46,7 +46,6 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
-import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.List;
@@ -225,12 +224,7 @@ public class MessageCenterFragment extends Fragment {
 
                 TextView textView = (TextView) emptyListView;
                 int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageNotSelectedTextAppearance, -1);
-
-                Typeface typeface = null;
-                String fontPath = attributes.getString(R.styleable.MessageCenter_messageNotSelectedFontPath);
-                if (!UAStringUtil.isEmpty(fontPath)) {
-                    typeface = Typeface.createFromAsset(getContext().getAssets(), fontPath);
-                }
+                Typeface typeface = ViewUtils.createTypeface(getContext(), textAppearance);
 
                 ViewUtils.applyTextStyle(getContext(), textView, textAppearance, typeface);
 
