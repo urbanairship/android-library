@@ -81,7 +81,6 @@ public class MessageListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         this.richPushInbox = UAirship.shared().getInbox();
         this.adapter = createMessageViewAdapter();
     }

@@ -90,6 +90,11 @@ public class MessageFragment extends Fragment {
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         webView = (UAWebView) view.findViewById(R.id.message_view);
 
+        // Workaround render issue with older android devices
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
         if (Build.VERSION.SDK_INT >= 12) {
             webView.setAlpha(0);
         } else {
