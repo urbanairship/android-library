@@ -35,7 +35,7 @@
         <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity android:name=".messagecenter.MessageActivity" />
-        <activity android:name=".messagecenter.MessageCenterActivity" />
+        <activity android:name=".messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"

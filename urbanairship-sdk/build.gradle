@@ -48,6 +48,7 @@ dependencies {
     // Optional
     compile 'com.google.android.gms:play-services-location:8.4.0'
     compile 'com.android.support:cardview-v7:23.1.1'
+    compile 'com.android.support:appcompat-v7:23.1.1'
 
     provided files('libs/amazon-device-messaging-1.0.1.jar')
 
@@ -108,7 +109,7 @@ install {
 
             whenConfigured { MavenPom pom ->
                 pom.dependencies.each {
-                    if (it.artifactId == 'play-services-location' || it.artifactId == 'cardview-v7') {
+                    if (it.artifactId == 'play-services-location' || it.artifactId == 'cardview-v7' || it.artifactId == 'appcompat-v7') {
                         it.optional = true
                     }
                 }

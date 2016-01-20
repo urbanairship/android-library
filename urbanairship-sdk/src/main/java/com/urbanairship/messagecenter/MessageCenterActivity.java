@@ -26,37 +26,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
-import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
-
-import com.urbanairship.R;
 
 /**
  * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class MessageCenterActivity extends FragmentActivity {
+public class MessageCenterActivity extends ThemedActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        TypedArray attributes = obtainStyledAttributes(R.styleable.Theme);
-        if (attributes.hasValue(R.styleable.Theme_messageCenterStyle)) {
-            setTheme(attributes.getResourceId(R.styleable.Theme_messageCenterStyle, -1));
-        } else {
-            setTheme(R.style.MessageCenter);
-        }
-
-        attributes.recycle();
-
         super.onCreate(savedInstanceState);
 
-        if (getActionBar() != null) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-            getActionBar().setHomeButtonEnabled(true);
-        }
+        setDisplayHomeAsUpEnabled(true);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -65,6 +49,7 @@ public class MessageCenterActivity extends FragmentActivity {
                     .commit();
         }
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
