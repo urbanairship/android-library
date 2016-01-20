@@ -168,7 +168,7 @@
     <style name="MessageCenter.MessageNotSelected.TextAppearance" parent="@android:style/TextAppearance.Small"/>
 
 
-    <style name="MessageCenter" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="MessageCenter">
         <item name="messageNotSelectedText">@string/ua_message_not_selected</item>
         <item name="messageNotSelectedTextAppearance">@style/MessageCenter.MessageNotSelected.TextAppearance</item>
 

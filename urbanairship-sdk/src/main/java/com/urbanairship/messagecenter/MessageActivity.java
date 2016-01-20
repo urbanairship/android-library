@@ -27,13 +27,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
-import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 
-import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
@@ -42,27 +39,15 @@ import com.urbanairship.richpush.RichPushMessage;
  * Manages the message view pager and display messages
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class MessageActivity extends FragmentActivity {
+public class MessageActivity extends ThemedActivity {
 
     private static final String FRAGMENT_TAG = "MessageFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        TypedArray a = obtainStyledAttributes(R.styleable.Theme);
-        if (a.hasValue(R.styleable.Theme_messageCenterStyle)) {
-            setTheme(a.getResourceId(R.styleable.Theme_messageCenterStyle, -1));
-        } else {
-            setTheme(R.style.MessageCenter);
-        }
-
-        a.recycle();
-
         super.onCreate(savedInstanceState);
 
-        if (getActionBar() != null) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-            getActionBar().setHomeButtonEnabled(true);
-        }
+        setDisplayHomeAsUpEnabled(true);
 
         String messageId = null;
 
@@ -88,13 +73,12 @@ public class MessageActivity extends FragmentActivity {
         }
 
 
-
         setTitle(message.getTitle());
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case android.R.id.home:
                 this.finish();
                 return true;
