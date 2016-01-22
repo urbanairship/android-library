@@ -223,18 +223,18 @@ class ChannelCapture extends AirshipComponent {
                 .setLocalOnly(true)
                 .setContentTitle(appName)
                 .setContentText(channel)
-                .setSmallIcon(R.drawable.ic_urbanairship_notification)
+                .setSmallIcon(R.drawable.ua_ic_urbanairship_notification)
                 .setColor(ContextCompat.getColor(context, R.color.urban_airship_blue))
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setTicker(context.getString(R.string.ua_channel_notification_ticker))
                 .setContentIntent(openUrlPendingIntent == null ? copyClipboardPendingIntent : openUrlPendingIntent)
-                .addAction(new NotificationCompat.Action(R.drawable.ic_notification_button_copy,
+                .addAction(new NotificationCompat.Action(R.drawable.ua_ic_notification_button_copy,
                         context.getString(R.string.ua_notification_button_copy),
                         copyClipboardPendingIntent));
 
         if (openUrlPendingIntent != null) {
-            builder.addAction(new NotificationCompat.Action(R.drawable.ic_notification_button_open_browser,
+            builder.addAction(new NotificationCompat.Action(R.drawable.ua_ic_notification_button_open_browser,
                     context.getString(R.string.ua_notification_button_save),
                     openUrlPendingIntent));
         }
