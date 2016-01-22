@@ -133,6 +133,18 @@ public class PushMessageTest extends BaseTestCase {
     }
 
     /**
+     * Test get push metadata.
+     */
+    @Test
+    public void testGetMetadata() {
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_METADATA, "testMetadata");
+
+        PushMessage pushMessage = new PushMessage(extras);
+        assertEquals("The push send metadata should match.", "testMetadata", pushMessage.getMetadata());
+    }
+
+    /**
      * Test get push bundle.
      */
     @Test

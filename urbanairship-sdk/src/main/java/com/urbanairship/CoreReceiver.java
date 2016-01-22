@@ -120,6 +120,9 @@ public class CoreReceiver extends BroadcastReceiver {
         // ConversionId needs to be the send id and not the push id, naming is hard.
         UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
 
+        // Set the conversion send metadata.
+        UAirship.shared().getAnalytics().setConversionMetadata(message.getMetadata());
+
         // Clear the in-app message if it matches the push send Id
         clearInAppMessage(message.getSendId());
 
@@ -157,9 +160,10 @@ public class CoreReceiver extends BroadcastReceiver {
 
         Logger.info("Notification opened ID: " + notificationId + " action button Id: " + notificationActionId);
 
-        // Set the conversion push id
+        // Set the conversion push id and metadata
         if (isForegroundAction) {
             UAirship.shared().getAnalytics().setConversionSendId(message.getSendId());
+            UAirship.shared().getAnalytics().setConversionMetadata(message.getMetadata());
         }
 
         // Clear the in-app message if it matches the push send Id

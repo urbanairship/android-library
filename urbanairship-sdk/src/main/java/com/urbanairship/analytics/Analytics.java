@@ -73,6 +73,7 @@ public class Analytics {
     private final Context context;
     private String sessionId;
     private String conversionSendId;
+    private String conversionMetadata;
 
     private String currentScreen;
     private String previousScreen;
@@ -143,6 +144,7 @@ public class Analytics {
                                      .sendBroadcast(new Intent(Analytics.ACTION_APP_BACKGROUND));
 
                 setConversionSendId(null);
+                setConversionMetadata(null);
             }
         });
     }
@@ -278,6 +280,7 @@ public class Analytics {
      * Returns the last stored send Id from when a push conversion was detected.
      *
      * @return A send Id String.
+     * @hide
      */
     public String getConversionSendId() {
         return conversionSendId;
@@ -293,6 +296,28 @@ public class Analytics {
     public void setConversionSendId(@Nullable String sendId) {
         Logger.debug("Analytics - Setting conversion send ID: " + sendId);
         this.conversionSendId = sendId;
+    }
+
+    /**
+     * Returns the last stored send metadata from when a push conversion was detected.
+     *
+     * @return A metadata String.
+     * @hide
+     */
+    public String getConversionMetadata() {
+        return conversionMetadata;
+    }
+
+    /**
+     * Stores the send metadata for later retrieval when a push conversion has been detected.
+     * You should not call this method directly.
+     *
+     * @param metadata The associated metadata String.
+     * @hide
+     */
+    public void setConversionMetadata(@Nullable String metadata) {
+        Logger.debug("Analytics - Setting conversion metadata: " + metadata);
+        this.conversionMetadata = metadata;
     }
 
     /**

@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import com.urbanairship.Logger;
+import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
@@ -40,16 +41,23 @@ public class PushArrivedEvent extends Event {
 
     static final String TYPE = "push_arrived";
 
+    /**
+     * Default send ID assigned when absent from the push payload.
+     */
+    private static final String DEFAULT_SEND_ID = "MISSING_SEND_ID";
+
     private final String pushId;
+    private final String metadata;
 
     /**
      * Constructor for PushArrivedEvent. You should not instantiate this class directly.
      *
-     * @param id The associated Push ID String.
+     * @param message The associated PushMessage.
      */
-    public PushArrivedEvent(String id) {
+    public PushArrivedEvent(PushMessage message) {
         super();
-        this.pushId = id;
+        this.pushId = message.getSendId();
+        this.metadata = message.getMetadata();
     }
 
     @Override
@@ -63,7 +71,13 @@ public class PushArrivedEvent extends Event {
         JSONObject data = new JSONObject();
 
         try {
-            data.put(PUSH_ID_KEY, pushId);
+            if (!UAStringUtil.isEmpty(pushId)) {
+                data.put(PUSH_ID_KEY, pushId);
+            } else {
+                data.put(PUSH_ID_KEY, DEFAULT_SEND_ID);
+            }
+
+            data.putOpt(METADATA_KEY, metadata);
 
             //connection info
             data.put(CONNECTION_TYPE_KEY, getConnectionType());

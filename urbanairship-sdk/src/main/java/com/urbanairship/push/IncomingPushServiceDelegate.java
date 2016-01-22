@@ -183,8 +183,8 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        pushManager.setLastReceivedSendId(message.getSendId());
-        createPushArrivedEvent(message.getSendId());
+        pushManager.setLastReceivedMetadata(message.getMetadata());
+        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
 
         if (message.isExpired()) {
             Logger.debug("Received expired push message, ignoring.");
@@ -329,19 +329,6 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         } catch (InterruptedException e) {
             Logger.warn("Interrupted while waiting for rich push messages to refresh");
         }
-    }
-
-    /**
-     * Creates and adds a push arrived event
-     *
-     * @param sendId The send ID.
-     */
-    private void createPushArrivedEvent(@Nullable String sendId) {
-        if (UAStringUtil.isEmpty(sendId)) {
-            sendId = UUID.randomUUID().toString();
-        }
-
-        airship.getAnalytics().addEvent(new PushArrivedEvent(sendId));
     }
 
     /**

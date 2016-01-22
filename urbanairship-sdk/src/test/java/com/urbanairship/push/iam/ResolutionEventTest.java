@@ -53,6 +53,7 @@ public class ResolutionEventTest extends BaseTestCase {
                 .create();
 
         UAirship.shared().getAnalytics().setConversionSendId("send id");
+        UAirship.shared().getAnalytics().setConversionMetadata("metadata");
     }
 
     /**
@@ -70,6 +71,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "button_click");
         EventTestUtils.validateNestedEventValue(event, "resolution", "button_id", "button id");
         EventTestUtils.validateNestedEventValue(event, "resolution", "button_group", "button group");
@@ -95,6 +97,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "button_click");
         EventTestUtils.validateNestedEventValue(event, "resolution", "button_id", "button id");
         EventTestUtils.validateNestedEventValue(event, "resolution", "button_group", "button group");
@@ -112,6 +115,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "message_click");
         EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 5.5);
         assertEquals("in_app_resolution", event.getType());
@@ -127,6 +131,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "replaced");
         EventTestUtils.validateNestedEventValue(event, "resolution", "replacement_id", "replacement id");
         assertEquals("in_app_resolution", event.getType());
@@ -153,6 +158,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");
         EventTestUtils.validateNestedEventValue(event, "resolution", "expiry", DateUtils.createIso8601TimeStamp(message.getExpiry()));
         assertEquals("in_app_resolution", event.getType());
@@ -167,6 +173,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "user_dismissed");
         EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 3.5);
         assertEquals("in_app_resolution", event.getType());
@@ -181,6 +188,7 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         EventTestUtils.validateNestedEventValue(event, "resolution", "type", "timed_out");
         EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 15.0);
         assertEquals("in_app_resolution", event.getType());
@@ -196,6 +204,21 @@ public class ResolutionEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "id", "iam id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", null);
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
+        assertEquals("in_app_resolution", event.getType());
+    }
+
+    /**
+     * Test conversion metadata is not added to the event data if it doesn't exist.
+     */
+    @Test
+    public void testNoConversionMetadata() throws JSONException {
+        UAirship.shared().getAnalytics().setConversionMetadata(null);
+        ResolutionEvent event = ResolutionEvent.createTimedOutResolutionEvent(message, 15000);
+
+        EventTestUtils.validateEventValue(event, "id", "iam id");
+        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", null);
         assertEquals("in_app_resolution", event.getType());
     }
 }

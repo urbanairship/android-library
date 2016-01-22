@@ -44,12 +44,14 @@ public class DisplayEventTest extends BaseTestCase {
     @Test
     public void testDisplayEvent() throws JSONException {
         UAirship.shared().getAnalytics().setConversionSendId("send id");
+        UAirship.shared().getAnalytics().setConversionMetadata("metadata");
         InAppMessage message = new InAppMessage.Builder().setId("message id").create();
 
         DisplayEvent event = new DisplayEvent(message);
 
         EventTestUtils.validateEventValue(event, "id", "message id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
         assertEquals("in_app_display", event.getType());
         assertTrue(event.isValid());
     }
@@ -60,12 +62,14 @@ public class DisplayEventTest extends BaseTestCase {
     @Test
     public void testDisplayEventNoConversionSendId() throws JSONException {
         UAirship.shared().getAnalytics().setConversionSendId(null);
+        UAirship.shared().getAnalytics().setConversionMetadata(null);
         InAppMessage message = new InAppMessage.Builder().setId("message id").create();
 
         DisplayEvent event = new DisplayEvent(message);
 
         EventTestUtils.validateEventValue(event, "id", "message id");
         EventTestUtils.validateEventValue(event, "conversion_send_id", null);
+        EventTestUtils.validateEventValue(event, "conversion_metadata", null);
         assertEquals("in_app_display", event.getType());
         assertTrue(event.isValid());
 

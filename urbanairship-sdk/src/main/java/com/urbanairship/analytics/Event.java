@@ -67,12 +67,13 @@ public abstract class Event {
     static final String CONNECTION_SUBTYPE_KEY = "connection_subtype";
     static final String CARRIER_KEY = "carrier";
     static final String PUSH_ID_KEY = "push_id";
+    static final String METADATA_KEY = "metadata";
     static final String TIME_ZONE_KEY = "time_zone";
     static final String DAYLIGHT_SAVINGS_KEY = "daylight_savings";
     static final String OS_VERSION_KEY = "os_version";
     static final String LIB_VERSION_KEY = "lib_version";
     static final String PACKAGE_VERSION_KEY = "package_version";
-    static final String LAST_SEND_ID_KEY = "last_send_id";
+    static final String LAST_METADATA_KEY = "last_metadata";
 
     @IntDef({LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY})
     @Retention(RetentionPolicy.SOURCE)

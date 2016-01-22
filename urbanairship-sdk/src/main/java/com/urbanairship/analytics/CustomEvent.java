@@ -91,9 +91,14 @@ public class CustomEvent extends Event {
     public static final String CONVERSION_SEND_ID = "conversion_send_id";
 
     /**
-     * Last send id key.
+     * Hard conversion send metadata key.
      */
-    public static final String LAST_RECEIVED_SEND_ID = "last_received_send_id";
+    public static final String CONVERSION_METADATA = "conversion_metadata";
+
+    /**
+     * Last send metadata key.
+     */
+    public static final String LAST_RECEIVED_METADATA = "last_received_metadata";
 
     /**
      * The custom properties key.
@@ -132,6 +137,7 @@ public class CustomEvent extends Event {
     private final String interactionType;
     private final String interactionId;
     private final String sendId;
+    private final String metadata;
     private final Map<String, Object> properties;
 
 
@@ -142,6 +148,7 @@ public class CustomEvent extends Event {
         this.interactionType = UAStringUtil.isEmpty(builder.interactionType) ? null : builder.interactionType;
         this.interactionId = UAStringUtil.isEmpty(builder.interactionId) ? null : builder.interactionId;
         this.sendId = builder.pushSendId;
+        this.metadata = builder.pushMetadata;
         this.properties = new HashMap<>(builder.properties);
     }
 
@@ -155,6 +162,7 @@ public class CustomEvent extends Event {
         JSONObject data = new JSONObject();
 
         String conversionSendId = UAirship.shared().getAnalytics().getConversionSendId();
+        String conversionMetadata = UAirship.shared().getAnalytics().getConversionMetadata();
 
         try {
             data.putOpt(EVENT_NAME, eventName);
@@ -168,10 +176,16 @@ public class CustomEvent extends Event {
 
             if (!UAStringUtil.isEmpty(sendId)) {
                 data.putOpt(CONVERSION_SEND_ID, sendId);
-            } else if (conversionSendId != null) {
-                data.putOpt(CONVERSION_SEND_ID, conversionSendId);
             } else {
-                data.putOpt(LAST_RECEIVED_SEND_ID, UAirship.shared().getPushManager().getLastReceivedSendId());
+                data.putOpt(CONVERSION_SEND_ID, conversionSendId);
+            }
+
+            if (!UAStringUtil.isEmpty(metadata)) {
+                data.putOpt(CONVERSION_METADATA, metadata);
+            } else if (conversionMetadata != null) {
+                data.putOpt(CONVERSION_METADATA, conversionMetadata);
+            } else {
+                data.putOpt(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
             }
 
             JSONObject propertiesPayload = new JSONObject();
@@ -279,6 +293,7 @@ public class CustomEvent extends Event {
         private String interactionType;
         private String interactionId;
         private String pushSendId;
+        private String pushMetadata;
         private Map<String, Object> properties = new HashMap<>();
 
         /**
@@ -411,6 +426,7 @@ public class CustomEvent extends Event {
         public Builder setAttribution(PushMessage pushMessage) {
             if (pushMessage != null) {
                 pushSendId = pushMessage.getSendId();
+                pushMetadata = pushMessage.getMetadata();
             }
             return this;
         }

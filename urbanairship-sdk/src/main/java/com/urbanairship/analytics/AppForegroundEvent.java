@@ -78,7 +78,8 @@ class AppForegroundEvent extends Event {
             data.put(LIB_VERSION_KEY, UAirship.getVersion());
             data.put(PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName);
             data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
-            data.put(LAST_SEND_ID_KEY, UAirship.shared().getPushManager().getLastReceivedSendId());
+            data.putOpt(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata());
+            data.put(LAST_METADATA_KEY, UAirship.shared().getPushManager().getLastReceivedMetadata());
         } catch (JSONException e) {
             Logger.error("AppForegroundEvent - Error constructing JSON data.", e);
         }

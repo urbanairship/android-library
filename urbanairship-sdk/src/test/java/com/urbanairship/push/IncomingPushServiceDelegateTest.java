@@ -36,6 +36,10 @@ import android.support.v4.app.NotificationManagerCompat;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.Event;
+import com.urbanairship.analytics.EventTestUtils;
+import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -57,6 +61,7 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,6 +75,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
     private PushManager pushManager;
     private PushPreferences pushPreferences;
     private NotificationManagerCompat notificationManager;
+    private Analytics analytics;
 
     private Notification notification;
     public final int constantNotificationId = 123;
@@ -120,7 +126,18 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         });
 
 
+        analytics = mock(Analytics.class);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                PushArrivedEvent event = (PushArrivedEvent) invocation.getArguments()[0];
+                EventTestUtils.validateEventValue(event, "push_id", "MISSING_SEND_ID");
+                return null;
+            }
+        }).when(analytics).addEvent(any(PushArrivedEvent.class));
+
         TestApplication.getApplication().setPushManager(pushManager);
+        TestApplication.getApplication().setAnalytics(analytics);
 
         serviceDelegate = new IncomingPushServiceDelegate(TestApplication.getApplication(),
                 TestApplication.getApplication().preferenceDataStore, UAirship.shared(), notificationManager);
@@ -137,6 +154,44 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
 
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+
+        serviceDelegate.onHandleIntent(pushIntent);
+        verify(notificationManager).notify(constantNotificationId, notification);
+
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
+        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
+
+        Intent intent = shadowPendingIntent.getSavedIntent();
+        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
+        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(), ((PushMessage)intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE)).getPushBundle());
+        assertEquals("One category should exist.", 1, intent.getCategories().size());
+    }
+
+    /**
+     * Test deliver push notification with a set send id.
+     */
+    @Test
+    public void testDeliverPushWithSendId() {
+        Intent alertingGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
+                .putExtra(PushMessage.EXTRA_ALERT, "Test Push Alert!")
+                .putExtra(PushMessage.EXTRA_PUSH_ID, "testPushID")
+                .putExtra(PushMessage.EXTRA_SEND_ID, "testSendID");
+
+        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                PushArrivedEvent event = (PushArrivedEvent) invocation.getArguments()[0];
+                EventTestUtils.validateEventValue(event, "push_id", "testSendID");
+                return null;
+            }
+        }).when(analytics).addEvent(any(PushArrivedEvent.class));
+
 
         serviceDelegate.onHandleIntent(pushIntent);
         verify(notificationManager).notify(constantNotificationId, notification);
