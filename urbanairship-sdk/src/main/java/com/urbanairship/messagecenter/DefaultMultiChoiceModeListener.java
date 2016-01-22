@@ -45,7 +45,7 @@ import java.util.Set;
  * to handle multiple selection.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class MessageMultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
+public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
 
     private final MessageListFragment messageListFragment;
 
@@ -53,7 +53,7 @@ public class MessageMultiChoiceModeListener implements AbsListView.MultiChoiceMo
      * Default constructor.
      * @param messageListFragment The {@link MessageListFragment}.
      */
-    public MessageMultiChoiceModeListener(MessageListFragment messageListFragment) {
+    public DefaultMultiChoiceModeListener(MessageListFragment messageListFragment) {
         this.messageListFragment = messageListFragment;
     }
 

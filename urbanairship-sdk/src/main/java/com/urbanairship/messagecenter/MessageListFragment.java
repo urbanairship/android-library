@@ -32,7 +32,10 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -65,7 +68,6 @@ public class MessageListFragment extends Fragment {
     private ImageLoader imageLoader;
     private String currentMessageId;
 
-
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
@@ -76,7 +78,6 @@ public class MessageListFragment extends Fragment {
         }
     };
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,11 +85,64 @@ public class MessageListFragment extends Fragment {
         this.adapter = createMessageViewAdapter();
     }
 
+    /**
+     * Subclasses can override to replace with their own layout.  If doing so, the
+     * returned view hierarchy <em>must</em> have an AbsListView (GridView or ListView) whose id
+     * is {@code android.R.id.list}, and can optionally empty list TextView view with id {@code andorid.R.id.empty}.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message_list, container, false);
-        refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+        ensureList(view);
+        return view;
+    }
 
+    @CallSuper
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        ensureList(view);
+    }
+
+    /**
+     * Ensures the list view is set up.
+     *
+     * @param view The content view.
+     */
+    private void ensureList(@NonNull View view) {
+        if (absListView != null) {
+            return;
+        }
+
+        if (view instanceof AbsListView) {
+            absListView = (AbsListView) view;
+        } else {
+            absListView = (AbsListView) view.findViewById(android.R.id.list);
+        }
+
+        if (absListView == null) {
+            throw new RuntimeException("Your content must have a ListView whose id attribute is 'android.R.id.list'");
+        }
+
+        absListView.setAdapter(adapter);
+        absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                UAirship.shared().getInbox().startMessageActivity(getMessage(position).getMessageId());
+            }
+        });
+
+        // Pull to refresh
+        refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
         if (refreshLayout != null) {
             refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -98,20 +152,13 @@ public class MessageListFragment extends Fragment {
             });
         }
 
-        absListView = (AbsListView) view.findViewById(R.id.list_view);
-        absListView.setAdapter(adapter);
+        // Empty list view
+        View emptyListView = view.findViewById(android.R.id.empty);
+        if (emptyListView != null) {
+            absListView.setEmptyView(emptyListView);
+        }
 
-        View emptyListView = view.findViewById(R.id.empty_message);
-        absListView.setEmptyView(emptyListView);
-
-        absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                UAirship.shared().getInbox().startMessageActivity(getMessage(position).getMessageId());
-            }
-        });
-
-
+        // Style
         TypedArray attributes = getContext()
                 .getTheme()
                 .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
@@ -139,9 +186,6 @@ public class MessageListFragment extends Fragment {
         placeHolder = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemIconPlaceholder, placeHolder);
 
         attributes.recycle();
-
-
-        return view;
     }
 
     /**
@@ -150,6 +194,7 @@ public class MessageListFragment extends Fragment {
      *
      * @return A {@link MessageViewAdapter} for the list view.
      */
+    @NonNull
     protected MessageViewAdapter createMessageViewAdapter() {
         imageLoader = new ImageLoader(getContext());
         return new MessageViewAdapter(getContext(), R.layout.ua_item_mc) {
@@ -225,10 +270,6 @@ public class MessageListFragment extends Fragment {
      * @return The {@link AbsListView}.
      */
     public AbsListView getAbsListView() {
-        if (absListView == null && getView() != null) {
-            absListView = (AbsListView) getView().findViewById(R.id.list_view);
-        }
-
         return absListView;
     }
 
@@ -262,7 +303,12 @@ public class MessageListFragment extends Fragment {
         return adapter;
     }
 
-    void setCurrentMessage(String messageId) {
+    /**
+     * Called to set the current message Id. The message will be highlighted
+     * in the list.
+     * @param messageId The message ID or null to clear it.
+     */
+    void setCurrentMessage(@Nullable String messageId) {
         if (currentMessageId == null && messageId == null) {
             return;
         }

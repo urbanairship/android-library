@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <com.urbanairship.widget.UAWebView
-        android:id="@+id/message_view"
+        android:id="@android:id/message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
@@ -14,7 +14,7 @@
         android:padding="32dp"
         android:orientation="vertical"
         android:visibility="gone"
-        android:id="@+id/error_page"
+        android:id="@+id/error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -37,7 +37,7 @@
     </LinearLayout>
 
     <ProgressBar
-        android:id="@+id/progress_bar"
+        android:id="@android:id/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:progressBarStyleLarge"
