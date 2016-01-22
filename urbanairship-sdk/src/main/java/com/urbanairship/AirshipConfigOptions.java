@@ -504,6 +504,14 @@ public class AirshipConfigOptions {
             Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS " + backgroundReportingIntervalMS + " may provide less detailed analytic reports.");
         }
 
+        if (productionAppKey != null && productionAppKey.equals(developmentAppKey)) {
+            Logger.warn("Production App Key matches Development App Key");
+        }
+
+        if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
+            Logger.warn("Production App Secret matches Development App Secret");
+        }
+
         return valid;
     }
 
