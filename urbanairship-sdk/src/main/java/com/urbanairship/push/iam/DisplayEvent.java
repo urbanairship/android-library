@@ -45,6 +45,7 @@ public class DisplayEvent extends Event {
 
     private static final String ID = "id";
     private static final String CONVERSION_SEND_ID = "conversion_send_id";
+    private static final String CONVERSION_METADATA = "conversion_metadata";
 
     private final String id;
 
@@ -69,6 +70,7 @@ public class DisplayEvent extends Event {
         try {
             data.putOpt(ID, id);
             data.putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId());
+            data.putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata());
         } catch (JSONException e) {
             Logger.error("DisplayEvent - Error constructing JSON data.", e);
         }

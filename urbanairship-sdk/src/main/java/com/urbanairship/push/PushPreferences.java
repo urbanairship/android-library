@@ -56,7 +56,7 @@ class PushPreferences {
     private static final String ALIAS_KEY = KEY_PREFIX + ".ALIAS";
     private static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
 
-    private static final String LAST_RECEIVED_SEND_ID = KEY_PREFIX + ".LAST_RECEIVED_SEND_ID";
+    private static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
     private static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_ID";
 
 
@@ -538,23 +538,22 @@ class PushPreferences {
         return preferenceDataStore.getString(APID_KEY, null);
     }
 
-
     /**
-     * Store the send id from the last received push.
+     * Store the send metadata from the last received push.
      *
-     * @param sendId The send ID string.
+     * @param sendMetadata The send metadata string.
      */
-    void setLastReceivedSendId(String sendId) {
-        preferenceDataStore.put(LAST_RECEIVED_SEND_ID, sendId);
+    void setLastReceivedMetadata(String sendMetadata) {
+        preferenceDataStore.put(LAST_RECEIVED_METADATA, sendMetadata);
     }
 
     /**
-     * Returns the send id of the last received push.
+     * Returns the send metadata of the last received push.
      *
-     * @return The send id from the last received push, or null if not found.
+     * @return The send metadata from the last received push, or null if not found.
      */
-    String getLastReceivedSendId() {
-        return preferenceDataStore.getString(LAST_RECEIVED_SEND_ID, null);
+    String getLastReceivedMetadata() {
+        return preferenceDataStore.getString(LAST_RECEIVED_METADATA, null);
     }
 
     /**

@@ -55,6 +55,7 @@ public class ResolutionEvent extends Event {
     private static final String ID = "id";
     private static final String RESOLUTION = "resolution";
     private static final String CONVERSION_SEND_ID = "conversion_send_id";
+    private static final String CONVERSION_METADATA = "conversion_metadata";
 
     // Resolution types
     private static final String RESOLUTION_TYPE = "type";
@@ -212,6 +213,7 @@ public class ResolutionEvent extends Event {
             data.putOpt(ID, id);
             data.putOpt(RESOLUTION, new JSONObject(resolutionData));
             data.putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId());
+            data.putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata());
         } catch (JSONException e) {
             Logger.error("ResolutionEvent - Error constructing JSON data.", e);
         }

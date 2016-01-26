@@ -155,29 +155,39 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test creating a custom event includes the last received send id.
+     * Test creating a custom event includes the hard conversion metadata if set.
      */
     @Test
-    public void testLastSendId() throws JSONException {
-        when(pushManager.getLastReceivedSendId()).thenReturn("last send id");
-
+    public void testHardConversionMetadata() throws JSONException {
         CustomEvent event = new CustomEvent.Builder("event name").create();
-
-        EventTestUtils.validateEventValue(event, "last_received_send_id", "last send id");
+        when(analytics.getConversionMetadata()).thenReturn("metadata");
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
     }
 
     /**
-     * Test creating a custom event includes only the hard id if set and not the last send.
+     * Test creating a custom event includes the last received metadata.
      */
     @Test
-    public void testHardConversionIDAndLastSendId() throws JSONException {
-        when(analytics.getConversionSendId()).thenReturn("send id");
-        when(pushManager.getLastReceivedSendId()).thenReturn("last send id");
+    public void testLastMetadata() throws JSONException {
+        when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
 
         CustomEvent event = new CustomEvent.Builder("event name").create();
 
-        EventTestUtils.validateEventValue(event, "last_received_send_id", null);
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        EventTestUtils.validateEventValue(event, "last_received_metadata", "last metadata");
+    }
+
+    /**
+     * Test creating a custom event includes only the hard metadata if set and not the last send.
+     */
+    @Test
+    public void testHardConversionMetadataAndLastMetadata() throws JSONException {
+        when(analytics.getConversionMetadata()).thenReturn("metadata");
+        when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
+
+        CustomEvent event = new CustomEvent.Builder("event name").create();
+
+        EventTestUtils.validateEventValue(event, "last_received_metadata", null);
+        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
     }
 
     /**
@@ -241,7 +251,7 @@ public class CustomEventTest extends BaseTestCase {
      */
     @Test
     public void testCustomInteractionEmpty() throws JSONException {
-        when(pushManager.getLastReceivedSendId()).thenReturn("last send id");
+        when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
 
         CustomEvent event = new CustomEvent.Builder("event name")
                 .create();

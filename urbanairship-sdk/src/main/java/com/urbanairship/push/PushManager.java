@@ -696,22 +696,22 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Returns the send id of the last received push.
+     * Returns the send metadata of the last received push.
      *
-     * @return The send id from the last received push, or null if not found.
+     * @return The send metadata from the last received push, or null if not found.
      */
     @Nullable
-    public String getLastReceivedSendId() {
-        return preferences.getLastReceivedSendId();
+    public String getLastReceivedMetadata() {
+        return preferences.getLastReceivedMetadata();
     }
 
     /**
-     * Store the send ID from the last received push.
+     * Store the send metadata from the last received push.
      *
-     * @param sendId The send ID string.
+     * @param sendMetadata The send metadata string.
      */
-    void setLastReceivedSendId(String sendId) {
-        preferences.setLastReceivedSendId(sendId);
+    void setLastReceivedMetadata(String sendMetadata) {
+        preferences.setLastReceivedMetadata(sendMetadata);
     }
 
     /**

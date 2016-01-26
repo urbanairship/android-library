@@ -63,6 +63,7 @@ class AppBackgroundEvent extends Event {
             }
 
             data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
+            data.putOpt(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata());
         } catch (JSONException e) {
             Logger.error("AppBackgroundEvent - Error constructing JSON data.", e);
         }

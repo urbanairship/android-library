@@ -54,6 +54,12 @@ public class PushMessage implements Parcelable {
     public static final String EXTRA_SEND_ID = "com.urbanairship.push.PUSH_ID";
 
     /**
+     * The push metadata extra holds the encrypted push identifiers sent in an
+     * Urban Airship Push Notification. Possible data includes send, push, and group IDs.
+     */
+    public static final String EXTRA_METADATA = "com.urbanairship.metadata";
+
+    /**
      * The actions extra key holds the payload of actions to be performed with the
      * push.
      */
@@ -249,6 +255,16 @@ public class PushMessage implements Parcelable {
     @Nullable
     public String getSendId() {
         return pushBundle.getString(EXTRA_SEND_ID);
+    }
+
+    /**
+     * Gets the push send metadata.
+     *
+     * @return The push send metadata.
+     */
+    @Nullable
+    public String getMetadata() {
+        return pushBundle.getString(EXTRA_METADATA);
     }
 
     /**

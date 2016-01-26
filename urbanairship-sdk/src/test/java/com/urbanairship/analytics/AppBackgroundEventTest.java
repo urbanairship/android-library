@@ -26,9 +26,11 @@ public class AppBackgroundEventTest extends BaseTestCase {
     @Test
     public void testEventData() throws JSONException {
         when(analytics.getConversionSendId()).thenReturn("send id");
+        when(analytics.getConversionMetadata()).thenReturn("send metadata");
 
         EventTestUtils.validateEventValue(event, Event.CONNECTION_TYPE_KEY, event.getConnectionType());
         EventTestUtils.validateEventValue(event, Event.CONNECTION_SUBTYPE_KEY, event.getConnectionSubType());
         EventTestUtils.validateEventValue(event, Event.PUSH_ID_KEY, "send id");
+        EventTestUtils.validateEventValue(event, Event.METADATA_KEY, "send metadata");
     }
 }
