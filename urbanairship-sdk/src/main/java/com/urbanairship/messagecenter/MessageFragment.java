@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+Copyright 2009-2016 Urban Airship Inc. All rights reserved.
 
 
 Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,13 @@ package com.urbanairship.messagecenter;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -52,7 +52,7 @@ public class MessageFragment extends Fragment {
 
     private static final String MESSAGE_ID_KEY = "com.urbanairship.richpush.URL_KEY";
     private UAWebView webView;
-    private ProgressBar progressBar;
+    private View progressBar;
     private RichPushMessage message;
     private View errorPage;
 
@@ -84,29 +84,58 @@ public class MessageFragment extends Fragment {
         }
     }
 
+    /**
+     * Subclasses can override to replace with their own layout.  If doing so, the
+     * returned view hierarchy <em>must</em> have a UAWebView whose id
+     * is {@code android.R.id.message}, a progress view whose id is {@code android.R.id.progress},
+     * and can optionally error page with a view id {@code R.id.error}.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message, container, false);
-        progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-        webView = (UAWebView) view.findViewById(R.id.message_view);
-        webView.setAlpha(0);
+        ensureView(view);
+        return view;
+    }
 
-        // Workaround render issue with older android devices
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+    @CallSuper
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        ensureView(view);
+    }
+
+    /**
+     * Ensures that the view contains a web view, progress view, and a error page.
+     *
+     * @param view The content view.
+     */
+    private void ensureView(View view) {
+        if (webView != null) {
+            return;
         }
 
-        errorPage = view.findViewById(R.id.error_page);
+        progressBar = view.findViewById(android.R.id.progress);
+        if (progressBar == null) {
+            throw new RuntimeException("Your content must have a progress View whose id attribute is 'android.R.id.progress'");
+        }
 
-        Button retryButton = (Button) view.findViewById(R.id.retry_button);
-        retryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showProgress();
-                error = null;
-                webView.loadRichPushMessage(message);
-            }
-        });
+        webView = (UAWebView) view.findViewById(android.R.id.message);
+        if (webView == null) {
+            throw new RuntimeException("Your content must have a UAWebView whose id attribute is 'android.R.id.message'");
+        }
+
+        errorPage = view.findViewById(R.id.error);
+
+        webView.setAlpha(0);
 
         // Set a custom RichPushWebViewClient view client to listen for the page finish
         // Note: UAWebViewClient is required to load the proper auth and to
@@ -133,7 +162,20 @@ public class MessageFragment extends Fragment {
             }
         });
 
-        return view;
+        // Workaround render issue with older android devices
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
+        Button retryButton = (Button) view.findViewById(R.id.retry_button);
+        if (retryButton != null) {
+            retryButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    retry();
+                }
+            });
+        }
     }
 
     @Override
@@ -159,10 +201,19 @@ public class MessageFragment extends Fragment {
     }
 
     /**
+     * Retries loading the message.
+     */
+    protected void retry() {
+        showProgress();
+        error = null;
+        webView.loadRichPushMessage(message);
+    }
+
+    /**
      * Shows the progress bar
      */
     private void showProgress() {
-        if (errorPage.getVisibility() == View.VISIBLE) {
+        if (errorPage != null && errorPage.getVisibility() == View.VISIBLE) {
             errorPage.animate()
                      .alpha(0f)
                      .setDuration(200)
@@ -179,6 +230,7 @@ public class MessageFragment extends Fragment {
                    .setDuration(200)
                    .setListener(null);
     }
+
     /**
      * Shows the message.
      */
@@ -198,15 +250,19 @@ public class MessageFragment extends Fragment {
      * Shows the error page.
      */
     private void showErrorPage() {
+        if (errorPage == null) {
+            return;
+        }
+
         if (errorPage.getVisibility() == View.GONE) {
             errorPage.setAlpha(0);
             errorPage.setVisibility(View.VISIBLE);
         }
 
         errorPage.animate()
-               .alpha(1f)
-               .setDuration(200)
-               .setListener(null);
+                 .alpha(1f)
+                 .setDuration(200)
+                 .setListener(null);
 
         progressBar.animate()
                    .alpha(0f)
@@ -219,6 +275,7 @@ public class MessageFragment extends Fragment {
      *
      * @return The {@link RichPushMessage} ID.
      */
+
     public String getMessageId() {
         return getArguments().getString(MESSAGE_ID_KEY);
     }

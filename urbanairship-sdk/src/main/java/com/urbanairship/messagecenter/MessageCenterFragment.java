@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+Copyright 2009-2016 Urban Airship Inc. All rights reserved.
 
 
 Redistribution and use in source and binary forms, with or without
@@ -27,11 +27,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
@@ -58,6 +61,8 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageCenterFragment extends Fragment {
 
+    private static final String START_MESSAGE_ID = "START_MESSAGE_ID";
+
     private static final String STATE_CURRENT_MESSAGE_ID = "STATE_CURRENT_MESSAGE_ID";
     private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
 
@@ -74,23 +79,77 @@ public class MessageCenterFragment extends Fragment {
         }
     };
 
+    /**
+     * Creates a new {@link MessageCenterFragment}
+     *
+     * @param messageId The message's ID to display
+     * @return {@link MessageCenterFragment} instance.
+     */
+    static MessageCenterFragment newInstance(String messageId) {
+        MessageCenterFragment message = new MessageCenterFragment();
+        Bundle arguments = new Bundle();
+        arguments.putString(START_MESSAGE_ID, messageId);
+        message.setArguments(arguments);
+        return message;
+    }
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
             currentMessagePosition = savedInstanceState.getInt(STATE_CURRENT_MESSAGE_POSITION, -1);
-            currentMessageId = savedInstanceState.getString(STATE_CURRENT_MESSAGE_ID);
+            currentMessageId = savedInstanceState.getString(STATE_CURRENT_MESSAGE_ID, null);
         }
-
     }
 
+    /**
+     * Subclasses can override to replace with their own layout.  If doing so, the
+     * returned view hierarchy <em>must</em> have contain a {@link MessageListFragment} whose id
+     * is {@code R.id.message_list_fragment}.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.ua_activity_mc, container, false);
+        View view = inflater.inflate(R.layout.ua_fragment_mc, container, false);
+        ensureView(view);
+        return view;
+    }
 
+    @CallSuper
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        ensureView(view);
+
+        if (savedInstanceState == null && getArguments() != null && getArguments().containsKey(START_MESSAGE_ID)) {
+            showMessage(getArguments().getString(START_MESSAGE_ID));
+        }
+    }
+
+    /**
+     * Ensures that the content view contains a message list fragment.
+     *
+     * @param view The content view.
+     */
+    private void ensureView(View view) {
+        if (messageListFragment != null) {
+            return;
+        }
 
         messageListFragment = (MessageListFragment) getChildFragmentManager().findFragmentById(R.id.message_list_fragment);
+        if (messageListFragment == null) {
+            throw new RuntimeException("Your content must have a MessageListFragment whose id attribute is 'R.id.message_list_fragment'");
+        }
 
         // The presence of a message_container indicates we are running in a split mode
         if (view.findViewById(R.id.message_container) != null) {
@@ -112,6 +171,23 @@ public class MessageCenterFragment extends Fragment {
             isTwoPane = false;
         }
 
+        configureMessageListFragment(messageListFragment);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
+        savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    /**
+     * Called to configure the messageListFragment.
+     *
+     * @param messageListFragment The messsage list fragment.
+     */
+    protected void configureMessageListFragment(final MessageListFragment messageListFragment) {
         messageListFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -122,18 +198,9 @@ public class MessageCenterFragment extends Fragment {
             }
         });
 
-
-        messageListFragment.getAbsListView().setMultiChoiceModeListener(new MessageMultiChoiceModeListener(messageListFragment));
+        messageListFragment.getAbsListView().setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
         messageListFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-        return view;
-    }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
-        savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
-
-        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
@@ -158,8 +225,11 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param messageId The message ID.
      */
-    private void showMessage(String messageId) {
+    protected void showMessage(String messageId) {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
+        if (message == null) {
+            return;
+        }
 
         currentMessageId = messageId;
         currentMessagePosition = UAirship.shared().getInbox().getMessages().indexOf(message);
@@ -173,13 +243,26 @@ public class MessageCenterFragment extends Fragment {
 
             Fragment fragment = messageId == null ? new NoMessageSelectedFragment() : MessageFragment.newInstance(messageId);
             getChildFragmentManager().beginTransaction()
-                                       .replace(R.id.message_container, fragment, tag)
-                                       .commit();
+                                     .replace(R.id.message_container, fragment, tag)
+                                     .commit();
 
             messageListFragment.setCurrentMessage(messageId);
 
         } else {
-            UAirship.shared().getInbox().startMessageActivity(messageId);
+            Intent intent = new Intent()
+                    .setPackage(getContext().getPackageName())
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
+
+            // Try VIEW_MESSAGE_INTENT_ACTION first
+            intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
+
+            if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+                // Fallback to our MessageActivity
+                intent.setClass(getContext(), MessageActivity.class);
+            }
+
+            getContext().startActivity(intent);
         }
     }
 
@@ -213,7 +296,7 @@ public class MessageCenterFragment extends Fragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.ua_fragment_no_message_selected, container, false);
-            View emptyListView = view.findViewById(R.id.empty_message);
+            View emptyListView = view.findViewById(android.R.id.empty);
 
 
             if (emptyListView != null && emptyListView instanceof TextView) {

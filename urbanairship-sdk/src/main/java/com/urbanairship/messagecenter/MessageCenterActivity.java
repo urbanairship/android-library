@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+Copyright 2009-2016 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.urbanairship.richpush.RichPushInbox;
+
 /**
  * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
  */
@@ -42,10 +44,18 @@ public class MessageCenterActivity extends ThemedActivity {
 
         setDisplayHomeAsUpEnabled(true);
 
+        String messageId = null;
+
+        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
+        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
+        if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
+            messageId = getIntent().getData().getSchemeSpecificPart();
+        }
+
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, new MessageCenterFragment())
+                    .add(android.R.id.content, MessageCenterFragment.newInstance(messageId))
                     .commit();
         }
     }

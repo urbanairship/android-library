@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Urban Airship Inc. All rights reserved.
+Copyright 2009-2016 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -205,14 +205,14 @@ public class RichPushInbox extends AirshipComponent {
                 .setPackage(context.getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // Fallback to our MessageCenterActivity
-            intent.setClass(context, MessageCenterActivity.class);
-        }
-
         if (intent.resolveActivity(context.getPackageManager()) == null) {
-            Logger.error("Failed to display inbox. No activities available.");
-            return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                // Fallback to our MessageCenterActivity
+                intent.setClass(context, MessageCenterActivity.class);
+            } else {
+                Logger.error("Failed to display inbox. No activities available.");
+                return;
+            }
         }
 
         context.startActivity(intent);
@@ -227,22 +227,19 @@ public class RichPushInbox extends AirshipComponent {
      * @param messageId An ID of a {@link RichPushMessage} to display.
      */
     public void startMessageActivity(@NonNull String messageId) {
-        Intent intent = new Intent()
+        Intent intent = new Intent(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION)
                 .setPackage(context.getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
 
-        // Try VIEW_MESSAGE_INTENT_ACTION first
-        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
-
-        if (intent.resolveActivity(context.getPackageManager()) == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // Fallback to our MessageActivity
-            intent.setClass(context, MessageActivity.class);
-        }
-
         if (intent.resolveActivity(context.getPackageManager()) == null) {
-            Logger.error("Failed to display message. No activities available.");
-            return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                // Fallback to our MessageCenterActivity
+                intent.setClass(context, MessageCenterActivity.class);
+            } else {
+                Logger.error("Failed to display message. No activities available.");
+                return;
+            }
         }
 
         context.startActivity(intent);
