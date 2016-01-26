@@ -67,7 +67,7 @@
         <item name="android:layout_marginLeft">-12dp</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
         <item name="android:scaleType">center</item>
-        <item name="android:src">@drawable/ic_close_white_18dp</item>
+        <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
     </style>
 
     <!-- Base style for the banner action buttons -->
