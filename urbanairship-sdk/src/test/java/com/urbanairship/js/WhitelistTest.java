@@ -38,7 +38,12 @@ public class WhitelistTest extends BaseTestCase {
      */
     @Test
     public void testDefaultWhitelist() {
-        Whitelist whitelist = Whitelist.createDefaultWhitelist(new AirshipConfigOptions());
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
+        Whitelist whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
 
         // Messages
         assertTrue(whitelist.isWhitelisted("https://device-api.urbanairship.com/api/user/"));

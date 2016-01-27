@@ -26,25 +26,25 @@ public class NamedUserApiClientTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
-    private AirshipConfigOptions mockAirshipConfigOptions;
     private NamedUserApiClient client;
     private TestRequest testRequest;
 
     @Before
     public void setUp() {
-        mockAirshipConfigOptions = Mockito.mock(AirshipConfigOptions.class);
         testRequest = new TestRequest();
 
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        when(mockAirshipConfigOptions.getAppKey()).thenReturn("appKey");
-        when(mockAirshipConfigOptions.getAppSecret()).thenReturn("appSecret");
-
-        TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
-
         // Set hostURL
-        UAirship.shared().getAirshipConfigOptions().hostURL = "https://go-demo.urbanairship.com/";
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setInProduction(false)
+                .setHostURL("https://go-demo.urbanairship.com/")
+                .build();
+
+        TestApplication.getApplication().setOptions(airshipConfigOptions);
 
         client = new NamedUserApiClient(mockRequestFactory);
     }
@@ -88,7 +88,14 @@ public class NamedUserApiClientTest extends BaseTestCase {
     public void testMalformedUrl() {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         // Set hostURL
-        UAirship.shared().getAirshipConfigOptions().hostURL = "files://thisIsMalformed";
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setInProduction(false)
+                .setHostURL("files://thisIsMalformed")
+                .build();
+
+        TestApplication.getApplication().setOptions(airshipConfigOptions);
 
         NamedUserApiClient client2 = new NamedUserApiClient(mockRequestFactory);
 

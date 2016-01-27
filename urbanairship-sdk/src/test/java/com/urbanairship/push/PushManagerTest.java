@@ -65,7 +65,11 @@ public class PushManagerTest extends BaseTestCase {
         mockNamedUser = mock(NamedUser.class);
 
 
-        options = new AirshipConfigOptions();
+        options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
         pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
 
         tagsToAdd.add("tag1");
@@ -930,11 +934,21 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testDelayChannelCreation() {
-        options.channelCreationDelayEnabled = false;
+        options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCreationDelayEnabled(false)
+                .build();
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
-        options.channelCreationDelayEnabled = true;
+        options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCreationDelayEnabled(true)
+                .build();
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
@@ -949,7 +963,12 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testEnableChannelCreation() {
         // Enable channel delay
-        options.channelCreationDelayEnabled = true;
+        options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCreationDelayEnabled(true)
+                .build();
+        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
         pushManager.init();
 
         // Set up shadowApplication to ensure the registration update service is started after
