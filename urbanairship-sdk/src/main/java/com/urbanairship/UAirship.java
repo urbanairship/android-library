@@ -330,18 +330,7 @@ public class UAirship {
      */
     private static void executeTakeOff(@NonNull Application application, @Nullable AirshipConfigOptions options, @Nullable OnReadyCallback readyCallback) {
         if (options == null) {
-            options = AirshipConfigOptions.loadDefaultOptions(application.getApplicationContext());
-        }
-
-        if (!options.isValid()) {
-            synchronized (airshipLock) {
-                isTakingOff = false;
-                airshipLock.notifyAll();
-            }
-
-            Logger.error("AirshipConfigOptions are not valid. Unable to take off! " +
-                    "Check your airshipconfig.properties file for the errors listed above.");
-            throw new IllegalArgumentException("Application configuration is invalid.");
+            options = new AirshipConfigOptions.Builder().applyDefaultProperties(application.getApplicationContext()).build();
         }
 
         // set sane log level based on production flag

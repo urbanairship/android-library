@@ -40,11 +40,12 @@ public class TagGroupsApiClientTest extends BaseTestCase {
     
     @Before
     public void setUp() {
-        AirshipConfigOptions configOptions = new AirshipConfigOptions();
-        configOptions.developmentAppKey = "appKey";
-        configOptions.developmentAppSecret = "appSecret";
-        configOptions.inProduction = false;
-        configOptions.hostURL = "https://go-demo.urbanairship.com/";
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setInProduction(false)
+                .setHostURL("https://go-demo.urbanairship.com/")
+                .build();
 
         testRequest = new TestRequest();
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);

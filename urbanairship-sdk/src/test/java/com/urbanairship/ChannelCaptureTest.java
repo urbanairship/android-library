@@ -69,10 +69,10 @@ public class ChannelCaptureTest extends BaseTestCase {
         clipboardManager = (ClipboardManager) RuntimeEnvironment.application.getSystemService(Context.CLIPBOARD_SERVICE);
         mockNotificationManager = mock(NotificationManagerCompat.class);
 
-        configOptions = new AirshipConfigOptions();
-        configOptions.developmentAppKey = "app key";
-        configOptions.developmentAppSecret = "app secret";
-        configOptions.inProduction = false;
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
 
         mockPushManager = mock(PushManager.class);
 
@@ -242,10 +242,23 @@ public class ChannelCaptureTest extends BaseTestCase {
     @Test
     public void testChannelCaptureDisabled() {
         // Disable the channel capture
-        configOptions.channelCaptureEnabled = false;
+        configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(false)
+                .build();
 
         // Reinitialize it
         capture.tearDown();
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager);
+
+        // Replace the executor so it runs everything right away
+        capture.executor = new Executor() {
+            @Override
+            public void execute(Runnable runnable) {
+                runnable.run();
+            }
+        };
         capture.init();
 
         // Set up a valid token

@@ -33,10 +33,11 @@ public class TestApplication extends Application implements TestLifecycleApplica
             }
         };
 
-        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions();
-        airshipConfigOptions.inProduction = false;
-        airshipConfigOptions.developmentAppKey = "app_key";
-        airshipConfigOptions.developmentAppSecret = "app_secret";
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("app_key")
+                .setDevelopmentAppSecret("app_secret")
+                .setInProduction(false)
+                .build();
 
         UAirship.application = this;
         UAirship.isFlying = true;

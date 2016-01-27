@@ -71,7 +71,12 @@ public class AnalyticsTest extends BaseTestCase {
         ArgumentCaptor<ActivityMonitor.Listener> listenerCapture = ArgumentCaptor.forClass(ActivityMonitor.Listener.class);
 
         Mockito.doNothing().when(mockActivityMonitor).setListener(listenerCapture.capture());
-        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new AirshipConfigOptions(), mockActivityMonitor);
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
+        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, airshipConfigOptions, mockActivityMonitor);
 
         activityMonitorListener = listenerCapture.getValue();
         assertNotNull("Should set the listener on create", activityMonitorListener);
@@ -205,8 +210,11 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testAddEventDisabledAnalyticsConfig() {
-        AirshipConfigOptions options = new AirshipConfigOptions();
-        options.analyticsEnabled = false;
+        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setAnalyticsEnabled(false)
+                .build();
 
         analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
 

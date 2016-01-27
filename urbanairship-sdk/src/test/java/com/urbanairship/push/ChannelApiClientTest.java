@@ -30,26 +30,27 @@ public class ChannelApiClientTest extends BaseTestCase {
 
     // Empty payload
     private ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
-    private AirshipConfigOptions mockAirshipConfigOptions;
     private ChannelApiClient client;
     private TestRequest testRequest;
 
 
     @Before
     public void setUp() throws Exception {
-        mockAirshipConfigOptions = Mockito.mock(AirshipConfigOptions.class);
         testRequest = new TestRequest();
 
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        when(mockAirshipConfigOptions.getAppKey()).thenReturn("appKey");
-        when(mockAirshipConfigOptions.getAppSecret()).thenReturn("appSecret");
-
-        TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
 
         // Set hostURL
-        UAirship.shared().getAirshipConfigOptions().hostURL = "https://go-demo.urbanairship.com/";
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setInProduction(false)
+                .setHostURL("https://go-demo.urbanairship.com/")
+                .build();
+
+        TestApplication.getApplication().setOptions(airshipConfigOptions);
 
         client = new ChannelApiClient(mockRequestFactory);
     }

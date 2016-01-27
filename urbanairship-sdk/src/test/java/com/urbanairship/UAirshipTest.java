@@ -26,10 +26,12 @@ public class UAirshipTest extends BaseTestCase {
     @Before
     public void setup() {
         looper = Shadows.shadowOf(Looper.myLooper());
-        configOptions = new AirshipConfigOptions();
-        configOptions.inProduction = true;
-        configOptions.productionAppKey = "app_key";
-        configOptions.productionAppSecret = "app_secret";
+
+        configOptions = new AirshipConfigOptions.Builder()
+                .setProductionAppKey("appKey")
+                .setProductionAppSecret("appSecret")
+                .setInProduction(true)
+                .build();
 
         application = TestApplication.getApplication();
 
