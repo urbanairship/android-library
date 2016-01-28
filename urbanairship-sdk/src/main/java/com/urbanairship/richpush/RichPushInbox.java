@@ -45,9 +45,10 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.messagecenter.MessageActivity;
+import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -237,8 +238,7 @@ public class RichPushInbox extends AirshipComponent {
                 // Fallback to our MessageCenterActivity
                 intent.setClass(context, MessageCenterActivity.class);
             } else {
-                Logger.error("Failed to display message. No activities available.");
-                return;
+                intent.setAction(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION);
             }
         }
 
