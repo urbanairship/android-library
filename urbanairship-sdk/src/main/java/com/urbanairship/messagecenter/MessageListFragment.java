@@ -88,7 +88,7 @@ public class MessageListFragment extends Fragment {
     /**
      * Subclasses can override to replace with their own layout.  If doing so, the
      * returned view hierarchy <em>must</em> have an AbsListView (GridView or ListView) whose id
-     * is {@code android.R.id.list}, and can optionally empty list TextView view with id {@code andorid.R.id.empty}.
+     * is {@code android.R.id.list}.
      *
      * @param inflater The LayoutInflater object that can be used to inflate
      * any views in the fragment,
@@ -103,6 +103,24 @@ public class MessageListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message_list, container, false);
         ensureList(view);
+
+        // Item click listener
+        getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                RichPushMessage message = getMessage(position);
+                if (message != null) {
+                    UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
+                }
+            }
+        });
+
+        // Empty list view
+        View emptyListView = view.findViewById(android.R.id.empty);
+        if (emptyListView != null) {
+            absListView.setEmptyView(emptyListView);
+        }
+
         return view;
     }
 
@@ -134,12 +152,6 @@ public class MessageListFragment extends Fragment {
         }
 
         absListView.setAdapter(adapter);
-        absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                UAirship.shared().getInbox().startMessageActivity(getMessage(position).getMessageId());
-            }
-        });
 
         // Pull to refresh
         refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
@@ -152,11 +164,7 @@ public class MessageListFragment extends Fragment {
             });
         }
 
-        // Empty list view
         View emptyListView = view.findViewById(android.R.id.empty);
-        if (emptyListView != null) {
-            absListView.setEmptyView(emptyListView);
-        }
 
         // Style
         TypedArray attributes = getContext()
