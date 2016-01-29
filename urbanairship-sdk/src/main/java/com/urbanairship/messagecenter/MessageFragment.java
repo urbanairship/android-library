@@ -212,7 +212,7 @@ public class MessageFragment extends Fragment {
     /**
      * Shows the progress bar
      */
-    private void showProgress() {
+    protected void showProgress() {
         if (errorPage != null && errorPage.getVisibility() == View.VISIBLE) {
             errorPage.animate()
                      .alpha(0f)
@@ -234,7 +234,7 @@ public class MessageFragment extends Fragment {
     /**
      * Shows the message.
      */
-    private void showMessage() {
+    protected void showMessage() {
         webView.animate()
                .alpha(1f)
                .setDuration(200)
@@ -249,7 +249,7 @@ public class MessageFragment extends Fragment {
     /**
      * Shows the error page.
      */
-    private void showErrorPage() {
+    protected void showErrorPage() {
         if (errorPage == null) {
             return;
         }
