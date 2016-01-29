@@ -3,6 +3,19 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.0.0 - January 28, 2016
+================================
+- Includes support for out of the box Message Center. The Message Center can be themed to match the application
+  or it can be overridden with a custom Message Center implementation.
+- Replaced the usage of com.android.internal.util.Predicate with ActionRegistry.Predicate in the ActionRegistry.
+- Replaced any usage of enums with ints and @IntDef.
+- RichPushManager has been removed. The inbox is now accessible directly off of the UAirship instance.
+- UALocationManager now returns a Cancelable instance instead of a PendingResult when requesting a single location.
+- Removed Eclipse style library distribution. Apps should move to Android Studio and use
+  the aar artifact provided in a maven repository.
+- Replaced RichPushSample and PushSample with a new unified sample.
+
+
 Version 6.4.3 - January 8, 2016
 ===============================
 - Fixed background push calling the wrong com.urbanairship.push.BaseIntentReceiver callback.
