@@ -120,13 +120,13 @@ class FusedLocationAdapter implements LocationAdapter {
 
     @Override
     public void disconnect() {
-        if (client != null) {
+        if (client != null && client.isConnected()) {
             client.disconnect();
-
-            // Clear the client so we don't only rely on `isConnected`, which seems to not immediately
-            // be updated by disconnect().
-            client = null;
         }
+
+        // Clear the client so we don't only rely on `isConnected`, which seems to not immediately
+        // be updated by disconnect().
+        client = null;
     }
 
     /**

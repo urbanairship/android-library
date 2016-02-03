@@ -86,7 +86,7 @@ class UALocationProvider {
             if (adapter == connectedAdapter || adapter.connect()) {
                 try {
                     adapter.cancelLocationUpdates(intent);
-                } catch (SecurityException ex) {
+                } catch (Exception ex) {
                     Logger.verbose("Unable to cancel location updates: " + ex.getMessage());
                 }
             }
@@ -117,7 +117,7 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Requesting location updates: " + options);
         try {
             connectedAdapter.requestLocationUpdates(options, intent);
-        } catch (SecurityException ex) {
+        } catch (Exception ex) {
             Logger.error("Unable to request location updates: " + ex.getMessage());
         }
     }
@@ -145,7 +145,7 @@ class UALocationProvider {
 
         try {
             return connectedAdapter.requestSingleLocation(locationCallback, options);
-        } catch (SecurityException ex) {
+        } catch (Exception ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
             return null;
         }
