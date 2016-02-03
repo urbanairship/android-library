@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,6 +42,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
@@ -298,8 +300,8 @@ public class UALocationManager extends AirshipComponent {
     /**
      * Records a single location using custom location request options.
      *
-     * @param locationCallback Callback with the location. The result may return a null location if
-     * the request is unable to be made due to insufficient permissions.
+     * @param locationCallback Callback with the location. The result may return a null location or empty
+     * Cancelable request if the request is unable to be made due to insufficient permissions.
      * @param requestOptions The location request options.
      * @return A cancelable object that can be used to cancel the request.
      * @throws IllegalArgumentException if the requestOptions is null.
@@ -309,6 +311,23 @@ public class UALocationManager extends AirshipComponent {
         //noinspection ConstantConditions
         if (requestOptions == null) {
             throw new IllegalArgumentException("Location request options cannot be null or invalid");
+        }
+
+        if (!isLocationPermitted()) {
+            return new Cancelable() {
+                @Override
+                public void cancel() {}
+
+                @Override
+                public boolean isDone() {
+                    return true;
+                }
+
+                @Override
+                public boolean isCanceled() {
+                    return true;
+                }
+            };
         }
 
         SingleLocationRequest request;
@@ -343,6 +362,9 @@ public class UALocationManager extends AirshipComponent {
      * the location service.
      */
     private void updateServiceConnection() {
+        if (!isLocationPermitted()) {
+            return;
+        }
 
         if (isContinuousLocationUpdatesAllowed()) {
             synchronized (locationListeners) {
@@ -576,5 +598,17 @@ public class UALocationManager extends AirshipComponent {
      */
     boolean isContinuousLocationUpdatesAllowed() {
         return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || UAirship.shared().getAnalytics().isAppInForeground());
+    }
+
+    /**
+     * Checks for location permissions in the manifest.
+     *
+     * @return <code>true</code> if location is allowed,
+     * otherwise <code>false</code>.
+     */
+    boolean isLocationPermitted() {
+        int fineLocationPermissionCheck = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION);
+        int coarseLocationPermissionCheck = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        return fineLocationPermissionCheck == PackageManager.PERMISSION_GRANTED || coarseLocationPermissionCheck == PackageManager.PERMISSION_GRANTED;
     }
 }
