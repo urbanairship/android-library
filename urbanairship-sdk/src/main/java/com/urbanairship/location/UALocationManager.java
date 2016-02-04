@@ -381,8 +381,6 @@ public class UALocationManager extends AirshipComponent {
         if (!isBound) {
             Logger.verbose("UALocationManager - Binding to location service.");
 
-
-            Context context = UAirship.getApplicationContext();
             Intent intent = new Intent(context, LocationService.class);
             if (context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)) {
                 isBound = true;
@@ -423,7 +421,7 @@ public class UALocationManager extends AirshipComponent {
         if (isBound) {
             Logger.verbose("UALocationManager - Unbinding to location service.");
 
-            UAirship.getApplicationContext().unbindService(serviceConnection);
+            context.unbindService(serviceConnection);
             isBound = false;
         }
     }
