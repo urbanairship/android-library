@@ -65,6 +65,8 @@ public class MessageCenterFragment extends Fragment {
 
     private static final String STATE_CURRENT_MESSAGE_ID = "STATE_CURRENT_MESSAGE_ID";
     private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
+    private static final String STATE_ABS_LIST_VIEW = "STATE_ABS_LIST_VIEW";
+
 
     private MessageListFragment messageListFragment;
     private boolean isTwoPane;
@@ -102,6 +104,7 @@ public class MessageCenterFragment extends Fragment {
             currentMessagePosition = savedInstanceState.getInt(STATE_CURRENT_MESSAGE_POSITION, -1);
             currentMessageId = savedInstanceState.getString(STATE_CURRENT_MESSAGE_ID, null);
         }
+
     }
 
     /**
@@ -133,6 +136,11 @@ public class MessageCenterFragment extends Fragment {
 
         if (savedInstanceState == null && getArguments() != null && getArguments().containsKey(START_MESSAGE_ID)) {
             showMessage(getArguments().getString(START_MESSAGE_ID));
+        }
+
+        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW) && messageListFragment.getAbsListView() != null) {
+            messageListFragment.getAbsListView().onRestoreInstanceState(savedInstanceState.getParcelable(STATE_ABS_LIST_VIEW));
         }
     }
 
@@ -179,6 +187,11 @@ public class MessageCenterFragment extends Fragment {
         savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
         savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
 
+        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+        if (messageListFragment != null && messageListFragment.getAbsListView() != null) {
+            savedInstanceState.putParcelable(STATE_ABS_LIST_VIEW, messageListFragment.getAbsListView().onSaveInstanceState());
+        }
+
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -201,6 +214,8 @@ public class MessageCenterFragment extends Fragment {
         messageListFragment.getAbsListView().setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
         messageListFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
+        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+        messageListFragment.getAbsListView().setSaveEnabled(false);
     }
 
     @Override
