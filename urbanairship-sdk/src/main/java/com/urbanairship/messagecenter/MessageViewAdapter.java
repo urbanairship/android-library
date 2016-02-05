@@ -71,11 +71,19 @@ public abstract class MessageViewAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
+        if (position > items.size()) {
+            return null;
+        }
+
         return items.get(position);
     }
 
     @Override
     public long getItemId(int position) {
+        if (position > items.size()                                                                                                  ) {
+            return -1;
+        }
+
         return items.get(position).getMessageId().hashCode();
     }
 
@@ -87,7 +95,9 @@ public abstract class MessageViewAdapter extends BaseAdapter {
             view = layoutInflater.inflate(layout, parent, false);
         }
 
-        bindView(view, items.get(position), position);
+        if (position <= items.size()) {
+            bindView(view, items.get(position), position);
+        }
 
         return view;
     }
