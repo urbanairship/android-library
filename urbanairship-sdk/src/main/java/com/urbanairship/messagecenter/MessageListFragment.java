@@ -83,6 +83,7 @@ public class MessageListFragment extends Fragment {
         super.onCreate(savedInstanceState);
         this.richPushInbox = UAirship.shared().getInbox();
         this.adapter = createMessageViewAdapter();
+        this.adapter.set(richPushInbox.getMessages());
     }
 
     /**
