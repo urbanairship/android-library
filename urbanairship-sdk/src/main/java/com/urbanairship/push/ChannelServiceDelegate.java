@@ -164,7 +164,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     if (!GcmRegistrar.register()) {
                         Logger.error("GCM registration failed.");
                     }
-                } catch (IOException e) {
+                } catch (IOException | SecurityException e) {
                     Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
                     isPushRegistering = true;
                     retryIntent(intent);
