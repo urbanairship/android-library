@@ -235,6 +235,19 @@ public class JsonValue implements Parcelable {
     }
 
     /**
+     * Gets the contained values as a JsonMap.
+     *
+     * @return The value as JsonMap, or an empty JsonMap if the value is not a JsonMap.
+     */
+    public JsonMap optMap() {
+        if (isNull() || !isJsonMap()) {
+            return JsonMap.EMPTY_MAP;
+        }
+
+        return getMap();
+    }
+
+    /**
      * If the contained value is null.
      *
      * @return <code>true</code> if the contained value is null, otherwise <code>false</code>.

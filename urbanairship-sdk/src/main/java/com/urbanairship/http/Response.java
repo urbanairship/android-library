@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.http;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -196,5 +197,23 @@ public class Response {
             return response;
         }
 
+    }
+
+    /**
+     * Retrieves the first header value for a given key.
+     *
+     * @param key The key.
+     * @return The first header value.
+     */
+    @Nullable
+    public String getResponseHeader(String key) {
+        if (responseHeaders != null) {
+            List<String> headersList = responseHeaders.get(key);
+            if (headersList != null && headersList.size() > 0) {
+                return headersList.get(0);
+            }
+        }
+
+        return null;
     }
 }

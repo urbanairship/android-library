@@ -31,6 +31,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.Response;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
@@ -53,8 +54,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ChannelServiceDelegateTest extends BaseTestCase {
+    private static final String CHANNEL_LOCATION_KEY = "Location";
+
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+    private final String fakeResponseBody = "{\"channel_id\": \"AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE\"}";
 
     PreferenceDataStore dataStore;
     PushManager pushManager;
@@ -97,10 +101,10 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
-        when(response.getChannelId()).thenReturn(fakeChannelId);
-        when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
+        when(response.getResponseBody()).thenReturn(fakeResponseBody);
+        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
         pushManager.setAlias("someAlias");
@@ -133,10 +137,10 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
-        when(response.getChannelId()).thenReturn(fakeChannelId);
-        when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
+        when(response.getResponseBody()).thenReturn(fakeResponseBody);
+        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
         pushManager.setAlias("someAlias");
@@ -159,10 +163,10 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     @Test
     public void testCreateChannel200() {
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
-        when(response.getChannelId()).thenReturn(fakeChannelId);
-        when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
+        when(response.getResponseBody()).thenReturn(fakeResponseBody);
+        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
 
@@ -185,16 +189,16 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
      * Test update registration fail to create a channel when channel response code is not successful
      */
     @Test
-    public void testUpdateRegistrationChannelResponseCodeFail() {
+    public void testUpdateRegistrationResponseCodeFail() {
         // Verify channel doesn't exist in preferences
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_NOT_FOUND);
-        when(response.getChannelId()).thenReturn(fakeChannelId);
-        when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
+        when(response.getResponseBody()).thenReturn(fakeResponseBody);
+        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
         pushManager.setAlias("someAlias");
@@ -215,16 +219,16 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
      * Test update registration fail to create a channel when channel ID from response is null
      */
     @Test
-    public void testUpdateRegistrationChannelResponseNullChannelId() {
+    public void testUpdateRegistrationResponseNullChannelId() {
         // Verify channel doesn't exist in preferences
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
 
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_CREATED);
-        when(response.getChannelId()).thenReturn(null);
-        when(response.getChannelLocation()).thenReturn(fakeChannelLocation);
+        when(response.getResponseBody()).thenReturn(null);
+        when(response.getResponseHeader(CHANNEL_LOCATION_KEY)).thenReturn(fakeChannelLocation);
 
         // Ensure payload is different, so we don't get a null payload
         pushManager.setAlias("someAlias");
@@ -255,7 +259,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         long lastRegistrationTime = dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0);
 
         // Set up channel response
-        ChannelResponse response = mock(ChannelResponse.class);
+        Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_OK);
 
         // Ensure payload is different, so we don't get a null payload
@@ -283,7 +287,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
 
 
         // Set up a conflict response
-        ChannelResponse conflictResponse = mock(ChannelResponse.class);
+        Response conflictResponse = mock(Response.class);
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 

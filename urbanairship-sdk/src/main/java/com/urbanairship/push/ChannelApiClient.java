@@ -67,9 +67,9 @@ class ChannelApiClient {
      * Create the Channel ID
      *
      * @param channelPayload An instance of ChannelRegistrationPayload
-     * @return channelResponse or null if an error occurred
+     * @return response or null if an error occurred
      */
-    ChannelResponse createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
+    Response createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Creating channel with payload: " + payload);
         return requestWithPayload(creationURL, "POST", payload);
@@ -80,9 +80,9 @@ class ChannelApiClient {
      *
      * @param channelLocation The location of the channel as a URL
      * @param channelPayload An instance of ChannelRegistrationPayload
-     * @return channelResponse or null if an error occurred
+     * @return response or null if an error occurred
      */
-    ChannelResponse updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
+    Response updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);
         return requestWithPayload(channelLocation, "PUT", payload);
@@ -94,9 +94,9 @@ class ChannelApiClient {
      * @param url The specified URL to send the request to.
      * @param requestMethod String representing the request method to use.
      * @param jsonPayload JSON payload as a string
-     * @return channelResponse or null if an error occurred
+     * @return response or null if an error occurred
      */
-    private ChannelResponse requestWithPayload(@NonNull URL url, @NonNull String requestMethod, @NonNull String jsonPayload) {
+    private Response requestWithPayload(@NonNull URL url, @NonNull String requestMethod, @NonNull String jsonPayload) {
         String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
         String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
 
@@ -112,6 +112,6 @@ class ChannelApiClient {
         }
 
         Logger.verbose("ChannelApiClient - Received channel response: " + response);
-        return new ChannelResponse(response);
+        return response;
     }
 }
