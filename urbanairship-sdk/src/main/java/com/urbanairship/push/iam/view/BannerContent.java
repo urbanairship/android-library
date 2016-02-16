@@ -178,10 +178,12 @@ class BannerContent implements Banner {
                 button.setText(actionButton.getLabel());
             }
 
-            Drawable drawable = ContextCompat.getDrawable(context, actionButton.getIcon());
-            drawable.setBounds(0, 0, size, size);
-            drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
-            button.setCompoundDrawables(drawable, null, null, null);
+            if (actionButton.getIcon() > 0) {
+                Drawable drawable = ContextCompat.getDrawable(context, actionButton.getIcon());
+                drawable.setBounds(0, 0, size, size);
+                drawable.setColorFilter(secondaryColor, PorterDuff.Mode.MULTIPLY);
+                button.setCompoundDrawables(drawable, null, null, null);
+            }
 
             applyTextStyle(context, button, actionButtonTextAppearance, buttonTypeface);
 
