@@ -3,9 +3,14 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.0.2 - February 17, 2016
+=================================
+ - Removed the icon padding for in-app message buttons without an icon.
+ - Fixed the OnePlus READ_CLIPBOARD security exception in the channel capture tool.
+
 Version 7.0.1 - February 5, 2016
 ================================
- - Fix MessageCenterFragment selection loss on confiugration changes.
+ - Fixed MessageCenterFragment selection loss on configuration changes.
  - Catch SecurityExceptions when attempting to register for GCM.
  - The LocationService now checks if the application has location permissions before starting.
  - Added a Message Center indicator to the Sample.
