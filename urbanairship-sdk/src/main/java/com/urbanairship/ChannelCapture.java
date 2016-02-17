@@ -164,7 +164,14 @@ class ChannelCapture extends AirshipComponent {
             return;
         }
 
-        String clipboardText = clipboard.getText();
+        String clipboardText;
+        try {
+            clipboardText = clipboard.getText();
+        } catch (SecurityException e) {
+            Logger.debug("Unable to read clipboard: " + e.getMessage());
+            return;
+        }
+
         String decodedClipboardString = base64Decode(clipboardText);
         String superSecretCode = generateToken();
         if (UAStringUtil.isEmpty(decodedClipboardString) || !decodedClipboardString.startsWith(superSecretCode)) {
@@ -179,7 +186,12 @@ class ChannelCapture extends AirshipComponent {
                                         .trim();
         }
 
-        clipboard.clear();
+        try {
+            clipboard.clear();
+        } catch (SecurityException e) {
+            Logger.debug("Unable to clear clipboard: " + e.getMessage());
+        }
+
         displayNotification(channel, url);
     }
 
