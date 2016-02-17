@@ -332,7 +332,7 @@ public class ManifestUtils {
         if (componentInfoMap.get(UrbanAirshipProvider.class) == null) {
             throw new IllegalStateException("Unable to resolve UrbanAirshipProvider. " +
                     "Please check that the provider is defined in your AndroidManifest.xml, " +
-                    "and that the authority string is set to  \"YOUR_PACKAGENAME.urbanairship.provider\"");
+                    "and that the authority string is set to  \"" + UrbanAirshipProvider.getAuthorityString() + "\"");
         }
 
     }
