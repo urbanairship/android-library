@@ -490,7 +490,7 @@ public class PushMessage implements Parcelable {
 
         @Override
         public PushMessage createFromParcel(Parcel in) {
-            return new PushMessage(in.readBundle());
+            return new PushMessage(in.readBundle(PushMessage.class.getClassLoader()));
         }
 
         @Override
