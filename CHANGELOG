@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.0.3 - February 24, 2016
+=================================
+ - Fixed rare RunTimeException when checking for location permissions in UALocationManager.
+
 Version 7.0.2 - February 17, 2016
 =================================
  - Removed the icon padding for in-app message buttons without an icon.
