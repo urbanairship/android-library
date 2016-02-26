@@ -39,7 +39,9 @@ import com.urbanairship.UAirship;
 import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.EventService;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
@@ -62,6 +64,16 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * Data store key for the time in milliseconds of last successfully channel registration.
      */
     private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
+
+    /**
+     * Response body key for the channel ID.
+     */
+    private static final String CHANNEL_ID_KEY = "channel_id";
+
+    /**
+     * Response header key for the channel location.
+     */
+    private static final String CHANNEL_LOCATION_KEY = "Location";
 
     /**
      * Max time between channel registration updates.
@@ -263,7 +275,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        ChannelResponse response = channelClient.updateChannelWithPayload(channelLocation, payload);
+        Response response = channelClient.updateChannelWithPayload(channelLocation, payload);
 
         // 5xx
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
@@ -314,7 +326,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        ChannelResponse response = channelClient.createChannelWithPayload(payload);
+        Response response = channelClient.createChannelWithPayload(payload);
 
         // 5xx
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
@@ -326,11 +338,20 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         // 200 or 201
         if (response.getStatus() == HttpURLConnection.HTTP_OK || response.getStatus() == HttpURLConnection.HTTP_CREATED) {
-            if (!UAStringUtil.isEmpty(response.getChannelLocation()) && !UAStringUtil.isEmpty(response.getChannelId())) {
-                Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + response.getChannelId());
+            String channelId = null;
+            try {
+                channelId = JsonValue.parseString(response.getResponseBody()).optMap().opt(CHANNEL_ID_KEY).getString();
+            } catch (JsonException e) {
+                Logger.debug("Unable to parse channel registration response body: " + response.getResponseBody(), e);
+            }
+
+            String channelLocation = response.getResponseHeader(CHANNEL_LOCATION_KEY);
+
+            if (!UAStringUtil.isEmpty(channelLocation) && !UAStringUtil.isEmpty(channelId)) {
+                Logger.info("Channel creation succeeded with status: " + response.getStatus() + " channel ID: " + channelId);
 
                 // Set the last registration payload and time then notify registration succeeded
-                pushManager.setChannel(response.getChannelId(), response.getChannelLocation());
+                pushManager.setChannel(channelId, channelLocation);
                 setLastRegistrationPayload(payload);
                 sendRegistrationFinishedBroadcast(true);
 
@@ -354,8 +375,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 getContext().startService(sendAnalytics);
 
             } else {
-                Logger.error("Failed to register with channel ID: " + response.getChannelId() +
-                        " channel location: " + response.getChannelLocation());
+                Logger.error("Failed to register with channel ID: " + channelId +
+                        " channel location: " + channelLocation);
                 sendRegistrationFinishedBroadcast(false);
             }
 

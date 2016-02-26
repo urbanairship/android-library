@@ -44,6 +44,8 @@ import java.util.Set;
  */
 public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
 
+    static final JsonMap EMPTY_MAP = new JsonMap(null);
+
     private final Map<String, JsonValue> map;
 
     /**
