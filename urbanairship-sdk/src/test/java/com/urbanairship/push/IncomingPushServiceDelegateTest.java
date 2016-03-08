@@ -73,7 +73,6 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
     private Intent alertingGcmIntent;
 
     private PushManager pushManager;
-    private PushPreferences pushPreferences;
     private NotificationManagerCompat notificationManager;
     private Analytics analytics;
 
@@ -93,7 +92,6 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         silentGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
                 .putExtra(PushMessage.EXTRA_PUSH_ID, "silentPushID");
 
-        pushPreferences = mock(PushPreferences.class);
         pushManager = mock(PushManager.class);
         notificationManager = mock(NotificationManagerCompat.class);
 
@@ -117,7 +115,6 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
             }
         };
 
-        when(pushManager.getPreferences()).thenReturn(pushPreferences);
         when(pushManager.getNotificationFactory()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {

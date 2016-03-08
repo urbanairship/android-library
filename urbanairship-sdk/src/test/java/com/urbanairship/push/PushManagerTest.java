@@ -4,6 +4,7 @@ import android.content.Intent;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -15,12 +16,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +32,6 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,12 +44,10 @@ public class PushManagerTest extends BaseTestCase {
     private Set<String> tagsToAdd = new HashSet<>();
     private Set<String> tagsToRemove = new HashSet<>();
 
-    PushPreferences mockPushPreferences;
+    PreferenceDataStore preferenceDataStore;
     PushManager pushManager;
     NamedUser mockNamedUser;
     AirshipConfigOptions options;
-
-
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -60,7 +59,7 @@ public class PushManagerTest extends BaseTestCase {
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
 
-        mockPushPreferences = mock(PushPreferences.class);
+        preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
         mockNamedUser = mock(NamedUser.class);
 
@@ -70,7 +69,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, mockNamedUser, options);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -88,7 +87,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testPushEnabled() {
         pushManager.setPushEnabled(true);
-        verify(mockPushPreferences).setPushEnabled(true);
+        assertTrue(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, false));
     }
 
     /**
@@ -96,10 +95,8 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testPushDisabled() {
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-
         pushManager.setPushEnabled(false);
-        verify(mockPushPreferences).setPushEnabled(false);
+        assertFalse(preferenceDataStore.getBoolean(PushManager.PUSH_ENABLED_KEY, true));
     }
 
     /**
@@ -108,7 +105,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testQuietTimeEnabled() {
         pushManager.setQuietTimeEnabled(true);
-        verify(mockPushPreferences).setQuietTimeEnabled(true);
+        assertTrue(preferenceDataStore.getBoolean(PushManager.QUIET_TIME_ENABLED, false));
     }
 
     /**
@@ -117,7 +114,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testQuietTimeDisabled() {
         pushManager.setQuietTimeEnabled(false);
-        verify(mockPushPreferences).setQuietTimeEnabled(false);
+        assertFalse(preferenceDataStore.getBoolean(PushManager.QUIET_TIME_ENABLED, true));
     }
 
     /**
@@ -126,7 +123,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testSoundEnabled() {
         pushManager.setSoundEnabled(true);
-        verify(mockPushPreferences).setSoundEnabled(true);
+        assertTrue(preferenceDataStore.getBoolean(PushManager.SOUND_ENABLED_KEY, false));
     }
 
     /**
@@ -135,7 +132,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testSoundDisabled() {
         pushManager.setSoundEnabled(false);
-        verify(mockPushPreferences).setSoundEnabled(false);
+        assertFalse(preferenceDataStore.getBoolean(PushManager.SOUND_ENABLED_KEY, true));
     }
 
     /**
@@ -144,7 +141,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testVibrateEnabled() {
         pushManager.setVibrateEnabled(true);
-        verify(mockPushPreferences).setVibrateEnabled(true);
+        assertTrue(preferenceDataStore.getBoolean(PushManager.VIBRATE_ENABLED_KEY, false));
     }
 
     /**
@@ -153,7 +150,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testVibrateDisabled() {
         pushManager.setVibrateEnabled(false);
-        verify(mockPushPreferences).setVibrateEnabled(false);
+        assertFalse(preferenceDataStore.getBoolean(PushManager.VIBRATE_ENABLED_KEY, true));
     }
 
     /**
@@ -167,7 +164,7 @@ public class PushManagerTest extends BaseTestCase {
         tags.add("here's,some,comma,separated,stuff");
 
         pushManager.setTags(tags);
-        verify(mockPushPreferences).setTags(tags);
+        assertEquals(tags, pushManager.getTags());
     }
 
     /**
@@ -197,21 +194,10 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testSetTagsWhiteSpaceTrimmedToEmpty() {
-        HashSet<String> mockTags = new HashSet<>();
-        mockTags.add("tag");
-        when(mockPushPreferences.getTags()).thenReturn(mockTags);
-
         HashSet<String> tags = new HashSet<>();
         tags.add(" ");
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
+        assertTrue(pushManager.getTags().isEmpty());
     }
 
     /**
@@ -219,19 +205,13 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsWhiteSpaceTrimmedToValid() {
-        HashSet<String> tags = new HashSet<>();
+        String trimmedTag = "whitespace_test_tag";
 
+        HashSet<String> tags = new HashSet<>();
         tags.add("    whitespace_test_tag    ");
 
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("whitespace_test_tag");
-            }
-        }));
+        assertEquals(pushManager.getTags().iterator().next(), trimmedTag);
     }
 
     /**
@@ -239,24 +219,13 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsOverMaxLength() {
-        HashSet<String> mockTags = new HashSet<>();
-        mockTags.add("tag");
-        when(mockPushPreferences.getTags()).thenReturn(mockTags);
-
         HashSet<String> tags = new HashSet<>();
 
         tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");
 
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
+        assertTrue(pushManager.getTags().isEmpty());
     }
 
     /**
@@ -264,23 +233,15 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsMaxLength() {
-        HashSet<String> tags = new HashSet<>();
+        String tag = "128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
+                "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[";
 
-        tags.add("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
-                "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[");
+        HashSet<String> tags = new HashSet<>();
+        tags.add(tag);
 
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadk" +
-                        "fjhskdnvpeortoivnk84389349843982ij32" +
-                        "1masdflkjahsdgkfjandsgkljhasdg'k./l'" +
-                        ".][;l].k,/[");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
     }
 
     /**
@@ -288,21 +249,12 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsZeroLength() {
-        HashSet<String> mockTags = new HashSet<>();
-        mockTags.add("tag");
-        when(mockPushPreferences.getTags()).thenReturn(mockTags);
-
         HashSet<String> tags = new HashSet<>();
         tags.add("");
-        pushManager.setTags(tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
+        pushManager.setTags(tags);
+        assertTrue(pushManager.getTags().isEmpty());
+
     }
 
     /**
@@ -313,19 +265,8 @@ public class PushManagerTest extends BaseTestCase {
         HashSet<String> tags = new HashSet<>();
         tags.add(null);
 
-        HashSet<String> mockTags = new HashSet<>();
-        mockTags.add("tag");
-        when(mockPushPreferences.getTags()).thenReturn(mockTags);
-
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
+        assertTrue(pushManager.getTags().isEmpty());
     }
 
     /**
@@ -333,18 +274,16 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsEmptySet() {
+        String tag = "testTag";
+
         HashSet<String> tags = new HashSet<>();
-        tags.add("testTag");
-        when(mockPushPreferences.getTags()).thenReturn(tags);
+        tags.add(tag);
+        pushManager.setTags(tags);
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
 
         pushManager.setTags(new HashSet<String>());
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
+        assertTrue(pushManager.getTags().isEmpty());
     }
 
     /**
@@ -352,20 +291,15 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeTagsMixedTagSet() {
+        String tag = "testTag";
+
         HashSet<String> tags = new HashSet<>();
-        tags.add("testTag");
+        tags.add(tag);
         tags.add("");
-        when(mockPushPreferences.getTags()).thenReturn(tags);
 
         pushManager.setTags(tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("testTag");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
     }
 
     /**
@@ -373,27 +307,17 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testAliasAndTags() {
+        String tag = "a_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
+        tags.add(tag);
 
-        tags.add("a_tag");
+        pushManager.setAliasAndTags(alias, tags);
 
-        pushManager.setAliasAndTags("sandwich", tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("a_tag");
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -401,30 +325,20 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsWhiteSpaceTrimmedToEmpty() {
+        String tag = "test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
         tags.add(" ");
         //add another test tag to allow updateApid call
-        tags.add("test_tag");
+        tags.add(tag);
 
+        pushManager.setAliasAndTags(alias, tags);
 
-        pushManager.setAliasAndTags("sandwich", tags);
-
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1;
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -432,27 +346,18 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsWhiteSpaceTrimmedToValid() {
+        String tag = "whitespace_test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
         tags.add("    whitespace_test_tag    ");
 
-        pushManager.setAliasAndTags("sandwich", tags);
+        pushManager.setAliasAndTags(alias, tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("whitespace_test_tag");
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -460,31 +365,22 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsOverMaxLength() {
+        String tag = "test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
         tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
                 "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");
         //add another test tag to pass tag changes check
-        tags.add("test_tag");
+        tags.add(tag);
 
 
-        pushManager.setAliasAndTags("sandwich", tags);
+        pushManager.setAliasAndTags(alias, tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1;
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -492,31 +388,19 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsMaxLength() {
+        String tag = "127_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
+                "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
-        tags.add("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
-                "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[");
+        tags.add(tag);
 
-        pushManager.setAliasAndTags("sandwich", tags);
+        pushManager.setAliasAndTags(alias, tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1 && set.contains("127_chars_lkashdflsfghekjashdflkjhsdfkjhsadk" +
-                        "fjhskdnvpeortoivnk84389349843982ij32" +
-                        "1masdflkjahsdgkfjandsgkljhasdg'k./l'" +
-                        ".][;l].k,/[");
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -524,30 +408,21 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsZeroLength() {
+        String tag = "test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
         tags.add("");
         //add another test tag to allow updateApid call
-        tags.add("test_tag");
+        tags.add(tag);
 
 
-        pushManager.setAliasAndTags("sandwich", tags);
+        pushManager.setAliasAndTags(alias, tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1;
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -555,30 +430,21 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsNullTag() {
+        String tag = "test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
 
         tags.add(null);
         //add another test tag to allow updateApid call
-        tags.add("test_tag");
+        tags.add(tag);
 
 
-        pushManager.setAliasAndTags("sandwich", tags);
+        pushManager.setAliasAndTags(alias, tags);
 
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 1;
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
+        assertEquals(pushManager.getTags().size(), 1);
+        assertEquals(pushManager.getTags().iterator().next(), tag);
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -586,29 +452,17 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testNormalizeAliasAndTagsEmptySet() {
+        String tag = " test_tag";
+        String alias = "sandwich";
+
         HashSet<String> tags = new HashSet<>();
+        tags.add(tag);
+        pushManager.setTags(tags);
 
-        tags.add("testTag");
+        pushManager.setAliasAndTags(alias, new HashSet<String>());
 
-        when(mockPushPreferences.getTags()).thenReturn(tags);
-
-        pushManager.setAliasAndTags("sandwich", new HashSet<String>());
-        verify(mockPushPreferences).setTags(argThat(new ArgumentMatcher<Set<String>>() {
-            @Override
-            public boolean matches(Object o) {
-                Set<String> set = (Set<String>) o;
-                return set.size() == 0;
-            }
-        }));
-
-        verify(mockPushPreferences).setAlias(argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object o) {
-                String string = (String) o;
-                return string.equals("sandwich");
-            }
-        }));
-
+        assertTrue(pushManager.getTags().isEmpty());
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -616,53 +470,10 @@ public class PushManagerTest extends BaseTestCase {
     */
     @Test
     public void testTrimmedAlias() {
+        String alias = "whitespace_test_alias";
         pushManager.setAlias("    whitespace_test_alias    ");
-        verify(mockPushPreferences).setAlias("whitespace_test_alias");
-    }
 
-    /**
-     * Tests that we can set and get tags.
-     */
-    @Test
-    public void testNormalizeGetTags() {
-        HashSet<String> tags = new HashSet<>();
-
-        tags.add("test_tag");
-        when(mockPushPreferences.getTags()).thenReturn(tags);
-        pushManager.setTags(tags);
-
-        assertEquals("Tags should be equal", tags, pushManager.getTags());
-    }
-
-    /**
-     * Tests that get tags will normalize the invalid tags.
-     */
-    @Test
-    public void testNormalizeGetTagsWhiteSpace() {
-        HashSet<String> tags = new HashSet<>();
-
-        tags.add(" test_tag ");
-
-        HashSet<String> normalizedTags = new HashSet<>();
-
-        normalizedTags.add("test_tag");
-
-        when(mockPushPreferences.getTags()).thenReturn(tags);
-        assertEquals("Tags should be equal", normalizedTags, pushManager.getTags());
-    }
-
-    /**
-     * Tests getTags for tags greater than MAX_TAG_LENGTH
-     */
-    @Test
-    public void testNormalizeGetTagsLength() {
-        HashSet<String> tags = new HashSet<>();
-
-        tags.add("128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" +
-                "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1");
-        when(mockPushPreferences.getTags()).thenReturn(tags);
-
-        assertEquals("Tags should be equal", new HashSet<String>(), pushManager.getTags());
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -670,8 +481,10 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testAlias() {
-        pushManager.setAlias("someAlias");
-        verify(mockPushPreferences).setAlias("someAlias");
+        String alias = "someAlias";
+        pushManager.setAlias(alias);
+
+        assertEquals(pushManager.getAlias(), alias);
     }
 
     /**
@@ -679,9 +492,11 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testClearAlias() {
-        when(mockPushPreferences.getAlias()).thenReturn("someAliasToClear");
+        String alias = "someAlias";
+        pushManager.setAlias(alias);
+
         pushManager.setAlias(null);
-        verify(mockPushPreferences).setAlias(null);
+        assertTrue(pushManager.getAlias() == null);
     }
 
     /**
@@ -689,8 +504,10 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testSetGcmToken() {
+        String gcmToken = "fakeGcmToken";
         pushManager.setGcmToken("fakeGcmToken");
-        verify(mockPushPreferences).setGcmToken("fakeGcmToken");
+
+        assertEquals(gcmToken, pushManager.getGcmToken());
     }
 
     /**
@@ -698,8 +515,10 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testSetAdmId() {
+        String admId = "fakeAdmId";
         pushManager.setAdmId("fakeAdmId");
-        verify(mockPushPreferences).setAdmId("fakeAdmId");
+
+        assertEquals(admId, pushManager.getAdmId());
     }
 
     /**
@@ -707,8 +526,8 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testOptInPushDisabled() {
-        when(mockPushPreferences.isPushEnabled()).thenReturn(false);
-        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmId");
+        pushManager.setPushEnabled(false);
+        pushManager.setGcmToken("fakeGcmId");
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -720,10 +539,10 @@ public class PushManagerTest extends BaseTestCase {
     public void testOptInAmazon() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-        when(mockPushPreferences.getAdmId()).thenReturn("fakeAdmId");
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
+        pushManager.setPushEnabled(true);
+        pushManager.setUserNotificationsEnabled(true);
+        pushManager.setAdmId("fakeAdmId");
+        pushManager.setPushTokenRegistrationEnabled(true);
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
     }
@@ -735,10 +554,10 @@ public class PushManagerTest extends BaseTestCase {
     public void testOptInAndroid() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getUserNotificationsEnabled()).thenReturn(true);
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
-        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmId");
+        pushManager.setPushEnabled(true);
+        pushManager.setUserNotificationsEnabled(true);
+        pushManager.setGcmToken("fakeGcmId");
+        pushManager.setPushTokenRegistrationEnabled(true);
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
     }
@@ -750,8 +569,8 @@ public class PushManagerTest extends BaseTestCase {
     public void testOptInGCMIdNull() {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getGcmToken()).thenReturn(null);
+        pushManager.setPushEnabled(true);
+        pushManager.setGcmToken(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -763,8 +582,8 @@ public class PushManagerTest extends BaseTestCase {
     public void testOptInADMIdNull() {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
-        when(mockPushPreferences.isPushEnabled()).thenReturn(true);
-        when(mockPushPreferences.getAdmId()).thenReturn(null);
+        pushManager.setPushEnabled(true);
+        pushManager.setAdmId(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -776,10 +595,9 @@ public class PushManagerTest extends BaseTestCase {
     public void testGetNextChannelRegistrationPayloadAndroid() throws JSONException {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
-        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
-        when(mockPushPreferences.getChannelLocation()).thenReturn(fakeChannelLocation);
-        when(mockPushPreferences.getGcmToken()).thenReturn("GCM_TOKEN");
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.setGcmToken("GCM_TOKEN");
+        pushManager.setPushTokenRegistrationEnabled(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
@@ -794,10 +612,9 @@ public class PushManagerTest extends BaseTestCase {
     public void testGetNextChannelRegistrationPayloadAmazon() throws JSONException {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
-        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
-        when(mockPushPreferences.getChannelLocation()).thenReturn(fakeChannelLocation);
-        when(mockPushPreferences.getAdmId()).thenReturn("ADM_ID");
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.setAdmId("ADM_ID");
+        pushManager.setPushTokenRegistrationEnabled(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         assertNotNull("The payload should not be null.", payload);
@@ -919,7 +736,8 @@ public class PushManagerTest extends BaseTestCase {
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         shadowApplication.clearStartedServices();
 
-        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        preferenceDataStore.put(PushManager.PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
         pushManager.init();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
@@ -939,7 +757,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(false)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
@@ -948,11 +766,11 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
-        when(mockPushPreferences.getChannelId()).thenReturn(fakeChannelId);
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
     }
@@ -968,7 +786,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), mockPushPreferences, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
         pushManager.init();
 
         // Set up shadowApplication to ensure the registration update service is started after
@@ -994,13 +812,13 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         pushManager.setPushTokenRegistrationEnabled(true);
-        verify(mockPushPreferences).setPushTokenRegistrationEnabled(true);
+        assertTrue(pushManager.getPushTokenRegistrationEnabled());
 
-        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmToken");
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(true);
+        pushManager.setGcmToken(null);
+        assertFalse(pushManager.isPushAvailable());
 
+        pushManager.setGcmToken("fakeGcmToken");
         assertTrue(pushManager.isPushAvailable());
-        verify(mockPushPreferences).getPushTokenRegistrationEnabled();
     }
 
     /**
@@ -1011,12 +829,56 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         pushManager.setPushTokenRegistrationEnabled(false);
-        verify(mockPushPreferences).setPushTokenRegistrationEnabled(false);
+        pushManager.setGcmToken("fakeGcmToken");
 
-        when(mockPushPreferences.getGcmToken()).thenReturn("fakeGcmToken");
-        when(mockPushPreferences.getPushTokenRegistrationEnabled()).thenReturn(false);
-
+        assertFalse(pushManager.getPushTokenRegistrationEnabled());
         assertFalse(pushManager.isPushAvailable());
-        verify(mockPushPreferences).getPushTokenRegistrationEnabled();
+    }
+
+    @Test
+    public void testQuietTimeIntervalMigration() {
+        pushManager.init();
+        assertTrue(pushManager.getQuietTimeInterval() == null);
+
+        preferenceDataStore.put(PushManager.QuietTime.START_HOUR_KEY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - 1);
+        preferenceDataStore.put(PushManager.QuietTime.START_MIN_KEY, 30);
+        preferenceDataStore.put(PushManager.QuietTime.END_HOUR_KEY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1);
+        preferenceDataStore.put(PushManager.QuietTime.END_MIN_KEY, 15);
+        pushManager.init();
+
+        int startHr = preferenceDataStore.getInt(PushManager.QuietTime.START_HOUR_KEY, PushManager.QuietTime.NOT_SET_VAL);
+        int startMin = preferenceDataStore.getInt(PushManager.QuietTime.START_MIN_KEY, PushManager.QuietTime.NOT_SET_VAL);
+        int endHr = preferenceDataStore.getInt(PushManager.QuietTime.END_HOUR_KEY, PushManager.QuietTime.NOT_SET_VAL);
+        int endMin = preferenceDataStore.getInt(PushManager.QuietTime.END_MIN_KEY, PushManager.QuietTime.NOT_SET_VAL);
+
+        assertTrue(startHr == -1);
+        assertTrue(startMin == -1);
+        assertTrue(endHr == -1);
+        assertTrue(endMin == -1);
+
+        Date[] interval = pushManager.getQuietTimeInterval();
+
+        Calendar start = Calendar.getInstance();
+        start.set(Calendar.HOUR_OF_DAY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) - 1);
+        start.set(Calendar.MINUTE, 30);
+        start.set(Calendar.SECOND, 0);
+
+        // Prepare the end date.
+        Calendar end = Calendar.getInstance();
+        end.set(Calendar.HOUR_OF_DAY, Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1);
+        end.set(Calendar.MINUTE, 15);
+        end.set(Calendar.SECOND, 0);
+
+        assertTrue(interval != null);
+        assertTrue(interval.length == 2);
+
+        // I hate this, but there's otherwise an inequivalence by milliseconds.
+        assertEquals(start.getTime().toString(), interval[0].toString());
+        assertEquals(end.getTime().toString(), interval[1].toString());
+
+        pushManager.setQuietTimeEnabled(false);
+        assertFalse(pushManager.isInQuietTime());
+        pushManager.setQuietTimeEnabled(true);
+        assertTrue(pushManager.isInQuietTime());
     }
 }

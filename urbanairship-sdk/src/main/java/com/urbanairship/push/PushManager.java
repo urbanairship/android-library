@@ -32,11 +32,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
@@ -44,6 +45,7 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -184,12 +186,45 @@ public class PushManager extends AirshipComponent {
      */
     private final String DEFAULT_TAG_GROUP = "device";
 
+
+    static final String KEY_PREFIX = "com.urbanairship.push";
+    static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
+    static final String USER_NOTIFICATIONS_ENABLED_KEY = KEY_PREFIX + ".USER_NOTIFICATIONS_ENABLED";
+    static final String PUSH_TOKEN_REGISTRATION_ENABLED_KEY = KEY_PREFIX + ".PUSH_TOKEN_REGISTRATION_ENABLED";
+
+    // As of version 5.0.0
+    static final String PUSH_ENABLED_SETTINGS_MIGRATED_KEY = KEY_PREFIX + ".PUSH_ENABLED_SETTINGS_MIGRATED";
+    static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
+    static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
+    static final String CHANNEL_LOCATION_KEY = KEY_PREFIX + ".CHANNEL_LOCATION";
+    static final String CHANNEL_ID_KEY = KEY_PREFIX + ".CHANNEL_ID";
+    static final String ALIAS_KEY = KEY_PREFIX + ".ALIAS";
+    static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
+    static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
+    static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_ID";
+    static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
+
+    static final class QuietTime {
+        public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
+        public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
+        public static final String END_HOUR_KEY = KEY_PREFIX + ".QuietTime.END_HOUR";
+        public static final String END_MIN_KEY = KEY_PREFIX + ".QuietTime.END_MINUTE";
+        public static final int NOT_SET_VAL = -1;
+    }
+
+    static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
+    static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
+    static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
+    static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
+    static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
+    static final String APID_KEY = KEY_PREFIX + ".APID";
+
     //singleton stuff
     private NotificationFactory notificationFactory;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean channelTagRegistrationEnabled = true;
     private final NamedUser namedUser;
-    private final PushPreferences preferences;
+    private final PreferenceDataStore preferenceDataStore;
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
 
@@ -204,11 +239,11 @@ public class PushManager extends AirshipComponent {
      * @hide
      */
     public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions) {
-        this(context, new PushPreferences(preferenceDataStore), new NamedUser(preferenceDataStore), configOptions);
+        this(context, preferenceDataStore, new NamedUser(preferenceDataStore), configOptions);
     }
 
-    PushManager(Context context, PushPreferences preferences, NamedUser namedUser, AirshipConfigOptions configOptions) {
-        this.preferences = preferences;
+    PushManager(Context context, PreferenceDataStore preferenceDataStore, NamedUser namedUser, AirshipConfigOptions configOptions) {
+        this.preferenceDataStore = preferenceDataStore;
         this.notificationFactory = new DefaultNotificationFactory(context);
         this.namedUser = namedUser;
         this.configOptions = configOptions;
@@ -222,13 +257,10 @@ public class PushManager extends AirshipComponent {
 
     @Override
     protected void init() {
-        this.preferences.migratePushEnabledSettings();
+        this.migratePushEnabledSettings();
+        this.migrateQuietTimeInterval();
 
-        if (preferences.getChannelId() == null && configOptions.channelCreationDelayEnabled) {
-            channelCreationDelayEnabled = true;
-        } else {
-            channelCreationDelayEnabled = false;
-        }
+        channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
         Intent registrationIntent = new Intent(UAirship.getApplicationContext(), PushService.class)
@@ -276,7 +308,7 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether push is enabled.
      */
     public void setPushEnabled(boolean enabled) {
-        preferences.setPushEnabled(enabled);
+        preferenceDataStore.put(PUSH_ENABLED_KEY, enabled);
         updateRegistration();
     }
 
@@ -284,10 +316,10 @@ public class PushManager extends AirshipComponent {
      * Determines whether push is enabled.
      *
      * @return <code>true</code> if push is enabled, <code>false</code> otherwise.
-     * This defaults to false, and must be explicitly set by the app.
+     * This defaults to true, and must be explicitly set by the app.
      */
     public boolean isPushEnabled() {
-        return preferences.isPushEnabled();
+        return preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, true);
     }
 
     /**
@@ -302,7 +334,7 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether user push is enabled.
      */
     public void setUserNotificationsEnabled(boolean enabled) {
-        preferences.setUserNotificationsEnabled(enabled);
+        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
         updateRegistration();
     }
 
@@ -312,7 +344,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if user push is enabled, <code>false</code> otherwise.
      */
     public boolean getUserNotificationsEnabled() {
-        return preferences.getUserNotificationsEnabled();
+        return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false);
     }
 
     /**
@@ -345,12 +377,12 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Returns the <code>PushPreferences</code> singleton for this application.
+     * Returns the <code>PreferenceDataStore</code> singleton for this application.
      *
-     * @return The PushPreferences
+     * @return The PreferenceDataStore
      */
-    PushPreferences getPreferences() {
-        return preferences;
+    PreferenceDataStore getPreferenceDataStore() {
+        return preferenceDataStore;
     }
 
     /**
@@ -378,14 +410,14 @@ public class PushManager extends AirshipComponent {
         boolean updateServer = false;
 
         //check for change to alias
-        if (!UAStringUtil.equals(alias, preferences.getAlias())) {
-            preferences.setAlias(alias);
+        if (!UAStringUtil.equals(alias, getAlias())) {
+            setAlias(alias);
             updateServer = true;
         }
 
         //check for change to tag set
-        if (!normalizedTags.equals(preferences.getTags())) {
-            preferences.setTags(normalizedTags);
+        if (!normalizedTags.equals(getTags())) {
+            setTags(normalizedTags);
             updateServer = true;
         }
 
@@ -404,9 +436,9 @@ public class PushManager extends AirshipComponent {
         if (getPushTokenRegistrationEnabled()) {
             switch (UAirship.shared().getPlatformType()) {
                 case UAirship.AMAZON_PLATFORM:
-                    return !UAStringUtil.isEmpty(getPreferences().getAdmId());
+                    return !UAStringUtil.isEmpty(getAdmId());
                 case UAirship.ANDROID_PLATFORM:
-                    return !UAStringUtil.isEmpty(getPreferences().getGcmToken());
+                    return !UAStringUtil.isEmpty(getGcmToken());
             }
         }
 
@@ -434,7 +466,7 @@ public class PushManager extends AirshipComponent {
                 .setOptIn(isOptIn())
                 .setBackgroundEnabled(isPushEnabled() && isPushAvailable())
                 .setUserId(UAirship.shared().getInbox().getUser().getId())
-                .setApid(preferences.getApid());
+                .setApid(getApid());
 
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
@@ -483,8 +515,8 @@ public class PushManager extends AirshipComponent {
             alias = alias.trim();
         }
 
-        if (!UAStringUtil.equals(alias, preferences.getAlias())) {
-            preferences.setAlias(alias);
+        if (!UAStringUtil.equals(alias, getAlias())) {
+            preferenceDataStore.put(ALIAS_KEY, alias);
             updateRegistration();
         }
     }
@@ -513,8 +545,12 @@ public class PushManager extends AirshipComponent {
         }
 
         Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-        if (!normalizedTags.equals(preferences.getTags())) {
-            preferences.setTags(normalizedTags);
+        if (!normalizedTags.equals(getTags())) {
+            if (normalizedTags == null || normalizedTags.isEmpty()) {
+                preferenceDataStore.remove(TAGS_KEY);
+            } else {
+                preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
+            }
             updateRegistration();
         }
     }
@@ -523,10 +559,10 @@ public class PushManager extends AirshipComponent {
     /**
      * Returns the current alias for this application's channel.
      *
-     * @return The string alias, or an empty string if one is not set.
+     * @return The string alias, or null if one is not set.
      */
     public String getAlias() {
-        return preferences.getAlias();
+        return preferenceDataStore.getString(ALIAS_KEY, null);
     }
 
     /**
@@ -548,7 +584,18 @@ public class PushManager extends AirshipComponent {
      */
     @NonNull
     public Set<String> getTags() {
-        Set<String> tags = preferences.getTags();
+        Set<String> tags = new HashSet<>();
+
+        JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
+
+        if (jsonValue.isJsonList()) {
+            for (JsonValue tag : jsonValue.getList()) {
+                if (tag.isString()) {
+                    tags.add(tag.getString());
+                }
+            }
+        }
+
         Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
         //to prevent the getTags call from constantly logging tag set failures, sync tags
@@ -565,7 +612,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public String getAdmId() {
-        return preferences.getAdmId();
+        return preferenceDataStore.getString(ADM_REGISTRATION_ID_KEY, null);
     }
 
     /**
@@ -598,7 +645,7 @@ public class PushManager extends AirshipComponent {
      * {@code false} otherwise.
      */
     public boolean getPushTokenRegistrationEnabled() {
-        return preferences.getPushTokenRegistrationEnabled();
+        return preferenceDataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
     }
 
     /**
@@ -608,7 +655,7 @@ public class PushManager extends AirshipComponent {
      * channel registration.
      */
     public void setPushTokenRegistrationEnabled(boolean enabled) {
-        preferences.setPushTokenRegistrationEnabled(enabled);
+        preferenceDataStore.put(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, enabled);
         updateRegistration();
     }
 
@@ -618,7 +665,7 @@ public class PushManager extends AirshipComponent {
      * @return A boolean indicated whether sound is enabled.
      */
     public boolean isSoundEnabled() {
-        return preferences.isSoundEnabled();
+        return preferenceDataStore.getBoolean(SOUND_ENABLED_KEY, true);
     }
 
     /**
@@ -627,7 +674,7 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether sound is enabled.
      */
     public void setSoundEnabled(boolean enabled) {
-        preferences.setSoundEnabled(enabled);
+        preferenceDataStore.put(SOUND_ENABLED_KEY, enabled);
     }
 
     /**
@@ -636,7 +683,7 @@ public class PushManager extends AirshipComponent {
      * @return A boolean indicating whether vibration is enabled.
      */
     public boolean isVibrateEnabled() {
-        return preferences.isVibrateEnabled();
+        return preferenceDataStore.getBoolean(VIBRATE_ENABLED_KEY, true);
     }
 
     /**
@@ -645,7 +692,7 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether vibration is enabled.
      */
     public void setVibrateEnabled(boolean enabled) {
-        preferences.setVibrateEnabled(enabled);
+        preferenceDataStore.put(VIBRATE_ENABLED_KEY, enabled);
     }
 
     /**
@@ -654,7 +701,7 @@ public class PushManager extends AirshipComponent {
      * @return A boolean indicating whether Quiet Time is enabled.
      */
     public boolean isQuietTimeEnabled() {
-        return preferences.isQuietTimeEnabled();
+        return preferenceDataStore.getBoolean(QUIET_TIME_ENABLED, false);
     }
 
     /**
@@ -663,7 +710,7 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether quiet time is enabled.
      */
     public void setQuietTimeEnabled(boolean enabled) {
-        preferences.setQuietTimeEnabled(enabled);
+        preferenceDataStore.put(QUIET_TIME_ENABLED, enabled);
     }
 
     /**
@@ -673,7 +720,12 @@ public class PushManager extends AirshipComponent {
      * @return A boolean indicating whether it is currently "Quiet Time".
      */
     public boolean isInQuietTime() {
-        return preferences.isInQuietTime();
+        if (!this.isQuietTimeEnabled()) {
+            return false;
+        }
+
+        QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
+        return quietTimeInterval != null && quietTimeInterval.isInQuietTime();
     }
 
     /**
@@ -692,7 +744,12 @@ public class PushManager extends AirshipComponent {
      * @return An array of two Date instances, representing the start and end of Quiet Time.
      */
     public Date[] getQuietTimeInterval() {
-        return preferences.getQuietTimeInterval();
+        QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
+        if (quietTimeInterval != null) {
+            return  quietTimeInterval.getQuietTimeIntervalDateArray();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -702,7 +759,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public String getLastReceivedMetadata() {
-        return preferences.getLastReceivedMetadata();
+        return preferenceDataStore.getString(LAST_RECEIVED_METADATA, null);
     }
 
     /**
@@ -711,7 +768,7 @@ public class PushManager extends AirshipComponent {
      * @param sendMetadata The send metadata string.
      */
     void setLastReceivedMetadata(String sendMetadata) {
-        preferences.setLastReceivedMetadata(sendMetadata);
+        preferenceDataStore.put(LAST_RECEIVED_METADATA, sendMetadata);
     }
 
     /**
@@ -721,7 +778,10 @@ public class PushManager extends AirshipComponent {
      * @param endTime A Date instance indicating when Quiet Time should end.
      */
     public void setQuietTimeInterval(@NonNull Date startTime, @NonNull Date endTime) {
-        preferences.setQuietTimeInterval(startTime, endTime);
+        QuietTimeInterval quietTimeInterval = new QuietTimeInterval.Builder()
+                .setQuietTimeInterval(startTime, endTime)
+                .build();
+        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
     }
 
     /**
@@ -822,7 +882,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public String getChannelId() {
-        return preferences.getChannelId();
+        return preferenceDataStore.getString(CHANNEL_ID_KEY, null);
     }
 
     /**
@@ -832,7 +892,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     String getChannelLocation() {
-        return preferences.getChannelLocation();
+        return preferenceDataStore.getString(CHANNEL_LOCATION_KEY, null);
     }
 
     /**
@@ -843,8 +903,8 @@ public class PushManager extends AirshipComponent {
      * @param channelLocation The channel location as a URL.
      */
     void setChannel(String channelId, String channelLocation) {
-        preferences.setChannelId(channelId);
-        preferences.setChannelLocation(channelLocation);
+        preferenceDataStore.put(CHANNEL_ID_KEY, channelId);
+        preferenceDataStore.put(CHANNEL_LOCATION_KEY, channelLocation);
     }
 
     /**
@@ -853,9 +913,9 @@ public class PushManager extends AirshipComponent {
      * @param admId An ADM identifier string.
      */
     void setAdmId(String admId) {
-        preferences.setAppVersionCode(UAirship.getPackageInfo().versionCode);
-        preferences.setAdmId(admId);
-        preferences.setDeviceId(getSecureId(UAirship.getApplicationContext()));
+        preferenceDataStore.put(APP_VERSION_KEY, UAirship.getPackageInfo().versionCode);
+        preferenceDataStore.put(ADM_REGISTRATION_ID_KEY, admId);
+        preferenceDataStore.put(DEVICE_ID_KEY, getSecureId(UAirship.getApplicationContext()));
     }
 
     /**
@@ -884,9 +944,9 @@ public class PushManager extends AirshipComponent {
      * @param token The Instance ID token.
      */
     void setGcmToken(String token) {
-        preferences.setGcmToken(token);
-        preferences.setAppVersionCode(UAirship.getPackageInfo().versionCode);
-        preferences.setDeviceId(getSecureId(UAirship.getApplicationContext()));
+        preferenceDataStore.put(GCM_INSTANCE_ID_TOKEN_KEY, token);
+        preferenceDataStore.put(APP_VERSION_KEY, UAirship.getPackageInfo().versionCode);
+        preferenceDataStore.put(DEVICE_ID_KEY, getSecureId(UAirship.getApplicationContext()));
     }
 
     /**
@@ -896,6 +956,112 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public String getGcmToken() {
-        return preferences.getGcmToken();
+        return preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
+    }
+
+    /**
+     * Sets the registered sender ID.
+     *
+     * @param senderId The registered sender ID.
+     */
+    void setRegisteredGcmSenderId(String senderId) {
+        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, senderId);
+    }
+
+    /**
+     * Gets the registered sender ID.
+     *
+     * @return The registered sender ID.
+     */
+    String getRegisteredGcmSenderId() {
+        return preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);
+    }
+
+    /**
+     * Returns the app version associated with the current Registration ID.
+     *
+     * @return The app version string, or -1 if not found.
+     */
+    int getAppVersionCode() {
+        return preferenceDataStore.getInt(APP_VERSION_KEY, -1);
+    }
+
+    /**
+     * Returns the device ID associated with the current Registration ID.
+     *
+     * @return The device ID string, or <code>null</code> if not found.
+     */
+    String getDeviceId() {
+        return preferenceDataStore.getString(DEVICE_ID_KEY, null);
+    }
+
+    /**
+     * Return the device's existing APID
+     *
+     * @return an APID string or null if it doesn't exist.
+     */
+    String getApid() {
+        return preferenceDataStore.getString(APID_KEY, null);
+    }
+
+    /**
+     * Migrates the old push enabled setting to the new user notifications enabled
+     * setting, and enables push by default. This was introduced in version 5.0.0.
+     */
+    void migratePushEnabledSettings() {
+
+        if (preferenceDataStore.getBoolean(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, false)) {
+            return;
+        }
+
+        Logger.info("Migrating push enabled preferences");
+
+        // get old push enabled value, defaulting to false as before
+        boolean oldPushEnabled = this.preferenceDataStore.getBoolean(PUSH_ENABLED_KEY, false);
+
+        // copy old push enabled value to user notifications enabled slot
+        Logger.info("Setting user notifications enabled to " + Boolean.toString(oldPushEnabled));
+        setUserNotificationsEnabled(oldPushEnabled);
+
+        if (!oldPushEnabled) {
+            Logger.info("Push is now enabled. You can continue to toggle the opt-in state by " +
+                    "enabling or disabling user notifications");
+        }
+
+        // set push enabled to true
+        setPushEnabled(true);
+        preferenceDataStore.put(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
+    }
+
+    /**
+     * Migrates the old quiet time interval to use QuietTimeInterval.
+     */
+    void migrateQuietTimeInterval() {
+
+        // Attempt to extract an old quiet time interval
+        int startHr = preferenceDataStore.getInt(QuietTime.START_HOUR_KEY, QuietTime.NOT_SET_VAL);
+        int startMin = preferenceDataStore.getInt(QuietTime.START_MIN_KEY, QuietTime.NOT_SET_VAL);
+        int endHr = preferenceDataStore.getInt(QuietTime.END_HOUR_KEY, QuietTime.NOT_SET_VAL);
+        int endMin = preferenceDataStore.getInt(QuietTime.END_MIN_KEY, QuietTime.NOT_SET_VAL);
+
+        if (startHr == QuietTime.NOT_SET_VAL || startMin == QuietTime.NOT_SET_VAL ||
+                endHr == QuietTime.NOT_SET_VAL || endMin == QuietTime.NOT_SET_VAL) {
+            return;
+        }
+
+        Logger.info("Migrating quiet time interval");
+
+        QuietTimeInterval quietTimeInterval = new QuietTimeInterval.Builder()
+                .setStartHour(startHr)
+                .setStartMin(startMin)
+                .setEndHour(endHr)
+                .setEndMin(endMin)
+                .build();
+
+        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue());
+        preferenceDataStore.remove(QuietTime.START_HOUR_KEY);
+        preferenceDataStore.remove(QuietTime.START_MIN_KEY);
+        preferenceDataStore.remove(QuietTime.END_HOUR_KEY);
+        preferenceDataStore.remove(QuietTime.END_MIN_KEY);
     }
 }

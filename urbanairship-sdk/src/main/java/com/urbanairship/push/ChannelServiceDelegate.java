@@ -84,7 +84,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     private static boolean isRegistrationStarted = false;
     private final UAirship airship;
     private final PushManager pushManager;
-    private final PushPreferences pushPreferences;
     private final ChannelApiClient channelClient;
 
     public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore) {
@@ -98,7 +97,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
-        this.pushPreferences = airship.getPushManager().getPreferences();
     }
 
     @Override
@@ -455,10 +453,10 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @return <code>true</code> if push registration is needed, otherwise <code>false</code>.
      */
     private boolean needsPushRegistration() {
-        if (UAirship.getPackageInfo().versionCode != pushPreferences.getAppVersionCode()) {
+        if (UAirship.getPackageInfo().versionCode != pushManager.getAppVersionCode()) {
             Logger.verbose("ChannelServiceDelegate - Version code changed to " + UAirship.getPackageInfo().versionCode + ". Push re-registration required.");
             return true;
-        } else if (!PushManager.getSecureId(getContext()).equals(pushPreferences.getDeviceId())) {
+        } else if (!PushManager.getSecureId(getContext()).equals(pushManager.getDeviceId())) {
             Logger.verbose("ChannelServiceDelegate - Device ID changed. Push re-registration required.");
             return true;
         }
@@ -471,7 +469,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
 
                 // Unregister if we have a different registered sender ID
-                if (airship.getAirshipConfigOptions().gcmSender != null && !airship.getAirshipConfigOptions().gcmSender.equals(pushPreferences.getRegisteredGcmSenderId())) {
+                if (airship.getAirshipConfigOptions().gcmSender != null && !airship.getAirshipConfigOptions().gcmSender.equals(pushManager.getRegisteredGcmSenderId())) {
                     Logger.verbose("ChannelServiceDelegate - GCM sender ID changed. Push re-registration required.");
                     return true;
                 }

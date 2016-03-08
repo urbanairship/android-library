@@ -65,7 +65,7 @@ class GcmRegistrar {
         if (token != null) {
             Logger.info("GCM registration successful security token: " + token);
             UAirship.shared().getPushManager().setGcmToken(token);
-            UAirship.shared().getPushManager().getPreferences().setRegisteredGcmSenderId(senderId);
+            UAirship.shared().getPushManager().setRegisteredGcmSenderId(senderId);
         }
 
         return true;
