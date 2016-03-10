@@ -78,15 +78,39 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
         assertTrue(new AssociateIdentifiersEvent(builder.create()).isValid());
     }
 
+    /**
+     * Test event data when limited ad tracking enabled.
+     * @throws JSONException
+     */
     @Test
     public void testEventData() throws JSONException {
         AssociatedIdentifiers ids = new AssociatedIdentifiers.Builder()
                 .setAdvertisingId("advertising Id")
+                .setLimitedAdTrackingEnabled(true)
                 .setIdentifier("phone", "867-5309")
                 .create();
 
         AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
         EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
         EventTestUtils.validateEventValue(event, "phone", "867-5309");
+        EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "true");
+    }
+
+    /**
+     * Test event data when limited ad tracking disabled.
+     * @throws JSONException
+     */
+    @Test
+    public void testEventDataWithLimitedTrackingDisabled() throws JSONException {
+        AssociatedIdentifiers ids = new AssociatedIdentifiers.Builder()
+                .setAdvertisingId("advertising Id")
+                .setLimitedAdTrackingEnabled(false)
+                .setIdentifier("phone", "867-5309")
+                .create();
+
+        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
+        EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
+        EventTestUtils.validateEventValue(event, "phone", "867-5309");
+        EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "false");
     }
 }
