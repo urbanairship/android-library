@@ -43,11 +43,30 @@ public class AssociatedIdentifiersTest extends BaseTestCase {
     public void testIds() {
         AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Builder()
                 .setAdvertisingId("advertising Id")
+                .setLimitedAdTrackingEnabled(true)
                 .setIdentifier("custom key", "custom value")
                 .create();
 
-        assertEquals(identifiers.getIds().size(), 2);
+        assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
         assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
+        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+    }
+
+    /**
+     * Test the ID mapping when limited ad tracking is disabled
+     */
+    @Test
+    public void testIdsLimitedAdTrackingDisabled() {
+        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Builder()
+                .setAdvertisingId("advertising Id")
+                .setLimitedAdTrackingEnabled(false)
+                .setIdentifier("custom key", "custom value")
+                .create();
+
+        assertEquals(identifiers.getIds().size(), 3);
+        assertEquals("custom value", identifiers.getIds().get("custom key"));
+        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
+        assertEquals("false", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
     }
 }

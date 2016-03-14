@@ -49,6 +49,8 @@ public class AssociatedIdentifiers {
 
     private static final String ADVERTISING_ID_KEY = "com.urbanairship.aaid";
 
+    private static final String LIMITED_AD_TRACKING_ENABLED_KEY = "com.urbanairship.limited_ad_tracking_enabled";
+
     private final Map<String, String> ids;
 
     private AssociatedIdentifiers(Builder builder) {
@@ -75,6 +77,16 @@ public class AssociatedIdentifiers {
          */
         public Builder setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId) {
             ids.put(ADVERTISING_ID_KEY, adId);
+            return this;
+        }
+
+        /**
+         * Sets the limit ad tracking enabled value.
+         * @param enabled A boolean indicating whether the user has limit ad tracking enabled or not.
+         * @return The builder object.
+         */
+        public Builder setLimitedAdTrackingEnabled(boolean enabled) {
+            ids.put(LIMITED_AD_TRACKING_ENABLED_KEY, (enabled ? "true" : "false"));
             return this;
         }
 
