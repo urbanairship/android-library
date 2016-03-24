@@ -307,12 +307,27 @@ public class AnalyticsTest extends BaseTestCase {
         Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
     }
 
+    // TODO: Remove tests using AssociatedIdentifiers.Builder() in 8.0.0, since
+    // AssociatedIdentifiers.Builder() have been marked to be removed in 8.0.0
     /**
      * Test associating identifiers sends a associate identifiers event to the event service.
      */
     @Test
     public void testAssociateIdentifiers() {
         analytics.associateIdentifiers(new AssociatedIdentifiers.Builder().create());
+
+        // Verify we started the event service to add the event
+        Intent eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
+        assertEquals("associate_identifiers", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+    }
+
+    /**
+     * Test associating identifiers sends a associate identifiers event to the event service.
+     */
+    @Test
+    public void testAssociateIdentifiersEditor() {
+        analytics.associateIdentifiers(new AssociatedIdentifiers.Editor().apply());
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();

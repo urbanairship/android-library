@@ -446,7 +446,17 @@ public class Analytics {
      * @param identifiers An {@link AssociatedIdentifiers} instance.
      */
     public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
+        preferences.setIdentifiers(identifiers.getIds());
         addEvent(new AssociateIdentifiersEvent(identifiers));
+    }
+
+    /**
+     * Edit the currently stored associated identifiers.
+     *
+     * @return The AssociatedIdentifiers.Editor
+     */
+    public AssociatedIdentifiers.Editor edit() {
+        return new AssociatedIdentifiers.Editor(preferences.getIdentifiers());
     }
 
     /**

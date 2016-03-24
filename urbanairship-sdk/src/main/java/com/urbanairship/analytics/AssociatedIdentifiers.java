@@ -53,8 +53,26 @@ public class AssociatedIdentifiers {
 
     private final Map<String, String> ids;
 
+    /**
+     * Creates an AssociatedIdentifiers object from a
+     * {@link com.urbanairship.analytics.AssociatedIdentifiers.Builder}.
+     *
+     * @param builder The AssociatedIdentifiers builder.
+     * @deprecated Marked to be removed in 8.0.0. Use Editor instead.
+     */
+    @Deprecated
     private AssociatedIdentifiers(Builder builder) {
         this.ids = new HashMap<>(builder.ids);
+    }
+
+    /**
+     * Modifies an AssociatedIdentifiers object from a
+     * {@link com.urbanairship.analytics.AssociatedIdentifiers.Editor}.
+     *
+     * @param editor The AssociatedIdentifiers editor.
+     */
+    private AssociatedIdentifiers(Editor editor) {
+        this.ids = new HashMap<>(editor.ids);
     }
 
     /**
@@ -66,6 +84,11 @@ public class AssociatedIdentifiers {
         return Collections.unmodifiableMap(ids);
     }
 
+    /**
+     *  Builder to construct AssociatedIdentifiers.
+     *  @deprecated Marked to be removed in 8.0.0. Use Editor instead.
+     */
+    @Deprecated
     public static class Builder {
         private final Map<String, String> ids = new HashMap<>();
 
@@ -74,7 +97,9 @@ public class AssociatedIdentifiers {
          *
          * @param adId The Android advertising ID.
          * @return The builder object.
+         * @deprecated Marked to be removed in 8.0.0.
          */
+        @Deprecated
         public Builder setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId) {
             ids.put(ADVERTISING_ID_KEY, adId);
             return this;
@@ -84,7 +109,9 @@ public class AssociatedIdentifiers {
          * Sets the limit ad tracking enabled value.
          * @param enabled A boolean indicating whether the user has limit ad tracking enabled or not.
          * @return The builder object.
+         * @deprecated Marked to be removed in 8.0.0.
          */
+        @Deprecated
         public Builder setLimitedAdTrackingEnabled(boolean enabled) {
             ids.put(LIMITED_AD_TRACKING_ENABLED_KEY, (enabled ? "true" : "false"));
             return this;
@@ -96,7 +123,9 @@ public class AssociatedIdentifiers {
          * @param key The custom ID's key.
          * @param value The custom ID's value.
          * @return The builder object.
+         * @deprecated Marked to be removed in 8.0.0.
          */
+        @Deprecated
         public Builder setIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key,
                                      @NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String value) {
             ids.put(key, value);
@@ -107,8 +136,97 @@ public class AssociatedIdentifiers {
          * Creates the AssociatedIdentifiers instance.
          *
          * @return The AssociatedIdentifiers instance.
+         * @deprecated Marked to be removed in 8.0.0.
          */
+        @Deprecated
         public AssociatedIdentifiers create() {
+            return new AssociatedIdentifiers(this);
+        }
+    }
+
+    /**
+     * Editor to modify AssociatedIdentifiers.
+     */
+    public static class Editor {
+        private Map<String, String> ids = new HashMap<>();
+
+        /**
+         * Editor constructor
+         */
+        public Editor() {
+        }
+
+        /**
+         * Editor constructor
+         *
+         * @param identifiers The associated identifiers map.
+         */
+        public Editor(Map<String, String> identifiers) {
+            if (identifiers != null) {
+                ids = identifiers;
+            }
+        }
+
+        /**
+         * Sets the Android advertising ID and the limit ad tracking enabled value.
+         * @param adId The Android advertising ID.
+         * @param limitedAdTrackingEnabled A boolean indicating whether the user has limit ad tracking enabled or not.
+         * @return The editor object.
+         */
+        public Editor setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId,
+                                       boolean limitedAdTrackingEnabled) {
+            ids.put(ADVERTISING_ID_KEY, adId);
+            ids.put(LIMITED_AD_TRACKING_ENABLED_KEY, (limitedAdTrackingEnabled ? "true" : "false"));
+            return this;
+        }
+
+        /**
+         * Removes both the Android advertising ID and the limit ad tracking enabled value.
+         * @return The editor object.
+         */
+        public Editor removeAdvertisingId() {
+            ids.remove(ADVERTISING_ID_KEY);
+            ids.remove(LIMITED_AD_TRACKING_ENABLED_KEY);
+            return this;
+        }
+
+        /**
+         * Adds an identifier.
+         * @param key The custom ID's key.
+         * @param value The custom ID's value.
+         * @return The editor object.
+         */
+        public Editor addIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key,
+                                    @NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String value) {
+            ids.put(key, value);
+            return this;
+        }
+
+        /**
+         * Removes the identifier.
+         * @param key The custom ID's key.
+         * @return The editor object.
+         */
+        public Editor removeIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key) {
+            ids.remove(key);
+            return this;
+        }
+
+        /**
+         * Removes all the identifiers.
+         * @return The editor object.
+         */
+        public Editor clearAll() {
+            ids.clear();
+            return this;
+        }
+
+        /**
+         * Returns the modified AssociatedIdentifiers object.
+         *
+         * @return The AssociatedIdentifiers object.
+         */
+        public AssociatedIdentifiers apply() {
             return new AssociatedIdentifiers(this);
         }
     }
