@@ -198,6 +198,18 @@ public class LandingPageActivity extends Activity {
             }
         });
 
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+
+                // Re-enable hardware rending if we detect a video in the message
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                }
+
+                return super.getDefaultVideoPoster();
+            }
+        });
 
     }
 
