@@ -107,7 +107,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         };
 
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
 
         receiver.onReceive(context, intent);
@@ -133,7 +133,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         };
 
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage);
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle());
 
         receiver.onReceive(context, intent);
 
@@ -175,7 +175,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100);
 
         receiver.onReceive(context, intent);
@@ -205,7 +205,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 100)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "button id")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
@@ -247,7 +247,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         };
 
         Intent intent = new Intent(PushManager.ACTION_NOTIFICATION_DISMISSED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, pushMessage)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 101);
 
         receiver.onReceive(context, intent);

@@ -1,5 +1,6 @@
 package com.urbanairship.push;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -466,6 +467,49 @@ public class PushMessage implements Parcelable {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        PushMessage that = (PushMessage) o;
+
+        if (pushBundle != null ? !pushBundle.equals(that.pushBundle) : that.pushBundle != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return pushBundle != null ? pushBundle.hashCode() : 0;
+    }
+
+    /**
+     * Gets the push message from the intent if available.
+     * @param intent The intent.
+     * @return The intent's PushMessage or null if the intent does not contain a PushMessage.
+     * @hide
+     */
+    @Nullable
+    public static PushMessage fromIntent(Intent intent) {
+        if (intent == null) {
+            return null;
+        }
+
+        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE);
+        if (pushBundle == null) {
+            return null;
+        }
+
+        return new PushMessage(pushBundle);
     }
 
     @Override

@@ -115,7 +115,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Create the intent
         final Intent intent = new Intent()
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150);
 
         receiver.onReceive(context, intent);
@@ -160,7 +160,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Create the intent
         Intent intent = new Intent()
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message);
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle());
 
 
         receiver.onReceive(context, intent);
@@ -180,7 +180,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Create the intent
         final Intent intent = new Intent()
                 .setAction(PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, true);
@@ -224,7 +224,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Create the intent
         final Intent intent = new Intent()
                 .setAction(PushManager.ACTION_NOTIFICATION_BUTTON_OPENED_PROXY)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId")
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);
@@ -251,7 +251,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Create the intent
         final Intent intent = new Intent()
                 .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, 150)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, deleteIntent);
 
