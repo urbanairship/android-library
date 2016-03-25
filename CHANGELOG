@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.0.4 - March 25, 2016
+==============================
+- Fixed SecurityException on Samsung devices running Lollipop when scheduling alarms beyond the allowed limit.
+- Fixed video playback in landing pages and Message Center.
+- Fixed rare BadParcelableException by avoiding custom parcelable use in broadcasted intents.
+
 Version 7.0.3 - February 24, 2016
 =================================
  - Fixed rare RunTimeException when checking for location permissions in UALocationManager.
