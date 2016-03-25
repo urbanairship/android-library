@@ -1,5 +1,6 @@
 package com.urbanairship.push;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcel;
 
@@ -19,6 +20,8 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PushMessageTest extends BaseTestCase {
@@ -552,6 +555,30 @@ public class PushMessageTest extends BaseTestCase {
         PushMessage message = new PushMessage(bundle);
 
         assertEquals(actions, message.getActions());
+    }
+
+    /**
+     * Test fromIntent creates a PushMessage instance if a bundle exists under PushManager.EXTRA_PUSH_MESSAGE_BUNDLE.
+     */
+    @Test
+    public void testFromIntent() {
+        Bundle bundle = new Bundle();
+        Intent intent = new Intent();
+        intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, bundle);
+
+        PushMessage message = PushMessage.fromIntent(intent);
+        assertNotNull(message);
+        assertEquals(bundle, message.getPushBundle());
+    }
+
+    /**
+     * Test fromIntent returns null if its unable to find a bundle extra under PushManager.EXTRA_PUSH_MESSAGE_BUNDLE.
+     */
+    @Test
+    public void testFromIntentInvalid() {
+        assertNull(PushMessage.fromIntent(null));
+        assertNull(PushMessage.fromIntent(new Intent()));
+        assertNull(PushMessage.fromIntent(new Intent().putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, "not a bundle")));
     }
 }
 

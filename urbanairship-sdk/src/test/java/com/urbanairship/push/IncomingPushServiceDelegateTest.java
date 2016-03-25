@@ -37,7 +37,6 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.push.iam.InAppMessage;
@@ -163,7 +162,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
 
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(), ((PushMessage)intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE)).getPushBundle());
+        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(),intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
     }
 
@@ -201,7 +200,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
 
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(), ((PushMessage)intent.getExtras().get(PushManager.EXTRA_PUSH_MESSAGE)).getPushBundle());
+        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(),intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
     }
 
@@ -222,11 +221,10 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
 
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
-        Bundle extras = i.getExtras();
-        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
         assertEquals("Push ID should equal pushMessage ID", "testPushID", push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
+        assertEquals("No notification ID should be present", i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
     }
 
 
@@ -249,10 +247,10 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
         Bundle extras = i.getExtras();
-        PushMessage push = extras.getParcelable(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
         assertEquals("Push ID should equal pushMessage ID", "silentPushID", push.getCanonicalPushId());
-        assertEquals("No notification ID should be present", -1, extras.getInt(PushManager.EXTRA_NOTIFICATION_ID, -1));
+        assertEquals("No notification ID should be present", -1, i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1));
     }
 
     /**

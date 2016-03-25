@@ -32,8 +32,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -58,7 +58,9 @@ public class PushManager extends AirshipComponent {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_MESSAGE}
+     * {@link #EXTRA_PUSH_MESSAGE_BUNDLE}
+     *
+     * @hide
      */
     public static final String ACTION_PUSH_RECEIVED = "com.urbanairship.push.RECEIVED";
 
@@ -67,9 +69,11 @@ public class PushManager extends AirshipComponent {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_MESSAGE},
+     * {@link #EXTRA_PUSH_MESSAGE_BUNDLE},
      * {@link #EXTRA_NOTIFICATION_BUTTON_ID},
      * {@link #EXTRA_NOTIFICATION_BUTTON_FOREGROUND}
+     *
+     * @hide
      */
     public static final String ACTION_NOTIFICATION_OPENED = "com.urbanairship.push.OPENED";
 
@@ -78,7 +82,9 @@ public class PushManager extends AirshipComponent {
      * <p/>
      * Extras:
      * {@link #EXTRA_NOTIFICATION_ID},
-     * {@link #EXTRA_PUSH_MESSAGE}
+     * {@link #EXTRA_PUSH_MESSAGE_BUNDLE}
+     *
+     * @hide
      */
     public static final String ACTION_NOTIFICATION_DISMISSED = "com.urbanairship.push.DISMISSED";
 
@@ -87,6 +93,8 @@ public class PushManager extends AirshipComponent {
      * <p/>
      * Extras:
      * {@link #EXTRA_CHANNEL_ID}
+     *
+     * @hide
      */
     public static final String ACTION_CHANNEL_UPDATED = "com.urbanairship.push.CHANNEL_UPDATED";
 
@@ -99,27 +107,33 @@ public class PushManager extends AirshipComponent {
     public static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.push.NOTIFICATION_ID";
 
     /**
-     * The push message extra.
+     * The push message extra bundle.
+     * @hide
      */
-    public static final String EXTRA_PUSH_MESSAGE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE";
+    public static final String EXTRA_PUSH_MESSAGE_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE_BUNDLE";
+
 
     /**
      * The interactive notification action button identifier extra.
+     * @hide
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_ID = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ID";
 
     /**
      * The flag indicating if the interactive notification action button is background or foreground.
+     * @hide
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_FOREGROUND = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_FOREGROUND";
 
     /**
      * Extra used to indicate an error in channel registration.
+     * @hide
      */
     public static final String EXTRA_ERROR = "com.urbanairship.push.EXTRA_ERROR";
 
     /**
      * The channel ID extra.
+     * @hide
      */
     public static final String EXTRA_CHANNEL_ID = "com.urbanairship.push.EXTRA_CHANNEL_ID";
 

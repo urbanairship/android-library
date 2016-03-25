@@ -265,7 +265,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         Intent contentIntent = new Intent(getContext(), CoreReceiver.class)
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
 
         // If the notification already has an intent, add it to the extras to be sent later
@@ -276,7 +276,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         Intent deleteIntent = new Intent(getContext(), CoreReceiver.class)
                 .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
 
         if (notification.deleteIntent != null) {
@@ -301,7 +301,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      */
     private void sendPushReceivedBroadcast(@NonNull PushMessage message, @Nullable Integer notificationId) {
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE, message)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .addCategory(UAirship.getPackageName())
                 .setPackage(UAirship.getPackageName());
 

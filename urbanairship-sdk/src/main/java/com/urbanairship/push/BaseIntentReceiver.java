@@ -83,7 +83,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         }
 
         String action = intent.getAction();
-        Logger.info(this.getClass().getSimpleName() + " - Received intent with action: " + action);
+        Logger.debug(this.getClass().getSimpleName() + " - Received intent with action: " + action);
 
         switch (action) {
             case PushManager.ACTION_PUSH_RECEIVED:
@@ -108,7 +108,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param intent The push received intent.
      */
     private void handlePushReceived(@NonNull Context context, @NonNull Intent intent) {
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
@@ -131,7 +131,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
     private void handlePushOpened(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
@@ -180,11 +180,12 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
     private void handleDismissedIntent(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
-        if (message == null) {
+        if (!intent.hasExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE)) {
             Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
+
+        PushMessage message = new PushMessage(intent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
 
         onNotificationDismissed(context, message, id);
     }
