@@ -322,9 +322,15 @@ public class EventService extends IntentService {
 
             PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            // Reschedule the intent
-            alarmManager.set(AlarmManager.RTC, sendTime, pendingIntent);
-            preferences.setScheduledSendTime(sendTime);
+            try {
+                // Reschedule the intent
+                alarmManager.set(AlarmManager.RTC, sendTime, pendingIntent);
+                preferences.setScheduledSendTime(sendTime);
+            } catch (SecurityException e) {
+                Logger.error("EventService - Failed to schedule event uploads.", e);
+                preferences.setScheduledSendTime(-1);
+            }
+
         } else {
             Logger.verbose("EventService - Alarm already scheduled for an earlier time.");
         }

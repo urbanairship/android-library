@@ -213,7 +213,12 @@ public abstract class BaseIntentService extends IntentService {
             Logger.verbose("BaseIntentService - Scheduling intent " + intent.getAction() + " in " + delay + " milliseconds.");
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
+
+            try {
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
+            } catch (SecurityException e) {
+                Logger.error("BaseIntentService - Failed to schedule intent " + intent.getAction(), e);
+            }
         }
     }
 }

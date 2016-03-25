@@ -107,7 +107,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     private void onNotificationOpenedProxy(Context context, Intent intent) {
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
@@ -142,7 +142,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     private void onNotificationButtonOpenedProxy(Context context, Intent intent) {
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
@@ -192,7 +192,7 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param intent The notification intent.
      */
     private void onNotificationDismissedProxy(Context context, Intent intent) {
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
@@ -229,7 +229,7 @@ public class CoreReceiver extends BroadcastReceiver {
     private void onNotificationOpened(Context context, Intent intent) {
         AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
 
-        PushMessage message = intent.getParcelableExtra(PushManager.EXTRA_PUSH_MESSAGE);
+        PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
