@@ -27,6 +27,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.messagecenter;
 
 import android.annotation.TargetApi;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
@@ -34,6 +35,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 
@@ -159,6 +161,19 @@ public class MessageFragment extends Fragment {
                 if (message != null && failingUrl != null && failingUrl.equals(message.getMessageBodyUrl())) {
                     error = errorCode;
                 }
+            }
+        });
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+
+                // Re-enable hardware rending if we detect a video in the message
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                }
+
+                return super.getDefaultVideoPoster();
             }
         });
 

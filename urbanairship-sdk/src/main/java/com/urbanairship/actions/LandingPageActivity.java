@@ -32,6 +32,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,6 +42,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -143,52 +145,72 @@ public class LandingPageActivity extends Activity {
         webView = (UAWebView) findViewById(android.R.id.primary);
         final ProgressBar progressBar = (ProgressBar) findViewById(android.R.id.progress);
 
-        if (webView != null) {
-            if (Build.VERSION.SDK_INT >= 12) {
-                webView.setAlpha(0);
-            } else {
-                webView.setVisibility(View.INVISIBLE);
-            }
-
-            webView.setWebViewClient(new UAWebViewClient() {
-                @Override
-                public void onPageFinished(final WebView view, String url) {
-                    super.onPageFinished(view, url);
-                    if (error != null) {
-                        switch (error) {
-                            case WebViewClient.ERROR_CONNECT:
-                            case WebViewClient.ERROR_TIMEOUT:
-                            case WebViewClient.ERROR_UNKNOWN:
-                                // Retry
-                                loadLandingPage(LANDING_PAGE_RETRY_DELAY_MS);
-                                break;
-                            default:
-                                // Load an empty page
-                                error = null;
-                                webView.loadData("", "text/html", null);
-                        }
-                    } else {
-                        // Set the background color again, fixes some older API versions
-                        if (webViewBackgroundColor != -1) {
-                            webView.setBackgroundColor(webViewBackgroundColor);
-                        }
-                        crossFade(webView, progressBar);
-                    }
-                }
-
-                @Override
-                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                    if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                        Logger.error("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
-                        error = errorCode;
-                    }
-                }
-            });
-        } else {
+        if (webView == null) {
             Logger.error("LandingPageActivity - A UAWebView with id android.R.id.primary is not defined" +
                     " in the custom layout.  Unable to show the landing page.");
             finish();
+            return;
         }
+
+        // Workaround render issue with older android devices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
+        if (Build.VERSION.SDK_INT >= 12) {
+            webView.setAlpha(0);
+        } else {
+            webView.setVisibility(View.INVISIBLE);
+        }
+
+        webView.setWebViewClient(new UAWebViewClient() {
+            @Override
+            public void onPageFinished(final WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (error != null) {
+                    switch (error) {
+                        case WebViewClient.ERROR_CONNECT:
+                        case WebViewClient.ERROR_TIMEOUT:
+                        case WebViewClient.ERROR_UNKNOWN:
+                            // Retry
+                            loadLandingPage(LANDING_PAGE_RETRY_DELAY_MS);
+                            break;
+                        default:
+                            // Load an empty page
+                            error = null;
+                            webView.loadData("", "text/html", null);
+                    }
+                } else {
+                    // Set the background color again, fixes some older API versions
+                    if (webViewBackgroundColor != -1) {
+                        webView.setBackgroundColor(webViewBackgroundColor);
+                    }
+                    crossFade(webView, progressBar);
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
+                    Logger.error("LandingPageActivity - Failed to load page " + failingUrl + " with error " + errorCode + " " + description);
+                    error = errorCode;
+                }
+            }
+        });
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+
+                // Re-enable hardware rending if we detect a video in the message
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                }
+
+                return super.getDefaultVideoPoster();
+            }
+        });
+
     }
 
     @Override
@@ -369,13 +391,7 @@ public class LandingPageActivity extends Activity {
             webView.setBackgroundColor(webViewBackgroundColor);
         }
 
-        // Use software rendering if available to avoid the white box web view glitch.
-        if (Build.VERSION.SDK_INT >= 11) {
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
-
         error = null;
-
 
         if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
             String messageId = uri.getSchemeSpecificPart();
