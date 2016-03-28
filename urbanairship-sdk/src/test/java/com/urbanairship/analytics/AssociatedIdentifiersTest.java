@@ -26,38 +26,47 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
-
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.analytics.AssociatedIdentifiers;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 
 public class AssociatedIdentifiersTest extends BaseTestCase {
 
-    // TODO: Remove tests using AssociatedIdentifiers.Builder() in 8.0.0, since
-    // AssociatedIdentifiers.Builder() have been marked to be removed in 8.0.0
+    AssociatedIdentifiers identifiers;
+    private AssociatedIdentifiers.Editor editor;
+
+    @Before
+    public void setup() {
+        identifiers = new AssociatedIdentifiers();
+        editor = new AssociatedIdentifiers.Editor(identifiers) {
+            @Override
+            void onApply(AssociatedIdentifiers theIdentifiers) {
+                identifiers = theIdentifiers;
+            }
+        };
+    }
+
     /**
      * Test the ID mapping
      */
     @Test
     public void testIds() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Builder()
-                .setAdvertisingId("advertising Id")
-                .setLimitedAdTrackingEnabled(true)
-                .setIdentifier("custom key", "custom value")
-                .create();
+
+        editor.setAdvertisingId("advertising Id", true)
+              .addIdentifier("custom key", "custom value")
+              .apply();
 
         assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertTrue(identifiers.isLimitAdTrackingEnabled());
     }
 
     /**
@@ -65,121 +74,81 @@ public class AssociatedIdentifiersTest extends BaseTestCase {
      */
     @Test
     public void testIdsLimitedAdTrackingDisabled() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Builder()
-                .setAdvertisingId("advertising Id")
-                .setLimitedAdTrackingEnabled(false)
-                .setIdentifier("custom key", "custom value")
-                .create();
+
+        editor.setAdvertisingId("advertising Id", false)
+              .addIdentifier("custom key", "custom value")
+              .apply();
 
         assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("false", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertFalse(identifiers.isLimitAdTrackingEnabled());
     }
 
     /**
-     * Test the ID mapping with Editor
-     */
-    @Test
-    public void testIdsEditor() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", true)
-                .addIdentifier("custom key", "custom value")
-                .apply();
-
-        assertEquals(identifiers.getIds().size(), 3);
-        assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
-    }
-
-    /**
-     * Test the ID mapping when limited ad tracking is disabled
-     */
-    @Test
-    public void testIdsLimitedAdTrackingDisabledEditor() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", false)
-                .addIdentifier("custom key", "custom value")
-                .apply();
-
-        assertEquals(identifiers.getIds().size(), 3);
-        assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("false", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
-    }
-
-    /**
-     * Test removing advertising ID with Editor
+     * Test removing advertising ID (and limitedAdTrackingEnabled)
      */
     @Test
     public void testRemoveAdvertisingId() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", true)
-                .addIdentifier("custom key", "custom value")
-                .apply();
+
+        editor.setAdvertisingId("advertising Id", true)
+              .addIdentifier("custom key", "custom value")
+              .apply();
 
         assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertTrue(identifiers.isLimitAdTrackingEnabled());
 
-        Map<String, String> ids = new HashMap<>(identifiers.getIds());
-        AssociatedIdentifiers updatedIdentifiers = new AssociatedIdentifiers.Editor(ids)
-                .removeAdvertisingId()
-                .apply();
+        editor.removeAdvertisingId()
+              .apply();
 
-        assertEquals(updatedIdentifiers.getIds().size(), 1);
-        assertEquals("custom value", updatedIdentifiers.getIds().get("custom key"));
-        assertNull(updatedIdentifiers.getIds().get("com.urbanairship.aaid"));
+        assertEquals(identifiers.getIds().size(), 1);
+        assertEquals("custom value", identifiers.getIds().get("custom key"));
+        assertNull(identifiers.getIds().get("com.urbanairship.aaid"));
+        assertNull(identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
     }
 
     /**
-     * Test remove identifier with Editor
+     * Test remove identifier
      */
     @Test
     public void testRemoveIdentifier() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", true)
-                .addIdentifier("custom key", "custom value")
-                .apply();
+
+        editor.setAdvertisingId("advertising Id", true)
+              .addIdentifier("custom key", "custom value")
+              .apply();
 
         assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertTrue(identifiers.isLimitAdTrackingEnabled());
 
-        Map<String, String> ids = new HashMap<>(identifiers.getIds());
-        AssociatedIdentifiers updatedIdentifiers = new AssociatedIdentifiers.Editor(ids)
-                .removeIdentifier("custom key")
-                .apply();
+        editor.removeIdentifier("custom key")
+              .apply();
 
-        assertEquals(updatedIdentifiers.getIds().size(), 2);
-        assertNull(updatedIdentifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", updatedIdentifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", updatedIdentifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getIds().size(), 2);
+        assertNull(identifiers.getIds().get("custom key"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertTrue(identifiers.isLimitAdTrackingEnabled());
     }
 
     /**
-     * Test clear all identifiers with Editor
+     * Test clear all identifiers
      */
     @Test
-    public void testClearAllIdentifiers() {
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", true)
-                .addIdentifier("custom key", "custom value")
-                .apply();
+    public void testClearIdentifiers() {
+
+        editor.setAdvertisingId("advertising Id", true)
+              .addIdentifier("custom key", "custom value")
+              .apply();
 
         assertEquals(identifiers.getIds().size(), 3);
         assertEquals("custom value", identifiers.getIds().get("custom key"));
-        assertEquals("advertising Id", identifiers.getIds().get("com.urbanairship.aaid"));
-        assertEquals("true", identifiers.getIds().get("com.urbanairship.limited_ad_tracking_enabled"));
+        assertEquals(identifiers.getAdvertisingId(), identifiers.getIds().get("com.urbanairship.aaid"));
+        assertTrue(identifiers.isLimitAdTrackingEnabled());
 
-        Map<String, String> ids = new HashMap<>(identifiers.getIds());
-        AssociatedIdentifiers updatedIdentifiers = new AssociatedIdentifiers.Editor(ids)
-                .clearAll()
-                .apply();
-
-        assertEquals(updatedIdentifiers.getIds().size(), 0);
+        editor.clear().apply();
+        assertEquals(identifiers.getIds().size(), 0);
     }
 }

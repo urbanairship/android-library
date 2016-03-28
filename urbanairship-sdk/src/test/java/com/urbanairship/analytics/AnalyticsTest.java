@@ -44,7 +44,9 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -307,8 +309,7 @@ public class AnalyticsTest extends BaseTestCase {
         Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
     }
 
-    // TODO: Remove tests using AssociatedIdentifiers.Builder() in 8.0.0, since
-    // AssociatedIdentifiers.Builder() have been marked to be removed in 8.0.0
+    // TODO: Remove this test for 8.0.0 since AssociatedIdentifiers.Builder() has been deprecated
     /**
      * Test associating identifiers sends a associate identifiers event to the event service.
      */
@@ -323,16 +324,31 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     /**
-     * Test associating identifiers sends a associate identifiers event to the event service.
+     * Test editAssociatedIdentifiers sends an associate identifiers event to the event service.
      */
     @Test
-    public void testAssociateIdentifiersEditor() {
-        analytics.associateIdentifiers(new AssociatedIdentifiers.Editor().apply());
+    public void testEditAssociatedIdentifiers() {
+        analytics.editAssociatedIdentifiers().apply();
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();
         assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
         assertEquals("associate_identifiers", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+    }
+
+    /**
+     * Test getAssociatedIdentifers.
+     */
+    @Test
+    public void testGetAssociatedIdentifiers() {
+        Map<String, String> ids = new HashMap<>();
+        ids.put("customKey", "customValue");
+        AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
+        analytics.getPreferences().setIdentifiers(identifiers);
+
+        AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifers();
+        assertEquals(storedIds.getIds().get("customKey"), "customValue");
+        assertEquals(storedIds.getIds().size(), 1);
     }
 
     /**

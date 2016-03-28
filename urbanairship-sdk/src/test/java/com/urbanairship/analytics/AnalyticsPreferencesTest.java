@@ -8,6 +8,9 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 
 public class AnalyticsPreferencesTest extends BaseTestCase {
@@ -64,12 +67,41 @@ public class AnalyticsPreferencesTest extends BaseTestCase {
                 preferences.getMinBatchInterval(), AnalyticsPreferences.MAX_BATCH_INTERVAL_MS - 1);
     }
 
-
     @Test
     public void TestGetNextSendTime() {
         Assert.assertEquals("Last send time should default to 0", 0, preferences.getLastSendTime());
 
         preferences.setLastSendTime(100);
         Assert.assertEquals("Last send time is not saving properly", 100, preferences.getLastSendTime());
+    }
+
+    /**
+     * Test associated identifiers.
+     */
+    @Test
+    public void testAssociatedIdentifiers() {
+        Map<String, String> ids = new HashMap<>();
+        ids.put("custom key", "custom value");
+        ids.put("fun key", "fun value");
+        AssociatedIdentifiers theIds = new AssociatedIdentifiers(ids);
+        preferences.setIdentifiers(theIds);
+
+        AssociatedIdentifiers someIds = preferences.getIdentifiers();
+        assertEquals("custom value", someIds.getIds().get("custom key"));
+        assertEquals("fun value", someIds.getIds().get("fun key"));
+        assertEquals(someIds.getIds().size(), 2);
+    }
+
+    /**
+     * Test empty associated identifiers.
+     */
+    @Test
+    public void testEmptyAssociatedIdentifiers() {
+        Map<String, String> ids = new HashMap<>();
+        AssociatedIdentifiers theIds = new AssociatedIdentifiers(ids);
+        preferences.setIdentifiers(theIds);
+
+        AssociatedIdentifiers emptyIds = preferences.getIdentifiers();
+        assertEquals(emptyIds.getIds().size(), 0);
     }
 }

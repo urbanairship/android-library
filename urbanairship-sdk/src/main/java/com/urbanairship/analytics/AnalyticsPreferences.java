@@ -1,12 +1,11 @@
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Analytics service preferences.
@@ -169,35 +168,30 @@ class AnalyticsPreferences {
     /**
      * Sets the associated identifiers.
      *
-     * @param ids The identifiers map.
+     * @param identifiers The AssociatedIdentifiers object.
      */
-    void setIdentifiers(Map<String, String> ids) {
-        if (!ids.isEmpty()) {
-            preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, JsonValue.wrapOpt(ids));
+    void setIdentifiers(@Nullable AssociatedIdentifiers identifiers) {
+        if (identifiers != null) {
+            preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
         } else {
             preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
         }
     }
 
     /**
-     * Returns the currently associated identifiers.
+     * Returns the current associated identifiers.
      *
-     * @return The current map of associated identifiers.
+     * @return The current associated identifiers.
      */
-    Map<String, String> getIdentifiers() {
-        Map<String, String> ids = new HashMap<>();
-
+    @NonNull
+    AssociatedIdentifiers getIdentifiers() {
         try {
-            JsonValue idsJasonValue = JsonValue.parseString(preferenceDataStore.getString(ASSOCIATED_IDENTIFIERS_KEY, null));
-            if (idsJasonValue != null && idsJasonValue.isJsonMap()) {
-                for (Map.Entry<String, JsonValue> entry : idsJasonValue.getMap()) {
-                    ids.put(entry.getKey(), entry.getValue().getString());
-                }
-            }
+            return AssociatedIdentifiers.fromJson(preferenceDataStore.getString(ASSOCIATED_IDENTIFIERS_KEY, null));
         } catch (JsonException e) {
             Logger.debug("Unable to parse associated identifiers.", e);
             preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
         }
-        return ids;
+
+        return new AssociatedIdentifiers();
     }
 }

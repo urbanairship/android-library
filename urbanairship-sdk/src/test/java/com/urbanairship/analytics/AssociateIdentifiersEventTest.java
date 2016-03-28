@@ -30,6 +30,8 @@ import com.urbanairship.BaseTestCase;
 import org.json.JSONException;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
@@ -39,11 +41,10 @@ import static junit.framework.Assert.assertTrue;
 
 public class AssociateIdentifiersEventTest extends BaseTestCase {
 
-    // TODO: Remove tests using AssociatedIdentifiers.Builder() in 8.0.0, since
-    // AssociatedIdentifiers.Builder() have been marked to be removed in 8.0.0
+
     @Test
     public void testEventType() {
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers.Builder().create());
+        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers());
         assertEquals(event.getType(), "associate_identifiers");
     }
 
@@ -52,13 +53,13 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
      */
     @Test
     public void testInvalidEvent() {
-        AssociatedIdentifiers.Builder builder = new AssociatedIdentifiers.Builder();
+        Map<String, String> ids = new HashMap<>();
         for (int i = 0; i < 101; i++) {
-            builder.setIdentifier(UUID.randomUUID().toString(), "value");
+            ids.put(UUID.randomUUID().toString(), "value");
         }
 
         // Verify its invalid
-        assertFalse(new AssociateIdentifiersEvent(builder.create()).isValid());
+        assertFalse(new AssociateIdentifiersEvent(new AssociatedIdentifiers(ids)).isValid());
     }
 
     /**
@@ -66,18 +67,17 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
      */
     @Test
     public void testValidEvent() {
-        AssociatedIdentifiers.Builder builder = new AssociatedIdentifiers.Builder();
-
         // Verify 0 Ids is valid
-        assertTrue(new AssociateIdentifiersEvent(builder.create()).isValid());
+        assertTrue(new AssociateIdentifiersEvent(new AssociatedIdentifiers()).isValid());
 
         // Add 100
+        Map<String, String> ids = new HashMap<>();
         for (int i = 0; i < 100; i++) {
-            builder.setIdentifier(UUID.randomUUID().toString(), "value");
+            ids.put(UUID.randomUUID().toString(), "value");
         }
 
         // Verify 100 Ids is valid
-        assertTrue(new AssociateIdentifiersEvent(builder.create()).isValid());
+        assertTrue(new AssociateIdentifiersEvent(new AssociatedIdentifiers(ids)).isValid());
     }
 
     /**
@@ -86,13 +86,12 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
      */
     @Test
     public void testEventData() throws JSONException {
-        AssociatedIdentifiers ids = new AssociatedIdentifiers.Builder()
-                .setAdvertisingId("advertising Id")
-                .setLimitedAdTrackingEnabled(true)
-                .setIdentifier("phone", "867-5309")
-                .create();
+        Map<String, String> ids = new HashMap<>();
+        ids.put("com.urbanairship.aaid", "advertising Id");
+        ids.put("phone", "867-5309");
+        ids.put("com.urbanairship.limited_ad_tracking_enabled", "true");
 
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
+        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers(ids));
         EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
         EventTestUtils.validateEventValue(event, "phone", "867-5309");
         EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "true");
@@ -104,89 +103,12 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
      */
     @Test
     public void testEventDataWithLimitedTrackingDisabled() throws JSONException {
-        AssociatedIdentifiers ids = new AssociatedIdentifiers.Builder()
-                .setAdvertisingId("advertising Id")
-                .setLimitedAdTrackingEnabled(false)
-                .setIdentifier("phone", "867-5309")
-                .create();
+        Map<String, String> ids = new HashMap<>();
+        ids.put("com.urbanairship.aaid", "advertising Id");
+        ids.put("phone", "867-5309");
+        ids.put("com.urbanairship.limited_ad_tracking_enabled", "false");
 
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
-        EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
-        EventTestUtils.validateEventValue(event, "phone", "867-5309");
-        EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "false");
-    }
-
-    /**
-     * Test event type with Editor
-     */
-    @Test
-    public void testEventTypeEditor() {
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers.Editor().apply());
-        assertEquals(event.getType(), "associate_identifiers");
-    }
-
-    /**
-     * Test the event is invalid when the associated identifiers exceed 100 with Editor.
-     */
-    @Test
-    public void testInvalidEventEditor() {
-        AssociatedIdentifiers.Editor editor = new AssociatedIdentifiers.Editor();
-        for (int i = 0; i < 101; i++) {
-            editor.addIdentifier(UUID.randomUUID().toString(), "value");
-        }
-
-        // Verify its invalid
-        assertFalse(new AssociateIdentifiersEvent(editor.apply()).isValid());
-    }
-
-    /**
-     * Test the event is valid if it contains 0 to 100 ids with Editor.
-     */
-    @Test
-    public void testValidEventEditor() {
-        AssociatedIdentifiers.Editor editor = new AssociatedIdentifiers.Editor();
-
-        // Verify 0 Ids is valid
-        assertTrue(new AssociateIdentifiersEvent(editor.apply()).isValid());
-
-        // Add 100
-        for (int i = 0; i < 100; i++) {
-            editor.addIdentifier(UUID.randomUUID().toString(), "value");
-        }
-
-        // Verify 100 Ids is valid
-        assertTrue(new AssociateIdentifiersEvent(editor.apply()).isValid());
-    }
-
-    /**
-     * Test event data when limited ad tracking enabled with Editor.
-     * @throws JSONException
-     */
-    @Test
-    public void testEventDataEditor() throws JSONException {
-        AssociatedIdentifiers ids = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", true)
-                .addIdentifier("phone", "867-5309")
-                .apply();
-
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
-        EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
-        EventTestUtils.validateEventValue(event, "phone", "867-5309");
-        EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "true");
-    }
-
-    /**
-     * Test event data when limited ad tracking disabled with Editor.
-     * @throws JSONException
-     */
-    @Test
-    public void testEventDataWithLimitedTrackingDisabledEditor() throws JSONException {
-        AssociatedIdentifiers ids = new AssociatedIdentifiers.Editor()
-                .setAdvertisingId("advertising Id", false)
-                .addIdentifier("phone", "867-5309")
-                .apply();
-
-        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(ids);
+        AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers(ids));
         EventTestUtils.validateEventValue(event, "com.urbanairship.aaid", "advertising Id");
         EventTestUtils.validateEventValue(event, "phone", "867-5309");
         EventTestUtils.validateEventValue(event, "com.urbanairship.limited_ad_tracking_enabled", "false");
