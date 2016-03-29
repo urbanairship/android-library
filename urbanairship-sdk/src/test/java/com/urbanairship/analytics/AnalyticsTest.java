@@ -346,7 +346,7 @@ public class AnalyticsTest extends BaseTestCase {
         AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
         analytics.getPreferences().setIdentifiers(identifiers);
 
-        AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifers();
+        AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
         assertEquals(storedIds.getIds().size(), 1);
     }

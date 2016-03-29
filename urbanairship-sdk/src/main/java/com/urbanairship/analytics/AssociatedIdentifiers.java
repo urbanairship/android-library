@@ -32,8 +32,10 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -136,30 +138,27 @@ public class AssociatedIdentifiers implements JsonSerializable {
      */
     public static abstract class Editor {
 
-        private final Map<String, String> ids;
+        private boolean clear = false;
+        private Map<String, String> idsToAdd = new HashMap<>();
+        private List<String> idsToRemove = new ArrayList<>();
 
         /**
          * Editor constructor
          */
-        Editor(AssociatedIdentifiers identifiers) {
-            this.ids = new HashMap<>();
-
-            if (identifiers != null) {
-                ids.putAll(identifiers.getIds());
-            }
+        Editor() {
         }
 
         /**
          * Sets the Android advertising ID and the limit ad tracking enabled value.
          *
          * @param adId The Android advertising ID.
-         * @param limitedAdTrackingEnabled A boolean indicating whether the user has limit ad tracking enabled or not.
+         * @param limitAdTrackingEnabled A boolean indicating whether the user has limit ad tracking enabled or not.
          * @return The editor object.
          */
         public Editor setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId,
-                                       boolean limitedAdTrackingEnabled) {
-            ids.put(ADVERTISING_ID_KEY, adId);
-            ids.put(LIMITED_AD_TRACKING_ENABLED_KEY, (limitedAdTrackingEnabled ? "true" : "false"));
+                                       boolean limitAdTrackingEnabled) {
+            addIdentifier(ADVERTISING_ID_KEY, adId);
+            addIdentifier(LIMITED_AD_TRACKING_ENABLED_KEY, (limitAdTrackingEnabled ? "true" : "false"));
             return this;
         }
 
@@ -169,8 +168,8 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @return The editor object.
          */
         public Editor removeAdvertisingId() {
-            ids.remove(ADVERTISING_ID_KEY);
-            ids.remove(LIMITED_AD_TRACKING_ENABLED_KEY);
+            removeIdentifier(ADVERTISING_ID_KEY);
+            removeIdentifier(LIMITED_AD_TRACKING_ENABLED_KEY);
             return this;
         }
 
@@ -183,7 +182,8 @@ public class AssociatedIdentifiers implements JsonSerializable {
          */
         public Editor addIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key,
                                     @NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String value) {
-            ids.put(key, value);
+            idsToRemove.remove(key);
+            idsToAdd.put(key, value);
             return this;
         }
 
@@ -194,29 +194,38 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @return The editor object.
          */
         public Editor removeIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key) {
-            ids.remove(key);
+            idsToAdd.remove(key);
+            idsToRemove.add(key);
             return this;
         }
 
         /**
-         * Removes all the identifiers.
+         * Clears all the identifiers.
+         * </p>
+         * Identifiers will be cleared first during apply, then the other operations will be applied.
          *
          * @return The editor object.
          */
         public Editor clear() {
-            ids.clear();
+            clear = true;
             return this;
         }
 
         /**
-         * Save changes to the modified identifiers and associates the identifiers with the device
-         * as well as add an event that will be sent up with other analytics events.
+         * Applies the identifiers changes.
          */
         public void apply() {
-            onApply(new AssociatedIdentifiers(ids));
+            onApply(clear, idsToAdd, idsToRemove);
         }
 
-        abstract void onApply(AssociatedIdentifiers identifiers);
+        /**
+         * Called when apply is called.
+         *
+         * @param clear {@code true} to clear all identifiers, otherwise {@code false}.
+         * @param idsToAdd Identifiers to add.
+         * @param idsToRemove Identifiers to remove.
+         */
+        abstract void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove);
     }
 
 
@@ -239,19 +248,6 @@ public class AssociatedIdentifiers implements JsonSerializable {
         @Deprecated
         public Builder setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId) {
             ids.put(ADVERTISING_ID_KEY, adId);
-            return this;
-        }
-
-        /**
-         * Sets the limit ad tracking enabled value.
-         *
-         * @param enabled A boolean indicating whether the user has limit ad tracking enabled or not.
-         * @return The builder object.
-         * @deprecated Marked to be removed in 8.0.0.
-         */
-        @Deprecated
-        public Builder setLimitedAdTrackingEnabled(boolean enabled) {
-            ids.put(LIMITED_AD_TRACKING_ENABLED_KEY, (enabled ? "true" : "false"));
             return this;
         }
 

@@ -44,6 +44,9 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.location.LocationRequestOptions;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -78,6 +81,8 @@ public class Analytics {
     private String currentScreen;
     private String previousScreen;
     private long screenStartTime;
+
+    private final Object associatedIdentifiersLock = new Object();
 
     /**
      * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
@@ -448,8 +453,10 @@ public class Analytics {
      */
     @Deprecated
     public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
-        preferences.setIdentifiers(identifiers);
-        addEvent(new AssociateIdentifiersEvent(identifiers));
+        synchronized (associatedIdentifiersLock) {
+            preferences.setIdentifiers(identifiers);
+            addEvent(new AssociateIdentifiersEvent(identifiers));
+        }
     }
 
     /**
@@ -461,11 +468,26 @@ public class Analytics {
      * @return The AssociatedIdentifiers.Editor
      */
     public AssociatedIdentifiers.Editor editAssociatedIdentifiers() {
-        return new AssociatedIdentifiers.Editor(preferences.getIdentifiers()) {
+        return new AssociatedIdentifiers.Editor() {
             @Override
-            void onApply(AssociatedIdentifiers identifiers) {
-                preferences.setIdentifiers(identifiers);
-                addEvent(new AssociateIdentifiersEvent(identifiers));
+            void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove) {
+                synchronized (associatedIdentifiersLock) {
+                    Map<String, String> ids = new HashMap<>();
+                    if (!clear) {
+                        Map<String, String> currentIds = getAssociatedIdentifiers().getIds();
+                        ids.putAll(currentIds);
+                    }
+
+                    ids.putAll(idsToAdd);
+
+                    for (String key : idsToRemove) {
+                        ids.remove(key);
+                    }
+
+                    AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
+                    preferences.setIdentifiers(identifiers);
+                    addEvent(new AssociateIdentifiersEvent(identifiers));
+                }
             }
         };
     }
@@ -475,8 +497,10 @@ public class Analytics {
      *
      * @return The current associated identifiers.
      */
-    public AssociatedIdentifiers getAssociatedIdentifers() {
-        return preferences.getIdentifiers();
+    public AssociatedIdentifiers getAssociatedIdentifiers() {
+        synchronized (associatedIdentifiersLock) {
+            return preferences.getIdentifiers();
+        }
     }
 
     /**
