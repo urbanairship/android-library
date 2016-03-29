@@ -73,11 +73,8 @@ class TagUtils {
      * @param tags The set of tags to normalize.
      * @return The set of normalized, valid tags.
      */
-    static Set<String> normalizeTags(Set<String> tags) {
-        if (tags == null) {
-            return null;
-        }
-
+    @NonNull
+    static Set<String> normalizeTags(@NonNull Set<String> tags) {
         Set<String> normalizedTags = new HashSet<>();
 
         for (String tag : tags) {

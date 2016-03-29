@@ -110,6 +110,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * The push message extra bundle.
+     *
      * @hide
      */
     public static final String EXTRA_PUSH_MESSAGE_BUNDLE = "com.urbanairship.push.EXTRA_PUSH_MESSAGE_BUNDLE";
@@ -117,24 +118,28 @@ public class PushManager extends AirshipComponent {
 
     /**
      * The interactive notification action button identifier extra.
+     *
      * @hide
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_ID = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_ID";
 
     /**
      * The flag indicating if the interactive notification action button is background or foreground.
+     *
      * @hide
      */
     public static final String EXTRA_NOTIFICATION_BUTTON_FOREGROUND = "com.urbanairship.push.EXTRA_NOTIFICATION_BUTTON_FOREGROUND";
 
     /**
      * Extra used to indicate an error in channel registration.
+     *
      * @hide
      */
     public static final String EXTRA_ERROR = "com.urbanairship.push.EXTRA_ERROR";
 
     /**
      * The channel ID extra.
+     *
      * @hide
      */
     public static final String EXTRA_CHANNEL_ID = "com.urbanairship.push.EXTRA_CHANNEL_ID";
@@ -242,6 +247,7 @@ public class PushManager extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
 
+    private final Object tagLock = new Object();
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -304,7 +310,6 @@ public class PushManager extends AirshipComponent {
      * This setting is persisted between application starts, so there is no need to call this
      * repeatedly. It is only necessary to call this when channelCreationDelayEnabled has been
      * set to <code>true</code> in the airship config.
-     *
      */
     public void enableChannelCreation() {
         if (isChannelCreationDelayEnabled()) {
@@ -417,21 +422,17 @@ public class PushManager extends AirshipComponent {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
         // only update server w/ registration call if
         // at least one of the values has changed
         boolean updateServer = false;
 
-        //check for change to alias
         if (!UAStringUtil.equals(alias, getAlias())) {
             setAlias(alias);
             updateServer = true;
         }
 
-        //check for change to tag set
-        if (!normalizedTags.equals(getTags())) {
-            setTags(normalizedTags);
+        if (!storeTags(tags)) {
             updateServer = true;
         }
 
@@ -558,14 +559,31 @@ public class PushManager extends AirshipComponent {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-        if (!normalizedTags.equals(getTags())) {
-            if (normalizedTags == null || normalizedTags.isEmpty()) {
-                preferenceDataStore.remove(TAGS_KEY);
-            } else {
-                preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
-            }
+        if (storeTags(tags)) {
             updateRegistration();
+        }
+    }
+
+    /**
+     * Stores tags in the preference data store.
+     *
+     * @param tags Tags to store.
+     * @return {code true} if tags changed, otherwise {@code false}.
+     */
+    private boolean storeTags(@NonNull Set<String> tags) {
+        synchronized (tagLock) {
+            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
+            if (!normalizedTags.equals(getTags())) {
+                if (normalizedTags.isEmpty()) {
+                    preferenceDataStore.remove(TAGS_KEY);
+                } else {
+                    preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -598,25 +616,28 @@ public class PushManager extends AirshipComponent {
      */
     @NonNull
     public Set<String> getTags() {
-        Set<String> tags = new HashSet<>();
+        synchronized (tagLock) {
+            Set<String> tags = new HashSet<>();
 
-        JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
+            JsonValue jsonValue = preferenceDataStore.getJsonValue(TAGS_KEY);
 
-        if (jsonValue.isJsonList()) {
-            for (JsonValue tag : jsonValue.getList()) {
-                if (tag.isString()) {
-                    tags.add(tag.getString());
+            if (jsonValue.isJsonList()) {
+                for (JsonValue tag : jsonValue.getList()) {
+                    if (tag.isString()) {
+                        tags.add(tag.getString());
+                    }
                 }
             }
-        }
 
-        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
+            Set<String> normalizedTags = TagUtils.normalizeTags(tags);
 
-        //to prevent the getTags call from constantly logging tag set failures, sync tags
-        if (tags.size() != normalizedTags.size()) {
-            this.setTags(normalizedTags);
+            //to prevent the getTags call from constantly logging tag set failures, sync tags
+            if (tags.size() != normalizedTags.size()) {
+                this.setTags(normalizedTags);
+            }
+
+            return normalizedTags;
         }
-        return normalizedTags;
     }
 
     /**
@@ -665,6 +686,7 @@ public class PushManager extends AirshipComponent {
     /**
      * Sets whether the GCM token or ADM ID is sent during channel registration.
      * If {@code false}, the app will not be able to receive push notifications.
+     *
      * @param enabled A boolean indicating whether the GCM token or ADM ID is sent during
      * channel registration.
      */
@@ -760,7 +782,7 @@ public class PushManager extends AirshipComponent {
     public Date[] getQuietTimeInterval() {
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
         if (quietTimeInterval != null) {
-            return  quietTimeInterval.getQuietTimeIntervalDateArray();
+            return quietTimeInterval.getQuietTimeIntervalDateArray();
         } else {
             return null;
         }
@@ -801,7 +823,7 @@ public class PushManager extends AirshipComponent {
     /**
      * Edit the channel tag groups.
      *
-     * @return The TagGroupsEditor.
+     * @return A {@link TagGroupsEditor}.
      */
     public TagGroupsEditor editTagGroups() {
         return new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS) {
@@ -844,6 +866,30 @@ public class PushManager extends AirshipComponent {
             }
         };
     }
+
+    /**
+     * Edits channel Tags.
+     *
+     * @return A {@link TagEditor}
+     */
+    public TagEditor editTags() {
+        return new TagEditor() {
+            @Override
+            void onApply(boolean clear, Set<String> tagsToAdd, Set<String> tagsToRemove) {
+                synchronized (tagLock) {
+                    Set<String> tags = clear ? new HashSet<String>() : getTags();
+
+                    tags.addAll(tagsToAdd);
+                    tags.removeAll(tagsToRemove);
+
+                    if (storeTags(tags)) {
+                        updateRegistration();
+                    }
+                }
+            }
+        };
+    }
+
 
     /**
      * Register a notification action group under the given name.
