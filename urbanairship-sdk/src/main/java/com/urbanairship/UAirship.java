@@ -36,6 +36,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.amazon.AdmUtils;
@@ -90,6 +91,12 @@ public class UAirship {
     volatile static boolean isTakingOff = false;
     static Application application;
     static UAirship sharedAirship;
+
+    /**
+     * Flag to enable printing take off's stacktrace. Useful when debugging exceptions related
+     * to take off not being called first.
+     */
+    public static boolean LOG_TAKE_OFF_STACKTRACE = false;
 
     private static List<CancelableOperation> pendingAirshipRequests;
 
@@ -290,6 +297,16 @@ public class UAirship {
             Logger.error("takeOff() must be called on the main thread!");
         }
 
+        if (LOG_TAKE_OFF_STACKTRACE) {
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement element : new Exception().getStackTrace()) {
+                sb.append("\n\tat ");
+                sb.append(element.toString());
+            }
+
+            Log.d(Logger.TAG, "Takeoff stack trace: " + sb.toString());
+        }
+
         synchronized (airshipLock) {
             // airships only take off once!!
             if (isFlying || isTakingOff) {
@@ -319,6 +336,7 @@ public class UAirship {
             thread.start();
         }
     }
+
 
     /**
      * Actually performs takeOff. This is called from takeOff on a background thread.
