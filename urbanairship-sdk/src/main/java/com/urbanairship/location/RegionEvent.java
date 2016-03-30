@@ -216,8 +216,15 @@ public class RegionEvent extends Event {
                 proximityRegionData.putOpt(PROXIMITY_REGION_ID, proximityRegion.getProximityId());
                 proximityRegionData.putOpt(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor());
                 proximityRegionData.putOpt(PROXIMITY_REGION_MINOR, proximityRegion.getMinor());
-                proximityRegionData.putOpt(LATITUDE, Double.toString(proximityRegion.getLatitude()));
-                proximityRegionData.putOpt(LONGITUDE, Double.toString(proximityRegion.getLongitude()));
+
+                if (proximityRegion.getLatitude() != null) {
+                    proximityRegionData.putOpt(LATITUDE, Double.toString(proximityRegion.getLatitude()));
+                }
+
+                if (proximityRegion.getLongitude() != null) {
+                    proximityRegionData.putOpt(LONGITUDE, Double.toString(proximityRegion.getLongitude()));
+                }
+
                 proximityRegionData.putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
 
                 data.putOpt(PROXIMITY_REGION, proximityRegionData);

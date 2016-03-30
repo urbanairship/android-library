@@ -207,6 +207,33 @@ public class RegionEventTest extends BaseTestCase {
     }
 
     /**
+     * Test creating a region event and setting a proximity region without a lat / long.
+     */
+    @Test
+    public void testRegionEventWithProximityRegionWithNullCoordinates() throws JSONException {
+
+        String regionId = createFixedSizeString('a', 255);
+        String source = createFixedSizeString('b', 255);
+        int boundaryEvent = RegionEvent.BOUNDARY_EVENT_ENTER;
+
+        RegionEvent event = new RegionEvent(regionId, source, boundaryEvent);
+        ProximityRegion proximityRegion = new ProximityRegion("test_proximity_region", 1, 2);
+
+        proximityRegion.setRssi(-59);
+
+        event.setProximityRegion(proximityRegion);
+
+        EventTestUtils.validateEventValue(event, "region_id", regionId);
+        EventTestUtils.validateEventValue(event, "source", source);
+        EventTestUtils.validateEventValue(event, "action", "enter");
+
+        EventTestUtils.validateNestedEventValue(event, "proximity", "proximity_id", proximityRegion.getProximityId());
+        EventTestUtils.validateNestedEventValue(event, "proximity", "major", proximityRegion.getMajor());
+        EventTestUtils.validateNestedEventValue(event, "proximity", "minor", proximityRegion.getMinor());
+        EventTestUtils.validateNestedEventValue(event, "proximity", "rssi", proximityRegion.getRssi());
+    }
+
+    /**
      * Test creating a region event and setting a circular region.
      */
     @Test
