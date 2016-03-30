@@ -36,6 +36,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
@@ -266,7 +267,7 @@ public class PushManager extends AirshipComponent {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
         }
 
-        actionGroupMap.putAll(NotificationActionButtonGroupFactory.createUrbanAirshipGroups());
+        actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
     }
 
     @Override
