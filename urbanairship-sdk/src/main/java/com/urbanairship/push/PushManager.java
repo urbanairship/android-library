@@ -268,6 +268,7 @@ public class PushManager extends AirshipComponent {
         }
 
         actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
+        actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
     }
 
     @Override
