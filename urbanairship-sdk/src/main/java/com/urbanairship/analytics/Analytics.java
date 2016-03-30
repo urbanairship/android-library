@@ -44,6 +44,9 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.location.LocationRequestOptions;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -78,6 +81,8 @@ public class Analytics {
     private String currentScreen;
     private String previousScreen;
     private long screenStartTime;
+
+    private final Object associatedIdentifiersLock = new Object();
 
     /**
      * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
@@ -444,9 +449,58 @@ public class Analytics {
      * associated identifiers will be replaced.
      *
      * @param identifiers An {@link AssociatedIdentifiers} instance.
+     * @deprecated Marked to be removed in 8.0.0. Use editAssociatedIdentifiers() instead.
      */
+    @Deprecated
     public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
-        addEvent(new AssociateIdentifiersEvent(identifiers));
+        synchronized (associatedIdentifiersLock) {
+            preferences.setIdentifiers(identifiers);
+            addEvent(new AssociateIdentifiersEvent(identifiers));
+        }
+    }
+
+    /**
+     * Edits the currently stored associated identifiers. All changes made in the editor are batched,
+     * and not stored until you call apply(). Calling apply() on the editor will associate the
+     * identifiers with the device and add an event that will be sent up with other analytics
+     * events. See {@link com.urbanairship.analytics.AssociatedIdentifiers.Editor}
+     *
+     * @return The AssociatedIdentifiers.Editor
+     */
+    public AssociatedIdentifiers.Editor editAssociatedIdentifiers() {
+        return new AssociatedIdentifiers.Editor() {
+            @Override
+            void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove) {
+                synchronized (associatedIdentifiersLock) {
+                    Map<String, String> ids = new HashMap<>();
+                    if (!clear) {
+                        Map<String, String> currentIds = getAssociatedIdentifiers().getIds();
+                        ids.putAll(currentIds);
+                    }
+
+                    ids.putAll(idsToAdd);
+
+                    for (String key : idsToRemove) {
+                        ids.remove(key);
+                    }
+
+                    AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
+                    preferences.setIdentifiers(identifiers);
+                    addEvent(new AssociateIdentifiersEvent(identifiers));
+                }
+            }
+        };
+    }
+
+    /**
+     * Returns the device's current associated identifiers.
+     *
+     * @return The current associated identifiers.
+     */
+    public AssociatedIdentifiers getAssociatedIdentifiers() {
+        synchronized (associatedIdentifiersLock) {
+            return preferences.getIdentifiers();
+        }
     }
 
     /**

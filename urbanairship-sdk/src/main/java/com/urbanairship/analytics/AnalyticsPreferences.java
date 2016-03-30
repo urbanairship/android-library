@@ -1,6 +1,11 @@
 package com.urbanairship.analytics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.json.JsonException;
 
 /**
  * Analytics service preferences.
@@ -15,6 +20,7 @@ class AnalyticsPreferences {
     private static final String LAST_SEND_KEY = KEY_PREFIX + ".LAST_SEND";
     private static final String SCHEDULED_SEND_TIME = KEY_PREFIX + ".SCHEDULED_SEND_TIME";
     private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
+    private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
 
     static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; //5 MB
     static final int MIN_TOTAL_DB_SIZE_BYTES = 10 * 1024;       //10 KB
@@ -141,7 +147,6 @@ class AnalyticsPreferences {
         preferenceDataStore.put(SCHEDULED_SEND_TIME, scheduledSendTime);
     }
 
-
     /**
      * Sets analytics enabled flag.
      *
@@ -158,5 +163,35 @@ class AnalyticsPreferences {
      */
     boolean isAnalyticsEnabled() {
         return preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
+    }
+
+    /**
+     * Sets the associated identifiers.
+     *
+     * @param identifiers The AssociatedIdentifiers object.
+     */
+    void setIdentifiers(@Nullable AssociatedIdentifiers identifiers) {
+        if (identifiers != null) {
+            preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
+        } else {
+            preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+        }
+    }
+
+    /**
+     * Returns the current associated identifiers.
+     *
+     * @return The current associated identifiers.
+     */
+    @NonNull
+    AssociatedIdentifiers getIdentifiers() {
+        try {
+            return AssociatedIdentifiers.fromJson(preferenceDataStore.getString(ASSOCIATED_IDENTIFIERS_KEY, null));
+        } catch (JsonException e) {
+            Logger.debug("Unable to parse associated identifiers.", e);
+            preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+        }
+
+        return new AssociatedIdentifiers();
     }
 }
