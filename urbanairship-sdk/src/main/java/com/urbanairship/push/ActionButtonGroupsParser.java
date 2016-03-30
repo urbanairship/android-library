@@ -51,6 +51,13 @@ import java.util.Map;
  */
 class ActionButtonGroupsParser {
 
+    private static final String BUTTON_GROUP_TAG = "UrbanAirshipActionButtonGroup";
+    private static final String BUTTON_TAG = "UrbanAirshipActionButton";
+
+    private static final String ID_ATTRIBUTE = "id";
+    private static final String DESCRIPTION_ATTRIBUTE = "description";
+    private static final String FOREGROUND_ATTRIBUTE = "foreground";
+
     /**
      * Generates a map of NotificationActionButtonGroups from an xml resource file.
      *
@@ -59,47 +66,60 @@ class ActionButtonGroupsParser {
      * @return A map of NotificationActionButtonGroups.
      */
     public static Map<String, NotificationActionButtonGroup> fromXml(Context context, @XmlRes int resource) {
-        Map<String, NotificationActionButtonGroup> groups = new HashMap<>();
 
         XmlResourceParser parser;
         try {
             parser = context.getResources().getXml(resource);
-        } catch (Resources.NotFoundException e) {
-            return groups;
+            return parseGroups(context, parser);
+        } catch (IOException | XmlPullParserException | Resources.NotFoundException e) {
+            Logger.error("Failed to parse NotificationActionButtonGroups:" + e.getMessage());
+            return new HashMap<>();
         }
+    }
+
+    /**
+     * Parses NotificationActionButtonGroups from xml.
+     *
+     * @param context The context.
+     * @param parser The xml parser.
+     * @return A map of NotificationActionButtonGroups.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
+    private static Map<String, NotificationActionButtonGroup> parseGroups(Context context, XmlResourceParser parser) throws IOException, XmlPullParserException {
+        Map<String, NotificationActionButtonGroup> groups = new HashMap<>();
 
         String groupId = null;
         NotificationActionButtonGroup.Builder groupBuilder = null;
 
-        int state;
-        do {
-            try {
-                state = parser.next();
-            } catch (XmlPullParserException | IOException e) {
-                break;
-            }
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
 
+            int tagType = parser.getEventType();
+            String tagName = parser.getName();
 
-            if (state == XmlPullParser.START_TAG && parser.getName().equals("UrbanAirshipActionButtonGroup")) {
-                groupId = parser.getAttributeValue(null, "id");
-                groupBuilder = new NotificationActionButtonGroup.Builder();
-
-                if (UAStringUtil.isEmpty(groupId)) {
-                    Logger.error("UrbanAirshipActionButtonGroup missing id.");
+            // Start group
+            if (tagType == XmlPullParser.START_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
+                String id = parser.getAttributeValue(null, ID_ATTRIBUTE);
+                if (UAStringUtil.isEmpty(id)) {
+                    Logger.error(BUTTON_GROUP_TAG + " missing id.");
+                    continue;
                 }
+
+                groupId = id;
+                groupBuilder = new NotificationActionButtonGroup.Builder();
 
                 continue;
             }
-
 
             if (UAStringUtil.isEmpty(groupId)) {
                 continue;
             }
 
-            if (state == XmlPullParser.START_TAG && parser.getName().equals("UrbanAirshipActionButton")) {
-                String buttonId = parser.getAttributeValue(null, "id");
+            // Inner Buttons
+            if (tagType == XmlPullParser.START_TAG && BUTTON_TAG.equals(tagName)) {
+                String buttonId = parser.getAttributeValue(null, ID_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(buttonId)) {
-                    Logger.error("UrbanAirshipActionButton missing id.");
+                    Logger.error(BUTTON_TAG + " missing id.");
                     continue;
                 }
 
@@ -107,10 +127,10 @@ class ActionButtonGroupsParser {
                 TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.UrbanAirshipActionButton);
 
                 NotificationActionButton button = new NotificationActionButton.Builder(buttonId)
-                        .setPerformsInForeground(parser.getAttributeBooleanValue(null, "foreground", true))
+                        .setPerformsInForeground(parser.getAttributeBooleanValue(null, FOREGROUND_ATTRIBUTE, true))
                         .setIcon(typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_icon, 0))
                         .setLabel(typedArray.getResourceId(R.styleable.UrbanAirshipActionButton_android_label, 0))
-                        .setDescription(parser.getAttributeValue(null, "description"))
+                        .setDescription(parser.getAttributeValue(null, DESCRIPTION_ATTRIBUTE))
                         .build();
 
                 groupBuilder.addNotificationActionButton(button);
@@ -120,20 +140,18 @@ class ActionButtonGroupsParser {
                 continue;
             }
 
-            if (state == XmlPullParser.END_TAG && parser.getName().equals("UrbanAirshipActionButtonGroup")) {
+            // End Group
+            if (tagType == XmlPullParser.END_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 NotificationActionButtonGroup group = groupBuilder.build();
                 if (group.getNotificationActionButtons().isEmpty()) {
-                    Logger.error("UrbanAirshipActionButtonGroup " + groupId + " missing action buttons.");
+                    Logger.error(BUTTON_GROUP_TAG + " " + groupId + " missing action buttons.");
                     continue;
                 }
 
                 groups.put(groupId, group);
             }
         }
-        while (state != XmlPullParser.END_DOCUMENT);
-
-        parser.close();
-
         return groups;
     }
+
 }
