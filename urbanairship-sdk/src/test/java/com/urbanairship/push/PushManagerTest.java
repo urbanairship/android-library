@@ -466,8 +466,8 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-    * Test set trimmed alias
-    */
+     * Test set trimmed alias
+     */
     @Test
     public void testTrimmedAlias() {
         String alias = "whitespace_test_alias";
@@ -880,5 +880,62 @@ public class PushManagerTest extends BaseTestCase {
         assertFalse(pushManager.isInQuietTime());
         pushManager.setQuietTimeEnabled(true);
         assertTrue(pushManager.isInQuietTime());
+    }
+
+    /**
+     * Test edit tags.
+     */
+    @Test
+    public void testEditTags() {
+        Set<String> tags = new HashSet<>();
+        tags.add("existing_tag");
+        tags.add("another_existing_tag");
+
+        // Set some existing tags first
+        pushManager.setTags(tags);
+
+        pushManager.editTags()
+                   .addTag("hi")
+                   .removeTag("another_existing_tag")
+                   .apply();
+
+        // Verify the new tags
+        tags = pushManager.getTags();
+        assertEquals(2, tags.size());
+        assertTrue(tags.contains("hi"));
+        assertTrue(tags.contains("existing_tag"));
+
+        // A registration update should be triggered
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect start registration", PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+    }
+
+
+    /**
+     * Test edit tags with clear set, clears the tags first before
+     * doing any adds.
+     */
+    @Test
+    public void testEditTagsClear() {
+        Set<String> tags = new HashSet<>();
+        tags.add("existing_tag");
+        tags.add("another_existing_tag");
+
+        // Set some existing tags first
+        pushManager.setTags(tags);
+
+        pushManager.editTags()
+                   .addTag("hi")
+                   .clear()
+                   .apply();
+
+        // Verify the new tags
+        tags = pushManager.getTags();
+        assertEquals(1, tags.size());
+        assertTrue(tags.contains("hi"));
+
+        // A registration update should be triggered
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals("Expect start registration", PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
     }
 }
