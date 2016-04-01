@@ -5,6 +5,7 @@ import android.content.Intent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.R;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -627,7 +628,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testUrbanAirshipNotificationActionButtonGroups() {
-        Set<String> keys = NotificationActionButtonGroupFactory.createUrbanAirshipGroups().keySet();
+        Set<String> keys = ActionButtonGroupsParser.fromXml(RuntimeEnvironment.application, R.xml.ua_notification_buttons).keySet();
         assertTrue(keys.size() > 0);
 
         for (String key : keys) {
@@ -649,7 +650,7 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testRemovingNotificationActionButtonGroupWithReservedPrefix() {
-        Set<String> keys = NotificationActionButtonGroupFactory.createUrbanAirshipGroups().keySet();
+        Set<String> keys = ActionButtonGroupsParser.fromXml(RuntimeEnvironment.application, R.xml.ua_notification_buttons).keySet();
 
         for (String key : keys) {
             pushManager.removeNotificationActionButtonGroup(key);

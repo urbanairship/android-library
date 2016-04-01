@@ -26,4 +26,12 @@
             <enum name="compatibility_mode" value="2"/>
         </attr>
     </declare-styleable>
+
+
+    <declare-styleable name="UrbanAirshipActionButton">
+        <attr name="android:icon"/>
+        <attr name="android:label" />
+    </declare-styleable>
+
+
 </resources>

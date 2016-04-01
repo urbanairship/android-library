@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ua_emoji_happy">&#128512;</string>
+    <string name="ua_emoji_sad">&#128542;</string>
+    <string name="ua_emoji_thumbs_up">&#128077;</string>
+    <string name="ua_emoji_thumbs_down">&#128078;</string>
+</resources>
