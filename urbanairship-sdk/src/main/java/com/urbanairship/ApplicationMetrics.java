@@ -37,28 +37,36 @@ import com.urbanairship.analytics.Analytics;
 /**
  * ApplicationMetrics stores metric information about the application.
  */
-public class ApplicationMetrics {
+public class ApplicationMetrics extends AirshipComponent {
 
     private static final String LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN";
     private final PreferenceDataStore preferenceDataStore;
+    private final Context context;
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            preferenceDataStore.put(LAST_OPEN_KEY, System.currentTimeMillis());
+        }
+    };
 
     ApplicationMetrics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;
-        registerBroadcastReceivers(context);
+        this.context = context.getApplicationContext();
     }
 
-    private void registerBroadcastReceivers(@NonNull Context context) {
+    @Override
+    protected void init() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
 
         LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
+        broadcastManager.registerReceiver(broadcastReceiver, filter);
+    }
 
-        broadcastManager.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                preferenceDataStore.put(LAST_OPEN_KEY, System.currentTimeMillis());
-            }
-        }, filter);
+    @Override
+    protected void tearDown() {
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
     }
 
     /**

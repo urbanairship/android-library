@@ -50,7 +50,7 @@ import java.util.concurrent.Executors;
  *
  * @hide
  */
-public final class PreferenceDataStore {
+public final class PreferenceDataStore extends AirshipComponent {
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
@@ -90,6 +90,7 @@ public final class PreferenceDataStore {
 
     /**
      * Adds a listener for preference changes.
+     *
      * @param listener A PreferenceChangeListener.
      */
     public void addListener(@NonNull PreferenceChangeListener listener) {
@@ -100,6 +101,7 @@ public final class PreferenceDataStore {
 
     /**
      * Removes a listener for preference changes.
+     *
      * @param listener A PreferenceChangeListener.
      */
     public void removeListener(@NonNull PreferenceChangeListener listener) {
@@ -108,10 +110,8 @@ public final class PreferenceDataStore {
         }
     }
 
-    /**
-     * Loads all the stored preferences. This call blocks.
-     */
-    void loadAll() {
+    @Override
+    protected void init() {
         Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(), null, null, null, null);
         if (cursor == null) {
             return;
@@ -123,10 +123,20 @@ public final class PreferenceDataStore {
         while (cursor.moveToNext()) {
             String key = cursor.getString(keyIndex);
             String value = cursor.getString(valueIndex);
-            preferences.put(key, new Preference(key, value));
+            Preference preference = new Preference(key, value);
+            preference.registerObserver();
+
+            preferences.put(key, preference);
         }
 
         cursor.close();
+    }
+
+    @Override
+    protected void tearDown() {
+        for (Preference preference : preferences.values()) {
+            preference.unregisterObserver();
+        }
     }
 
     /**
@@ -210,17 +220,6 @@ public final class PreferenceDataStore {
             Logger.debug("Unable to parse preference value: " + key, e);
             return JsonValue.NULL;
         }
-    }
-
-    /**
-     * Delete a key/value pair. This method will block on the database write.
-     *
-     * @param key The preference name.
-     * @return <code>true</code> if the preference was successfully removed from
-     * the database, otherwise <code>false</code>
-     */
-    public boolean removeSync(@NonNull String key) {
-        return putSync(key, null);
     }
 
     /**
@@ -341,6 +340,8 @@ public final class PreferenceDataStore {
                 preference = preferences.get(key);
             } else {
                 preference = new Preference(key, null);
+                preference.registerObserver();
+
                 preferences.put(key, preference);
             }
         }
@@ -354,13 +355,27 @@ public final class PreferenceDataStore {
      */
     private class Preference {
 
+        private ContentObserver observer = new ContentObserver(null) {
+            @Override
+            public void onChange(boolean selfChange) {
+                super.onChange(selfChange);
+
+                Logger.verbose("PreferenceDataStore - Preference updated:" + Preference.this.key);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        syncValue();
+                    }
+                });
+            }
+        };
+
         private final String key;
         private String value;
 
         Preference(String key, String value) {
             this.key = key;
             this.value = value;
-            this.registerObserver();
         }
 
         /**
@@ -474,28 +489,13 @@ public final class PreferenceDataStore {
             }
         }
 
-        /**
-         * Registers a content observer to be notified when the preference
-         * changes.
-         */
-        private void registerObserver() {
-            ContentObserver observer = new ContentObserver(null) {
-                @Override
-                public void onChange(boolean selfChange) {
-                    super.onChange(selfChange);
-
-                    Logger.verbose("PreferenceDataStore - Preference updated:" + Preference.this.key);
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            syncValue();
-                        }
-                    });
-                }
-            };
-
+        void registerObserver() {
             Uri uri = Uri.withAppendedPath(UrbanAirshipProvider.getPreferencesContentUri(), key);
             resolver.registerContentObserver(uri, true, observer);
+        }
+
+        void unregisterObserver() {
+            resolver.unregisterContentObserver(observer);
         }
     }
 }

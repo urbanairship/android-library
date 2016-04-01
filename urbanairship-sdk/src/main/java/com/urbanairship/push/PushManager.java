@@ -27,6 +27,7 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -269,16 +270,19 @@ public class PushManager extends AirshipComponent {
         this.namedUser = namedUser;
         this.configOptions = configOptions;
 
-        if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
-            Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
-        }
-
         actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
-        actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
+        }
     }
 
     @Override
     protected void init() {
+        if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
+            Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
+        }
+
         this.migratePushEnabledSettings();
         this.migrateQuietTimeInterval();
 

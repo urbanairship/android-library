@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship.analytics;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -33,7 +34,6 @@ import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.util.DataManager;
 
 import java.util.HashMap;
@@ -92,8 +92,8 @@ class EventDataManager extends DataManager {
 
     }
 
-    EventDataManager() {
-        super(UAirship.getApplicationContext(), DATABASE_NAME, DATABASE_VERSION);
+    EventDataManager(@NonNull Context context, @NonNull String appKey) {
+        super(context, appKey, DATABASE_NAME, DATABASE_VERSION);
     }
 
     @Override
@@ -110,7 +110,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void onCreate(SQLiteDatabase db) {
+    protected void onCreate(@NonNull SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + Events.TABLE_NAME + " ("
                 + Events._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + Events.COLUMN_NAME_TYPE + " TEXT,"

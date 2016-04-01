@@ -32,6 +32,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.util.DataManager;
 import com.urbanairship.util.UAStringUtil;
@@ -41,6 +42,7 @@ import java.util.List;
 
 /**
  * Manages access to Urban Airship Preferences and Rich Push Message data.
+ * @hide
  */
 public final class UrbanAirshipProvider extends ContentProvider {
 
@@ -121,9 +123,9 @@ public final class UrbanAirshipProvider extends ContentProvider {
      */
     private static final int KEYS_LOCATION = 1;
 
+    private DatabaseModel richPushDataModel;
+    private DatabaseModel preferencesDataModel;
 
-    private DatabaseModel richPushModel;
-    private DatabaseModel preferencesModel;
 
     private static String authorityString;
 
@@ -172,6 +174,9 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
+        if (getContext() != null) {
+            Autopilot.automaticTakeOff(getContext());
+        }
         return true;
     }
 
@@ -221,9 +226,11 @@ public final class UrbanAirshipProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         DatabaseModel model = getDatabaseModel(uri);
-        DataManager manager = model.dataManager;
+        if (model == null || getContext() == null) {
+            return null;
+        }
 
-        if (manager.insert(model.table, values) != -1) {
+        if (model.dataManager.insert(model.table, values) != -1) {
             String uriKey = values.getAsString(model.notificationColumnId);
             model.notifyDatabaseChange(getContext(), new String[] { uriKey }, INSERT_ACTION);
             return Uri.withAppendedPath(uri, uriKey);
@@ -235,9 +242,11 @@ public final class UrbanAirshipProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         DatabaseModel model = getDatabaseModel(uri);
-        DataManager manager = model.dataManager;
+        if (model == null || getContext() == null) {
+            return null;
+        }
 
-        Cursor cursor = manager.query(model.table, projection, selection, selectionArgs, sortOrder);
+        Cursor cursor = model.dataManager.query(model.table, projection, selection, selectionArgs, sortOrder);
 
         if (cursor != null) {
             cursor.setNotificationUri(this.getContext().getContentResolver(), uri);
@@ -261,32 +270,17 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
     @Override
     public void shutdown() {
-        getRichPushModel().dataManager.close();
-        getPreferencesModel().dataManager.close();
-    }
-
-
-    // helpers
-
-    /**
-     * @return The preferences database model.
-     */
-    private DatabaseModel getPreferencesModel() {
-        if (preferencesModel == null) {
-            preferencesModel = DatabaseModel.createPreferencesModel(getContext());
+        if (richPushDataModel != null) {
+            richPushDataModel.dataManager.close();
+            richPushDataModel = null;
         }
-        return preferencesModel;
+
+        if (preferencesDataModel != null) {
+            preferencesDataModel.dataManager.close();
+            preferencesDataModel = null;
+        }
     }
 
-    /**
-     * @return The rich push database model.
-     */
-    private DatabaseModel getRichPushModel() {
-        if (richPushModel == null) {
-            richPushModel = DatabaseModel.createRichPushModel(getContext());
-        }
-        return richPushModel;
-    }
 
     /**
      * Parses a URI for any keys to use to identify values in the database.
@@ -308,17 +302,34 @@ public final class UrbanAirshipProvider extends ContentProvider {
      * @param uri URI of the provider action.
      * @return Either a preferences or rich push database model depending on the URI.
      */
+    @Nullable
     private DatabaseModel getDatabaseModel(@NonNull Uri uri) {
+        if (getContext() == null || (!UAirship.isFlying() && !UAirship.isTakingOff())) {
+            return null;
+        }
+
+        String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
+
         int type = MATCHER.match(uri);
         switch (type) {
             case RICHPUSH_MESSAGE_URI_TYPE:
             case RICHPUSH_MESSAGES_URI_TYPE:
-                return getRichPushModel();
+                if (richPushDataModel == null) {
+                    richPushDataModel = DatabaseModel.createRichPushModel(getContext(), appKey);
+                }
+
+                return richPushDataModel;
 
             case PREFERENCE_URI_TYPE:
             case PREFERENCES_URI_TYPE:
-                return getPreferencesModel();
+                if (preferencesDataModel == null) {
+                    preferencesDataModel = DatabaseModel.createPreferencesModel(getContext(), appKey);
+                }
+
+                return preferencesDataModel;
         }
+
+
         throw new IllegalArgumentException("Invalid URI: " + uri);
     }
 
@@ -341,7 +352,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
          * @param notificationColumnId Notification column id.
          */
         private DatabaseModel(@NonNull DataManager dataManager, @NonNull String table, @NonNull Uri contentUri, @NonNull String notificationColumnId) {
-
             this.dataManager = dataManager;
             this.table = table;
             this.contentUri = contentUri;
@@ -351,11 +361,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
         /**
          * Creates a rich push database model.
          *
-         * @param context used to create or open databases.
+         * @param context The application context
+         * @param appKey The current appKey.
          * @return A database model configured for rich push messages.
          */
-        static DatabaseModel createRichPushModel(@NonNull Context context) {
-            DataManager model = new RichPushDataManager(context);
+        static DatabaseModel createRichPushModel(@NonNull Context context, String appKey) {
+            DataManager model = new RichPushDataManager(context, appKey);
             return new DatabaseModel(model, RichPushTable.TABLE_NAME, getRichPushContentUri(),
                     RichPushTable.COLUMN_NAME_MESSAGE_ID);
         }
@@ -363,11 +374,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
         /**
          * Creates a preferences database model.
          *
-         * @param context used to create or open databases.
+         * @param context The application context
+         * @param appKey The current appKey.
          * @return DatabaseModel.
          */
-        static DatabaseModel createPreferencesModel(@NonNull Context context) {
-            DataManager model = new PreferencesDataManager(context);
+        static DatabaseModel createPreferencesModel(@NonNull Context context, String appKey) {
+            DataManager model = new PreferencesDataManager(context, appKey);
             return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, getPreferencesContentUri(),
                     PreferencesDataManager.COLUMN_NAME_KEY);
         }

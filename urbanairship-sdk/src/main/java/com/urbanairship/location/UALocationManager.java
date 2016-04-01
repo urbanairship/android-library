@@ -79,6 +79,14 @@ public class UALocationManager extends AirshipComponent {
 
     private final PreferenceDataStore preferenceDataStore;
 
+    private BroadcastReceiver appStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateServiceConnection();
+        }
+    };
+
+
     /**
      * List of location listeners.
      */
@@ -145,20 +153,14 @@ public class UALocationManager extends AirshipComponent {
         filter.addAction(Analytics.ACTION_APP_FOREGROUND);
         filter.addAction(Analytics.ACTION_APP_BACKGROUND);
 
-        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
-        broadcastManager.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateServiceConnection();
-            }
-        }, filter);
-
+        LocalBroadcastManager.getInstance(context).registerReceiver(appStateReceiver, filter);
         updateServiceConnection();
     }
 
     @Override
     protected void tearDown() {
         preferenceDataStore.removeListener(preferenceChangeListener);
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(appStateReceiver);
     }
 
 
