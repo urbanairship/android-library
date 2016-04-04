@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Да</string>
+    <string name="ua_notification_button_no">Нет</string>
+    <string name="ua_notification_button_shop_now">Купите сейчас</string>
+    <string name="ua_notification_button_buy_now">Купите сейчас</string>
+    <string name="ua_notification_button_follow">Подписаться</string>
+    <string name="ua_notification_button_unfollow">Отписаться</string>
+    <string name="ua_notification_button_opt_in">Подписаться на рассылку</string>
+    <string name="ua_notification_button_opt_out">Отписаться от рассылки</string>
+    <string name="ua_notification_button_remind">Напомнить мне позже</string>
+    <string name="ua_notification_button_share">Поделиться</string>
+    <string name="ua_notification_button_accept">Принять</string>
+    <string name="ua_notification_button_decline">Отклонить</string>
+    <string name="ua_notification_button_download">Скачать</string>
+    <string name="ua_notification_button_more_like">Больше подобного</string>
+    <string name="ua_notification_button_less_like">Меньше подобного</string>
+    <string name="ua_notification_button_like">Нравится</string>
+    <string name="ua_notification_button_dislike">Не нравится</string>
+    <string name="ua_notification_button_copy">Копировать</string>
+    <string name="ua_notification_button_save">Сохранить</string>
+    <string name="ua_notification_button_add_to_calendar">Добавить в календарь</string>
+    <string name="ua_notification_button_add">Добавить</string>
+    <string name="ua_notification_button_tell_me_more">Сказать больше</string>
+    <string name="ua_notification_button_send_info">Отправить информацию</string>
+    <string name="ua_notification_button_rate_now">Оценить сейчас</string>
+    <string name="ua_notification_button_search">Поиск</string>
+    <string name="ua_notification_button_book_now">Забронировать сейчас</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Поделиться</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Городской канал дирижабля</string>
+    <string name="ua_channel_copy_toast">Канал скопирован в буфер обмена!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Центр сообщений</string>
+    <string name="ua_empty_message_list">Нет сообщений</string>
+    <string name="ua_message_not_selected">Нет выбранных сообщений</string>
+    <string name="ua_mc_failed_to_load">Невозможно загрузить сообщение. Пожалуйста, повторите попытку позже.</string>
+    <string name="ua_retry_button">Повторить попытку</string>
+    <string name="ua_ok">ОК</string>
+    <string name="ua_cancel">Отмена</string>
+    <string name="ua_select_none">Не выбирать ничего</string>
+    <string name="ua_select_all">Выбрать все</string>
+    <string name="ua_connection_error">Ошибка подключения</string>
+    <string name="ua_mark_read">Отметить как прочитанное</string>
+    <string name="ua_delete">Удалить</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> выбран</item>
+    <item quantity="few">
+      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+    <item quantity="many">
+      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+  </plurals>
+
+</resources>

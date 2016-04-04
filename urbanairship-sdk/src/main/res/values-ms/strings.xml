@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ya</string>
+    <string name="ua_notification_button_no">Tidak</string>
+    <string name="ua_notification_button_shop_now">Berbelanjalah Sekarang</string>
+    <string name="ua_notification_button_buy_now">Beli Sekarang</string>
+    <string name="ua_notification_button_follow">Ikut</string>
+    <string name="ua_notification_button_unfollow">Nyahikut</string>
+    <string name="ua_notification_button_opt_in">Ikut serta</string>
+    <string name="ua_notification_button_opt_out">Tarik diri</string>
+    <string name="ua_notification_button_remind">Ingatkan Saya Kemudian</string>
+    <string name="ua_notification_button_share">Kongsi</string>
+    <string name="ua_notification_button_accept">Terima</string>
+    <string name="ua_notification_button_decline">Tolak</string>
+    <string name="ua_notification_button_download">Muat turun</string>
+    <string name="ua_notification_button_more_like">Lebih Seperti Ini</string>
+    <string name="ua_notification_button_less_like">Kurang Seperti Ini</string>
+    <string name="ua_notification_button_like">Suka</string>
+    <string name="ua_notification_button_dislike">Tidak suka</string>
+    <string name="ua_notification_button_copy">Salin</string>
+    <string name="ua_notification_button_save">Simpan</string>
+    <string name="ua_notification_button_add_to_calendar">Tambah Ke Kalendar</string>
+    <string name="ua_notification_button_add">Tambah</string>
+    <string name="ua_notification_button_tell_me_more">Beritahu Saya Lagi</string>
+    <string name="ua_notification_button_send_info">Menghantar Info</string>
+    <string name="ua_notification_button_rate_now">Nilaikan Sekarang</string>
+    <string name="ua_notification_button_search">Carian</string>
+    <string name="ua_notification_button_book_now">Tempah Sekarang</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Kongsi</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Saluran Urban AirShip</string>
+    <string name="ua_channel_copy_toast">Saluran disalin ke papan klip!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Pusat Mesej</string>
+    <string name="ua_empty_message_list">Tiada Mesej</string>
+    <string name="ua_message_not_selected">Tiada Mesej Yang Dipilih</string>
+    <string name="ua_mc_failed_to_load">Tidak dapat memuatkan mesej. Sila cuba sebentar lagi.</string>
+    <string name="ua_retry_button">Cuba semula</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Batal</string>
+    <string name="ua_select_none">Pilih Tiada</string>
+    <string name="ua_select_all">Pilih Semua</string>
+    <string name="ua_connection_error">Ralat Sambungan</string>
+    <string name="ua_mark_read">Tanda Dibaca</string>
+    <string name="ua_delete">Padam</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> dipilih</item>
+  </plurals>
+
+</resources>

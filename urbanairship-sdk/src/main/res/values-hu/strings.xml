@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Igen</string>
+    <string name="ua_notification_button_no">Nem</string>
+    <string name="ua_notification_button_shop_now">Vásárlás most</string>
+    <string name="ua_notification_button_buy_now">Megveszem most</string>
+    <string name="ua_notification_button_follow">Követem</string>
+    <string name="ua_notification_button_unfollow">Nem követem</string>
+    <string name="ua_notification_button_opt_in">Kérem</string>
+    <string name="ua_notification_button_opt_out">Nem kérem</string>
+    <string name="ua_notification_button_remind">Emlékeztess később</string>
+    <string name="ua_notification_button_share">Oszd meg</string>
+    <string name="ua_notification_button_accept">Fogadd el</string>
+    <string name="ua_notification_button_decline">Utasítsd el</string>
+    <string name="ua_notification_button_download">Töltsd le</string>
+    <string name="ua_notification_button_more_like">Még több ilyen</string>
+    <string name="ua_notification_button_less_like">Kevesebb ilyen</string>
+    <string name="ua_notification_button_like">Tetszik</string>
+    <string name="ua_notification_button_dislike">Nem tetszik</string>
+    <string name="ua_notification_button_copy">Másold</string>
+    <string name="ua_notification_button_save">Mentsd el</string>
+    <string name="ua_notification_button_add_to_calendar">Add a naptárhoz</string>
+    <string name="ua_notification_button_add">Add hozzá</string>
+    <string name="ua_notification_button_tell_me_more">Mondj róla többet</string>
+    <string name="ua_notification_button_send_info">Küldj infót</string>
+    <string name="ua_notification_button_rate_now">Most értékelem</string>
+    <string name="ua_notification_button_search">Keress</string>
+    <string name="ua_notification_button_book_now">Foglald le most</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Oszd meg</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship csatorna</string>
+    <string name="ua_channel_copy_toast">A csatornát rámásoltam a vágólapra</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Üzenetközpont</string>
+    <string name="ua_empty_message_list">Nincs üzenete</string>
+    <string name="ua_message_not_selected">Nincs kiválasztva üzenet</string>
+    <string name="ua_mc_failed_to_load">Nem tudtam betölteni az üzenetet. Próbálja újra később.</string>
+    <string name="ua_retry_button">Próbáld újra</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Mégse</string>
+    <string name="ua_select_none">Ne válassz ki egyet sem</string>
+    <string name="ua_select_all">Válaszd ki mindet</string>
+    <string name="ua_connection_error">Kapcsolati hiba</string>
+    <string name="ua_mark_read">Jelöld olvasottnak</string>
+    <string name="ua_delete">Töröld</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> kiválasztva</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> kiválasztva</item>
+  </plurals>
+
+</resources>

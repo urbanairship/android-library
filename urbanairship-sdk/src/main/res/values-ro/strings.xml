@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Da</string>
+    <string name="ua_notification_button_no">Nu</string>
+    <string name="ua_notification_button_shop_now">Fă Cumpărături Acum</string>
+    <string name="ua_notification_button_buy_now">Cumpără Acum</string>
+    <string name="ua_notification_button_follow">Urmărește</string>
+    <string name="ua_notification_button_unfollow">Nu mai urmări</string>
+    <string name="ua_notification_button_opt_in">Abonare</string>
+    <string name="ua_notification_button_opt_out">Dezabonare</string>
+    <string name="ua_notification_button_remind">Amintește-mi mai târziu</string>
+    <string name="ua_notification_button_share">Distribuie</string>
+    <string name="ua_notification_button_accept">Acceptă</string>
+    <string name="ua_notification_button_decline">Refiză</string>
+    <string name="ua_notification_button_download">Descarcă</string>
+    <string name="ua_notification_button_more_like">Mai Multe Asemănătoare</string>
+    <string name="ua_notification_button_less_like">Mai Puține Asemănătoare</string>
+    <string name="ua_notification_button_like">Îți place</string>
+    <string name="ua_notification_button_dislike">Nu îți place</string>
+    <string name="ua_notification_button_copy">Copiază</string>
+    <string name="ua_notification_button_save">Salvează</string>
+    <string name="ua_notification_button_add_to_calendar">Adaugă În Calendar</string>
+    <string name="ua_notification_button_add">Adaugă</string>
+    <string name="ua_notification_button_tell_me_more">Mai multe informații</string>
+    <string name="ua_notification_button_send_info">Trimite Informații</string>
+    <string name="ua_notification_button_rate_now">Apreciază Acum</string>
+    <string name="ua_notification_button_search">Caută</string>
+    <string name="ua_notification_button_book_now">Rezervă Acum</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Distribuie</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Canalul Urban Airship</string>
+    <string name="ua_channel_copy_toast">Canal copiat în memoria temporară!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Centrul de Mesaje</string>
+    <string name="ua_empty_message_list">Niciun Mesaj</string>
+    <string name="ua_message_not_selected">Niciun Mesaj Selectat</string>
+    <string name="ua_mc_failed_to_load">Imposibil de încărcat mesaje. Te rugăm să încerci mai târziu.</string>
+    <string name="ua_retry_button">Încearcă din nou</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Anulează</string>
+    <string name="ua_select_none">Selectează Niciunul</string>
+    <string name="ua_select_all">Selectează Toate</string>
+    <string name="ua_connection_error">Eroare de Conexiune</string>
+    <string name="ua_mark_read">Marchează ca Citit</string>
+    <string name="ua_delete">Șterge</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one"> <xliff:g example="1" id="count">%1$d</xliff:g> a fost selectat</item>
+    <item quantity="few">
+      <xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
+  </plurals>
+
+</resources>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ja</string>
+    <string name="ua_notification_button_no">Nej</string>
+    <string name="ua_notification_button_shop_now">Handla nu</string>
+    <string name="ua_notification_button_buy_now">Köp nu</string>
+    <string name="ua_notification_button_follow">Följ</string>
+    <string name="ua_notification_button_unfollow">Sluta följa</string>
+    <string name="ua_notification_button_opt_in">Anmäl dig</string>
+    <string name="ua_notification_button_opt_out">Avanmäl dig</string>
+    <string name="ua_notification_button_remind">Påminn mig senare</string>
+    <string name="ua_notification_button_share">Dela</string>
+    <string name="ua_notification_button_accept">Acceptera</string>
+    <string name="ua_notification_button_decline">Neka</string>
+    <string name="ua_notification_button_download">Ladda ner</string>
+    <string name="ua_notification_button_more_like">Mer som detta</string>
+    <string name="ua_notification_button_less_like">Mindre som detta</string>
+    <string name="ua_notification_button_like">Gilla</string>
+    <string name="ua_notification_button_dislike">Ogilla</string>
+    <string name="ua_notification_button_copy">Kopiera</string>
+    <string name="ua_notification_button_save">Spara</string>
+    <string name="ua_notification_button_add_to_calendar">Lägg till i kalender</string>
+    <string name="ua_notification_button_add">Lägg till</string>
+    <string name="ua_notification_button_tell_me_more">Berätta mer</string>
+    <string name="ua_notification_button_send_info">Skicka info</string>
+    <string name="ua_notification_button_rate_now">Betygsätt nu</string>
+    <string name="ua_notification_button_search">Sök</string>
+    <string name="ua_notification_button_book_now">Boka nu</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Dela</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship Channel</string>
+    <string name="ua_channel_copy_toast">Kanal kopierad till Urklipp!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Meddelandecenter</string>
+    <string name="ua_empty_message_list">Inga meddelanden</string>
+    <string name="ua_message_not_selected">Inget meddelande har valts</string>
+    <string name="ua_mc_failed_to_load">Det går inte att läsa in meddelande. Försök igen senare.</string>
+    <string name="ua_retry_button">Försök igen</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Avbryt</string>
+    <string name="ua_select_none">Välj inget</string>
+    <string name="ua_select_all">Välj alla</string>
+    <string name="ua_connection_error">Anslutningsfel</string>
+    <string name="ua_mark_read">Markera som läst</string>
+    <string name="ua_delete">Radera</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> valt</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> valda</item>
+  </plurals>
+
+</resources>

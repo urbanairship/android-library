@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Oui</string>
@@ -18,7 +18,43 @@
     <string name="ua_notification_button_less_like">Moins de contenus comme celui-là</string>
     <string name="ua_notification_button_like">J\'aime</string>
     <string name="ua_notification_button_dislike">Je n\'aime pas</string>
+    <string name="ua_notification_button_copy">Copier</string>
+    <string name="ua_notification_button_save">Enregistrer</string>
+    <string name="ua_notification_button_add_to_calendar">Ajouter au calendrier</string>
+    <string name="ua_notification_button_add">Ajouter</string>
+    <string name="ua_notification_button_tell_me_more">En savoir plus</string>
+    <string name="ua_notification_button_send_info">Envoyer des infos</string>
+    <string name="ua_notification_button_rate_now">Évaluer maintenant</string>
+    <string name="ua_notification_button_search">Rechercher</string>
+    <string name="ua_notification_button_book_now">Réserver maintenant</string>
 
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Partager</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Canal Urban Airship</string>
+    <string name="ua_channel_copy_toast">Canal copié dans le presse-papiers !</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Centre de messagerie</string>
+    <string name="ua_empty_message_list">Aucun message</string>
+    <string name="ua_message_not_selected">Aucun message sélectionné</string>
+    <string name="ua_mc_failed_to_load">Impossible de charger le message. Veuillez réessayer plus tard.</string>
+    <string name="ua_retry_button">Réessayer</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Annuler</string>
+    <string name="ua_select_none">Ne rien sélectionner</string>
+    <string name="ua_select_all">Tout sélectionner</string>
+    <string name="ua_connection_error">Erreur de connexion</string>
+    <string name="ua_mark_read">Marquer comme lu</string>
+    <string name="ua_delete">Supprimer</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> sélectionné</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> sélectionnés</item>
+  </plurals>
+
 </resources>

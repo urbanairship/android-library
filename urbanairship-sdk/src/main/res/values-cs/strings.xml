@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ano</string>
+    <string name="ua_notification_button_no">Ne</string>
+    <string name="ua_notification_button_shop_now">Koupit teď</string>
+    <string name="ua_notification_button_buy_now">Nakupovat teď</string>
+    <string name="ua_notification_button_follow">Sledovat</string>
+    <string name="ua_notification_button_unfollow">Nesledovat</string>
+    <string name="ua_notification_button_opt_in">Přidat se</string>
+    <string name="ua_notification_button_opt_out">Odhlásit se</string>
+    <string name="ua_notification_button_remind">Připomenout později</string>
+    <string name="ua_notification_button_share">Sdílet</string>
+    <string name="ua_notification_button_accept">Přijmout</string>
+    <string name="ua_notification_button_decline">Odmítnout</string>
+    <string name="ua_notification_button_download">Stáhnout</string>
+    <string name="ua_notification_button_more_like">Víc se mi líbí toto</string>
+    <string name="ua_notification_button_less_like">Méně se mi líbí toto</string>
+    <string name="ua_notification_button_like">Líbí se mi</string>
+    <string name="ua_notification_button_dislike">Nelíbí se mi</string>
+    <string name="ua_notification_button_copy">Kopírovat</string>
+    <string name="ua_notification_button_save">Uložit</string>
+    <string name="ua_notification_button_add_to_calendar">Přidat do kalendáře</string>
+    <string name="ua_notification_button_add">Přidat</string>
+    <string name="ua_notification_button_tell_me_more">Chci vědět víc</string>
+    <string name="ua_notification_button_send_info">Odeslat informace</string>
+    <string name="ua_notification_button_rate_now">Hodnotit teď</string>
+    <string name="ua_notification_button_search">Vyhledávání</string>
+    <string name="ua_notification_button_book_now">Zarezervovat hned</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Sdílet</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Kanál Urban Airship</string>
+    <string name="ua_channel_copy_toast">Kanál je zkopírovaný do schránky!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Centrum zpráv</string>
+    <string name="ua_empty_message_list">Žádné zprávy</string>
+    <string name="ua_message_not_selected">Nejsou vybrané žádné zprávy</string>
+    <string name="ua_mc_failed_to_load">Zprávu nelze načíst. Zkuste to prosím později znovu.</string>
+    <string name="ua_retry_button">Zkusit znovu</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Zrušit</string>
+    <string name="ua_select_none">Nevybírat nic</string>
+    <string name="ua_select_all">Vybrat Vše</string>
+    <string name="ua_connection_error">Chyba připojení</string>
+    <string name="ua_mark_read">Označit jako přečtené</string>
+    <string name="ua_delete">Odstranit</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">Počet vybraných: <xliff:g example="1" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="few">Počet vybraných: <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="other">Počet vybraných: <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+  </plurals>
+
+</resources>

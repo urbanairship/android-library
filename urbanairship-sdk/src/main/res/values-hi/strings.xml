@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">हां</string>
+    <string name="ua_notification_button_no">नहीं</string>
+    <string name="ua_notification_button_shop_now">अभी खरीददारी करें</string>
+    <string name="ua_notification_button_buy_now">अभी खरीदें</string>
+    <string name="ua_notification_button_follow">फॉलो करें</string>
+    <string name="ua_notification_button_unfollow">अनफॉलो करें</string>
+    <string name="ua_notification_button_opt_in">ऑप्ट-इन</string>
+    <string name="ua_notification_button_opt_out">ऑप्ट-आउट</string>
+    <string name="ua_notification_button_remind">मुझे बाद में याद दिलाएं</string>
+    <string name="ua_notification_button_share">साझा करें</string>
+    <string name="ua_notification_button_accept">स्वीकार करें</string>
+    <string name="ua_notification_button_decline">अस्वीकारें</string>
+    <string name="ua_notification_button_download">डाउनलोड करें</string>
+    <string name="ua_notification_button_more_like">इसकी तरह और</string>
+    <string name="ua_notification_button_less_like">इसकी तरह कम</string>
+    <string name="ua_notification_button_like">पसंद करें</string>
+    <string name="ua_notification_button_dislike">नापसंद करें</string>
+    <string name="ua_notification_button_copy">कॉपी करें</string>
+    <string name="ua_notification_button_save">सहेजें</string>
+    <string name="ua_notification_button_add_to_calendar">कैलेंडर में जोड़ें</string>
+    <string name="ua_notification_button_add">जोड़ें</string>
+    <string name="ua_notification_button_tell_me_more">मुझे और बताएं</string>
+    <string name="ua_notification_button_send_info">जानकारी भेजें</string>
+    <string name="ua_notification_button_rate_now">अभी रेट करें</string>
+    <string name="ua_notification_button_search">खोजें</string>
+    <string name="ua_notification_button_book_now">अभी बुक करें</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">साझा करें</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">शहरी एयरशिप चैनल</string>
+    <string name="ua_channel_copy_toast">चैनल क्लिपबोर्ड पर कॉपी किया गया!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">संदेश केंद्र</string>
+    <string name="ua_empty_message_list">कोई संदेश नहीं</string>
+    <string name="ua_message_not_selected">कोई संदेश नहीं चुना गया</string>
+    <string name="ua_mc_failed_to_load">संदेश लोड करने में असमर्थ। कृपया दोबारा कोशिश करें।</string>
+    <string name="ua_retry_button">पुन: प्रयास करें</string>
+    <string name="ua_ok">ठीक है</string>
+    <string name="ua_cancel">रद्द करें</string>
+    <string name="ua_select_none">किसी का चयन न करें</string>
+    <string name="ua_select_all">सभी का चयन करें</string>
+    <string name="ua_connection_error">कनेक्शन त्रुटि</string>
+    <string name="ua_mark_read">पढ़ा गया चिह्नित करें</string>
+    <string name="ua_delete">हटाएं</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> चयनित</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> चयनित</item>
+  </plurals>
+
+</resources>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">نعم</string>
+    <string name="ua_notification_button_no">لا</string>
+    <string name="ua_notification_button_shop_now">تسوق الآن</string>
+    <string name="ua_notification_button_buy_now">اشتري الآن</string>
+    <string name="ua_notification_button_follow">تابِع</string>
+    <string name="ua_notification_button_unfollow">إلغاء متابعة</string>
+    <string name="ua_notification_button_opt_in">اشترك</string>
+    <string name="ua_notification_button_opt_out">انسحب</string>
+    <string name="ua_notification_button_remind">ذكرني لاحقا</string>
+    <string name="ua_notification_button_share">مشاركة</string>
+    <string name="ua_notification_button_accept">قبول</string>
+    <string name="ua_notification_button_decline">رفض</string>
+    <string name="ua_notification_button_download">تحميل</string>
+    <string name="ua_notification_button_more_like">المزيد من هذا</string>
+    <string name="ua_notification_button_less_like">القليل من هذا</string>
+    <string name="ua_notification_button_like">إعجاب</string>
+    <string name="ua_notification_button_dislike">إلغاء إعجاب</string>
+    <string name="ua_notification_button_copy">نسخ</string>
+    <string name="ua_notification_button_save">حفظ</string>
+    <string name="ua_notification_button_add_to_calendar">إضافة إلى التقويم</string>
+    <string name="ua_notification_button_add">إضافة</string>
+    <string name="ua_notification_button_tell_me_more">أخبرني أكثر</string>
+    <string name="ua_notification_button_send_info">إرسال معلومات</string>
+    <string name="ua_notification_button_rate_now">قيم الآن</string>
+    <string name="ua_notification_button_search">بحث</string>
+    <string name="ua_notification_button_book_now">احجز الآن</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">مشاركة</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">قناة Urban Airship</string>
+    <string name="ua_channel_copy_toast">تم نسخ القناة إلى الحافظة!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">مركز الرسائل</string>
+    <string name="ua_empty_message_list">لا توجد رسائل</string>
+    <string name="ua_message_not_selected">لم يتم تحديد رسالة</string>
+    <string name="ua_mc_failed_to_load">غير قادر على تحميل الرسالة. الرجاء معاودة المحاولة في وقت لاحق.</string>
+    <string name="ua_retry_button">إعادة المحاولة</string>
+    <string name="ua_ok">موافق</string>
+    <string name="ua_cancel">إلغاء</string>
+    <string name="ua_select_none">اختر لا شيء</string>
+    <string name="ua_select_all">اختر الكل</string>
+    <string name="ua_connection_error">خطأ في الإتصال</string>
+    <string name="ua_mark_read">اجعلها مقروءة</string>
+    <string name="ua_delete">حذف</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="zero">تم تحديد <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="one">تم تحديد <xliff:g example="1" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="two">تم تحديد <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="few">تم تحديد <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="many">تم تحديد <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+    <item quantity="other">تم تحديد <xliff:g example="3" id="count">%1$d</xliff:g>
+    </item>
+  </plurals>
+
+</resources>
