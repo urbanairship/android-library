@@ -7,11 +7,11 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
@@ -299,11 +299,11 @@ public class AddCustomEventActionTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
 
         // Validate the custom String[] property
-        JSONArray array = EventTestUtils.getEventData(event).getJSONObject("properties").getJSONArray("array");
-        assertEquals(3, array.length());
-        assertEquals("string value", array.getString(0));
-        assertEquals("true", array.getString(1));
-        assertEquals("124", array.getString(2));
+        JsonList array = EventTestUtils.getEventData(event).get("properties").getMap().get("array").getList();
+        assertEquals(3, array.size());
+        assertEquals("string value", array.get(0).getString());
+        assertEquals("true", array.get(1).getString());
+        assertEquals("124", array.get(2).getString());
     }
 }
 

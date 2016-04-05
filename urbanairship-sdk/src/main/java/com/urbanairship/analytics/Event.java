@@ -31,12 +31,9 @@ import android.net.NetworkInfo;
 import android.support.annotation.IntDef;
 import android.telephony.TelephonyManager;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -136,26 +133,21 @@ public abstract class Event {
      * @return The event data as a String, or null if an error occurred.
      */
     String createEventPayload(String sessionId) {
-        JSONObject object = new JSONObject();
-        JSONObject data = getEventData();
+        JsonMap.Builder object = JsonMap.newBuilder();
+        JsonMap data = getEventData();
 
-        try {
-            // Copy the event data
-            data = new JSONObject(data.toString());
+        // Copy the event data and add the session id
+        data = JsonMap.newBuilder()
+                .putAll(data)
+                .put(SESSION_ID_KEY, sessionId)
+                .build();
 
-            // Add the session id
-            data.put(SESSION_ID_KEY, sessionId);
+        object.put(TYPE_KEY, getType())
+                .put(EVENT_ID_KEY, eventId)
+                .put(TIME_KEY, time)
+                .put(DATA_KEY, data);
 
-            object.put(TYPE_KEY, getType());
-            object.put(EVENT_ID_KEY, eventId);
-            object.put(TIME_KEY, time);
-            object.put(DATA_KEY, data);
-        } catch (JSONException e) {
-            Logger.error("Event - Error constructing JSON " + getType() + " representation.", e);
-            return null;
-        }
-
-        return object.toString();
+        return object.build().toString();
     }
 
     /**
@@ -170,7 +162,7 @@ public abstract class Event {
      *
      * @return The event data.
      */
-    protected abstract JSONObject getEventData();
+    protected abstract JsonMap getEventData();
 
     /**
      * Returns a list of currently enabled notification types.

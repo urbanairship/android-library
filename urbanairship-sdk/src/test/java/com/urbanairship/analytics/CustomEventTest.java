@@ -4,11 +4,11 @@ import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -478,10 +478,10 @@ public class CustomEventTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
 
         // Validate the custom String[] property
-        JSONArray array = event.getEventData().getJSONObject("properties").getJSONArray("array");
-        assertEquals(2, array.length());
-        assertEquals("value", array.getString(0));
-        assertEquals("another value", array.getString(1));
+        JsonList array = event.getEventData().get("properties").getMap().get("array").getList();
+        assertEquals(2, array.size());
+        assertEquals("value", array.get(0).getString());
+        assertEquals("another value", array.get(1).getString());
     }
 
     /**

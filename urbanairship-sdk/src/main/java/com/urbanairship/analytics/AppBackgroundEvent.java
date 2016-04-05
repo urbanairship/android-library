@@ -25,12 +25,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
 
 class AppBackgroundEvent extends Event {
 
@@ -51,24 +47,13 @@ class AppBackgroundEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-
-        JSONObject data = new JSONObject();
-
-        try {
-            data.put(CONNECTION_TYPE_KEY, getConnectionType());
-            String subtype = getConnectionSubType();
-            if (!UAStringUtil.isEmpty(subtype)) {
-                data.put(CONNECTION_SUBTYPE_KEY, subtype);
-            }
-
-            data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
-            data.putOpt(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata());
-        } catch (JSONException e) {
-            Logger.error("AppBackgroundEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(CONNECTION_TYPE_KEY, getConnectionType())
+                .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
+                .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
+                .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
+                .build();
     }
 
 }

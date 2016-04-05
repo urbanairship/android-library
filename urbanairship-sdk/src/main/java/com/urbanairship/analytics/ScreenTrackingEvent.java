@@ -29,9 +29,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
 
 /**
  * A screen tracking event allows users to track an activity by associating a
@@ -117,19 +115,13 @@ class ScreenTrackingEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
-
-        try {
-            data.put(SCREEN_KEY, screen);
-            data.put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime));
-            data.put(STOP_TIME_KEY, Event.millisecondsToSecondsString(stopTime));
-            data.put(DURATION_KEY, Event.millisecondsToSecondsString(stopTime - startTime));
-            data.putOpt(PREVIOUS_SCREEN_KEY, previousScreen);
-        } catch (JSONException e) {
-            Logger.error("ScreenTrackingEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(SCREEN_KEY, screen)
+                .put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime))
+                .put(STOP_TIME_KEY, Event.millisecondsToSecondsString(stopTime))
+                .put(DURATION_KEY, Event.millisecondsToSecondsString(stopTime - startTime))
+                .put(PREVIOUS_SCREEN_KEY, previousScreen)
+                .build();
     }
 }

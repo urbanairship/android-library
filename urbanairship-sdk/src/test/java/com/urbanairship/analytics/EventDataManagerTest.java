@@ -1,8 +1,8 @@
 package com.urbanairship.analytics;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonMap;
 
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
@@ -294,8 +294,8 @@ public class EventDataManagerTest extends BaseTestCase {
         }
 
         @Override
-        protected JSONObject getEventData() {
-            return new JSONObject();
+        protected JsonMap getEventData() {
+            return new JsonMap(null);
         }
     }
 

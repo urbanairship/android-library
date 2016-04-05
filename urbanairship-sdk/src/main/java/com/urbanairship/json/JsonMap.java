@@ -25,9 +25,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.json;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.json.JSONStringer;
@@ -42,7 +44,7 @@ import java.util.Set;
 /**
  * An immutable mapping of String keys to JsonValues.
  */
-public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
+public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSerializable {
 
     static final JsonMap EMPTY_MAP = new JsonMap(null);
 
@@ -55,6 +57,15 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
      */
     public JsonMap(@Nullable Map<String, JsonValue> map) {
         this.map = map == null ? new HashMap<String, JsonValue>() : new HashMap<>(map);
+    }
+
+    /**
+     * Factory method to create a new JSON map builder.
+     *
+     * @return A JSON map builder.
+     */
+    public static Builder newBuilder() {
+        return new JsonMap.Builder();
     }
 
     /**
@@ -218,5 +229,133 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>> {
     @Override
     public Iterator<Map.Entry<String, JsonValue>> iterator() {
         return entrySet().iterator();
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonValue.wrap(this);
+    }
+
+    /**
+     * Builder class for {@link com.urbanairship.json.JsonMap} Objects.
+     */
+    public static class Builder {
+        private Map<String, JsonValue> map = new HashMap<>();
+
+        private Builder() {}
+
+        /**
+         * Add a pre-existing JSON map to the JSON map.
+         *
+         * @param map A JsonMap instance.
+         * @return The JSON map builder.
+         */
+        public Builder putAll(@NonNull JsonMap map) {
+            for (Map.Entry<String, JsonValue> entry : map.entrySet()) {
+                put(entry.getKey(), entry.getValue());
+            }
+
+            return this;
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as a JsonSerializable.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, JsonSerializable value) {
+            if (value == null || value.toJsonValue().isNull()) {
+                map.remove(key);
+            } else {
+                map.put(key, value.toJsonValue());
+            }
+
+            return this;
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as an Object. If an exception is thrown while attempting to wrap
+         * this object as a JsonValue, it will be swallowed and the entry will be dropped from the map.
+         * @return The JSON map builder.
+         */
+        public Builder putOpt(@NonNull String key, Object value) {
+            put(key, JsonValue.wrapOpt(value));
+            return this;
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as a String.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, String value) {
+            if (!UAStringUtil.isEmpty(value)) {
+                put(key, JsonValue.wrap(value));
+            } else {
+                map.remove(key);
+            }
+
+            return this;
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as a boolean.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, boolean value) {
+            return put(key, JsonValue.wrap(value));
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as an int.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, int value) {
+            return put(key, JsonValue.wrap(value));
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as a long.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, long value) {
+            return put(key, JsonValue.wrap(value));
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
+         * @param value The value as a char.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, char value) {
+            return put(key, JsonValue.wrap(value));
+        }
+
+        /**
+         * Create the JSON map.
+         *
+         * @return The created JSON map.
+         */
+        public JsonMap build() {
+            return new JsonMap(map);
+        }
     }
 }
