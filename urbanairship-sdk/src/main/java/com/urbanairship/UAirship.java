@@ -115,25 +115,12 @@ public class UAirship {
     /**
      * Constructs an instance of UAirship.
      *
-     * @param context The application context.
      * @param airshipConfigOptions The airship config options.
-     * @param preferenceDataStore The preference data store.
      *
      * @hide
      */
-    UAirship(@NonNull Context context, @NonNull AirshipConfigOptions airshipConfigOptions, @NonNull PreferenceDataStore preferenceDataStore) {
+    UAirship(@NonNull AirshipConfigOptions airshipConfigOptions) {
         this.airshipConfigOptions = airshipConfigOptions;
-        this.preferenceDataStore = preferenceDataStore;
-
-        this.analytics = new Analytics(context, preferenceDataStore, airshipConfigOptions);
-        this.applicationMetrics = new ApplicationMetrics(context, preferenceDataStore);
-        this.inbox = new RichPushInbox(context, preferenceDataStore);
-        this.locationManager = new UALocationManager(context, preferenceDataStore);
-        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
-        this.pushManager = new PushManager(context, preferenceDataStore, airshipConfigOptions);
-        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
-        this.actionRegistry = new ActionRegistry();
-        this.channelCapture = new ChannelCapture(context, airshipConfigOptions, this.pushManager);
     }
 
     /**
@@ -359,26 +346,7 @@ public class UAirship {
         Logger.info("Airship log level: " + Logger.logLevel);
         Logger.info("UA Version: " + getVersion() + " / App key = " + options.getAppKey() + " Production = " + options.inProduction);
 
-        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(application.getApplicationContext());
-        preferenceDataStore.loadAll();
-
-        sharedAirship = new UAirship(application.getApplicationContext(), options, preferenceDataStore);
-
-        String currentVersion = getVersion();
-        String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
-
-        if (previousVersion != null && !previousVersion.equals(currentVersion)) {
-            Logger.info("Urban Airship library changed from " + previousVersion +
-                    " to " + currentVersion + ".");
-        }
-
-        // store current version as library version once check is performed
-        preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
-
-        // if in development mode, check the manifest and log manifest issues
-        if (!options.inProduction) {
-            sharedAirship.validateManifest();
-        }
+        sharedAirship = new UAirship(options);
 
         synchronized (airshipLock) {
             // IMPORTANT! Make sure we set isFlying before calling the readyCallback callback or
@@ -389,6 +357,11 @@ public class UAirship {
 
             // Initialize the modules
             sharedAirship.init();
+
+            // if in development mode, check the manifest and log manifest issues
+            if (!options.inProduction) {
+                sharedAirship.validateManifest();
+            }
 
             Logger.info("Airship ready!");
 
@@ -410,12 +383,14 @@ public class UAirship {
             // Notify any blocking shared
             airshipLock.notifyAll();
         }
+
+
     }
 
     /**
      * Cleans up and closes any connections or other resources.
      */
-    static void land() {
+    public static void land() {
         synchronized (airshipLock) {
             if (!isTakingOff && !isFlying) {
                 return;
@@ -571,14 +546,41 @@ public class UAirship {
      * Initializes UAirship instance.
      */
     private void init() {
-        // Initialize the managers
+        // Create and init the preference data store first
+        this.preferenceDataStore = new PreferenceDataStore(application);
+        this.preferenceDataStore.init();
+
+        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions);
+        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore);
+        this.inbox = new RichPushInbox(application, preferenceDataStore);
+        this.locationManager = new UALocationManager(application, preferenceDataStore);
+        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions);
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager);
+        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        this.actionRegistry = new ActionRegistry();
+        this.actionRegistry.registerDefaultActions();
+
+        // Initialize the rest of the AirshipComponents
         ((AirshipComponent) this.inbox).init();
         ((AirshipComponent) this.pushManager).init();
         ((AirshipComponent) this.locationManager).init();
         ((AirshipComponent) this.inAppMessageManager).init();
         ((AirshipComponent) this.channelCapture).init();
+        ((AirshipComponent) this.applicationMetrics).init();
+        ((AirshipComponent) this.analytics).init();
 
-        this.actionRegistry.registerDefaultActions();
+        // Store the version
+        String currentVersion = getVersion();
+        String previousVersion = preferenceDataStore.getString(LIBRARY_VERSION_KEY, null);
+
+        if (previousVersion != null && !previousVersion.equals(currentVersion)) {
+            Logger.info("Urban Airship library changed from " + previousVersion +
+                    " to " + currentVersion + ".");
+        }
+
+        // store current version as library version once check is performed
+        this.preferenceDataStore.put(LIBRARY_VERSION_KEY, getVersion());
     }
 
     /**
@@ -591,6 +593,10 @@ public class UAirship {
         ((AirshipComponent) this.locationManager).tearDown();
         ((AirshipComponent) this.inAppMessageManager).tearDown();
         ((AirshipComponent) this.channelCapture).tearDown();
+        ((AirshipComponent) this.applicationMetrics).tearDown();
+        ((AirshipComponent) this.analytics).tearDown();
+
+        ((AirshipComponent) this.preferenceDataStore).tearDown();
     }
 
     /**

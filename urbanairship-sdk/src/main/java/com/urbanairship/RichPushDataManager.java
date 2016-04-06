@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
 
@@ -19,12 +20,12 @@ class RichPushDataManager extends DataManager {
     private static final String DATABASE_NAME = "ua_richpush.db";
     private static final int DATABASE_VERSION = 3;
 
-    RichPushDataManager(Context context) {
-        super(context, DATABASE_NAME, DATABASE_VERSION);
+    RichPushDataManager(Context context, String appKey) {
+        super(context, appKey, DATABASE_NAME, DATABASE_VERSION);
     }
 
     @Override
-    protected void onCreate(SQLiteDatabase db) {
+    protected void onCreate(@NonNull SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + RichPushTable.COLUMN_NAME_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + RichPushTable.COLUMN_NAME_MESSAGE_ID + " TEXT UNIQUE, "

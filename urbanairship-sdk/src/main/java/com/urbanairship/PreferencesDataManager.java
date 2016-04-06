@@ -20,12 +20,12 @@ class PreferencesDataManager extends DataManager {
     static final String DATABASE_NAME = "ua_preferences.db";
     static final int DATABASE_VERSION = 1;
 
-    public PreferencesDataManager(@NonNull Context context) {
-        super(context, DATABASE_NAME, DATABASE_VERSION);
+    public PreferencesDataManager(@NonNull Context context, @NonNull String appKey) {
+        super(context, appKey, DATABASE_NAME, DATABASE_VERSION);
     }
 
     @Override
-    protected void onCreate(SQLiteDatabase db) {
+    protected void onCreate(@NonNull SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_KEY + " TEXT PRIMARY KEY, "
                 + COLUMN_NAME_VALUE + " TEXT);");

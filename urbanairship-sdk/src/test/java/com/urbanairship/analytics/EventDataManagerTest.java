@@ -5,6 +5,7 @@ import com.urbanairship.BaseTestCase;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class EventDataManagerTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        dataManager = new EventDataManager();
+        dataManager = new EventDataManager(RuntimeEnvironment.application, "test");
     }
 
     /**

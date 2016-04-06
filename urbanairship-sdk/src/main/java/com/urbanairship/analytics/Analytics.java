@@ -37,6 +37,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
@@ -52,7 +53,7 @@ import java.util.UUID;
 /**
  * This class is the primary interface to the UrbanAirship Analytics API.
  */
-public class Analytics {
+public class Analytics extends AirshipComponent {
 
     /**
      * Intent action for application foreground.
@@ -70,10 +71,10 @@ public class Analytics {
     private final ActivityMonitor activityMonitor;
     private final EventDataManager dataManager;
     private final AnalyticsPreferences preferences;
+    private final Context context;
     private boolean inBackground;
 
     private final AirshipConfigOptions configOptions;
-    private final Context context;
     private String sessionId;
     private String conversionSendId;
     private String conversionMetadata;
@@ -104,17 +105,19 @@ public class Analytics {
     Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
               @NonNull AirshipConfigOptions options, @NonNull ActivityMonitor activityMonitor) {
 
-        this.preferences = new AnalyticsPreferences(preferenceDataStore);
         this.context = context.getApplicationContext();
-
-        this.dataManager = new EventDataManager();
+        this.preferences = new AnalyticsPreferences(preferenceDataStore);
+        this.dataManager = new EventDataManager(context, options.getAppKey());
         this.inBackground = true; //application is starting
 
         this.configOptions = options;
+        this.activityMonitor = activityMonitor;
+    }
 
+    @Override
+    protected void init() {
         startNewSession();
 
-        this.activityMonitor = activityMonitor;
         this.activityMonitor.setListener(new ActivityMonitor.Listener() {
             @Override
             public void onForeground(long timeMS) {
@@ -152,6 +155,11 @@ public class Analytics {
                 setConversionMetadata(null);
             }
         });
+    }
+
+    @Override
+    protected void tearDown() {
+        activityMonitor.setListener(null);
     }
 
     /**

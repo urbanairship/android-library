@@ -79,6 +79,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .build();
 
         this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, airshipConfigOptions, mockActivityMonitor);
+        analytics.init();
 
         activityMonitorListener = listenerCapture.getValue();
         assertNotNull("Should set the listener on create", activityMonitorListener);

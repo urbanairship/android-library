@@ -26,7 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship;
 
 /**
- * Base class for Urban Airship managers.
+ * Base class for Urban Airship components.
  */
 public abstract class AirshipComponent {
 

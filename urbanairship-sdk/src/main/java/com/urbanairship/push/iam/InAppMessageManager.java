@@ -170,6 +170,11 @@ public class InAppMessageManager extends AirshipComponent {
         }
     }
 
+    @Override
+    protected void tearDown() {
+        handler.removeCallbacks(displayRunnable);
+    }
+
     /**
      * Sets the default delay before an in-app message is automatically displayed when an activity
      * is resumed.

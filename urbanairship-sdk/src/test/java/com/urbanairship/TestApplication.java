@@ -4,9 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
 
+import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
 
 import org.robolectric.RuntimeEnvironment;
@@ -47,7 +50,18 @@ public class TestApplication extends Application implements TestLifecycleApplica
         ContentProvider provider = new UrbanAirshipProvider();
         provider.onCreate();
 
-        UAirship.sharedAirship = new UAirship(this, airshipConfigOptions, preferenceDataStore);
+        UAirship.sharedAirship = new UAirship(airshipConfigOptions);
+        UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
+        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, airshipConfigOptions);
+        UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore);
+        UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore);
+        UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore);
+        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
+        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions);
+        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager);
+        UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        UAirship.sharedAirship.actionRegistry = new ActionRegistry();
+        UAirship.sharedAirship.actionRegistry.registerDefaultActions();
 
         setPlatform(UAirship.ANDROID_PLATFORM);
         ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(), provider);

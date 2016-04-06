@@ -55,36 +55,13 @@ public abstract class DataManager {
 
     /**
      * Default Constructor for DataManager
-     *
      * @param context The context used for opening and creating databases
+     * @param appKey The application key. Used to prefix the database file.
      * @param name The name of the database
      * @param version The version of the database
      */
-    public DataManager(@NonNull Context context, @NonNull String name, int version) {
-
-        if (Build.VERSION.SDK_INT >= 21) {
-            File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
-            File oldDatabasePath = context.getDatabasePath(name);
-            File newDatabasePath = new File(urbanAirshipNoBackupDirectory, name);
-
-            // Make sure the no backup directory exists
-            if (!urbanAirshipNoBackupDirectory.exists()) {
-                urbanAirshipNoBackupDirectory.mkdirs();
-            }
-
-            // Migrate the existing database if available
-            if (!newDatabasePath.exists() && oldDatabasePath.exists()) {
-                oldDatabasePath.renameTo(newDatabasePath);
-
-                // Move the journal to the new path
-                File journal = context.getDatabasePath(name + "-journal");
-                if (journal.exists()) {
-                    journal.renameTo(new File(urbanAirshipNoBackupDirectory, name + "-journal"));
-                }
-            }
-
-            name = newDatabasePath.getAbsolutePath();
-        }
+    public DataManager(@NonNull Context context, @NonNull String appKey, @NonNull String name, int version) {
+        name = migrateDatabase(context, appKey, name);
 
         openHelper = new SQLiteOpenHelper(context, name, null, version) {
 
@@ -489,6 +466,72 @@ public abstract class DataManager {
         }
 
         return false;
+    }
+
+    /**
+     * Tries to move the database to a prefixed name. On API 21+, it will also move the database
+     * to the no backup directory.
+     *
+     * @param context The application context.
+     * @param appKey The appKey.
+     * @param name The database name.
+     *
+     * @return The name of the database.
+     */
+    private String migrateDatabase(Context context, String appKey, String name) {
+        String targetName = appKey + "_" + name;
+        File target;
+        File[] sources;
+
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            File urbanAirshipNoBackupDirectory = new File(context.getNoBackupFilesDir(), DATABASE_DIRECTORY_NAME);
+            if (!urbanAirshipNoBackupDirectory.exists()) {
+                urbanAirshipNoBackupDirectory.mkdirs();
+            }
+
+            target = new File(urbanAirshipNoBackupDirectory, targetName);
+            sources = new File[] {
+                    // Standard directory with the appKey prefix
+                    context.getDatabasePath(targetName),
+
+                    // No backup directory with database name without appKey prefix
+                    new File(urbanAirshipNoBackupDirectory, name),
+
+                    // Standard directory without the appKey prefix
+                    context.getDatabasePath(name)
+            };
+
+        } else {
+            target = context.getDatabasePath(targetName);
+
+            sources = new File[] {
+                    context.getDatabasePath(name)
+            };
+        }
+
+        if (target.exists()) {
+            return target.getAbsolutePath();
+        }
+
+        for (File oldFile : sources) {
+            if (!oldFile.exists()) {
+                continue;
+            }
+
+            // Failed, we will get it next time
+            if (!oldFile.renameTo(target)) {
+                return oldFile.getAbsolutePath();
+            }
+
+            // Move the journal file if it exists
+            File journal = new File(oldFile.getAbsolutePath() + "-journal");
+            if (journal.exists()) {
+                journal.renameTo(new File(target.getAbsolutePath() + "-journal"));
+            }
+        }
+
+        return target.getAbsolutePath();
     }
 }
 
