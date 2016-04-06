@@ -377,4 +377,128 @@
 
    </UrbanAirshipActionButtonGroup>
 
+    <UrbanAirshipActionButtonGroup id="ua_add_calendar_remind">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="add_calendar"
+            android:icon="@drawable/ua_ic_notification_button_event"
+            android:label="@string/ua_notification_button_add_to_calendar"/>
+
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="remind"
+            android:icon="@drawable/ua_ic_notification_button_remind"
+            android:label="@string/ua_notification_button_remind"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_add">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="add"
+            android:icon="@drawable/ua_ic_notification_button_add"
+            android:label="@string/ua_notification_button_add" />
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_save">
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="save"
+            android:icon="@drawable/ua_ic_notification_button_save"
+            android:label="@string/ua_notification_button_save" />
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_follow_save">
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="follow"
+            android:icon="@drawable/ua_ic_notification_button_follow"
+            android:label="@string/ua_notification_button_follow"/>
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="save"
+            android:icon="@drawable/ua_ic_notification_button_save"
+            android:label="@string/ua_notification_button_save" />
+
+    </UrbanAirshipActionButtonGroup>
+
+
+    <UrbanAirshipActionButtonGroup id="ua_opt_in_remind">
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="opt_in"
+            android:icon="@drawable/ua_ic_notification_button_follow"
+            android:label="@string/ua_notification_button_opt_in"/>
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="remind"
+            android:icon="@drawable/ua_ic_notification_button_remind"
+            android:label="@string/ua_notification_button_remind"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_more_info">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="more_info"
+            android:icon="@drawable/ua_ic_notification_button_info"
+            android:label="@string/ua_notification_button_tell_me_more"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_rate_remind">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="rate"
+            android:label="@string/ua_notification_button_rate_now"/>
+
+        <UrbanAirshipActionButton
+            foreground="false"
+            id="remind"
+            android:icon="@drawable/ua_ic_notification_button_remind"
+            android:label="@string/ua_notification_button_remind"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_rate">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="rate"
+            android:label="@string/ua_notification_button_rate_now"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_search">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="search"
+            android:icon="@drawable/ua_ic_notification_button_search"
+            android:label="@string/ua_notification_button_search"/>
+
+    </UrbanAirshipActionButtonGroup>
+
+    <UrbanAirshipActionButtonGroup id="ua_book">
+
+        <UrbanAirshipActionButton
+            foreground="true"
+            id="search"
+            android:icon="@drawable/ua_ic_notification_button_book"
+            android:label="@string/ua_notification_button_book_now"/>
+
+    </UrbanAirshipActionButtonGroup>
+
 </resouces>
