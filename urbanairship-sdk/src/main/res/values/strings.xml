@@ -19,6 +19,15 @@
     <string name="ua_notification_button_less_like">Less Like This</string>
     <string name="ua_notification_button_like">Like</string>
     <string name="ua_notification_button_dislike">Dislike</string>
+    <string name="ua_notification_button_copy">Copy</string>
+    <string name="ua_notification_button_save">Save</string>
+    <string name="ua_notification_button_add_to_calendar">Add To Calendar</string>
+    <string name="ua_notification_button_add">Add</string>
+    <string name="ua_notification_button_tell_me_more">Tell Me More</string>
+    <string name="ua_notification_button_send_info">Send Info</string>
+    <string name="ua_notification_button_rate_now">Rate Now</string>
+    <string name="ua_notification_button_search">Search</string>
+    <string name="ua_notification_button_book_now">Book Now</string>
 
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Share</string>
@@ -27,13 +36,19 @@
     <string name="ua_channel_notification_ticker">Urban Airship Channel</string>
     <string name="ua_channel_copy_toast">Channel copied to clipboard!</string>
 
-    <string name="ua_notification_button_copy">Copy</string>
-    <string name="ua_notification_button_save">Save</string>
+    <!-- Message Center -->
     <string name="ua_message_center_title">Message Center</string>
-    <string name="ua_empty_message_list">No messages</string>
-    <string name="ua_message_not_selected">No message selected</string>
-    <string name="ua_mc_failed_to_load">There’s been a connection issue. Please try again…</string>
+    <string name="ua_empty_message_list">No Messages</string>
+    <string name="ua_message_not_selected">No Message Selected</string>
+    <string name="ua_mc_failed_to_load">Unable to load message. Please try again later.</string>
     <string name="ua_retry_button">Retry</string>
+    <string name="ua_ok">Ok</string>
+    <string name="ua_cancel">Cancel</string>
+    <string name="ua_select_none">Select None</string>
+    <string name="ua_connection_error">Connection Error</string>
+    <string name="ua_mark_read">Mark Read</string>
+    <string name="ua_delete">Delete</string>
+    <string name="ua_select_all">Select All</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
@@ -41,8 +56,5 @@
         <item quantity="other"><xliff:g id="count" example="3">%1$d</xliff:g> selected</item>
     </plurals>
 
-    <string name="ua_mark_read">Mark Read</string>
-    <string name="ua_delete">Delete</string>
-    <string name="ua_select_all">Select All</string>
 
 </resources>

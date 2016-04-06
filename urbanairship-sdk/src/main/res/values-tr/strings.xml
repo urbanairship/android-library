@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Evet</string>
+    <string name="ua_notification_button_no">Hayır</string>
+    <string name="ua_notification_button_shop_now">Şimdi Alışveriş Yap</string>
+    <string name="ua_notification_button_buy_now">Şimdi Satın Al</string>
+    <string name="ua_notification_button_follow">Takip Et</string>
+    <string name="ua_notification_button_unfollow">Takibi Bırak</string>
+    <string name="ua_notification_button_opt_in">Ekle</string>
+    <string name="ua_notification_button_opt_out">Çıkar</string>
+    <string name="ua_notification_button_remind">Daha Sonra Hatırlat</string>
+    <string name="ua_notification_button_share">Paylaş</string>
+    <string name="ua_notification_button_accept">Kabul Et</string>
+    <string name="ua_notification_button_decline">Reddet</string>
+    <string name="ua_notification_button_download">İndir</string>
+    <string name="ua_notification_button_more_like">Benzerlerinden Daha Fazla</string>
+    <string name="ua_notification_button_less_like">Benzerlerinden Daha Az</string>
+    <string name="ua_notification_button_like">Beğen</string>
+    <string name="ua_notification_button_dislike">Beğenme</string>
+    <string name="ua_notification_button_copy">Kopyala</string>
+    <string name="ua_notification_button_save">Kaydet</string>
+    <string name="ua_notification_button_add_to_calendar">Takvime Ekle</string>
+    <string name="ua_notification_button_add">Ekle</string>
+    <string name="ua_notification_button_tell_me_more">Daha Fazla Bilgi</string>
+    <string name="ua_notification_button_send_info">Bilgi Gönder</string>
+    <string name="ua_notification_button_rate_now">Şimdi Oyla</string>
+    <string name="ua_notification_button_search">Ara</string>
+    <string name="ua_notification_button_book_now">Hemen Ayırt</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Paylaş</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship Kanalı</string>
+    <string name="ua_channel_copy_toast">Kanal panoya kopyalandı!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Mesaj Merkezi</string>
+    <string name="ua_empty_message_list">Mesaj Yok</string>
+    <string name="ua_message_not_selected">Seçili Mesaj Yok</string>
+    <string name="ua_mc_failed_to_load">Mesaj yüklenemiyor. Lütfen daha sonra tekrar deneyin.</string>
+    <string name="ua_retry_button">Tekrar dene</string>
+    <string name="ua_ok">Tamam</string>
+    <string name="ua_cancel">İptal</string>
+    <string name="ua_select_none">Hiçbirini Seçme</string>
+    <string name="ua_select_all">Tümünü Seç</string>
+    <string name="ua_connection_error">Bağlantı Hatası</string>
+    <string name="ua_mark_read">Okundu Olarak İşaretle</string>
+    <string name="ua_delete">Sil</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> seçildi</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> seçildi</item>
+  </plurals>
+
+</resources>

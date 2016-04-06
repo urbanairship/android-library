@@ -43,8 +43,8 @@ public class ActionButtonGroupsParserTest extends BaseTestCase {
     public void testDefaultGroups() {
         Map<String, NotificationActionButtonGroup> groups = ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons);
 
-        // We provide 27 groups
-        assertEquals(27, groups.size());
+        // We provide 37 groups
+        assertEquals(37, groups.size());
 
         // Verify a random group
         NotificationActionButtonGroup yesNoGroup = groups.get("ua_yes_no_foreground");

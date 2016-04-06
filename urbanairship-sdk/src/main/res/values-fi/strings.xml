@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Kyllä</string>
+    <string name="ua_notification_button_no">Ei</string>
+    <string name="ua_notification_button_shop_now">Tee nyt ostoksia</string>
+    <string name="ua_notification_button_buy_now">Osta nyt</string>
+    <string name="ua_notification_button_follow">Seuraa</string>
+    <string name="ua_notification_button_unfollow">Älä seuraa</string>
+    <string name="ua_notification_button_opt_in">Opt-in</string>
+    <string name="ua_notification_button_opt_out">Opt-out</string>
+    <string name="ua_notification_button_remind">Muistuta minua myöhemmin</string>
+    <string name="ua_notification_button_share">Jaa</string>
+    <string name="ua_notification_button_accept">Hyväksy</string>
+    <string name="ua_notification_button_decline">Hylkää</string>
+    <string name="ua_notification_button_download">Lataa</string>
+    <string name="ua_notification_button_more_like">Lisää tämän kaltaisia</string>
+    <string name="ua_notification_button_less_like">Vähemmän tämän kaltaisia</string>
+    <string name="ua_notification_button_like">Tykkää</string>
+    <string name="ua_notification_button_dislike">Älä tykkää</string>
+    <string name="ua_notification_button_copy">Kopioi</string>
+    <string name="ua_notification_button_save">Tallenna</string>
+    <string name="ua_notification_button_add_to_calendar">Lisää kalenteriin</string>
+    <string name="ua_notification_button_add">Lisää</string>
+    <string name="ua_notification_button_tell_me_more">Kerro minulle lisää</string>
+    <string name="ua_notification_button_send_info">Lähetä tietoa</string>
+    <string name="ua_notification_button_rate_now">Arvostele nyt</string>
+    <string name="ua_notification_button_search">Hae</string>
+    <string name="ua_notification_button_book_now">Varaa nyt</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Jaa</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urbaani ilmalaiva -kanava</string>
+    <string name="ua_channel_copy_toast">Kanava kopioitu leikepöydälle!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Viestikeskus</string>
+    <string name="ua_empty_message_list">Ei viestejä</string>
+    <string name="ua_message_not_selected">Ei valittua viestiä</string>
+    <string name="ua_mc_failed_to_load">Viestin lataaminen ei onnistu. Yritä uudelleen myöhemmin.</string>
+    <string name="ua_retry_button">Yritä uudelleen</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Peruuta</string>
+    <string name="ua_select_none">Älä valitse mitään</string>
+    <string name="ua_select_all">Valitse kaikki</string>
+    <string name="ua_connection_error">Yhteysvirhe</string>
+    <string name="ua_mark_read">Merkitse luetuksi</string>
+    <string name="ua_delete">Poista</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> valittu</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> valittu</item>
+  </plurals>
+
+</resources>

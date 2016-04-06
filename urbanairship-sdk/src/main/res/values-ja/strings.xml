@@ -1,24 +1,58 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">はい</string>
     <string name="ua_notification_button_no">いいえ</string>
-    <string name="ua_notification_button_shop_now">今すぐ買い物する</string>
-    <string name="ua_notification_button_buy_now">今すぐ購入</string>
+    <string name="ua_notification_button_shop_now">今すぐお店へ移動する</string>
+    <string name="ua_notification_button_buy_now">今すぐ購入する</string>
     <string name="ua_notification_button_follow">フォローする</string>
-    <string name="ua_notification_button_unfollow">フォローを解除</string>
-    <string name="ua_notification_button_opt_in">オプト・イン</string>
-    <string name="ua_notification_button_opt_out">オプト・アウト</string>
+    <string name="ua_notification_button_unfollow">フォローしない</string>
+    <string name="ua_notification_button_opt_in">オプトイン</string>
+    <string name="ua_notification_button_opt_out">オプトアウト</string>
     <string name="ua_notification_button_remind">後で通知</string>
     <string name="ua_notification_button_share">共有</string>
     <string name="ua_notification_button_accept">同意</string>
     <string name="ua_notification_button_decline">拒否</string>
     <string name="ua_notification_button_download">ダウンロード</string>
-    <string name="ua_notification_button_more_like">類似のものを表示する</string>
-    <string name="ua_notification_button_less_like">類似のものを非表示する</string>
+    <string name="ua_notification_button_more_like">さらに似ている項目</string>
+    <string name="ua_notification_button_less_like">もっと違う項目</string>
     <string name="ua_notification_button_like">いいね！</string>
     <string name="ua_notification_button_dislike">いいね！を取り消す</string>
+    <string name="ua_notification_button_copy">コピーする</string>
+    <string name="ua_notification_button_save">保存する</string>
+    <string name="ua_notification_button_add_to_calendar">カレンダーに追加する</string>
+    <string name="ua_notification_button_add">追加する</string>
+    <string name="ua_notification_button_tell_me_more">詳しく教えてください</string>
+    <string name="ua_notification_button_send_info">情報を送信する</string>
+    <string name="ua_notification_button_rate_now">今すぐ評価する</string>
+    <string name="ua_notification_button_search">検索する</string>
+    <string name="ua_notification_button_book_now">今すぐ予約する</string>
 
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">共有しよう</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship チャンネル</string>
+    <string name="ua_channel_copy_toast">チャンネルがクリップボードにコピーされました！</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">メッセージ センター</string>
+    <string name="ua_empty_message_list">メッセージはありません</string>
+    <string name="ua_message_not_selected">メッセージが選択されていません</string>
+    <string name="ua_mc_failed_to_load">メッセージを読み込むことができません。後ほどもう一度お試しください。</string>
+    <string name="ua_retry_button">もう一度やり直す</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">キャンセルする</string>
+    <string name="ua_select_none">何も選択しない</string>
+    <string name="ua_select_all">すべて選択する</string>
+    <string name="ua_connection_error">接続エラー</string>
+    <string name="ua_mark_read">既読にする</string>
+    <string name="ua_delete">削除する</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g>が選択されています</item>
+  </plurals>
+
 </resources>

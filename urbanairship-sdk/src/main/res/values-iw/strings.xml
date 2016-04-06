@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">כן</string>
+    <string name="ua_notification_button_no">לא</string>
+    <string name="ua_notification_button_shop_now">קנה עכשיו</string>
+    <string name="ua_notification_button_buy_now">קנה עכשיו</string>
+    <string name="ua_notification_button_follow">עקוב</string>
+    <string name="ua_notification_button_unfollow">הסר עקיבה</string>
+    <string name="ua_notification_button_opt_in">הסכמת הרשמה</string>
+    <string name="ua_notification_button_opt_out">ביטול הסכמת הרשמה</string>
+    <string name="ua_notification_button_remind">הזכר לי מאוחר יותר</string>
+    <string name="ua_notification_button_share">שתף</string>
+    <string name="ua_notification_button_accept">אשר</string>
+    <string name="ua_notification_button_decline">דחה</string>
+    <string name="ua_notification_button_download">הורדה</string>
+    <string name="ua_notification_button_more_like">יותר כמו זה</string>
+    <string name="ua_notification_button_less_like">פחות כמו זה</string>
+    <string name="ua_notification_button_like">אהבתי</string>
+    <string name="ua_notification_button_dislike">לא אהבתי</string>
+    <string name="ua_notification_button_copy">העתק</string>
+    <string name="ua_notification_button_save">שמור</string>
+    <string name="ua_notification_button_add_to_calendar">הוסף ליומן</string>
+    <string name="ua_notification_button_add">הוסף</string>
+    <string name="ua_notification_button_tell_me_more">ספר לי עוד</string>
+    <string name="ua_notification_button_send_info">שלח פרטים</string>
+    <string name="ua_notification_button_rate_now">דרג עכשיו</string>
+    <string name="ua_notification_button_search">חיפוש</string>
+    <string name="ua_notification_button_book_now">הזמן עכשיו</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">שתף</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">ערוץ Urban Airship</string>
+    <string name="ua_channel_copy_toast">הערוץ הועתק ללוח העריכה!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">מרכז ההודעות</string>
+    <string name="ua_empty_message_list">אין הודעות</string>
+    <string name="ua_message_not_selected">לא נבחרה הודעה</string>
+    <string name="ua_mc_failed_to_load">לא ניתן לטעון הודעה. נסה שוב מאוחר יותר.</string>
+    <string name="ua_retry_button">נסה שוב</string>
+    <string name="ua_ok">אישור</string>
+    <string name="ua_cancel">ביטול</string>
+    <string name="ua_select_none">ללא בחירה</string>
+    <string name="ua_select_all">בחר הכול</string>
+    <string name="ua_connection_error">שגיאת התחברות</string>
+    <string name="ua_mark_read">סמן כנקרא</string>
+    <string name="ua_delete">מחק</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> נבחר</item>
+    <item quantity="two">
+      <xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
+    <item quantity="many">
+      <xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
+  </plurals>
+
+</resources>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">是</string>
@@ -18,7 +18,41 @@
     <string name="ua_notification_button_less_like">更少类似</string>
     <string name="ua_notification_button_like">喜欢</string>
     <string name="ua_notification_button_dislike">不喜欢</string>
+    <string name="ua_notification_button_copy">复制</string>
+    <string name="ua_notification_button_save">保存</string>
+    <string name="ua_notification_button_add_to_calendar">添加到日历</string>
+    <string name="ua_notification_button_add">添加</string>
+    <string name="ua_notification_button_tell_me_more">告诉我更多</string>
+    <string name="ua_notification_button_send_info">发送信息</string>
+    <string name="ua_notification_button_rate_now">现在就评价吧</string>
+    <string name="ua_notification_button_search">搜索</string>
+    <string name="ua_notification_button_book_now">现在预订</string>
 
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">分享</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">城市飞艇通道</string>
+    <string name="ua_channel_copy_toast">通道已复制到剪贴板！</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">消息中心</string>
+    <string name="ua_empty_message_list">无消息</string>
+    <string name="ua_message_not_selected">未选择消息</string>
+    <string name="ua_mc_failed_to_load">无法加载消息。请稍后再试。</string>
+    <string name="ua_retry_button">重试</string>
+    <string name="ua_ok">好</string>
+    <string name="ua_cancel">取消</string>
+    <string name="ua_select_none">全不选</string>
+    <string name="ua_select_all">全选</string>
+    <string name="ua_connection_error">连接错误</string>
+    <string name="ua_mark_read">标记已读</string>
+    <string name="ua_delete">删除</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g>项已选</item>
+  </plurals>
+
 </resources>

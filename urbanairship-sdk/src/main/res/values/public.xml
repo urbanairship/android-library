@@ -20,16 +20,25 @@
     <public name="ua_notification_button_dislike" type="string"/>
     <public name="ua_notification_button_copy" type="string"/>
     <public name="ua_notification_button_save" type="string"/>
+    <public name="ua_notification_button_add_to_calendar" type="string"/>
+    <public name="ua_notification_button_add" type="string"/>
+    <public name="ua_notification_button_tell_me_more" type="string"/>
+    <public name="ua_notification_button_send_info" type="string"/>
+    <public name="ua_notification_button_rate_now" type="string"/>
+    <public name="ua_notification_button_search" type="string"/>
+    <public name="ua_notification_button_book_now" type="string"/>
     <public name="ua_share_dialog_title" type="string"/>
     <public name="ua_message_center_title" type="string"/>
     <public name="ua_empty_message_list" type="string"/>
     <public name="ua_message_not_selected" type="string"/>
     <public name="ua_mc_failed_to_load" type="string"/>
     <public name="ua_retry_button" type="string"/>
+    <public name="ua_ok" type="string"/>
     <public name="ua_delete" type="string"/>
     <public name="ua_mark_read" type="string"/>
     <public name="ua_select_all" type="string"/>
     <public name="ua_selected_count" type="plurals"/>
+
 
     <!-- Attributes -->
     <public name="mixed_content_mode" type="attr"/>

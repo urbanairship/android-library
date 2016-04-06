@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ja</string>
+    <string name="ua_notification_button_no">Nee</string>
+    <string name="ua_notification_button_shop_now">Winkel nu</string>
+    <string name="ua_notification_button_buy_now">Koop nu</string>
+    <string name="ua_notification_button_follow">Volg</string>
+    <string name="ua_notification_button_unfollow">Ontvolg</string>
+    <string name="ua_notification_button_opt_in">Aanmelden</string>
+    <string name="ua_notification_button_opt_out">Afmelden</string>
+    <string name="ua_notification_button_remind">Herinner mij later</string>
+    <string name="ua_notification_button_share">Deel</string>
+    <string name="ua_notification_button_accept">Accepteer</string>
+    <string name="ua_notification_button_decline">Wijs af</string>
+    <string name="ua_notification_button_download">Download</string>
+    <string name="ua_notification_button_more_like">Meer \"Vind Dit Leuk\"</string>
+    <string name="ua_notification_button_less_like">Minder \"Vind Dit Leuk\"</string>
+    <string name="ua_notification_button_like">Vind ik leuk</string>
+    <string name="ua_notification_button_dislike">Vind ik niet leuk</string>
+    <string name="ua_notification_button_copy">Kopieer</string>
+    <string name="ua_notification_button_save">Sla op</string>
+    <string name="ua_notification_button_add_to_calendar">Voeg toe aan kalender</string>
+    <string name="ua_notification_button_add">Voeg toe</string>
+    <string name="ua_notification_button_tell_me_more">Vertel Mij Neer</string>
+    <string name="ua_notification_button_send_info">Stuur Info</string>
+    <string name="ua_notification_button_rate_now">Beoordeel Nu</string>
+    <string name="ua_notification_button_search">Zoek</string>
+    <string name="ua_notification_button_book_now">Boek Nu</string>
+
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Deel</string>
+
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Urban Airship Kanaal</string>
+    <string name="ua_channel_copy_toast">Kanaal gekopieerd naar het klembord!</string>
+
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Berichtencentrum</string>
+    <string name="ua_empty_message_list">Geen Berichten</string>
+    <string name="ua_message_not_selected">Geen Bericht Geselecteerd</string>
+    <string name="ua_mc_failed_to_load">Kan bericht niet laden. Probeer het later opnieuw.</string>
+    <string name="ua_retry_button">Probeer opnieuw</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Annuleer</string>
+    <string name="ua_select_none">Selecteer Geen</string>
+    <string name="ua_select_all">Selecteer Alle</string>
+    <string name="ua_connection_error">Verbindingsfout</string>
+    <string name="ua_mark_read">Markeer als Gelezen</string>
+    <string name="ua_delete">Verwijder</string>
+
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+    <item quantity="one">
+      <xliff:g example="1" id="count">%1$d</xliff:g> geselecteerd</item>
+    <item quantity="other">
+      <xliff:g example="3" id="count">%1$d</xliff:g> geselecteerd</item>
+  </plurals>
+
+</resources>
