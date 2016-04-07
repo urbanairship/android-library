@@ -123,7 +123,7 @@ public class CustomEvent extends Event {
     /**
      * The max number of custom properties.
      */
-    public static final int MAX_PROPERTIES = 20;
+    public static final int MAX_PROPERTIES = 100;
 
     /**
      * The max size of a collection that is allowed in a custom property.
