@@ -27,13 +27,10 @@ package com.urbanairship.push.iam;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * An event that is sent the first time an {@link InAppMessage} is displayed.
@@ -64,18 +61,12 @@ public class DisplayEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
-
-        try {
-            data.putOpt(ID, id);
-            data.putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId());
-            data.putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata());
-        } catch (JSONException e) {
-            Logger.error("DisplayEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(ID, id)
+                .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
+                .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
+                .build();
     }
 
     @Override

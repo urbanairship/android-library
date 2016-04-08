@@ -1,6 +1,7 @@
 package com.urbanairship.analytics;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,14 +41,8 @@ public class EventTest extends BaseTestCase {
         }
 
         @Override
-        protected JSONObject getEventData() {
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.putOpt("some key", "some value");
-            } catch (JSONException ignored) {
-
-            }
-            return jsonObject;
+        protected JsonMap getEventData() {
+            return JsonMap.newBuilder().put("some key", "some value").build();
         }
     }
 }

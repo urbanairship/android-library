@@ -28,8 +28,8 @@ package com.urbanairship.analytics;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
 
@@ -76,7 +76,7 @@ class AssociateIdentifiersEvent extends Event {
     }
 
     @Override
-    protected JSONObject getEventData() {
-        return new JSONObject(ids);
+    protected JsonMap getEventData() {
+        return JsonValue.wrapOpt(ids).optMap();
     }
 }

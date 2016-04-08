@@ -6,7 +6,9 @@ import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
@@ -68,5 +70,32 @@ public class JsonMapTest extends BaseTestCase {
     @Test
     public void testEmptyMapToString() {
         assertEquals("{}", new JsonMap(null).toString());
+    }
+
+    @Test
+    public void testMapBuilder() {
+        List list = Arrays.asList("String", 1.2, false, 1, 'c');
+
+        jsonMap = JsonMap.newBuilder()
+                .putAll(jsonMap)
+                .put("boolean", true)
+                .put("int", 1)
+                .put("char", 'c')
+                .put("String", "String")
+                .put("list", JsonValue.wrapOpt(list))
+                .build();
+
+        assertEquals("some-value", jsonMap.get("some-key").getString());
+        assertEquals("another-value", jsonMap.get("another-key").getString());
+        assertEquals(true, jsonMap.get("boolean").getBoolean(false));
+        assertEquals(1, jsonMap.get("int").getInt(2));
+        assertEquals("c", jsonMap.get("char").getString());
+        assertEquals("String", jsonMap.get("String").getString());
+
+        assertEquals("String", jsonMap.get("list").getList().getList().get(0).getString());
+        assertEquals(1.2, jsonMap.get("list").getList().getList().get(1).getDouble(2.2));
+        assertEquals(false, jsonMap.get("list").getList().getList().get(2).getBoolean(true));
+        assertEquals(1, jsonMap.get("list").getList().getList().get(3).getInt(2));
+        assertEquals("c", jsonMap.get("list").getList().getList().get(4).getString());
     }
 }

@@ -29,11 +29,8 @@ import android.location.Location;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -119,27 +116,18 @@ public class LocationEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-
-        JSONObject data = new JSONObject();
-
-        try {
-            data.put(LATITUDE_KEY, latitude);
-            data.put(LONGITUDE_KEY, longitude);
-            data.put(REQUESTED_ACCURACY_KEY, requestedAccuracy);
-
-
-            data.put(UPDATE_TYPE_KEY, updateType == UPDATE_TYPE_CONTINUOUS ? "CONTINUOUS" : "SINGLE");
-            data.put(PROVIDER_KEY, provider);
-            data.put(H_ACCURACY_KEY, accuracy);
-            data.put(V_ACCURACY_KEY, "NONE");
-            data.put(FOREGROUND_KEY, foreground);
-            data.put(UPDATE_DISTANCE_KEY, updateDistance);
-        } catch (JSONException e) {
-            Logger.error("LocationEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(LATITUDE_KEY, latitude)
+                .put(LONGITUDE_KEY, longitude)
+                .put(REQUESTED_ACCURACY_KEY, requestedAccuracy)
+                .put(UPDATE_TYPE_KEY, updateType == UPDATE_TYPE_CONTINUOUS ? "CONTINUOUS" : "SINGLE")
+                .put(PROVIDER_KEY, provider)
+                .put(H_ACCURACY_KEY, accuracy)
+                .put(V_ACCURACY_KEY, "NONE")
+                .put(FOREGROUND_KEY, foreground)
+                .put(UPDATE_DISTANCE_KEY, updateDistance)
+                .build();
     }
 
     @Override

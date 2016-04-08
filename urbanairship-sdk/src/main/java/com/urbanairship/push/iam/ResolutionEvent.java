@@ -29,14 +29,11 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.util.DateUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -206,18 +203,12 @@ public class ResolutionEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
-
-        try {
-            data.putOpt(ID, id);
-            data.putOpt(RESOLUTION, new JSONObject(resolutionData));
-            data.putOpt(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId());
-            data.putOpt(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata());
-        } catch (JSONException e) {
-            Logger.error("ResolutionEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(ID, id)
+                .putOpt(RESOLUTION, resolutionData)
+                .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
+                .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
+                .build();
     }
 }

@@ -55,7 +55,7 @@ import java.util.Map;
  * String by calling{@link #parseString(String)}. The JsonValue {@link #toString()} returns the
  * JSON String representation of the object.
  */
-public class JsonValue implements Parcelable {
+public class JsonValue implements Parcelable, JsonSerializable {
 
     /**
      * A null representation of the JsonValue.
@@ -754,4 +754,9 @@ public class JsonValue implements Parcelable {
             return new JsonValue[size];
         }
     };
+
+    @Override
+    public JsonValue toJsonValue() {
+        return this;
+    }
 }

@@ -5,11 +5,11 @@ import android.os.Build;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 public class AppForegroundEventTest extends BaseTestCase {
 
     private AppForegroundEvent event;
-    private JSONObject data;
+    private JsonMap data;
 
     private PushManager mockPush;
     private Analytics analytics;
@@ -67,11 +67,11 @@ public class AppForegroundEventTest extends BaseTestCase {
 
     @Test
     public void testNotificationTypes() throws JSONException {
-        JSONObject data = event.getEventData();
-        JSONArray typesJSON = (JSONArray) data.get(AppForegroundEvent.NOTIFICATION_TYPES_KEY);
+        JsonMap data = event.getEventData();
+        JsonList typesJSON = data.get(AppForegroundEvent.NOTIFICATION_TYPES_KEY).getList();
         ArrayList<String> typesList = new ArrayList<>();
-        for (int i = 0; i < typesJSON.length(); i++) {
-            typesList.add((String) typesJSON.get(i));
+        for (int i = 0; i < typesJSON.size(); i++) {
+            typesList.add(typesJSON.get(i).getString());
         }
         assertEquals(typesList, event.getNotificationTypes());
     }

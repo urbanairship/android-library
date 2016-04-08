@@ -39,7 +39,7 @@ import java.util.List;
 /**
  * An immutable list of JsonValues.
  */
-public class JsonList implements Iterable<JsonValue> {
+public class JsonList implements Iterable<JsonValue>, JsonSerializable {
 
     private final List<JsonValue> list;
 
@@ -186,5 +186,10 @@ public class JsonList implements Iterable<JsonValue> {
             actionValue.write(stringer);
         }
         stringer.endArray();
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonValue.wrap(this);
     }
 }

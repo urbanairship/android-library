@@ -25,12 +25,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship.analytics;
 
-import com.urbanairship.Logger;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Analytics event when a push arrives.
@@ -66,33 +63,14 @@ public class PushArrivedEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
+    protected final JsonMap getEventData() {
 
-        JSONObject data = new JSONObject();
-
-        try {
-            if (!UAStringUtil.isEmpty(pushId)) {
-                data.put(PUSH_ID_KEY, pushId);
-            } else {
-                data.put(PUSH_ID_KEY, DEFAULT_SEND_ID);
-            }
-
-            data.putOpt(METADATA_KEY, metadata);
-
-            //connection info
-            data.put(CONNECTION_TYPE_KEY, getConnectionType());
-
-            String subtype = getConnectionSubType();
-            if (!UAStringUtil.isEmpty(subtype)) {
-                data.put(CONNECTION_SUBTYPE_KEY, subtype);
-            }
-
-            data.put(CARRIER_KEY, getCarrier());
-
-        } catch (JSONException e) {
-            Logger.error("PushArrivedEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+        return JsonMap.newBuilder()
+                .put(PUSH_ID_KEY, !UAStringUtil.isEmpty(pushId) ? pushId : DEFAULT_SEND_ID)
+                .put(METADATA_KEY, metadata)
+                .put(CONNECTION_TYPE_KEY, getConnectionType())
+                .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
+                .put(CARRIER_KEY, getCarrier())
+                .build();
     }
 }

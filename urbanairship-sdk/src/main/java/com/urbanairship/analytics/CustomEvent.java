@@ -31,14 +31,11 @@ import android.support.annotation.Size;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -158,57 +155,52 @@ public class CustomEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
+    protected final JsonMap getEventData() {
+        JsonMap.Builder data = JsonMap.newBuilder();
 
         String conversionSendId = UAirship.shared().getAnalytics().getConversionSendId();
         String conversionMetadata = UAirship.shared().getAnalytics().getConversionMetadata();
 
-        try {
-            data.putOpt(EVENT_NAME, eventName);
-            data.putOpt(INTERACTION_ID, interactionId);
-            data.putOpt(INTERACTION_TYPE, interactionType);
-            data.putOpt(TRANSACTION_ID, transactionId);
+        data.put(EVENT_NAME, eventName);
+        data.put(INTERACTION_ID, interactionId);
+        data.put(INTERACTION_TYPE, interactionType);
+        data.put(TRANSACTION_ID, transactionId);
 
-            if (eventValue != null) {
-                data.putOpt(EVENT_VALUE, eventValue.movePointRight(6).longValue());
-            }
-
-            if (!UAStringUtil.isEmpty(sendId)) {
-                data.putOpt(CONVERSION_SEND_ID, sendId);
-            } else {
-                data.putOpt(CONVERSION_SEND_ID, conversionSendId);
-            }
-
-            if (!UAStringUtil.isEmpty(metadata)) {
-                data.putOpt(CONVERSION_METADATA, metadata);
-            } else if (conversionMetadata != null) {
-                data.putOpt(CONVERSION_METADATA, conversionMetadata);
-            } else {
-                data.putOpt(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
-            }
-
-            JSONObject propertiesPayload = new JSONObject();
-
-            // Properties
-            for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                if (entry.getValue() instanceof Collection) {
-                    propertiesPayload.putOpt(entry.getKey(), new JSONArray((Collection) entry.getValue()));
-                } else {
-                    // Everything else can be stringified
-                    propertiesPayload.putOpt(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).toString());
-                }
-            }
-
-            if (propertiesPayload.length() > 0) {
-                data.putOpt(PROPERTIES, propertiesPayload);
-            }
-
-        } catch (JSONException e) {
-            Logger.error("CustomEvent - Error constructing JSON data.", e);
+        if (eventValue != null) {
+            data.put(EVENT_VALUE, eventValue.movePointRight(6).longValue());
         }
 
-        return data;
+        if (!UAStringUtil.isEmpty(sendId)) {
+            data.put(CONVERSION_SEND_ID, sendId);
+        } else {
+            data.put(CONVERSION_SEND_ID, conversionSendId);
+        }
+
+        if (!UAStringUtil.isEmpty(metadata)) {
+            data.put(CONVERSION_METADATA, metadata);
+        } else if (conversionMetadata != null) {
+            data.put(CONVERSION_METADATA, conversionMetadata);
+        } else {
+            data.put(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
+        }
+
+        JsonMap.Builder propertiesPayload = JsonMap.newBuilder();
+
+        // Properties
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            if (entry.getValue() instanceof Collection) {
+                propertiesPayload.put(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).getList());
+            } else {
+                // Everything else can be stringified
+                propertiesPayload.putOpt(entry.getKey(), JsonValue.wrapOpt(entry.getValue()).toString());
+            }
+        }
+
+        if (propertiesPayload.build().getMap().size() > 0) {
+            data.put(PROPERTIES, propertiesPayload.build());
+        }
+
+        return data.build();
     }
 
     @Override

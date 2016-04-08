@@ -28,11 +28,8 @@ package com.urbanairship.analytics;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.urbanairship.Logger;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * An event that captures information regarding an interactive notification action open.
@@ -75,19 +72,13 @@ public class InteractiveNotificationEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
-
-        try {
-            data.put(SEND_ID_KEY, sendId);
-            data.put(BUTTON_GROUP_KEY, buttonGroupId);
-            data.put(BUTTON_ID_KEY, buttonId);
-            data.put(BUTTON_DESCRIPTION_KEY, buttonDescription);
-            data.put(FOREGROUND_KEY, isForeground);
-        } catch (JSONException e) {
-            Logger.error("InteractiveNotificationEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(SEND_ID_KEY, sendId)
+                .put(BUTTON_GROUP_KEY, buttonGroupId)
+                .put(BUTTON_ID_KEY, buttonId)
+                .put(BUTTON_DESCRIPTION_KEY, buttonDescription)
+                .put(FOREGROUND_KEY, isForeground)
+                .build();
     }
 }

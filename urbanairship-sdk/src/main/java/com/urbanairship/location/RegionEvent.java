@@ -31,9 +31,7 @@ import android.support.annotation.Size;
 
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.Event;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -195,49 +193,46 @@ public class RegionEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-        JSONObject data = new JSONObject();
-        JSONObject proximityRegionData;
-        JSONObject circularRegionData;
+    protected final JsonMap getEventData() {
 
         if (!isValid()) {
             return null;
         }
 
-        try {
-            data.putOpt(REGION_ID, regionId);
-            data.putOpt(SOURCE, source);
+        JsonMap.Builder data = JsonMap.newBuilder()
+                .put(REGION_ID, regionId)
+                .put(SOURCE, source)
+                .put(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
 
-            data.putOpt(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
+        if (proximityRegion != null && proximityRegion.isValid()) {
+            JsonMap.Builder proximityRegionData = JsonMap.newBuilder()
+                    .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
+                    .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
+                    .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
+                    .put(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
 
-            if (proximityRegion != null && proximityRegion.isValid()) {
-                proximityRegionData = new JSONObject();
-
-                proximityRegionData.putOpt(PROXIMITY_REGION_ID, proximityRegion.getProximityId());
-                proximityRegionData.putOpt(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor());
-                proximityRegionData.putOpt(PROXIMITY_REGION_MINOR, proximityRegion.getMinor());
-                proximityRegionData.putOpt(LATITUDE, Double.toString(proximityRegion.getLatitude()));
-                proximityRegionData.putOpt(LONGITUDE, Double.toString(proximityRegion.getLongitude()));
-                proximityRegionData.putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
-
-                data.putOpt(PROXIMITY_REGION, proximityRegionData);
+            if (proximityRegion.getLatitude() != null) {
+                proximityRegionData.put(LATITUDE, Double.toString(proximityRegion.getLatitude()));
             }
 
-            if (circularRegion != null && circularRegion.isValid()) {
-                circularRegionData = new JSONObject();
-
-                circularRegionData.putOpt(CIRCULAR_REGION_RADIUS, String.format(Locale.US, "%.1f", circularRegion.getRadius()));
-                circularRegionData.putOpt(LATITUDE,  String.format(Locale.US, "%.7f", circularRegion.getLatitude()));
-                circularRegionData.putOpt(LONGITUDE, String.format(Locale.US, "%.7f", circularRegion.getLongitude()));
-
-                data.putOpt(CIRCULAR_REGION, circularRegionData);
+            if (proximityRegion.getLongitude() != null) {
+                proximityRegionData.put(LONGITUDE, Double.toString(proximityRegion.getLongitude()));
             }
 
-        } catch (JSONException exception) {
-            Logger.error("Error constructing JSON data for " + getType());
+            data.put(PROXIMITY_REGION, proximityRegionData.build());
         }
 
-        return data;
+        if (circularRegion != null && circularRegion.isValid()) {
+            JsonMap circularRegionData = JsonMap.newBuilder()
+                    .put(CIRCULAR_REGION_RADIUS, String.format(Locale.US, "%.1f", circularRegion.getRadius()))
+                    .put(LATITUDE, String.format(Locale.US, "%.7f", circularRegion.getLatitude()))
+                    .put(LONGITUDE,  String.format(Locale.US, "%.7f", circularRegion.getLongitude()))
+                    .build();
+
+            data.put(CIRCULAR_REGION, circularRegionData);
+        }
+
+        return data.build();
     }
 
     /**

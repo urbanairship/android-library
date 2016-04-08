@@ -27,13 +27,9 @@ package com.urbanairship.analytics;
 
 import android.os.Build;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 class AppForegroundEvent extends Event {
 
@@ -57,34 +53,21 @@ class AppForegroundEvent extends Event {
     }
 
     @Override
-    protected final JSONObject getEventData() {
-
-        JSONObject data = new JSONObject();
-
-        try {
-            //connection info
-            data.put(CONNECTION_TYPE_KEY, getConnectionType());
-
-            String subtype = getConnectionSubType();
-            if (!UAStringUtil.isEmpty(subtype)) {
-                data.put(CONNECTION_SUBTYPE_KEY, subtype);
-            }
-
-            data.put(CARRIER_KEY, getCarrier());
-            data.put(TIME_ZONE_KEY, getTimezone());
-            data.put(DAYLIGHT_SAVINGS_KEY, isDaylightSavingsTime());
-            data.put(NOTIFICATION_TYPES_KEY, new JSONArray(getNotificationTypes()));
-            data.put(OS_VERSION_KEY, Build.VERSION.RELEASE);
-            data.put(LIB_VERSION_KEY, UAirship.getVersion());
-            data.put(PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName);
-            data.put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId());
-            data.putOpt(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata());
-            data.put(LAST_METADATA_KEY, UAirship.shared().getPushManager().getLastReceivedMetadata());
-        } catch (JSONException e) {
-            Logger.error("AppForegroundEvent - Error constructing JSON data.", e);
-        }
-
-        return data;
+    protected final JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(CONNECTION_TYPE_KEY, getConnectionType())
+                .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
+                .put(CARRIER_KEY, getCarrier())
+                .put(TIME_ZONE_KEY, getTimezone())
+                .put(DAYLIGHT_SAVINGS_KEY, isDaylightSavingsTime())
+                .put(NOTIFICATION_TYPES_KEY, JsonValue.wrapOpt(getNotificationTypes()).getList())
+                .put(OS_VERSION_KEY, Build.VERSION.RELEASE)
+                .put(LIB_VERSION_KEY, UAirship.getVersion())
+                .put(PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName)
+                .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
+                .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
+                .put(LAST_METADATA_KEY, UAirship.shared().getPushManager().getLastReceivedMetadata())
+                .build();
     }
 
 }

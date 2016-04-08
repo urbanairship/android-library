@@ -2,6 +2,7 @@ package com.urbanairship.location;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.EventTestUtils;
+import com.urbanairship.json.JsonValue;
 
 import org.json.JSONException;
 import org.junit.Test;
@@ -18,7 +19,7 @@ public class RegionEventTest extends BaseTestCase {
      * Test region event data formatting directly.
      */
     @Test
-    public void testRegionEventData() throws JSONException {
+    public void testRegionEventData() throws Exception {
 
         String regionId = "region_id";
         String source = "source";
@@ -38,8 +39,8 @@ public class RegionEventTest extends BaseTestCase {
 
         String expectedData = "{\"proximity\":{\"proximity_id\":\"test_proximity_region\",\"minor\":2," +
                 "\"longitude\":\"0.0\",\"rssi\":-59,\"latitude\":\"0.0\",\"major\":1},\"source\":\"source\"," +
-                "\"action\":\"enter\",\"region_id\":\"region_id\",\"circular_region\":{\"longitude\":\"180.0000000\"," +
-                "\"radius\":\"10.0\",\"latitude\":\"90.0000000\"}}";
+                "\"region_id\":\"region_id\",\"action\":\"enter\",\"circular_region\":{\"radius\":\"10.0\"," +
+                "\"longitude\":\"180.0000000\",\"latitude\":\"90.0000000\"}}";
 
         // test isValid returns true for valid region event
         assertEquals(expectedData, event.getEventData().toString());

@@ -27,10 +27,7 @@ package com.urbanairship.analytics;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
 
 /**
  * Event to track Google Play Store referrals
@@ -57,15 +54,9 @@ class InstallAttributionEvent extends Event {
     }
 
     @Override
-    protected JSONObject getEventData() {
-        JSONObject jsonObject = new JSONObject();
-
-        try {
-            jsonObject.putOpt(PLAY_STORE_REFERRER, referrer);
-        } catch (JSONException e) {
-            Logger.error("InstallAttributionEvent - Error constructing JSON data.", e);
-        }
-
-        return jsonObject;
+    protected JsonMap getEventData() {
+        return JsonMap.newBuilder()
+                .put(PLAY_STORE_REFERRER, referrer)
+                .build();
     }
 }

@@ -73,7 +73,7 @@ public class InstallReceiverTest extends BaseTestCase {
                 }
 
                 InstallAttributionEvent event = (InstallAttributionEvent) argument;
-                return "some value".equals(event.getEventData().opt("google_play_referrer"));
+                return "some value".equals(event.getEventData().opt("google_play_referrer").getString());
             }
         }));
     }
