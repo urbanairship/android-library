@@ -100,7 +100,7 @@ public class JsonValue implements Parcelable, JsonSerializable {
      */
     public String getString(String defaultValue) {
         if (isNull()) {
-            return null;
+            return defaultValue;
         }
 
         if (isString()) {
@@ -219,6 +219,19 @@ public class JsonValue implements Parcelable, JsonSerializable {
         }
 
         return (JsonList) value;
+    }
+
+    /**
+     * Gets the contained values as a JsonList.
+     *
+     * @return The value as JsonList, or an empty JsonList if the value is not a JsonList.
+     */
+    public JsonList optList() {
+        if (isNull() || !isJsonList()) {
+            return JsonList.EMPTY_LIST;
+        }
+
+        return getList();
     }
 
     /**

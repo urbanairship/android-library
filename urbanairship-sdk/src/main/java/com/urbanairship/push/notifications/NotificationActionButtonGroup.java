@@ -30,11 +30,11 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,18 +74,18 @@ public class NotificationActionButtonGroup {
     List<NotificationCompat.Action> createAndroidActions(Context context, PushMessage message, int notificationId, String actionsPayload) {
         final List<NotificationCompat.Action> androidActions = new ArrayList<>();
 
-        JSONObject notificationActionJSON = null;
+        JsonMap notificationActionMap = null;
         if (!UAStringUtil.isEmpty(actionsPayload)) {
             // Run UA actions for the notification action
             try {
-                notificationActionJSON = new JSONObject(actionsPayload);
-            } catch (JSONException e) {
+                notificationActionMap = JsonValue.parseString(actionsPayload).optMap();
+            } catch(JsonException e) {
                 Logger.error("Failed to parse notification actions payload: " + actionsPayload, e);
             }
         }
 
         for (NotificationActionButton action : getNotificationActionButtons()) {
-            String actions = notificationActionJSON == null ? null : notificationActionJSON.optString(action.getId());
+            String actions = notificationActionMap == null ? null : notificationActionMap.opt(action.getId()).toString();
             NotificationCompat.Action androidAction = action.createAndroidNotificationAction(context, actions, message, notificationId);
             androidActions.add(androidAction);
         }

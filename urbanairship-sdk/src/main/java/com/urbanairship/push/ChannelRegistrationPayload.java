@@ -34,8 +34,6 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONArray;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -223,7 +221,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
 
         // If setTags is TRUE, then include the tags
         if (setTags && tags != null) {
-            channel.put(TAGS_KEY, new JSONArray(tags));
+            channel.put(TAGS_KEY, JsonValue.wrapOpt(tags).getList());
         }
 
         payload.put(CHANNEL_KEY, channel);

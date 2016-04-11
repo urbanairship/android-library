@@ -39,17 +39,18 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -95,17 +96,17 @@ class EventApiClient {
             return null;
         }
 
-        JSONArray eventJSON = new JSONArray();
+        List<JsonValue> eventJSON = new ArrayList<>();
 
         for (String eventPayload : events) {
             try {
-                eventJSON.put(new JSONObject(eventPayload));
-            } catch (JSONException e) {
+                eventJSON.add(JsonValue.parseString(eventPayload));
+            } catch (JsonException e) {
                 Logger.error("EventApiClient - Invalid eventPayload.", e);
             }
         }
 
-        String payload = eventJSON.toString();
+        String payload = new JsonList(eventJSON).toString();
 
         String url = UAirship.shared().getAirshipConfigOptions().analyticsServer + "warp9/";
         URL analyticsServerUrl = null;

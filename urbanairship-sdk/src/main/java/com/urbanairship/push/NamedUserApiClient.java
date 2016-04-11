@@ -32,8 +32,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-
-import org.json.JSONObject;
+import com.urbanairship.json.JsonMap;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -69,15 +68,11 @@ class NamedUserApiClient {
      * @return The response or null if an error occurred.
      */
     Response associate(@NonNull String id, @NonNull String channelId) {
-        JSONObject payload = new JSONObject();
-        try {
-            payload.put(CHANNEL_KEY, channelId);
-            payload.put(DEVICE_TYPE_KEY, getDeviceType());
-            payload.put(NAMED_USER_ID_KEY, id);
-
-        } catch (Exception ex) {
-            Logger.error("Failed to create associate named user payload as json.", ex);
-        }
+        JsonMap payload = JsonMap.newBuilder()
+                .put(CHANNEL_KEY, channelId)
+                .put(DEVICE_TYPE_KEY, getDeviceType())
+                .put(NAMED_USER_ID_KEY, id)
+                .build();
 
         URL associateUrl;
         String urlString = this.urlString + "/associate";
@@ -98,14 +93,10 @@ class NamedUserApiClient {
      * @return The response or null if an error occurred.
      */
     Response disassociate(@NonNull String channelId) {
-        JSONObject payload = new JSONObject();
-        try {
-            payload.put(CHANNEL_KEY, channelId);
-            payload.put(DEVICE_TYPE_KEY, getDeviceType());
-
-        } catch (Exception ex) {
-            Logger.error("Failed to create disassociate named user payload as json.", ex);
-        }
+        JsonMap payload = JsonMap.newBuilder()
+                .put(CHANNEL_KEY, channelId)
+                .put(DEVICE_TYPE_KEY, getDeviceType())
+                .build();
 
         URL disassociateUrl;
         String urlString = this.urlString + "/disassociate";

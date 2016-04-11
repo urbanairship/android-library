@@ -1,10 +1,10 @@
 package com.urbanairship.analytics;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,14 +20,14 @@ public class EventTest extends BaseTestCase {
     }
 
     @Test
-    public void testCreateEventPayload() throws JSONException {
-        JSONObject body = new JSONObject(event.createEventPayload("session id"));
+    public void testCreateEventPayload() throws JsonException {
+        JsonMap body = JsonValue.parseString(event.createEventPayload("session id")).optMap();
 
-        assertEquals(body.get(Event.TYPE_KEY), event.getType());
-        assertEquals(body.get(Event.EVENT_ID_KEY), event.getEventId());
-        assertEquals(body.get(Event.TIME_KEY), event.getTime());
-        assertEquals(body.getJSONObject(Event.DATA_KEY).get(Event.SESSION_ID_KEY), "session id");
-        assertEquals(body.getJSONObject(Event.DATA_KEY).get("some key"), "some value");
+        assertEquals(body.get(Event.TYPE_KEY).getString(), event.getType());
+        assertEquals(body.get(Event.EVENT_ID_KEY).getString(), event.getEventId());
+        assertEquals(body.get(Event.TIME_KEY).getString(), event.getTime());
+        assertEquals(body.get(Event.DATA_KEY).optMap().get(Event.SESSION_ID_KEY).getString(), "session id");
+        assertEquals(body.get(Event.DATA_KEY).optMap().get("some key").getString(), "some value");
     }
 
     //a simple extension of the abstract Event class so

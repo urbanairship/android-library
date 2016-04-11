@@ -37,13 +37,13 @@ import android.view.WindowManager;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.BitmapUtils;
 import com.urbanairship.util.UAStringUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -169,16 +169,20 @@ public abstract class NotificationFactory {
             return extender;
         }
 
-        JSONObject wearableJSON;
+        JsonMap wearableJson;
         try {
-            wearableJSON = new JSONObject(wearablePayload);
-        } catch (JSONException e) {
+            wearableJson = JsonValue.parseString(wearablePayload).optMap();
+        } catch (JsonException e) {
             Logger.error("Failed to parse wearable payload.", e);
             return extender;
         }
 
-        String actionGroupId = wearableJSON.optString(INTERACTIVE_TYPE_KEY);
-        String actionsPayload = wearableJSON.optString(INTERACTIVE_ACTIONS_KEY, message.getInteractiveActionsPayload());
+        String actionGroupId = wearableJson.opt(INTERACTIVE_TYPE_KEY).getString();
+        String actionsPayload = wearableJson.opt(INTERACTIVE_ACTIONS_KEY).toString();
+        if (UAStringUtil.isEmpty(actionsPayload)) {
+            actionsPayload = message.getInteractiveActionsPayload();
+        }
+
         if (!UAStringUtil.isEmpty(actionGroupId)) {
             NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(actionGroupId);
 
@@ -188,7 +192,7 @@ public abstract class NotificationFactory {
             }
         }
 
-        String backgroundUrl = wearableJSON.optString(BACKGROUND_IMAGE_KEY);
+        String backgroundUrl = wearableJson.opt(BACKGROUND_IMAGE_KEY).getString();
         if (!UAStringUtil.isEmpty(backgroundUrl)) {
             try {
                 Bitmap bitmap = fetchBigImage(new URL(backgroundUrl));
@@ -198,16 +202,12 @@ public abstract class NotificationFactory {
             }
         }
 
-        JSONArray pages = wearableJSON.optJSONArray(EXTRA_PAGES_KEY);
-        if (pages != null) {
-            for (int i = 0; i < pages.length(); i++) {
-                JSONObject page = pages.optJSONObject(i);
-                if (page == null) {
-                    continue;
-                }
-
-                extender.addPage(createWearPage(page));
+        JsonList pages = wearableJson.opt(EXTRA_PAGES_KEY).optList();
+        for (JsonValue page : pages) {
+            if (!page.isJsonMap()) {
+                continue;
             }
+            extender.addPage(createWearPage(page.optMap()));
         }
 
         return extender;
@@ -225,23 +225,23 @@ public abstract class NotificationFactory {
             return null;
         }
 
-        JSONObject styleJSON;
+        JsonMap styleJson;
         try {
-            styleJSON = new JSONObject(stylePayload);
-        } catch (JSONException e) {
+            styleJson = JsonValue.parseString(stylePayload).optMap();
+        } catch (JsonException e) {
             Logger.error("Failed to parse notification style payload.", e);
             return null;
         }
 
-        String type = styleJSON.optString(TYPE_KEY);
+        String type = styleJson.opt(TYPE_KEY).getString("");
 
         switch (type) {
             case BIG_TEXT_KEY:
-                return createBigTextStyle(styleJSON);
+                return createBigTextStyle(styleJson);
             case INBOX_KEY:
-                return createInboxStyle(styleJSON);
+                return createInboxStyle(styleJson);
             case BIG_PICTURE_KEY:
-                return createBigPictureStyle(styleJSON);
+                return createBigPictureStyle(styleJson);
         }
 
         return null;
@@ -249,18 +249,18 @@ public abstract class NotificationFactory {
 
     /**
      * Creates the pages of the wearable notification.
-     * @param page The JSONObject page.
+     * @param page The JsonMap page.
      * @return The notification with pages.
      */
-    private Notification createWearPage(@NonNull JSONObject page) {
+    private Notification createWearPage(@NonNull JsonMap page) {
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
 
-        String title = page.optString(TITLE_KEY);
+        String title = page.opt(TITLE_KEY).getString();
         if (!UAStringUtil.isEmpty(title)) {
             style.setBigContentTitle(title);
         }
 
-        String alert = page.optString(ALERT_KEY);
+        String alert = page.opt(ALERT_KEY).getString();
         if (!UAStringUtil.isEmpty(alert)) {
             style.bigText(alert);
         }
@@ -273,16 +273,16 @@ public abstract class NotificationFactory {
 
     /**
      * Creates the big text notification style.
-     * @param styleJSON The JSONObject style.
+     * @param styleJson The JsonMap style.
      * @return The big text style.
      */
-    private NotificationCompat.Style createBigTextStyle(@NonNull JSONObject styleJSON) {
+    private NotificationCompat.Style createBigTextStyle(@NonNull JsonMap styleJson) {
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
 
-        String title = styleJSON.optString(TITLE_KEY);
-        String summary = styleJSON.optString(SUMMARY_KEY);
+        String title = styleJson.opt(TITLE_KEY).getString();
+        String summary = styleJson.opt(SUMMARY_KEY).getString();
 
-        String bigText = styleJSON.optString(BIG_TEXT_KEY);
+        String bigText = styleJson.opt(BIG_TEXT_KEY).getString();
         if (!UAStringUtil.isEmpty(bigText)) {
             style.bigText(bigText);
         }
@@ -300,18 +300,18 @@ public abstract class NotificationFactory {
 
     /**
      * Creates the big picture notification style.
-     * @param styleJSON The JSONObject style.
+     * @param styleJson The JsonMap style.
      * @return The big picture style or null if it failed to be created.
      * @throws IOException
      */
-    private NotificationCompat.BigPictureStyle createBigPictureStyle(@NonNull JSONObject styleJSON) throws IOException {
+    private NotificationCompat.BigPictureStyle createBigPictureStyle(@NonNull JsonMap styleJson) throws IOException {
         NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
 
-        String title = styleJSON.optString(TITLE_KEY);
-        String summary = styleJSON.optString(SUMMARY_KEY);
+        String title = styleJson.opt(TITLE_KEY).getString();
+        String summary = styleJson.opt(SUMMARY_KEY).getString();
 
         try {
-            URL url = new URL(styleJSON.optString(BIG_PICTURE_KEY));
+            URL url = new URL(styleJson.opt(BIG_PICTURE_KEY).getString(""));
             Bitmap bitmap = fetchBigImage(url);
             if (bitmap == null) {
                 Logger.error("Failed to create big picture style, unable to fetch image: " + url);
@@ -336,22 +336,20 @@ public abstract class NotificationFactory {
 
     /**
      * Creates the inbox notification style.
-     * @param styleJSON The JSONObject style.
+     * @param styleJson The JsonMap style.
      * @return The inbox style.
      */
-    private NotificationCompat.InboxStyle createInboxStyle(@NonNull JSONObject styleJSON) {
+    private NotificationCompat.InboxStyle createInboxStyle(@NonNull JsonMap styleJson) {
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
 
-        String title = styleJSON.optString(TITLE_KEY);
-        String summary = styleJSON.optString(SUMMARY_KEY);
+        String title = styleJson.opt(TITLE_KEY).getString();
+        String summary = styleJson.opt(SUMMARY_KEY).getString();
 
-        JSONArray lines = styleJSON.optJSONArray(LINES_KEY);
-        if (lines != null) {
-            for (int i = 0; i < lines.length(); i++) {
-                String line = lines.optString(i);
-                if (line != null) {
-                    style.addLine(line);
-                }
+        JsonList lines = styleJson.opt(LINES_KEY).optList();
+        for (JsonValue line : lines) {
+            String lineValue = line.getString();
+            if (UAStringUtil.isEmpty(lineValue)) {
+                style.addLine(lineValue);
             }
         }
 
@@ -376,19 +374,19 @@ public abstract class NotificationFactory {
 
         if (!UAStringUtil.isEmpty(message.getPublicNotificationPayload())) {
             try {
-                JSONObject jsonObject = new JSONObject(message.getPublicNotificationPayload());
+                JsonMap jsonMap = JsonValue.parseString(message.getPublicNotificationPayload()).optMap();
 
                 NotificationCompat.Builder publicBuilder = new NotificationCompat.Builder(getContext())
-                        .setContentTitle(jsonObject.optString(TITLE_KEY))
-                        .setContentText(jsonObject.optString(ALERT_KEY))
+                        .setContentTitle(jsonMap.opt(TITLE_KEY).getString(""))
+                        .setContentText(jsonMap.opt(ALERT_KEY).getString(""))
                         .setAutoCancel(true)
                         .setSmallIcon(notificationIcon);
 
-                if (jsonObject.has(SUMMARY_KEY)) {
-                    publicBuilder.setSubText(jsonObject.optString(SUMMARY_KEY));
+                if (jsonMap.containsKey(SUMMARY_KEY)) {
+                    publicBuilder.setSubText(jsonMap.opt(SUMMARY_KEY).getString(""));
                 }
                 return publicBuilder.build();
-            } catch (JSONException e) {
+            } catch (JsonException e) {
                 Logger.error("Failed to parse public notification.", e);
             }
         }
