@@ -1,6 +1,7 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
+import android.graphics.Color;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
@@ -10,6 +11,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
 import org.json.JSONException;
@@ -938,5 +940,28 @@ public class PushManagerTest extends BaseTestCase {
         // A registration update should be triggered
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Expect start registration", PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+    }
+
+    /**
+     * Test default notification icon and accent color.
+     */
+    @Test
+    public void testDefaultNotificationFactory() {
+        DefaultNotificationFactory factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
+        assertEquals(0, factory.getSmallIconId());
+        assertEquals(0, factory.getColor());
+
+        AirshipConfigOptions options = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setNotificationAccentColor(Color.parseColor("#ff0000"))
+                .setNotificationIcon(R.drawable.ua_ic_urbanairship_notification)
+                .build();
+
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, mockNamedUser, options);
+        factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
+
+        assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());
+        assertEquals(Color.parseColor("#ff0000"), factory.getColor());
     }
 }

@@ -266,7 +266,15 @@ public class PushManager extends AirshipComponent {
 
     PushManager(Context context, PreferenceDataStore preferenceDataStore, NamedUser namedUser, AirshipConfigOptions configOptions) {
         this.preferenceDataStore = preferenceDataStore;
-        this.notificationFactory = new DefaultNotificationFactory(context);
+
+        DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
+        factory.setColor(configOptions.notificationAccentColor);
+        if (configOptions.notificationIcon != 0) {
+            factory.setSmallIconId(configOptions.notificationIcon);
+        }
+
+        this.notificationFactory = factory;
+
         this.namedUser = namedUser;
         this.configOptions = configOptions;
 
