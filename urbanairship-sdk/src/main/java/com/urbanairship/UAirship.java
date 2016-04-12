@@ -62,7 +62,7 @@ import java.util.List;
  */
 public class UAirship {
 
-    @IntDef({AMAZON_PLATFORM, ANDROID_PLATFORM})
+    @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
     @interface Platform {}
 
@@ -116,7 +116,6 @@ public class UAirship {
      * Constructs an instance of UAirship.
      *
      * @param airshipConfigOptions The airship config options.
-     *
      * @hide
      */
     UAirship(@NonNull AirshipConfigOptions airshipConfigOptions) {
@@ -215,7 +214,8 @@ public class UAirship {
     }
 
     /**
-     * Take off with options defined in airshipconfig.properties
+     * Take off with config loaded from the {@code airshipconfig.properties} file in the
+     * assets directory. See {@link com.urbanairship.AirshipConfigOptions.Builder#applyDefaultProperties(Context)}.
      *
      * @param application The application (required)
      */
@@ -225,9 +225,10 @@ public class UAirship {
     }
 
     /**
-     * Take off with airshipconfig.properties and a callback to perform airship configuration after
+     * Take off with a callback to perform airship configuration after
      * takeoff. The ready callback will be executed before the UAirship instance is returned by any
-     * of the shared methods.
+     * of the shared methods. The config will be loaded from {@code airshipconfig.properties} file in the
+     * assets directory. See {@link com.urbanairship.AirshipConfigOptions.Builder#applyDefaultProperties(Context)}.
      *
      * @param application The application (required)
      * @param readyCallback Optional ready callback. The callback will be triggered on a background thread

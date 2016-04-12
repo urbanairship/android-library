@@ -26,29 +26,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.urbanairship;
 
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Size;
+import android.support.annotation.Nullable;
+import android.support.annotation.XmlRes;
 import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Properties;
-
-
 /**
  * This class holds the set of options necessary to properly initialize
  * {@link com.urbanairship.UAirship}.
- *
- * @author Urban Airship
  */
 public class AirshipConfigOptions {
 
@@ -131,6 +120,7 @@ public class AirshipConfigOptions {
      * <p/>
      * Defaults to ADM, GCM.
      */
+    @Nullable
     public final String[] allowedTransports;
 
 
@@ -141,6 +131,7 @@ public class AirshipConfigOptions {
      * <p/>
      * Defaults null.
      */
+    @Nullable
     public final String[] whitelist;
 
     /**
@@ -176,6 +167,7 @@ public class AirshipConfigOptions {
      * Logger level when the application is in debug mode. Possible values are:
      * <br><ul>
      * <li>ASSERT
+     * <li>NONE
      * <li>DEBUG
      * <li>ERROR
      * <li>INFO
@@ -190,6 +182,7 @@ public class AirshipConfigOptions {
      * Logger level when the application is in production mode. Possible values are:
      * <br><ul>
      * <li>ASSERT
+     * <li>NONE
      * <li>DEBUG
      * <li>ERROR
      * <li>INFO
@@ -256,7 +249,6 @@ public class AirshipConfigOptions {
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
         this.notificationIcon = builder.notificationIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
-
     }
 
     /**
@@ -307,253 +299,251 @@ public class AirshipConfigOptions {
         return false;
     }
 
+    /**
+     * Airship config builder.
+     */
     public static final class Builder {
+        /*
+         * Common config fields
+         */
+        private static final String FIELD_PRODUCTION_APP_KEY = "productionAppKey";
+        private static final String FIELD_PRODUCTION_APP_SECRET = "productionAppSecret";
+        private static final String FIELD_DEVELOPMENT_APP_KEY = "developmentAppKey";
+        private static final String FIELD_DEVELOPMENT_APP_SECRET = "developmentAppSecret";
+        private static final String FIELD_HOST_URL = "hostURL";
+        private static final String FIELD_ANALYTICS_SERVER = "analyticsServer";
+        private static final String FIELD_LANDING_PAGE_CONTENT_URL = "landingPageContentURL";
+        private static final String FIELD_GCM_SENDER = "gcmSender";
+        private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
+        private static final String FIELD_WHITELIST = "whitelist";
+        private static final String FIELD_IN_PRODUCTION = "inProduction";
+        private static final String FIELD_ANALYTICS_ENABLED = "analyticsEnabled";
+        private static final String FIELD_BACKGROUND_REPORTING_INTERVAL_MS = "backgroundReportingIntervalMS";
+        private static final String FIELD_CLEAR_NAMED_USER = "clearNamedUser";
+        private static final String FIELD_DEVELOPMENT_LOG_LEVEL = "developmentLogLevel";
+        private static final String FIELD_PRODUCTION_LOG_LEVEL = "productionLogLevel";
+        private static final String FIELD_AUTO_LAUNCH_APPLICATION = "autoLaunchApplication";
+        private static final String FIELD_CHANNEL_CREATION_DELAY_ENABLED = "channelCreationDelayEnabled";
+        private static final String FIELD_CHANNEL_CAPTURE_ENABLED = "channelCaptureEnabled";
+        private static final String FIELD_NOTIFICATION_ICON = "notificationIcon";
+        private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
 
-        @PropertyName(name = "productionAppKey")
         private String productionAppKey;
-
-        @PropertyName(name = "productionAppSecret")
         private String productionAppSecret;
-
-        @PropertyName(name = "developmentAppKey")
         private String developmentAppKey;
-
-        @PropertyName(name = "developmentAppSecret")
         private String developmentAppSecret;
-
-        @Size(min=1)
-        @PropertyName(name = "hostURL")
         private String hostURL = "https://device-api.urbanairship.com/";
-
-        @PropertyName(name = "analyticsServer")
         private String analyticsServer = "https://combine.urbanairship.com/";
-
-        @PropertyName(name = "landingPageContentURL")
         private String landingPageContentURL = "https://dl.urbanairship.com/aaa/";
-
-        @PropertyName(name = "gcmSender")
         private String gcmSender;
-
-        @PropertyName(name = "allowedTransports")
         private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT };
-
-        @PropertyName(name = "whitelist")
         private String[] whitelist = null;
-
-        @PropertyName(name = "inProduction")
         private boolean inProduction = false;
-
-        @PropertyName(name = "analyticsEnabled")
         private boolean analyticsEnabled = true;
-
-        @PropertyName(name = "backgroundReportingIntervalMS")
         private long backgroundReportingIntervalMS = 15 * 60 * 1000;
-
-        @PropertyName(name = "clearNamedUser")
         private boolean clearNamedUser = false;
-
-        @PropertyName(name = "developmentLogLevel")
         private int developmentLogLevel = DEFAULT_DEVELOPMENT_LOG_LEVEL;
-
-        @PropertyName(name = "productionLogLevel")
         private int productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
-
-        @PropertyName(name = "autoLaunchApplication")
         private boolean autoLaunchApplication = true;
-
-        @PropertyName(name = "channelCreationDelayEnabled")
         private boolean channelCreationDelayEnabled = false;
-
-        @PropertyName(name = "channelCaptureEnabled")
         private boolean channelCaptureEnabled = true;
-
-        @PropertyName(name = "notificationIcon")
         private int notificationIcon;
-
-        @PropertyName(name = "notificationAccentColor")
         private int notificationAccentColor;
 
         /**
-         * Apply the options from the default properties file
+         * Apply the options from the default properties file {@code airshipconfig.properties}.
+         * <p/>
+         * See {@link #applyProperties(Context, String)}.
          *
-         * @param ctx The application context
+         * @param context The application context
          * @return The config option builder.
          */
-        public Builder applyDefaultProperties(@NonNull Context ctx) {
-            this.applyProperties(ctx, DEFAULT_PROPERTIES_FILENAME);
-            return this;
+        public Builder applyDefaultProperties(@NonNull Context context) {
+            return applyProperties(context, DEFAULT_PROPERTIES_FILENAME);
         }
 
         /**
-         * Apply the options from a given properties file
+         * Apply the options from a given properties file. The properties file should
+         * be available in the assets directory. The properties file can define any of the
+         * public {@link AirshipConfigOptions} fields. Example:
+         * <pre>
+         * {@code
+         * # App Credentials
+         * developmentAppKey = Your Development App Key
+         * developmentAppSecret = Your Development App Secret
+         * productionAppKey = Your Production App Key
+         * productionAppSecret = Your Production Secret
          *
-         * @param ctx The application context
-         * @param propertiesFile The properties file
+         * # Flag to indicate what credentials to use
+         * inProduction = false
+         *
+         * # Required for GCM
+         * gcmSender = Your GCM sender ID is your Google API project number (required for GCM)
+         *
+         * # Log levels
+         * developmentLogLevel = DEBUG
+         * productionLogLevel = ERROR
+         *
+         * # Notification settings
+         * notificationIcon = ic_notification
+         * notificationAccentColor = #ff0000
+         *
+         * }
+         * </pre>
+         *
+         * @param context The application context.
+         * @param propertiesFile The name of the properties file in the assets directory.
          * @return The config option builder.
          */
-        public Builder applyProperties(@NonNull Context ctx, @NonNull String propertiesFile) {
-            Resources resources = ctx.getResources();
-            AssetManager assetManager = resources.getAssets();
-
-            //bail if the properties file can't be found
+        public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
-                if (!Arrays.asList(assetManager.list("")).contains(propertiesFile)) {
-                    Logger.verbose("AirshipConfigOptions - Couldn't find " + propertiesFile);
-                    return this;
-                }
-            } catch (IOException e) {
-                Logger.error(e);
-                return this;
-            }
-
-            Properties properties = new Properties();
-            InputStream inStream = null;
-
-            try {
-                inStream = assetManager.open(propertiesFile);
-                properties.load(inStream);
-
-                Class<?> theClass = this.getClass();
-
-                for (Field field : theClass.getDeclaredFields()) {
-                    // If it's a nested Options class, skip it
-                    if (AirshipConfigOptions.Builder.class.isAssignableFrom(field.getType())) {
-                        continue;
-                    }
-
-                    String propertyValue = getPropertyValue(field, properties);
-
-                    if (propertyValue != null) {
-                        setPropertyValue(ctx, field, propertyValue);
-                    }
-                }
-
-            } catch (IOException ioe) {
-                Logger.error("AirshipConfigOptions - Unable to load properties file " + propertiesFile, ioe);
-            } finally {
-                if (inStream != null) {
-                    try {
-                        inStream.close();
-                    } catch (IOException e) {
-                        Logger.error("AirshipConfigOptions - Failed to close input stream.", e);
-                    }
-                }
+                ConfigParser configParser = new PropertiesConfigParser(context, propertiesFile);
+                applyConfig(configParser);
+            } catch (Exception e) {
+                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
             }
 
             return this;
         }
 
         /**
-         * Gets the string value of the field
+         * Apply options from a xml resource file. The XML file must contain the element {@code AirshipConfigOptions}
+         * and any public {@link AirshipConfigOptions} fields should be set as attributes on the element.
+         * Example:
+         * <pre>
+         * {@code
+         * <AirshipConfigOptions
+         *    notificationIcon = "@drawable/ic_notification"
+         *    notificationAccentColor = "@color/color_accent"
+         *    inProduction = "false"
+         *    productionAppKey = "Your Production App Key"
+         *    productionAppSecret = "Your Production App Secret"
+         *    productionLogLevel = "NONE"
+         *    developmentAppKey = "Your Development App Key"
+         *    developmentAppSecret = "Your Development App Secret"
+         *    developmentLogLevel = "VERBOSE"
+         *    gcmSender = "Your GCM sender ID is your Google API project number (required for GCM)" />
+         * }
+         * </pre>
          *
-         * @param field field
-         * @param properties properties
-         * @return the current value of the property
+         * @param context The application context.
+         * @param xmlResourceId The xml resource ID.
+         * @return The config option builder.
          */
-        private String getPropertyValue(@NonNull Field field, @NonNull Properties properties) {
-            String propertyValue = null;
-            PropertyName propertyAnnotation = field.getAnnotation(PropertyName.class);
-
-            if (propertyAnnotation != null) {
-                propertyValue = properties.getProperty(propertyAnnotation.name());
-                Logger.verbose("AirshipConfigOptions - Found PropertyAnnotation for " + propertyAnnotation.name() + " matching " + field.getName());
+        public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
+            try {
+                XmlConfigParser configParser = new XmlConfigParser(context, xmlResourceId);
+                applyConfig(configParser);
+                configParser.close();
+            } catch (Exception e) {
+                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
             }
 
-            return propertyValue;
+            return this;
         }
 
         /**
-         * Sets the field value with the parsed version of propertyValue
+         * Applies a value to the builder.
          *
-         * @param context The application context
-         * @param field field
-         * @param propertyValue propertyValue
+         * @param configParser The config parser.
          */
-        private void setPropertyValue(Context context, @NonNull Field field, @NonNull String propertyValue) {
-            try {
-                // Parse as boolean if expected
-                if (field.getType() == Boolean.TYPE || field.getType() == Boolean.class) {
-                    field.set(this, Boolean.valueOf(propertyValue));//set will auto-unbox and the value will not be null
-                } else if (field.getType() == Integer.TYPE || field.getType() == Integer.class) {
-                    int refValue = parseOptionValues(context, field, propertyValue);
-                    field.set(this, refValue);
-                } else if (field.getType() == Long.TYPE || field.getType() == Long.class) {
-                    field.set(this, Long.valueOf(propertyValue));
-                } else if (field.getType().isArray()) {
-                    field.set(this, propertyValue.split("[, ]+"));
-                } else {
-                    field.set(this, propertyValue.trim());
+        private void applyConfig(ConfigParser configParser) {
+            for (int i = 0; i < configParser.getCount(); i++) {
+                try {
+                    switch (configParser.getName(i)) {
+                        case FIELD_PRODUCTION_APP_KEY:
+                            this.setProductionAppKey(configParser.getString(i));
+                            break;
+
+                        case FIELD_PRODUCTION_APP_SECRET:
+                            this.setProductionAppSecret(configParser.getString(i));
+                            break;
+
+                        case FIELD_DEVELOPMENT_APP_KEY:
+                            this.setDevelopmentAppKey(configParser.getString(i));
+                            break;
+
+                        case FIELD_DEVELOPMENT_APP_SECRET:
+                            this.setDevelopmentAppSecret(configParser.getString(i));
+                            break;
+
+                        case FIELD_HOST_URL:
+                            this.setHostURL(configParser.getString(i));
+                            break;
+
+                        case FIELD_ANALYTICS_SERVER:
+                            this.setAnalyticsServer(configParser.getString(i));
+                            break;
+
+                        case FIELD_LANDING_PAGE_CONTENT_URL:
+                            this.setLandingPageContentURL(configParser.getString(i));
+                            break;
+
+                        case FIELD_GCM_SENDER:
+                            this.setGcmSender(configParser.getString(i));
+                            break;
+
+                        case FIELD_ALLOWED_TRANSPORTS:
+                            this.setAllowedTransports(configParser.getStringArray(i));
+                            break;
+
+                        case FIELD_WHITELIST:
+                            this.setWhitelist(configParser.getStringArray(i));
+                            break;
+
+                        case FIELD_IN_PRODUCTION:
+                            this.setInProduction(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_ANALYTICS_ENABLED:
+                            this.setAnalyticsEnabled(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_BACKGROUND_REPORTING_INTERVAL_MS:
+                            this.setBackgroundReportingIntervalMS(configParser.getLong(i));
+                            break;
+
+                        case FIELD_CLEAR_NAMED_USER:
+                            this.setClearNamedUser(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_DEVELOPMENT_LOG_LEVEL:
+                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(i), AirshipConfigOptions.DEFAULT_DEVELOPMENT_LOG_LEVEL));
+                            break;
+
+                        case FIELD_PRODUCTION_LOG_LEVEL:
+                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(i), AirshipConfigOptions.DEFAULT_PRODUCTION_LOG_LEVEL));
+                            break;
+
+                        case FIELD_AUTO_LAUNCH_APPLICATION:
+                            this.setAutoLaunchApplication(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_CHANNEL_CREATION_DELAY_ENABLED:
+                            this.setChannelCreationDelayEnabled(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_CHANNEL_CAPTURE_ENABLED:
+                            this.setChannelCaptureEnabled(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_NOTIFICATION_ICON:
+                            this.setNotificationIcon(configParser.getDrawableResourceId(i));
+                            break;
+
+                        case FIELD_NOTIFICATION_ACCENT_COLOR:
+                            this.setNotificationAccentColor(configParser.getColor(i));
+                            break;
+                    }
+                } catch (Exception e) {
+                    Logger.error("Unable to set config field '" + configParser.getName(i) + "' due to invalid configuration value.", e);
                 }
-            } catch (IllegalAccessException e) {
-                Logger.error("AirshipConfigOptions - Unable to set field '" + field.getName() + "' because the field is not visible.", e);
-            } catch (IllegalArgumentException | ClassNotFoundException e) {
-                Logger.error("AirshipConfigOptions - Unable to set field '" + field.getName() + "' due to invalid configuration value.", e);
-            }
-        }
-
-        /**
-         * Parses values provided by a .properties file
-         *
-         * @param context The application context
-         * @param field field
-         * @param value value
-         * @return the field value to be set
-         * @throws ClassNotFoundException
-         * @throws IllegalAccessException
-         * @throws IllegalArgumentException
-         */
-        private int parseOptionValues(Context context, @NonNull Field field, @NonNull String value) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException {
-            switch (field.getName()) {
-                case "developmentLogLevel":
-                    return parseLogLevel(value, DEFAULT_DEVELOPMENT_LOG_LEVEL);
-                case "productionLogLevel":
-                    return parseLogLevel(value, DEFAULT_PRODUCTION_LOG_LEVEL);
-                case "notificationIcon":
-                    return context.getResources().getIdentifier(value, "drawable", context.getPackageName());
-                case "notificationAccentColor":
-                    return Color.parseColor(value);
-                default:
-                    return Integer.valueOf(value);
-            }
-
-        }
-
-        private int parseLogLevel(String value, int defaultValue) {
-            if (UAStringUtil.isEmpty(value)) {
-                return defaultValue;
-            }
-
-            switch (value.toUpperCase()) {
-                case "ASSERT":
-                    return Log.ASSERT;
-                case "DEBUG":
-                    return Log.DEBUG;
-                case "ERROR":
-                    return Log.ERROR;
-                case "INFO":
-                    return Log.INFO;
-                case "VERBOSE":
-                    return Log.VERBOSE;
-                case "WARN":
-                    return Log.WARN;
-            }
-
-            try {
-                int intValue = Integer.valueOf(value);
-                if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
-                    return intValue;
-                }
-
-                Logger.error(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
-                return defaultValue;
-            } catch (NumberFormatException nfe) {
-                throw new IllegalArgumentException("Invalid log level: " + value);
             }
         }
 
         /**
          * Sets the default notification Icon.
-         *
+         * <p/>
          * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
          *
          * @param notificationIcon The notification icon.
@@ -566,7 +556,7 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the default notification accent color.
-         *
+         * <p/>
          * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setColor(int)}.
          *
          * @param notificationAccentColor The notification accent color.
@@ -791,14 +781,13 @@ public class AirshipConfigOptions {
 
         /**
          * Builds the config options. Will fail if any of the following preconditions are not met.
-         *
+         * <p/>
          * <pre>
          * 1. If inProduction is <code>false</code>, development app key and secret must be set.
          * 2. If inProduction is <code>true</code>, production app key and secret must be set.
          * 3. The analytics URI must not be empty if analytics are enabled.
          * 4. The host URL must not be empty.
          * </pre>
-         *
          *
          * @return The built config options.
          */
@@ -840,5 +829,4 @@ public class AirshipConfigOptions {
             return new AirshipConfigOptions(this);
         }
     }
-
 }

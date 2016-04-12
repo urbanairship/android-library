@@ -9,15 +9,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -67,28 +61,6 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(Log.VERBOSE, aco.getLoggerLevel());
         assertEquals(R.drawable.ua_ic_urbanairship_notification, aco.notificationIcon);
         assertEquals(Color.parseColor("#ff0000"), aco.notificationAccentColor);
-    }
-
-    /**
-     * This test verifies all public property fields have an annotation
-     */
-    @Test
-    public void testPropertyNameAnnotation() {
-        AirshipConfigOptions.Builder aco = new AirshipConfigOptions.Builder();
-        List<AirshipConfigOptions.Builder> options = new ArrayList<>();
-        options.add(aco);
-        for (AirshipConfigOptions.Builder option : options) {
-            option.applyProperties(uaContext, TEST_PROPERTIES_FILE);
-            Class<?> optionsClass = option.getClass();
-            List<Field> fields = Arrays.asList(optionsClass.getFields());
-            for (Field field : fields) {
-                if (!(field.getType() instanceof Class)) {
-                    PropertyName propertyAnnotation = (PropertyName) field.getAnnotation(PropertyName.class);
-                    assertNotNull(propertyAnnotation);
-                    assertEquals(propertyAnnotation.name(), field.getName());
-                }
-            }
-        }
     }
 
     /**

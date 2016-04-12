@@ -27,6 +27,8 @@ package com.urbanairship;
 
 import android.util.Log;
 
+import com.urbanairship.util.UAStringUtil;
+
 /**
  * Shared logging wrapper for all Urban Airship log entries.
  * This class serves to consolidate the tag and log level in a
@@ -176,6 +178,48 @@ public class Logger {
     public static void error(String s, Throwable t) {
         if (logLevel <= Log.ERROR && s != null && t != null) {
             Log.e(TAG, s, t);
+        }
+    }
+
+    /**
+     * Parses the log level from a String.
+     *
+     * @param value The log level as a String.
+     * @param defaultValue Default value if the value is empty.
+     * @return The log level.
+     * @throws IllegalArgumentException
+     */
+    static int parseLogLevel(String value, int defaultValue) throws IllegalArgumentException {
+        if (UAStringUtil.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        switch (value.toUpperCase()) {
+            case "ASSERT":
+            case "NONE":
+                return Log.ASSERT;
+            case "DEBUG":
+                return Log.DEBUG;
+            case "ERROR":
+                return Log.ERROR;
+            case "INFO":
+                return Log.INFO;
+            case "VERBOSE":
+                return Log.VERBOSE;
+            case "WARN":
+                return Log.WARN;
+        }
+
+        try {
+            int intValue = Integer.valueOf(value);
+            if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
+                return intValue;
+            }
+
+            Logger.error(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
+            return defaultValue;
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Invalid log level: " + value);
         }
     }
 }
