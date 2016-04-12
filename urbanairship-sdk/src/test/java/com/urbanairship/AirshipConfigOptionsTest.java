@@ -2,6 +2,7 @@ package com.urbanairship;
 
 import android.app.Application;
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 
 import org.junit.Before;
@@ -25,8 +26,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class AirshipConfigOptionsTest extends BaseTestCase {
     public Context uaContext;
-    static final String optionsTestPropertiesFile = "optionstest.properties";
-    static final String validateIntegerValuesFile = "validateIntegerValues.properties";
+    static final String TEST_PROPERTIES_FILE = "valid.properties";
+    static final String INVALID_PROPERTIES_FILE = "invalid.properties";
 
     @Before
     public void setUp() throws Exception {
@@ -39,7 +40,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
      */
     @Test
     public void testLoadFromProperties() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder().applyProperties(uaContext, optionsTestPropertiesFile).build();
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder().applyProperties(uaContext, TEST_PROPERTIES_FILE).build();
 
         assertEquals("prodAppKey", aco.productionAppKey);
         assertEquals("prodAppSecret", aco.productionAppSecret);
@@ -64,6 +65,8 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(aco.productionAppKey, aco.getAppKey());
         assertEquals(aco.productionAppSecret, aco.getAppSecret());
         assertEquals(Log.VERBOSE, aco.getLoggerLevel());
+        assertEquals(R.drawable.ua_ic_urbanairship_notification, aco.notificationIcon);
+        assertEquals(Color.parseColor("#ff0000"), aco.notificationAccentColor);
     }
 
     /**
@@ -75,7 +78,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         List<AirshipConfigOptions.Builder> options = new ArrayList<>();
         options.add(aco);
         for (AirshipConfigOptions.Builder option : options) {
-            option.applyProperties(uaContext, optionsTestPropertiesFile);
+            option.applyProperties(uaContext, TEST_PROPERTIES_FILE);
             Class<?> optionsClass = option.getClass();
             List<Field> fields = Arrays.asList(optionsClass.getFields());
             for (Field field : fields) {
@@ -89,20 +92,22 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
     }
 
     /**
-     * This test loads invalid integer/enum values and verify the property value is set to default
+     * This test loads invalid values and verify the property value is set to default
      */
     @Test
-    public void testValidateIntegerValues() {
-        AirshipConfigOptions.Builder aco = new AirshipConfigOptions.Builder();
-        aco.applyProperties(uaContext, validateIntegerValuesFile)
-            .setDevelopmentAppKey("appKey")
-            .setDevelopmentAppSecret("appSecret");
-        assertEquals(Log.DEBUG, aco.build().developmentLogLevel);
+    public void testInvalidOptions() {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
+                .applyProperties(uaContext, INVALID_PROPERTIES_FILE)
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .build();
 
-        aco.setInProduction(true)
-           .applyProperties(uaContext, validateIntegerValuesFile)
-           .setProductionAppSecret("appSecret")
-           .setProductionAppKey("appKey");
-        assertEquals(Log.ERROR, aco.build().productionLogLevel);
+        assertEquals(Log.DEBUG, aco.developmentLogLevel);
+        assertEquals(Log.ERROR, aco.productionLogLevel);
+
+        assertEquals(0, aco.notificationAccentColor);
+        assertEquals(0, aco.notificationIcon);
     }
 }

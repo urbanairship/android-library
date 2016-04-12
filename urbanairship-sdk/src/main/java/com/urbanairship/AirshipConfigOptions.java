@@ -28,6 +28,9 @@ package com.urbanairship;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.support.annotation.ColorInt;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.util.Log;
@@ -219,6 +222,18 @@ public class AirshipConfigOptions {
      */
     public final boolean channelCaptureEnabled;
 
+    /**
+     * Notification icon.
+     */
+    @DrawableRes
+    public final int notificationIcon;
+
+    /**
+     * Notification accent color.
+     */
+    @ColorInt
+    public final int notificationAccentColor;
+
     private AirshipConfigOptions(Builder builder) {
         this.productionAppKey = builder.productionAppKey;
         this.productionAppSecret = builder.productionAppSecret;
@@ -239,6 +254,9 @@ public class AirshipConfigOptions {
         this.autoLaunchApplication = builder.autoLaunchApplication;
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled;
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
+        this.notificationIcon = builder.notificationIcon;
+        this.notificationAccentColor = builder.notificationAccentColor;
+
     }
 
     /**
@@ -335,11 +353,9 @@ public class AirshipConfigOptions {
         private boolean clearNamedUser = false;
 
         @PropertyName(name = "developmentLogLevel")
-        @ConstantClass(name = "android.util.Log")
         private int developmentLogLevel = DEFAULT_DEVELOPMENT_LOG_LEVEL;
 
         @PropertyName(name = "productionLogLevel")
-        @ConstantClass(name = "android.util.Log")
         private int productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
 
         @PropertyName(name = "autoLaunchApplication")
@@ -351,6 +367,12 @@ public class AirshipConfigOptions {
         @PropertyName(name = "channelCaptureEnabled")
         private boolean channelCaptureEnabled = true;
 
+        @PropertyName(name = "notificationIcon")
+        private int notificationIcon;
+
+        @PropertyName(name = "notificationAccentColor")
+        private int notificationAccentColor;
+
         /**
          * Apply the options from the default properties file
          *
@@ -361,7 +383,6 @@ public class AirshipConfigOptions {
             this.applyProperties(ctx, DEFAULT_PROPERTIES_FILENAME);
             return this;
         }
-
 
         /**
          * Apply the options from a given properties file
@@ -403,7 +424,7 @@ public class AirshipConfigOptions {
                     String propertyValue = getPropertyValue(field, properties);
 
                     if (propertyValue != null) {
-                        setPropertyValue(field, propertyValue);
+                        setPropertyValue(ctx, field, propertyValue);
                     }
                 }
 
@@ -419,32 +440,7 @@ public class AirshipConfigOptions {
                 }
             }
 
-            if (inProduction) {
-                if (!isLogLevelValid(productionLogLevel)) {
-                    Logger.error(productionLogLevel + " is not a valid log level. Falling back to " + DEFAULT_PRODUCTION_LOG_LEVEL + " ERROR.");
-                    productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
-                }
-            } else {
-                if (!isLogLevelValid(developmentLogLevel)) {
-                    Logger.error(developmentLogLevel + " is not a valid log level. Falling back to " + DEFAULT_DEVELOPMENT_LOG_LEVEL + " DEBUG.");
-                    developmentLogLevel = DEFAULT_DEVELOPMENT_LOG_LEVEL;
-                }
-            }
             return this;
-        }
-
-        private boolean isLogLevelValid(int logType) {
-            switch (logType) {
-                case Log.ASSERT:
-                case Log.DEBUG:
-                case Log.ERROR:
-                case Log.INFO:
-                case Log.VERBOSE:
-                case Log.WARN:
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         /**
@@ -469,16 +465,17 @@ public class AirshipConfigOptions {
         /**
          * Sets the field value with the parsed version of propertyValue
          *
+         * @param context The application context
          * @param field field
          * @param propertyValue propertyValue
          */
-        private void setPropertyValue(@NonNull Field field, @NonNull String propertyValue) {
+        private void setPropertyValue(Context context, @NonNull Field field, @NonNull String propertyValue) {
             try {
                 // Parse as boolean if expected
                 if (field.getType() == Boolean.TYPE || field.getType() == Boolean.class) {
                     field.set(this, Boolean.valueOf(propertyValue));//set will auto-unbox and the value will not be null
                 } else if (field.getType() == Integer.TYPE || field.getType() == Integer.class) {
-                    int refValue = parseOptionValues(field, propertyValue);
+                    int refValue = parseOptionValues(context, field, propertyValue);
                     field.set(this, refValue);
                 } else if (field.getType() == Long.TYPE || field.getType() == Long.class) {
                     field.set(this, Long.valueOf(propertyValue));
@@ -497,6 +494,7 @@ public class AirshipConfigOptions {
         /**
          * Parses values provided by a .properties file
          *
+         * @param context The application context
          * @param field field
          * @param value value
          * @return the field value to be set
@@ -504,31 +502,79 @@ public class AirshipConfigOptions {
          * @throws IllegalAccessException
          * @throws IllegalArgumentException
          */
-        private int parseOptionValues(@NonNull Field field, @NonNull String value) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException {
-            // Accept the integer value in the properties file for backwards compatibility
-            try {
-                return Integer.valueOf(value);
-            } catch (NumberFormatException nfe) {
-                ConstantClass classAnnotation = field.getAnnotation(ConstantClass.class);
-
-                if (classAnnotation == null) {
-                    throw new IllegalArgumentException("The field '" + field.getName() + "' has a type mismatch or missing annotation.");
-                }
-
-                Class<?> constantClass = Class.forName(classAnnotation.name());
-
-                for (Field referenceField : constantClass.getDeclaredFields()) {
-                    if (referenceField.getName().equalsIgnoreCase(value)) {
-                        try {
-                            return referenceField.getInt(this);
-                        } catch (IllegalArgumentException e) {
-                            throw new IllegalArgumentException("The field '" + field.getName() + "' is incompatible with specified class", e);
-                        }
-                    }
-                }
-
-                throw new IllegalArgumentException("Unable to match class for field '" + field.getName() + "'");
+        private int parseOptionValues(Context context, @NonNull Field field, @NonNull String value) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException {
+            switch (field.getName()) {
+                case "developmentLogLevel":
+                    return parseLogLevel(value, DEFAULT_DEVELOPMENT_LOG_LEVEL);
+                case "productionLogLevel":
+                    return parseLogLevel(value, DEFAULT_PRODUCTION_LOG_LEVEL);
+                case "notificationIcon":
+                    return context.getResources().getIdentifier(value, "drawable", context.getPackageName());
+                case "notificationAccentColor":
+                    return Color.parseColor(value);
+                default:
+                    return Integer.valueOf(value);
             }
+
+        }
+
+        private int parseLogLevel(String value, int defaultValue) {
+            if (UAStringUtil.isEmpty(value)) {
+                return defaultValue;
+            }
+
+            switch (value.toUpperCase()) {
+                case "ASSERT":
+                    return Log.ASSERT;
+                case "DEBUG":
+                    return Log.DEBUG;
+                case "ERROR":
+                    return Log.ERROR;
+                case "INFO":
+                    return Log.INFO;
+                case "VERBOSE":
+                    return Log.VERBOSE;
+                case "WARN":
+                    return Log.WARN;
+            }
+
+            try {
+                int intValue = Integer.valueOf(value);
+                if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
+                    return intValue;
+                }
+
+                Logger.error(intValue + " is not a valid log level. Falling back to " + defaultValue + ".");
+                return defaultValue;
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("Invalid log level: " + value);
+            }
+        }
+
+        /**
+         * Sets the default notification Icon.
+         *
+         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setSmallIconId(int)}.
+         *
+         * @param notificationIcon The notification icon.
+         * @return The config options builder.
+         */
+        public Builder setNotificationIcon(@DrawableRes int notificationIcon) {
+            this.notificationIcon = notificationIcon;
+            return this;
+        }
+
+        /**
+         * Sets the default notification accent color.
+         *
+         * See {@link com.urbanairship.push.notifications.DefaultNotificationFactory#setColor(int)}.
+         *
+         * @param notificationAccentColor The notification accent color.
+         * @return The config options builder.
+         */
+        public Builder setNotificationAccentColor(@ColorInt int notificationAccentColor) {
+            this.notificationAccentColor = notificationAccentColor;
+            return this;
         }
 
         /**
