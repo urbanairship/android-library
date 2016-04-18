@@ -34,8 +34,8 @@
         <activity android:name="com.urbanairship.CoreActivity" />
         <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <activity android:name=".messagecenter.MessageActivity" />
-        <activity android:name=".messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
+        <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
+        <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"
@@ -86,7 +86,7 @@
         </receiver>
 
         <receiver
-            android:name=".push.GcmPushReceiver"
+            android:name="com.urbanairship.push.GcmPushReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
 
             <intent-filter>
@@ -97,7 +97,7 @@
         </receiver>
 
         <receiver
-            android:name=".push.AdmPushReceiver"
+            android:name="com.urbanairship.push.AdmPushReceiver"
             android:permission="com.amazon.device.messaging.permission.SEND">
 
             <intent-filter>
