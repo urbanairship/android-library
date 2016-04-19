@@ -45,6 +45,9 @@ public final class ActionArguments {
      */
     public static final String PUSH_MESSAGE_METADATA = "com.urbanairship.PUSH_MESSAGE";
 
+    public static final String REMOTE_INPUT_METADATA = "com.urbanairship.REMOTE_INPUT";
+
+
     /**
      * Metadata attached to action arguments when triggering an action from by name.
      * The value is stored as a String.

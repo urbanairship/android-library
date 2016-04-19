@@ -27,6 +27,9 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.ArrayRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.RemoteInput;
 
 /**
@@ -39,19 +42,20 @@ public class LocalizableRemoteInput {
     private final int[] choices;
     private final Bundle extras;
     private final boolean allowFreeFormInput;
+    private final int choicesArray;
 
-    private LocalizableRemoteInput(String resultKey, int labelId, int[] choices,
-                        boolean allowFreeFormInput, Bundle extras) {
-
-        this.resultKey = resultKey;
-        this.labelId = labelId;
-        this.choices = choices;
-        this.allowFreeFormInput = allowFreeFormInput;
-        this.extras = extras;
+    private LocalizableRemoteInput(Builder builder) {
+        this.resultKey = builder.resultKey;
+        this.labelId = builder.labelId;
+        this.choices = builder.choices;
+        this.allowFreeFormInput = builder.allowFreeFormInput;
+        this.extras = builder.extras;
+        this.choicesArray = builder.choicesArray;
     }
 
     /**
      * Gets the result key.
+     *
      * @return The result key as a string.
      */
     public String getResultKey() {
@@ -60,6 +64,7 @@ public class LocalizableRemoteInput {
 
     /**
      * Gets the label ID.
+     *
      * @return The label ID as an int.
      */
     public int getLabel() {
@@ -68,6 +73,7 @@ public class LocalizableRemoteInput {
 
     /**
      * Get possible input choices. This can be null if there are no choices to present.
+     *
      * @return The choices as an array of int.
      */
     public int[] getChoices() {
@@ -76,6 +82,7 @@ public class LocalizableRemoteInput {
 
     /**
      * Gets the allowFreeFormInput boolean value.
+     *
      * @return <code>true</code> if free form input is allowed, otherwise <code>false</code>.
      */
     public boolean getAllowFreeFormInput() {
@@ -84,6 +91,7 @@ public class LocalizableRemoteInput {
 
     /**
      * Gets the extras.
+     *
      * @return The extras as a bundle.
      */
     public Bundle getExtras() {
@@ -92,11 +100,13 @@ public class LocalizableRemoteInput {
 
     /**
      * Creates the remote input.
+     *
      * @param context The application context.
      * @return The remote input.
      */
     public RemoteInput createRemoteInput(Context context) {
         RemoteInput.Builder builder = new RemoteInput.Builder(resultKey)
+                .setAllowFreeFormInput(allowFreeFormInput)
                 .addExtras(extras);
 
         if (choices != null) {
@@ -107,7 +117,12 @@ public class LocalizableRemoteInput {
             builder.setChoices(convertedChoices);
         }
 
-        if (labelId >= 0) {
+        if (choicesArray != 0) {
+            String[] replyChoices = context.getResources().getStringArray(choicesArray);
+            builder.setChoices(replyChoices);
+        }
+
+        if (labelId != 0) {
             builder.setLabel(context.getText(labelId));
         }
 
@@ -123,41 +138,58 @@ public class LocalizableRemoteInput {
         private int[] choices;
         private final Bundle extras = new Bundle();
         private boolean allowFreeFormInput = false;
+        private int choicesArray;
 
         /**
          * Set the result key value.
+         *
          * @param resultKey A string value.
          */
-        public Builder(String resultKey) {
-            if (resultKey == null) {
-                throw new IllegalArgumentException("Result key can't be null");
-            }
-
+        public Builder(@NonNull  String resultKey) {
             this.resultKey = resultKey;
         }
 
         /**
          * Set the label ID value.
+         *
          * @param labelId An int value.
          * @return The builder with the label ID set.
          */
-        public Builder setLabel(int labelId) {
+        public Builder setLabel(@StringRes  int labelId) {
             this.labelId = labelId;
             return this;
         }
 
         /**
          * Set the choices value.
+         *
+         * @param choices An int array.
+         * @return The builder with the choices set.
+         *
+         * @deprecated Use {@link #setChoices(int)} instead.
+         */
+        @Deprecated
+        public Builder setChoices(int[] choices) {
+            this.choices = choices;
+            this.choicesArray = 0;
+            return this;
+        }
+
+        /**
+         * Set the choices value.
+         *
          * @param choices An int array.
          * @return The builder with the choices set.
          */
-        public Builder setChoices(int[] choices) {
-            this.choices = choices;
+        public Builder setChoices(@ArrayRes int choices) {
+            this.choices = null;
+            this.choicesArray = choices;
             return this;
         }
 
         /**
          * Set the allowFreeFormInput value.
+         *
          * @param allowFreeFormInput A boolean value.
          * @return The builder with the allowFreeFormInput set.
          */
@@ -168,6 +200,7 @@ public class LocalizableRemoteInput {
 
         /**
          * Set the extras value.
+         *
          * @param extras A bundle value.
          * @return The builder with the extras set.
          */
@@ -180,10 +213,11 @@ public class LocalizableRemoteInput {
 
         /**
          * Builds and returns a LocalizableRemoteInput.
+         *
          * @return The LocalizableRemoteInput.
          */
         public LocalizableRemoteInput build() {
-            return new LocalizableRemoteInput(resultKey, labelId, choices, allowFreeFormInput, extras);
+            return new LocalizableRemoteInput(this);
         }
     }
 }

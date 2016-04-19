@@ -23,58 +23,60 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.urbanairship.push;
+package com.urbanairship;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushMessage;
 
 /**
  * Base intent receiver to process registration and push events from Urban Airship.
  * <p/>
- * To listen for Urban Airship events, create a class that extends the BaseIntentReceiver.
+ * To listen for Urban Airship events, create a class that extends the AirshipReceiver.
  * Register the new class in the AndroidManifest.xml with the following intent filter:
  * <pre>
  * {@code
- <receiver android:name="CustomIntentReceiver" exported="false">
-    <intent-filter>
-        <action android:name="com.urbanairship.push.CHANNEL_UPDATED" />
-        <action android:name="com.urbanairship.push.OPENED" />
-        <action android:name="com.urbanairship.push.RECEIVED" />
-        <action android:name="com.urbanairship.push.DISMISSED" />
-
-        <category android:name=}${applicationId} {@code />
-    </intent-filter>
- </receiver>
+ * <receiver android:name="CustomAirshipReceiver" exported="false">
+ * <intent-filter>
+ * <action android:name="com.urbanairship.push.CHANNEL_UPDATED" />
+ * <action android:name="com.urbanairship.push.OPENED" />
+ * <action android:name="com.urbanairship.push.RECEIVED" />
+ * <action android:name="com.urbanairship.push.DISMISSED" />
+ *
+ * <category android:name=}${applicationId} {@code />
+ * </intent-filter>
+ * </receiver>
  * }
  * </pre>
  * <p/>
  * Make sure the registered intent receiver is not exported to prevent it from receiving messages
  * outside the application.
- *
- * @deprecated Use {@link com.urbanairship.AirshipReceiver} instead.
  */
-@Deprecated
-public abstract class BaseIntentReceiver extends BroadcastReceiver {
+public class AirshipReceiver extends BroadcastReceiver {
+
+    /**
+     * The remote input extra.
+     */
+    static final String EXTRA_REMOTE_INPUT = "com.urbanairship.push.EXTRA_REMOTE_INPUT";
 
     /**
      * Result code indicating an activity was launched during
-     * {@link #onNotificationActionOpened(android.content.Context, PushMessage, int, String, boolean)}
-     * or {@link #onNotificationOpened(android.content.Context, PushMessage, int)}.
+     * onNotificationOpened.
      */
-    public static final int RESULT_ACTIVITY_LAUNCHED = 1;
+    static final int RESULT_ACTIVITY_LAUNCHED = 1;
 
     /**
      * Result code indicating an activity was not launched during
-     * {@link #onNotificationActionOpened(android.content.Context, PushMessage, int, String, boolean)}
-     * or {@link #onNotificationOpened(android.content.Context, PushMessage, int)}.
+     * onNotificationOpened.
      */
-    public static final int RESULT_ACTIVITY_NOT_LAUNCHED = -1;
+    static final int RESULT_ACTIVITY_NOT_LAUNCHED = -1;
 
     @Override
     @CallSuper
@@ -113,15 +115,16 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
     private void handlePushReceived(@NonNull Context context, @NonNull Intent intent) {
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
-        if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_ID)) {
+        boolean notificationPosted = intent.hasExtra(PushManager.EXTRA_NOTIFICATION_ID);
+        onPushReceived(context, message, notificationPosted);
+
+        if (notificationPosted) {
             int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
-            onPushReceived(context, message, id);
-        } else {
-            onBackgroundPushReceived(context, message);
+            onNotificationPosted(context, new NotificationInfo(message, id));
         }
     }
 
@@ -133,20 +136,25 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      */
     private void handlePushOpened(@NonNull Context context, @NonNull Intent intent) {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
-
         PushMessage message = PushMessage.fromIntent(intent);
         if (message == null) {
-            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
+        NotificationInfo notificationInfo = new NotificationInfo(message, id);
+
         boolean launchedActivity;
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID)) {
+
             String buttonId = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID);
             boolean isForeground = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);
-            launchedActivity = onNotificationActionOpened(context, message, id, buttonId, isForeground);
+            Bundle remoteInput = intent.getBundleExtra(EXTRA_REMOTE_INPUT);
+
+            ActionButtonInfo actionButtonInfo = new ActionButtonInfo(buttonId, isForeground, remoteInput);
+            launchedActivity = onNotificationOpened(context, notificationInfo, actionButtonInfo);
         } else {
-            launchedActivity = onNotificationOpened(context, message, id);
+            launchedActivity = onNotificationOpened(context, notificationInfo);
         }
 
         // Only set the result if we have an ordered broadcast and the result is not already activity launched.
@@ -167,7 +175,7 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         } else {
             String channel = intent.getStringExtra(PushManager.EXTRA_CHANNEL_ID);
             if (channel == null) {
-                Logger.error("BaseIntentReceiver - Intent is missing channel ID for: " + intent.getAction());
+                Logger.error("AirshipReceiver - Intent is missing channel ID for: " + intent.getAction());
                 return;
             }
             onChannelRegistrationSucceeded(context, channel);
@@ -184,14 +192,19 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
         int id = intent.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1);
 
         if (!intent.hasExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE)) {
-            Logger.error("BaseIntentReceiver - Intent is missing push message for: " + intent.getAction());
+            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
-        PushMessage message = new PushMessage(intent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
+        PushMessage message = PushMessage.fromIntent(intent);
+        if (message == null) {
+            Logger.error("AirshipReceiver - Intent is missing push message for: " + intent.getAction());
+            return;
+        }
 
-        onNotificationDismissed(context, message, id);
+        onNotificationDismissed(context, new NotificationInfo(message, id));
     }
+
 
     /**
      * Called when channel registration succeeded.
@@ -199,67 +212,146 @@ public abstract class BaseIntentReceiver extends BroadcastReceiver {
      * @param context The application context.
      * @param channelId The channel ID.
      */
-    protected abstract void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId);
+    protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {}
 
     /**
      * Called when channel registration fails.
      *
      * @param context The application context.
      */
-    protected abstract void onChannelRegistrationFailed(@NonNull Context context);
+    protected void onChannelRegistrationFailed(@NonNull Context context) {}
 
     /**
      * Called when a push is received.
      *
      * @param context The application context.
      * @param message The received push message.
-     * @param notificationId The notification ID of the message posted in the notification center.
+     * @param notificationPosted {@code true} if a notification was posted for the push, otherwise {code false}. If
+     * the notification was posted {@link #onNotificationPosted(Context, NotificationInfo)} will be called
+     * immediately after this method with the {@link NotificationInfo}.
      */
-    protected abstract void onPushReceived(@NonNull Context context, @NonNull PushMessage message, int notificationId);
+    protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, boolean notificationPosted) {}
 
     /**
-     * Called when a push is received that did not result in a notification being posted.
+     * Called when a notification is posted.
      *
      * @param context The application context.
-     * @param message The received push message.
+     * @param notificationInfo The notification info.
      */
-    protected abstract void onBackgroundPushReceived(@NonNull Context context, @NonNull PushMessage message);
+    protected void onNotificationPosted(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {}
 
     /**
      * Called when a notification is opened.
      *
      * @param context The application context.
-     * @param message The push message associated with the notification.
-     * @param notificationId The notification ID.
+     * @param notificationInfo The notification info.
      * @return <code>true</code> if the application was launched, otherwise <code>false</code>. If
      * <code>false</code> is returned, and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication}
      * is enabled, the launcher activity will automatically be launched.
      */
-    protected abstract boolean onNotificationOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId);
+    protected boolean onNotificationOpened(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {
+        return false;
+    }
 
     /**
      * Called when a notification action button is opened.
      *
      * @param context The application context.
-     * @param message The push message associated with the notification.
-     * @param notificationId The notification ID.
-     * @param buttonId The button identifier.
-     * @param isForeground If the notification action button is foreground or not. If <code>false</code> the application
-     * should not be launched.
+     * @param notificationInfo The notification info.
+     * @param actionButtonInfo THe notification action button info.
+     *
      * @return <code>true</code> if the application was launched, otherwise <code>false</code>. If
      * <code>false</code> is returned for a foreground notification action button,
      * and {@link com.urbanairship.AirshipConfigOptions#autoLaunchApplication} is enabled, the launcher
      * activity will automatically be launched.
      */
-    protected abstract boolean onNotificationActionOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId, @NonNull String buttonId, boolean isForeground);
+    protected boolean onNotificationOpened(@NonNull Context context, @NonNull NotificationInfo notificationInfo, @NonNull ActionButtonInfo actionButtonInfo) {
+        return false;
+    }
 
     /**
-     * Called when a notification is dismissed from either swiping away the notification or from
-     * clearing all notifications.
+     * Called when a notification is dismissed.
      *
      * @param context The application context.
-     * @param message The push message associated with the notification.
-     * @param notificationId The notification ID.
+     * @param notificationInfo The notification info.
      */
-    protected void onNotificationDismissed(@NonNull Context context, @NonNull PushMessage message, int notificationId) {}
+    protected void onNotificationDismissed(@NonNull Context context, @NonNull NotificationInfo notificationInfo) {}
+
+    /**
+     * Contains information about a posted notification.
+     */
+    protected static class NotificationInfo {
+        private final PushMessage message;
+        private final int notificationId;
+
+        private NotificationInfo(@NonNull PushMessage message, @NonNull int notificationId) {
+            this.message = message;
+            this.notificationId = notificationId;
+        }
+
+        /**
+         * Returns the notification's push message.
+         *
+         * @return The push message.
+         */
+        @NonNull
+        public PushMessage getMessage() {
+            return message;
+        }
+
+        /**
+         * Returns the notification ID.
+         *
+         * @return The notification ID.
+         */
+        public int getNotificationId() {
+            return notificationId;
+        }
+    }
+
+    /**
+     * Contains info about a notification action button.
+     */
+    protected static class ActionButtonInfo {
+        private final String buttonId;
+        private final boolean isForeground;
+        private final Bundle remoteInput;
+
+        private ActionButtonInfo(String buttonId, boolean isForeground, Bundle remoteInput) {
+            this.buttonId = buttonId;
+            this.isForeground = isForeground;
+            this.remoteInput = remoteInput;
+        }
+
+        /**
+         * Returns the button's ID.
+         *
+         * @return The button's ID.
+         */
+        @NonNull
+        public String getButtonId() {
+            return buttonId;
+        }
+
+        /**
+         * If the button should trigger a foreground action or not.
+         *
+         * @return {@code true} if the action should trigger a foreground action, otherwise {@code false}.
+         */
+        public boolean isForeground() {
+            return isForeground;
+        }
+
+        /**
+         * Remote input associated with the notification action. Only available if the action
+         * button defines {@link com.urbanairship.push.notifications.LocalizableRemoteInput}
+         * and the button was triggered from an Android Wear device or Android N.
+         *
+         * @return The remote input associated with the action button.
+         */
+        @Nullable
+        public Bundle getRemoteInput() {
+            return remoteInput;
+        }
+    }
 }
