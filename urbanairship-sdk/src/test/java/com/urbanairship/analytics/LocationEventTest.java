@@ -3,9 +3,11 @@ package com.urbanairship.analytics;
 import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -133,20 +135,20 @@ public class LocationEventTest extends BaseTestCase {
     /**
      * Verifies the location payload uses the correct keys
      *
-     * @throws JSONException
+     * @throws JsonException
      */
     @Test
-    public void testJSONKeys() throws JSONException {
+    public void testJSONKeys() throws JsonException {
         String[] expectedKeys = new String[] { "session_id", "lat", "long", "requested_accuracy", "update_type",
                                                "provider", "update_dist", "h_accuracy", "v_accuracy", "foreground" };
 
-        JSONObject eventData = new JSONObject(event.createEventPayload("sessionId")).getJSONObject(Event.DATA_KEY);
+        JsonMap eventData = JsonValue.parseString(event.createEventPayload("sessionId")).optMap().get(Event.DATA_KEY).optMap();
 
         for (String key : expectedKeys) {
-            assertTrue(eventData.has(key));
+            assertTrue(eventData.containsKey(key));
         }
 
-        assertEquals("One of these does not belong: " + eventData.names().toString(), eventData.length(), expectedKeys.length);
+        assertEquals("One of these does not belong: " + eventData.keySet().toString(), eventData.size(), expectedKeys.length);
     }
 
     private Location createTestLocation(String provider) {

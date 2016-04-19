@@ -41,6 +41,8 @@ import java.util.List;
  */
 public class JsonList implements Iterable<JsonValue>, JsonSerializable {
 
+    static final JsonList EMPTY_LIST = new JsonList(null);
+
     private final List<JsonValue> list;
 
     /**

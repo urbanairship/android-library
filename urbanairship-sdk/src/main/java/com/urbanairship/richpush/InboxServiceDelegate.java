@@ -40,10 +40,6 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -235,7 +231,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
          * Note: If we can't delete the messages on the server, leave them untouched
          * and we'll get them next time.
          */
-        JSONObject payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
+        JsonMap payload = buildMessagesPayload(DELETE_MESSAGES_KEY, idsToDelete);
         if (payload == null) {
             return;
         }
@@ -277,7 +273,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
          * Note: If we can't mark the messages read on the server, leave them untouched
          * and we'll get them next time.
          */
-        JSONObject payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
+        JsonMap payload = buildMessagesPayload(MARK_READ_MESSAGES_KEY, idsToUpdate);
         if (payload == null) {
             return;
         }
@@ -302,22 +298,21 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
      *
      * @param root String root of payload.
      * @param ids Set of message ID strings.
-     * @return A message payload as a JSONObject.
+     * @return A message payload as a JsonMap.
      */
-    private JSONObject buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
-        try {
-            JSONObject payload = new JSONObject();
-            payload.put(root, new JSONArray());
-            String userId = this.user.getId();
-            for (String id : ids) {
-                String url = hostUrl + String.format(MESSAGE_URL, userId, id);
-                payload.accumulate(root, url);
-            }
-            Logger.verbose(payload.toString());
-            return payload;
-        } catch (JSONException e) {
-            Logger.info(e.getMessage());
+    private JsonMap buildMessagesPayload(@NonNull String root, @NonNull Set<String> ids) {
+        List<String> urls = new ArrayList<>();
+        String userId = this.user.getId();
+        for (String id : ids) {
+            String url = hostUrl + String.format(MESSAGE_URL, userId, id);
+            urls.add(url);
         }
-        return null;
+
+        JsonMap payload = JsonMap.newBuilder()
+                .put(root, JsonValue.wrapOpt(urls))
+                .build();
+
+        Logger.verbose(payload.toString());
+        return payload;
     }
 }
