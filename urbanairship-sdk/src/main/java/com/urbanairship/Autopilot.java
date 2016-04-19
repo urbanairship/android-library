@@ -30,32 +30,35 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 /**
- * Autopilot allows you to defer calling UAirship.takeOff until after the application has been created. Typically, UAirship.takeOff must
- * be called in Application.onCreate() so that the Urban Airship library is ready to handle incoming events before intents are delivered to
- * any application components. Calling takeOff directly is the simplest integration, however some application frameworks do not provide a
- * way to extend the Application class. Autopilot allows you to provide your bootstrapping code in a way that allows the library to
- * lazily execute it.
+ * Autopilot allows UAirship.takeOff to be called without overriding the Application class. Typically,
+ * UAirship.takeOff must be called in Application.onCreate() so that the Urban Airship library is ready to
+ * handle incoming events before intents are delivered to any application components. Calling takeOff
+ * directly is the simplest integration, however some application frameworks do not provide a way to
+ * extend the Application class. Autopilot allows you to provide your bootstrapping code in a way
+ * that allows the library to lazily execute it.
  * <p/>
- * Extend this class and implement the abstract methods, then call Autopilot.automaticTakeOff() at <em>all</em> application
- * entry points (i.e., in the onCreate() method of all registered Broadcast Receivers, Activities and Services). The default
- * {@link com.urbanairship.AirshipConfigOptions} will be created from the airshipconfig.properties file from the assets. To provide
- * a custom {@link com.urbanairship.AirshipConfigOptions}, override {@link #createAirshipConfigOptions}.
+ * Autopilot will be called before {@link Application#onCreate()} on the main process. If this is too early
+ * for the application to handle takeOff, it can be delayed by overriding {@link #allowEarlyTakeOff(Context)}.
+ * If delayed or if the application uses multiple processes, {@link #automaticTakeOff(Context)} must be called
+ * at <em>all</em> application entry points (i.e., in the onCreate() method of all registered
+ * Broadcast Receivers, Activities and Services).
  * <p/>
- * Your subclass <em>must</em> not be abstract and <em>may</em> provide a default constructor that will be invoked with Class.newInstance().
+ * The default {@link com.urbanairship.AirshipConfigOptions} will be created from the
+ * {@code airshipconfig.properties} file from the assets. To provide a different config,
+ * override {@link #createAirshipConfigOptions}.
  * <p/>
- * Add an entry to the application block of your manifest containing the fully qualified class name of your Autopilot implementation.
- * The meta-data name must be set to "com.urbanairship.autopilot" (Autopilot.AUTOPILOT_MANIFEST_KEY).
- * e.g.,
- * <pre>{@code <meta-data android:name="com.urbanairship.autopilot" android:value="com.urbanairship.push.sample.SampleAutopilot" /> }</pre>
- * <p/>
- * If your app uses Proguard obfuscation, you will need to add an exclusion to proguard.cfg for your Autopilot class:
- * <pre>{@code -keep public class * extends com.urbanairship.Autopilot}</pre>
+ * To use Autopilot, extend this class and implement the abstract methods. The class must be
+ * public, non-abstract, and it must contain an empty constructor that is public. Register the
+ * class by adding an entry to the application block of your manifest containing the fully qualified
+ * class name of your Autopilot implementation. The meta-data name must be set to {@link #AUTOPILOT_MANIFEST_KEY}.
+ * Example:
+ * <pre>{@code <meta-data android:name="com.urbanairship.autopilot"
+ *                        android:value="com.urbanairship.push.sample.SampleAutopilot" /> }</pre>
  */
 public abstract class Autopilot implements UAirship.OnReadyCallback {
 
@@ -67,9 +70,20 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
 
     private static final String TAG = "Urban Airship Autopilot";
 
+    private static boolean instanceCreated;
+    private static Autopilot instance;
+
     /**
-     * Starts the auto pilot takeOff process. This method must be called at every application entry
-     * point (e.g., the onCreate() method of all broadcast receivers, launch activities and services.).
+     * Starts the auto pilot takeOff process.
+     *
+     * @param context The application context.
+     */
+    public static void automaticTakeOff(@NonNull Context context) {
+        automaticTakeOff((Application) context.getApplicationContext(), false);
+    }
+
+    /**
+     * Starts the auto pilot takeOff process.
      *
      * @param application The application.
      */
@@ -78,54 +92,32 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
      * to prevent onCreateAirshipConfig from being called multiple times.
      */
     public static synchronized void automaticTakeOff(@NonNull Application application) {
+        automaticTakeOff(application, false);
+    }
+
+    /**
+     * Starts the auto pilot takeOff process.
+     *
+     * @param application The application.
+     * @param earlyTakeoff Flag indicating if its an early takeOff or not (before Application.onCreate).
+     */
+    static synchronized void automaticTakeOff(@NonNull Application application, boolean earlyTakeoff) {
         if (UAirship.isFlying() || UAirship.isTakingOff()) {
             return;
         }
 
-        String classname = null;
-
-        // Retrieve the class name from the manifest
-        try {
-            ApplicationInfo ai = application.getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            classname = bundle.getString(AUTOPILOT_MANIFEST_KEY);
-        } catch (NameNotFoundException e) {
-            Log.e(TAG, "Failed to load meta-data, NameNotFound: " + e.getMessage());
-        } catch (NullPointerException e) {
-            Log.e(TAG, "Failed to load meta-data, NullPointer: " + e.getMessage());
-        }
-
-        if (classname == null) {
-            Log.e(TAG, "Unable to takeOff automatically");
-            return;
-        }
-
-        // Attempt to load the class
-        Class<?> autopilotClass;
-        try {
-            autopilotClass = Class.forName(classname);
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "Unable to load the defined Autopilot instance. ClassNotFoundException: " + e.getMessage());
-            return;
-        }
-
-        // Attempt to instantiate
-        final Autopilot instance;
-        try {
-            instance = (Autopilot) autopilotClass.newInstance();
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "Unable to instantiate the defined Autopilot instance. IllegalAccessException: " + e.getMessage());
-            return;
-        } catch (InstantiationException e) {
-            Log.e(TAG, "Unable to instantiate the defined Autopilot instance. InstantiationException: " + e.getMessage());
-            return;
-        } catch (ClassCastException e) {
-            Log.e(TAG, "Unable to instantiate the defined Autopilot instance. ClassCastException: " + e.getMessage());
-            return;
+        if (!instanceCreated && instance == null) {
+            instance = createAutopilotInstance(application);
+            instanceCreated = true;
         }
 
         if (instance == null) {
-            Log.e(TAG, "Unable to instantiate the defined Autopilot instance. Instance is null.");
+            // Not configured for autopilot
+            return;
+        }
+
+        if (earlyTakeoff && !instance.allowEarlyTakeOff(application)) {
+            Log.i(TAG, "Skipping early takeoff.");
             return;
         }
 
@@ -137,16 +129,49 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
         }
 
         UAirship.takeOff(application, options, instance);
+        instance = null;
     }
 
     /**
-     * Starts the auto pilot takeOff process. This method must be called at every application entry
-     * point (e.g., the onCreate() method of all broadcast receivers, launch activities and services.).
+     * Creates the app's auto pilot instance.
      *
      * @param context The application context.
+     * @return An autopilot instance, or {@code null} if the app is not configured to use auto pilot
+     * or if the class is unable to be created.
      */
-    public static void automaticTakeOff(@NonNull Context context) {
-        automaticTakeOff((Application) context.getApplicationContext());
+    @Nullable
+    private static Autopilot createAutopilotInstance(@NonNull Context context) {
+        String classname;
+
+        try {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            if (ai == null || ai.metaData == null) {
+                Log.e(TAG, "Unable to load app bundle.");
+                return null;
+            }
+
+            classname = ai.metaData.getString(AUTOPILOT_MANIFEST_KEY);
+        } catch (NameNotFoundException e) {
+            Log.e(TAG, "Failed to get app' metadata.", e);
+            return null;
+        }
+
+        if (classname == null) {
+            return null;
+        }
+
+        try {
+            Class<?> autopilotClass = Class.forName(classname);
+            return (Autopilot) autopilotClass.newInstance();
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "Class not found: " + classname);
+        } catch (InstantiationException e) {
+            Log.e(TAG, "Unable to create class: " + classname);
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "Unable to access class: " + classname);
+        }
+
+        return null;
     }
 
     /**
@@ -160,5 +185,21 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
     @Nullable
     public AirshipConfigOptions createAirshipConfigOptions(@NonNull Context context) {
         return null;
+    }
+
+    /**
+     * Checks if Autopilot is able to takeOff before {@link Application#onCreate()}.
+     * <p/>
+     * Early takeOff will only be called on the main process. Apps that use multiple processes need
+     * to make sure {@link #automaticTakeOff(Context)} is called in any other processes that use
+     * Urban Airship. If early takeOff is disabled, {@link #automaticTakeOff(Context)} must be called
+     * at <em>all</em> application entry points (i.e., in the onCreate() method of all registered
+     * Broadcast Receivers, Activities and Services).
+     *
+     * @param context The application context.
+     * @return {@code true} to allow early takeOff, otherwise {@code false}.
+     */
+    public boolean allowEarlyTakeOff(@NonNull Context context) {
+        return true;
     }
 }

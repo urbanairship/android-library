@@ -25,10 +25,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.urbanairship;
 
+import android.app.Application;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
+import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -174,15 +176,23 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        if (getContext() != null) {
-            Autopilot.automaticTakeOff(getContext());
-        }
         return true;
     }
 
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
+    public void attachInfo(Context context, ProviderInfo info) {
+        super.attachInfo(context, info);
+
+        Autopilot.automaticTakeOff((Application) context.getApplicationContext(), true);
+    }
+
+    @Override
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         DatabaseModel model = getDatabaseModel(uri);
+        if (model == null || getContext() == null) {
+            return -1;
+        }
+
         DataManager manager = model.dataManager;
 
         int numberDeleted = manager.delete(model.table, selection, selectionArgs);
@@ -192,7 +202,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public String getType(Uri uri) {
+    public String getType(@NonNull Uri uri) {
         int type = MATCHER.match(uri);
         switch (type) {
             case RICHPUSH_MESSAGES_URI_TYPE:
@@ -208,8 +218,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert(Uri uri, ContentValues[] values) {
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
         DatabaseModel model = getDatabaseModel(uri);
+        if (model == null || getContext() == null) {
+            return -1;
+        }
+
         DataManager manager = model.dataManager;
 
         List<ContentValues> insertedValues = manager.bulkInsert(model.table, values);
@@ -224,7 +238,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues values) {
+    public Uri insert(@NonNull  Uri uri, ContentValues values) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
             return null;
@@ -240,7 +254,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         DatabaseModel model = getDatabaseModel(uri);
         if (model == null || getContext() == null) {
             return null;
@@ -256,8 +270,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull  Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         DatabaseModel model = getDatabaseModel(uri);
+        if (model == null || getContext() == null) {
+            return -1;
+        }
+
         DataManager manager = model.dataManager;
 
         int updated = manager.update(model.table, values, selection, selectionArgs);
