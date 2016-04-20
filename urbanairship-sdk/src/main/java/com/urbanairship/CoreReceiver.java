@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.RemoteInput;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -148,6 +149,8 @@ public class CoreReceiver extends BroadcastReceiver {
             return;
         }
 
+        Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
+
         String notificationActionId = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID);
         if (notificationActionId == null) {
             Logger.error("CoreReceiver - Intent is missing notification button ID: " + intent.getAction());
@@ -173,13 +176,17 @@ public class CoreReceiver extends BroadcastReceiver {
         NotificationManagerCompat.from(context).cancel(notificationId);
 
         // Add the interactive notification event
-        InteractiveNotificationEvent event = new InteractiveNotificationEvent(message, notificationActionId, description, isForegroundAction);
+        InteractiveNotificationEvent event = new InteractiveNotificationEvent(message, notificationActionId, description, isForegroundAction, remoteInput);
         UAirship.shared().getAnalytics().addEvent(event);
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtras(intent.getExtras())
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
+
+        if (remoteInput != null && remoteInput.size() != 0) {
+            openIntent.putExtra(AirshipReceiver.EXTRA_REMOTE_INPUT, remoteInput);
+        }
 
         context.sendOrderedBroadcast(openIntent, UAirship.getUrbanAirshipPermission());
     }
@@ -239,10 +246,10 @@ public class CoreReceiver extends BroadcastReceiver {
             boolean isForeground = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);
             String actionPayload = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD);
 
-            if (isForeground && getResultCode() != BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED && options.autoLaunchApplication) {
+            if (isForeground && getResultCode() != AirshipReceiver.RESULT_ACTIVITY_LAUNCHED && options.autoLaunchApplication) {
                 // Set the result if its an ordered broadcast
                 if (launchApplication(context) && isOrderedBroadcast()) {
-                    setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+                    setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
                 }
             }
 
@@ -250,10 +257,15 @@ public class CoreReceiver extends BroadcastReceiver {
                 // Run UA actions for the notification action
                 Logger.debug("Running actions for notification action: " + actionPayload);
 
-                @Action.Situation int situation = isForeground ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON : Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                @Action.Situation
+                int situation = isForeground ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON : Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
 
                 Bundle metadata = new Bundle();
                 metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+
+                if (intent.hasExtra(AirshipReceiver.EXTRA_REMOTE_INPUT)) {
+                    metadata.putBundle(ActionArguments.REMOTE_INPUT_METADATA, intent.getBundleExtra(AirshipReceiver.EXTRA_REMOTE_INPUT));
+                }
 
                 ActionService.runActions(context, actionPayload, situation, metadata);
             }
