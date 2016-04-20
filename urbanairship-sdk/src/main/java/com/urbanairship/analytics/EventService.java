@@ -30,12 +30,19 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.util.UAStringUtil;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -60,6 +67,11 @@ public class EventService extends IntentService {
      * Intent action to delete all locally stored events.
      */
     static final String ACTION_DELETE_ALL = "com.urbanairship.analytics.DELETE_ALL";
+
+    /**
+     * Intent action to update the ad ID on foreground.
+     */
+    static final String ACTION_UPDATE_ADVERTISING_ID = "com.urbanairship.com.analytics.UPDATE_ADVERTISING_ID";
 
     /**
      * Intent extra for the event's type.
@@ -155,6 +167,9 @@ public class EventService extends IntentService {
                 break;
             case ACTION_SEND:
                 uploadEvents();
+                break;
+            case ACTION_UPDATE_ADVERTISING_ID:
+                updateAdvertisingId();
                 break;
             default:
                 Logger.warn("EventService - Unrecognized intent action: " + intent.getAction());
@@ -334,5 +349,44 @@ public class EventService extends IntentService {
         } else {
             Logger.verbose("EventService - Alarm already scheduled for an earlier time.");
         }
+    }
+
+    /**
+     * Updates the advertising ID and limited ad tracking preference.
+     */
+    private void updateAdvertisingId() {
+        Analytics analytics = UAirship.shared().getAnalytics();
+        AssociatedIdentifiers associatedIdentifiers = analytics.getAssociatedIdentifiers();
+
+        String advertisingId = associatedIdentifiers.getAdvertisingId();
+        boolean limitedAdTrackingEnabled = associatedIdentifiers.isLimitAdTrackingEnabled();
+
+        switch (UAirship.shared().getPlatformType()) {
+            case UAirship.AMAZON_PLATFORM:
+                advertisingId = Settings.Secure.getString(getContentResolver(), "advertising_id");
+                limitedAdTrackingEnabled = Settings.Secure.getInt(getContentResolver(), "limit_ad_tracking", -1) == 0;
+                break;
+
+            case UAirship.ANDROID_PLATFORM:
+                if (!PlayServicesUtils.isGoogleAdsDependencyAvailable()) {
+                    break;
+                }
+
+                try {
+                    AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(getApplicationContext());
+                    advertisingId = adInfo.getId();
+                    limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
+                } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
+                    Logger.error("EventService - Failed to retrieve and update advertising ID.", e);
+                    return;
+                }
+                break;
+        }
+
+        if (!UAStringUtil.equals(associatedIdentifiers.getAdvertisingId(), advertisingId) ||
+                associatedIdentifiers.isLimitAdTrackingEnabled() != limitedAdTrackingEnabled) {
+            analytics.editAssociatedIdentifiers().setAdvertisingId(advertisingId, limitedAdTrackingEnabled).apply();
+        }
+
     }
 }

@@ -110,7 +110,8 @@ public class AssociatedIdentifiers implements JsonSerializable {
      * @return <code>true</code> if user limit ad tracking enabled, <code>false</code> otherwise.
      */
     public boolean isLimitAdTrackingEnabled() {
-        return ids.get(LIMITED_AD_TRACKING_ENABLED_KEY).equalsIgnoreCase("true");
+        String enabled = ids.get(LIMITED_AD_TRACKING_ENABLED_KEY);
+        return enabled != null && enabled.equalsIgnoreCase("true");
     }
 
     @Override

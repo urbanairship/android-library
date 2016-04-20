@@ -21,6 +21,7 @@ class AnalyticsPreferences {
     private static final String SCHEDULED_SEND_TIME = KEY_PREFIX + ".SCHEDULED_SEND_TIME";
     private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
     private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
+    private static final String ADVERTISING_ID_AUTO_TRACKING_KEY = KEY_PREFIX + ".ADVERTISING_ID_TRACKING";
 
     static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; //5 MB
     static final int MIN_TOTAL_DB_SIZE_BYTES = 10 * 1024;       //10 KB
@@ -176,6 +177,24 @@ class AnalyticsPreferences {
         } else {
             preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
         }
+    }
+
+    /**
+     * Sets the ad ID auto tracking enabled flag.
+     *
+     * @param enabled {@code true} to enable, {@code false} to disable.
+     */
+    void setAutoTrackAdvertisingIdEnabled(boolean enabled) {
+        preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
+    }
+
+    /**
+     * Returns the tracking ad ID auto enabled flag.
+     *
+     * @return {@code true} if enabled, otherwise {@code false}.
+     */
+    boolean isAutoTrackAdvertisingIdEnabled() {
+        return preferenceDataStore.getBoolean(ADVERTISING_ID_AUTO_TRACKING_KEY, false);
     }
 
     /**

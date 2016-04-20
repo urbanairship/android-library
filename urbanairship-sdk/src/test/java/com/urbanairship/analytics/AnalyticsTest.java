@@ -402,4 +402,34 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify event service to add event is not started
         assertNull(shadowApplication.getNextStartedService());
     }
+
+
+    /**
+     * Test that foregrounding the app with advertising ID tracking enabled dispatches an intent to the
+     * event service.
+     */
+    @Test
+    public void testAdIdTrackingOnForeground() {
+        // Test the preference settings.
+        analytics.setAutoTrackAdvertisingIdEnabled(false);
+        assertFalse(analytics.isAutoTrackAdvertisingIdEnabled());
+
+        analytics.setAutoTrackAdvertisingIdEnabled(true);
+        assertTrue(analytics.isAutoTrackAdvertisingIdEnabled());
+
+        // Start analytics in the background.
+        activityMonitorListener.onBackground(0);
+        assertFalse(analytics.isAppInForeground());
+
+        activityMonitorListener.onForeground(0);
+        assertTrue(analytics.isAppInForeground());
+
+        // An add event is sent for screen tracking.
+        Intent eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
+
+        // An advertising ID update event is sent.
+        eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(EventService.ACTION_UPDATE_ADVERTISING_ID, eventIntent.getAction());
+    }
 }

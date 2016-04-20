@@ -43,6 +43,7 @@ import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.location.LocationRequestOptions;
 
 import java.util.HashMap;
@@ -129,6 +130,14 @@ public class Analytics extends AirshipComponent {
                 // If the app backgrounded, there should be no current screen
                 if (currentScreen == null) {
                     trackScreen(previousScreen);
+                }
+
+                // If advertising ID tracking is enabled, send an update intent to the event service.
+                if (isAutoTrackAdvertisingIdEnabled()) {
+                    Intent i = new Intent(context, EventService.class)
+                            .setAction(EventService.ACTION_UPDATE_ADVERTISING_ID);
+
+                    context.startService(i);
                 }
 
                 // Send the foreground broadcast
@@ -449,6 +458,29 @@ public class Analytics extends AirshipComponent {
      */
     public boolean isEnabled() {
         return configOptions.analyticsEnabled && preferences.isAnalyticsEnabled();
+    }
+
+    /**
+     * Sets the ad ID auto tracking enabled flag.
+     *
+     * @param enabled {@code true} to enable, {@code false} to disable.
+     */
+    public void setAutoTrackAdvertisingIdEnabled(boolean enabled) {
+        if (UAirship.shared().getPlatformType() == UAirship.ANDROID_PLATFORM && !PlayServicesUtils.isGoogleAdsDependencyAvailable() && enabled) {
+            Logger.error("Analytics - Advertising ID auto-tracking could not be enabled due to a missing Google Ads dependency.");
+            return;
+        }
+
+        preferences.setAutoTrackAdvertisingIdEnabled(enabled);
+    }
+
+    /**
+     * Returns the ad ID auto tracking enabled flag.
+     *
+     * @return {@code true} if enabled, otherwise {@code false}.
+     */
+    public boolean isAutoTrackAdvertisingIdEnabled() {
+        return preferences.isAutoTrackAdvertisingIdEnabled();
     }
 
     /**

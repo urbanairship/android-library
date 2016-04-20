@@ -59,6 +59,7 @@ public class PlayServicesUtils {
     private static Boolean isGoogleCloudMessagingDependencyAvailable;
     private static Boolean isFusedLocationDependencyAvailable;
     private static Boolean isGooglePlayStoreAvailable;
+    private static Boolean isGoogleAdsDependencyAvailable;
 
 
     /**
@@ -186,6 +187,29 @@ public class PlayServicesUtils {
         }
 
         return isFusedLocationDependencyAvailable;
+    }
+
+
+    /**
+     * Checks if Google Play services dependency is available for advertising ID tracking.
+     *
+     * @return <code>true</code> if available, otherwise <code>false</code>.
+     */
+    public static boolean isGoogleAdsDependencyAvailable() {
+        if (isGoogleAdsDependencyAvailable == null) {
+            if (!isGooglePlayServicesDependencyAvailable()) {
+                isGoogleAdsDependencyAvailable = false;
+            } else {
+                try {
+                    Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                    isGoogleAdsDependencyAvailable = true;
+                } catch (ClassNotFoundException e) {
+                    isGoogleAdsDependencyAvailable = false;
+                }
+            }
+        }
+
+        return isGoogleAdsDependencyAvailable;
     }
 
     /**
