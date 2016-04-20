@@ -52,6 +52,7 @@ import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -94,6 +95,19 @@ public class RichPushInbox extends AirshipComponent {
         void onFinished(boolean success);
     }
 
+    /**
+     * Predicate interface for {@link RichPushMessage}.
+     */
+    public interface Predicate {
+
+        /**
+         * Applies the predicate to the provided message.
+         *
+         * @param message A {@link RichPushMessage} instance.
+         * @return {@code true} if the message matches the predicate, otherwise {@code false}.
+         */
+        boolean apply(RichPushMessage message);
+    }
 
     /**
      * Intent action to view the rich push inbox.
@@ -128,7 +142,6 @@ public class RichPushInbox extends AirshipComponent {
     private BroadcastReceiver foregroundReceiver;
     private Context context;
     private Handler handler = new Handler(Looper.getMainLooper());
-
 
     public RichPushInbox(Context context, PreferenceDataStore dataStore) {
         this(context, new RichPushUser(dataStore), new RichPushResolver(context), Executors.newSingleThreadExecutor());
@@ -399,47 +412,107 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     /**
-     * Gets a list of RichPushMessages. Sorted by descending sent at date.
+     * Filters a collection of messages according to the supplied predicate
+     *
+     * @param messages The messages to filter
+     * @param predicate The predicate. If null, the collection will be returned as-is.
+     * @return A filtered collection of messages
+     */
+    private Collection<RichPushMessage> filterMessages(Collection<RichPushMessage> messages, @Nullable Predicate predicate) {
+        List<RichPushMessage> filteredMessages = new ArrayList<>();
+
+        if (predicate == null) {
+            return messages;
+        }
+
+        for (RichPushMessage message : messages) {
+            if (predicate.apply(message)) {
+                filteredMessages.add(message);
+            }
+        }
+
+        return filteredMessages;
+    }
+
+    /**
+     * Gets a list of RichPushMessages, filtered by the provided predicate.
+     * Sorted by descending sent-at date.
+     *
+     * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
+     * @return List of filtered and sorted {@link RichPushMessage}s.
+     */
+    @NonNull
+    public List<RichPushMessage> getMessages(@Nullable Predicate predicate) {
+        synchronized (inboxLock) {
+            List<RichPushMessage> messages = new ArrayList<>();
+            messages.addAll(filterMessages(unreadMessages.values(), predicate));
+            messages.addAll(filterMessages(readMessages.values(), predicate));
+            Collections.sort(messages, MESSAGE_COMPARATOR);
+            return messages;
+        }
+    }
+
+
+    /**
+     * Gets a list of RichPushMessages. Sorted by descending sent-at date.
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
     @NonNull
     public List<RichPushMessage> getMessages() {
+        return getMessages(null);
+    }
+
+    /**
+     * Gets a list of unread RichPushMessages, filtered by the provided predicate.
+     * Sorted by descending sent-at date.
+     *
+     * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
+     * @return List of sorted {@link RichPushMessage}s.
+     */
+    @NonNull
+    public List<RichPushMessage> getUnreadMessages(@Nullable Predicate predicate) {
         synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>(getCount());
-            messages.addAll(unreadMessages.values());
-            messages.addAll(readMessages.values());
+            List<RichPushMessage> messages = new ArrayList<>(filterMessages(unreadMessages.values(), predicate));
             Collections.sort(messages, MESSAGE_COMPARATOR);
             return messages;
         }
     }
 
     /**
-     * Gets a list of unread RichPushMessages. Sorted by descending sent at date.
+     * Gets a list of unread RichPushMessages. Sorted by descending sent-at date.
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
     @NonNull
     public List<RichPushMessage> getUnreadMessages() {
+        return getUnreadMessages(null);
+    }
+
+    /**
+     * Gets a list of read RichPushMessages, filtered by the provided predicate.
+     * Sorted by descending sent-at date.
+     *
+     * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
+     * @return List of sorted {@link RichPushMessage}s.
+     */
+    @NonNull
+    public List<RichPushMessage> getReadMessages(@Nullable Predicate predicate) {
         synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>(unreadMessages.values());
+            List<RichPushMessage> messages = new ArrayList<>(filterMessages(readMessages.values(), predicate));
             Collections.sort(messages, MESSAGE_COMPARATOR);
             return messages;
         }
     }
 
     /**
-     * Gets a list of read RichPushMessages. Sorted by descending sent at date.
+     * Gets a list of read RichPushMessages. Sorted by descending sent-at date.
      *
      * @return List of sorted {@link RichPushMessage}s.
      */
     @NonNull
     public List<RichPushMessage> getReadMessages() {
-        synchronized (inboxLock) {
-            List<RichPushMessage> messages = new ArrayList<>(readMessages.values());
-            Collections.sort(messages, MESSAGE_COMPARATOR);
-            return messages;
-        }
+        return getReadMessages(null);
     }
 
     /**

@@ -45,6 +45,7 @@ import com.urbanairship.google.GcmUtils;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
@@ -111,6 +112,7 @@ public class UAirship {
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
     ChannelCapture channelCapture;
+    MessageCenter messageCenter;
 
     /**
      * Constructs an instance of UAirship.
@@ -561,6 +563,7 @@ public class UAirship {
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions();
+        this.messageCenter = new MessageCenter();
 
         // Initialize the rest of the AirshipComponents
         ((AirshipComponent) this.inbox).init();
@@ -570,6 +573,7 @@ public class UAirship {
         ((AirshipComponent) this.channelCapture).init();
         ((AirshipComponent) this.applicationMetrics).init();
         ((AirshipComponent) this.analytics).init();
+        ((AirshipComponent) this.messageCenter).init();
 
         // Store the version
         String currentVersion = getVersion();
@@ -596,8 +600,8 @@ public class UAirship {
         ((AirshipComponent) this.channelCapture).tearDown();
         ((AirshipComponent) this.applicationMetrics).tearDown();
         ((AirshipComponent) this.analytics).tearDown();
-
         ((AirshipComponent) this.preferenceDataStore).tearDown();
+        ((AirshipComponent) this.messageCenter).tearDown();
     }
 
     /**
@@ -678,6 +682,12 @@ public class UAirship {
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
     }
+
+    /**
+     * The default Message Center.
+     * @return The default message center.
+     */
+    public MessageCenter getMessageCenter() { return messageCenter; }
 
     /**
      * Returns the platform type. The platform type is determined only once

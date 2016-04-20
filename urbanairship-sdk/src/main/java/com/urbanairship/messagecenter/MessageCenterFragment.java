@@ -67,6 +67,7 @@ public class MessageCenterFragment extends Fragment {
     private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
     private static final String STATE_ABS_LIST_VIEW = "STATE_ABS_LIST_VIEW";
 
+    private RichPushInbox.Predicate predicate;
 
     private MessageListFragment messageListFragment;
     private boolean isTwoPane;
@@ -84,7 +85,7 @@ public class MessageCenterFragment extends Fragment {
     /**
      * Creates a new {@link MessageCenterFragment}
      *
-     * @param messageId The message's ID to display
+     * @param messageId The message's ID to display.
      * @return {@link MessageCenterFragment} instance.
      */
     static MessageCenterFragment newInstance(String messageId) {
@@ -133,6 +134,8 @@ public class MessageCenterFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureView(view);
+
+        messageListFragment.setPredicate(predicate);
 
         if (savedInstanceState == null && getArguments() != null && getArguments().containsKey(START_MESSAGE_ID)) {
             showMessage(getArguments().getString(START_MESSAGE_ID));
@@ -236,6 +239,14 @@ public class MessageCenterFragment extends Fragment {
     }
 
     /**
+     * Gets messages from the inbox filtered by the local predicate
+     * @return The filtered list of messages.
+     */
+    private List<RichPushMessage> getMessages() {
+        return UAirship.shared().getInbox().getMessages(predicate);
+    }
+
+    /**
      * Displays a message.
      *
      * @param messageId The message ID.
@@ -247,7 +258,7 @@ public class MessageCenterFragment extends Fragment {
         }
 
         currentMessageId = messageId;
-        currentMessagePosition = UAirship.shared().getInbox().getMessages().indexOf(message);
+        currentMessagePosition = getMessages().indexOf(message);
 
         if (isTwoPane) {
             String tag = messageId == null ? "EMPTY_MESSAGE" : messageId;
@@ -283,7 +294,7 @@ public class MessageCenterFragment extends Fragment {
 
     private void updateCurrentMessage() {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(currentMessageId);
-        List<RichPushMessage> messages = UAirship.shared().getInbox().getMessages();
+        List<RichPushMessage> messages = getMessages();
 
         if (currentMessageId != null && !messages.contains(message)) {
             if (messages.size() == 0) {
@@ -301,6 +312,16 @@ public class MessageCenterFragment extends Fragment {
         } else {
             messageListFragment.setCurrentMessage(null);
         }
+    }
+
+    /**
+     * Sets the predicate to use for filtering messages. If unset, the default @link{MessageCenter}
+     * predicate will be used.
+     *
+     * @param predicate A predicate for filtering messages.
+     */
+    public void setPredicate(RichPushInbox.Predicate predicate) {
+        this.predicate = predicate;
     }
 
     /**

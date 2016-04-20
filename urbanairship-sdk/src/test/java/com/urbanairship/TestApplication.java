@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
 
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
@@ -62,6 +64,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions();
+        UAirship.sharedAirship.messageCenter = new MessageCenter();
 
         setPlatform(UAirship.ANDROID_PLATFORM);
         ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(), provider);

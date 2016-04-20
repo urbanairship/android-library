@@ -32,6 +32,10 @@ import android.os.ResultReceiver;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
+import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.richpush.RichPushMessage;
+
+import junit.framework.Assert;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -40,11 +44,14 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
+import java.lang.Character;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
+import dalvik.annotation.TestTarget;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -57,6 +64,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public class RichPushInboxTest extends BaseTestCase {
 
     RichPushInbox inbox;
+    RichPushInbox.Predicate testPredicate;
     ShadowApplication application;
 
     @Before
@@ -72,6 +80,16 @@ public class RichPushInboxTest extends BaseTestCase {
         };
 
         inbox = new RichPushInbox(context, user, resolver, executor);
+
+        // Only the "even" messages
+        testPredicate = new RichPushInbox.Predicate() {
+            @Override
+            public boolean apply(RichPushMessage message) {
+                String substring = message.getMessageId().replace("_message_id", "");
+                int index = Integer.parseInt(substring);
+                return index % 2 == 0;
+            }
+        };
 
         // Populate the MCRAP database with 10 messages
         for (int i = 0; i < 10; i++) {
@@ -278,6 +296,75 @@ public class RichPushInboxTest extends BaseTestCase {
         receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
 
         verifyZeroInteractions(callback);
+    }
+
+    /**
+     * Test getting messages with or without a predicate
+     */
+    @Test
+    public void testGetMessages() {
+
+        // regular style
+
+        List<RichPushMessage> messages = inbox.getMessages();
+        Assert.assertEquals(messages.size(), inbox.getCount());
+
+        // filtered style
+        List<RichPushMessage> filteredMessages = inbox.getMessages(testPredicate);
+
+        Assert.assertEquals(filteredMessages.size(), inbox.getCount() / 2);
+    }
+
+    @Test
+    public void testGetUnreadMessages() {
+
+        HashSet<String> messageIds = new HashSet<>();
+        messageIds.add("1_message_id");
+        messageIds.add("2_message_id");
+        messageIds.add("3_message_id");
+        messageIds.add("4_message_id");
+
+        // Mark messages read
+        inbox.markMessagesRead(messageIds);
+
+
+        List<RichPushMessage> unreadMessages = inbox.getUnreadMessages();
+        Assert.assertEquals(unreadMessages.size(), 6);
+
+
+        List<RichPushMessage> filteredMessages = inbox.getUnreadMessages(testPredicate);
+        Assert.assertEquals(filteredMessages.size(), 3);
+
+        for (RichPushMessage message : filteredMessages) {
+            String substring = message.getMessageId().replace("_message_id", "");
+            int index = Integer.parseInt(substring);
+            Assert.assertEquals(index % 2,  0);
+        }
+    }
+
+    @Test
+    public void testGetReadMessages() {
+        HashSet<String> messageIds = new HashSet<>();
+
+        messageIds.add("1_message_id");
+        messageIds.add("2_message_id");
+        messageIds.add("3_message_id");
+        messageIds.add("4_message_id");
+
+        // Mark messages read
+        inbox.markMessagesRead(messageIds);
+
+        List<RichPushMessage> readMessages = inbox.getReadMessages();
+        Assert.assertEquals(readMessages.size(), 4);
+
+        List<RichPushMessage> filteredMessages= inbox.getReadMessages(testPredicate);
+        Assert.assertEquals(filteredMessages.size(), 2);
+
+        for (RichPushMessage message : filteredMessages) {
+            String substring = message.getMessageId().replace("_message_id", "");
+            int index = Integer.parseInt(substring);
+            Assert.assertEquals(index % 2, 0);
+        }
     }
 
     /**

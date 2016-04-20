@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 
 /**
@@ -52,12 +53,21 @@ public class MessageCenterActivity extends ThemedActivity {
             messageId = getIntent().getData().getSchemeSpecificPart();
         }
 
+        MessageCenterFragment fragment;
+
         if (savedInstanceState == null) {
+            fragment = MessageCenterFragment.newInstance(messageId);
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, MessageCenterFragment.newInstance(messageId))
+                    .add(android.R.id.content, fragment, "MESSAGE_CENTER_FRAGMENT")
                     .commit();
+        } else {
+            fragment = (MessageCenterFragment) getSupportFragmentManager().findFragmentByTag("MESSAGE_CENTER_FRAGMENT");
         }
+
+        // Apply the default message center predicate
+        fragment.setPredicate(UAirship.shared().getMessageCenter().getPredicate());
+
     }
 
 

@@ -54,6 +54,8 @@ import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
+import java.util.List;
+
 /**
  * Fragment that displays the Urban Airship Message Center.
  */
@@ -67,6 +69,7 @@ public class MessageListFragment extends Fragment {
     private Cancelable fetchMessagesOperation;
     private ImageLoader imageLoader;
     private String currentMessageId;
+    private RichPushInbox.Predicate predicate;
 
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
@@ -74,16 +77,28 @@ public class MessageListFragment extends Fragment {
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
         public void onInboxUpdated() {
-            adapter.set(richPushInbox.getMessages());
+            updateAdapterMessages();
         }
     };
+
+    /**
+     * Gets messages from the inbox filtered by the local predicate
+     * @return The filtered list of messages.
+     */
+    private List<RichPushMessage> getMessages() {
+        return richPushInbox.getMessages(predicate);
+    }
+
+    private void updateAdapterMessages() {
+        adapter.set(getMessages());
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.richPushInbox = UAirship.shared().getInbox();
         this.adapter = createMessageViewAdapter();
-        this.adapter.set(richPushInbox.getMessages());
+        updateAdapterMessages();
     }
 
     /**
@@ -232,7 +247,7 @@ public class MessageListFragment extends Fragment {
         richPushInbox.addListener(inboxListener);
 
         // Set latest messages
-        adapter.set(richPushInbox.getMessages());
+        updateAdapterMessages();
 
         getAbsListView().invalidate();
     }
@@ -329,6 +344,13 @@ public class MessageListFragment extends Fragment {
         currentMessageId = messageId;
         if (getAdapter() != null) {
             getAdapter().notifyDataSetChanged();
+        }
+    }
+
+    void setPredicate(RichPushInbox.Predicate predicate) {
+        this.predicate = predicate;
+        if (adapter != null) {
+            updateAdapterMessages();
         }
     }
 }
