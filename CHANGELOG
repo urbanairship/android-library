@@ -20,6 +20,7 @@ Version 7.1.0 - April 21, 2016
 - Broader localization support.
 - Data is now stored on a per app key basis to support conflict-free app key changing.
 - Remote input support.
+- Deprecated BaseIntentReceiver in favor of AirshipReceiver.
 
 Version 7.0.4 - March 25, 2016
 ==============================
