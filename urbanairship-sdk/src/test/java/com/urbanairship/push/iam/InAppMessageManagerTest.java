@@ -31,6 +31,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Build;
 import android.os.Looper;
+import android.view.ViewGroup;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -76,6 +77,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     public void before() {
         mockActivity = mock(Activity.class);
         when(mockActivity.getFragmentManager()).thenReturn(mock(FragmentManager.class));
+        when(mockActivity.findViewById(android.R.id.content)).thenReturn(mock(ViewGroup.class));
 
         mockAnalytics = mock(Analytics.class);
         TestApplication.getApplication().setAnalytics(mockAnalytics);
@@ -144,6 +146,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
+        when(mockActivity.findViewById(android.R.id.custom)).thenReturn(mock(ViewGroup.class));
 
         // Set and show the pending in-app message
         inAppMessageManager.setPendingMessage(message);
@@ -422,6 +425,26 @@ public class InAppMessageManagerTest extends BaseTestCase {
                 return true;
             }
         }));
+    }
+
+    /**
+     * Test showing the pending in-app message in a container that does not exist.
+     */
+    @Test
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void testShowMessageInvalidContainerId() {
+        // Set up a mocked transaction
+        FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
+        when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
+
+        // Return null when finding the custom container
+        when(mockActivity.findViewById(android.R.id.custom)).thenReturn(null);
+
+        // Set the pending message
+        inAppMessageManager.setPendingMessage(message);
+
+        // Try to display it
+        assertFalse(inAppMessageManager.showPendingMessage(mockActivity, android.R.id.custom, android.R.animator.fade_in, android.R.animator.fade_out));
     }
 
     /**

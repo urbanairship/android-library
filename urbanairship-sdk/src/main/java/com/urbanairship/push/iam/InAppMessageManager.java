@@ -417,6 +417,11 @@ public class InAppMessageManager extends AirshipComponent {
             return false;
         }
 
+        if (activity.findViewById(containerId) == null) {
+            Logger.info("InAppMessageManager - Unable to display in-app message. Unable to find container: " + containerId);
+            return false;
+        }
+
         // Add a display event if the last displayed id does not match the current message
         if (!UAStringUtil.equals(pending.getId(), dataStore.getString(LAST_DISPLAYED_ID_KEY, null))) {
             Logger.debug("InAppMessageManager - Displaying pending message: " + pending + " for first time.");
@@ -445,6 +450,8 @@ public class InAppMessageManager extends AirshipComponent {
                 Logger.error("InAppMessageManager - InAppMessageFragmentFactory returned a null fragment, unable to display an in-app message.");
                 return false;
             }
+
+
 
             Bundle args = InAppMessageFragment.createArgs(pending, exitAnimation);
             if (currentFragment.getArguments() != null) {
