@@ -3,6 +3,24 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.1.0 - April 21, 2016
+==============================
+- Message Center filtering.
+- Associated identifiers editor API.
+- Associated identifiers support limited ad tracking.
+- Tag editor API.
+- Analytics.setAutoTrackAdIdentifier to automatically track the user's advertising identifier.
+- Autopilot will now take off before Application.onCreate. Applications that use Autopilot can disable early.
+  take off by overriding Autopilot.allowEarlyTakeOff in their Autopilot class.
+- The default notification icon and accent color are configurable through AirshipConfigOptions.
+- AirshipConfigOptions can be defined in an XML resource file.
+- Added new notification action button groups.
+- Fixed GcmPushReceiver logging erroneous errors.
+- Increased custom event property limit to 100.
+- Broader localization support.
+- Data is now stored on a per app key basis to support conflict-free app key changing.
+- Remote input support.
+
 Version 7.0.4 - March 25, 2016
 ==============================
 - Fixed SecurityException on Samsung devices running Lollipop when scheduling alarms beyond the allowed limit.
