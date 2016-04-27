@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.1.1 - April 26, 2016
+==============================
+- Prevent possible ANR when executing the OnReadyCallback during takeOff().
+
 Version 7.1.0 - April 21, 2016
 ==============================
 - Message Center filtering.
