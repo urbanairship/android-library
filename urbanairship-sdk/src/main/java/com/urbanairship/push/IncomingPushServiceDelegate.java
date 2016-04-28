@@ -30,6 +30,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
@@ -322,7 +323,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             public void onFinished(boolean success) {
                 semaphore.release();
             }
-        });
+        }, Looper.getMainLooper());
 
         try {
             semaphore.tryAcquire(RICH_PUSH_REFRESH_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
