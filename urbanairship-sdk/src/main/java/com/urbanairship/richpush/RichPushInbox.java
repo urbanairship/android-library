@@ -291,7 +291,7 @@ public class RichPushInbox extends AirshipComponent {
      * {@link Listener#onInboxUpdated()} will be called.
      */
     public void fetchMessages() {
-        fetchMessages(false, null);
+        fetchMessages(false, null, null);
     }
 
     /**
@@ -306,8 +306,25 @@ public class RichPushInbox extends AirshipComponent {
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public Cancelable fetchMessages(@Nullable final FetchMessagesCallback callback) {
-        return fetchMessages(callback != null, callback);
+    public Cancelable fetchMessages(@NonNull final FetchMessagesCallback callback) {
+        return fetchMessages(true, callback, null);
+    }
+
+    /**
+     * Fetches the latest inbox changes from Urban Airship.
+     * <p/>
+     * Normally this method is not called directly as the message list is automatically fetched when
+     * the application foregrounds or when a notification with an associated message is received.
+     * <p/>
+     * If the fetch request completes and results in a change to the messages,
+     * {@link Listener#onInboxUpdated()} will be called.
+     *
+     * @param callback Callback to be notified when the request finishes fetching the messages.
+     * @param looper The looper to post the callback on.
+     * @return A cancelable object that can be used to cancel the callback.
+     */
+    public Cancelable fetchMessages(@NonNull final FetchMessagesCallback callback, @NonNull Looper looper) {
+        return fetchMessages(true, callback, looper);
     }
 
     /**
@@ -320,12 +337,13 @@ public class RichPushInbox extends AirshipComponent {
      * {@link Listener#onInboxUpdated()} will be called.
      *
      * @param force {@code true} to force a sync request even if a request is already in progress.
-     * @param callback Callback to be notified when the request finishes refreshing
+     * @param callback Callback to be notified when the request finishes refreshing.
+     * @param looper The looper to post the callback on.
      * the messages. If force is {@code false}, the callback will not be called if a sync request
      * is already in progress.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback) {
+    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback, @Nullable  Looper looper) {
 
         final PendingResult<Boolean> pendingResult = new PendingResult<>(new PendingResult.ResultCallback<Boolean>() {
             @Override
@@ -344,7 +362,11 @@ public class RichPushInbox extends AirshipComponent {
 
         fetchCount++;
 
-        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.myLooper())) {
+        if (looper == null) {
+            looper = Looper.myLooper() == null ? Looper.getMainLooper() : Looper.myLooper();
+        }
+
+        ResultReceiver resultReceiver = new ResultReceiver(new Handler(looper)) {
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 fetchCount--;
