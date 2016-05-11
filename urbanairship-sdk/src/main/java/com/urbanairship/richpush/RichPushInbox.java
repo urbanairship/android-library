@@ -168,10 +168,11 @@ public class RichPushInbox extends AirshipComponent {
             };
 
             user.addListener(userListener);
+        } else {
+            user.update(false);
         }
 
-        user.update(false);
-        refresh();
+        refresh(false);
 
         foregroundReceiver = new BroadcastReceiver() {
             @Override
@@ -651,8 +652,9 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Refreshes the inbox messages from the DB.
+     * @param notify {@code true} to notify listeners, otherwise {@code false}.
      */
-    void refresh() {
+    void refresh(boolean notify) {
 
         List<RichPushMessage> messageList = richPushResolver.getMessages();
 
@@ -701,7 +703,9 @@ public class RichPushInbox extends AirshipComponent {
             }
         }
 
-        notifyInboxUpdated();
+        if (notify) {
+            notifyInboxUpdated();
+        }
     }
 
     /**

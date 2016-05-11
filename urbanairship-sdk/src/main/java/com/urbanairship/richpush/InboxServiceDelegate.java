@@ -206,7 +206,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
         resolver.deleteMessages(deletedMessageIds);
 
         // update the inbox cache
-        airship.getInbox().refresh();
+        airship.getInbox().refresh(true);
     }
 
     /**

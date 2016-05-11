@@ -32,8 +32,6 @@ import android.os.ResultReceiver;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
-import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 
 import junit.framework.Assert;
 
@@ -44,32 +42,32 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.lang.Character;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import dalvik.annotation.TestTarget;
-
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 public class RichPushInboxTest extends BaseTestCase {
 
     RichPushInbox inbox;
     RichPushInbox.Predicate testPredicate;
     ShadowApplication application;
-
+    RichPushUser user;
     @Before
     public void setUp() {
-        RichPushUser user = mock(RichPushUser.class);
+        user = mock(RichPushUser.class);
         Context context = RuntimeEnvironment.application;
         RichPushResolver resolver = new RichPushResolver(context);
         Executor executor = new Executor() {
@@ -96,10 +94,35 @@ public class RichPushInboxTest extends BaseTestCase {
             RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
         }
 
-        inbox.refresh();
+        inbox.refresh(false);
 
         application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
+    }
+
+    /**
+     * Test init only updates the user if it already exists. Normally the user updates
+     * after channel creation.
+     */
+    @Test
+    public void testInitNoUser() {
+        when(user.getId()).thenReturn(null);
+
+        inbox.init();
+
+        verify(user, never()).update(false);
+    }
+
+    /**
+     * Test init only updates the user if it exists.
+     */
+    @Test
+    public void testInitWithUser() {
+        when(user.getId()).thenReturn("cool");
+
+        inbox.init();
+
+        verify(user, times(1)).update(false);
     }
 
     /**

@@ -280,6 +280,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             retryIntent(intent);
+            sendRegistrationFinishedBroadcast(false);
             return;
         }
 
@@ -330,6 +331,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
+            sendRegistrationFinishedBroadcast(false);
             retryIntent(intent);
             return;
         }

@@ -83,6 +83,20 @@ public class PushManagerTest extends BaseTestCase {
         tagsToRemove.add("tag5");
     }
 
+    /**
+     * Test init only starts the push service with action START_REGISTRATION.
+     */
+    @Test
+    public void testInit() {
+       pushManager.init();
+
+        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals(PushService.ACTION_START_REGISTRATION, startedIntent.getAction());
+
+        // Verify we do not have any other services
+        assertNull(ShadowApplication.getInstance().getNextStartedService());
+    }
+
 
     /**
      * Test enabling push.

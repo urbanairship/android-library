@@ -1095,7 +1095,7 @@ public class PushManager extends AirshipComponent {
 
         // copy old push enabled value to user notifications enabled slot
         Logger.info("Setting user notifications enabled to " + Boolean.toString(oldPushEnabled));
-        setUserNotificationsEnabled(oldPushEnabled);
+        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, oldPushEnabled);
 
         if (!oldPushEnabled) {
             Logger.info("Push is now enabled. You can continue to toggle the opt-in state by " +
@@ -1103,7 +1103,7 @@ public class PushManager extends AirshipComponent {
         }
 
         // set push enabled to true
-        setPushEnabled(true);
+        preferenceDataStore.put(PUSH_ENABLED_KEY, true);
         preferenceDataStore.put(PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
     }
 
