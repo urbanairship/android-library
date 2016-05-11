@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.1.3 - May 11, 2016
+============================
+- Channel registration failures will now notify AirshipReceiver on 500s.
+- Prevent erroneous `RichPushInbox.Listener.onInboxUpdated` update during takeOff.
+- Prevent an extra channel registration during first run.
+
 Version 7.1.2 - April 28, 2016
 ==============================
 - Fixed 60 second delay when displaying message center push notifications.
