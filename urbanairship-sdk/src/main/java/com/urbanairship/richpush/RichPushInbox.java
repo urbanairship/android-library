@@ -680,6 +680,12 @@ public class RichPushInbox extends AirshipComponent {
                     continue;
                 }
 
+                // Expired
+                if (message.isExpired()) {
+                    deletedMessageIds.add(message.getMessageId());
+                    continue;
+                }
+
                 // Unread - check the previousUnreadMessageIds if any mark reads are still in process
                 if (previousUnreadMessageIds.contains(message.getMessageId())) {
                     message.unreadClient = true;
