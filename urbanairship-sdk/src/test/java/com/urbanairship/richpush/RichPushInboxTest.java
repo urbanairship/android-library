@@ -94,6 +94,11 @@ public class RichPushInboxTest extends BaseTestCase {
             RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id");
         }
 
+        // Put some expired messages in there (these should not show up after refresh)
+        for (int i = 10; i< 15; i++) {
+            RichPushTestUtils.insertMessage(String.valueOf(i + 1) + "_message_id", null, true);
+        }
+
         inbox.refresh(false);
 
         application = Shadows.shadowOf(RuntimeEnvironment.application);
