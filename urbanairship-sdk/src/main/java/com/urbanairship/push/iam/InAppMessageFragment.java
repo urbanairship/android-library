@@ -372,10 +372,12 @@ public class InAppMessageFragment extends Fragment {
         isDismissed = true;
 
         if (getActivity() != null) {
+
+            //noinspection ResourceType
             getActivity().getFragmentManager().beginTransaction()
                          .setCustomAnimations(0, animate ? getArguments().getInt(DISMISS_ANIMATION, 0) : 0)
                          .remove(this)
-                         .commit();
+                         .commitAllowingStateLoss();
         }
     }
 
