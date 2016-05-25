@@ -57,6 +57,7 @@ class RichPushResolver extends UrbanAirshipResolver {
     private static final String WHERE_CLAUSE_MESSAGE_ID = RichPushTable.COLUMN_NAME_MESSAGE_ID + " = ?";
     private static final String FALSE_VALUE = "0";
     private static final String TRUE_VALUE = "1";
+    private final Uri uri;
 
     /**
      * Default constructor.
@@ -65,6 +66,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     RichPushResolver(Context context) {
         super(context);
+        this.uri = UrbanAirshipProvider.getRichPushContentUri(context);
     }
 
     /**
@@ -76,7 +78,7 @@ class RichPushResolver extends UrbanAirshipResolver {
     List<RichPushMessage> getMessages() {
         List<RichPushMessage> messages = new ArrayList<>();
 
-        Cursor cursor = this.query(UrbanAirshipProvider.getRichPushContentUri(), null, null, null, null);
+        Cursor cursor = this.query(this.uri, null, null, null, null);
         if (cursor == null) {
             return messages;
         }
@@ -109,7 +111,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     @NonNull
     Set<String> getMessageIds() {
-        Cursor cursor = this.query(UrbanAirshipProvider.getRichPushContentUri(), null, null, null, null);
+        Cursor cursor = this.query(this.uri, null, null, null, null);
         return getMessageIdsFromCursor(cursor);
     }
 
@@ -121,7 +123,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     @NonNull
     Set<String> getReadUpdatedMessageIds() {
-        Cursor cursor = this.query(UrbanAirshipProvider.getRichPushContentUri(), null,
+        Cursor cursor = this.query(this.uri, null,
                 WHERE_CLAUSE_READ + " AND " + WHERE_CLAUSE_CHANGED, new String[] { FALSE_VALUE }, null);
         return getMessageIdsFromCursor(cursor);
     }
@@ -133,7 +135,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     @NonNull
     Set<String> getDeletedMessageIds() {
-        Cursor cursor = this.query(UrbanAirshipProvider.getRichPushContentUri(), null,
+        Cursor cursor = this.query(this.uri, null,
                 RichPushTable.COLUMN_NAME_DELETED + " = ?", new String[] { TRUE_VALUE },
                 null);
         return getMessageIdsFromCursor(cursor);
@@ -194,12 +196,8 @@ class RichPushResolver extends UrbanAirshipResolver {
      * @return Count of messages that were deleted.
      */
     int deleteMessages(@NonNull Set<String> messageIds) {
-        Uri uri = Uri.withAppendedPath(UrbanAirshipProvider.getRichPushContentUri(),
-                UAStringUtil.join(messageIds, UrbanAirshipProvider.KEYS_DELIMITER));
-
         String query = RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )";
-
-        return this.delete(uri, query, messageIds.toArray(new String[messageIds.size()]));
+        return this.delete(this.uri,query, messageIds.toArray(new String[messageIds.size()]));
     }
 
 
@@ -214,10 +212,9 @@ class RichPushResolver extends UrbanAirshipResolver {
         for (JsonValue messagePayload : messagePayloads) {
             ContentValues values = parseMessageContentValues(messagePayload);
 
-            // Set the client unread status the same as the origin for new messages
-            values.put(RichPushTable.COLUMN_NAME_UNREAD, values.getAsBoolean(RichPushTable.COLUMN_NAME_UNREAD_ORIG));
-
             if (values != null) {
+                // Set the client unread status the same as the origin for new messages
+                values.put(RichPushTable.COLUMN_NAME_UNREAD, values.getAsBoolean(RichPushTable.COLUMN_NAME_UNREAD_ORIG));
                 contentValues.add(values);
             }
         }
@@ -226,7 +223,7 @@ class RichPushResolver extends UrbanAirshipResolver {
             return -1;
         }
 
-        return this.bulkInsert(UrbanAirshipProvider.getRichPushContentUri(),
+        return this.bulkInsert(this.uri,
                 contentValues.toArray(new ContentValues[contentValues.size()]));
     }
 
@@ -242,7 +239,7 @@ class RichPushResolver extends UrbanAirshipResolver {
             return -1;
         }
 
-        Uri uri = Uri.withAppendedPath(UrbanAirshipProvider.getRichPushContentUri(), messageId);
+        Uri uri = Uri.withAppendedPath(this.uri, messageId);
 
         return this.update(uri, values, WHERE_CLAUSE_MESSAGE_ID, new String[] { messageId });
     }
@@ -254,10 +251,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      * @return Count of messages that where updated.
      */
     private int updateMessages(@NonNull Set<String> messageIds, @NonNull ContentValues values) {
-        Uri uri = Uri.withAppendedPath(UrbanAirshipProvider.getRichPushContentUri(),
-                UAStringUtil.join(messageIds, UrbanAirshipProvider.KEYS_DELIMITER));
-
-        return this.update(uri,
+        return this.update(this.uri,
                 values,
                 RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )",
                 messageIds.toArray(new String[messageIds.size()]));

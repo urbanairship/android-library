@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
 
-import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.js.Whitelist;
@@ -48,7 +47,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.isFlying = true;
         UAirship.isTakingOff = true;
 
-        UrbanAirshipProvider.init();
         ContentProvider provider = new UrbanAirshipProvider();
         provider.onCreate();
 
@@ -67,7 +65,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.messageCenter = new MessageCenter();
 
         setPlatform(UAirship.ANDROID_PLATFORM);
-        ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(), provider);
+        ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(this), provider);
     }
 
     public void setPlatform(int platform) {

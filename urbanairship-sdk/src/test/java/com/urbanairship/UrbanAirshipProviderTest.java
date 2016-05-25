@@ -42,19 +42,23 @@ import static junit.framework.Assert.assertNull;
 public class UrbanAirshipProviderTest extends BaseTestCase {
 
     private ContentResolver resolver;
+    private Uri preferenceUri;
+    private Uri richPushUri;
 
     @Before
     public void setup() {
         resolver = RuntimeEnvironment.application.getContentResolver();
+        preferenceUri = UrbanAirshipProvider.getPreferencesContentUri(TestApplication.getApplication());
+        richPushUri = UrbanAirshipProvider.getRichPushContentUri(TestApplication.getApplication());
     }
 
     @Test
     @Config(shadows = { CustomShadowContentResolver.class })
     public void testGetType() {
-        Uri messagesUri = UrbanAirshipProvider.getRichPushContentUri();
+        Uri messagesUri = this.richPushUri;
         assertEquals(UrbanAirshipProvider.RICH_PUSH_CONTENT_TYPE, this.resolver.getType(messagesUri));
 
-        Uri messageUri = Uri.withAppendedPath(UrbanAirshipProvider.getRichPushContentUri(), "this.should.work");
+        Uri messageUri = Uri.withAppendedPath(this.richPushUri, "this.should.work");
         assertEquals(UrbanAirshipProvider.RICH_PUSH_CONTENT_ITEM_TYPE, this.resolver.getType(messageUri));
 
         Uri failureUri = Uri.parse("content://com.urbanairship/garbage");
@@ -68,8 +72,8 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
 
-        Uri newUri = this.resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
-        assertFalse(UrbanAirshipProvider.getPreferencesContentUri().equals(newUri));
+        Uri newUri = this.resolver.insert(this.preferenceUri, values);
+        assertFalse(this.preferenceUri.equals(newUri));
 
         Cursor cursor = this.resolver.query(newUri, null, null, null, null);
         assertEquals(1, cursor.getCount());
@@ -88,11 +92,11 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
 
-        Uri newUri = this.resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        Uri newUri = this.resolver.insert(this.preferenceUri, values);
 
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "new value");
 
-        Uri replaceUri = this.resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        Uri replaceUri = this.resolver.insert(this.preferenceUri, values);
         assertEquals(newUri, replaceUri);
 
         Cursor cursor = this.resolver.query(replaceUri, null, null, null, null);
@@ -111,20 +115,20 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         ContentValues values = new ContentValues();
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        resolver.insert(this.preferenceUri, values);
 
         ContentValues anotherValue = new ContentValues();
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_KEY, "another key");
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "another value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), anotherValue);
+        resolver.insert(this.preferenceUri, anotherValue);
 
         ContentValues updateValue = new ContentValues();
         updateValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "new value");
 
-        int updated = this.resolver.update(UrbanAirshipProvider.getPreferencesContentUri(), updateValue, null, null);
+        int updated = this.resolver.update(this.preferenceUri, updateValue, null, null);
         assertEquals(2, updated);
 
-        Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(), null, null, null, null);
+        Cursor cursor = resolver.query(this.preferenceUri, null, null, null, null);
         assertEquals(2, cursor.getCount());
 
         cursor.moveToFirst();
@@ -143,23 +147,23 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         ContentValues values = new ContentValues();
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        resolver.insert(this.preferenceUri, values);
 
         ContentValues anotherValue = new ContentValues();
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_KEY, "another key");
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "another value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), anotherValue);
+        resolver.insert(this.preferenceUri, anotherValue);
 
         // Update the "another key" value
         ContentValues updateValue = new ContentValues();
         updateValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "new value");
-        int updated = this.resolver.update(UrbanAirshipProvider.getPreferencesContentUri(), updateValue,
+        int updated = this.resolver.update(this.preferenceUri, updateValue,
                 PreferencesDataManager.COLUMN_NAME_KEY + " IN (?)",
                 new String[] { "another key" });
 
         assertEquals(1, updated);
 
-        Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(), null, null, null, null);
+        Cursor cursor = resolver.query(this.preferenceUri, null, null, null, null);
         assertEquals(2, cursor.getCount());
 
         cursor.moveToFirst();
@@ -178,14 +182,14 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         ContentValues values = new ContentValues();
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        resolver.insert(this.preferenceUri, values);
 
         ContentValues anotherValue = new ContentValues();
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_KEY, "another key");
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "another value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), anotherValue);
+        resolver.insert(this.preferenceUri, anotherValue);
 
-        int deleted = this.resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(), null, null);
+        int deleted = this.resolver.delete(this.preferenceUri, null, null);
         assertEquals(2, deleted);
     }
 
@@ -194,14 +198,14 @@ public class UrbanAirshipProviderTest extends BaseTestCase {
         ContentValues values = new ContentValues();
         values.put(PreferencesDataManager.COLUMN_NAME_KEY, "key");
         values.put(PreferencesDataManager.COLUMN_NAME_VALUE, "value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values);
+        resolver.insert(this.preferenceUri, values);
 
         ContentValues anotherValue = new ContentValues();
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_KEY, "another key");
         anotherValue.put(PreferencesDataManager.COLUMN_NAME_VALUE, "another value");
-        resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), anotherValue);
+        resolver.insert(this.preferenceUri, anotherValue);
 
-        int deleted = this.resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(),
+        int deleted = this.resolver.delete(this.preferenceUri,
                 PreferencesDataManager.COLUMN_NAME_KEY + " IN (?)",
                 new String[] { "another key" });
 

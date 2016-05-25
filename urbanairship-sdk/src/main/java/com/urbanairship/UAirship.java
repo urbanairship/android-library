@@ -309,8 +309,6 @@ public class UAirship {
             isTakingOff = true;
 
             UAirship.application = application;
-            UrbanAirshipProvider.init();
-
             if (Build.VERSION.SDK_INT >= 14) {
                 Analytics.registerLifeCycleCallbacks(application);
                 InAppMessageManager.registerLifeCycleCallbacks(application);

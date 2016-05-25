@@ -43,7 +43,7 @@ public class ApplicationMetricsTest extends BaseTestCase {
 
     @Before
     public void setup() {
-        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(mock(UrbanAirshipResolver.class));
+        PreferenceDataStore preferenceDataStore = new PreferenceDataStore(TestApplication.getApplication(), mock(UrbanAirshipResolver.class));
         metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore);
         metrics.init();
     }

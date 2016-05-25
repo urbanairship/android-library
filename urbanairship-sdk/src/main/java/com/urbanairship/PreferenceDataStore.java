@@ -58,6 +58,7 @@ public final class PreferenceDataStore extends AirshipComponent {
 
     private final Map<String, Preference> preferences = new HashMap<>();
     private final UrbanAirshipResolver resolver;
+    private final Context context;
 
     private final List<PreferenceChangeListener> listeners = new ArrayList<>();
 
@@ -81,10 +82,11 @@ public final class PreferenceDataStore extends AirshipComponent {
      * @param context The application context.
      */
     PreferenceDataStore(Context context) {
-        this(new UrbanAirshipResolver(context));
+        this(context, new UrbanAirshipResolver(context));
     }
 
-    PreferenceDataStore(UrbanAirshipResolver resolver) {
+    PreferenceDataStore(Context context, UrbanAirshipResolver resolver) {
+        this.context = context;
         this.resolver = resolver;
     }
 
@@ -112,7 +114,7 @@ public final class PreferenceDataStore extends AirshipComponent {
 
     @Override
     protected void init() {
-        Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(), null, null, null, null);
+        Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), null, null, null, null);
         if (cursor == null) {
             return;
         }
@@ -356,11 +358,15 @@ public final class PreferenceDataStore extends AirshipComponent {
     private class Preference {
 
         private ContentObserver observer = new ContentObserver(null) {
+
+            @Override
+            public boolean deliverSelfNotifications() {
+                return false;
+            }
+
             @Override
             public void onChange(boolean selfChange) {
-                super.onChange(selfChange);
-
-                Logger.verbose("PreferenceDataStore - Preference updated:" + Preference.this.key);
+                Logger.verbose("PreferenceDataStore - Preference updated: " + Preference.this.key);
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -372,10 +378,12 @@ public final class PreferenceDataStore extends AirshipComponent {
 
         private final String key;
         private String value;
+        private Uri uri;
 
         Preference(String key, String value) {
             this.key = key;
             this.value = value;
+            this.uri = Uri.withAppendedPath(UrbanAirshipProvider.getPreferencesContentUri(context), key);
         }
 
         /**
@@ -395,13 +403,14 @@ public final class PreferenceDataStore extends AirshipComponent {
          * @param value Value of the preference.
          */
         void put(final String value) {
-            setValue(value);
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    writeValue(value);
-                }
-            });
+            if (setValue(value)) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        writeValue(value);
+                    }
+                });
+            }
         }
 
         /**
@@ -428,17 +437,18 @@ public final class PreferenceDataStore extends AirshipComponent {
          * method.
          *
          * @param value The value of the preference.
+         * @return {@code true} if the value changed, otherwise {@code false}.
          */
-        private void setValue(String value) {
+        private boolean setValue(String value) {
             synchronized (this) {
                 if (UAStringUtil.equals(value, this.value)) {
-                    return;
+                    return false;
                 }
-
                 this.value = value;
             }
 
             onPreferenceChanged(key);
+            return true;
         }
 
         /**
@@ -452,14 +462,25 @@ public final class PreferenceDataStore extends AirshipComponent {
             synchronized (this) {
                 if (value == null) {
                     Logger.verbose("PreferenceDataStore - Removing preference: " + key);
-                    return resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(), WHERE_CLAUSE_KEY,
-                            new String[] { key }) >= 0;
+
+                    if (resolver.delete(UrbanAirshipProvider.getPreferencesContentUri(context), WHERE_CLAUSE_KEY, new String[] { key }) == 1) {
+                        resolver.notifyChange(this.uri, observer);
+                        return true;
+                    }
+
+                    return false;
                 } else {
                     Logger.verbose("PreferenceDataStore - Saving preference: " + key + " value: " + value);
                     ContentValues values = new ContentValues();
                     values.put(PreferencesDataManager.COLUMN_NAME_KEY, key);
                     values.put(PreferencesDataManager.COLUMN_NAME_VALUE, value);
-                    return resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(), values) != null;
+
+                    if (resolver.insert(UrbanAirshipProvider.getPreferencesContentUri(context), values) != null) {
+                        resolver.notifyChange(this.uri, observer);
+                        return true;
+                    }
+
+                    return false;
                 }
             }
         }
@@ -471,7 +492,7 @@ public final class PreferenceDataStore extends AirshipComponent {
             Cursor cursor = null;
             try {
                 synchronized (this) {
-                    cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(),
+                    cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context),
                             new String[] { PreferencesDataManager.COLUMN_NAME_VALUE }, WHERE_CLAUSE_KEY,
                             new String[] { key }, null);
                 }
@@ -490,8 +511,7 @@ public final class PreferenceDataStore extends AirshipComponent {
         }
 
         void registerObserver() {
-            Uri uri = Uri.withAppendedPath(UrbanAirshipProvider.getPreferencesContentUri(), key);
-            resolver.registerContentObserver(uri, true, observer);
+            resolver.registerContentObserver(this.uri, true, observer);
         }
 
         void unregisterObserver() {
