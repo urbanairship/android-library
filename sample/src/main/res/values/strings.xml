@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">Sample</string>
+    <string name="message_center_title">Message Center</string>
+    <string name="home_title">Home</string>
+    <string name="location_title">Location</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="settings">Settings</string>
+    <string name="delete">Delete</string>
+    <string name="ok">OK</string>
+    <string name="push_preference_category_title">Push Preferences</string>
+    <string name="location_preference_category_title">Location Preferences</string>
+    <string name="analytics_preference_category_title">Analytics Preferences</string>
+    <string name="quiet_time_enable_preference_title">Enable Quiet Time</string>
+    <string name="quiet_time_start_preference_title">Quiet Time Start</string>
+    <string name="quiet_time_end_preference_title">Quiet Time End</string>
+    <string name="push_preference_title">Enable Push</string>
+    <string name="sound_preference_title">Enable Sound</string>
+    <string name="vibrate_preference_title">Enable Vibrate</string>
+    <string name="location_preference_title">Enable Location Updates</string>
+    <string name="background_location_preference_title">Allow Background Location</string>
+    <string name="analytics_preference_title">Send usage data</string>
+    <string name="advanced_preference_category_title">Advanced</string>
+    <string name="channel_id_preference_title">Channel ID</string>
+    <string name="user_id_preference_title">User ID</string>
+    <string name="set_alias_preference_title">Set Alias</string>
+    <string name="set_named_user_preference_title">Set Named User</string>
+    <string name="add_tags_preference_title">Add Tags</string>
+    <string name="duplicate_tag_warning">Tag already exists</string>
+    <string name="location_request_priority">Request Priority:</string>
+    <string name="location_high_accuracy">High Accuracy</string>
+    <string name="location_balanced_accuracy">Balanced Power and Accuracy</string>
+    <string name="location_low_power">Low Power</string>
+    <string name="location_no_power">No Power</string>
+    <string name="button_request_location">Request Location</string>
+    <string name="location_requesting_location">Requesting Location</string>
+    <string name="channel_id">Channel</string>
+    <string name="button_preferences">Preferences</string>
+    <string name="button_view_location">View Location</string>
+    <string name="toast_channel_clipboard">Channel copied to clipboard</string>
+
+    <!-- Message Center Indicator -->
+    <string name="view">View</string>
+    <plurals name="mc_indicator_text">
+        <item quantity="one">%d unread message</item>
+        <item quantity="other">%d unread messages</item>
+    </plurals>
+
+</resources>

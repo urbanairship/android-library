@@ -10,8 +10,8 @@ build/
 docs/doclava-build
 
 local.properties
-airshipconfig.properties
 build.properties
 
+airshipconfig.properties
 .gradle
 .idea

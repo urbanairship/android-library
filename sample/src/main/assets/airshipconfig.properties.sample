@@ -9,3 +9,7 @@ inProduction = false
 # LogLevel is "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR" or "ASSERT"
 developmentLogLevel = DEBUG
 productionLogLevel = ERROR
+
+# Notification customization
+notificationIcon = ic_notification
+notificationAccentColor = #00698f

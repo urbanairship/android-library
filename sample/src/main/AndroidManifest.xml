@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    package="com.urbanairship.sample"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Optional: Needed if using location in Urban Airship. -->
+    <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <application
+        android:name=".SampleApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:theme="@style/AppTheme.NoActionBar"
+            android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:label="@string/app_name">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+
+            <!-- The open inbox action will attempt to start an activity with
+           "com.urbanairship.VIEW_RICH_PUSH_INBOX" filter when requesting to view the inbox.-->
+            <intent-filter>
+                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+
+        </activity>
+
+        <activity
+            android:label="@string/settings"
+            android:name=".SettingsActivity"
+            android:parentActivityName=".MainActivity">
+
+            <!-- Lollipop+ only - Allows the settings to be accessed quickly from long clicking a notification
+           or through the application's notification settings. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES"/>
+            </intent-filter>
+
+        </activity>
+
+        <!-- Optional: This is an example of one of the many ways to handle deep
+        linking in the application. To use with your application, update the data
+        scheme to be unique for the application and modify ParseDeepLinkActivity.parseDeepLink
+        method to match your application's deep link parsing -->
+        <activity android:name=".ParseDeepLinkActivity"
+                  android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <!-- Handles any vnd.urbanairship.sample://deeplink URI's -->
+                <data
+                    android:host="deeplink"
+                    android:scheme="vnd.urbanairship.sample"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+            </intent-filter>
+        </activity>
+
+
+        <!-- Optional: Receives push and registration events from the Urban Airship SDK. -->
+        <receiver
+            android:name=".SampleAirshipReceiver"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="com.urbanairship.push.CHANNEL_UPDATED"/>
+                <action android:name="com.urbanairship.push.OPENED"/>
+                <action android:name="com.urbanairship.push.DISMISSED"/>
+                <action android:name="com.urbanairship.push.RECEIVED"/>
+
+                <category android:name="${applicationId}"/>
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
