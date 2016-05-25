@@ -1,3 +1,0 @@
-[submodule "sample-lib/sample"]
-	path = sample-lib/sample
-	url = git@github.com:urbanairship/android-samples-dev.git

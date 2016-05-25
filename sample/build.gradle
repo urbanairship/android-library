@@ -1,16 +1,14 @@
 apply plugin: 'com.android.application'
 
-android {
-    sourceSets {
-        main {
-            manifest.srcFile '../sample/src/main/AndroidManifest.xml'
-            java.srcDirs = ['../sample/src/main/java']
-            resources.srcDirs = ['../sample/src/res']
-            res.srcDirs = ['../sample/src/main/res']
-            assets.srcDirs = ['../sample/src/main/assets']
-        }
-    }
+repositories {
+    jcenter()
 
+    maven {
+        url  "https://urbanairship.bintray.com/android"
+    }
+}
+
+android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
@@ -38,5 +36,5 @@ dependencies {
     // Allows Urban Airship location services to use Fused Location
     compile 'com.google.android.gms:play-services-location:8.4.0'
 
-    compile project(':urbanairship-sdk')
+    compile 'com.urbanairship.android:urbanairship-sdk:7.1.+'
 }
