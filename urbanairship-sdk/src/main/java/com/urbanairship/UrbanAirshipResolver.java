@@ -101,7 +101,11 @@ public class UrbanAirshipResolver {
      * @param observer The ContentObserver you want to alert when the supplied URI is updated.
      */
     public void registerContentObserver(Uri uri, boolean notifyForDescendents, ContentObserver observer) {
-        this.getResolver().registerContentObserver(uri, notifyForDescendents, observer);
+        try {
+            this.getResolver().registerContentObserver(uri, notifyForDescendents, observer);
+        } catch (IllegalArgumentException e) {
+            Logger.warn("Unable to register content observer for uri: " + uri);
+        }
     }
 
     /**
@@ -113,9 +117,18 @@ public class UrbanAirshipResolver {
         this.getResolver().unregisterContentObserver(observer);
     }
 
+    public void notifyChange(Uri uri, ContentObserver observer) {
+        try {
+            this.getResolver().notifyChange(uri, observer);
+        } catch (IllegalArgumentException ex) {
+            Logger.warn("Unable to notify observers of change for uri: " + uri);
+        }
+    }
+
     // helpers
 
     private ContentResolver getResolver() {
         return this.context.getContentResolver();
     }
+
 }
