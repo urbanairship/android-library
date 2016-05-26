@@ -332,7 +332,7 @@ public class ManifestUtils {
         if (componentInfoMap.get(UrbanAirshipProvider.class) == null) {
             throw new IllegalStateException("Unable to resolve UrbanAirshipProvider. " +
                     "Please check that the provider is defined in your AndroidManifest.xml, " +
-                    "and that the authority string is set to  \"" + UrbanAirshipProvider.getAuthorityString() + "\"");
+                    "and that the authority string is set to  \"" + UrbanAirshipProvider.getAuthorityString(UAirship.getApplicationContext()) + "\"");
         }
 
     }
@@ -356,7 +356,7 @@ public class ManifestUtils {
             put(CoreReceiver.class, ManifestUtils.getReceiverInfo(CoreReceiver.class));
 
             // Providers
-            put(UrbanAirshipProvider.class, ManifestUtils.getProviderInfo(UrbanAirshipProvider.getAuthorityString()));
+            put(UrbanAirshipProvider.class, ManifestUtils.getProviderInfo(UrbanAirshipProvider.getAuthorityString(UAirship.getApplicationContext())));
 
             // Activities
             put(ActionActivity.class, ManifestUtils.getActivityInfo(ActionActivity.class));

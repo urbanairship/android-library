@@ -30,16 +30,13 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
-import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.util.DataManager;
-import com.urbanairship.util.UAStringUtil;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -47,11 +44,6 @@ import java.util.List;
  * @hide
  */
 public final class UrbanAirshipProvider extends ContentProvider {
-
-    /**
-     * The key that defines the keys delimiter.
-     */
-    public static final String KEYS_DELIMITER = "|";
 
     /**
      * Mime type suffixes for getType.
@@ -65,27 +57,9 @@ public final class UrbanAirshipProvider extends ContentProvider {
     static final String PREFERENCES_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "preference";
 
     /**
-     * The database delete action that is appended to notification Uri's so we have more
-     * information about what changed in the database.
-     */
-    public static final String DELETE_ACTION = "delete";
-
-    /**
-     * The database insert action that is appended to notification Uri's so we have more
-     * information about what changed in the database.
-     */
-    public static final String INSERT_ACTION = "insert";
-
-    /**
-     * The database update action that is appended to notification Uri's so we have more
-     * information about what changed in the database.
-     */
-    public static final String UPDATE_ACTION = "update";
-
-    /**
      * Used to match passed in Uris to databases.
      */
-    private static final UriMatcher MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
+    private final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     /**
      * Rich Push Uri Types to give to the UriMatcher.
@@ -100,55 +74,20 @@ public final class UrbanAirshipProvider extends ContentProvider {
     private static final int PREFERENCE_URI_TYPE = 3;
 
 
-    /**
-     * Location of the different parts of interest within well-formed Uris. Maybe not needed right now.
-     * <p/>
-     * The only required part is TABLE_LOCATION. KEYS_LOCATION and ACTION_LOCATION are mostly used for
-     * change notifications.
-     * <p/>
-     * content://com.urbanairship/TABLE_LOCATION/KEYS_LOCATION/ACTION_LOCATION
-     * <p/>
-     * Examples:
-     * <p/>
-     * Single preference: content://com.urbanairship/preferences/com.urbanairship.analytics.LAST_SENT
-     * Single richpush message: content://com.urbanairship/richpush/a13245tr
-     * <p/>
-     * Examples of Uris that will be broadcast instead of notified through the resolver. These are
-     * necessary since Android didn't start sending the Uri back with the change notification until
-     * Jelly Bean.
-     * <p/>
-     * Single richpush message inserted: content://com.urbanairship/richpush/a13245tr/insert
-     * Multiple richpush messages isUpdated: content://com.urbanairship/richpush/a13245tr|bfjs234ffl/update
-     * <p/>
-     * private static final int TABLE_LOCATION = 0;
-     * private static final int ACTION_LOCATION = 2;
-     */
-    private static final int KEYS_LOCATION = 1;
-
     private DatabaseModel richPushDataModel;
     private DatabaseModel preferencesDataModel;
 
 
     private static String authorityString;
 
-    /**
-     * Initializes the UrbanAirshipProvider and sets up the URI matcher.
-     * This is called in UAirship.takeOff().
-     */
-    static void init() {
-        MATCHER.addURI(getAuthorityString(), "richpush", RICHPUSH_MESSAGES_URI_TYPE);
-        MATCHER.addURI(getAuthorityString(), "richpush/*", RICHPUSH_MESSAGE_URI_TYPE);
-        MATCHER.addURI(getAuthorityString(), "preferences", PREFERENCES_URI_TYPE);
-        MATCHER.addURI(getAuthorityString(), "preferences/*", PREFERENCE_URI_TYPE);
-    }
 
     /**
      * Creates the rich push content URI.
      *
      * @return The rich push content URI.
      */
-    public static Uri getRichPushContentUri() {
-        return Uri.parse("content://" + getAuthorityString() + "/richpush");
+    public static Uri getRichPushContentUri(Context context) {
+        return Uri.parse("content://" + getAuthorityString(context) + "/richpush");
     }
 
     /**
@@ -156,8 +95,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The preferences URI.
      */
-    public static Uri getPreferencesContentUri() {
-        return Uri.parse("content://" + getAuthorityString() + "/preferences");
+    public static Uri getPreferencesContentUri(Context context) {
+        return Uri.parse("content://" + getAuthorityString(context) + "/preferences");
     }
 
     /**
@@ -165,25 +104,30 @@ public final class UrbanAirshipProvider extends ContentProvider {
      *
      * @return The authority string.
      */
-    public static String getAuthorityString() {
+    public static String getAuthorityString(Context context) {
         if (authorityString == null) {
-            String packageName = UAirship.getPackageName();
+            String packageName = context.getPackageName();
             authorityString = packageName + ".urbanairship.provider";
         }
 
         return authorityString;
     }
 
+
     @Override
     public boolean onCreate() {
+        if (getContext() == null) {
+            return false;
+        }
+
+        matcher.addURI(getAuthorityString(getContext()), "richpush", RICHPUSH_MESSAGES_URI_TYPE);
+        matcher.addURI(getAuthorityString(getContext()), "richpush/*", RICHPUSH_MESSAGE_URI_TYPE);
+        matcher.addURI(getAuthorityString(getContext()), "preferences", PREFERENCES_URI_TYPE);
+        matcher.addURI(getAuthorityString(getContext()), "preferences/*", PREFERENCE_URI_TYPE);
+
+        Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
+
         return true;
-    }
-
-    @Override
-    public void attachInfo(Context context, ProviderInfo info) {
-        super.attachInfo(context, info);
-
-        Autopilot.automaticTakeOff((Application) context.getApplicationContext(), true);
     }
 
     @Override
@@ -193,17 +137,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return -1;
         }
 
-        DataManager manager = model.dataManager;
-
-        int numberDeleted = manager.delete(model.table, selection, selectionArgs);
-
-        model.notifyDatabaseChange(getContext(), getKeys(uri), DELETE_ACTION);
-        return numberDeleted;
+        return model.dataManager.delete(model.table, selection, selectionArgs);
     }
 
     @Override
     public String getType(@NonNull Uri uri) {
-        int type = MATCHER.match(uri);
+        int type = matcher.match(uri);
         switch (type) {
             case RICHPUSH_MESSAGES_URI_TYPE:
                 return RICH_PUSH_CONTENT_TYPE;
@@ -224,17 +163,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return -1;
         }
 
-        DataManager manager = model.dataManager;
-
-        List<ContentValues> insertedValues = manager.bulkInsert(model.table, values);
-
-        String[] ids = new String[insertedValues.size()];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = insertedValues.get(i).getAsString(model.notificationColumnId);
+        List<ContentValues> inserted = model.dataManager.bulkInsert(model.table, values);
+        if (inserted == null) {
+            return -1;
         }
 
-        model.notifyDatabaseChange(getContext(), ids, INSERT_ACTION);
-        return insertedValues.size();
+        return inserted.size();
     }
 
     @Override
@@ -244,9 +178,9 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return null;
         }
 
-        if (model.dataManager.insert(model.table, values) != -1) {
+        long id = model.dataManager.insert(model.table, values);
+        if (id != -1) {
             String uriKey = values.getAsString(model.notificationColumnId);
-            model.notifyDatabaseChange(getContext(), new String[] { uriKey }, INSERT_ACTION);
             return Uri.withAppendedPath(uri, uriKey);
         }
 
@@ -276,14 +210,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return -1;
         }
 
-        DataManager manager = model.dataManager;
-
-        int updated = manager.update(model.table, values, selection, selectionArgs);
-        if (updated != -1) {
-            model.notifyDatabaseChange(getContext(), this.getKeys(uri), UPDATE_ACTION);
-        }
-
-        return updated;
+        return model.dataManager.update(model.table, values, selection, selectionArgs);
     }
 
     @Override
@@ -301,20 +228,6 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
 
     /**
-     * Parses a URI for any keys to use to identify values in the database.
-     *
-     * @param uri The URI of the provider action.
-     * @return An array of keys.
-     */
-    private String[] getKeys(@NonNull Uri uri) {
-        try {
-            return uri.getPathSegments().get(KEYS_LOCATION).split("\\" + KEYS_DELIMITER);
-        } catch (IndexOutOfBoundsException e) {
-            return new String[] { };
-        }
-    }
-
-    /**
      * Gets the database model according to the URI.
      *
      * @param uri URI of the provider action.
@@ -326,9 +239,14 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return null;
         }
 
-        String appKey = UAirship.sharedAirship.getAirshipConfigOptions().getAppKey();
+        UAirship airship = UAirship.sharedAirship;
+        if (airship == null || airship.getAirshipConfigOptions() == null || airship.getAirshipConfigOptions().getAppKey() == null) {
+            return null;
+        }
 
-        int type = MATCHER.match(uri);
+        String appKey = airship.getAirshipConfigOptions().getAppKey();
+
+        int type = matcher.match(uri);
         switch (type) {
             case RICHPUSH_MESSAGE_URI_TYPE:
             case RICHPUSH_MESSAGES_URI_TYPE:
@@ -358,21 +276,18 @@ public final class UrbanAirshipProvider extends ContentProvider {
     private static class DatabaseModel {
         final DataManager dataManager;
         final String table;
-        final Uri contentUri;
-        final String notificationColumnId;
+        private final String notificationColumnId;
 
         /**
          * Hidden DatabaseModel constructor.
          *
          * @param dataManager The database manager for the model.
          * @param table The database table to modify.
-         * @param contentUri Base URI, used for notifying changes.
          * @param notificationColumnId Notification column id.
          */
-        private DatabaseModel(@NonNull DataManager dataManager, @NonNull String table, @NonNull Uri contentUri, @NonNull String notificationColumnId) {
+        private DatabaseModel(@NonNull DataManager dataManager, @NonNull String table, @NonNull String notificationColumnId) {
             this.dataManager = dataManager;
             this.table = table;
-            this.contentUri = contentUri;
             this.notificationColumnId = notificationColumnId;
          }
 
@@ -385,8 +300,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          */
         static DatabaseModel createRichPushModel(@NonNull Context context, String appKey) {
             DataManager model = new RichPushDataManager(context, appKey);
-            return new DatabaseModel(model, RichPushTable.TABLE_NAME, getRichPushContentUri(),
-                    RichPushTable.COLUMN_NAME_MESSAGE_ID);
+            return new DatabaseModel(model, RichPushTable.TABLE_NAME, RichPushTable.COLUMN_NAME_MESSAGE_ID);
         }
 
         /**
@@ -398,22 +312,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
          */
         static DatabaseModel createPreferencesModel(@NonNull Context context, String appKey) {
             DataManager model = new PreferencesDataManager(context, appKey);
-            return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, getPreferencesContentUri(),
-                    PreferencesDataManager.COLUMN_NAME_KEY);
+            return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, PreferencesDataManager.COLUMN_NAME_KEY);
         }
-
-        /**
-         * Notifies any changes to the database and content provider.
-         *
-         * @param context The context to use for notifications.
-         * @param ids The ids of items that were updated.
-         * @param action The type of update action.
-         */
-        void notifyDatabaseChange(@NonNull Context context, @NonNull String[] ids, @NonNull String action) {
-            Uri newUri = Uri.withAppendedPath(contentUri, UAStringUtil.join(Arrays.asList(ids), KEYS_DELIMITER) + "/" + action);
-            Logger.verbose("UrbanAirshipProvider - Notifying of change to " + newUri);
-            context.getContentResolver().notifyChange(newUri, null);
-        }
-
     }
 }
