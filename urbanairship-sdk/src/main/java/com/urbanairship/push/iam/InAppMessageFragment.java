@@ -162,9 +162,11 @@ public class InAppMessageFragment extends Fragment {
         this.timer = new Timer(duration) {
             @Override
             protected void onFinish() {
-                dismiss(true);
-                ResolutionEvent resolutionEvent = ResolutionEvent.createTimedOutResolutionEvent(message, timer.getRunTime());
-                UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+                if (isResumed()) {
+                    dismiss(true);
+                    ResolutionEvent resolutionEvent = ResolutionEvent.createTimedOutResolutionEvent(message, timer.getRunTime());
+                    UAirship.shared().getAnalytics().addEvent(resolutionEvent);
+                }
             }
         };
 
@@ -244,7 +246,9 @@ public class InAppMessageFragment extends Fragment {
                         timer.stop();
                         break;
                     case ViewDragHelper.STATE_IDLE:
-                        timer.start();
+                        if (isResumed()) {
+                            timer.start();
+                        }
                         break;
                 }
             }
@@ -363,19 +367,28 @@ public class InAppMessageFragment extends Fragment {
             return;
         }
 
+        isDismissed = true;
+
         synchronized (listeners) {
             for (Listener listener : new ArrayList<>(listeners)) {
                 listener.onFinish(this);
             }
         }
 
-        isDismissed = true;
 
         if (getActivity() != null) {
+
+            /*
+             * Commit allowing state loss is ok because we keep track or our own
+             * state and will dismiss the fragment anyways when its restored.
+             * We do not rely on the fragment manager to keep track for us.
+             */
+
+            //noinspection ResourceType
             getActivity().getFragmentManager().beginTransaction()
                          .setCustomAnimations(0, animate ? getArguments().getInt(DISMISS_ANIMATION, 0) : 0)
                          .remove(this)
-                         .commit();
+                         .commitAllowingStateLoss();
         }
     }
 
