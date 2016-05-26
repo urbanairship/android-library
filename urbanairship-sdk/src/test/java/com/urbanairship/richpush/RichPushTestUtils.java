@@ -50,6 +50,10 @@ public class RichPushTestUtils {
     }
 
     public static void insertMessage(String messageId, Map<String, String> extras) {
+        insertMessage(messageId, extras, false);
+    }
+
+    public static void insertMessage(String messageId, Map<String, String> extras, boolean expired) {
         Map<String, Object> payload = new HashMap<>();
         payload.put(RichPushMessage.MESSAGE_ID_KEY, messageId);
         payload.put(RichPushMessage.MESSAGE_BODY_URL_KEY, String.format("https://go.urbanairship.com/api/user/tests/messages/%s/body/", messageId));
@@ -61,6 +65,10 @@ public class RichPushTestUtils {
 
         if (extras != null) {
             payload.put(RichPushMessage.EXTRA_KEY, extras);
+        }
+
+        if (expired) {
+            payload.put(RichPushMessage.MESSAGE_EXPIRY_KEY, DateUtils.createIso8601TimeStamp(0));
         }
 
         try {
