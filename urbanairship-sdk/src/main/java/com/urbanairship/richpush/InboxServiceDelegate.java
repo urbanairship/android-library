@@ -151,7 +151,7 @@ class InboxServiceDelegate extends BaseIntentService.Delegate {
                 return false;
             }
 
-            if (serverMessages == null || serverMessages.size() == 0) {
+            if (serverMessages == null) {
                 Logger.info("Inbox message list is empty.");
             } else {
                 Logger.info("Received " + serverMessages.size() + " inbox messages.");
