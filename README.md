@@ -8,6 +8,10 @@ Urban Airship SDK for Android.
 - [Javadocs](https://docs.urbanairship.com/android-lib/reference/packages.html)
 - [Migration guide](http://docs.urbanairship.com/topic_guides/android_migration.html)
 
+## Contributing Code
+
+We accept pull requests! If you would like to submit a pull request, please fill out and submit a
+Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement.html).
 
 ## Quickstart
 
@@ -100,3 +104,5 @@ The available [sample](sample) application showcases the majority of the feature
 the Urban Airship SDK. The [sample-lib](sample-lib) shares the same source as the [sample](sample),
 but uses the Urban Airship SDK from source instead of the prebuilt aar package from
 [bintray](https://bintray.com/urbanairship/android/urbanairship-sdk/view).
+
+
