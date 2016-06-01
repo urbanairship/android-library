@@ -193,6 +193,45 @@ public class InboxServiceDelegateTest extends BaseTestCase {
     }
 
     /**
+     * Test that the inbox is updated when the response doesn't contain any messages.
+     */
+    @Test
+    public void testUpdateMessagesEmpty() {
+        // Set the last refresh time
+        dataStore.put(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 300l);
+
+        // Return a 200 message list response with messages
+        responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
+                new Response.Builder(HttpURLConnection.HTTP_OK)
+                        .setResponseMessage("OK")
+                        .setLastModified(600l)
+                        .setResponseBody("{ \"messages\": []}")
+                        .create());
+
+        Intent intent = new Intent(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+
+        serviceDelegate.onHandleIntent(intent);
+
+        // Verify result receiver
+        assertEquals("Should return a success code", RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+                resultReceiver.lastResultCode);
+
+        // Verify the request method and url
+        TestRequest testRequest = requests.get(0);
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", testRequest.getURL().toString());
+        assertEquals(300l, testRequest.getIfModifiedSince());
+        assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
+
+        // Verify LAST_MESSAGE_REFRESH_TIME was updated
+        assertEquals(600l, dataStore.getLong(RichPushUpdateService.LAST_MESSAGE_REFRESH_TIME, 0));
+
+        // Verify we updated the inbox
+        verify(inbox).refresh(true);
+    }
+
+    /**
      * Test updateMessages returns success code when response is HTTP_OK.
      */
     @Test
