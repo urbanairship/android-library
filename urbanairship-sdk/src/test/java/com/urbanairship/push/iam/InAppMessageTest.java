@@ -1,3 +1,5 @@
+/* Copyright 2016 Urban Airship and Contributors */
+
 package com.urbanairship.push.iam;
 
 import android.graphics.Color;
