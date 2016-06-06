@@ -90,6 +90,10 @@ public class DefaultNotificationFactory extends NotificationFactory {
 
         int defaults = NOTIFICATION_DEFAULTS;
 
+        if (message.getSound(getContext()) != null) {
+            sound = message.getSound(getContext());
+        }
+
         if (sound != null) {
             builder.setSound(sound);
 

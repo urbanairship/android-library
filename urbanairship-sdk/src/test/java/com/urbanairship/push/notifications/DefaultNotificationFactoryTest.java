@@ -4,6 +4,8 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 
@@ -11,8 +13,11 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
+import org.apache.xerces.util.URI;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -138,4 +143,27 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         assertEquals("The sound should match.", Settings.System.DEFAULT_RINGTONE_URI, factory.getSound());
     }
 
+    /**
+     * Test sound setting from a notification.
+     */
+    @Test
+    public void testPushMessageSound() {
+        context = Mockito.spy(UAirship.getApplicationContext());
+        Resources resources = Mockito.mock(Resources.class);
+        Mockito.when(resources.getIdentifier(Mockito.eq("test_sound"), Mockito.anyString(), Mockito.anyString())).thenReturn(5);
+        Mockito.when(context.getApplicationContext()).thenReturn(context);
+        Mockito.when(context.getResources()).thenReturn(resources);
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_SOUND, "test_sound");
+        extras.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
+        extras.putString(PushMessage.EXTRA_PUSH_ID, "0a2027a0-1766-11e4-9db0-90e2ba287ae5");
+        pushMessage = new PushMessage(extras);
+
+        factory = new DefaultNotificationFactory(context);
+        factory.createNotification(pushMessage, 1);
+
+        Uri expected = Uri.parse("android.resource://" + context.getPackageName() + "/" + 5);
+        assertEquals("The sound should match.", expected, factory.getSound());
+    }
 }

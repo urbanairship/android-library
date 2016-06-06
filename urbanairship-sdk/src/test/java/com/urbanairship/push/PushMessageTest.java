@@ -2,11 +2,15 @@
 
 package com.urbanairship.push;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.OpenRichPushInboxAction;
@@ -15,7 +19,10 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -557,6 +564,37 @@ public class PushMessageTest extends BaseTestCase {
         PushMessage message = new PushMessage(bundle);
 
         assertEquals(actions, message.getActions());
+    }
+
+    /**
+     * Test get notification sound.
+     */
+    @Test
+    public void testGetSound() {
+        Context context = Mockito.spy(UAirship.getApplicationContext());
+        Resources resources = Mockito.mock(Resources.class);
+        Mockito.when(resources.getIdentifier(Mockito.eq("test_sound"), Mockito.anyString(), Mockito.anyString())).thenReturn(5);
+        Mockito.when(context.getResources()).thenReturn(resources);
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_SOUND, "test_sound");
+        PushMessage pushMessage = new PushMessage(extras);
+
+        Uri expected = Uri.parse("android.resource://" + context.getPackageName() + "/" + 5);
+        Assert.assertEquals("The sound should match.", expected, pushMessage.getSound(context));
+    }
+
+    /**
+     * Test get notification sound is null when not found.
+     */
+    @Test
+    public void testGetSoundNull() {
+        Context context = UAirship.getApplicationContext();
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_SOUND, "test_sound");
+        PushMessage pushMessage = new PushMessage(extras);
+
+        Assert.assertNull("The sound should be null.", pushMessage.getSound(context));
     }
 
     /**
