@@ -163,7 +163,6 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         factory = new DefaultNotificationFactory(context);
         factory.createNotification(pushMessage, 1);
 
-        Uri expected = Uri.parse("android.resource://" + context.getPackageName() + "/" + 5);
-        assertEquals("The sound should match.", expected, factory.getSound());
+        assertNull("Notification factory sound should not be overwritten.", factory.getSound());
     }
 }
