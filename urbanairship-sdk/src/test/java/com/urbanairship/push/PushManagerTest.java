@@ -38,8 +38,6 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class PushManagerTest extends BaseTestCase {
 
@@ -51,7 +49,6 @@ public class PushManagerTest extends BaseTestCase {
 
     PreferenceDataStore preferenceDataStore;
     PushManager pushManager;
-    NamedUser mockNamedUser;
     AirshipConfigOptions options;
 
     @Rule
@@ -66,15 +63,13 @@ public class PushManagerTest extends BaseTestCase {
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
-        mockNamedUser = mock(NamedUser.class);
-
 
         options = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -677,18 +672,6 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test init starts named user and tags update service.
-     */
-    @Test
-    public void testInitStartNamedUserUpdateService() {
-        when(mockNamedUser.getId()).thenReturn("named user");
-
-        pushManager.init();
-        verify(mockNamedUser).startUpdateService();
-        verify(mockNamedUser).startUpdateTagsService();
-    }
-
-    /**
      * Test editTagGroups apply starts the update channel tag groups service.
      */
     @Test
@@ -776,7 +759,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(false)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
@@ -785,7 +768,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
@@ -805,7 +788,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
         pushManager.init();
 
         // Set up shadowApplication to ensure the registration update service is started after
@@ -974,7 +957,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setNotificationIcon(R.drawable.ua_ic_urbanairship_notification)
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, mockNamedUser, options);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options);
         factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
 
         assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());

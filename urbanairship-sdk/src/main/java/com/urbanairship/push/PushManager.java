@@ -221,7 +221,6 @@ public class PushManager extends AirshipComponent {
     private NotificationFactory notificationFactory;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private boolean channelTagRegistrationEnabled = true;
-    private final NamedUser namedUser;
     private final PreferenceDataStore preferenceDataStore;
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
@@ -238,10 +237,6 @@ public class PushManager extends AirshipComponent {
      * @hide
      */
     public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions) {
-        this(context, preferenceDataStore, new NamedUser(preferenceDataStore), configOptions);
-    }
-
-    PushManager(Context context, PreferenceDataStore preferenceDataStore, NamedUser namedUser, AirshipConfigOptions configOptions) {
         this.preferenceDataStore = preferenceDataStore;
 
         DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
@@ -252,7 +247,6 @@ public class PushManager extends AirshipComponent {
 
         this.notificationFactory = factory;
 
-        this.namedUser = namedUser;
         this.configOptions = configOptions;
 
         actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
@@ -283,16 +277,6 @@ public class PushManager extends AirshipComponent {
         if (getChannelId() != null) {
             startUpdateTagsService();
         }
-
-
-        // Start named user update
-        this.namedUser.startUpdateService();
-
-        // Update named user tags if we have a named user
-        if (namedUser.getId() != null) {
-            this.namedUser.startUpdateTagsService();
-        }
-
     }
 
     /**
@@ -592,10 +576,12 @@ public class PushManager extends AirshipComponent {
      * Returns the current named user.
      *
      * @return The named user.
+     * @deprecated Use {@link UAirship#getNamedUser()} instead.
      */
+    @Deprecated
     @NonNull
     public NamedUser getNamedUser() {
-        return namedUser;
+        return UAirship.shared().getNamedUser();
     }
 
     /**

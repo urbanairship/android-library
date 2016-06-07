@@ -62,6 +62,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     private final UAirship airship;
     private final PushManager pushManager;
     private final ChannelApiClient channelClient;
+    private final NamedUser namedUser;
 
     public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore) {
         this(context, dataStore, new ChannelApiClient(), UAirship.shared());
@@ -74,6 +75,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
+        this.namedUser = airship.getNamedUser();
     }
 
     @Override
@@ -336,12 +338,12 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     // 200 means channel previously existed and a named user may be associated to it.
                     if (airship.getAirshipConfigOptions().clearNamedUser) {
                         // If clearNamedUser is true on re-install, then disassociate if necessary
-                        pushManager.getNamedUser().disassociateNamedUserIfNull();
+                        namedUser.disassociateNamedUserIfNull();
                     }
                 }
 
                 // If setId was called before channel creation, update named user
-                pushManager.getNamedUser().startUpdateService();
+                namedUser.startUpdateService();
                 pushManager.updateRegistration();
                 pushManager.startUpdateTagsService();
                 airship.getInbox().getUser().update(true);
