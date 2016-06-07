@@ -53,7 +53,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
 
     public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore) {
         this(context, dataStore, new TagGroupsApiClient(UAirship.shared().getAirshipConfigOptions()),
-                UAirship.shared().getPushManager(), UAirship.shared().getPushManager().getNamedUser());
+                UAirship.shared().getPushManager(), UAirship.shared().getNamedUser());
     }
 
     public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore,

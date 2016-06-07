@@ -33,7 +33,7 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
 
     public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore) {
         this(context, dataStore, new NamedUserApiClient(), UAirship.shared().getPushManager(),
-                UAirship.shared().getPushManager().getNamedUser());
+                UAirship.shared().getNamedUser());
     }
 
     public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore, NamedUserApiClient client, PushManager pushManager, NamedUser namedUser) {

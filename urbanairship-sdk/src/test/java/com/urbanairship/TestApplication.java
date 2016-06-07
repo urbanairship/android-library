@@ -11,6 +11,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
@@ -65,6 +66,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions();
         UAirship.sharedAirship.messageCenter = new MessageCenter();
+        UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
 
         setPlatform(UAirship.ANDROID_PLATFORM);
         ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(this), provider);

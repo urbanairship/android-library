@@ -23,6 +23,7 @@ import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
@@ -90,6 +91,7 @@ public class UAirship {
     InAppMessageManager inAppMessageManager;
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
+    NamedUser namedUser;
 
     /**
      * Constructs an instance of UAirship.
@@ -534,6 +536,7 @@ public class UAirship {
         this.locationManager = new UALocationManager(application, preferenceDataStore);
         this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions);
+        this.namedUser = new NamedUser(application, preferenceDataStore);
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager);
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
@@ -549,6 +552,7 @@ public class UAirship {
         ((AirshipComponent) this.applicationMetrics).init();
         ((AirshipComponent) this.analytics).init();
         ((AirshipComponent) this.messageCenter).init();
+        ((AirshipComponent) this.namedUser).init();
 
         // Store the version
         String currentVersion = getVersion();
@@ -577,6 +581,8 @@ public class UAirship {
         ((AirshipComponent) this.analytics).tearDown();
         ((AirshipComponent) this.preferenceDataStore).tearDown();
         ((AirshipComponent) this.messageCenter).tearDown();
+        ((AirshipComponent) this.namedUser).tearDown();
+
     }
 
     /**
@@ -586,6 +592,15 @@ public class UAirship {
      */
     public AirshipConfigOptions getAirshipConfigOptions() {
         return airshipConfigOptions;
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.push.NamedUser} instance.
+     *
+     * @return The {@link com.urbanairship.push.NamedUser} instance.
+     */
+    public NamedUser getNamedUser() {
+        return namedUser;
     }
 
     /**

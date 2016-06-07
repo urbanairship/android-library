@@ -48,7 +48,7 @@ public class NamedUserTest extends BaseTestCase {
 
         TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication().preferenceDataStore);
+        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore);
     }
 
     /**
@@ -100,6 +100,23 @@ public class NamedUserTest extends BaseTestCase {
         assertEquals("Intent action should be to update named user",
                 PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
         assertNull("Named user ID should be null", namedUser.getId());
+    }
+
+    /**
+     * Test init starts named user and tags update service.
+     */
+    @Test
+    public void testInitStartNamedUserUpdateService() {
+        namedUser.setId("test");
+        ShadowApplication.getInstance().clearStartedServices();
+
+        namedUser.init();
+
+        Intent updateIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals(PushService.ACTION_UPDATE_NAMED_USER, updateIntent.getAction());
+
+        Intent tagIntent = ShadowApplication.getInstance().getNextStartedService();
+        assertEquals(PushService.ACTION_UPDATE_NAMED_USER_TAGS, tagIntent.getAction());
     }
 
     /**
