@@ -161,6 +161,10 @@ public final class ActionRegistry {
                 DeepLinkAction.DEFAULT_REGISTRY_NAME,
                 DeepLinkAction.DEFAULT_REGISTRY_SHORT_NAME);
 
+        registerAction(new WalletAction(),
+                WalletAction.DEFAULT_REGISTRY_NAME,
+                WalletAction.DEFAULT_REGISTRY_SHORT_NAME);
+
         Entry landingPageEntry = registerAction(new LandingPageAction(),
                 LandingPageAction.DEFAULT_REGISTRY_NAME,
                 LandingPageAction.DEFAULT_REGISTRY_SHORT_NAME);
