@@ -1,6 +1,8 @@
 package com.urbanairship.push;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -111,6 +113,11 @@ public class PushMessage implements Parcelable {
     public static final String EXTRA_PRIORITY = "com.urbanairship.priority";
 
     /**
+     * The extra key for the sound of the notification.
+     */
+    public static final String EXTRA_SOUND = "com.urbanairship.sound";
+
+    /**
      * The minimum priority value for the notification.
      */
     static final int MIN_PRIORITY = -2;
@@ -177,6 +184,7 @@ public class PushMessage implements Parcelable {
             OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
     private final Bundle pushBundle;
+    private Uri sound = null;
 
     /**
      * Create a new PushMessage
@@ -432,6 +440,27 @@ public class PushMessage implements Parcelable {
     @Nullable
     public String getCategory() {
         return pushBundle.getString(EXTRA_CATEGORY);
+    }
+
+    /**
+     * Gets the sound of the notification.
+     *
+     * @param context The application context.
+     * @return The sound of the notification.
+     */
+    @Nullable
+    public Uri getSound(@NonNull  Context context) {
+        if (sound == null && pushBundle.getString(EXTRA_SOUND) != null) {
+            String notificationSoundName = pushBundle.getString(EXTRA_SOUND);
+            int id = context.getResources().getIdentifier(notificationSoundName, "raw", context.getPackageName());
+            if (id != 0) {
+                sound = Uri.parse("android.resource://" + context.getPackageName() + "/" + id);
+            } else {
+                Logger.error("PushMessage - unable to find notification sound with name: " + notificationSoundName);
+            }
+        }
+
+        return sound;
     }
 
     /**
