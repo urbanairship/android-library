@@ -144,6 +144,7 @@ public class UAWebViewClient extends WebViewClient {
      * Called when UAirship.close() is triggered from the Urban Airship Javascript interface.
      * <p/>
      * The default behavior simulates a back key press.
+     *
      * @param webView The web view.
      */
     public void onClose(final WebView webView) {
@@ -299,7 +300,7 @@ public class UAWebViewClient extends WebViewClient {
                                        String errorMessage = null;
                                        switch (result.getStatus()) {
                                            case ActionResult.STATUS_ACTION_NOT_FOUND:
-                                               errorMessage =  String.format("Action %s not found", name);
+                                               errorMessage = String.format("Action %s not found", name);
                                                break;
                                            case ActionResult.STATUS_REJECTED_ARGUMENTS:
                                                errorMessage = String.format("Action %s rejected its arguments", name);
@@ -461,6 +462,7 @@ public class UAWebViewClient extends WebViewClient {
 
     /**
      * Injects the Urban Airship Javascript interface into the web view.
+     *
      * @param webView The web view.
      */
     @SuppressLint("NewAPI")
@@ -480,12 +482,15 @@ public class UAWebViewClient extends WebViewClient {
         StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
 
         // Getters
-        sb.append(createGetter("getDeviceModel",  Build.MODEL))
+        sb.append(createGetter("getDeviceModel", Build.MODEL))
           .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
           .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
           .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
           .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
-          .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()));
+          .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
+          .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
+          .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
+
 
         // Append native bridge
         sb.append(NativeBridge.getJavaScriptSource());
@@ -510,6 +515,7 @@ public class UAWebViewClient extends WebViewClient {
 
     /**
      * Helper method to get the RichPushMessage from the web view.
+     *
      * @param webView The web view.
      * @return The rich push message or null if the web view is not an instance of UAWebView
      * or does not have an associated message.
