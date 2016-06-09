@@ -177,6 +177,11 @@ public class PushMessage implements Parcelable {
      */
     public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
+    /**
+     * Default sound name.
+     */
+    private static final String DEFAULT_SOUND_NAME = "default";
+
     private static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
             OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
             OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
@@ -452,11 +457,14 @@ public class PushMessage implements Parcelable {
     public Uri getSound(@NonNull  Context context) {
         if (sound == null && pushBundle.getString(EXTRA_SOUND) != null) {
             String notificationSoundName = pushBundle.getString(EXTRA_SOUND);
+
             int id = context.getResources().getIdentifier(notificationSoundName, "raw", context.getPackageName());
             if (id != 0) {
                 sound = Uri.parse("android.resource://" + context.getPackageName() + "/" + id);
-            } else {
-                Logger.error("PushMessage - unable to find notification sound with name: " + notificationSoundName);
+            } else if (!DEFAULT_SOUND_NAME.equals(notificationSoundName)) {
+                // Do not log a warning for the "default" name. Android plays the default sound if no sound
+                // is provided.
+                Logger.warn("PushMessage - unable to find notification sound with name: " + notificationSoundName);
             }
         }
 
