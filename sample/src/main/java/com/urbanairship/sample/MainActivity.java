@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onInboxUpdated() {
             showMessageCenterIndicator();
+            updateUnreadCount();
         }
     };
 
@@ -135,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         UAirship.shared().getInbox().addListener(inboxListener);
 
         showMessageCenterIndicator();
+        updateUnreadCount();
     }
 
     @Override
@@ -218,6 +221,21 @@ public class MainActivity extends AppCompatActivity {
                                    .commit();
 
         drawer.closeDrawer(GravityCompat.START);
+    }
+
+    /**
+     * Updates the unread count for the message center in the nav bar.
+     */
+    private void updateUnreadCount() {
+        int unreadCount = UAirship.shared().getInbox().getUnreadCount();
+        TextView view = (TextView) navigation.getMenu().findItem(R.id.nav_message_center).getActionView();
+
+        if (unreadCount > 0) {
+            view.setVisibility(View.VISIBLE);
+            view.setText(String.valueOf(unreadCount));
+        } else {
+            view.setVisibility(View.GONE);
+        }
     }
 
     /**
