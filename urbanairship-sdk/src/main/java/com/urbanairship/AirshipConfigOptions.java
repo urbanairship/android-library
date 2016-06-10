@@ -199,6 +199,11 @@ public class AirshipConfigOptions {
     public final int notificationIcon;
 
     /**
+     * The Wallet URL. This will always be set to https://wallet-api.urbanairship.com
+     */
+    public final String walletUrl;
+
+    /**
      * Notification accent color.
      */
     @ColorInt
@@ -226,6 +231,7 @@ public class AirshipConfigOptions {
         this.channelCaptureEnabled = builder.channelCaptureEnabled;
         this.notificationIcon = builder.notificationIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
+        this.walletUrl = builder.walletUrl;
     }
 
     /**
@@ -304,6 +310,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_CHANNEL_CAPTURE_ENABLED = "channelCaptureEnabled";
         private static final String FIELD_NOTIFICATION_ICON = "notificationIcon";
         private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
+        private static final String FIELD_WALLET_URL = "walletUrl";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -326,6 +333,7 @@ public class AirshipConfigOptions {
         private boolean channelCaptureEnabled = true;
         private int notificationIcon;
         private int notificationAccentColor;
+        private String walletUrl = "https://wallet-api.urbanairship.com";
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -510,6 +518,9 @@ public class AirshipConfigOptions {
 
                         case FIELD_NOTIFICATION_ACCENT_COLOR:
                             this.setNotificationAccentColor(configParser.getColor(i));
+                            break;
+                        case FIELD_WALLET_URL:
+                            this.setWalletUrl(configParser.getString(i));
                             break;
                     }
                 } catch (Exception e) {
@@ -753,6 +764,17 @@ public class AirshipConfigOptions {
          */
         public Builder setChannelCaptureEnabled(boolean channelCaptureEnabled) {
             this.channelCaptureEnabled = channelCaptureEnabled;
+            return this;
+        }
+
+        /**
+         * Set the Wallet URL.
+         *
+         * @param walletUrl The Wallet URL.
+         * @return The config options builder.
+         */
+        public Builder setWalletUrl(String walletUrl) {
+            this.walletUrl = walletUrl;
             return this;
         }
 
