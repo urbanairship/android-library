@@ -39,7 +39,7 @@ class GcmRegistrar {
         InstanceID instanceID = InstanceID.getInstance(UAirship.getApplicationContext());
         String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-        if (token != null) {
+        if (token != null && !token.equals(UAirship.shared().getPushManager().getGcmToken())) {
             Logger.info("GCM registration successful security token: " + token);
             UAirship.shared().getPushManager().setGcmToken(token);
             UAirship.shared().getPushManager().setRegisteredGcmSenderId(senderId);

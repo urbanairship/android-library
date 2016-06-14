@@ -71,14 +71,14 @@
         <service
             android:name="com.urbanairship.push.UAInstanceIDListenerService"
             android:exported="false">
-            <intent-filter>
+
+            <intent-filter android:priority="-999">
                 <action android:name="com.google.android.gms.iid.InstanceID"/>
             </intent-filter>
         </service>
 
         <receiver android:name="com.urbanairship.CoreReceiver"
                   android:exported="false">
-
             <intent-filter android:priority="-999">
                 <action android:name="com.urbanairship.push.OPENED" />
                 <category android:name="${applicationId}" />
@@ -89,7 +89,7 @@
             android:name="com.urbanairship.push.GcmPushReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
 
-            <intent-filter>
+            <intent-filter android:priority="-999">
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
                 <category android:name="${applicationId}" />
