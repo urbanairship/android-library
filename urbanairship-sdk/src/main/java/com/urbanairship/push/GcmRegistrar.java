@@ -21,17 +21,12 @@ import java.io.IOException;
 class GcmRegistrar {
 
     /**
-     * Starts the registration process for GCM
-     *
-     * @return <code>true</code> if the registration process started, otherwise
-     * <code>false</code>.
+     * Registers for GCM.
      */
-    public static boolean register() throws IOException {
-        Logger.verbose("Registering with GCM.");
-
+    public static void register() throws IOException {
         // Check if GCM is available
         if (!isGcmAvailable()) {
-            return false;
+            return;
         }
 
         String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
@@ -39,13 +34,17 @@ class GcmRegistrar {
         InstanceID instanceID = InstanceID.getInstance(UAirship.getApplicationContext());
         String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-        if (token != null && !token.equals(UAirship.shared().getPushManager().getGcmToken())) {
-            Logger.info("GCM registration successful security token: " + token);
-            UAirship.shared().getPushManager().setGcmToken(token);
-            UAirship.shared().getPushManager().setRegisteredGcmSenderId(senderId);
+        if (token == null) {
+            Logger.error("GCM registration failed. Token is null.");
+            return;
         }
 
-        return true;
+        if (!token.equals(UAirship.shared().getPushManager().getGcmToken())) {
+            Logger.info("GCM registration successful. Token: " + token);
+            UAirship.shared().getPushManager().setGcmToken(token);
+        } else {
+            Logger.verbose("GCM token up to date.");
+        }
     }
 
     /**
@@ -68,7 +67,7 @@ class GcmRegistrar {
             }
         } catch (IllegalStateException e) {
             // Missing version tag
-            Logger.error("Unable to register with GCM:  " + e.getMessage());
+            Logger.error("Unable to register with GCM: " + e.getMessage());
             return false;
         }
 

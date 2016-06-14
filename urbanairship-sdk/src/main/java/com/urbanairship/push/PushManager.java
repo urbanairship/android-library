@@ -5,7 +5,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -950,20 +949,7 @@ public class PushManager extends AirshipComponent {
      * @param admId An ADM identifier string.
      */
     void setAdmId(String admId) {
-        preferenceDataStore.put(APP_VERSION_KEY, UAirship.getPackageInfo().versionCode);
         preferenceDataStore.put(ADM_REGISTRATION_ID_KEY, admId);
-        preferenceDataStore.put(DEVICE_ID_KEY, getSecureId(UAirship.getApplicationContext()));
-    }
-
-    /**
-     * Gets the Android secure ID.
-     *
-     * @param context The application context.
-     * @return The Android secure ID.
-     * @hide
-     */
-    static String getSecureId(@NonNull Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
     /**
@@ -982,8 +968,6 @@ public class PushManager extends AirshipComponent {
      */
     void setGcmToken(String token) {
         preferenceDataStore.put(GCM_INSTANCE_ID_TOKEN_KEY, token);
-        preferenceDataStore.put(APP_VERSION_KEY, UAirship.getPackageInfo().versionCode);
-        preferenceDataStore.put(DEVICE_ID_KEY, getSecureId(UAirship.getApplicationContext()));
     }
 
     /**
@@ -994,42 +978,6 @@ public class PushManager extends AirshipComponent {
     @Nullable
     public String getGcmToken() {
         return preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
-    }
-
-    /**
-     * Sets the registered sender ID.
-     *
-     * @param senderId The registered sender ID.
-     */
-    void setRegisteredGcmSenderId(String senderId) {
-        preferenceDataStore.put(REGISTERED_GCM_SENDER_IDS, senderId);
-    }
-
-    /**
-     * Gets the registered sender ID.
-     *
-     * @return The registered sender ID.
-     */
-    String getRegisteredGcmSenderId() {
-        return preferenceDataStore.getString(REGISTERED_GCM_SENDER_IDS, null);
-    }
-
-    /**
-     * Returns the app version associated with the current Registration ID.
-     *
-     * @return The app version string, or -1 if not found.
-     */
-    int getAppVersionCode() {
-        return preferenceDataStore.getInt(APP_VERSION_KEY, -1);
-    }
-
-    /**
-     * Returns the device ID associated with the current Registration ID.
-     *
-     * @return The device ID string, or <code>null</code> if not found.
-     */
-    String getDeviceId() {
-        return preferenceDataStore.getString(DEVICE_ID_KEY, null);
     }
 
     /**

@@ -111,7 +111,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         isRegistrationStarted = true;
 
-        if (isPushRegistrationAllowed() && needsPushRegistration()) {
+        if (isPushRegistrationAllowed()) {
             isPushRegistering = true;
 
             // Update the push registration
@@ -137,6 +137,13 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         switch (airship.getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
 
+                if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
+                    Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
+                            "the modular Google Play Services dependencies, make sure the application includes " +
+                            "the com.google.android.gms:play-services-gcm dependency.");
+                    break;
+                }
+
                 if (intent.getBooleanExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, false)) {
                     // If we currently do not have a token then ignore the refresh
                     if (pushManager.getGcmToken() == null) {
@@ -148,17 +155,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     intent.removeExtra(PushService.EXTRA_GCM_TOKEN_REFRESH);
                 }
 
-                if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
-                    Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
-                            "the modular Google Play Services dependencies, make sure the application includes " +
-                            "the com.google.android.gms:play-services-gcm dependency.");
-                    break;
-                }
-
                 try {
-                    if (!GcmRegistrar.register()) {
-                        Logger.error("GCM registration failed.");
-                    }
+                    GcmRegistrar.register();
                 } catch (IOException | SecurityException e) {
                     Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
                     isPushRegistering = true;
@@ -168,12 +166,22 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 break;
 
             case UAirship.AMAZON_PLATFORM:
-                if (AdmUtils.isAdmSupported()) {
+
+                if (!AdmUtils.isAdmSupported()) {
+                    Logger.error("ADM is not supported on this device.");
+                    break;
+                }
+
+                String admId = AdmUtils.getRegistrationId(getContext());
+                if (admId == null) {
+                    pushManager.setAdmId(null);
                     AdmUtils.startRegistration(getContext());
                     isPushRegistering = true;
-                } else {
-                    Logger.error("ADM is not supported on this device.");
+                } else if (!admId.equals(pushManager.getAdmId())) {
+                    Logger.info("ADM registration successful. Registration ID: " + admId);
+                    pushManager.setAdmId(admId);
                 }
+
                 break;
             default:
                 Logger.error("Unknown platform type. Unable to register for push.");
@@ -428,52 +436,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             default:
                 return false;
         }
-    }
-
-    /**
-     * Checks if push registration is needed by checking the following:
-     * - ADM/GCM registration Id is missing.
-     * - Application version code changed since the last registration.
-     * - Device ID changed since the last registration.
-     * - For GCM, if the GCM sender IDs changed since the last registration.
-     *
-     * @return <code>true</code> if push registration is needed, otherwise <code>false</code>.
-     */
-    private boolean needsPushRegistration() {
-        if (UAirship.getPackageInfo().versionCode != pushManager.getAppVersionCode()) {
-            Logger.verbose("ChannelServiceDelegate - Version code changed to " + UAirship.getPackageInfo().versionCode + ". Push re-registration required.");
-            return true;
-        } else if (!PushManager.getSecureId(getContext()).equals(pushManager.getDeviceId())) {
-            Logger.verbose("ChannelServiceDelegate - Device ID changed. Push re-registration required.");
-            return true;
-        }
-
-        switch (airship.getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                if (UAStringUtil.isEmpty(pushManager.getGcmToken())) {
-                    return true;
-                }
-
-
-                // Unregister if we have a different registered sender ID
-                if (airship.getAirshipConfigOptions().gcmSender != null && !airship.getAirshipConfigOptions().gcmSender.equals(pushManager.getRegisteredGcmSenderId())) {
-                    Logger.verbose("ChannelServiceDelegate - GCM sender ID changed. Push re-registration required.");
-                    return true;
-                }
-
-                Logger.verbose("ChannelServiceDelegate - GCM already registered with ID: " + pushManager.getGcmToken());
-                return false;
-
-            case UAirship.AMAZON_PLATFORM:
-                if (UAStringUtil.isEmpty(pushManager.getAdmId())) {
-                    return true;
-                }
-
-                Logger.verbose("ChannelServiceDelegate - ADM already registered with ID: " + pushManager.getAdmId());
-                return false;
-        }
-
-        return false;
     }
 
     /**
