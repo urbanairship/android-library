@@ -46,4 +46,14 @@ class AdmWrapper {
     public static void startRegistration(@NonNull Context context) {
         new ADM(context).startRegister();
     }
+
+    /**
+     * Wraps {@link com.amazon.device.messaging.ADM#getRegistrationId()}.
+     *
+     * @param context The application context.
+     * @return The registration ID or null if ADM has not registered yet.
+     */
+    public static String getRegistrationId(Context context) {
+        return new ADM(context).getRegistrationId();
+    }
 }

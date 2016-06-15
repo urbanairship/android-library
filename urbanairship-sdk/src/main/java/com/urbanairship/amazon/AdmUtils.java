@@ -53,6 +53,17 @@ public class AdmUtils {
     }
 
     /**
+     * Gets the ADM registration ID.
+     * @return The registration ID or null if ADM has not registered yet.
+     */
+    public static String getRegistrationId(@NonNull Context context) {
+        if (isAdmSupported()) {
+            return AdmWrapper.getRegistrationId(context);
+        }
+        return null;
+    }
+
+    /**
      * Validates the manifest for ADM.
      */
     public static void validateManifest() {

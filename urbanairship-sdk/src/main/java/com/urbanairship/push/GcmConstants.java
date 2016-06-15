@@ -12,6 +12,16 @@ public interface GcmConstants {
     String ACTION_GCM_RECEIVE = "com.google.android.c2dm.intent.RECEIVE";
 
     /**
+     * This intent action indicates a registration from GCM.
+     */
+    String ACTION_GCM_REGISTRATION = "com.google.android.c2dm.intent.REGISTRATION";
+
+    /**
+     * This intent action indicates a registration change.
+     */
+    String ACTION_INSTANCE_ID = "com.google.android.gms.iid.InstanceID";
+
+    /**
      * The GCM Message Type extra is set by GCM and indicates the type of the incoming message intent. It is used
      * to indicate that a message originated in the GCM service (e.g., due to pending deletion).
      */
@@ -27,4 +37,6 @@ public interface GcmConstants {
      * The message type value sent in {@link #EXTRA_GCM_MESSAGE_TYPE} when GCM deleted pending messages.
      */
     String GCM_DELETED_MESSAGES_VALUE = "deleted_messages";
+
+
 }

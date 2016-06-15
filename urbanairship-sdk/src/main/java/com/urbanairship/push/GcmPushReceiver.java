@@ -16,8 +16,7 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 
 /**
- * WakefulBroadcastReceiver that receives GCM messages and delivers them to both the application-specific GcmListenerService subclass,
- * and Urban Airship's PushService.
+ * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.
  */
 public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
@@ -36,6 +35,59 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             return;
         }
 
+        switch (intent.getAction()) {
+            case GcmConstants.ACTION_GCM_RECEIVE:
+                Intent pushIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
+                        .putExtra(PushService.EXTRA_INTENT, intent);
+
+                startWakefulService(context, pushIntent);
+
+                if (this.isOrderedBroadcast()) {
+                    this.setResultCode(Activity.RESULT_OK);
+                }
+
+                break;
+
+            case GcmConstants.ACTION_INSTANCE_ID:
+                startInstanceIdService(context, intent);
+
+                break;
+
+            case GcmConstants.ACTION_GCM_REGISTRATION:
+
+                // When we detect a GCM registration, make sure our GCM token is up-to-date.
+                Intent registrationIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION);
+
+                startWakefulService(context, registrationIntent);
+                break;
+        }
+    }
+
+
+    /**
+     * Starts the application's InstanceIDListenerService.
+     *
+     * @param context The application's context.
+     * @param intent The application's intent.
+     */
+    private void startInstanceIdService(Context context, Intent intent) {
+        // Try to set the service class name
+        ResolveInfo resolveInfo = context.getPackageManager().resolveService(intent, 0);
+        if (resolveInfo != null && resolveInfo.serviceInfo != null) {
+            ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+            if (context.getPackageName().equals(serviceInfo.packageName) && serviceInfo.name != null) {
+                String serviceName = serviceInfo.name;
+                serviceName = serviceName.startsWith(".") ? context.getPackageName() + serviceName : serviceName;
+
+                Logger.debug("GcmPushReceiver - Forwarding GCM intent to " + serviceName);
+                intent.setClassName(context.getPackageName(), serviceName);
+            } else {
+                Logger.error("GcmPushReceiver - Error resolving target intent service, skipping classname enforcement. Resolved service was: " + serviceInfo.packageName + "/" + serviceInfo.name);
+            }
+        }
+
         // Send the intent to the InstanceIdService or the GcmIntentService
         try {
             ComponentName componentName = startWakefulService(context, intent);
@@ -48,23 +100,11 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 this.setResultCode(401);
             }
         }
-
-        // Forward any GCM Receive messages to Push Service
-        if (GcmConstants.ACTION_GCM_RECEIVE.equals(intent.getAction())) {
-            Intent pushIntent = new Intent(context, PushService.class)
-                    .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                    .putExtra(PushService.EXTRA_INTENT, intent);
-
-            startWakefulService(context, pushIntent);
-
-            if (this.isOrderedBroadcast()) {
-                this.setResultCode(Activity.RESULT_OK);
-            }
-        }
     }
 
     /**
      * Normalizes the intent based on the GcmReceiver logic.
+     *
      * @param context The application context.
      * @param intent The intent.
      */
@@ -89,23 +129,8 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         // Registration, iid, and refresh needs to start the InstanceID service.
         String from = intent.getStringExtra("from");
-        if ("com.google.android.c2dm.intent.REGISTRATION".equals(intent.getAction()) || "google.com/iid".equals(from) || "gcm.googleapis.com/refresh".equals(from)) {
+        if ("google.com/iid".equals(from) || "gcm.googleapis.com/refresh".equals(from)) {
             intent.setAction("com.google.android.gms.iid.InstanceID");
-        }
-
-        // Try to set the service class name
-        ResolveInfo resolveInfo = context.getPackageManager().resolveService(intent, 0);
-        if (resolveInfo != null && resolveInfo.serviceInfo != null) {
-            ServiceInfo serviceInfo = resolveInfo.serviceInfo;
-            if (context.getPackageName().equals(serviceInfo.packageName) && serviceInfo.name != null) {
-                String serviceName = serviceInfo.name;
-                serviceName = serviceName.startsWith(".") ? context.getPackageName() + serviceName : serviceName;
-
-                Logger.debug("GcmPushReceiver - Forwarding GCM intent to " + serviceName);
-                intent.setClassName(context.getPackageName(), serviceName);
-            } else {
-                Logger.error("GcmPushReceiver - Error resolving target intent service, skipping classname enforcement. Resolved service was: " + serviceInfo.packageName + "/" + serviceInfo.name);
-            }
         }
     }
 }
