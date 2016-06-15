@@ -55,6 +55,11 @@ public abstract class BaseIntentService extends IntentService {
     @Override
     @CallSuper
     protected void onHandleIntent(Intent intent) {
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("BaseIntentService - unable to handle intent, takeOff not called.");
+            return;
+        }
+
         if (intent == null) {
             return;
         }

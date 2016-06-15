@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 
 /**
@@ -49,6 +50,12 @@ public class ActionActivity extends Activity {
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
+
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("ActionActivity - unable to create activity, takeOff not called.");
+            finish();
+            return;
+        }
 
         Intent intent = getIntent();
 

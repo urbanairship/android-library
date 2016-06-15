@@ -128,6 +128,11 @@ public class EventService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("EventService - unable to handle intent, takeOff not called.");
+            return;
+        }
+
         if (intent == null || intent.getAction() == null) {
             return;
         }

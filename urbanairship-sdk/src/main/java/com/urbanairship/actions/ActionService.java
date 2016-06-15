@@ -2,7 +2,6 @@
 
 package com.urbanairship.actions;
 
-import android.app.Application;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +13,7 @@ import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -78,7 +78,11 @@ public class ActionService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Autopilot.automaticTakeOff((Application) getApplicationContext());
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("ActionService - unable to start service, takeOff not called.");
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
 
         lastStartId = startId;
 
@@ -161,6 +165,7 @@ public class ActionService extends Service {
      * @param intent The service intent.
      */
     private void onRunActions(@NonNull Intent intent) {
+
         Bundle actions = intent.getBundleExtra(EXTRA_ACTIONS_BUNDLE);
         if (actions == null) {
             actions = new Bundle();

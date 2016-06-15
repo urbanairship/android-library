@@ -168,6 +168,12 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, final int startId) {
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("LocationService - unable to start service, takeOff not called.");
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
+
         Message msg = handler.obtainMessage();
         msg.arg1 = startId;
         msg.obj = intent;
@@ -177,7 +183,6 @@ public class LocationService extends Service {
 
         return START_NOT_STICKY;
     }
-
 
     private void onHandleIntent(Intent intent) {
         if (intent == null || intent.getAction() == null) {
