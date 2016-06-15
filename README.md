@@ -98,11 +98,10 @@ Set the custom application in the AndroidManifest.xml file:
    <application android:name=".CustomApplication" ... />
 ```
 
-## Sample Applications
+## Sample Application
 
-The available [sample](sample) application showcases the majority of the features offered by
-the Urban Airship SDK. The [sample-lib](sample-lib) shares the same source as the [sample](sample),
-but uses the Urban Airship SDK from source instead of the prebuilt aar package from
-[bintray](https://bintray.com/urbanairship/android/urbanairship-sdk/view).
+A sample application is available [sample](sample) that showcases the majority of the features offered by
+the Urban Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
+`sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
 
