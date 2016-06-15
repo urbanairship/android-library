@@ -50,24 +50,17 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 break;
 
             case GcmConstants.ACTION_INSTANCE_ID:
+                startInstanceIdService(context, intent);
 
-                // Only forward intents to the instance id service if the
-                // result code is not already set from another GcmReceiver.
-                if (!isOrderedBroadcast() || getResultCode() == 0) {
-                    startInstanceIdService(context, intent);
-                }
+                break;
 
-                // fall through
             case GcmConstants.ACTION_GCM_REGISTRATION:
 
-                if (intent.getStringExtra("registration_id") == null) {
-                    Intent registrationIntent = new Intent(context, PushService.class)
-                            .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION)
-                            .putExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, true);
+                // When we detect a GCM registration, make sure our GCM token is up-to-date.
+                Intent registrationIntent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION);
 
-                    startWakefulService(context, registrationIntent);
-                }
-
+                startWakefulService(context, registrationIntent);
                 break;
         }
     }

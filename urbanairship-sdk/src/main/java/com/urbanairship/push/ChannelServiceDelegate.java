@@ -144,17 +144,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     break;
                 }
 
-                if (intent.getBooleanExtra(PushService.EXTRA_GCM_TOKEN_REFRESH, false)) {
-                    // If we currently do not have a token then ignore the refresh
-                    if (pushManager.getGcmToken() == null) {
-                        return;
-                    }
-
-                    // Clear token
-                    pushManager.setGcmToken(null);
-                    intent.removeExtra(PushService.EXTRA_GCM_TOKEN_REFRESH);
-                }
-
                 try {
                     GcmRegistrar.register();
                 } catch (IOException | SecurityException e) {

@@ -82,12 +82,6 @@ public class PushService extends BaseIntentService {
     static final String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
 
     /**
-     * Extra flag for {@link #ACTION_UPDATE_PUSH_REGISTRATION} to clear the GCM Instance ID token
-     * when updating push registration.
-     */
-    static final String EXTRA_GCM_TOKEN_REFRESH = "com.urbanairship.push.EXTRA_GCM_TOKEN_REFRESH";
-
-    /**
      * PushService constructor.
      */
     public PushService() {
