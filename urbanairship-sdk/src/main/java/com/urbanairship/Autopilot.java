@@ -29,15 +29,26 @@ import android.util.Log;
  * {@code airshipconfig.properties} file from the assets. To provide a different config,
  * override {@link #createAirshipConfigOptions}.
  * <p/>
- * To use Autopilot, extend this class and implement the abstract methods. The class must be
- * public, non-abstract, and it must contain an empty constructor that is public. Register the
- * class by adding an entry to the application block of your manifest containing the fully qualified
- * class name of your Autopilot implementation. The meta-data name must be set to {@link #AUTOPILOT_MANIFEST_KEY}.
- * Example:
- * <pre>{@code <meta-data android:name="com.urbanairship.autopilot"
- *                        android:value="com.urbanairship.push.sample.SampleAutopilot" /> }</pre>
+ * The default Autopilot behavior will call takeOff and load airship config options from the {@code airshipconfig.properties}
+ * file in the assets directory. To use autopilot, add the following entry to the application block
+ * in the Application AndroidManifest.xml:
+ * <pre>{@code
+ *  <meta-data android:name="com.urbanairship.autopilot"
+ *           android:value="com.urbanairship.AutoPilot" /> }</pre>
+ *
+ * <p/>
+ * Autopilot can be customized in order to load config from a different source or to customize the Airship
+ * instance when it is ready. To customize Autopilot, extend the class and override either {@link #allowEarlyTakeOff(Context)},
+ * {@link #onAirshipReady(UAirship)}, or {@link #createAirshipConfigOptions(Context)} methods. The class
+ * must be non-abstract, public, and it should only have a single public, no-argument constructor.
+ * Register the class by adding an entry to the application block of your manifest containing the
+ * fully qualified class name of your Autopilot implementation:
+ * <pre>{@code
+ *  <meta-data android:name="com.urbanairship.autopilot"
+ *           android:value="com.urbanairship.push.sample.SampleAutopilot" /> }</pre>
+ *
  */
-public abstract class Autopilot implements UAirship.OnReadyCallback {
+public class Autopilot implements UAirship.OnReadyCallback {
 
     /**
      * The name of the AndroidManifest meta-data element used to hold the fully qualified class
@@ -178,5 +189,10 @@ public abstract class Autopilot implements UAirship.OnReadyCallback {
      */
     public boolean allowEarlyTakeOff(@NonNull Context context) {
         return true;
+    }
+
+    @Override
+    public void onAirshipReady(UAirship airship) {
+        Logger.info("Autopilot - Airship ready!");
     }
 }

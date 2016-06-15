@@ -1,1 +1,1 @@
-include ':urbanairship-sdk', ":sample-lib", ":sample"
+include ':urbanairship-sdk', ":sample"

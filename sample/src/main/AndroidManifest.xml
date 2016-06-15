@@ -8,18 +8,23 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
-        android:name=".SampleApplication"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_config"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Autopilot calls takeOff without the need to override the Application -->
+        <meta-data
+            android:name="com.urbanairship.autopilot"
+            android:value="com.urbanairship.sample.SampleAutopilot"/>
+
         <activity
-            android:theme="@style/AppTheme.NoActionBar"
             android:name=".MainActivity"
+            android:label="@string/app_name"
             android:launchMode="singleTop"
-            android:label="@string/app_name">
+            android:theme="@style/AppTheme.NoActionBar">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -39,8 +44,8 @@
         </activity>
 
         <activity
-            android:label="@string/settings"
             android:name=".SettingsActivity"
+            android:label="@string/settings"
             android:parentActivityName=".MainActivity">
 
             <!-- Lollipop+ only - Allows the settings to be accessed quickly from long clicking a notification
@@ -56,8 +61,9 @@
         linking in the application. To use with your application, update the data
         scheme to be unique for the application and modify ParseDeepLinkActivity.parseDeepLink
         method to match your application's deep link parsing -->
-        <activity android:name=".ParseDeepLinkActivity"
-                  android:theme="@android:style/Theme.NoDisplay">
+        <activity
+            android:name=".ParseDeepLinkActivity"
+            android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
 

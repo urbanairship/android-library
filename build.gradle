@@ -23,5 +23,5 @@ allprojects {
 
 
 task continuousIntegration
-continuousIntegration.dependsOn(':sample-lib:build', 'urbanairship-sdk:assembleRelease',
+continuousIntegration.dependsOn(':sample:build', 'urbanairship-sdk:assembleRelease',
         'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javadoc')
