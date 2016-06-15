@@ -81,6 +81,12 @@ public class LandingPageActivity extends Activity {
         super.onCreate(savedInstanceState);
         Autopilot.automaticTakeOff(getApplication());
 
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("LandingPageActivity - unable to create activity, takeOff not called.");
+            finish();
+            return;
+        }
+
         Logger.debug("Creating landing page activity.");
 
         Intent intent = getIntent();

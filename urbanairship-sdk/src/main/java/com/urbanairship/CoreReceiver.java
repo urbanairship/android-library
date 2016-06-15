@@ -33,6 +33,11 @@ public class CoreReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Autopilot.automaticTakeOff(context);
 
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("CoreReceiver - unable to receive intent, takeOff not called.");
+            return;
+        }
+
         if (intent == null || intent.getAction() == null) {
             return;
         }

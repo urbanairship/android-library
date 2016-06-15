@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.urbanairship.Autopilot;
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 
@@ -19,6 +21,13 @@ public class MessageCenterActivity extends ThemedActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Autopilot.automaticTakeOff(getApplication());
+
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error("MessageCenterActivity - unable to create activity, takeOff not called.");
+            finish();
+            return;
+        }
 
         setDisplayHomeAsUpEnabled(true);
 
