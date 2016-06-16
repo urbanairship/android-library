@@ -155,7 +155,14 @@ public class AirshipReceiver extends BroadcastReceiver {
                 Logger.error("AirshipReceiver - Intent is missing channel ID for: " + intent.getAction());
                 return;
             }
+
             onChannelRegistrationSucceeded(context, channel);
+            boolean isCreateRequest = intent.getBooleanExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, true);
+            if (isCreateRequest) {
+                onChannelCreated(context, channel);
+            } else {
+                onChannelUpdated(context, channel);
+            }
         }
     }
 
@@ -188,8 +195,28 @@ public class AirshipReceiver extends BroadcastReceiver {
      *
      * @param context The application context.
      * @param channelId The channel ID.
+     *
+     * @deprecated Use {@link #onChannelCreated(Context, String)} and {@link #onChannelUpdated(Context, String)}
+     * instead.
      */
+    @Deprecated
     protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {}
+
+    /**
+     * Called when a channel ID is updated.
+     *
+     * @param context The application context.
+     * @param channelId The channel ID.
+     */
+    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId){}
+
+    /**
+     * Called when a channel ID is created.
+     *
+     * @param context The application context.
+     * @param channelId The channel ID.
+     */
+    protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {}
 
     /**
      * Called when channel registration fails.

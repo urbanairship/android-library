@@ -123,6 +123,13 @@ public class PushManager extends AirshipComponent {
     public static final String EXTRA_CHANNEL_ID = "com.urbanairship.push.EXTRA_CHANNEL_ID";
 
     /**
+     * Extra used to indicate whether a channel registration request type is create or update.
+     *
+     * @hide
+     */
+    public static final String EXTRA_CHANNEL_CREATE_REQUEST = "com.urbanairship.push.EXTRA_CHANNEL_CREATE_REQUEST";
+
+    /**
      * This intent action indicates that a push notification has been opened.
      *
      * @hide
@@ -198,7 +205,6 @@ public class PushManager extends AirshipComponent {
     static final String ALIAS_KEY = KEY_PREFIX + ".ALIAS";
     static final String TAGS_KEY = KEY_PREFIX + ".TAGS";
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
-    static final String REGISTERED_GCM_SENDER_IDS = KEY_PREFIX + ".REGISTERED_GCM_SENDER_ID";
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
 
     static final class QuietTime {
@@ -212,8 +218,6 @@ public class PushManager extends AirshipComponent {
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
     static final String ADM_REGISTRATION_ID_KEY = KEY_PREFIX + ".ADM_REGISTRATION_ID_KEY";
     static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
-    static final String APP_VERSION_KEY = KEY_PREFIX + ".APP_VERSION";
-    static final String DEVICE_ID_KEY = KEY_PREFIX + ".DEVICE_ID";
     static final String APID_KEY = KEY_PREFIX + ".APID";
 
     //singleton stuff

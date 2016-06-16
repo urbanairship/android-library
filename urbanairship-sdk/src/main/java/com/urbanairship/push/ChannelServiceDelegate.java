@@ -262,7 +262,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             retryIntent(intent);
-            sendRegistrationFinishedBroadcast(false);
+            sendRegistrationFinishedBroadcast(false, false);
             return;
         }
 
@@ -272,7 +272,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
-            sendRegistrationFinishedBroadcast(true);
+            sendRegistrationFinishedBroadcast(true, false);
             return;
         }
 
@@ -291,7 +291,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
-        sendRegistrationFinishedBroadcast(false);
+        sendRegistrationFinishedBroadcast(false, false);
     }
 
     /**
@@ -313,7 +313,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
-            sendRegistrationFinishedBroadcast(false);
+            sendRegistrationFinishedBroadcast(false, true);
             retryIntent(intent);
             return;
         }
@@ -335,7 +335,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 // Set the last registration payload and time then notify registration succeeded
                 pushManager.setChannel(channelId, channelLocation);
                 setLastRegistrationPayload(payload);
-                sendRegistrationFinishedBroadcast(true);
+                sendRegistrationFinishedBroadcast(true, true);
 
                 if (response.getStatus() == HttpURLConnection.HTTP_OK) {
                     // 200 means channel previously existed and a named user may be associated to it.
@@ -359,7 +359,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             } else {
                 Logger.error("Failed to register with channel ID: " + channelId +
                         " channel location: " + channelLocation);
-                sendRegistrationFinishedBroadcast(false);
+                sendRegistrationFinishedBroadcast(false, true);
             }
 
             return;
@@ -367,7 +367,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
-        sendRegistrationFinishedBroadcast(false);
+        sendRegistrationFinishedBroadcast(false, true);
     }
 
     /**
@@ -477,10 +477,13 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * only if a receiver is set to get the user-defined intent receiver.
      *
      * @param isSuccess A boolean indicating whether registration succeeded or not.
+     * @param isCreateRequest A boolean indicating the channel registration request type - true if
+     * the request is of the create type, false otherwise.
      */
-    private void sendRegistrationFinishedBroadcast(boolean isSuccess) {
+    private void sendRegistrationFinishedBroadcast(boolean isSuccess, boolean isCreateRequest) {
         Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED)
                 .putExtra(PushManager.EXTRA_CHANNEL_ID, pushManager.getChannelId())
+                .putExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, isCreateRequest)
                 .addCategory(UAirship.getPackageName())
                 .setPackage(UAirship.getPackageName());
 

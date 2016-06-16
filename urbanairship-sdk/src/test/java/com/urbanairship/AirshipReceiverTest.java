@@ -41,12 +41,14 @@ public class AirshipReceiverTest extends BaseTestCase {
     }
 
     /**
-     * Test parsing the ACTION_CHANNEL_UPDATED intent calls onChannelRegistrationSucceeded.
+     * Test parsing the ACTION_CHANNEL_UPDATED intent with the EXTRA_CHANNEL_CREATE_REQUEST extra set to true
+     * (for channel ID creation) calls onChannelRegistrationSucceeded and onChannelCreated.
      */
     @Test
-    public void testOnChannelRegistrationSucceeded() {
+    public void testOnChannelCreateSucceeded() {
         Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED)
-                .putExtra(PushManager.EXTRA_CHANNEL_ID, "channel id");
+                .putExtra(PushManager.EXTRA_CHANNEL_ID, "channel id")
+                .putExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, true);
 
         receiver = new AirshipReceiver() {
             @Override
@@ -55,10 +57,53 @@ public class AirshipReceiverTest extends BaseTestCase {
                 assertNotNull(context);
                 assertEquals("channel id", channelId);
             }
+            @Override
+            protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
+                callbackCount++;
+                assertNotNull(context);
+                assertEquals("channel id", channelId);
+            }
+            @Override
+            protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
+                throw new RuntimeException();
+            }
         };
 
         receiver.onReceive(context, intent);
-        assertEquals(1, callbackCount);
+        assertEquals(2, callbackCount);
+    }
+
+    /**
+     * Test parsing the ACTION_CHANNEL_UPDATED intent with the EXTRA_CHANNEL_CREATE_REQUEST extra set to false
+     * (for channel ID updates) calls onChannelRegistrationSucceeded and onChannelUpdated.
+     */
+    @Test
+    public void testOnChannelUpdateSucceeded() {
+        Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED)
+                .putExtra(PushManager.EXTRA_CHANNEL_ID, "channel id")
+                .putExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, false);
+
+        receiver = new AirshipReceiver() {
+            @Override
+            protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
+                callbackCount++;
+                assertNotNull(context);
+                assertEquals("channel id", channelId);
+            }
+            @Override
+            protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
+                throw new RuntimeException();
+            }
+            @Override
+            protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
+                callbackCount++;
+                assertNotNull(context);
+                assertEquals("channel id", channelId);
+            }
+        };
+
+        receiver.onReceive(context, intent);
+        assertEquals(2, callbackCount);
     }
 
     /**
