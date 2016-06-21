@@ -18,25 +18,17 @@ Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement
 Include Urban Airship into the build.gradle file:
 
 ```
-   repositories {
-       ...
-
-       maven {
-           url  "https://urbanairship.bintray.com/android"
-       }
-   }
-
    dependencies {
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:7.1.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:7.2.+'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:23.3.0'
+     compile 'com.android.support:cardview-v7:23.4.0'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:8.4.0'
+     compile 'com.google.android.gms:play-services-location:9.0.2'
    }
 ```
 
@@ -79,28 +71,16 @@ Create a new `airshipconfig.properties` file with your application’s settings:
    notificationAccentColor = #ff0000
 ```
 
-Create a custom application to call takeOff in the application's `onCreate` method:
+Set the Autopilot meta-data in the AndroidManifest.xml file:
 
 ```
-   public class CustomApplication extends Application {
-       @Override
-       public void onCreate() {
-           super.onCreate();
-
-           UAirship.takeOff(this);
-       }
-   }
-```
-
-Set the custom application in the AndroidManifest.xml file:
-
-```
-   <application android:name=".CustomApplication" ... />
+      <meta-data android:name="com.urbanairship.autopilot"
+               android:value="com.urbanairship.Autopilot"/>
 ```
 
 ## Sample Application
 
-A sample application is available [sample](sample) that showcases the majority of the features offered by
+A [sample](sample) application is available that showcases the majority of the features offered by
 the Urban Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
