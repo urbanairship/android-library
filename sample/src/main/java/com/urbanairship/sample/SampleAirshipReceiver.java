@@ -21,10 +21,18 @@ public class SampleAirshipReceiver extends AirshipReceiver {
     public static final String ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL";
 
     @Override
-    protected void onChannelRegistrationSucceeded(Context context, String channelId) {
-        Log.i(TAG, "Channel registration updated. Channel Id:" + channelId + ".");
+    protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
+        Log.i(TAG, "Channel created. Channel Id:" + channelId + ".");
 
-        // Broadcast that the channel updated. Used to refresh the channel ID on the home fragment
+        // Broadcast that the channel was created. Used to refresh the channel ID on the home fragment
+        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(ACTION_UPDATE_CHANNEL));
+    }
+
+    @Override
+    protected void onChannelUpdated(@NonNull Context context, @NonNull String channelId) {
+        Log.i(TAG, "Channel updated. Channel Id:" + channelId + ".");
+
+        // Broadcast that the channel was updated. Used to refresh the channel ID on the home fragment
         LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(ACTION_UPDATE_CHANNEL));
     }
 
