@@ -3,6 +3,20 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.2.0 - June 21, 2016
+=============================
+- The internal GCM integration has been updated to not conflict with other integrations and will no longer trigger the
+  GcmListenerService when receiving GCM messages. Any application that contains additional GCM clients outside of Urban
+  Airship needs to register the GcmReceiver from Google Play Services in the AndroidManifest.xml.
+- Autopilot is now a concrete class and can be used directly to `takeOff` with config options loaded
+  from `airshipconfig.properties`.
+- Added support to override the notification sound from the push API.
+- Added a wallet action to handle Android Pay deep links.
+- Added the Named User ID and Channel ID to the JavaScript bridge.
+- Moved the accessor for Named User to UAirship. Old accessor has been deprecated.
+- Removed `sample-lib`, `sample` now build against the sdk module directly.
+- Added pass creation APIs to generate an Android Pay deep link.
+
 Version 7.1.5 - June 1, 2016
 ============================
 - Fixed bug preventing the removal of expired RichPushMessages on empty RichPushInbox update responses.
