@@ -6,8 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.BaseIntentService;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -23,9 +24,35 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Service delegate for the {@link PushService} to handle tag group updates.
+ * Handles tag group intents.
  */
-class TagGroupServiceDelegate extends BaseIntentService.Delegate {
+class TagGroupIntentHandler {
+
+    /**
+     * Action to update named user tags.
+     */
+    static final String ACTION_UPDATE_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER_TAGS";
+
+
+    /**
+     * Action to update the channel tag groups.
+     */
+    static final String ACTION_UPDATE_CHANNEL_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_TAG_GROUPS";
+
+    /**
+     * Action to clear the pending named user tags.
+     */
+    static final String ACTION_CLEAR_PENDING_NAMED_USER_TAGS = "com.urbanairship.push.ACTION_CLEAR_PENDING_NAMED_USER_TAGS";
+
+    /**
+     * Extra containing tag groups to add to channel tag groups or named user tags.
+     */
+    static final String EXTRA_ADD_TAG_GROUPS = "com.urbanairship.push.EXTRA_ADD_TAG_GROUPS";
+
+    /**
+     * Extra containing tag groups to remove from channel tag groups or named user tags.
+     */
+    static final String EXTRA_REMOVE_TAG_GROUPS = "com.urbanairship.push.EXTRA_REMOVE_TAG_GROUPS";
 
     /**
      * Key for storing the pending named user add tags changes in the {@link PreferenceDataStore}.
@@ -50,30 +77,43 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
     private final PushManager pushManager;
     private final NamedUser namedUser;
     private final TagGroupsApiClient client;
+    private final Context context;
+    private final PreferenceDataStore dataStore;
 
-    public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new TagGroupsApiClient(UAirship.shared().getAirshipConfigOptions()),
-                UAirship.shared().getPushManager(), UAirship.shared().getNamedUser());
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param airship The airship instance.
+     * @param dataStore The preference data store.
+     */
+    TagGroupIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+        this(context, airship, dataStore, new TagGroupsApiClient(airship.getAirshipConfigOptions()));
     }
 
-    public TagGroupServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                   TagGroupsApiClient client, PushManager pushManager, NamedUser namedUser) {
+    @VisibleForTesting
+    TagGroupIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                          TagGroupsApiClient client) {
 
-        super(context, dataStore);
-
+        this.context = context;
+        this.dataStore = dataStore;
         this.client = client;
-        this.pushManager = pushManager;
-        this.namedUser = namedUser;
+        this.pushManager = airship.getPushManager();
+        this.namedUser = airship.getNamedUser();
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
+    /**
+     * Handles {@link AirshipService} intents for {@link com.urbanairship.push.PushManager}.
+     *
+     * @param intent The intent.
+     */
+    protected void handleIntent(Intent intent) {
         switch (intent.getAction()) {
-            case PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS:
-            case PushService.ACTION_UPDATE_NAMED_USER_TAGS:
+            case ACTION_UPDATE_CHANNEL_TAG_GROUPS:
+            case ACTION_UPDATE_NAMED_USER_TAGS:
                 onUpdateTagGroups(intent);
                 break;
-            case PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
+            case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
                 onClearPendingNamedUserTags();
                 break;
         }
@@ -86,7 +126,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
      */
     private void onUpdateTagGroups(Intent intent) {
 
-        boolean isChannelTagGroup = intent.getAction().equals(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        boolean isChannelTagGroup = intent.getAction().equals(ACTION_UPDATE_CHANNEL_TAG_GROUPS);
 
         String pendingAddTagGroupsKey;
         String pendingRemoveTagGroupsKey;
@@ -103,23 +143,23 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
         Map<String, Set<String>> pendingRemoveTags = getPendingTagChanges(pendingRemoveTagGroupsKey);
 
         // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = intent.getBundleExtra(PushService.EXTRA_ADD_TAG_GROUPS);
+        Bundle addTagsBundle = intent.getBundleExtra(EXTRA_ADD_TAG_GROUPS);
         if (addTagsBundle != null) {
             combineTags(addTagsBundle, pendingAddTags, pendingRemoveTags);
-            intent.removeExtra(PushService.EXTRA_ADD_TAG_GROUPS);
+            intent.removeExtra(EXTRA_ADD_TAG_GROUPS);
         }
 
         // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = intent.getBundleExtra(PushService.EXTRA_REMOVE_TAG_GROUPS);
+        Bundle removeTagsBundle = intent.getBundleExtra(EXTRA_REMOVE_TAG_GROUPS);
         if (removeTagsBundle != null) {
             combineTags(removeTagsBundle, pendingRemoveTags, pendingAddTags);
-            intent.removeExtra(PushService.EXTRA_REMOVE_TAG_GROUPS);
+            intent.removeExtra(EXTRA_REMOVE_TAG_GROUPS);
         }
 
         // Make sure we actually have tag changes to perform
         if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
-            getDataStore().remove(pendingAddTagGroupsKey);
-            getDataStore().remove(pendingRemoveTagGroupsKey);
+            dataStore.remove(pendingAddTagGroupsKey);
+            dataStore.remove(pendingRemoveTagGroupsKey);
             return;
         }
 
@@ -162,7 +202,7 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
             storePendingTagChanges(pendingRemoveTagGroupsKey, pendingRemoveTags);
 
             // Retry later
-            retryIntent(intent);
+            AirshipService.retryServiceIntent(context, intent);
 
             return;
         }
@@ -173,8 +213,8 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
             logTagGroupResponseIssues(response.getResponseBody());
 
             // Clear pending
-            getDataStore().remove(pendingAddTagGroupsKey);
-            getDataStore().remove(pendingRemoveTagGroupsKey);
+            dataStore.remove(pendingAddTagGroupsKey);
+            dataStore.remove(pendingRemoveTagGroupsKey);
 
             return;
         }
@@ -185,8 +225,8 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
 
         if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN || response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
             // Clear pending
-            getDataStore().remove(pendingAddTagGroupsKey);
-            getDataStore().remove(pendingRemoveTagGroupsKey);
+            dataStore.remove(pendingAddTagGroupsKey);
+            dataStore.remove(pendingRemoveTagGroupsKey);
         } else {
             // Save pending
             storePendingTagChanges(pendingAddTagGroupsKey, pendingAddTags);
@@ -199,8 +239,8 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
      * Clear pending named user tags.
      */
     private void onClearPendingNamedUserTags() {
-        getDataStore().remove(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
-        getDataStore().remove(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
+        dataStore.remove(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
+        dataStore.remove(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
     }
 
     /**
@@ -264,29 +304,31 @@ class TagGroupServiceDelegate extends BaseIntentService.Delegate {
             }
         }
     }
+
     /**
      * Stores pending tag groups changes in the {@link PreferenceDataStore}.
+     *
      * @param tagGroupKey The data store key.
      * @param tagGroupChanges The pending tag groups.
      */
     private void storePendingTagChanges(@NonNull String tagGroupKey, @NonNull Map<String, Set<String>> tagGroupChanges) {
-        getDataStore().put(tagGroupKey, JsonValue.wrapOpt(tagGroupChanges));
+        dataStore.put(tagGroupKey, JsonValue.wrapOpt(tagGroupChanges));
     }
 
     /**
-     *  Returns the pending tag group changes for the given {@link PreferenceDataStore} key.
+     * Returns the pending tag group changes for the given {@link PreferenceDataStore} key.
      *
-     *  @param tagGroupKey The tag group key string.
-     *  @return The pending tag groups.
+     * @param tagGroupKey The tag group key string.
+     * @return The pending tag groups.
      */
     @NonNull
     private Map<String, Set<String>> getPendingTagChanges(String tagGroupKey) {
         JsonValue tagGroupsJsonValue = null;
         try {
-            tagGroupsJsonValue = JsonValue.parseString(getDataStore().getString(tagGroupKey, null));
+            tagGroupsJsonValue = JsonValue.parseString(dataStore.getString(tagGroupKey, null));
         } catch (JsonException e) {
             Logger.error("Unable to parse pending tag groups.", e);
-            getDataStore().remove(tagGroupKey);
+            dataStore.remove(tagGroupKey);
         }
 
         return TagUtils.convertToTagsMap(tagGroupsJsonValue);

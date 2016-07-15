@@ -4,8 +4,9 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.BaseIntentService;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -15,11 +16,13 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.net.HttpURLConnection;
 
-/**
- * Service delegate for the {@link PushService} to handle associating and dissociating a named user
- * from the Urban Airship channel.
- */
-class NamedUserServiceDelegate extends BaseIntentService.Delegate {
+
+class NamedUserIntentHandler {
+
+    /**
+     * Action to update named user association or disassociation.
+     */
+    static final String ACTION_UPDATE_NAMED_USER = "com.urbanairship.push.ACTION_UPDATE_NAMED_USER";
 
     /**
      * Key for storing the {@link NamedUser#getChangeToken()} in the {@link PreferenceDataStore} from the
@@ -30,28 +33,42 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
     private final NamedUserApiClient client;
     private final NamedUser namedUser;
     private final PushManager pushManager;
+    private final Context context;
+    private final PreferenceDataStore dataStore;
 
-    public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new NamedUserApiClient(), UAirship.shared().getPushManager(),
-                UAirship.shared().getNamedUser());
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param airship The airship instance.
+     * @param dataStore The preference data store.
+     */
+    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+        this(context, airship, dataStore, new NamedUserApiClient());
     }
 
-    public NamedUserServiceDelegate(Context context, PreferenceDataStore dataStore, NamedUserApiClient client, PushManager pushManager, NamedUser namedUser) {
-        super(context, dataStore);
+    @VisibleForTesting
+    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore, NamedUserApiClient client) {
+        this.context = context;
+        this.dataStore = dataStore;
         this.client = client;
-        this.namedUser = namedUser;
-        this.pushManager = pushManager;
+        this.namedUser = airship.getNamedUser();
+        this.pushManager = airship.getPushManager();
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (!intent.getAction().equals(PushService.ACTION_UPDATE_NAMED_USER)) {
+    /**
+     * Handles {@link AirshipService} intents for {@link com.urbanairship.push.PushManager}.
+     *
+     * @param intent The intent.
+     */
+    protected void handleIntent(Intent intent) {
+        if (!intent.getAction().equals(ACTION_UPDATE_NAMED_USER)) {
             return;
         }
 
         String currentId = namedUser.getId();
         String changeToken = namedUser.getChangeToken();
-        String lastUpdatedToken = getDataStore().getString(LAST_UPDATED_TOKEN_KEY, null);
+        String lastUpdatedToken = dataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
         String channelId = pushManager.getChannelId();
 
         if (changeToken == null && lastUpdatedToken == null) {
@@ -61,7 +78,7 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
 
         if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
             // Skip since no change has occurred (token remain the same).
-            Logger.debug("NamedUserServiceDelegate - Named user already updated. Skipping.");
+            Logger.debug("NamedUserIntentHandler - Named user already updated. Skipping.");
             return;
         }
 
@@ -84,14 +101,14 @@ class NamedUserServiceDelegate extends BaseIntentService.Delegate {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.info("Update named user failed, will retry.");
-            retryIntent(intent);
+            AirshipService.retryServiceIntent(context, intent);
             return;
         }
 
         // 2xx
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             Logger.info("Update named user succeeded with status: " + response.getStatus());
-            getDataStore().put(LAST_UPDATED_TOKEN_KEY, changeToken);
+            dataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
             namedUser.startUpdateTagsService();
             return;
         }

@@ -85,6 +85,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.shared().applicationMetrics = metrics;
     }
 
+    public void setNamedUser(NamedUser namedUser) {
+        UAirship.shared().namedUser = namedUser;
+    }
+
     public void setAnalytics(Analytics analytics) {
         UAirship.shared().analytics = analytics;
     }

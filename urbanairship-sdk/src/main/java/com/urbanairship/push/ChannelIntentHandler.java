@@ -6,10 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.BaseIntentService;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -27,9 +28,34 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Service delegate for the {@link PushService} to handle channel and push registrations.
+ * Intent handler for channel registration
  */
-class ChannelServiceDelegate extends BaseIntentService.Delegate {
+class ChannelIntentHandler {
+
+    /**
+     * Action to start channel and push registration.
+     */
+    static final String ACTION_START_REGISTRATION = "com.urbanairship.push.ACTION_START_REGISTRATION";
+
+    /**
+     * Action notifying the service that ADM registration has finished.
+     */
+    static final String ACTION_ADM_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_ADM_REGISTRATION_FINISHED";
+
+    /**
+     * Action to update channel registration.
+     */
+    static final String ACTION_UPDATE_PUSH_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_PUSH_REGISTRATION";
+
+    /**
+     * Action to update channel registration.
+     */
+    static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
+
+    /**
+     * Extra containing the received message intent.
+     */
+    static final String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
 
     /**
      * Data store key for the last successfully registered channel payload.
@@ -62,37 +88,51 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
     private final PushManager pushManager;
     private final ChannelApiClient channelClient;
     private final NamedUser namedUser;
+    private final Context context;
+    private final PreferenceDataStore dataStore;
 
-    public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new ChannelApiClient(), UAirship.shared());
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param airship The airship instance.
+     * @param dataStore The preference data store.
+     */
+    ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+        this(context, airship, dataStore, new ChannelApiClient());
     }
 
-    public ChannelServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                  ChannelApiClient channelClient, UAirship airship) {
-        super(context, dataStore);
-
+    @VisibleForTesting
+    ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                                ChannelApiClient channelClient) {
+        this.context = context;
+        this.dataStore = dataStore;
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
+    /**
+     * Handles {@link AirshipService} intents for {@link com.urbanairship.push.PushManager}.
+     *
+     * @param intent The intent.
+     */
+    protected void handleIntent(Intent intent) {
         switch (intent.getAction()) {
-            case PushService.ACTION_START_REGISTRATION:
+            case ACTION_START_REGISTRATION:
                 onStartRegistration();
                 break;
 
-            case PushService.ACTION_UPDATE_PUSH_REGISTRATION:
+            case ACTION_UPDATE_PUSH_REGISTRATION:
                 onUpdatePushRegistration(intent);
                 break;
 
-            case PushService.ACTION_ADM_REGISTRATION_FINISHED:
+            case ACTION_ADM_REGISTRATION_FINISHED:
                 onAdmRegistrationFinished(intent);
                 break;
 
-            case PushService.ACTION_UPDATE_CHANNEL_REGISTRATION:
+            case ACTION_UPDATE_CHANNEL_REGISTRATION:
                 onUpdateChannelRegistration(intent);
                 break;
         }
@@ -114,14 +154,14 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             isPushRegistering = true;
 
             // Update the push registration
-            Intent updatePushRegistrationIntent = new Intent(getContext(), PushService.class)
-                    .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION);
-            getContext().startService(updatePushRegistrationIntent);
+            Intent updatePushRegistrationIntent = new Intent(context, AirshipService.class)
+                    .setAction(ACTION_UPDATE_PUSH_REGISTRATION);
+            context.startService(updatePushRegistrationIntent);
         } else {
             // Update the channel registration
-            Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
-                    .setAction(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-            getContext().startService(channelUpdateIntent);
+            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
+                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
+            context.startService(channelUpdateIntent);
         }
     }
 
@@ -148,7 +188,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                 } catch (IOException | SecurityException e) {
                     Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
                     isPushRegistering = true;
-                    retryIntent(intent);
+                    AirshipService.retryServiceIntent(context, intent);
                 }
 
                 break;
@@ -160,10 +200,10 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
                     break;
                 }
 
-                String admId = AdmUtils.getRegistrationId(getContext());
+                String admId = AdmUtils.getRegistrationId(context);
                 if (admId == null) {
                     pushManager.setAdmId(null);
-                    AdmUtils.startRegistration(getContext());
+                    AdmUtils.startRegistration(context);
                     isPushRegistering = true;
                 } else if (!admId.equals(pushManager.getAdmId())) {
                     Logger.info("ADM registration successful. Registration ID: " + admId);
@@ -177,10 +217,10 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
 
         if (!isPushRegistering) {
             // Update the channel registration
-            Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
-                    .setAction(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
+                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
 
-            getContext().startService(channelUpdateIntent);
+            context.startService(channelUpdateIntent);
         }
     }
 
@@ -195,9 +235,9 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        Intent admIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        Intent admIntent = intent.getParcelableExtra(EXTRA_INTENT);
         if (admIntent == null) {
-            Logger.error("ChannelServiceDelegate - Received ADM message missing original intent.");
+            Logger.error("ChannelIntentHandler - Received ADM message missing original intent.");
             return;
         }
 
@@ -214,9 +254,9 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         isPushRegistering = false;
 
         // Update the channel registration
-        Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
-                .setAction(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        getContext().startService(channelUpdateIntent);
+        Intent channelUpdateIntent = new Intent(context, AirshipService.class)
+                .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
+        context.startService(channelUpdateIntent);
     }
 
     /**
@@ -224,11 +264,11 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      */
     private void onUpdateChannelRegistration(@NonNull Intent intent) {
         if (isPushRegistering) {
-            Logger.verbose("ChannelServiceDelegate - Push registration in progress, skipping registration update.");
+            Logger.verbose("ChannelIntentHandler - Push registration in progress, skipping registration update.");
             return;
         }
 
-        Logger.verbose("ChannelServiceDelegate - Performing channel registration.");
+        Logger.verbose("ChannelIntentHandler - Performing channel registration.");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         String channelId = pushManager.getChannelId();
@@ -250,7 +290,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      */
     private void updateChannel(@NonNull Intent intent, @NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("ChannelServiceDelegate - Channel already up to date.");
+            Logger.verbose("ChannelIntentHandler - Channel already up to date.");
             return;
         }
 
@@ -260,7 +300,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
-            retryIntent(intent);
+            AirshipService.retryServiceIntent(context, intent);
             sendRegistrationFinishedBroadcast(false, false);
             return;
         }
@@ -281,9 +321,9 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             pushManager.setChannel(null, null);
 
             // Update registration
-            Intent channelUpdateIntent = new Intent(getContext(), PushService.class)
-                    .setAction(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-            getContext().startService(channelUpdateIntent);
+            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
+                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
+            context.startService(channelUpdateIntent);
 
             return;
         }
@@ -313,7 +353,7 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, true);
-            retryIntent(intent);
+            AirshipService.retryServiceIntent(context, intent);
             return;
         }
 
@@ -431,8 +471,8 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @param channelPayload A ChannelRegistrationPayload.
      */
     private void setLastRegistrationPayload(ChannelRegistrationPayload channelPayload) {
-        getDataStore().put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload);
-        getDataStore().put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
+        dataStore.put(LAST_REGISTRATION_PAYLOAD_KEY, channelPayload);
+        dataStore.put(LAST_REGISTRATION_TIME_KEY, System.currentTimeMillis());
     }
 
     /**
@@ -442,12 +482,12 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      */
     @Nullable
     private ChannelRegistrationPayload getLastRegistrationPayload() {
-        String payloadJSON = getDataStore().getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
+        String payloadJSON = dataStore.getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
 
         try {
             return ChannelRegistrationPayload.parseJson(payloadJSON);
         } catch (JsonException e) {
-            Logger.error("ChannelServiceDelegate - Failed to parse payload from JSON.", e);
+            Logger.error("ChannelIntentHandler - Failed to parse payload from JSON.", e);
             return null;
         }
     }
@@ -458,11 +498,11 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
      * @return the last registration time
      */
     private long getLastRegistrationTime() {
-        long lastRegistrationTime = getDataStore().getLong(LAST_REGISTRATION_TIME_KEY, 0L);
+        long lastRegistrationTime = dataStore.getLong(LAST_REGISTRATION_TIME_KEY, 0L);
 
         // If its in the future reset it
         if (lastRegistrationTime > System.currentTimeMillis()) {
-            getDataStore().put(LAST_REGISTRATION_TIME_KEY, 0);
+            dataStore.put(LAST_REGISTRATION_TIME_KEY, 0);
             return 0;
         }
 
@@ -488,6 +528,6 @@ class ChannelServiceDelegate extends BaseIntentService.Delegate {
             intent.putExtra(PushManager.EXTRA_ERROR, true);
         }
 
-        getContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
+        context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
     }
 }

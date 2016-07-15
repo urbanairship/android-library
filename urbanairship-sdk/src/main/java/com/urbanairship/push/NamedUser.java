@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.util.UAStringUtil;
@@ -128,7 +129,7 @@ public class NamedUser extends AirshipComponent {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        return new TagGroupsEditor(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
     }
 
     /**
@@ -161,8 +162,8 @@ public class NamedUser extends AirshipComponent {
      * Start service for named user update.
      */
     void startUpdateService() {
-        Intent i = new Intent(context, PushService.class)
-                .setAction(PushService.ACTION_UPDATE_NAMED_USER);
+        Intent i = new Intent(context, AirshipService.class)
+                .setAction(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
 
         context.startService(i);
     }
@@ -171,8 +172,8 @@ public class NamedUser extends AirshipComponent {
      * Start service to clear pending named user tags.
      */
     void startClearPendingTagsService() {
-        Intent i = new Intent(context, PushService.class)
-                .setAction(PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+        Intent i = new Intent(context, AirshipService.class)
+                .setAction(TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
 
         context.startService(i);
     }
@@ -181,8 +182,8 @@ public class NamedUser extends AirshipComponent {
      * Start service for named user tags update.
      */
     void startUpdateTagsService() {
-        Intent i = new Intent(context, PushService.class)
-                .setAction(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
+        Intent i = new Intent(context, AirshipService.class)
+                .setAction(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
 
         context.startService(i);
     }

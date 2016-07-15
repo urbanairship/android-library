@@ -43,7 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-public class IncomingPushServiceDelegateTest extends BaseTestCase {
+public class PushIntentHandlerTest extends BaseTestCase {
 
     private Intent silentGcmIntent;
     private Intent alertingGcmIntent;
@@ -56,7 +56,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
     public final int constantNotificationId = 123;
     private NotificationFactory notificationFactory;
 
-    private IncomingPushServiceDelegate serviceDelegate;
+    private PushIntentHandler intentHandler;
 
     @Before
     public void setup() {
@@ -112,8 +112,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
 
-        serviceDelegate = new IncomingPushServiceDelegate(TestApplication.getApplication(),
-                TestApplication.getApplication().preferenceDataStore, UAirship.shared(), notificationManager);
+        intentHandler = new PushIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+                TestApplication.getApplication().preferenceDataStore, notificationManager);
     }
 
 
@@ -122,13 +122,13 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPush() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
         verify(notificationManager).notify(constantNotificationId, notification);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
@@ -150,8 +150,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
                 .putExtra(PushMessage.EXTRA_PUSH_ID, "testPushID")
                 .putExtra(PushMessage.EXTRA_SEND_ID, "testSendID");
 
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
@@ -166,7 +166,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         }).when(analytics).addEvent(any(PushArrivedEvent.class));
 
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
         verify(notificationManager).notify(constantNotificationId, notification);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
@@ -183,15 +183,15 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushUserPushDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(false);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
@@ -207,8 +207,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverBackgroundPush() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, silentGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, silentGcmIntent);
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
 
@@ -216,7 +216,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
         notification = null;
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
@@ -232,8 +232,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushException() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
 
         // Set a notification factory that throws an exception
@@ -252,7 +252,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         verify(notificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
     }
@@ -262,8 +262,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testNotificationContentIntent() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
@@ -276,7 +276,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -294,8 +294,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testNotificationDeleteIntent() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
@@ -308,7 +308,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -326,8 +326,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushSoundDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
@@ -339,7 +339,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         notification.sound = Uri.parse("some://sound");
         notification.defaults = NotificationCompat.DEFAULT_ALL;
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include DEFAULT_SOUND.",
                 notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
@@ -351,8 +351,8 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushVibrateDisabled() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
@@ -364,7 +364,7 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
         notification.defaults = NotificationCompat.DEFAULT_ALL;
         notification.vibrate = new long[] { 0L, 1L, 200L };
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
         assertNull("The notification sound should be null.", notification.vibrate);
         assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
                 notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
@@ -382,14 +382,14 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
                 .toJsonValue()
                 .toString());
 
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
 
         assertEquals(new PushMessage(alertingGcmIntent.getExtras()).getInAppMessage(), UAirship.shared().getInAppMessageManager().getPendingMessage());
     }
@@ -399,14 +399,14 @@ public class IncomingPushServiceDelegateTest extends BaseTestCase {
      */
     @Test
     public void testInQuietTime() {
-        Intent pushIntent = new Intent(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushService.EXTRA_INTENT, alertingGcmIntent);
+        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         when(pushManager.isVibrateEnabled()).thenReturn(true);
         when(pushManager.isSoundEnabled()).thenReturn(true);
         when(pushManager.isInQuietTime()).thenReturn(true);
 
-        serviceDelegate.onHandleIntent(pushIntent);
+        intentHandler.handleIntent(pushIntent);
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
     }
