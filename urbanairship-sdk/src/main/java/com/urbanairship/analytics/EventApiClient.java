@@ -4,13 +4,13 @@ package com.urbanairship.analytics;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
@@ -41,28 +41,37 @@ class EventApiClient {
     static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
 
     private final RequestFactory requestFactory;
+    private final Context context;
 
-    EventApiClient() {
-        this(new RequestFactory());
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     */
+    EventApiClient(@NonNull Context context) {
+        this(context, new RequestFactory());
     }
 
     /**
      * Create the EventApiClient
      *
+     * @param context The application context.
      * @param requestFactory The requestFactory.
      */
     @VisibleForTesting
-    EventApiClient(@NonNull RequestFactory requestFactory) {
+    EventApiClient(@NonNull Context context, @NonNull RequestFactory requestFactory) {
         this.requestFactory = requestFactory;
+        this.context = context;
     }
 
     /**
      * Sends a collection of events.
      *
+     * @param airship The {@link UAirship} instance.
      * @param events Specified events
      * @return eventResponse or null if an error occurred
      */
-    EventResponse sendEvents(@NonNull Collection<String> events) {
+    EventResponse sendEvents(@NonNull  UAirship airship, @NonNull Collection<String> events) {
         if (events.size() == 0) {
             Logger.verbose("EventApiClient - No events to send.");
             return null;
@@ -85,7 +94,7 @@ class EventApiClient {
 
         String payload = new JsonList(eventJSON).toString();
 
-        String url = UAirship.shared().getAirshipConfigOptions().analyticsServer + "warp9/";
+        String url = airship.getAirshipConfigOptions().analyticsServer + "warp9/";
         URL analyticsServerUrl = null;
         try {
             analyticsServerUrl = new URL(url);
@@ -94,38 +103,37 @@ class EventApiClient {
         }
 
         String deviceFamily;
-        if (UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM) {
+        if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
             deviceFamily = "amazon";
         } else {
             deviceFamily = "android";
         }
 
         double sentAt = System.currentTimeMillis() / 1000.0;
-        AirshipConfigOptions airshipConfig = UAirship.shared().getAirshipConfigOptions();
 
         Request request = requestFactory.createRequest("POST", analyticsServerUrl)
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
                                         .setHeader("X-UA-Device-Family", deviceFamily)
                                         .setHeader("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt))
-                                        .setHeader("X-UA-Package-Name", UAirship.getPackageName())
-                                        .setHeader("X-UA-Package-Version", UAirship.getPackageInfo().versionName)
-                                        .setHeader("X-UA-App-Key", airshipConfig.getAppKey())
-                                        .setHeader("X-UA-In-Production", Boolean.toString(airshipConfig.inProduction))
+                                        .setHeader("X-UA-Package-Name", getPackageName())
+                                        .setHeader("X-UA-Package-Version", getPackageVersion())
+                                        .setHeader("X-UA-App-Key", airship.getAirshipConfigOptions().getAppKey())
+                                        .setHeader("X-UA-In-Production", Boolean.toString(airship.getAirshipConfigOptions().inProduction))
                                         .setHeader("X-UA-Device-Model", Build.MODEL)
                                         .setHeader("X-UA-Android-Version-Code", String.valueOf(Build.VERSION.SDK_INT))
                                         .setHeader("X-UA-Lib-Version", UAirship.getVersion())
                                         .setHeader("X-UA-Timezone", TimeZone.getDefault().getID())
                                         .setHeader("X-UA-Channel-Opted-In",
-                                                Boolean.toString(UAirship.shared().getPushManager().isOptIn()))
+                                                Boolean.toString(airship.getPushManager().isOptIn()))
                                         .setHeader("X-UA-Channel-Background-Enabled",
-                                                Boolean.toString(UAirship.shared().getPushManager().isPushEnabled() &&
-                                                        UAirship.shared().getPushManager().isPushAvailable()))
+                                                Boolean.toString(airship.getPushManager().isPushEnabled() &&
+                                                        airship.getPushManager().isPushAvailable()))
                                         .setHeader("X-UA-Location-Permission", getLocationPermission())
                                         .setHeader("X-UA-Location-Service-Enabled",
-                                                Boolean.toString(UAirship.shared().getLocationManager().isLocationUpdatesEnabled()))
+                                                Boolean.toString(airship.getLocationManager().isLocationUpdatesEnabled()))
                                         .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()))
-                                        .setHeader("X-UA-User-ID", UAirship.shared().getInbox().getUser().getId());
+                                        .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
 
 
         Locale locale = Locale.getDefault();
@@ -141,7 +149,7 @@ class EventApiClient {
             }
         }
 
-        String channelID = UAirship.shared().getPushManager().getChannelId();
+        String channelID = airship.getPushManager().getChannelId();
         if (!UAStringUtil.isEmpty(channelID)) {
             request.setHeader("X-UA-Channel-ID", channelID);
             // Send the Channel ID instead of the Registration ID as the Push Address for
@@ -166,7 +174,7 @@ class EventApiClient {
      *
      * @return The location permission string.
      */
-    static String getLocationPermissionForApp() {
+    String getLocationPermissionForApp() {
         if (ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION) ||
                 ManifestUtils.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             return ALWAYS_ALLOWED;
@@ -180,8 +188,7 @@ class EventApiClient {
      *
      * @return The location permission string.
      */
-    static String getLocationPermission() {
-
+    String getLocationPermission() {
         // Android Marshmallow
         if (Build.VERSION.SDK_INT >= 23) {
             if (UAirship.getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
@@ -224,7 +231,7 @@ class EventApiClient {
      *
      * @return <code>true</code> if Bluetooth is enabled, otherwise <code>false</code>.
      */
-    static boolean isBluetoothEnabled() {
+    boolean isBluetoothEnabled() {
         if (!ManifestUtils.isPermissionGranted(Manifest.permission.BLUETOOTH)) {
             // Manifest missing Bluetooth permissions
             return false;
@@ -234,6 +241,22 @@ class EventApiClient {
 
             //noinspection ResourceType - Suppresses the bluetooth permission warning
             return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
+        }
+    }
+
+    String getPackageName() {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).packageName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    String getPackageVersion() {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
         }
     }
 }

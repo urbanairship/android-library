@@ -541,7 +541,7 @@ public class UAirship {
         this.preferenceDataStore.init();
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions);
+        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions, getPlatformType());
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore);
         this.inbox = new RichPushInbox(application, preferenceDataStore);
         this.locationManager = new UALocationManager(application, preferenceDataStore);

@@ -58,7 +58,7 @@ public class EventApiClientTest extends BaseTestCase {
         TestApplication.getApplication().setInbox(inbox);
 
 
-        client = new EventApiClient(mockRequestFactory);
+        client = new EventApiClient(TestApplication.getApplication(), mockRequestFactory);
     }
 
     /**
@@ -66,7 +66,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSendEmptyEvents() {
-        assertNull(client.sendEvents(new ArrayList<String>()));
+        assertNull(client.sendEvents(UAirship.shared(), new ArrayList<String>()));
         assertNull(null);
     }
 
@@ -80,7 +80,7 @@ public class EventApiClientTest extends BaseTestCase {
                 .setResponseBody(events.toString())
                 .create();
 
-        EventResponse response = client.sendEvents(events);
+        EventResponse response = client.sendEvents(UAirship.shared(), events);
 
         assertEquals("Event request body should match", testRequest.getRequestBody(), events.toString());
         assertNotNull("Event response should not be null", response);
@@ -118,7 +118,7 @@ public class EventApiClientTest extends BaseTestCase {
 
         };
 
-        client.sendEvents(events);
+        client.sendEvents(UAirship.shared(), events);
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
 
         for (String[] keyValuePair : expectedHeaders) {
@@ -139,7 +139,7 @@ public class EventApiClientTest extends BaseTestCase {
                 .setResponseBody(events.toString())
                 .create();
 
-        client.sendEvents(events);
+        client.sendEvents(UAirship.shared(), events);
 
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
         String deviceFamily = requestHeaders.get("X-UA-Device-Family");
@@ -159,7 +159,7 @@ public class EventApiClientTest extends BaseTestCase {
                 .setResponseBody(events.toString())
                 .create();
 
-        client.sendEvents(events);
+        client.sendEvents(UAirship.shared(), events);
 
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
         assertNull(requestHeaders.get("X-UA-Locale-Country"));
@@ -178,7 +178,7 @@ public class EventApiClientTest extends BaseTestCase {
                 .setResponseBody(events.toString())
                 .create();
 
-        client.sendEvents(events);
+        client.sendEvents(UAirship.shared(), events);
 
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
         assertNull(requestHeaders.get("X-UA-Locale-Variant"));
@@ -197,7 +197,7 @@ public class EventApiClientTest extends BaseTestCase {
                 .setResponseBody(events.toString())
                 .create();
 
-        client.sendEvents(events);
+        client.sendEvents(UAirship.shared(), events);
 
         Map<String, String> requestHeaders = testRequest.getRequestHeaders();
         assertNull(requestHeaders.get("X-UA-Locale-Language"));
@@ -211,7 +211,7 @@ public class EventApiClientTest extends BaseTestCase {
     @Test
     public void testNullResponse() {
         testRequest.response = null;
-        EventResponse response = client.sendEvents(events);
+        EventResponse response = client.sendEvents(UAirship.shared(), events);
         assertNull(response);
     }
 }
