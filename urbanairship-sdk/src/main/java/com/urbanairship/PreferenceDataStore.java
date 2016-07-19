@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
  *
  * @hide
  */
-public final class PreferenceDataStore extends AirshipComponent {
+public final class PreferenceDataStore {
 
     private static final String WHERE_CLAUSE_KEY = PreferencesDataManager.COLUMN_NAME_KEY + " = ?";
 
@@ -89,7 +89,9 @@ public final class PreferenceDataStore extends AirshipComponent {
         }
     }
 
-    @Override
+    /**
+     * Initializes the preference data store.
+     */
     protected void init() {
         Cursor cursor = resolver.query(UrbanAirshipProvider.getPreferencesContentUri(context), null, null, null, null);
         if (cursor == null) {
@@ -111,7 +113,9 @@ public final class PreferenceDataStore extends AirshipComponent {
         cursor.close();
     }
 
-    @Override
+    /**
+     * Unregisters any observers.
+     */
     protected void tearDown() {
         for (Preference preference : preferences.values()) {
             preference.unregisterObserver();
