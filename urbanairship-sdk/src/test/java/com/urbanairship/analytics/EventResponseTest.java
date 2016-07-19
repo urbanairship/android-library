@@ -39,46 +39,46 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES);
+                EventResponse.MAX_TOTAL_DB_SIZE_BYTES);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES + 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES);
+                EventResponse.MAX_TOTAL_DB_SIZE_BYTES);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES - 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MAX_TOTAL_DB_SIZE_BYTES - 1);
+                EventResponse.MAX_TOTAL_DB_SIZE_BYTES - 1);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES);
+                EventResponse.MIN_TOTAL_DB_SIZE_BYTES);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES - 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES);
+                EventResponse.MIN_TOTAL_DB_SIZE_BYTES);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES + 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxTotalSize(),
-                AnalyticsPreferences.MIN_TOTAL_DB_SIZE_BYTES + 1);
+                EventResponse.MIN_TOTAL_DB_SIZE_BYTES + 1);
     }
 
     /**
@@ -89,46 +89,46 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MAX_BATCH_SIZE_BYTES);
+                EventResponse.MAX_BATCH_SIZE_BYTES);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES + 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MAX_BATCH_SIZE_BYTES);
+                EventResponse.MAX_BATCH_SIZE_BYTES);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES - 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MAX_BATCH_SIZE_BYTES - 1);
+                EventResponse.MAX_BATCH_SIZE_BYTES - 1);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MIN_BATCH_SIZE_BYTES);
+                EventResponse.MIN_BATCH_SIZE_BYTES);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES - 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MIN_BATCH_SIZE_BYTES);
+                EventResponse.MIN_BATCH_SIZE_BYTES);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES + 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxBatchSize(),
-                AnalyticsPreferences.MIN_BATCH_SIZE_BYTES + 1);
+                EventResponse.MIN_BATCH_SIZE_BYTES + 1);
     }
 
     /**
@@ -139,46 +139,46 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_WAIT_MS));
+        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MAX_WAIT_MS);
+                EventResponse.MAX_WAIT_MS);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_WAIT_MS + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS + 1));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MAX_WAIT_MS);
+                EventResponse.MAX_WAIT_MS);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_WAIT_MS - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS - 1));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MAX_WAIT_MS - 1);
+                EventResponse.MAX_WAIT_MS - 1);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_WAIT_MS));
+        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MIN_WAIT_MS);
+                EventResponse.MIN_WAIT_MS);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_WAIT_MS - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS - 1));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MIN_WAIT_MS);
+                EventResponse.MIN_WAIT_MS);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_WAIT_MS + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS + 1));
         responseHeaders.put("X-UA-Max-Wait", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxWait(),
-                AnalyticsPreferences.MIN_WAIT_MS + 1);
+                EventResponse.MIN_WAIT_MS + 1);
     }
 
     /**
@@ -189,45 +189,45 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_INTERVAL_MS));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_INTERVAL_MS));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MAX_BATCH_INTERVAL_MS);
+                EventResponse.MAX_BATCH_INTERVAL_MS);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_INTERVAL_MS + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_INTERVAL_MS + 1));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MAX_BATCH_INTERVAL_MS);
+                EventResponse.MAX_BATCH_INTERVAL_MS);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MAX_BATCH_INTERVAL_MS - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_INTERVAL_MS - 1));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MAX_BATCH_INTERVAL_MS - 1);
+                EventResponse.MAX_BATCH_INTERVAL_MS - 1);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_INTERVAL_MS));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_INTERVAL_MS));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MIN_BATCH_INTERVAL_MS);
+                EventResponse.MIN_BATCH_INTERVAL_MS);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_INTERVAL_MS - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_INTERVAL_MS - 1));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MIN_BATCH_INTERVAL_MS);
+                EventResponse.MIN_BATCH_INTERVAL_MS);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(AnalyticsPreferences.MIN_BATCH_INTERVAL_MS + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_INTERVAL_MS + 1));
         responseHeaders.put("X-UA-Min-Batch-Interval", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMinBatchInterval(),
-                AnalyticsPreferences.MIN_BATCH_INTERVAL_MS + 1);
+                EventResponse.MIN_BATCH_INTERVAL_MS + 1);
     }
 }

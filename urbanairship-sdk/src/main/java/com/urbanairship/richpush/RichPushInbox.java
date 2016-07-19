@@ -17,6 +17,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -47,6 +48,7 @@ import java.util.concurrent.Executors;
  * server the next time the inbox is synchronized.
  */
 public class RichPushInbox extends AirshipComponent {
+
 
     /**
      * A listener interface for receiving event callbacks related to inbox updates.
@@ -119,13 +121,16 @@ public class RichPushInbox extends AirshipComponent {
     private BroadcastReceiver foregroundReceiver;
     private Context context;
     private Handler handler = new Handler(Looper.getMainLooper());
+    private InboxIntentHandler inboxIntentHandler;
+    private final PreferenceDataStore dataStore;
 
     public RichPushInbox(Context context, PreferenceDataStore dataStore) {
-        this(context, new RichPushUser(dataStore), new RichPushResolver(context), Executors.newSingleThreadExecutor());
+        this(context, dataStore, new RichPushUser(context, dataStore), new RichPushResolver(context), Executors.newSingleThreadExecutor());
     }
 
-    RichPushInbox(Context context, RichPushUser user, RichPushResolver resolver, Executor executor) {
+    RichPushInbox(Context context, PreferenceDataStore dataStore, RichPushUser user, RichPushResolver resolver, Executor executor) {
         this.context = context.getApplicationContext();
+        this.dataStore = dataStore;
         this.user = user;
         this.richPushResolver = resolver;
         this.executor = executor;
@@ -157,8 +162,8 @@ public class RichPushInbox extends AirshipComponent {
                 if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
                     fetchMessages();
                 } else {
-                    Intent serviceIntent = new Intent(context, RichPushUpdateService.class)
-                            .setAction(RichPushUpdateService.ACTION_SYNC_MESSAGE_STATE);
+                    Intent serviceIntent = new Intent(context, AirshipService.class)
+                            .setAction(InboxIntentHandler.ACTION_SYNC_MESSAGE_STATE);
                     context.startService(serviceIntent);
                 }
             }
@@ -169,6 +174,20 @@ public class RichPushInbox extends AirshipComponent {
         filter.addAction(Analytics.ACTION_APP_BACKGROUND);
 
         LocalBroadcastManager.getInstance(context).registerReceiver(foregroundReceiver, filter);
+    }
+
+    @Override
+    protected boolean acceptsIntentAction(@NonNull UAirship airship, @NonNull String action) {
+        if (inboxIntentHandler == null) {
+            inboxIntentHandler = new InboxIntentHandler(context, airship, dataStore);
+        }
+
+        return inboxIntentHandler.acceptsIntentAction(action);
+    }
+
+    @Override
+    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
+        inboxIntentHandler.handleIntent(intent);
     }
 
     @Override
@@ -348,15 +367,14 @@ public class RichPushInbox extends AirshipComponent {
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 fetchCount--;
-                pendingResult.setResult(resultCode == RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS);
+                pendingResult.setResult(resultCode == InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS);
             }
         };
 
         Logger.debug("RichPushInbox - Starting update service.");
-        Context context = UAirship.getApplicationContext();
-        Intent intent = new Intent(context, RichPushUpdateService.class)
-                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+        Intent intent = new Intent(context, AirshipService.class)
+                .setAction(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
 
         context.startService(intent);
 

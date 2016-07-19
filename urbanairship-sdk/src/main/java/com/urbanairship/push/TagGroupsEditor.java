@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
@@ -91,10 +92,10 @@ public class TagGroupsEditor {
             return;
         }
 
-        Intent i = new Intent(UAirship.getApplicationContext(), PushService.class)
+        Intent i = new Intent(UAirship.getApplicationContext(), AirshipService.class)
                 .setAction(action)
-                .putExtra(PushService.EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
-                .putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
+                .putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
+                .putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
 
         UAirship.getApplicationContext().startService(i);
     }

@@ -11,6 +11,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,9 +22,7 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,7 +54,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, airshipConfigOptions, mockActivityMonitor);
+        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockActivityMonitor);
         analytics.init();
 
         activityMonitorListener = listenerCapture.getValue();
@@ -130,9 +129,9 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify that a app background event is sent to the service to be added
         Intent addEventIntent = shadowApplication.getNextStartedService();
         assertNotNull("Going into background should start the event service", addEventIntent);
-        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), EventService.ACTION_ADD);
+        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), AnalyticsIntentHandler.ACTION_ADD);
         assertEquals("Should add an app background event", AppBackgroundEvent.TYPE,
-                addEventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+                addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
 
         // Verify isAppInForeground is false
         assertFalse(analytics.isAppInForeground());
@@ -175,13 +174,13 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify the intent contains the content values of the event
         Intent addEventIntent = shadowApplication.getNextStartedService();
         assertNotNull(addEventIntent);
-        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), EventService.ACTION_ADD);
-        assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_ID), "event-id");
-        assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_DATA), "event-data");
-        assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE), "event-type");
-        assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_TIME_STAMP), "1000");
-        assertEquals(addEventIntent.getStringExtra(EventService.EXTRA_EVENT_SESSION_ID), analytics.getSessionId());
-        assertEquals(addEventIntent.getIntExtra(EventService.EXTRA_EVENT_PRIORITY, -100), Event.LOW_PRIORITY);
+        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), AnalyticsIntentHandler.ACTION_ADD);
+        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID), "event-id");
+        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA), "event-data");
+        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE), "event-type");
+        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP), "1000");
+        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID), analytics.getSessionId());
+        assertEquals(addEventIntent.getIntExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, -100), Event.LOW_PRIORITY);
 
     }
 
@@ -196,7 +195,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setAnalyticsEnabled(false)
                 .build();
 
-        analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
+        analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, UAirship.ANDROID_PLATFORM);
 
         analytics.addEvent(new AppForegroundEvent(100));
         Intent addEventIntent = shadowApplication.getNextStartedService();
@@ -254,7 +253,7 @@ public class AnalyticsTest extends BaseTestCase {
     public void testDisableAnalytics() {
         analytics.setEnabled(false);
 
-        assertEquals(EventService.ACTION_DELETE_ALL, shadowApplication.getNextStartedService().getAction());
+        assertEquals(AnalyticsIntentHandler.ACTION_DELETE_ALL, shadowApplication.getNextStartedService().getAction());
     }
 
     /**
@@ -297,8 +296,8 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
-        assertEquals("associate_identifiers", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
+        assertEquals("associate_identifiers", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
     }
 
     /**
@@ -306,23 +305,14 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testEditAssociatedIdentifiers() {
-        analytics.editAssociatedIdentifiers().apply();
+        analytics.editAssociatedIdentifiers()
+                 .addIdentifier("customKey", "customValue")
+                 .apply();
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
-        assertEquals("associate_identifiers", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
-    }
-
-    /**
-     * Test getAssociatedIdentifers.
-     */
-    @Test
-    public void testGetAssociatedIdentifiers() {
-        Map<String, String> ids = new HashMap<>();
-        ids.put("customKey", "customValue");
-        AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
-        analytics.getPreferences().setIdentifiers(identifiers);
+        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
+        assertEquals("associate_identifiers", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
 
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
@@ -343,8 +333,8 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
-        assertEquals("screen_tracking", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
+        assertEquals("screen_tracking", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
     }
 
     /**
@@ -360,8 +350,8 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify we started the event service to add the event
         Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
-        assertEquals("screen_tracking", eventIntent.getStringExtra(EventService.EXTRA_EVENT_TYPE));
+        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
+        assertEquals("screen_tracking", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
     }
 
     /**
@@ -401,12 +391,8 @@ public class AnalyticsTest extends BaseTestCase {
         activityMonitorListener.onForeground(0);
         assertTrue(analytics.isAppInForeground());
 
-        // An add event is sent for screen tracking.
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_ADD, eventIntent.getAction());
-
         // An advertising ID update event is sent.
-        eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(EventService.ACTION_UPDATE_ADVERTISING_ID, eventIntent.getAction());
+        Intent eventIntent = shadowApplication.getNextStartedService();
+        assertEquals(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID, eventIntent.getAction());
     }
 }

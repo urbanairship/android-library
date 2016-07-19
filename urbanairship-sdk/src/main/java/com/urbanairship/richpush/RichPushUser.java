@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -23,6 +24,7 @@ import java.util.List;
  * The Urban Airship rich push user.
  */
 public class RichPushUser {
+
 
     /**
      * A listener interface for receiving events for user updates.
@@ -44,8 +46,10 @@ public class RichPushUser {
     private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
+    private final Context context;
 
-    RichPushUser(PreferenceDataStore preferenceDataStore) {
+    RichPushUser(Context context, PreferenceDataStore preferenceDataStore) {
+        this.context = context;
         this.preferences = preferenceDataStore;
 
         String password = preferences.getString(USER_PASSWORD_KEY, null);
@@ -90,7 +94,7 @@ public class RichPushUser {
         ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
-                boolean success = resultCode == RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS;
+                boolean success = resultCode == InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS;
 
                 synchronized (listeners) {
                     for (Listener listener : new ArrayList<>(listeners)) {
@@ -101,11 +105,10 @@ public class RichPushUser {
         };
 
         Logger.debug("RichPushUser - Starting update service.");
-        Context context = UAirship.getApplicationContext();
-        Intent intent = new Intent(context, RichPushUpdateService.class)
-                .setAction(RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE)
-                .putExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
-                .putExtra(RichPushUpdateService.EXTRA_FORCEFULLY, forcefully);
+        Intent intent = new Intent(context, AirshipService.class)
+                .setAction(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                .putExtra(InboxIntentHandler.EXTRA_FORCEFULLY, forcefully);
 
         context.startService(intent);
     }

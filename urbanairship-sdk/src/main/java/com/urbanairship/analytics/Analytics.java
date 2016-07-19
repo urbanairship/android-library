@@ -16,11 +16,13 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipService;
 import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.location.LocationRequestOptions;
 
 import java.util.HashMap;
@@ -33,6 +35,11 @@ import java.util.UUID;
  */
 public class Analytics extends AirshipComponent {
 
+    private static final String KEY_PREFIX = "com.urbanairship.analytics";
+    private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
+    private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
+    private static final String ADVERTISING_ID_AUTO_TRACKING_KEY = KEY_PREFIX + ".ADVERTISING_ID_TRACKING";
+
     /**
      * Intent action for application foreground.
      */
@@ -43,13 +50,12 @@ public class Analytics extends AirshipComponent {
      */
     public static final String ACTION_APP_BACKGROUND = "com.urbanairship.analytics.APP_BACKGROUND";
 
-
     private static LifeCycleCallbacks lifeCycleCallbacks;
 
     private final ActivityMonitor activityMonitor;
-    private final EventDataManager dataManager;
-    private final AnalyticsPreferences preferences;
+    private final PreferenceDataStore preferenceDataStore;
     private final Context context;
+    private final int platform;
     private boolean inBackground;
 
     private final AirshipConfigOptions configOptions;
@@ -62,14 +68,15 @@ public class Analytics extends AirshipComponent {
     private long screenStartTime;
 
     private final Object associatedIdentifiersLock = new Object();
+    private AnalyticsIntentHandler analyticsIntentHandler;
 
     /**
      * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
      *
      * @hide
      */
-    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options) {
-        this(context, preferenceDataStore, options, new ActivityMonitor());
+    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options, int platform) {
+        this(context, preferenceDataStore, options, platform, new ActivityMonitor());
     }
 
     /**
@@ -78,18 +85,18 @@ public class Analytics extends AirshipComponent {
      * @param context The application context.
      * @param preferenceDataStore The preference data store.
      * @param options The airship config options
+     * @param platform The device platform.
      * @param activityMonitor Optional activityMonitor
      */
     Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
-              @NonNull AirshipConfigOptions options, @NonNull ActivityMonitor activityMonitor) {
+              @NonNull AirshipConfigOptions options, int platform, @NonNull ActivityMonitor activityMonitor) {
 
         this.context = context.getApplicationContext();
-        this.preferences = new AnalyticsPreferences(preferenceDataStore);
-        this.dataManager = new EventDataManager(context, options.getAppKey());
+        this.preferenceDataStore = preferenceDataStore;
         this.inBackground = true; //application is starting
-
         this.configOptions = options;
         this.activityMonitor = activityMonitor;
+        this.platform = platform;
     }
 
     @Override
@@ -111,8 +118,8 @@ public class Analytics extends AirshipComponent {
 
                 // If advertising ID tracking is enabled, send an update intent to the event service.
                 if (isAutoTrackAdvertisingIdEnabled()) {
-                    Intent i = new Intent(context, EventService.class)
-                            .setAction(EventService.ACTION_UPDATE_ADVERTISING_ID);
+                    Intent i = new Intent(context, AirshipService.class)
+                            .setAction(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID);
 
                     context.startService(i);
                 }
@@ -141,6 +148,19 @@ public class Analytics extends AirshipComponent {
                 setConversionMetadata(null);
             }
         });
+    }
+
+    @Override
+    protected boolean acceptsIntentAction(@NonNull UAirship airship, @NonNull String action) {
+        if (analyticsIntentHandler == null) {
+            analyticsIntentHandler = new AnalyticsIntentHandler(context, airship, preferenceDataStore);
+        }
+        return analyticsIntentHandler.acceptsIntentAction(action);
+    }
+
+    @Override
+    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
+        analyticsIntentHandler.handleIntent(intent);
     }
 
     @Override
@@ -222,14 +242,14 @@ public class Analytics extends AirshipComponent {
             Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
-        Intent i = new Intent(context, EventService.class)
-                .setAction(EventService.ACTION_ADD)
-                .putExtra(EventService.EXTRA_EVENT_TYPE, event.getType())
-                .putExtra(EventService.EXTRA_EVENT_ID, event.getEventId())
-                .putExtra(EventService.EXTRA_EVENT_DATA, eventPayload)
-                .putExtra(EventService.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                .putExtra(EventService.EXTRA_EVENT_SESSION_ID, sessionId)
-                .putExtra(EventService.EXTRA_EVENT_PRIORITY, event.getPriority());
+        Intent i = new Intent(context, AirshipService.class)
+                .setAction(AnalyticsIntentHandler.ACTION_ADD)
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, event.getType())
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, event.getEventId())
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, eventPayload)
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, sessionId)
+                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, event.getPriority());
 
 
         if (context.startService(i) == null) {
@@ -329,25 +349,6 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
-     * Gets the EventDataManager
-     *
-     * @return A EventDataManager
-     */
-    EventDataManager getDataManager() {
-        return dataManager;
-    }
-
-    /**
-     * Gets the analytic preferences
-     *
-     * @return The analytic preferences
-     */
-    AnalyticsPreferences getPreferences() {
-        return preferences;
-    }
-
-
-    /**
      * Registers analytics for life cycle callbacks.
      *
      * @param application The application.
@@ -413,15 +414,17 @@ public class Analytics extends AirshipComponent {
      * @param enabled {@code true} to enable analytics, {@code false} to disable.
      */
     public void setEnabled(boolean enabled) {
+        boolean previousValue = preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
+
         // When we disable analytics delete all the events
-        if (preferences.isAnalyticsEnabled() && !enabled) {
-            Intent i = new Intent(context, EventService.class)
-                    .setAction(EventService.ACTION_DELETE_ALL);
+        if (previousValue && !enabled) {
+            Intent i = new Intent(context, AirshipService.class)
+                    .setAction(AnalyticsIntentHandler.ACTION_DELETE_ALL);
 
             context.startService(i);
         }
 
-        preferences.setAnalyticsEnabled(enabled);
+        preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
     }
 
     /**
@@ -434,7 +437,7 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if analytics is enabled, otherwise {@code false}.
      */
     public boolean isEnabled() {
-        return configOptions.analyticsEnabled && preferences.isAnalyticsEnabled();
+        return configOptions.analyticsEnabled && preferenceDataStore.getBoolean(ANALYTICS_ENABLED_KEY, true);
     }
 
     /**
@@ -443,12 +446,16 @@ public class Analytics extends AirshipComponent {
      * @param enabled {@code true} to enable, {@code false} to disable.
      */
     public void setAutoTrackAdvertisingIdEnabled(boolean enabled) {
-        if (UAirship.shared().getPlatformType() == UAirship.ANDROID_PLATFORM && !PlayServicesUtils.isGoogleAdsDependencyAvailable() && enabled) {
+        if (platform == UAirship.ANDROID_PLATFORM && !PlayServicesUtils.isGoogleAdsDependencyAvailable() && enabled) {
             Logger.error("Analytics - Advertising ID auto-tracking could not be enabled due to a missing Google Ads dependency.");
             return;
         }
 
-        preferences.setAutoTrackAdvertisingIdEnabled(enabled);
+        preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
+
+        if (enabled) {
+            context.startService(new Intent(context, AirshipService.class).setAction(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID));
+        }
     }
 
     /**
@@ -457,7 +464,7 @@ public class Analytics extends AirshipComponent {
      * @return {@code true} if enabled, otherwise {@code false}.
      */
     public boolean isAutoTrackAdvertisingIdEnabled() {
-        return preferences.isAutoTrackAdvertisingIdEnabled();
+        return preferenceDataStore.getBoolean(ADVERTISING_ID_AUTO_TRACKING_KEY, false);
     }
 
     /**
@@ -471,7 +478,7 @@ public class Analytics extends AirshipComponent {
     @Deprecated
     public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
         synchronized (associatedIdentifiersLock) {
-            preferences.setIdentifiers(identifiers);
+            preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
             addEvent(new AssociateIdentifiersEvent(identifiers));
         }
     }
@@ -502,7 +509,7 @@ public class Analytics extends AirshipComponent {
                     }
 
                     AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
-                    preferences.setIdentifiers(identifiers);
+                    preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
                     addEvent(new AssociateIdentifiersEvent(identifiers));
                 }
             }
@@ -516,7 +523,14 @@ public class Analytics extends AirshipComponent {
      */
     public AssociatedIdentifiers getAssociatedIdentifiers() {
         synchronized (associatedIdentifiersLock) {
-            return preferences.getIdentifiers();
+            try {
+                return AssociatedIdentifiers.fromJson(preferenceDataStore.getString(ASSOCIATED_IDENTIFIERS_KEY, null));
+            } catch (JsonException e) {
+                Logger.debug("Unable to parse associated identifiers.", e);
+                preferenceDataStore.remove(ASSOCIATED_IDENTIFIERS_KEY);
+            }
+
+            return new AssociatedIdentifiers();
         }
     }
 
@@ -544,5 +558,16 @@ public class Analytics extends AirshipComponent {
 
         currentScreen = screen;
         screenStartTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Uploads any pending events. Events are batched and uploaded automatically to conserve
+     * battery life. Normally apps should not call this method directly.
+     */
+    public void uploadEvents() {
+        Intent sendAnalytics = new Intent(context, AirshipService.class)
+                .setAction(AnalyticsIntentHandler.ACTION_SEND);
+
+        context.startService(sendAnalytics);
     }
 }

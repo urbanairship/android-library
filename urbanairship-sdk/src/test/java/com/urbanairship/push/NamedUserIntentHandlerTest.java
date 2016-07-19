@@ -7,6 +7,7 @@ import android.content.Intent;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;
@@ -25,13 +26,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class NamedUserServiceDelegateTest extends BaseTestCase {
+public class NamedUserIntentHandlerTest extends BaseTestCase {
 
     private NamedUserApiClient namedUserClient;
     private NamedUser namedUser;
     private PushManager pushManager;
     private PreferenceDataStore dataStore;
-    private NamedUserServiceDelegate delegate;
+    private NamedUserIntentHandler intentHandler;
 
     private String changeToken;
 
@@ -40,6 +41,10 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
         namedUserClient = Mockito.mock(NamedUserApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
+
+        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setPushManager(pushManager);
+
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
         changeToken = UUID.randomUUID().toString();
@@ -50,9 +55,8 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
             }
         });
 
-
-        delegate = new NamedUserServiceDelegate(TestApplication.getApplication(), dataStore,
-                namedUserClient, pushManager, namedUser);
+        intentHandler = new NamedUserIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+                dataStore, namedUserClient);
     }
 
     /**
@@ -73,14 +77,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-            delegate.onHandleIntent(intent);
+            Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            intentHandler.handleIntent(intent);
 
             // Verify the update was performed
             verify(namedUserClient).associate("namedUserID", "channelID");
 
             // Verify the last change token was updated
-            assertEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+            assertEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
 
             // Reset the mocks so we can verify again
             reset(namedUserClient);
@@ -101,14 +105,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
         when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        intentHandler.handleIntent(intent);
 
         // Verify the update was performed
         verify(namedUserClient).associate("namedUserID", "channelID");
 
         // Verify the last change token was not updated
-        assertNotEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
     /**
@@ -129,14 +133,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-            delegate.onHandleIntent(intent);
+            Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            intentHandler.handleIntent(intent);
 
             // Verify the update was performed
             verify(namedUserClient).disassociate("channelID");
 
             // Verify the last change token was updated
-            assertEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+            assertEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
 
             // Reset the mocks so we can verify again
             reset(namedUserClient);
@@ -157,14 +161,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
         when(namedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        intentHandler.handleIntent(intent);
 
         // Verify the update was performed
         verify(namedUserClient).disassociate("channelID");
 
         // Verify the last change token was not updated
-        assertNotEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
     /**
@@ -176,14 +180,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        intentHandler.handleIntent(intent);
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
 
         // Verify the last change token was not updated
-        assertNotEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
     /**
@@ -195,14 +199,14 @@ public class NamedUserServiceDelegateTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn(null);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        intentHandler.handleIntent(intent);
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
 
         // Verify the last change token was not updated
-        assertNotEquals(changeToken, dataStore.getString(NamedUserServiceDelegate.LAST_UPDATED_TOKEN_KEY, null));
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
 }

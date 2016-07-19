@@ -62,10 +62,9 @@
 
         </activity>
 
-        <service android:name="com.urbanairship.push.PushService" android:label="Push Notification Service" />
-        <service android:name="com.urbanairship.analytics.EventService" android:label="Event Service" />
+        <service android:name="com.urbanairship.AirshipService" />
+
         <service android:name="com.urbanairship.actions.ActionService" />
-        <service android:name="com.urbanairship.richpush.RichPushUpdateService" />
         <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
 
         <service

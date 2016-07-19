@@ -10,9 +10,9 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.BaseIntentService;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -36,9 +36,24 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Service delegate for the {@link PushService} to handle incoming push messages.
+ * Intent handler for incoming push messages.
  */
-class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
+class PushIntentHandler {
+
+    /**
+     * Action sent when a push is received by GCM.
+     */
+    static final String ACTION_RECEIVE_GCM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_GCM_MESSAGE";
+
+    /**
+     * Action sent when a push is received by ADM.
+     */
+    static final String ACTION_RECEIVE_ADM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_ADM_MESSAGE";
+
+    /**
+     * Extra containing the received message intent.
+     */
+    static final String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
 
     /**
      * Key to store the push canonical IDs for push deduping.
@@ -56,29 +71,36 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
     private static final int RICH_PUSH_REFRESH_WAIT_TIME_MS = 60000; // 1 minute
 
     private final NotificationManagerCompat notificationManager;
-    private final PushManager pushManager;
     private final UAirship airship;
+    private final PreferenceDataStore dataStore;
+    private final Context context;
 
-    public IncomingPushServiceDelegate(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, UAirship.shared(), NotificationManagerCompat.from(context));
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param airship The airship instance.
+     * @param dataStore The preference data store.
+     */
+    PushIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+        this(context, airship, dataStore, NotificationManagerCompat.from(context));
     }
 
-    public IncomingPushServiceDelegate(Context context, PreferenceDataStore dataStore,
-                                       UAirship airship, NotificationManagerCompat notificationManager) {
-        super(context, dataStore);
-
+    @VisibleForTesting
+    PushIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                      NotificationManagerCompat notificationManager) {
+        this.context = context;
+        this.dataStore = dataStore;
         this.airship = airship;
-        this.pushManager = airship.getPushManager();
         this.notificationManager = notificationManager;
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
+    protected void handleIntent(Intent intent) {
         switch (intent.getAction()) {
-            case PushService.ACTION_RECEIVE_ADM_MESSAGE:
+            case ACTION_RECEIVE_ADM_MESSAGE:
                 onAdmMessageReceived(intent);
                 break;
-            case PushService.ACTION_RECEIVE_GCM_MESSAGE:
+            case ACTION_RECEIVE_GCM_MESSAGE:
                 onGcmMessageReceived(intent);
                 break;
         }
@@ -96,13 +118,13 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         }
 
         if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("IncomingPushServiceDelegate - Received intent from GCM without registering.");
+            Logger.error("PushIntentHandler - Received intent from GCM without registering.");
             return;
         }
 
-        Intent gcmIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        Intent gcmIntent = intent.getParcelableExtra(EXTRA_INTENT);
         if (gcmIntent == null) {
-            Logger.error("IncomingPushServiceDelegate - Received GCM message missing original intent.");
+            Logger.error("PushIntentHandler - Received GCM message missing original intent.");
             return;
         }
 
@@ -132,13 +154,13 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         }
 
         if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("IncomingPushServiceDelegate - Received intent from ADM without registering.");
+            Logger.error("PushIntentHandler - Received intent from ADM without registering.");
             return;
         }
 
-        Intent admIntent = intent.getParcelableExtra(PushService.EXTRA_INTENT);
+        Intent admIntent = intent.getParcelableExtra(EXTRA_INTENT);
         if (admIntent == null) {
-            Logger.error("IncomingPushServiceDelegate - Received ADM message missing original intent.");
+            Logger.error("PushIntentHandler - Received ADM message missing original intent.");
             return;
         }
 
@@ -151,7 +173,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
      * @param message The push message.
      */
     private void processMessage(@NonNull PushMessage message) {
-        if (!pushManager.isPushEnabled()) {
+        if (!airship.getPushManager().isPushEnabled()) {
             Logger.info("Received a push when push is disabled! Ignoring.");
             return;
         }
@@ -161,7 +183,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return;
         }
 
-        pushManager.setLastReceivedMetadata(message.getMetadata());
+        airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
         airship.getAnalytics().addEvent(new PushArrivedEvent(message));
 
         if (message.isExpired()) {
@@ -170,7 +192,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         }
 
         if (message.isPing()) {
-            Logger.verbose("IncomingPushServiceDelegate - Received UA Ping");
+            Logger.verbose("PushIntentHandler - Received UA Ping");
             return;
         }
 
@@ -182,20 +204,20 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         // Store any pending in-app messages
         InAppMessage inAppMessage = message.getInAppMessage();
         if (inAppMessage != null) {
-            Logger.debug("IncomingPushServiceDelegate - Received a Push with an in-app message.");
+            Logger.debug("PushIntentHandler - Received a Push with an in-app message.");
             airship.getInAppMessageManager().setPendingMessage(inAppMessage);
         }
 
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
-            Logger.debug("IncomingPushServiceDelegate - Received a Rich Push.");
+            Logger.debug("PushIntentHandler - Received a Rich Push.");
             refreshRichPushMessages();
         }
 
         Integer notificationId = null;
-        if (!pushManager.getUserNotificationsEnabled()) {
+        if (!airship.getPushManager().getUserNotificationsEnabled()) {
             Logger.info("User notifications disabled. Unable to display notification for message: " + message);
         } else {
-            notificationId = showNotification(message, pushManager.getNotificationFactory());
+            notificationId = showNotification(message, airship.getPushManager().getNotificationFactory());
         }
 
         sendPushReceivedBroadcast(message, notificationId);
@@ -228,19 +250,19 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             return null;
         }
 
-        if (!pushManager.isVibrateEnabled() || pushManager.isInQuietTime()) {
+        if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
             // Remove both the vibrate and the DEFAULT_VIBRATE flag
             notification.vibrate = null;
             notification.defaults &= ~Notification.DEFAULT_VIBRATE;
         }
 
-        if (!pushManager.isSoundEnabled() || pushManager.isInQuietTime()) {
+        if (!airship.getPushManager().isSoundEnabled() || airship.getPushManager().isInQuietTime()) {
             // Remove both the sound and the DEFAULT_SOUND flag
             notification.sound = null;
             notification.defaults &= ~Notification.DEFAULT_SOUND;
         }
 
-        Intent contentIntent = new Intent(getContext(), CoreReceiver.class)
+        Intent contentIntent = new Intent(context, CoreReceiver.class)
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
@@ -251,7 +273,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, notification.contentIntent);
         }
 
-        Intent deleteIntent = new Intent(getContext(), CoreReceiver.class)
+        Intent deleteIntent = new Intent(context, CoreReceiver.class)
                 .setAction(PushManager.ACTION_NOTIFICATION_DISMISSED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
@@ -261,8 +283,8 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, notification.deleteIntent);
         }
 
-        notification.contentIntent = PendingIntent.getBroadcast(getContext(), 0, contentIntent, 0);
-        notification.deleteIntent = PendingIntent.getBroadcast(getContext(), 0, deleteIntent, 0);
+        notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
+        notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
         Logger.info("Posting notification " + notification + " with ID " + notificationId);
         notificationManager.notify(notificationId, notification);
@@ -287,7 +309,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
             intent.putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId.intValue());
         }
 
-        getContext().sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
+        context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
     }
 
     /**
@@ -323,9 +345,9 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
 
         JsonList jsonList = null;
         try {
-            jsonList = JsonValue.parseString(getDataStore().getString(LAST_CANONICAL_IDS_KEY, null)).getList();
+            jsonList = JsonValue.parseString(dataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
         } catch (JsonException e) {
-            Logger.debug("IncomingPushServiceDelegate - Unable to parse canonical Ids.", e);
+            Logger.debug("PushIntentHandler - Unable to parse canonical Ids.", e);
         }
 
         List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
@@ -345,7 +367,7 @@ class IncomingPushServiceDelegate extends BaseIntentService.Delegate {
         }
 
         // Store the new list
-        getDataStore().put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
+        dataStore.put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
 
         return true;
     }

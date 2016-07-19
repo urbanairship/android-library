@@ -18,7 +18,7 @@ public class TagGroupsEditorTest {
 
     @Before
     public void setUp() {
-        editor = new TagGroupsEditor(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        editor = new TagGroupsEditor(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
     }
 
     /**

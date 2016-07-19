@@ -63,11 +63,11 @@ public class NamedUserTest extends BaseTestCase {
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be clearing pending named user tags",
-                PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+                TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
 
         startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be to update named user",
-                PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+                NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
 
@@ -94,11 +94,11 @@ public class NamedUserTest extends BaseTestCase {
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be clearing pending named user tags",
-                PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+                TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
 
         startedIntent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals("Intent action should be to update named user",
-                PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+                NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
         assertNull("Named user ID should be null", namedUser.getId());
     }
 
@@ -113,10 +113,10 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.init();
 
         Intent updateIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(PushService.ACTION_UPDATE_NAMED_USER, updateIntent.getAction());
+        assertEquals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, updateIntent.getAction());
 
         Intent tagIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(PushService.ACTION_UPDATE_NAMED_USER_TAGS, tagIntent.getAction());
+        assertEquals(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS, tagIntent.getAction());
     }
 
     /**
@@ -146,7 +146,7 @@ public class NamedUserTest extends BaseTestCase {
 
         ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
         assertEquals("Intent action should be to update named user",
-                intent.getAction(), PushService.ACTION_UPDATE_NAMED_USER);
+                intent.getAction(), NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
         assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
     }
 
@@ -186,7 +186,7 @@ public class NamedUserTest extends BaseTestCase {
                  .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Tags Service", PushService.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
+        assertEquals("Expect Update Named User Tags Service", TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
     }
 
     /**
@@ -210,7 +210,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.startUpdateService();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Service", PushService.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+        assertEquals("Expect Update Named User Service", NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
     }
 
     /**
@@ -222,7 +222,7 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.startUpdateTagsService();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Tags Service", PushService.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
+        assertEquals("Expect Update Named User Tags Service", TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS, startedIntent.getAction());
     }
 
     /**
@@ -233,6 +233,6 @@ public class NamedUserTest extends BaseTestCase {
         namedUser.startClearPendingTagsService();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Clear Pending Tags Service", PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+        assertEquals("Expect Clear Pending Tags Service", TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
     }
 }

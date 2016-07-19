@@ -3,12 +3,13 @@
 package com.urbanairship.analytics;
 
 import android.app.AlarmManager;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.push.PushManager;
 
@@ -35,46 +36,39 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-public class EventServiceTest extends BaseTestCase {
+public class AnalyticsIntentHandlerTest extends BaseTestCase {
 
-    EventService service;
-    EventApiClient client;
-    EventDataManager dataManager;
-    AnalyticsPreferences preferences;
-    PushManager pushManager;
+    AnalyticsIntentHandler intentHandler;
+    EventApiClient mockClient;
+    EventDataManager mockDataManager;
+    PushManager mockPushManager;
+    Analytics mockAnalytics;
     String channelId;
+    PreferenceDataStore dataStore;
 
     @Before
     public void setUp() {
-        pushManager = mock(PushManager.class);
-        preferences = mock(AnalyticsPreferences.class);
-        dataManager = mock(EventDataManager.class);
+        mockPushManager = mock(PushManager.class);
+        mockDataManager = mock(EventDataManager.class);
+        mockAnalytics = mock(Analytics.class);
+        mockClient = mock(EventApiClient.class);
 
-        Analytics analytics = mock(Analytics.class);
-        when(analytics.getDataManager()).thenReturn(dataManager);
-        when(analytics.getPreferences()).thenReturn(preferences);
-
-        TestApplication.getApplication().setAnalytics(analytics);
-        TestApplication.getApplication().setPushManager(pushManager);
-
-        Mockito.when(pushManager.getChannelId()).thenAnswer(new Answer<String>() {
+        Mockito.when(mockPushManager.getChannelId()).thenAnswer(new Answer<String>() {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 return channelId;
             }
         });
+
+
+        TestApplication.getApplication().setAnalytics(mockAnalytics);
+        TestApplication.getApplication().setPushManager(mockPushManager);
+
         channelId = "some channel ID";
+        dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        client = mock(EventApiClient.class);
-
-        // Extend it to make onHandleIntent public so we can call it directly
-        service = new EventService("EventService", client) {
-            @Override
-            public void onHandleIntent(Intent intent) {
-                super.onHandleIntent(intent);
-            }
-        };
-        service.onCreate();
+        intentHandler = new AnalyticsIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+                dataStore, mockDataManager, mockClient);
     }
 
     /**
@@ -83,24 +77,18 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testAddEventAfterNextSendTime() {
-        Intent intent = new Intent(EventService.ACTION_ADD);
-        intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
-        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
-        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
-        intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
-        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
-        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_ADD);
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, "some-type");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "DATA!");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
 
-        service.onHandleIntent(intent);
-        // Verify it was added to the data manager
-        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
+        intentHandler.handleIntent(intent);
 
         // Verify we add an event.
-        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
-
-
-        // Reset last send time, should schedule the event in 10 seconds
-        when(preferences.getLastSendTime()).thenReturn(0l);
+        Mockito.verify(mockDataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
 
         // Check it schedules an upload
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
@@ -109,7 +97,7 @@ public class EventServiceTest extends BaseTestCase {
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
-        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertEquals(AnalyticsIntentHandler.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within 10 second
@@ -122,28 +110,24 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testAddEventBeforeNextSendTime() {
-        Intent intent = new Intent(EventService.ACTION_ADD);
-        intent.putExtra(EventService.EXTRA_EVENT_TYPE, "some-type");
-        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
-        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
-        intent.putExtra(EventService.EXTRA_EVENT_DATA, "DATA!");
-        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
-        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
-
-        service.onHandleIntent(intent);
-        // Verify it was added to the data manager
-        Mockito.verify(dataManager).insertEvent("some-type", "DATA!", "event id", "session id", "100");
-
-        // Verify we add an event.
-        Mockito.verify(dataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
-
-
         // Set the last send time to the current time so the next send time is minBatchInterval
-        when(preferences.getLastSendTime()).thenReturn(System.currentTimeMillis());
+        dataStore.put(AnalyticsIntentHandler.LAST_SEND_KEY, System.currentTimeMillis());
 
         // Set the minBatchInterval to 20 seconds
-        when(preferences.getMinBatchInterval()).thenReturn(20000);
+        dataStore.put(AnalyticsIntentHandler.MIN_BATCH_INTERVAL_KEY, 20000);
 
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_ADD);
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, "some-type");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "DATA!");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
+
+        intentHandler.handleIntent(intent);
+
+        // Verify we add an event.
+        Mockito.verify(mockDataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
 
         // Check it schedules an upload
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
@@ -152,7 +136,7 @@ public class EventServiceTest extends BaseTestCase {
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
-        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertEquals(AnalyticsIntentHandler.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within 20 second
@@ -164,15 +148,12 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testAddEventEmptyData() {
-        ContentValues values = new ContentValues();
-        values.put("some-key", "some-value");
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_ADD);
 
-        Intent intent = new Intent(EventService.ACTION_ADD);
-
-        service.onHandleIntent(intent);
+        intentHandler.handleIntent(intent);
 
         // Verify we don't add any events.
-        Mockito.verify(dataManager, new Times(0)).insertEvent(anyString(), anyString(), anyString(), anyString(), anyString());
+        Mockito.verify(mockDataManager, new Times(0)).insertEvent(anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     /**
@@ -186,17 +167,17 @@ public class EventServiceTest extends BaseTestCase {
         // Set up data manager to return 2 count for events.
         // Note: we only have one event, but it should only ask for one to upload
         // having it return 2 will make it schedule to upload events in the future
-        when(dataManager.getEventCount()).thenReturn(2);
+        when(mockDataManager.getEventCount()).thenReturn(2);
 
         // Return 200 bytes in size.  It should only be able to do 100 bytes so only
         // the first event.
-        when(dataManager.getDatabaseSize()).thenReturn(200);
+        when(mockDataManager.getDatabaseSize()).thenReturn(200);
 
         // Return the event when it asks for 1
-        when(dataManager.getEvents(1)).thenReturn(events);
+        when(mockDataManager.getEvents(1)).thenReturn(events);
 
-        // Preferences
-        when(preferences.getMaxBatchSize()).thenReturn(100);
+        // Set the max batch size to 100
+        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100);
 
         // Set up the response
         EventResponse response = mock(EventResponse.class);
@@ -207,23 +188,23 @@ public class EventServiceTest extends BaseTestCase {
         when(response.getMinBatchInterval()).thenReturn(100);
 
         // Return the response
-        when(client.sendEvents(events.values())).thenReturn(response);
+        when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Intent intent = new Intent(EventService.ACTION_SEND);
-        service.onHandleIntent(intent);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_SEND);
+        intentHandler.handleIntent(intent);
 
-        // Check clients receives the events
-        Mockito.verify(client).sendEvents(events.values());
+        // Check mockClients receives the events
+        Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
 
         // Check data manager deletes events
-        Mockito.verify(dataManager).deleteEvents(events.keySet());
+        Mockito.verify(mockDataManager).deleteEvents(events.keySet());
 
         // Verify responses are being saved
-        Mockito.verify(preferences).setMaxTotalDbSize(200);
-        Mockito.verify(preferences).setMaxBatchSize(300);
-        Mockito.verify(preferences).setMaxWait(400);
-        Mockito.verify(preferences).setMinBatchInterval(100);
+        assertEquals(200, dataStore.getInt(AnalyticsIntentHandler.MAX_TOTAL_DB_SIZE_KEY, 0));
+        assertEquals(300, dataStore.getInt(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 0));
+        assertEquals(400, dataStore.getInt(AnalyticsIntentHandler.MAX_WAIT_KEY, 0));
+        assertEquals(100, dataStore.getInt(AnalyticsIntentHandler.MIN_BATCH_INTERVAL_KEY, 0));
 
         // Check it schedules another upload
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
@@ -242,27 +223,28 @@ public class EventServiceTest extends BaseTestCase {
             events.put("event " + i, "{ 'body' }");
         }
 
-        when(preferences.getMaxBatchSize()).thenReturn(100000);
-        when(dataManager.getDatabaseSize()).thenReturn(100000);
-        when(dataManager.getEventCount()).thenReturn(1000);
+        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100000);
+
+        when(mockDataManager.getDatabaseSize()).thenReturn(100000);
+        when(mockDataManager.getEventCount()).thenReturn(1000);
 
         // Return the event when it asks for 1
-        when(dataManager.getEvents(500)).thenReturn(events);
+        when(mockDataManager.getEvents(500)).thenReturn(events);
 
         // Set up the response
         EventResponse response = mock(EventResponse.class);
         when(response.getStatus()).thenReturn(200);
-        when(client.sendEvents(events.values())).thenReturn(response);
+        when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Intent intent = new Intent(EventService.ACTION_SEND);
-        service.onHandleIntent(intent);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_SEND);
+        intentHandler.handleIntent(intent);
 
-        // Check clients receives the events
-        Mockito.verify(client).sendEvents(events.values());
+        // Check mockClients receives the events
+        Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
 
         // Check data manager deletes events
-        Mockito.verify(dataManager).deleteEvents(events.keySet());
+        Mockito.verify(mockDataManager).deleteEvents(events.keySet());
     }
 
     /**
@@ -270,29 +252,23 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testSendingWithNoChannelID() {
-
         // Return null when channel ID is expected
-        Mockito.when(pushManager.getChannelId()).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return null;
-            }
-        });
+        channelId = null;
 
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
 
         // Satisfy event count check to avoid early return.
-        when(dataManager.getEventCount()).thenReturn(1);
+        when(mockDataManager.getEventCount()).thenReturn(1);
         // Return the event when it asks for 1
-        when(dataManager.getEvents(1)).thenReturn(events);
+        when(mockDataManager.getEvents(1)).thenReturn(events);
 
         // Start the upload process
-        Intent intent = new Intent(EventService.ACTION_SEND);
-        service.onHandleIntent(intent);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_SEND);
+        intentHandler.handleIntent(intent);
 
         // Verify uploadEvents returns early when no channel ID is present.
-        Mockito.verify(client, never()).sendEvents(events.values());
+        Mockito.verify(mockClient, never()).sendEvents(UAirship.shared(), events.values());
     }
 
     /**
@@ -302,21 +278,23 @@ public class EventServiceTest extends BaseTestCase {
     public void testSendEventsFails() {
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
-        when(dataManager.getEventCount()).thenReturn(1);
-        when(dataManager.getDatabaseSize()).thenReturn(100);
-        when(dataManager.getEvents(1)).thenReturn(events);
-        when(preferences.getMaxBatchSize()).thenReturn(100);
+        when(mockDataManager.getEventCount()).thenReturn(1);
+        when(mockDataManager.getDatabaseSize()).thenReturn(100);
+        when(mockDataManager.getEvents(1)).thenReturn(events);
+
+        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100);
+
 
         // Return a null response
-        when(client.sendEvents(events.values())).thenReturn(null);
+        when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(null);
 
-        Intent intent = new Intent(EventService.ACTION_SEND);
-        service.onHandleIntent(intent);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_SEND);
+        intentHandler.handleIntent(intent);
 
-        Mockito.verify(client).sendEvents(events.values());
+        Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
 
         // If it fails, it should skip deleting events
-        Mockito.verify(dataManager, Mockito.never()).deleteEvents(events.keySet());
+        Mockito.verify(mockDataManager, Mockito.never()).deleteEvents(events.keySet());
 
         // Check it schedules another upload
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
@@ -330,18 +308,18 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testAddingHighPriorityEvents() {
-        Intent intent = new Intent(EventService.ACTION_ADD);
-        intent.putExtra(EventService.EXTRA_EVENT_TYPE, RegionEvent.TYPE);
-        intent.putExtra(EventService.EXTRA_EVENT_ID, "event id");
-        intent.putExtra(EventService.EXTRA_EVENT_TIME_STAMP, "100");
-        intent.putExtra(EventService.EXTRA_EVENT_DATA, "Region Event Data");
-        intent.putExtra(EventService.EXTRA_EVENT_SESSION_ID, "session id");
-        intent.putExtra(EventService.EXTRA_EVENT_PRIORITY, Event.HIGH_PRIORITY);
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_ADD);
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, RegionEvent.TYPE);
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "Region Event Data");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id");
+        intent.putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.HIGH_PRIORITY);
 
         // Set last send time to year 3005 so we don't upload immediately
-        when(preferences.getLastSendTime()).thenReturn(32661446400000l);
+        dataStore.put(AnalyticsIntentHandler.LAST_SEND_KEY, 32661446400000L);
 
-        service.onHandleIntent(intent);
+        intentHandler.handleIntent(intent);
 
         // Check it schedules an upload
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
@@ -350,7 +328,7 @@ public class EventServiceTest extends BaseTestCase {
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(alarm.operation);
         assertTrue(shadowPendingIntent.isServiceIntent());
-        assertEquals(EventService.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
+        assertEquals(AnalyticsIntentHandler.ACTION_SEND, shadowPendingIntent.getSavedIntent().getAction());
         assertNotNull("Alarm should be scheduled when region event is added", alarm);
 
         // Verify the alarm is within a second
@@ -362,8 +340,8 @@ public class EventServiceTest extends BaseTestCase {
      */
     @Test
     public void testDeleteAll() {
-        Intent intent = new Intent(EventService.ACTION_DELETE_ALL);
-        service.onHandleIntent(intent);
-        Mockito.verify(dataManager).deleteAllEvents();
+        Intent intent = new Intent(AnalyticsIntentHandler.ACTION_DELETE_ALL);
+        intentHandler.handleIntent(intent);
+        Mockito.verify(mockDataManager).deleteAllEvents();
     }
 }
