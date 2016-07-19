@@ -38,7 +38,7 @@ public class RichPushUserTest extends BaseTestCase {
     @Before
     public void setUp() {
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        user = new RichPushUser(dataStore);
+        user = new RichPushUser(TestApplication.getApplication(), dataStore);
         listener = new TestUserListener();
         user.addListener(listener);
 
@@ -125,7 +125,7 @@ public class RichPushUserTest extends BaseTestCase {
         dataStore.put("com.urbanairship.user.PASSWORD", fakeToken);
         dataStore.put("com.urbanairship.user.ID", fakeUserId);
 
-        user = new RichPushUser(dataStore);
+        user = new RichPushUser(TestApplication.getApplication(), dataStore);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
         assertEquals("User password should match", fakeToken, user.getPassword());
@@ -145,7 +145,7 @@ public class RichPushUserTest extends BaseTestCase {
         user.update(false);
 
         ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
-        Assert.assertEquals(intent.getAction(), RichPushUpdateService.ACTION_RICH_PUSH_USER_UPDATE);
+        Assert.assertEquals(intent.getAction(), InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE);
     }
 
     /**
@@ -159,8 +159,8 @@ public class RichPushUserTest extends BaseTestCase {
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
 
         // Verify the listener received a success callback
         assertTrue("Listener should be notified of user update success.",
@@ -178,8 +178,8 @@ public class RichPushUserTest extends BaseTestCase {
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
 
         // Verify the listener received a success callback
         assertFalse("Listener should be notified of user update failed.",

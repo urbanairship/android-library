@@ -9,6 +9,7 @@ import android.os.ResultReceiver;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
+import com.urbanairship.TestApplication;
 
 import junit.framework.Assert;
 
@@ -54,7 +55,7 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         };
 
-        inbox = new RichPushInbox(context, user, resolver, executor);
+        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, user, resolver, executor);
 
         // Only the "even" messages
         testPredicate = new RichPushInbox.Predicate() {
@@ -200,14 +201,14 @@ public class RichPushInboxTest extends BaseTestCase {
     }
 
     /**
-     * Test fetch messages starts the RichPushUpdateService.
+     * Test fetch messages starts the AirshipService.
      */
     @Test
     public void testFetchMessages() {
         inbox.fetchMessages();
 
         Intent intent = application.getNextStartedService();
-        assertEquals(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE, intent.getAction());
+        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, intent.getAction());
     }
 
 
@@ -241,13 +242,13 @@ public class RichPushInboxTest extends BaseTestCase {
         inbox.fetchMessages();
 
         // Verify we started the service
-        assertEquals(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
+        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
 
         // Force another update
         inbox.fetchMessages(callback);
 
         // Verify we started another service
-        assertEquals(RichPushUpdateService.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
+        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
     }
 
 
@@ -262,8 +263,8 @@ public class RichPushInboxTest extends BaseTestCase {
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
 
         verify(callback).onFinished(true);
     }
@@ -279,8 +280,8 @@ public class RichPushInboxTest extends BaseTestCase {
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
 
         verify(callback).onFinished(false);
     }
@@ -297,8 +298,8 @@ public class RichPushInboxTest extends BaseTestCase {
 
         // Send result to the receiver
         ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(RichPushUpdateService.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(RichPushUpdateService.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
 
         verifyZeroInteractions(callback);
     }

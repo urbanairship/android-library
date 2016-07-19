@@ -26,7 +26,6 @@ import com.urbanairship.location.LocationService;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushService;
-import com.urbanairship.richpush.RichPushUpdateService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -237,11 +236,6 @@ public class ManifestUtils {
             Logger.error("AndroidManifest.xml missing required service: " + PushService.class.getCanonicalName());
         }
 
-        // Check Rich Push
-        if (componentInfoMap.get(RichPushUpdateService.class) == null) {
-            Logger.error("AndroidManifest.xml missing required service: " + RichPushUpdateService.class.getCanonicalName());
-        }
-
         // Check Actions Service
         if (componentInfoMap.get(ActionService.class) == null) {
             Logger.error("AndroidManifest.xml missing required service: " + ActionService.class.getCanonicalName());
@@ -325,7 +319,6 @@ public class ManifestUtils {
             // Services
             put(EventService.class, ManifestUtils.getServiceInfo(EventService.class));
             put(PushService.class, ManifestUtils.getServiceInfo(PushService.class));
-            put(RichPushUpdateService.class, ManifestUtils.getServiceInfo(RichPushUpdateService.class));
             put(ActionService.class, ManifestUtils.getServiceInfo(ActionService.class));
             put(LocationService.class, ManifestUtils.getServiceInfo(LocationService.class));
 
