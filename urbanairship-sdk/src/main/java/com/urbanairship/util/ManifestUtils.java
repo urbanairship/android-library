@@ -21,11 +21,9 @@ import com.urbanairship.UrbanAirshipProvider;
 import com.urbanairship.actions.ActionActivity;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.LandingPageAction;
-import com.urbanairship.analytics.EventService;
 import com.urbanairship.location.LocationService;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -226,15 +224,6 @@ public class ManifestUtils {
             Logger.error("AndroidManifest.xml missing required activity: " + CoreActivity.class.getCanonicalName());
         }
 
-        // Event Service check
-        if (airshipConfigOptions.analyticsEnabled && componentInfoMap.get(EventService.class) == null) {
-            Logger.error("AndroidManifest.xml missing required service: " + EventService.class.getCanonicalName());
-        }
-
-        // Check Push
-        if (componentInfoMap.get(PushService.class) == null) {
-            Logger.error("AndroidManifest.xml missing required service: " + PushService.class.getCanonicalName());
-        }
 
         // Check Actions Service
         if (componentInfoMap.get(ActionService.class) == null) {
@@ -317,8 +306,6 @@ public class ManifestUtils {
     private static Map<Class, ComponentInfo> getUrbanAirshipComponentInfoMap() {
         return new HashMap<Class, ComponentInfo>() {{
             // Services
-            put(EventService.class, ManifestUtils.getServiceInfo(EventService.class));
-            put(PushService.class, ManifestUtils.getServiceInfo(PushService.class));
             put(ActionService.class, ManifestUtils.getServiceInfo(ActionService.class));
             put(LocationService.class, ManifestUtils.getServiceInfo(LocationService.class));
 

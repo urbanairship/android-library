@@ -46,6 +46,8 @@ public class TestApplication extends Application implements TestLifecycleApplica
                 .setInProduction(false)
                 .build();
 
+        setPlatform(UAirship.ANDROID_PLATFORM);
+
         UAirship.application = this;
         UAirship.isFlying = true;
         UAirship.isTakingOff = true;
@@ -55,7 +57,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
-        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, airshipConfigOptions);
+        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM);
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore);
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore);
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore);
@@ -68,7 +70,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.messageCenter = new MessageCenter();
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
 
-        setPlatform(UAirship.ANDROID_PLATFORM);
         ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(this), provider);
     }
 
@@ -82,6 +83,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setApplicationMetrics(ApplicationMetrics metrics) {
         UAirship.shared().applicationMetrics = metrics;
+    }
+
+    public void setNamedUser(NamedUser namedUser) {
+        UAirship.shared().namedUser = namedUser;
     }
 
     public void setAnalytics(Analytics analytics) {

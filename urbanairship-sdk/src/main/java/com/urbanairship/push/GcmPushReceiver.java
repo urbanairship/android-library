@@ -12,6 +12,7 @@ import android.os.Build;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Base64;
 
+import com.urbanairship.AirshipService;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 
@@ -37,9 +38,9 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         switch (intent.getAction()) {
             case GcmConstants.ACTION_GCM_RECEIVE:
-                Intent pushIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_RECEIVE_GCM_MESSAGE)
-                        .putExtra(PushService.EXTRA_INTENT, intent);
+                Intent pushIntent = new Intent(context, AirshipService.class)
+                        .setAction(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                        .putExtra(PushIntentHandler.EXTRA_INTENT, intent);
 
                 startWakefulService(context, pushIntent);
 
@@ -57,8 +58,8 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             case GcmConstants.ACTION_GCM_REGISTRATION:
 
                 // When we detect a GCM registration, make sure our GCM token is up-to-date.
-                Intent registrationIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_UPDATE_PUSH_REGISTRATION);
+                Intent registrationIntent = new Intent(context, AirshipService.class)
+                        .setAction(ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION);
 
                 startWakefulService(context, registrationIntent);
                 break;

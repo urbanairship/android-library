@@ -8,6 +8,7 @@ import android.os.Bundle;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -27,7 +28,7 @@ import static junit.framework.Assert.assertNull;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class TagGroupServiceDelegateTest extends BaseTestCase {
+public class TagGroupIntentHandlerTest extends BaseTestCase {
 
     private Map<String, Set<String>> addTagsMap;
     private Map<String, Set<String>> removeTagsMap;
@@ -38,17 +39,20 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
     private NamedUser namedUser;
     private PushManager pushManager;
     private PreferenceDataStore dataStore;
-    private TagGroupServiceDelegate delegate;
+    private TagGroupIntentHandler intentHandler;
 
     @Before
     public void setUp() {
         tagGroupsClient = Mockito.mock(TagGroupsApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
+
+        TestApplication.getApplication().setNamedUser(namedUser);
+        TestApplication.getApplication().setPushManager(pushManager);
+
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        delegate = new TagGroupServiceDelegate(TestApplication.getApplication(), dataStore,
-                tagGroupsClient, pushManager, namedUser);
+        intentHandler = new TagGroupIntentHandler(TestApplication.getApplication(), UAirship.shared(), dataStore, tagGroupsClient);
 
         Set<String> addTags = new HashSet<>();
         addTags.add("tag1");
@@ -87,17 +91,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateChannelTags called
         Mockito.verify(tagGroupsClient, Mockito.times(1)).updateChannelTags("channelID", addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -109,17 +113,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(pushManager.getChannelId()).thenReturn(null);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateChannelTags not called when channel ID doesn't exist
         verifyZeroInteractions(tagGroupsClient);
 
         // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -136,17 +140,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateChannelTags called
         Mockito.verify(tagGroupsClient).updateChannelTags("channelID", addTagsMap, removeTagsMap);
 
         // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -158,8 +162,8 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(pushManager.getChannelId()).thenReturn("channelID");
 
         // Perform an update without specify new tags
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(tagGroupsClient);
@@ -179,17 +183,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateChannelTags called
         Mockito.verify(tagGroupsClient).updateChannelTags("channelID", addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -206,17 +210,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateNamedUserTags called
         Mockito.verify(tagGroupsClient).updateNamedUserTags("namedUserId", addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -228,17 +232,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn(null);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
         verifyZeroInteractions(tagGroupsClient);
 
         // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -255,17 +259,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateNamedUserTags called
         Mockito.verify(tagGroupsClient).updateNamedUserTags("namedUserId", addTagsMap, removeTagsMap);
 
         // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -278,8 +282,8 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         Bundle emptyTagsBundle = new Bundle();
 
         // Perform an update without specify new tags
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        intentHandler.handleIntent(intent);
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(tagGroupsClient);
@@ -300,17 +304,17 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_UPDATE_NAMED_USER_TAGS);
-        intent.putExtra(PushService.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(PushService.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
 
         // Verify updateNamedUserTags called
         Mockito.verify(tagGroupsClient).updateNamedUserTags("namedUserId", addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -319,15 +323,15 @@ public class TagGroupServiceDelegateTest extends BaseTestCase {
     @Test
     public void testClearPendingNamedUserTags() throws JsonException {
         // Set non-empty pending tags
-        dataStore.put(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        dataStore.put(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Perform the update
-        Intent intent = new Intent(PushService.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
-        delegate.onHandleIntent(intent);
+        Intent intent = new Intent(TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+        intentHandler.handleIntent(intent);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(TagGroupServiceDelegate.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(TagGroupIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
     }
 }

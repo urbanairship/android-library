@@ -12,6 +12,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ChannelServiceDelegateTest extends BaseTestCase {
+public class ChannelIntentHandlerTest extends BaseTestCase {
     private static final String CHANNEL_LOCATION_KEY = "Location";
 
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
@@ -40,7 +41,7 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
     PreferenceDataStore dataStore;
     PushManager pushManager;
     ChannelApiClient client;
-    ChannelServiceDelegate serviceDelegate;
+    ChannelIntentHandler intentHandler;
     RichPushInbox richPushInbox;
     RichPushUser richPushUser;
 
@@ -59,9 +60,9 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
 
-        // Extend it to make onHandleIntent public so we can call it directly
-        serviceDelegate = new ChannelServiceDelegate(TestApplication.getApplication(),
-                TestApplication.getApplication().preferenceDataStore, client, UAirship.shared());
+        // Extend it to make handleIntent public so we can call it directly
+        intentHandler = new ChannelIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+                TestApplication.getApplication().preferenceDataStore, client);
 
         Shadows.shadowOf(RuntimeEnvironment.application).clearStartedServices();
     }
@@ -90,8 +91,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         assertEquals("Channel ID should exist in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should exist in preferences", fakeChannelLocation,
@@ -126,8 +127,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -150,8 +151,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -184,8 +185,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -214,8 +215,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -247,8 +248,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         // Return the response
         when(client.updateChannelWithPayload(channelLocation, payload)).thenReturn(response);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         // Verify channel update succeeded
         assertNotSame("Last registration time should be updated", dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0), lastRegistrationTime);
@@ -268,8 +269,8 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 
-        Intent intent = new Intent(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        serviceDelegate.onHandleIntent(intent);
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+        intentHandler.handleIntent(intent);
 
         // Verify update was called
         Mockito.verify(client).updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class));
@@ -283,11 +284,11 @@ public class ChannelServiceDelegateTest extends BaseTestCase {
 
         Intent serviceIntent;
         while((serviceIntent = application.getNextStartedService()) != null) {
-            if (serviceIntent.getAction().equals(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION)) {
+            if (serviceIntent.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)) {
                 break;
             }
         }
 
-        assertEquals(PushService.ACTION_UPDATE_CHANNEL_REGISTRATION, serviceIntent.getAction());
+        Assert.assertEquals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION, serviceIntent.getAction());
     }
 }
