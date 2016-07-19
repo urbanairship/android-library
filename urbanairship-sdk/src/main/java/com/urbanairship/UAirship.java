@@ -79,6 +79,7 @@ public class UAirship {
 
     private static List<CancelableOperation> pendingAirshipRequests;
 
+    List<AirshipComponent> components;
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -113,12 +114,24 @@ public class UAirship {
     @NonNull
     public static UAirship shared() {
         synchronized (airshipLock) {
-            if (isFlying) {
-                return sharedAirship;
+            if (!isTakingOff && !isFlying) {
+                throw new IllegalStateException("Take off must be called before shared()");
             }
 
-            if (!isTakingOff) {
-                throw new IllegalStateException("Take off must be called before shared()");
+           return waitForTakeOff();
+        }
+    }
+
+    /**
+     * Waits for UAirship to takeOff and be ready.
+     * @return The ready UAirship instance.
+     *
+     * @hide
+     */
+    public static UAirship waitForTakeOff() {
+        synchronized (airshipLock) {
+            if (isFlying) {
+                return sharedAirship;
             }
 
             boolean interrupted = false;
@@ -359,12 +372,9 @@ public class UAirship {
                 pendingAirshipRequests = null;
             }
 
-
             // Notify any blocking shared
             airshipLock.notifyAll();
         }
-
-
     }
 
     /**
@@ -530,6 +540,7 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
+        // Airship components
         this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions);
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore);
         this.inbox = new RichPushInbox(application, preferenceDataStore);
@@ -543,16 +554,9 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions();
         this.messageCenter = new MessageCenter();
 
-        // Initialize the rest of the AirshipComponents
-        ((AirshipComponent) this.inbox).init();
-        ((AirshipComponent) this.pushManager).init();
-        ((AirshipComponent) this.locationManager).init();
-        ((AirshipComponent) this.inAppMessageManager).init();
-        ((AirshipComponent) this.channelCapture).init();
-        ((AirshipComponent) this.applicationMetrics).init();
-        ((AirshipComponent) this.analytics).init();
-        ((AirshipComponent) this.messageCenter).init();
-        ((AirshipComponent) this.namedUser).init();
+        for (AirshipComponent component : getComponents()) {
+            component.init();
+        }
 
         // Store the version
         String currentVersion = getVersion();
@@ -571,18 +575,12 @@ public class UAirship {
      * Tears down the UAirship instance.
      */
     private void tearDown() {
-        // Tear down the managers
-        ((AirshipComponent) this.inbox).tearDown();
-        ((AirshipComponent) this.pushManager).tearDown();
-        ((AirshipComponent) this.locationManager).tearDown();
-        ((AirshipComponent) this.inAppMessageManager).tearDown();
-        ((AirshipComponent) this.channelCapture).tearDown();
-        ((AirshipComponent) this.applicationMetrics).tearDown();
-        ((AirshipComponent) this.analytics).tearDown();
-        ((AirshipComponent) this.preferenceDataStore).tearDown();
-        ((AirshipComponent) this.messageCenter).tearDown();
-        ((AirshipComponent) this.namedUser).tearDown();
+        for (AirshipComponent component : getComponents()) {
+            component.tearDown();
+        }
 
+        // Teardown the preference data store last
+        preferenceDataStore.tearDown();
     }
 
     /**
@@ -727,6 +725,24 @@ public class UAirship {
         }
 
         return platform;
+    }
+
+    List<AirshipComponent> getComponents() {
+        if (components == null) {
+            // Initialize the rest of the AirshipComponents
+            components = new ArrayList<>();
+            components.add(inbox);
+            components.add(pushManager);
+            components.add(locationManager);
+            components.add(inAppMessageManager);
+            components.add(channelCapture);
+            components.add(applicationMetrics);
+            components.add(analytics);
+            components.add(messageCenter);
+            components.add(namedUser);
+        }
+
+        return components;
     }
 
     /**

@@ -62,6 +62,8 @@
 
         </activity>
 
+        <service android:name="com.urbanairship.AirshipService" />
+
         <service android:name="com.urbanairship.push.PushService" android:label="Push Notification Service" />
         <service android:name="com.urbanairship.analytics.EventService" android:label="Event Service" />
         <service android:name="com.urbanairship.actions.ActionService" />
