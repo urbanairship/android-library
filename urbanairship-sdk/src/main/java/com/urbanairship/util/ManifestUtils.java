@@ -24,7 +24,6 @@ import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.location.LocationService;
 import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -226,11 +225,6 @@ public class ManifestUtils {
         }
 
 
-        // Check Push
-        if (componentInfoMap.get(PushService.class) == null) {
-            Logger.error("AndroidManifest.xml missing required service: " + PushService.class.getCanonicalName());
-        }
-
         // Check Actions Service
         if (componentInfoMap.get(ActionService.class) == null) {
             Logger.error("AndroidManifest.xml missing required service: " + ActionService.class.getCanonicalName());
@@ -312,7 +306,6 @@ public class ManifestUtils {
     private static Map<Class, ComponentInfo> getUrbanAirshipComponentInfoMap() {
         return new HashMap<Class, ComponentInfo>() {{
             // Services
-            put(PushService.class, ManifestUtils.getServiceInfo(PushService.class));
             put(ActionService.class, ManifestUtils.getServiceInfo(ActionService.class));
             put(LocationService.class, ManifestUtils.getServiceInfo(LocationService.class));
 

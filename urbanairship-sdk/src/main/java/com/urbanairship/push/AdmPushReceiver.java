@@ -10,6 +10,7 @@ import android.os.Build;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.amazon.device.messaging.ADMConstants;
+import com.urbanairship.AirshipService;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 
@@ -36,16 +37,16 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
         switch (intent.getAction()) {
             case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
-                Intent pushIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_RECEIVE_ADM_MESSAGE)
-                        .putExtra(PushService.EXTRA_INTENT, intent);
+                Intent pushIntent = new Intent(context, AirshipService.class)
+                        .setAction(PushIntentHandler.ACTION_RECEIVE_ADM_MESSAGE)
+                        .putExtra(PushIntentHandler.EXTRA_INTENT, intent);
 
                 startWakefulService(context, pushIntent);
                 break;
             case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
-                Intent finishIntent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_ADM_REGISTRATION_FINISHED)
-                        .putExtra(PushService.EXTRA_INTENT, intent);
+                Intent finishIntent = new Intent(context, AirshipService.class)
+                        .setAction(ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED)
+                        .putExtra(ChannelIntentHandler.EXTRA_INTENT, intent);
 
                 startWakefulService(context, finishIntent);
                 break;
