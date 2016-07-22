@@ -5,9 +5,9 @@ package com.urbanairship.analytics;
 import java.math.BigDecimal;
 
 /**
- * A class that represents a custom media event for the application.
+ * A class that represents a custom media event template for the application.
  */
-public class MediaEvent {
+public class MediaEventTemplate {
     /**
      * The browsed event name.
      */
@@ -97,123 +97,123 @@ public class MediaEvent {
     private String source;
     private String medium;
 
-    private MediaEvent(String eventName, BigDecimal value) {
+    private MediaEventTemplate(String eventName, BigDecimal value) {
         this.eventName = eventName;
         this.value = value;
     }
 
-    private MediaEvent(String eventName, String source, String medium) {
+    private MediaEventTemplate(String eventName, String source, String medium) {
         this.eventName = eventName;
         this.source = source;
         this.medium = medium;
     }
 
     /**
-     * Creates a starred content event.
+     * Creates a starred content event template.
      *
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createStarredEvent() {
-        return new MediaEvent(STARRED_CONTENT_EVENT, null);
+    public static MediaEventTemplate newStarredTemplate() {
+        return new MediaEventTemplate(STARRED_CONTENT_EVENT, null);
     }
 
     /**
-     * Creates a shared content event.
+     * Creates a shared content event template.
      *
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createSharedEvent() {
-        return new MediaEvent(SHARED_CONTENT_EVENT, null);
+    public static MediaEventTemplate newSharedTemplate() {
+        return new MediaEventTemplate(SHARED_CONTENT_EVENT, null);
     }
 
     /**
-     * Creates a shared content event.
+     * Creates a shared content event template.
      * </p>
      * If the source or medium exceeds 255 characters it will cause the event to be invalid.
      *
      * @param source The source as a string.
      * @param medium The medium as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createSharedEvent(String source, String medium) {
-        return new MediaEvent(SHARED_CONTENT_EVENT, source, medium);
+    public static MediaEventTemplate newSharedTemplate(String source, String medium) {
+        return new MediaEventTemplate(SHARED_CONTENT_EVENT, source, medium);
     }
 
     /**
-     * Creates a consumed content event.
+     * Creates a consumed content event template.
      *
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createConsumedEvent() {
-        return new MediaEvent(CONSUMED_CONTENT_EVENT, null);
+    public static MediaEventTemplate newConsumedTemplate() {
+        return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, null);
     }
 
     /**
-     * Creates a browsed event.
+     * Creates a browsed event template.
      *
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createBrowsedEvent() {
-        return new MediaEvent(BROWSED_CONTENT_EVENT, null);
+    public static MediaEventTemplate newBrowsedTemplate() {
+        return new MediaEventTemplate(BROWSED_CONTENT_EVENT, null);
     }
 
     /**
-     * Creates a consumed content event.
+     * Creates a consumed content event template.
      * <p/>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as a BigDecimal.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createConsumedEvent(BigDecimal value) {
-        return new MediaEvent(CONSUMED_CONTENT_EVENT, value);
+    public static MediaEventTemplate newConsumedTemplate(BigDecimal value) {
+        return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, value);
     }
 
     /**
-     * Creates a consumed content event.
+     * Creates a consumed content event template.
      * <p/>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as a double. Must be a number.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      * @throws NumberFormatException if the value is infinity or not a number.
      */
-    public static MediaEvent createConsumedEvent(double value) {
-        return new MediaEvent(CONSUMED_CONTENT_EVENT, BigDecimal.valueOf(value));
+    public static MediaEventTemplate newConsumedTemplate(double value) {
+        return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, BigDecimal.valueOf(value));
     }
 
     /**
-     * Creates a consumed content event.
+     * Creates a consumed content event template.
      * <p/>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as a string. Must contain valid string representation of a big decimal.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      * @throws NumberFormatException if the event value does not contain a valid string representation
      * of a big decimal.
      */
-    public static MediaEvent createConsumedEvent(String value) {
+    public static MediaEventTemplate newConsumedTemplate(String value) {
         if (value == null || value.length() == 0) {
-            return new MediaEvent(CONSUMED_CONTENT_EVENT, null);
+            return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, null);
         } else {
-            return new MediaEvent(CONSUMED_CONTENT_EVENT, new BigDecimal(value));
+            return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, new BigDecimal(value));
         }
     }
 
     /**
-     * Creates a consumed content event.
+     * Creates a consumed content event template.
      * <p/>
      * The event's value will be accurate 6 digits after the decimal. The number must fall in the
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event value as an int.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public static MediaEvent createConsumedEvent(int value) {
-        return new MediaEvent(CONSUMED_CONTENT_EVENT, new BigDecimal(value));
+    public static MediaEventTemplate newConsumedTemplate(int value) {
+        return new MediaEventTemplate(CONSUMED_CONTENT_EVENT, new BigDecimal(value));
     }
 
     /**
@@ -222,9 +222,9 @@ public class MediaEvent {
      * If the ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param id The ID as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setId(String id) {
+    public MediaEventTemplate setId(String id) {
         this.id = id;
         return this;
     }
@@ -235,9 +235,9 @@ public class MediaEvent {
      * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setCategory(String category) {
+    public MediaEventTemplate setCategory(String category) {
         this.category = category;
         return this;
     }
@@ -248,9 +248,9 @@ public class MediaEvent {
      * If the type exceeds 255 characters it will cause the event to be invalid.
      *
      * @param type The type as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setType(String type) {
+    public MediaEventTemplate setType(String type) {
         this.type = type;
         return this;
     }
@@ -261,9 +261,9 @@ public class MediaEvent {
      * If the description exceeds 255 characters it will cause the event to be invalid.
      *
      * @param description The description as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setDescription(String description) {
+    public MediaEventTemplate setDescription(String description) {
         this.description = description;
         return this;
     }
@@ -272,9 +272,9 @@ public class MediaEvent {
      * Set the feature.
      *
      * @param feature The feature as a boolean.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setFeature(boolean feature) {
+    public MediaEventTemplate setFeature(boolean feature) {
         this.feature = feature;
         this.featureSet = true;
         return this;
@@ -286,9 +286,9 @@ public class MediaEvent {
      * If the author exceeds 255 characters it will cause the event to be invalid.
      *
      * @param author The author as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setAuthor(String author) {
+    public MediaEventTemplate setAuthor(String author) {
         this.author = author;
         return this;
     }
@@ -299,17 +299,19 @@ public class MediaEvent {
      * If the publishedDate exceeds 255 characters it will cause the event to be invalid.
      *
      * @param publishedDate The publishedDate as a string.
-     * @return A MediaEvent.
+     * @return A MediaEventTemplate.
      */
-    public MediaEvent setPublishedDate(String publishedDate) {
+    public MediaEventTemplate setPublishedDate(String publishedDate) {
         this.publishedDate = publishedDate;
         return this;
     }
 
     /**
-     * Creates and records the custom media event.
+     * Creates the custom media event.
+     *
+     * @return The custom media event.
      */
-    public CustomEvent track() {
+    public CustomEvent createEvent() {
         CustomEvent.Builder builder = new CustomEvent.Builder(this.eventName);
 
         if (this.value != null) {
@@ -355,6 +357,6 @@ public class MediaEvent {
             builder.addProperty(MEDIUM, this.medium);
         }
 
-        return builder.addEvent();
+        return builder.create();
     }
 }

@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 
 import static org.mockito.Mockito.mock;
 
-public class AccountEventTest extends BaseTestCase {
+public class AccountEventTemplateTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -35,9 +35,9 @@ public class AccountEventTest extends BaseTestCase {
      */
     @Test
     public void testBasicAccountEvent() throws JSONException {
-        CustomEvent event = AccountEvent.createRegisteredEvent().track();
+        CustomEvent event = AccountEventTemplate.newRegisteredTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", AccountEvent.REGISTERED_ACCOUNT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.REGISTERED_ACCOUNT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -47,17 +47,16 @@ public class AccountEventTest extends BaseTestCase {
      */
     @Test
     public void testAccountEvent() throws JSONException {
-        CustomEvent event = AccountEvent.createRegisteredEvent()
-                                        .setValue(new BigDecimal(123))
-                                        .setTransactionId("Wednesday 11/4/2015")
-                                        .setCategory("Premium")
-                                        .track();
+        CustomEvent event = AccountEventTemplate.newRegisteredTemplate()
+                                                .setValue(new BigDecimal(123))
+                                                .setTransactionId("Wednesday 11/4/2015")
+                                                .setCategory("Premium")
+                                                .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", AccountEvent.REGISTERED_ACCOUNT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.REGISTERED_ACCOUNT_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 123000000L);
         EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"Premium\"");
     }
-
 }

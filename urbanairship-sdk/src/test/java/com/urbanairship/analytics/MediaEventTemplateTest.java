@@ -13,7 +13,7 @@ import org.junit.rules.ExpectedException;
 
 import static org.mockito.Mockito.mock;
 
-public class MediaEventTest extends BaseTestCase {
+public class MediaEventTemplateTest extends BaseTestCase {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -32,9 +32,9 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testBrowsedEventBasic() throws JSONException {
-        CustomEvent event = MediaEvent.createBrowsedEvent().track();
+        CustomEvent event = MediaEventTemplate.newBrowsedTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.BROWSED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -45,17 +45,17 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testBrowsedEvent() throws JSONException {
-        CustomEvent event = MediaEvent.createBrowsedEvent()
-                .setCategory("media-category")
-                .setId("starred-content-ID 1")
-                .setDescription("This is a starred content media event.")
-                .setType("audio type")
-                .setAuthor("The Cool UA")
-                .setFeature(true)
-                .setPublishedDate("November 4, 2015")
-                .track();
+        CustomEvent event = MediaEventTemplate.newBrowsedTemplate()
+                                              .setCategory("media-category")
+                                              .setId("starred-content-ID 1")
+                                              .setDescription("This is a starred content media event.")
+                                              .setType("audio type")
+                                              .setAuthor("The Cool UA")
+                                              .setFeature(true)
+                                              .setPublishedDate("November 4, 2015")
+                                              .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.BROWSED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
@@ -73,9 +73,9 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testStarredEventBasic() throws JSONException {
-        CustomEvent event = MediaEvent.createStarredEvent().track();
+        CustomEvent event = MediaEventTemplate.newStarredTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.STARRED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.STARRED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -86,17 +86,17 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testStarredEvent() throws JSONException {
-        CustomEvent event = MediaEvent.createStarredEvent()
-                                      .setCategory("media-category")
-                                      .setId("starred-content-ID 1")
-                                      .setDescription("This is a starred content media event.")
-                                      .setType("audio type")
-                                      .setAuthor("The Cool UA")
-                                      .setFeature(true)
-                                      .setPublishedDate("November 4, 2015")
-                                      .track();
+        CustomEvent event = MediaEventTemplate.newStarredTemplate()
+                                              .setCategory("media-category")
+                                              .setId("starred-content-ID 1")
+                                              .setDescription("This is a starred content media event.")
+                                              .setType("audio type")
+                                              .setAuthor("The Cool UA")
+                                              .setFeature(true)
+                                              .setPublishedDate("November 4, 2015")
+                                              .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.STARRED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.STARRED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
@@ -114,9 +114,9 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testSharedEventBasic() throws JSONException {
-        CustomEvent event = MediaEvent.createSharedEvent().track();
+        CustomEvent event = MediaEventTemplate.newSharedTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.SHARED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.SHARED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -127,17 +127,17 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testSharedEvent() throws JSONException {
-        CustomEvent event = MediaEvent.createSharedEvent("facebook", "social")
-                                      .setCategory("media-category")
-                                      .setId("shared-content-ID 2")
-                                      .setDescription("This is a shared content media event.")
-                                      .setType("video type")
-                                      .setAuthor("The Cool UA")
-                                      .setFeature(true)
-                                      .setPublishedDate("November 4, 2015")
-                                      .track();
+        CustomEvent event = MediaEventTemplate.newSharedTemplate("facebook", "social")
+                                              .setCategory("media-category")
+                                              .setId("shared-content-ID 2")
+                                              .setDescription("This is a shared content media event.")
+                                              .setType("video type")
+                                              .setAuthor("The Cool UA")
+                                              .setFeature(true)
+                                              .setPublishedDate("November 4, 2015")
+                                              .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.SHARED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.SHARED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "medium", "\"social\"");
@@ -157,9 +157,9 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testConsumedEventBasic() throws JSONException {
-        CustomEvent event = MediaEvent.createConsumedEvent().track();
+        CustomEvent event = MediaEventTemplate.newConsumedTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.CONSUMED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.CONSUMED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -170,17 +170,17 @@ public class MediaEventTest extends BaseTestCase {
      */
     @Test
     public void testConsumedEvent() throws JSONException {
-        CustomEvent event = MediaEvent.createConsumedEvent(2.99)
-                                      .setCategory("media-category")
-                                      .setId("consumed-content-ID 1")
-                                      .setDescription("This is a consumed content media event.")
-                                      .setType("audio type")
-                                      .setAuthor("The Cool UA")
-                                      .setFeature(true)
-                                      .setPublishedDate("November 4, 2015")
-                                      .track();
+        CustomEvent event = MediaEventTemplate.newConsumedTemplate(2.99)
+                                              .setCategory("media-category")
+                                              .setId("consumed-content-ID 1")
+                                              .setDescription("This is a consumed content media event.")
+                                              .setType("audio type")
+                                              .setAuthor("The Cool UA")
+                                              .setFeature(true)
+                                              .setPublishedDate("November 4, 2015")
+                                              .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", MediaEvent.CONSUMED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.CONSUMED_CONTENT_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 2990000.0);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");

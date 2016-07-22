@@ -5,9 +5,10 @@ package com.urbanairship.analytics;
 import java.math.BigDecimal;
 
 /**
- * A class that represents a custom retail event for the application.
+ * A class that represents a custom retail event template for the application.
  */
-public class RetailEvent {
+public class RetailEventTemplate {
+
     /**
      * The browsed event name.
      */
@@ -87,72 +88,72 @@ public class RetailEvent {
     private String source;
     private String medium;
 
-    private RetailEvent(String eventName) {
+    private RetailEventTemplate(String eventName) {
         this.eventName = eventName;
     }
 
-    private RetailEvent(String eventName, String source, String medium) {
+    private RetailEventTemplate(String eventName, String source, String medium) {
         this.eventName = eventName;
         this.source = source;
         this.medium = medium;
     }
 
     /**
-     * Creates a browsed event.
+     * Creates a browsed event template.
      *
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createBrowsedEvent() {
-        return new RetailEvent(BROWSED_PRODUCT_EVENT);
+    public static RetailEventTemplate newBrowsedTemplate() {
+        return new RetailEventTemplate(BROWSED_PRODUCT_EVENT);
     }
 
     /**
-     * Creates an added to cart event.
+     * Creates an added to cart event template.
      *
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createAddedToCartEvent() {
-        return new RetailEvent(ADDED_TO_CART_EVENT);
+    public static RetailEventTemplate newAddedToCartTemplate() {
+        return new RetailEventTemplate(ADDED_TO_CART_EVENT);
     }
 
     /**
-     * Creates a starred product event.
+     * Creates a starred product event template.
      *
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createStarredProduct() {
-        return new RetailEvent(STARRED_PRODUCT_EVENT);
+    public static RetailEventTemplate newStarredProductTemplate() {
+        return new RetailEventTemplate(STARRED_PRODUCT_EVENT);
     }
 
     /**
-     * Creates a shared product event.
+     * Creates a shared product event template.
      *
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createSharedProduct() {
-        return new RetailEvent(SHARED_PRODUCT_EVENT);
+    public static RetailEventTemplate newSharedProductTemplate() {
+        return new RetailEventTemplate(SHARED_PRODUCT_EVENT);
     }
 
     /**
-     * Creates a shared product event.
+     * Creates a shared product event template.
      * <p/>
      * If the source or medium exceeds 255 characters it will cause the event to be invalid.
      *
      * @param source The source as a string.
      * @param medium The medium as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createSharedProduct(String source, String medium) {
-        return new RetailEvent(SHARED_PRODUCT_EVENT, source, medium);
+    public static RetailEventTemplate newSharedProductTemplate(String source, String medium) {
+        return new RetailEventTemplate(SHARED_PRODUCT_EVENT, source, medium);
     }
 
     /**
-     * Creates a purchased event.
+     * Creates a purchased event template.
      *
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public static RetailEvent createPurchasedEvent() {
-        return new RetailEvent(PURCHASED_EVENT);
+    public static RetailEventTemplate newPurchasedTemplate() {
+        return new RetailEventTemplate(PURCHASED_EVENT);
     }
 
     /**
@@ -161,9 +162,9 @@ public class RetailEvent {
      * If the transaction ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param transactionId The event's transaction ID as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setTransactionId(String transactionId) {
+    public RetailEventTemplate setTransactionId(String transactionId) {
         this.transactionId = transactionId;
         return this;
     }
@@ -175,9 +176,9 @@ public class RetailEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a BigDecimal.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setValue(BigDecimal value) {
+    public RetailEventTemplate setValue(BigDecimal value) {
         this.value = value;
         return this;
     }
@@ -189,10 +190,10 @@ public class RetailEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a double. Must be a number.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      * @throws NumberFormatException if the value is infinity or not a number.
      */
-    public RetailEvent setValue(double value) {
+    public RetailEventTemplate setValue(double value) {
         return setValue(BigDecimal.valueOf(value));
     }
 
@@ -203,11 +204,11 @@ public class RetailEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a string. Must contain valid string representation of a big decimal.
-     * @return An AccountEvent.
+     * @return An RetailEventTemplate.
      * @throws NumberFormatException if the event value does not contain a valid string representation
      * of a big decimal.
      */
-    public RetailEvent setValue(String value) {
+    public RetailEventTemplate setValue(String value) {
         if (value == null || value.length() == 0) {
             this.value = null;
             return this;
@@ -223,9 +224,9 @@ public class RetailEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as an int.
-     * @return An AccountEvent.
+     * @return An RetailEventTemplate.
      */
-    public RetailEvent setValue(int value) {
+    public RetailEventTemplate setValue(int value) {
         return setValue(new BigDecimal(value));
     }
 
@@ -235,9 +236,9 @@ public class RetailEvent {
      * If the ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param id The ID as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setId(String id) {
+    public RetailEventTemplate setId(String id) {
         this.id = id;
         return this;
     }
@@ -248,9 +249,9 @@ public class RetailEvent {
      * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setCategory(String category) {
+    public RetailEventTemplate setCategory(String category) {
         this.category = category;
         return this;
     }
@@ -261,9 +262,9 @@ public class RetailEvent {
      * If the description exceeds 255 characters it will cause the event to be invalid.
      *
      * @param description The description as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setDescription(String description) {
+    public RetailEventTemplate setDescription(String description) {
         this.description = description;
         return this;
     }
@@ -274,9 +275,9 @@ public class RetailEvent {
      * If the brand exceeds 255 characters it will cause the event to be invalid.
      *
      * @param brand The brand as a string.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setBrand(String brand) {
+    public RetailEventTemplate setBrand(String brand) {
         this.brand = brand;
         return this;
     }
@@ -285,18 +286,20 @@ public class RetailEvent {
      * Set the newItem value.
      *
      * @param newItem A boolean value indicating if the item is new or not.
-     * @return A RetailEvent.
+     * @return A RetailEventTemplate.
      */
-    public RetailEvent setNewItem(boolean newItem) {
+    public RetailEventTemplate setNewItem(boolean newItem) {
         this.newItem = newItem;
         this.newItemSet = true;
         return this;
     }
 
     /**
-     * Creates and records the custom retail event.
+     * Creates the custom retail event.
+     *
+     * @return The custom retail event.
      */
-    public CustomEvent track() {
+    public CustomEvent createEvent() {
         CustomEvent.Builder builder = new CustomEvent.Builder(this.eventName);
 
         if (this.value != null) {
@@ -338,6 +341,6 @@ public class RetailEvent {
             builder.addProperty(MEDIUM, this.medium);
         }
 
-        return builder.addEvent();
+        return builder.create();
     }
 }

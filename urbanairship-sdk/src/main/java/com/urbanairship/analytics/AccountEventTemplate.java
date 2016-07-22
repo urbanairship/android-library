@@ -5,9 +5,10 @@ package com.urbanairship.analytics;
 import java.math.BigDecimal;
 
 /**
- * A class that represents a custom account event for the application.
+ * A class that represents a custom account event template for the application.
  */
-public class AccountEvent {
+public class AccountEventTemplate {
+
     /**
      * The registered account event name.
      */
@@ -28,16 +29,16 @@ public class AccountEvent {
     private String category;
     private String transactionId;
 
-    private AccountEvent() {
+    private AccountEventTemplate() {
     }
 
     /**
-     * Creates a registered account event.
+     * Creates a registered account event template.
      *
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      */
-    public static AccountEvent createRegisteredEvent() {
-        return new AccountEvent();
+    public static AccountEventTemplate newRegisteredTemplate() {
+        return new AccountEventTemplate();
     }
 
     /**
@@ -46,9 +47,9 @@ public class AccountEvent {
      * If the transaction ID exceeds 255 characters it will cause the event to be invalid.
      *
      * @param transactionId The event's transaction ID as a string.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      */
-    public AccountEvent setTransactionId(String transactionId) {
+    public AccountEventTemplate setTransactionId(String transactionId) {
         this.transactionId = transactionId;
         return this;
     }
@@ -60,9 +61,9 @@ public class AccountEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a BigDecimal.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      */
-    public AccountEvent setValue(BigDecimal value) {
+    public AccountEventTemplate setValue(BigDecimal value) {
         this.value = value;
         return this;
     }
@@ -74,10 +75,10 @@ public class AccountEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a double. Must be a number.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      * @throws NumberFormatException if the value is infinity or not a number.
      */
-    public AccountEvent setValue(double value) {
+    public AccountEventTemplate setValue(double value) {
         return setValue(BigDecimal.valueOf(value));
     }
 
@@ -88,11 +89,11 @@ public class AccountEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as a string. Must contain valid string representation of a big decimal.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      * @throws NumberFormatException if the event value does not contain a valid string representation
      * of a big decimal.
      */
-    public AccountEvent setValue(String value) {
+    public AccountEventTemplate setValue(String value) {
         if (value == null || value.length() == 0) {
             this.value = null;
             return this;
@@ -108,9 +109,9 @@ public class AccountEvent {
      * range [-2^31, 2^31-1]. Any value outside that range will cause the event to be invalid.
      *
      * @param value The event's value as an int.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      */
-    public AccountEvent setValue(int value) {
+    public AccountEventTemplate setValue(int value) {
         return setValue(new BigDecimal(value));
     }
 
@@ -120,17 +121,19 @@ public class AccountEvent {
      * If the category exceeds 255 characters it will cause the event to be invalid.
      *
      * @param category The category as a string.
-     * @return An AccountEvent.
+     * @return An AccountEventTemplate.
      */
-    public AccountEvent setCategory(String category) {
+    public AccountEventTemplate setCategory(String category) {
         this.category = category;
         return this;
     }
 
     /**
-     * Creates and records the custom account event.
+     * Creates the custom account event.
+     *
+     * @return The custom account event.
      */
-    public CustomEvent track() {
+    public CustomEvent createEvent() {
         CustomEvent.Builder builder = new CustomEvent.Builder(REGISTERED_ACCOUNT_EVENT);
 
         if (this.value != null) {
@@ -148,6 +151,7 @@ public class AccountEvent {
             builder.addProperty(CATEGORY, this.category);
         }
 
-        return builder.addEvent();
+        return builder.create();
     }
+
 }

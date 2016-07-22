@@ -14,7 +14,7 @@ import org.mockito.Mock;
 
 import static org.mockito.Mockito.mock;
 
-public class RetailEventTest extends BaseTestCase {
+public class RetailEventTemplateTest extends BaseTestCase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -35,9 +35,9 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testBrowsedEventBasic() throws JSONException {
-        CustomEvent event = RetailEvent.createBrowsedEvent().track();
+        CustomEvent event = RetailEventTemplate.newBrowsedTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.BROWSED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.BROWSED_PRODUCT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -48,17 +48,17 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testBrowsedEvent() throws JSONException {
-        CustomEvent event = RetailEvent.createBrowsedEvent()
-                                       .setCategory("retail-category")
-                                       .setId("browsed-ID 1")
-                                       .setDescription("This is a browsed retail event.")
-                                       .setValue(99.99)
-                                       .setTransactionId("123")
-                                       .setBrand("nike")
-                                       .setNewItem(true)
-                                       .track();
+        CustomEvent event = RetailEventTemplate.newBrowsedTemplate()
+                                               .setCategory("retail-category")
+                                               .setId("browsed-ID 1")
+                                               .setDescription("This is a browsed retail event.")
+                                               .setValue(99.99)
+                                               .setTransactionId("123")
+                                               .setBrand("nike")
+                                               .setNewItem(true)
+                                               .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.BROWSED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.BROWSED_PRODUCT_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -76,9 +76,9 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testAddedToCartEventBasic() throws JSONException {
-        CustomEvent event = RetailEvent.createAddedToCartEvent().track();
+        CustomEvent event = RetailEventTemplate.newAddedToCartTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.ADDED_TO_CART_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.ADDED_TO_CART_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -89,17 +89,17 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testAddedToCartEvent() throws JSONException {
-        CustomEvent event = RetailEvent.createAddedToCartEvent()
-                                       .setCategory("retail-category")
-                                       .setId("added-to-cart-ID 1")
-                                       .setDescription("This is an added to cart retail event.")
-                                       .setValue(1.99)
-                                       .setTransactionId("123")
-                                       .setBrand("columbia")
-                                       .setNewItem(true)
-                                       .track();
+        CustomEvent event = RetailEventTemplate.newAddedToCartTemplate()
+                                               .setCategory("retail-category")
+                                               .setId("added-to-cart-ID 1")
+                                               .setDescription("This is an added to cart retail event.")
+                                               .setValue(1.99)
+                                               .setTransactionId("123")
+                                               .setBrand("columbia")
+                                               .setNewItem(true)
+                                               .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.ADDED_TO_CART_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.ADDED_TO_CART_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 1990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -117,9 +117,9 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testStarredEventBasic() throws JSONException {
-        CustomEvent event = RetailEvent.createStarredProduct().track();
+        CustomEvent event = RetailEventTemplate.newStarredProductTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.STARRED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.STARRED_PRODUCT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -130,17 +130,17 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testStarredEvent() throws JSONException {
-        CustomEvent event = RetailEvent.createStarredProduct()
-                                       .setCategory("retail-category")
-                                       .setId("starred-product-ID 1")
-                                       .setDescription("This is a starred retail event.")
-                                       .setValue(99.99)
-                                       .setTransactionId("123")
-                                       .setBrand("nike")
-                                       .setNewItem(true)
-                                       .track();
+        CustomEvent event = RetailEventTemplate.newStarredProductTemplate()
+                                               .setCategory("retail-category")
+                                               .setId("starred-product-ID 1")
+                                               .setDescription("This is a starred retail event.")
+                                               .setValue(99.99)
+                                               .setTransactionId("123")
+                                               .setBrand("nike")
+                                               .setNewItem(true)
+                                               .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.STARRED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.STARRED_PRODUCT_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -158,9 +158,9 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testSharedEventBasic() throws JSONException {
-        CustomEvent event = RetailEvent.createSharedProduct().track();
+        CustomEvent event = RetailEventTemplate.newSharedProductTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.SHARED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.SHARED_PRODUCT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -171,17 +171,17 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testSharedEvent() throws JSONException {
-        CustomEvent event = RetailEvent.createSharedProduct("facebook", "social")
-                                       .setCategory("retail-category")
-                                       .setId("shared-product-ID 1")
-                                       .setDescription("This is a shared retail event.")
-                                       .setValue(49.99)
-                                       .setTransactionId("123")
-                                       .setBrand("nike")
-                                       .setNewItem(true)
-                                       .track();
+        CustomEvent event = RetailEventTemplate.newSharedProductTemplate("facebook", "social")
+                                               .setCategory("retail-category")
+                                               .setId("shared-product-ID 1")
+                                               .setDescription("This is a shared retail event.")
+                                               .setValue(49.99)
+                                               .setTransactionId("123")
+                                               .setBrand("nike")
+                                               .setNewItem(true)
+                                               .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.SHARED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.SHARED_PRODUCT_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 49990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
@@ -201,9 +201,9 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testPurchasedEventBasic() throws JSONException {
-        CustomEvent event = RetailEvent.createPurchasedEvent().track();
+        CustomEvent event = RetailEventTemplate.newPurchasedTemplate().createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.PURCHASED_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.PURCHASED_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -214,17 +214,17 @@ public class RetailEventTest extends BaseTestCase {
      */
     @Test
     public void testPurchasedEvent() throws JSONException {
-        CustomEvent event = RetailEvent.createPurchasedEvent()
-                                       .setCategory("retail-category")
-                                       .setId("purchased-product-ID 1")
-                                       .setDescription("This is a purchased retail event.")
-                                       .setValue(99.99)
-                                       .setTransactionId("123")
-                                       .setBrand("nike")
-                                       .setNewItem(true)
-                                       .track();
+        CustomEvent event = RetailEventTemplate.newPurchasedTemplate()
+                                               .setCategory("retail-category")
+                                               .setId("purchased-product-ID 1")
+                                               .setDescription("This is a purchased retail event.")
+                                               .setValue(99.99)
+                                               .setTransactionId("123")
+                                               .setBrand("nike")
+                                               .setNewItem(true)
+                                               .createEvent();
 
-        EventTestUtils.validateEventValue(event, "event_name", RetailEvent.PURCHASED_EVENT);
+        EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.PURCHASED_EVENT);
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
