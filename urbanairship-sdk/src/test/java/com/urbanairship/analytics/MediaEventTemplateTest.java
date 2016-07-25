@@ -10,8 +10,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 
+import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class MediaEventTemplateTest extends BaseTestCase {
     @Rule
@@ -36,6 +39,18 @@ public class MediaEventTemplateTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+    }
+
+    /**
+     * Test trackEvent creates and adds the event to analytics.
+     */
+    @Test
+    public void testTrackEvent() {
+        CustomEvent event = MediaEventTemplate.newBrowsedTemplate().trackEvent();
+
+        ArgumentCaptor<Event> argument = ArgumentCaptor.forClass(Event.class);
+        verify(analytics).addEvent(argument.capture());
+        assertEquals("Track even should add the event.", event, argument.getValue());
     }
 
     /**

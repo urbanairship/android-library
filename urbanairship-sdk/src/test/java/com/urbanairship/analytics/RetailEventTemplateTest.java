@@ -10,9 +10,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class RetailEventTemplateTest extends BaseTestCase {
 
@@ -39,6 +42,19 @@ public class RetailEventTemplateTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.BROWSED_PRODUCT_EVENT);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
+    }
+
+    /**
+     * Test trackEvent creates and adds the event to analytics.
+     */
+    @Test
+    public void testTrackEvent() {
+        CustomEvent event = RetailEventTemplate.newBrowsedTemplate().trackEvent();
+
+        ArgumentCaptor<Event> argument = ArgumentCaptor.forClass(Event.class);
+        verify(analytics).addEvent(argument.capture());
+
+        assertEquals("Track event should add the event.", event, argument.getValue());
     }
 
     /**

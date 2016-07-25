@@ -513,8 +513,20 @@ public class CustomEvent extends Event {
          * Create the custom event and adds the event to Analytics.
          *
          * @return The created custom event.
+         *
+         * @deprecated Use {@link #track()} instead.
          */
+        @Deprecated
         public CustomEvent addEvent() {
+            return track();
+        }
+
+        /**
+         * Creates the custom event and adds the event to Analytics.
+         *
+         * @return The tracked custom event.
+         */
+        public CustomEvent track() {
             CustomEvent event = create();
             UAirship.shared().getAnalytics().addEvent(event);
             return event;
