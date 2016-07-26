@@ -134,24 +134,6 @@ public class AccountEventTemplate {
      * @return The custom account event.
      */
     public CustomEvent createEvent() {
-        return eventBuilder().create();
-    }
-
-    /**
-     * Creates the custom account event and adds the event to Analytics.
-     *
-     * @return The tracked custom account event.
-     */
-    public CustomEvent trackEvent() {
-        return eventBuilder().track();
-    }
-
-    /**
-     * Creates the custom event builder.
-     *
-     * @return The custom event builder.
-     */
-    private CustomEvent.Builder eventBuilder() {
         CustomEvent.Builder builder = new CustomEvent.Builder(REGISTERED_ACCOUNT_EVENT);
 
         if (this.value != null) {
@@ -169,6 +151,6 @@ public class AccountEventTemplate {
             builder.addProperty(CATEGORY, this.category);
         }
 
-        return builder;
+        return builder.create();
     }
 }

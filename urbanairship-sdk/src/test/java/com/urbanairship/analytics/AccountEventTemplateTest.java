@@ -10,13 +10,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 
-import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class AccountEventTemplateTest extends BaseTestCase {
 
@@ -61,18 +58,5 @@ public class AccountEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"Premium\"");
-    }
-
-    /**
-     * Test trackEvent creates and adds the event to analytics.
-     */
-    @Test
-    public void testTrackEvent() {
-        CustomEvent event = AccountEventTemplate.newRegisteredTemplate().trackEvent();
-
-        ArgumentCaptor<Event> argument = ArgumentCaptor.forClass(Event.class);
-        verify(analytics).addEvent(argument.capture());
-
-        assertEquals("Track event should add the event.", event, argument.getValue());
     }
 }

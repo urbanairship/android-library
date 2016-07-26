@@ -134,11 +134,12 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test Builder.track creates and adds the event to analytics.
+     * Test track adds the event to analytics.
      */
     @Test
     public void testTrack() {
-        CustomEvent event = new CustomEvent.Builder("event name").track();
+        CustomEvent event = new CustomEvent.Builder("event name").create();
+        event.track();
 
         ArgumentCaptor<Event> argument = ArgumentCaptor.forClass(Event.class);
         verify(analytics).addEvent(argument.capture());

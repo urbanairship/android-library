@@ -312,24 +312,6 @@ public class MediaEventTemplate {
      * @return The custom media event.
      */
     public CustomEvent createEvent() {
-        return eventBuilder().create();
-    }
-
-    /**
-     * Creates the custom media event and adds the event to Analytics.
-     *
-     * @return The tracked custom media event.
-     */
-    public CustomEvent trackEvent() {
-        return eventBuilder().track();
-    }
-
-    /**
-     * Creates the custom event builder.
-     *
-     * @return The custom event builder.
-     */
-    private CustomEvent.Builder eventBuilder() {
         CustomEvent.Builder builder = new CustomEvent.Builder(this.eventName);
 
         if (this.value != null) {
@@ -375,6 +357,6 @@ public class MediaEventTemplate {
             builder.addProperty(MEDIUM, this.medium);
         }
 
-        return builder;
+        return builder.create();
     }
 }

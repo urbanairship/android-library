@@ -252,6 +252,16 @@ public class CustomEvent extends Event {
     }
 
     /**
+     * Adds the event to Analytics.
+     *
+     * @return The tracked custom event.
+     */
+    public CustomEvent track() {
+        UAirship.shared().getAnalytics().addEvent(this);
+        return this;
+    }
+
+    /**
      * Builder class for {@link com.urbanairship.analytics.CustomEvent} Objects.
      */
     public static class Builder {
@@ -514,22 +524,14 @@ public class CustomEvent extends Event {
          *
          * @return The created custom event.
          *
-         * @deprecated Use {@link #track()} instead.
+         * @deprecated Use {@link CustomEvent#track()} instead.
          */
         @Deprecated
         public CustomEvent addEvent() {
-            return track();
-        }
-
-        /**
-         * Creates the custom event and adds the event to Analytics.
-         *
-         * @return The tracked custom event.
-         */
-        public CustomEvent track() {
             CustomEvent event = create();
-            UAirship.shared().getAnalytics().addEvent(event);
+            event.track();
             return event;
         }
+
     }
 }
