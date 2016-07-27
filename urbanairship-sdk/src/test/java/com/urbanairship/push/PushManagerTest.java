@@ -963,4 +963,48 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());
         assertEquals(Color.parseColor("#ff0000"), factory.getColor());
     }
+
+
+    /**
+     * Test migrating quiet time enabled setting.
+     */
+    @Test
+    public void testMigrateQuietTimeEnabled() {
+        // Make sure only the old enable setting is set to true
+        preferenceDataStore.remove(PushManager.QUIET_TIME_ENABLED);
+        preferenceDataStore.put(PushManager.OLD_QUIET_TIME_ENABLED, true);
+
+        // Verify quiet time is disabled
+        assertFalse(pushManager.isQuietTimeEnabled());
+
+        // Migrate the old setting
+        pushManager.migrateQuietTimeSettings();
+
+        // Verify quiet time is enabled
+        assertTrue(pushManager.isQuietTimeEnabled());
+
+        // Make sure changes to the setting are persisted
+        pushManager.setQuietTimeEnabled(false);
+        pushManager.migratePushEnabledSettings();
+        assertFalse(pushManager.isQuietTimeEnabled());
+    }
+
+    /**
+     * Test migrating quiet time enabled setting does not overwrite
+     * the new setting if its set.
+     */
+    @Test
+    public void testMigrateQuietTimeEnabledAlreadySet() {
+        preferenceDataStore.put(PushManager.QUIET_TIME_ENABLED, false);
+        preferenceDataStore.put(PushManager.OLD_QUIET_TIME_ENABLED, true);
+
+        // Verify quiet time is disabled
+        assertFalse(pushManager.isQuietTimeEnabled());
+
+        // Migrate the old setting
+        pushManager.migrateQuietTimeSettings();
+
+        // Verify quiet time is still disabled
+        assertFalse(pushManager.isQuietTimeEnabled());
+    }
 }
