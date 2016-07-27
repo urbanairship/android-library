@@ -208,6 +208,8 @@ public class PushManager extends AirshipComponent {
     static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
 
+    static final String OLD_QUIET_TIME_ENABLED = KEY_PREFIX + ".QuietTime.Enabled";
+
     static final class QuietTime {
         public static final String START_HOUR_KEY = KEY_PREFIX + ".QuietTime.START_HOUR";
         public static final String START_MIN_KEY = KEY_PREFIX + ".QuietTime.START_MINUTE";
@@ -272,7 +274,7 @@ public class PushManager extends AirshipComponent {
         }
 
         this.migratePushEnabledSettings();
-        this.migrateQuietTimeInterval();
+        this.migrateQuietTimeSettings();
 
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
@@ -1072,9 +1074,18 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Migrates the old quiet time interval to use QuietTimeInterval.
+     * Migrates the quiet time settings.
      */
-    void migrateQuietTimeInterval() {
+    void migrateQuietTimeSettings() {
+
+        /*
+         * We changed the quiet time enabled key without migrating it when we released 7.1.0. Migrate
+         * the old quiet time key to the new key only if the new key is not yet set.
+         */
+        if (preferenceDataStore.getString(QUIET_TIME_ENABLED, null) == null) {
+            preferenceDataStore.put(QUIET_TIME_ENABLED, preferenceDataStore.getBoolean(OLD_QUIET_TIME_ENABLED, false));
+            preferenceDataStore.remove(OLD_QUIET_TIME_ENABLED);
+        }
 
         // Attempt to extract an old quiet time interval
         int startHr = preferenceDataStore.getInt(QuietTime.START_HOUR_KEY, QuietTime.NOT_SET_VAL);

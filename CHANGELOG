@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.2.1 - July 27, 2016
+=============================
+- Fixed an issue where the `quiet time enabled` setting wasn’t properly migrated from a key change in 7.1.0.
+
 Version 7.2.0 - June 21, 2016
 =============================
 - The internal GCM integration has been updated to not conflict with other integrations and will no longer trigger the

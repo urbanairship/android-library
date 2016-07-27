@@ -88,8 +88,6 @@ android.libraryVariants.all { variant ->
             addStringOption "templatedir", "docs/template"
         }
     }
-
-
 }
 
 install {
@@ -104,7 +102,26 @@ install {
                 // Add your description here
                 name project.name
                 description project.description
-                url 'http://www.urbanairship.com'
+                url 'https://github.com/urbanairship/android-library'
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                scm {
+                    connection 'https://github.com/urbanairship/android-library.git'
+                    url 'https://github.com/urbanairship/android-library'
+                }
+
+                developers {
+                    developer {
+                        name 'Urban Airship'
+                    }
+                }
             }
 
             whenConfigured { MavenPom pom ->
@@ -131,7 +148,8 @@ bintray {
         userOrg = 'urbanairship'
         name = project.name
         desc = project.description
-        websiteUrl = 'http://www.urbanairship.com'
+        websiteUrl = 'https://github.com/urbanairship/android-library'
+        licenses = ['Apache-2.0']
 
         version {
             desc = project.description
