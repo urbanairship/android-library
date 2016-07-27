@@ -230,8 +230,6 @@ public class PushManager extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
 
-    private TagGroupIntentHandler tagGroupIntentHandler;
-    private NamedUserIntentHandler namedUserIntentHandler;
     private ChannelIntentHandler channelIntentHandler;
     private PushIntentHandler pushIntentHandler;
 
@@ -293,10 +291,8 @@ public class PushManager extends AirshipComponent {
     @Override
     protected boolean acceptsIntentAction(UAirship airship, @NonNull String action) {
         switch (action) {
-            case TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS:
-            case TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS:
-            case TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
+            case ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS:
+            case ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
             case ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED:
             case ChannelIntentHandler.ACTION_START_REGISTRATION:
             case ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
@@ -311,24 +307,9 @@ public class PushManager extends AirshipComponent {
 
     @Override
     protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
-
         switch (intent.getAction()) {
-            case TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS:
-            case TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS:
-            case TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-                if (tagGroupIntentHandler == null) {
-                    tagGroupIntentHandler = new TagGroupIntentHandler(context, airship, preferenceDataStore);
-                }
-                tagGroupIntentHandler.handleIntent(intent);
-                break;
-
-            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
-                if (namedUserIntentHandler == null) {
-                    namedUserIntentHandler = new NamedUserIntentHandler(context, airship, preferenceDataStore);
-                }
-                namedUserIntentHandler.handleIntent(intent);
-                break;
-
+            case ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS:
+            case ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
             case ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED:
             case ChannelIntentHandler.ACTION_START_REGISTRATION:
             case ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
@@ -874,7 +855,7 @@ public class PushManager extends AirshipComponent {
      * @return A {@link TagGroupsEditor}.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS) {
+        return new TagGroupsEditor(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES) {
             @Override
             public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
@@ -1028,9 +1009,9 @@ public class PushManager extends AirshipComponent {
      * Starts the push service to update tag groups.
      */
     void startUpdateTagsService() {
-        Intent tagUpdateIntent = new Intent(UAirship.getApplicationContext(), AirshipService.class)
-                .setAction(TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS);
-        UAirship.getApplicationContext().startService(tagUpdateIntent);
+        Intent tagUpdateIntent = new Intent(context, AirshipService.class)
+                .setAction(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        context.startService(tagUpdateIntent);
     }
 
     /**

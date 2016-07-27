@@ -683,7 +683,7 @@ public class PushManagerTest extends BaseTestCase {
                    .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Channel Tag Groups Service", TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+        assertEquals("Expect Update Channel Tag Groups Service", ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, startedIntent.getAction());
     }
 
     /**
@@ -699,7 +699,7 @@ public class PushManagerTest extends BaseTestCase {
                    .apply();
 
         Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Channel Tag Groups Service", TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+        assertEquals("Expect Update Channel Tag Groups Service", ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, startedIntent.getAction());
     }
 
     /**
@@ -746,7 +746,7 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("Expect start registration", ChannelIntentHandler.ACTION_START_REGISTRATION, startedIntent.getAction());
 
         startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect update channel tag groups service", TagGroupIntentHandler.ACTION_UPDATE_CHANNEL_TAG_GROUPS, startedIntent.getAction());
+        assertEquals("Expect update channel tag groups service", ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS, startedIntent.getAction());
     }
 
     /**

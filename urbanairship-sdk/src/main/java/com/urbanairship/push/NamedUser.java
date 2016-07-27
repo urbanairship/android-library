@@ -11,6 +11,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.UUID;
@@ -40,6 +41,7 @@ public class NamedUser extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
     private final Object lock = new Object();
+    private NamedUserIntentHandler namedUserIntentHandler;
 
     /**
      * Creates a NamedUser.
@@ -60,6 +62,35 @@ public class NamedUser extends AirshipComponent {
         // Update named user tags if we have a named user
         if (getId() != null) {
             startUpdateTagsService();
+        }
+    }
+
+    @Override
+    protected boolean acceptsIntentAction(UAirship airship, @NonNull String action) {
+        switch (action) {
+            case NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
+            case NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
+            case NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS:
+            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
+                return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
+
+        switch (intent.getAction()) {
+            case NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
+            case NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
+            case NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS:
+            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
+                if (namedUserIntentHandler == null) {
+                    namedUserIntentHandler = new NamedUserIntentHandler(context, airship, preferenceDataStore);
+                }
+                namedUserIntentHandler.handleIntent(intent);
+                break;
         }
     }
 
@@ -129,7 +160,7 @@ public class NamedUser extends AirshipComponent {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+        return new TagGroupsEditor(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
     }
 
     /**
@@ -173,7 +204,7 @@ public class NamedUser extends AirshipComponent {
      */
     void startClearPendingTagsService() {
         Intent i = new Intent(context, AirshipService.class)
-                .setAction(TagGroupIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+                .setAction(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
 
         context.startService(i);
     }
@@ -183,7 +214,7 @@ public class NamedUser extends AirshipComponent {
      */
     void startUpdateTagsService() {
         Intent i = new Intent(context, AirshipService.class)
-                .setAction(TagGroupIntentHandler.ACTION_UPDATE_NAMED_USER_TAGS);
+                .setAction(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
 
         context.startService(i);
     }

@@ -2,6 +2,7 @@
 
 package com.urbanairship.push;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
@@ -9,6 +10,7 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,5 +72,38 @@ class TagUtils {
         }
 
         return normalizedTags;
+    }
+
+    /**
+     * Combine the tags from bundle with the pending tags.
+     *
+     * @param tagsBundle The tags bundle.
+     * @param tagsToAdd The pending tags to add tags to.
+     * @param tagsToRemove The pending tags to remove tags from.
+     */
+    static void combineTagGroups(Bundle tagsBundle, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
+        if (tagsBundle == null) {
+            return;
+        }
+
+        for (String group : tagsBundle.keySet()) {
+            List<String> tags = tagsBundle.getStringArrayList(group);
+
+            if (tags == null) {
+                continue;
+            }
+
+            // Add tags to tagsToAdd.
+            if (tagsToAdd.containsKey(group)) {
+                tagsToAdd.get(group).addAll(tags);
+            } else {
+                tagsToAdd.put(group, new HashSet<>(tags));
+            }
+
+            // Remove tags from tagsToRemove.
+            if (tagsToRemove.containsKey(group)) {
+                tagsToRemove.get(group).removeAll(tags);
+            }
+        }
     }
 }

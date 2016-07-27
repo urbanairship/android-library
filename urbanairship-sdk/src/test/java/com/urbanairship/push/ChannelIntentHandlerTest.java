@@ -3,12 +3,15 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
@@ -23,12 +26,18 @@ import org.robolectric.shadows.ShadowApplication;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class ChannelIntentHandlerTest extends BaseTestCase {
@@ -38,13 +47,17 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeResponseBody = "{\"channel_id\": \"AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE\"}";
 
+    private Map<String, Set<String>> addTagsMap;
+    private Map<String, Set<String>> removeTagsMap;
+    private Bundle addTagsBundle;
+    private Bundle removeTagsBundle;
+
     PreferenceDataStore dataStore;
     PushManager pushManager;
     ChannelApiClient client;
     ChannelIntentHandler intentHandler;
     RichPushInbox richPushInbox;
     RichPushUser richPushUser;
-
 
     @Before
     public void setUp() {
@@ -65,6 +78,28 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
                 TestApplication.getApplication().preferenceDataStore, client);
 
         Shadows.shadowOf(RuntimeEnvironment.application).clearStartedServices();
+
+        Set<String> addTags = new HashSet<>();
+        addTags.add("tag1");
+        addTags.add("tag2");
+        addTagsMap = new HashMap<>();
+        addTagsMap.put("tagGroup", addTags);
+
+        Set<String> removeTags = new HashSet<>();
+        removeTags.add("tag4");
+        removeTags.add("tag5");
+        removeTagsMap = new HashMap<>();
+        removeTagsMap.put("tagGroup", removeTags);
+
+        addTagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : addTagsMap.entrySet()) {
+            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        removeTagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : removeTagsMap.entrySet()) {
+            removeTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
     }
 
     /**
@@ -263,7 +298,6 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Set Channel ID and channel location
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-
         // Set up a conflict response
         Response conflictResponse = mock(Response.class);
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
@@ -283,12 +317,184 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
 
         Intent serviceIntent;
-        while((serviceIntent = application.getNextStartedService()) != null) {
+        while ((serviceIntent = application.getNextStartedService()) != null) {
             if (serviceIntent.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)) {
                 break;
             }
         }
 
         Assert.assertEquals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION, serviceIntent.getAction());
+    }
+
+    /**
+     * Test apply tag group changes updates the pending tag groups.
+     */
+    @Test
+    public void testApplyTagGroupChanges() throws JsonException {
+        // Apply tag groups
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
+
+        // Verify pending tags are saved
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test apply tag group changes schedules a tag group update request.
+     */
+    @Test
+    public void testApplyTagGroupChangesSchedulesUpload() throws JsonException {
+        // Set Channel ID and channel location
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        // Apply tag groups
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
+
+        // Verify pending tags are saved
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+
+
+        // Verify the push service intent to update the channel was started
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
+
+        Intent serviceIntent;
+        while ((serviceIntent = application.getNextStartedService()) != null) {
+            if (serviceIntent.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS)) {
+                break;
+            }
+        }
+
+        assertEquals(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS, serviceIntent.getAction());
+    }
+
+    /**
+     * Test update channel tag groups succeeds if the status is 200 and clears pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsSucceed() throws JsonException {
+        // Return a channel ID
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        // Provide pending changes
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 200 response
+        Response response = Mockito.mock(Response.class);
+        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        // Perform the update
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(client, Mockito.times(1)).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
+
+        // Verify pending tag groups are empty
+        assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test update channel tag groups without channel fails and save pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsNoChannelId() throws JsonException {
+        // Provide pending changes
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Perform the update
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateChannelTags not called when channel ID doesn't exist
+        verifyZeroInteractions(client);
+
+        // Verify pending tags saved
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test update channel tag groups fails if the status is 500 and save pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsServerError() throws JsonException {
+        // Return a channel ID
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        // Provide pending changes
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        // Perform the update
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
+    }
+
+    /**
+     * Test don't update channel tags if both pendingAddTags and pendingRemoveTags are empty.
+     */
+    @Test
+    public void testNoUpdateWithEmptyTags() {
+        // Return a channel ID
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        // Provide pending changes
+        dataStore.remove(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
+        dataStore.remove(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
+
+        // Perform an update without specify new tags
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify it didn't cause a client update
+        verifyZeroInteractions(client);
+    }
+
+    /**
+     * Test update channel tag groups fails if the status is 400 and clears pending tags.
+     */
+    @Test
+    public void testUpdateChannelTagGroupsBadRequest() throws JsonException {
+        // Return a channel ID
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        // Provide pending changes
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 400 response
+        Response response = Mockito.mock(Response.class);
+        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(400);
+
+        // Perform the update
+        Intent intent = new Intent(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateChannelTags called
+        Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
+
+        // Verify pending tag groups are empty
+        junit.framework.Assert.assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        junit.framework.Assert.assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 }

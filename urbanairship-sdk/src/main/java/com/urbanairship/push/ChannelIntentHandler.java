@@ -4,6 +4,7 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -26,11 +27,23 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Intent handler for channel registration
  */
 class ChannelIntentHandler {
+
+    /**
+     * Action to update pending channel tag groups.
+     */
+    static final String ACTION_APPLY_TAG_GROUP_CHANGES = "com.urbanairship.push.ACTION_APPLY_TAG_GROUP_CHANGES";
+
+    /**
+     * Action to perform update request for pending tag group changes.
+     */
+    static final String ACTION_UPDATE_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_TAG_GROUPS";
 
     /**
      * Action to start channel and push registration.
@@ -68,6 +81,16 @@ class ChannelIntentHandler {
     private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
 
     /**
+     * Key for storing the pending channel add tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_CHANNEL_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
+
+    /**
+     * Key for storing the pending channel remove tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
+
+    /**
      * Response body key for the channel ID.
      */
     private static final String CHANNEL_ID_KEY = "channel_id";
@@ -99,7 +122,7 @@ class ChannelIntentHandler {
      * @param dataStore The preference data store.
      */
     ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, new ChannelApiClient());
+        this(context, airship, dataStore, new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
@@ -134,6 +157,14 @@ class ChannelIntentHandler {
 
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
                 onUpdateChannelRegistration(intent);
+                break;
+
+            case ACTION_APPLY_TAG_GROUP_CHANGES:
+                onApplyTagGroupChanges(intent);
+                break;
+
+            case ACTION_UPDATE_TAG_GROUPS:
+                onUpdateTagGroup(intent);
                 break;
         }
     }
@@ -530,4 +561,80 @@ class ChannelIntentHandler {
 
         context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
     }
+
+
+    /**
+     * Handles performing any tag group requests if any pending tag group changes are available.
+     *
+     * @param intent The update intent
+     */
+    private void onUpdateTagGroup(Intent intent) {
+        String channelId = pushManager.getChannelId();
+        if (channelId == null) {
+            Logger.verbose("Failed to update channel tags due to null channel ID.");
+            return;
+        }
+
+        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
+        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
+
+        // Make sure we actually have tag changes to perform
+        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
+            Logger.verbose("Channel pending tag group changes empty. Skipping update.");
+            return;
+        }
+
+        Response response = channelClient.updateTagGroups(channelId, pendingAddTags, pendingRemoveTags);
+
+        // 5xx or no response
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            Logger.info("Failed to update tag groups, will retry. Saved pending tag groups.");
+
+            // Retry later
+            AirshipService.retryServiceIntent(context, intent);
+
+            return;
+        }
+
+        int status = response.getStatus();
+
+        Logger.info("Channel tag groups update finished with status: " + status);
+
+        // Clear pending groups if success, forbidden, or bad request
+        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
+            // Clear pending
+            dataStore.remove(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
+            dataStore.remove(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
+        }
+    }
+
+    /**
+     * Handles any pending tag group changes.
+     *
+     * @param intent The tag group intent.
+     */
+    private void onApplyTagGroupChanges(Intent intent) {
+        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
+        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
+
+        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
+        Bundle addTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
+        TagUtils.combineTagGroups(addTagsBundle, pendingAddTags, pendingRemoveTags);
+
+        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
+        Bundle removeTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
+        TagUtils.combineTagGroups(removeTagsBundle, pendingRemoveTags, pendingAddTags);
+
+        dataStore.put(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingAddTags));
+        dataStore.put(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingRemoveTags));
+
+        // Make sure we actually have tag changes to perform
+        if (pushManager.getChannelId() != null && (!pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty())) {
+            Intent updateIntent = new Intent(context, AirshipService.class)
+                    .setAction(ACTION_UPDATE_TAG_GROUPS);
+
+            context.startService(updateIntent);
+        }
+    }
+
 }

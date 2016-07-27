@@ -5,36 +5,36 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.Logger;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * A high level abstraction for performing Named User API association and disassociation.
+ * A high level abstraction for performing Named User API requests.
  */
-class NamedUserApiClient {
+class NamedUserApiClient extends BaseApiClient {
 
-    static final String NAMED_USER_PATH = "api/named_users";
+    private static final String TAG_GROUP_PATH = "api/named_users/tags/";
+    private static final String ASSOCIATE_PATH = "api/named_users/associate/";
+    private static final String DISASSOCIATE_PATH = "api/named_users/disassociate/";
+
     static final String CHANNEL_KEY = "channel_id";
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String NAMED_USER_ID_KEY = "named_user_id";
+    private final int platform;
 
-    protected final String urlString;
-    private final RequestFactory requestFactory;
-
-    NamedUserApiClient() {
-        this(new RequestFactory());
+    NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
+        this(platform, configOptions, new RequestFactory());
     }
 
     @VisibleForTesting
-    NamedUserApiClient(@NonNull RequestFactory requestFactory) {
-        this.requestFactory = requestFactory;
-        this.urlString = UAirship.shared().getAirshipConfigOptions().hostURL + NAMED_USER_PATH;
+    NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+        super(configOptions, requestFactory);
+        this.platform = platform;
     }
 
     /**
@@ -51,16 +51,8 @@ class NamedUserApiClient {
                 .put(NAMED_USER_ID_KEY, id)
                 .build();
 
-        URL associateUrl;
-        String urlString = this.urlString + "/associate";
-        try {
-            associateUrl = new URL(urlString);
-        } catch (MalformedURLException e) {
-            Logger.error("Invalid hostURL", e);
-            return null;
-        }
-
-        return request(associateUrl, payload.toString());
+        URL associateUrl = getDeviceUrl(ASSOCIATE_PATH);
+        return performRequest(associateUrl, "POST", payload.toString());
     }
 
     /**
@@ -75,42 +67,8 @@ class NamedUserApiClient {
                 .put(DEVICE_TYPE_KEY, getDeviceType())
                 .build();
 
-        URL disassociateUrl;
-        String urlString = this.urlString + "/disassociate";
-        try {
-            disassociateUrl = new URL(urlString);
-        } catch (MalformedURLException e) {
-            Logger.error("Invalid hostURL", e);
-            return null;
-        }
-
-        return request(disassociateUrl, payload.toString());
-    }
-
-    /**
-     * Sends the named user request.
-     *
-     * @param url The specified URL to send the request to.
-     * @param jsonPayload The JSON payload as a string.
-     * @return The response or null if an error occurred.
-     */
-    private Response request(@NonNull URL url, @NonNull String jsonPayload) {
-        String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
-        String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
-
-        Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(appKey, appSecret)
-                                          .setRequestBody(jsonPayload, "application/json")
-                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
-
-        if (response == null) {
-            Logger.error("Failed to receive a response for named user.");
-        } else {
-            Logger.debug("Received a response for named user: " + response);
-        }
-
-        return response;
+        URL disassociateUrl = getDeviceUrl(DISASSOCIATE_PATH);
+        return performRequest(disassociateUrl, "POST", payload.toString());
     }
 
     /**
@@ -119,15 +77,23 @@ class NamedUserApiClient {
      * @return The device type string.
      */
     String getDeviceType() {
-        String deviceType = null;
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                deviceType = "android";
-                break;
+        switch (platform) {
             case UAirship.AMAZON_PLATFORM:
-                deviceType = "amazon";
-                break;
+                return "amazon";
+
+            case UAirship.ANDROID_PLATFORM:
+            default:
+                return  "android";
         }
-        return deviceType;
+    }
+
+    @Override
+    protected String getTagGroupAudienceSelector() {
+        return NAMED_USER_ID_KEY;
+    }
+
+    @Override
+    protected String getTagGroupPath() {
+        return TAG_GROUP_PATH;
     }
 }

@@ -4,7 +4,6 @@ package com.urbanairship.push;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
@@ -46,9 +45,7 @@ public class NamedUserApiClientTest extends BaseTestCase {
                 .setHostURL("https://go-demo.urbanairship.com/")
                 .build();
 
-        TestApplication.getApplication().setOptions(airshipConfigOptions);
-
-        client = new NamedUserApiClient(mockRequestFactory);
+        client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
     }
 
     /**
@@ -89,6 +86,7 @@ public class NamedUserApiClientTest extends BaseTestCase {
     @Test
     public void testMalformedUrl() {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
+
         // Set hostURL
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
@@ -97,14 +95,13 @@ public class NamedUserApiClientTest extends BaseTestCase {
                 .setHostURL("files://thisIsMalformed")
                 .build();
 
-        TestApplication.getApplication().setOptions(airshipConfigOptions);
 
-        NamedUserApiClient client2 = new NamedUserApiClient(mockRequestFactory);
+        client = new NamedUserApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
 
-        Response response = client2.associate(fakeNamedUserId, fakeChannelId);
+        Response response = client.associate(fakeNamedUserId, fakeChannelId);
         assertNull("Response should be null", response);
 
-        response = client2.disassociate(fakeChannelId);
+        response = client.disassociate(fakeChannelId);
         assertNull("Response should be null", response);
     }
 }

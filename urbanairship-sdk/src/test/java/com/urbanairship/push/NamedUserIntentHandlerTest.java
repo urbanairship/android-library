@@ -3,23 +3,36 @@
 package com.urbanairship.push;
 
 import android.content.Intent;
+import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowApplication;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -35,6 +48,11 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
     private NamedUserIntentHandler intentHandler;
 
     private String changeToken;
+
+    private Map<String, Set<String>> addTagsMap;
+    private Map<String, Set<String>> removeTagsMap;
+    private Bundle addTagsBundle;
+    private Bundle removeTagsBundle;
 
     @Before
     public void setup() {
@@ -57,6 +75,30 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
 
         intentHandler = new NamedUserIntentHandler(TestApplication.getApplication(), UAirship.shared(),
                 dataStore, namedUserClient);
+
+        Set<String> addTags = new HashSet<>();
+        addTags.add("tag1");
+        addTags.add("tag2");
+        addTagsMap = new HashMap<>();
+        addTagsMap.put("tagGroup", addTags);
+
+        Set<String> removeTags = new HashSet<>();
+        removeTags.add("tag4");
+        removeTags.add("tag5");
+        removeTagsMap = new HashMap<>();
+        removeTagsMap.put("tagGroup", removeTags);
+
+        addTagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : addTagsMap.entrySet()) {
+            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        removeTagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : removeTagsMap.entrySet()) {
+            removeTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        Shadows.shadowOf(RuntimeEnvironment.application).clearStartedServices();
     }
 
     /**
@@ -209,4 +251,196 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
+    /**
+     * Test apply tag group changes updates the pending tag groups.
+     */
+    @Test
+    public void testApplyTagGroupChanges() throws JsonException {
+        // Apply tag groups
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
+
+        // Verify pending tags are saved
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test apply tag group changes schedules a tag group update request.
+     */
+    @Test
+    public void testApplyTagGroupChangesSchedulesUpload() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Apply tag groups
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
+        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
+        intentHandler.handleIntent(intent);
+
+        // Verify pending tags are saved
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+
+
+        // Verify the push service intent to update the channel was started
+        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
+
+        Intent serviceIntent;
+        while((serviceIntent = application.getNextStartedService()) != null) {
+            if (serviceIntent.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS)) {
+                break;
+            }
+        }
+
+        Assert.assertEquals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS, serviceIntent.getAction());
+    }
+
+    /**
+     * Test update named user tags succeeds if the status is 200 and clears pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsSucceed() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Provide pending changes
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 200 response
+        Response response = Mockito.mock(Response.class);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+
+        // Verify pending tag groups are empty
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test update named user tags without named user ID fails and save pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsNoNamedUser() throws JsonException {
+        // Return a null named user ID
+        when(namedUser.getId()).thenReturn(null);
+
+        // Provide pending changes
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateNamedUserTags not called when channel ID doesn't exist
+        verifyZeroInteractions(namedUserClient);
+    }
+
+    /**
+     * Test update named user tags fails if the status is 500.
+     */
+    @Test
+    public void testUpdateNamedUserTagsServerError() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Provide pending changes
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+
+        // Verify pending tags persist
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test don't update named user tags if both pendingAddTags and pendingRemoveTags are empty.
+     */
+    @Test
+    public void testNoUpdateNamedUserWithEmptyTags() {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Clear pending changes
+        dataStore.remove(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
+        dataStore.remove(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify it didn't cause a client update
+        verifyZeroInteractions(namedUserClient);
+    }
+
+    /**
+     * Test update named user tags fails if the status is 400 and clears pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserTagsBadRequest() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Provide pending changes
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 400 response
+        Response response = Mockito.mock(Response.class);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(400);
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+        intentHandler.handleIntent(intent);
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+
+        // Verify pending tag groups are empty
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test clear pending named user tags.
+     */
+    @Test
+    public void testClearPendingNamedUserTags() throws JsonException {
+        // Set non-empty pending tags
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Perform the update
+        Intent intent = new Intent(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+        intentHandler.handleIntent(intent);
+
+        // Verify pending tag groups are empty
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
 }

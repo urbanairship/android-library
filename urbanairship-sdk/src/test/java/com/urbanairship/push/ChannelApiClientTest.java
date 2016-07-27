@@ -4,8 +4,8 @@ package com.urbanairship.push;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonValue;
@@ -36,7 +36,6 @@ public class ChannelApiClientTest extends BaseTestCase {
     private ChannelApiClient client;
     private TestRequest testRequest;
 
-
     @Before
     public void setUp() throws Exception {
         testRequest = new TestRequest();
@@ -53,9 +52,7 @@ public class ChannelApiClientTest extends BaseTestCase {
                 .setHostURL("https://go-demo.urbanairship.com/")
                 .build();
 
-        TestApplication.getApplication().setOptions(airshipConfigOptions);
-
-        client = new ChannelApiClient(mockRequestFactory);
+        client = new ChannelApiClient(UAirship.ANDROID_PLATFORM, airshipConfigOptions, mockRequestFactory);
     }
 
     /**

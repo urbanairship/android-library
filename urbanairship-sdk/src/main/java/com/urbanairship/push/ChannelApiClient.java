@@ -5,39 +5,34 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * A high level abstraction for performing Channel API creation and updates.
+ * A high level abstraction for performing Channel requests.
  */
-class ChannelApiClient {
+class ChannelApiClient extends BaseApiClient {
 
     static final String CHANNEL_CREATION_PATH = "api/channels/";
+    private static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
 
-    protected URL creationURL;
-    private final RequestFactory requestFactory;
+    private static final String ANDROID_CHANNEL_KEY = "android_channel";
+    private static final String AMAZON_CHANNEL_KEY = "amazon_channel";
+    private final int platform;
 
-    ChannelApiClient() {
-        this(new RequestFactory());
+    ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
+        this(platform, configOptions, new RequestFactory());
     }
 
     @VisibleForTesting
-    ChannelApiClient(@NonNull RequestFactory requestFactory) {
-        this.requestFactory = requestFactory;
-
-        String urlString = UAirship.shared().getAirshipConfigOptions().hostURL + CHANNEL_CREATION_PATH;
-        try {
-            this.creationURL = new URL(urlString);
-        } catch (MalformedURLException e) {
-            this.creationURL = null;
-            Logger.error("ChannelApiClient - Invalid hostURL    ", e);
-        }
+    ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+        super(configOptions, requestFactory);
+        this.platform = platform;
     }
 
     /**
@@ -49,7 +44,7 @@ class ChannelApiClient {
     Response createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Creating channel with payload: " + payload);
-        return requestWithPayload(creationURL, "POST", payload);
+        return performRequest(getDeviceUrl(CHANNEL_CREATION_PATH), "POST", payload);
     }
 
     /**
@@ -62,33 +57,23 @@ class ChannelApiClient {
     Response updateChannelWithPayload(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload channelPayload) {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);
-        return requestWithPayload(channelLocation, "PUT", payload);
+        return performRequest(channelLocation, "PUT", payload);
     }
 
-    /**
-     * Sends the channel creation or update request
-     *
-     * @param url The specified URL to send the request to.
-     * @param requestMethod String representing the request method to use.
-     * @param jsonPayload JSON payload as a string
-     * @return response or null if an error occurred
-     */
-    private Response requestWithPayload(@NonNull URL url, @NonNull String requestMethod, @NonNull String jsonPayload) {
-        String appKey = UAirship.shared().getAirshipConfigOptions().getAppKey();
-        String appSecret = UAirship.shared().getAirshipConfigOptions().getAppSecret();
+    @Override
+    protected String getTagGroupAudienceSelector() {
+        switch (platform) {
+            case UAirship.AMAZON_PLATFORM:
+                return AMAZON_CHANNEL_KEY;
 
-        Response response = requestFactory.createRequest(requestMethod, url)
-                                          .setCredentials(appKey, appSecret)
-                                          .setRequestBody(jsonPayload, "application/json")
-                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
-
-        if (response == null) {
-            Logger.debug("ChannelApiClient - Failed to receive channel response.");
-            return null;
+            case UAirship.ANDROID_PLATFORM:
+            default:
+                return ANDROID_CHANNEL_KEY;
         }
+    }
 
-        Logger.verbose("ChannelApiClient - Received channel response: " + response);
-        return response;
+    @Override
+    protected String getTagGroupPath() {
+        return CHANNEL_TAGS_PATH;
     }
 }

@@ -28,18 +28,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class TagGroupsApiClientTest extends BaseTestCase {
+public class BaseApiClientTest extends BaseTestCase {
 
-    private final String fakeNamedUserId = "fake-named-user-id";
-    private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+    private final String identifier = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String tagGroup = "fake_tag_group";
 
     private Set<String> tagsToAdd;
     private Set<String> tagsToRemove;
     private TestRequest testRequest;
 
-    private TagGroupsApiClient client;
-    
+    private BaseApiClient client;
+
     @Before
     public void setUp() {
         AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
@@ -53,7 +52,17 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
-        client = new TagGroupsApiClient(configOptions, mockRequestFactory);
+        client = new BaseApiClient(configOptions, mockRequestFactory) {
+            @Override
+            protected String getTagGroupAudienceSelector() {
+                return "test";
+            }
+
+            @Override
+            protected String getTagGroupPath() {
+                return "api/test";
+            }
+        };
 
         tagsToAdd = new HashSet<>();
         tagsToAdd.add("tag1");
@@ -63,10 +72,10 @@ public class TagGroupsApiClientTest extends BaseTestCase {
     }
 
     /**
-     * Test updateNamedUserTags succeeds if status is 200.
+     * Test updateTagGroups succeeds if status is 200.
      */
     @Test
-    public void testUpdateNamedUserTagsSucceeds() throws JsonException {
+    public void testUpdateTagGroupsSucceeds() throws JsonException {
         // testRequest is returned from the mockRequestFactory
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
@@ -79,7 +88,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         Map<String, Set<String>> removeTags = new HashMap<>();
         removeTags.put(tagGroup, tagsToRemove);
 
-        Response response = client.updateNamedUserTags(fakeNamedUserId, addTags, removeTags);
+        Response response = client.updateTagGroups(identifier, addTags, removeTags);
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
@@ -87,7 +96,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         testRequest.getRequestBody();
 
         Map<String, String> audience = new HashMap<>();
-        audience.put("named_user_id", fakeNamedUserId);
+        audience.put("test", identifier);
 
         JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
 
@@ -97,46 +106,12 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
     }
 
-    /**
-     * Test updateChannelTags succeeds if status is 200.
-     */
-    @Test
-    public void testUpdateChannelTagsSucceeds() throws JsonException {
-        // testRequest is returned from the mockRequestFactory
-        testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\": true}")
-                .create();
-
-        Map<String, Set<String>> addTags = new HashMap<>();
-        addTags.put(tagGroup, tagsToAdd);
-
-        Map<String, Set<String>> removeTags = new HashMap<>();
-        removeTags.put(tagGroup, tagsToRemove);
-
-        Response response = client.updateChannelTags(fakeChannelId, addTags, removeTags);
-
-        assertNotNull("Response should not be null", response);
-        assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
-
-        testRequest.getRequestBody();
-
-        Map<String, String> audience = new HashMap<>();
-        audience.put("android_channel", fakeChannelId);
-
-        JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
-
-        // verify payload
-        assertEquals("Payload should contain audience", request.getMap().get("audience"), JsonValue.wrap(audience));
-        assertEquals("Payload should contain addTags", request.getMap().get("add"), JsonValue.wrap(addTags));
-        assertEquals("Payload should contain removeTags", request.getMap().get("remove"), JsonValue.wrap(removeTags));
-    }
 
     /**
      * Test payload does not contain empty addTags.
      */
     @Test
-    public void testEmptyAddTags() throws JsonException {
+    public void testUpdateTagGroupsEmptyAddTags() throws JsonException {
         // testRequest is returned from the mockRequestFactory
         testRequest.response = new Response.Builder(HttpURLConnection.HTTP_OK)
                 .setResponseMessage("OK")
@@ -148,7 +123,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         Map<String, Set<String>> removeTags = new HashMap<>();
         removeTags.put(tagGroup, tagsToRemove);
 
-        Response response = client.updateChannelTags(fakeChannelId, emptyAddTags, removeTags);
+        Response response = client.updateTagGroups(identifier, emptyAddTags, removeTags);
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
@@ -156,7 +131,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         testRequest.getRequestBody();
 
         Map<String, String> audience = new HashMap<>();
-        audience.put("android_channel", fakeChannelId);
+        audience.put("test", identifier);
 
         JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
 
@@ -182,7 +157,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
 
         Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
 
-        Response response = client.updateChannelTags(fakeChannelId, addTags, emptyRemoveTags);
+        Response response = client.updateTagGroups(identifier, addTags, emptyRemoveTags);
 
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
@@ -190,7 +165,7 @@ public class TagGroupsApiClientTest extends BaseTestCase {
         testRequest.getRequestBody();
 
         Map<String, String> audience = new HashMap<>();
-        audience.put("android_channel", fakeChannelId);
+        audience.put("test", identifier);
 
         JsonValue request = JsonValue.parseString(testRequest.getRequestBody());
 
@@ -204,23 +179,11 @@ public class TagGroupsApiClientTest extends BaseTestCase {
      * Test updateChannelTags with empty addTags and removeTags returns null.
      */
     @Test
-    public void testUpdateChannelEmptyTags() {
+    public void testUpdateTagGroupsEmptyTags() {
         Map<String, Set<String>> emptyAddTags = new HashMap<>();
         Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
 
-        Response response = client.updateChannelTags(fakeChannelId, emptyAddTags, emptyRemoveTags);
-        assertNull("Response should be null", response);
-    }
-
-    /**
-     * Test updateNamedUserTags with empty addTags and removeTags returns null.
-     */
-    @Test
-    public void testUpdateNamedUserEmptyTags() {
-        Map<String, Set<String>> emptyAddTags = new HashMap<>();
-        Map<String, Set<String>> emptyRemoveTags = new HashMap<>();
-
-        Response response = client.updateNamedUserTags(fakeNamedUserId, emptyAddTags, emptyRemoveTags);
+        Response response = client.updateTagGroups(identifier, emptyAddTags, emptyRemoveTags);
         assertNull("Response should be null", response);
     }
 }

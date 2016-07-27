@@ -43,7 +43,7 @@ public class UAirship {
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
-    @interface Platform {}
+    public @interface Platform {}
 
     /**
      * Amazon platform type. Only ADM transport will be allowed.

@@ -23,6 +23,16 @@ import java.util.Set;
  */
 public class TagGroupsEditor {
 
+    /**
+     * Extra containing tag groups to remove from channel tag groups or named user tags.
+     */
+    static final String EXTRA_REMOVE_TAG_GROUPS = "EXTRA_REMOVE_TAG_GROUPS";
+
+    /**
+     * Extra containing tag groups to add to channel tag groups or named user tags.
+     */
+    static final String EXTRA_ADD_TAG_GROUPS = "EXTRA_ADD_TAG_GROUPS";
+
     private final String action;
     protected final Map<String, Set<String>> tagsToAdd = new HashMap<>();
     protected final Map<String, Set<String>> tagsToRemove = new HashMap<>();
@@ -94,8 +104,8 @@ public class TagGroupsEditor {
 
         Intent i = new Intent(UAirship.getApplicationContext(), AirshipService.class)
                 .setAction(action)
-                .putExtra(TagGroupIntentHandler.EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
-                .putExtra(TagGroupIntentHandler.EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
+                .putExtra(EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
+                .putExtra(EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
 
         UAirship.getApplicationContext().startService(i);
     }
