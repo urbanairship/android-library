@@ -6,7 +6,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.amazon.device.messaging.ADM;
-import com.amazon.device.messaging.development.ADMManifest;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
@@ -14,17 +13,6 @@ import com.urbanairship.UAirship;
  * Wrapper around ADM methods.
  */
 class AdmWrapper {
-
-    /**
-     * Wraps {@link com.amazon.device.messaging.development.ADMManifest#checkManifestAuthoredProperly(android.content.Context)}.
-     */
-    public static void validateManifest() {
-        try {
-            ADMManifest.checkManifestAuthoredProperly(UAirship.getApplicationContext());
-        } catch (RuntimeException ex) {
-            Logger.error("AndroidManifest invalid ADM setup.", ex);
-        }
-    }
 
     /**
      * Wraps {@link com.amazon.device.messaging.ADM#isSupported()}.

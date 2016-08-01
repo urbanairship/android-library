@@ -18,7 +18,6 @@ import android.util.Log;
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.google.GcmUtils;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -353,7 +352,7 @@ public class UAirship {
 
             // if in development mode, check the manifest and log manifest issues
             if (!options.inProduction) {
-                sharedAirship.validateManifest();
+                ManifestUtils.validateManifest();
             }
 
             Logger.info("Airship ready!");
@@ -743,33 +742,6 @@ public class UAirship {
         }
 
         return components;
-    }
-
-    /**
-     * Logs any issues with the manifest.
-     */
-    private void validateManifest() {
-        ManifestUtils.validateManifest(airshipConfigOptions);
-
-        switch (sharedAirship.getPlatformType()) {
-            case ANDROID_PLATFORM:
-                if (airshipConfigOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-                    GcmUtils.validateManifest(airshipConfigOptions);
-                } else {
-                    Logger.error("Android platform detected but GCM transport is disabled. " +
-                            "The device will not be able to receive push notifications.");
-                }
-                break;
-
-            case AMAZON_PLATFORM:
-                if (airshipConfigOptions.isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-                    AdmUtils.validateManifest();
-                } else {
-                    Logger.error("Amazon platform detected but ADM transport is disabled. " +
-                            "The device will not be able to receive push notifications.");
-                }
-                break;
-        }
     }
 
     /**

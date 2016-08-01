@@ -5,8 +5,6 @@ package com.urbanairship.amazon;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
-
 /**
  * Util methods for ADM.
  */
@@ -61,16 +59,5 @@ public class AdmUtils {
             return AdmWrapper.getRegistrationId(context);
         }
         return null;
-    }
-
-    /**
-     * Validates the manifest for ADM.
-     */
-    public static void validateManifest() {
-        if (isAdmAvailable()) {
-            AdmWrapper.validateManifest();
-        } else {
-            Logger.warn("ADM is not available on this device.");
-        }
     }
 }

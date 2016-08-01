@@ -9,9 +9,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.google.GcmUtils;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.util.ManifestUtils;
 
 import java.io.IOException;
 
@@ -68,19 +66,6 @@ class GcmRegistrar {
         } catch (IllegalStateException e) {
             // Missing version tag
             Logger.error("Unable to register with GCM: " + e.getMessage());
-            return false;
-        }
-
-        // Check for permissions - the emulator will not have them, nor with devices without the Google stack
-        // such as the Kindle Fire.
-        if (!ManifestUtils.isPermissionKnown(GcmUtils.PERMISSION_RECEIVE)) {
-            Logger.error(GcmUtils.PERMISSION_RECEIVE + " is unknown to PackageManager. " +
-                    "Note that an AVD emulator may not support GCM.");
-
-            Logger.error("If you're running in an emulator, you need to install " +
-                    "the appropriate image through the Android SDK and AVM manager. " +
-                    "See http://developer.android.com/guide/google/gcm/ for further details.");
-
             return false;
         }
 
