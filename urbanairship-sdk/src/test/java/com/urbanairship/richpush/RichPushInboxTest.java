@@ -3,22 +3,23 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
 import com.urbanairship.TestApplication;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 
 import junit.framework.Assert;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,13 +39,16 @@ import static org.mockito.Mockito.when;
 
 public class RichPushInboxTest extends BaseTestCase {
 
-    RichPushInbox inbox;
-    RichPushInbox.Predicate testPredicate;
-    ShadowApplication application;
-    RichPushUser user;
+    private RichPushInbox inbox;
+    private RichPushInbox.Predicate testPredicate;
+    private RichPushUser mockUser;
+    private JobDispatcher mockDispatcher;
+
     @Before
     public void setUp() {
-        user = mock(RichPushUser.class);
+        mockDispatcher = mock(JobDispatcher.class);
+        mockUser = mock(RichPushUser.class);
+
         Context context = RuntimeEnvironment.application;
         RichPushResolver resolver = new RichPushResolver(context);
         Executor executor = new Executor() {
@@ -55,7 +58,7 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         };
 
-        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, user, resolver, executor);
+        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor);
 
         // Only the "even" messages
         testPredicate = new RichPushInbox.Predicate() {
@@ -78,34 +81,31 @@ public class RichPushInboxTest extends BaseTestCase {
         }
 
         inbox.refresh(false);
-
-        application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
     }
 
     /**
-     * Test init only updates the user if it already exists. Normally the user updates
+     * Test init only updates the mockUser if it already exists. Normally the mockUser updates
      * after channel creation.
      */
     @Test
     public void testInitNoUser() {
-        when(user.getId()).thenReturn(null);
+        when(mockUser.getId()).thenReturn(null);
 
         inbox.init();
 
-        verify(user, never()).update(false);
+        verify(mockUser, never()).update(false);
     }
 
     /**
-     * Test init only updates the user if it exists.
+     * Test init only updates the mockUser if it exists.
      */
     @Test
     public void testInitWithUser() {
-        when(user.getId()).thenReturn("cool");
+        when(mockUser.getId()).thenReturn("cool");
 
         inbox.init();
 
-        verify(user, times(1)).update(false);
+        verify(mockUser, times(1)).update(false);
     }
 
     /**
@@ -207,8 +207,13 @@ public class RichPushInboxTest extends BaseTestCase {
     public void testFetchMessages() {
         inbox.fetchMessages();
 
-        Intent intent = application.getNextStartedService();
-        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, intent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            }
+        }));
     }
 
 
@@ -221,14 +226,17 @@ public class RichPushInboxTest extends BaseTestCase {
         // Start refreshing messages
         inbox.fetchMessages();
 
-        // Clear the services
-        application.clearStartedServices();
-
         // Try to refresh again
         inbox.fetchMessages();
 
-        // Verify a new service was not started
-        assertNull(application.peekNextStartedService());
+        // Verify only 1 job was dispatched to refresh the messages
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            }
+        }));
     }
 
     /**
@@ -241,14 +249,17 @@ public class RichPushInboxTest extends BaseTestCase {
         // Start refreshing messages
         inbox.fetchMessages();
 
-        // Verify we started the service
-        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
-
         // Force another update
         inbox.fetchMessages(callback);
 
-        // Verify we started another service
-        assertEquals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, application.getNextStartedService().getAction());
+        // Verify we dispatched 2 jobs
+        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            }
+        }));
     }
 
 
@@ -261,10 +272,24 @@ public class RichPushInboxTest extends BaseTestCase {
 
         inbox.fetchMessages(callback);
 
-        // Send result to the receiver
-        ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+                    return false;
+                }
+
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                if (receiver == null) {
+                    return false;
+                }
+
+                // Send result to the receiver
+                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+                return true;
+            }
+        }));
 
         verify(callback).onFinished(true);
     }
@@ -278,10 +303,24 @@ public class RichPushInboxTest extends BaseTestCase {
 
         inbox.fetchMessages(callback);
 
-        // Send result to the receiver
-        ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+                    return false;
+                }
+
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                if (receiver == null) {
+                    return false;
+                }
+
+                // Send result to the receiver
+                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                return true;
+            }
+        }));
 
         verify(callback).onFinished(false);
     }
@@ -296,10 +335,24 @@ public class RichPushInboxTest extends BaseTestCase {
         Cancelable cancelable = inbox.fetchMessages(callback);
         cancelable.cancel();
 
-        // Send result to the receiver
-        ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+                    return false;
+                }
+
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                if (receiver == null) {
+                    return false;
+                }
+
+                // Send result to the receiver
+                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                return true;
+            }
+        }));
 
         verifyZeroInteractions(callback);
     }

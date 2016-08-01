@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.content.Intent;
 import android.graphics.Color;
 
 import com.urbanairship.AirshipConfigOptions;
@@ -13,6 +12,8 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
@@ -21,10 +22,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -37,26 +37,31 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class PushManagerTest extends BaseTestCase {
 
-    Analytics mockAnalytics;
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private Set<String> tagsToAdd = new HashSet<>();
     private Set<String> tagsToRemove = new HashSet<>();
 
-    PreferenceDataStore preferenceDataStore;
-    PushManager pushManager;
-    AirshipConfigOptions options;
+    private PreferenceDataStore preferenceDataStore;
+    private PushManager pushManager;
+    private AirshipConfigOptions options;
+    private Analytics mockAnalytics;
+    private JobDispatcher mockDispatcher;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setup() {
-
+        mockDispatcher = mock(JobDispatcher.class);
         mockAnalytics = mock(Analytics.class);
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
@@ -69,7 +74,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options, mockDispatcher);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -81,17 +86,21 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test init only starts the push service with action START_REGISTRATION.
+     * Test init only starts dispatches a job to start registration.
      */
     @Test
     public void testInit() {
        pushManager.init();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(ChannelIntentHandler.ACTION_START_REGISTRATION, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_START_REGISTRATION);
+            }
+        }));
 
-        // Verify we do not have any other services
-        assertNull(ShadowApplication.getInstance().getNextStartedService());
+        verifyNoMoreInteractions(mockDispatcher);
     }
 
 
@@ -672,62 +681,32 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test editTagGroups apply starts the update channel tag groups service.
+     * Test editTagGroups apply dispatches a job to update the tag groups.
      */
     @Test
     public void testStartUpdateChannelTagService() {
-
         pushManager.editTagGroups()
                    .addTags("tagGroup", tagsToAdd)
                    .removeTags("tagGroup", tagsToRemove)
                    .apply();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Channel Tag Groups Service", ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
+                        job.getAirshipComponentName().equals(PushManager.class.getName());
+            }
+        }));
     }
 
     /**
-     * Test adding and removing tags to device tag group pass when channelTagRegistrationEnabled is false.
-     */
-    @Test
-    public void testChannelTagRegistrationDisabled() {
-
-        pushManager.setChannelTagRegistrationEnabled(false);
-        pushManager.editTagGroups()
-                   .addTags("device", tagsToAdd)
-                   .removeTags("device", tagsToRemove)
-                   .apply();
-
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Channel Tag Groups Service", ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, startedIntent.getAction());
-    }
-
-    /**
-     * Test adding and removing tags to device tag group fails when channelTagRegistrationEnabled is true.
-     */
-    @Test
-    public void testChannelTagRegistrationEnabled() {
-
-        pushManager.setChannelTagRegistrationEnabled(true);
-        pushManager.editTagGroups()
-                   .addTags("device", tagsToAdd)
-                   .removeTags("device", tagsToRemove)
-                   .apply();
-
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertNull("Update channel tag groups service should not have started", startedIntent);
-    }
-
-    /**
-     * Test editTagGroups apply does not start the service when addTags and removeTags are empty.
+     * Test editTagGroups apply does not update the tag groups if addTags and removeTags are empty.
      */
     @Test
     public void testEmptyAddTagsRemoveTags() {
-
         pushManager.editTagGroups().apply();
-
-        Intent startedIntent = ShadowApplication.getInstance().peekNextStartedService();
-        assertNull("Update channel tag groups service should not have started", startedIntent);
+        verifyZeroInteractions(mockDispatcher);
     }
 
     /**
@@ -735,18 +714,17 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testInitUpdateChannelTags() {
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        shadowApplication.clearStartedServices();
-
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
         preferenceDataStore.put(PushManager.PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
         pushManager.init();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect start registration", ChannelIntentHandler.ACTION_START_REGISTRATION, startedIntent.getAction());
-
-        startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect update channel tag groups service", ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+            }
+        }));
     }
 
     /**
@@ -788,13 +766,11 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
+
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, mockDispatcher);
         pushManager.init();
 
-        // Set up shadowApplication to ensure the registration update service is started after
-        // channel creation re-enable
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        shadowApplication.clearStartedServices();
+        assertTrue(pushManager.isChannelCreationDelayEnabled());
 
         // Re-enable channel creation to initiate channel registration
         pushManager.enableChannelCreation();
@@ -802,8 +778,14 @@ public class PushManagerTest extends BaseTestCase {
         // Ensure channel delay enabled is now false
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect start registration", ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+        // Update should be called
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            }
+        }));
     }
 
     /**
@@ -908,8 +890,14 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(tags.contains("existing_tag"));
 
         // A registration update should be triggered
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect start registration", ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            }
+        }));
+
     }
 
 
@@ -936,9 +924,14 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals(1, tags.size());
         assertTrue(tags.contains("hi"));
 
-        // A registration update should be triggered
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect start registration", ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION, startedIntent.getAction());
+
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            }
+        }));
     }
 
     /**

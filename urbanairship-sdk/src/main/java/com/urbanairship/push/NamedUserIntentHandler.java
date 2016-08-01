@@ -3,15 +3,15 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
@@ -69,6 +69,7 @@ class NamedUserIntentHandler {
     private final PushManager pushManager;
     private final Context context;
     private final PreferenceDataStore dataStore;
+    private final JobDispatcher jobDispatcher;
 
     /**
      * Default constructor.
@@ -78,51 +79,52 @@ class NamedUserIntentHandler {
      * @param dataStore The preference data store.
      */
     NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+        this(context, airship, dataStore, JobDispatcher.shared(context), new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore, NamedUserApiClient client) {
+    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, NamedUserApiClient client) {
         this.context = context;
         this.dataStore = dataStore;
         this.client = client;
         this.namedUser = airship.getNamedUser();
         this.pushManager = airship.getPushManager();
+        this.jobDispatcher = jobDispatcher;
     }
 
     /**
-     * Handles {@link AirshipService} intents for {@link com.urbanairship.push.PushManager}.
+     * Called to handle jobs from {@link NamedUser#onPerformJob(UAirship, Job)}.
      *
-     * @param intent The intent.
+     * @param job The airship job.
+     * @return The job result.
      */
-    protected void handleIntent(Intent intent) {
-        switch (intent.getAction()) {
+    @Job.JobResult
+    protected int performJob(Job job) {
+        switch (job.getAction()) {
             case ACTION_UPDATE_NAMED_USER:
-                onUpdateNamedUser(intent);
-                break;
+                return onUpdateNamedUser();
 
             case ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-                onClearTagGroups();
-                break;
+                return onClearTagGroups();
 
             case ACTION_APPLY_TAG_GROUP_CHANGES:
-                onApplyTagGroupChanges(intent);
-                break;
-
+                return onApplyTagGroupChanges(job);
 
             case ACTION_UPDATE_TAG_GROUPS:
-                onUpdateTagGroup(intent);
-                break;
+                return onUpdateTagGroup();
         }
+
+        return Job.JOB_FINISHED;
     }
 
 
     /**
      * Handles associate/disassociate updates.
      *
-     * @param intent The update intent.
+     * @return The job result.
      */
-    private void onUpdateNamedUser(Intent intent) {
+    @Job.JobResult
+    private int onUpdateNamedUser() {
         String currentId = namedUser.getId();
         String changeToken = namedUser.getChangeToken();
         String lastUpdatedToken = dataStore.getString(LAST_UPDATED_TOKEN_KEY, null);
@@ -130,18 +132,18 @@ class NamedUserIntentHandler {
 
         if (changeToken == null && lastUpdatedToken == null) {
             // Skip since no one has set the named user ID. Usually from a new or re-install.
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
             // Skip since no change has occurred (token remain the same).
             Logger.debug("NamedUserIntentHandler - Named user already updated. Skipping.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.info("The channel ID does not exist. Will retry when channel ID is available.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Response response;
@@ -158,39 +160,40 @@ class NamedUserIntentHandler {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.info("Update named user failed, will retry.");
-            AirshipService.retryServiceIntent(context, intent);
-            return;
+            return Job.JOB_RETRY;
         }
 
         // 2xx
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             Logger.info("Update named user succeeded with status: " + response.getStatus());
             dataStore.put(LAST_UPDATED_TOKEN_KEY, changeToken);
-            namedUser.startUpdateTagsService();
-            return;
+            namedUser.dispatchUpdateTagGroupsJob();
+            return Job.JOB_FINISHED;
         }
 
         // 403
         if (response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
             Logger.info("Update named user failed with status: " + response.getStatus() +
                     " This action is not allowed when the app is in server-only mode.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         // 4xx
         Logger.info("Update named user failed with status: " + response.getStatus());
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles performing any tag group requests if any pending tag group changes are available.
      *
-     * @param intent The update intent
+     * @return The job result.
      */
-    private void onUpdateTagGroup(Intent intent) {
+    @Job.JobResult
+    private int onUpdateTagGroup() {
         String namedUserId = namedUser.getId();
         if (namedUserId == null) {
             Logger.verbose("Failed to update named user tags due to null named user ID.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY));
@@ -199,19 +202,15 @@ class NamedUserIntentHandler {
         // Make sure we actually have tag changes to perform
         if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
             Logger.verbose("Named user pending tag group changes empty. Skipping update.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Response response = client.updateTagGroups(namedUser.getId(), pendingAddTags, pendingRemoveTags);
 
         // 5xx or no response
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("Failed to update tag groups, will retry. Saved pending tag groups.");
-
-            // Retry later
-            AirshipService.retryServiceIntent(context, intent);
-
-            return;
+            Logger.info("Failed to update tag groups, will retry later.");
+            return Job.JOB_RETRY;
         }
 
         int status = response.getStatus();
@@ -222,23 +221,27 @@ class NamedUserIntentHandler {
         if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
             onClearTagGroups();
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles any pending tag group changes.
      *
-     * @param intent The tag group intent.
+     * @param job The airship job.
+     * @return The job result.
      */
-    private void onApplyTagGroupChanges(Intent intent) {
+    @Job.JobResult
+    private int onApplyTagGroupChanges(Job job) {
         Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY));
         Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY));
 
         // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
+        Bundle addTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
         TagUtils.combineTagGroups(addTagsBundle, pendingAddTags, pendingRemoveTags);
 
         // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
+        Bundle removeTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
         TagUtils.combineTagGroups(removeTagsBundle, pendingRemoveTags, pendingAddTags);
 
         dataStore.put(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingAddTags));
@@ -246,18 +249,26 @@ class NamedUserIntentHandler {
 
         // Make sure we actually have tag changes to perform
         if (namedUser.getId() != null && (!pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty())) {
-            Intent updateIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_TAG_GROUPS);
+            Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+                    .setAirshipComponent(NamedUser.class)
+                    .build();
 
-            context.startService(updateIntent);
+            jobDispatcher.dispatch(updateJob);
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles clearing pending tag groups.
+     *
+     * @return The job result.
      */
-    private void onClearTagGroups() {
+    @Job.JobResult
+    private int onClearTagGroups() {
         dataStore.remove(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
         dataStore.remove(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
+
+        return Job.JOB_FINISHED;
     }
 }

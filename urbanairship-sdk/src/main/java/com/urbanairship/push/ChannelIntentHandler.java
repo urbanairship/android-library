@@ -11,13 +11,14 @@ import android.support.annotation.VisibleForTesting;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.http.Response;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -113,6 +114,7 @@ class ChannelIntentHandler {
     private final NamedUser namedUser;
     private final Context context;
     private final PreferenceDataStore dataStore;
+    private final JobDispatcher jobDispatcher;
 
     /**
      * Default constructor.
@@ -122,61 +124,63 @@ class ChannelIntentHandler {
      * @param dataStore The preference data store.
      */
     ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+        this(context, airship, dataStore, JobDispatcher.shared(context), new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
     ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                                ChannelApiClient channelClient) {
+                         JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
         this.context = context;
         this.dataStore = dataStore;
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
+        this.jobDispatcher = jobDispatcher;
     }
 
     /**
-     * Handles {@link AirshipService} intents for {@link com.urbanairship.push.PushManager}.
+     * Called to handle jobs from {@link PushManager#onPerformJob(UAirship, Job)}.
      *
-     * @param intent The intent.
+     * @param job The airship job.
+     * @return The job result.
      */
-    protected void handleIntent(Intent intent) {
-        switch (intent.getAction()) {
+    @Job.JobResult
+    protected int performJob(Job job) {
+        switch (job.getAction()) {
             case ACTION_START_REGISTRATION:
-                onStartRegistration();
-                break;
+                return onStartRegistration();
 
             case ACTION_UPDATE_PUSH_REGISTRATION:
-                onUpdatePushRegistration(intent);
-                break;
+                return onUpdatePushRegistration();
 
             case ACTION_ADM_REGISTRATION_FINISHED:
-                onAdmRegistrationFinished(intent);
-                break;
+                return onAdmRegistrationFinished(job);
 
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
-                onUpdateChannelRegistration(intent);
-                break;
+                return onUpdateChannelRegistration();
 
             case ACTION_APPLY_TAG_GROUP_CHANGES:
-                onApplyTagGroupChanges(intent);
-                break;
+                return onApplyTagGroupChanges(job);
 
             case ACTION_UPDATE_TAG_GROUPS:
-                onUpdateTagGroup(intent);
-                break;
+                return onUpdateTagGroup();
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Starts the registration process. Will either start the push registration flow or channel registration
      * depending on if push registration is needed.
+     *
+     * @return The job result.
      */
-    private void onStartRegistration() {
+    @Job.JobResult
+    private int onStartRegistration() {
         if (isRegistrationStarted) {
             // Happens anytime we have multiple processes
-            return;
+            return Job.JOB_FINISHED;
         }
 
         isRegistrationStarted = true;
@@ -185,23 +189,30 @@ class ChannelIntentHandler {
             isPushRegistering = true;
 
             // Update the push registration
-            Intent updatePushRegistrationIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_PUSH_REGISTRATION);
-            context.startService(updatePushRegistrationIntent);
+            Job job = Job.newBuilder(ACTION_UPDATE_PUSH_REGISTRATION)
+                         .setAirshipComponent(PushManager.class)
+                         .build();
+
+            jobDispatcher.dispatch(job);
         } else {
             // Update the channel registration
-            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
-            context.startService(channelUpdateIntent);
+            Job job = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                         .setAirshipComponent(PushManager.class)
+                         .build();
+
+            jobDispatcher.dispatch(job);
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Updates the push registration for either ADM or GCM.
      *
-     * @param intent The push registration update intent.
+     * @return The job result.
      */
-    private void onUpdatePushRegistration(@NonNull Intent intent) {
+    @Job.JobResult
+    private int onUpdatePushRegistration() {
         isPushRegistering = false;
 
         switch (airship.getPlatformType()) {
@@ -219,7 +230,7 @@ class ChannelIntentHandler {
                 } catch (IOException | SecurityException e) {
                     Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
                     isPushRegistering = true;
-                    AirshipService.retryServiceIntent(context, intent);
+                    return Job.JOB_RETRY;
                 }
 
                 break;
@@ -248,28 +259,33 @@ class ChannelIntentHandler {
 
         if (!isPushRegistering) {
             // Update the channel registration
-            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
+            Job job = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                         .setAirshipComponent(PushManager.class)
+                         .build();
 
-            context.startService(channelUpdateIntent);
+            jobDispatcher.dispatch(job);
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Called when ADM registration is finished.
      *
-     * @param intent The received intent.
+     * @param job The registration job.
+     * @return The job result.
      */
-    private void onAdmRegistrationFinished(@NonNull Intent intent) {
+    @Job.JobResult
+    private int onAdmRegistrationFinished(@NonNull Job job) {
         if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !AdmUtils.isAdmAvailable()) {
             Logger.error("Received intent from invalid transport acting as ADM.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
-        Intent admIntent = intent.getParcelableExtra(EXTRA_INTENT);
+        Intent admIntent = job.getExtras().getParcelable(EXTRA_INTENT);
         if (admIntent == null) {
             Logger.error("ChannelIntentHandler - Received ADM message missing original intent.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (admIntent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
@@ -285,18 +301,25 @@ class ChannelIntentHandler {
         isPushRegistering = false;
 
         // Update the channel registration
-        Intent channelUpdateIntent = new Intent(context, AirshipService.class)
-                .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
-        context.startService(channelUpdateIntent);
+        Job channelUpdateJob = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                  .setAirshipComponent(PushManager.class)
+                                  .build();
+
+        jobDispatcher.dispatch(channelUpdateJob);
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Updates channel registration.
+     *
+     * @return The job result.
      */
-    private void onUpdateChannelRegistration(@NonNull Intent intent) {
+    @Job.JobResult
+    private int onUpdateChannelRegistration() {
         if (isPushRegistering) {
             Logger.verbose("ChannelIntentHandler - Push registration in progress, skipping registration update.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Logger.verbose("ChannelIntentHandler - Performing channel registration.");
@@ -306,23 +329,24 @@ class ChannelIntentHandler {
         URL channelLocation = getChannelLocationUrl();
 
         if (channelLocation != null && !UAStringUtil.isEmpty(channelId)) {
-            updateChannel(intent, channelLocation, payload);
+            return updateChannel(channelLocation, payload);
         } else {
-            createChannel(intent, payload);
+            return createChannel(payload);
         }
     }
 
     /**
      * Updates a channel.
      *
-     * @param intent The update channel intent.
      * @param channelLocation Channel location.
      * @param payload The ChannelRegistrationPayload payload.
+     * @return The job result.
      */
-    private void updateChannel(@NonNull Intent intent, @NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
+    @Job.JobResult
+    private int updateChannel(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("ChannelIntentHandler - Channel already up to date.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Response response = channelClient.updateChannelWithPayload(channelLocation, payload);
@@ -331,9 +355,8 @@ class ChannelIntentHandler {
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
-            AirshipService.retryServiceIntent(context, intent);
             sendRegistrationFinishedBroadcast(false, false);
-            return;
+            return Job.JOB_RETRY;
         }
 
         // 2xx (API should only return 200 or 201)
@@ -343,7 +366,7 @@ class ChannelIntentHandler {
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
             sendRegistrationFinishedBroadcast(true, false);
-            return;
+            return Job.JOB_FINISHED;
         }
 
         // 409
@@ -352,29 +375,33 @@ class ChannelIntentHandler {
             pushManager.setChannel(null, null);
 
             // Update registration
-            Intent channelUpdateIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION);
-            context.startService(channelUpdateIntent);
+            Job channelUpdateJob = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                      .setAirshipComponent(PushManager.class)
+                                      .build();
 
-            return;
+            jobDispatcher.dispatch(channelUpdateJob);
+
+            return Job.JOB_FINISHED;
         }
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
         sendRegistrationFinishedBroadcast(false, false);
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Actually creates the channel.
      *
-     * @param intent The create channel intent.
      * @param payload The ChannelRegistrationPayload payload.
+     * @return The job result.
      */
-    private void createChannel(@NonNull Intent intent, @NonNull ChannelRegistrationPayload payload) {
+    @Job.JobResult
+    private int createChannel(@NonNull ChannelRegistrationPayload payload) {
 
         if (pushManager.isChannelCreationDelayEnabled()) {
             Logger.info("Channel registration is currently disabled.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Response response = channelClient.createChannelWithPayload(payload);
@@ -384,8 +411,8 @@ class ChannelIntentHandler {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, true);
-            AirshipService.retryServiceIntent(context, intent);
-            return;
+            return Job.JOB_RETRY;
+
         }
 
         // 200 or 201
@@ -416,8 +443,9 @@ class ChannelIntentHandler {
                 }
 
                 // If setId was called before channel creation, update named user
-                namedUser.startUpdateService();
+                namedUser.dispatchNamedUserUpdateJob();
                 pushManager.updateRegistration();
+
                 pushManager.startUpdateTagsService();
                 airship.getInbox().getUser().update(true);
 
@@ -430,12 +458,14 @@ class ChannelIntentHandler {
                 sendRegistrationFinishedBroadcast(false, true);
             }
 
-            return;
+            return Job.JOB_FINISHED;
         }
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
         sendRegistrationFinishedBroadcast(false, true);
+
+        return Job.JOB_FINISHED;
     }
 
     /**
@@ -566,13 +596,14 @@ class ChannelIntentHandler {
     /**
      * Handles performing any tag group requests if any pending tag group changes are available.
      *
-     * @param intent The update intent
+     * @return The job result.
      */
-    private void onUpdateTagGroup(Intent intent) {
+    @Job.JobResult
+    private int onUpdateTagGroup() {
         String channelId = pushManager.getChannelId();
         if (channelId == null) {
             Logger.verbose("Failed to update channel tags due to null channel ID.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
@@ -581,19 +612,15 @@ class ChannelIntentHandler {
         // Make sure we actually have tag changes to perform
         if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
             Logger.verbose("Channel pending tag group changes empty. Skipping update.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         Response response = channelClient.updateTagGroups(channelId, pendingAddTags, pendingRemoveTags);
 
         // 5xx or no response
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("Failed to update tag groups, will retry. Saved pending tag groups.");
-
-            // Retry later
-            AirshipService.retryServiceIntent(context, intent);
-
-            return;
+            Logger.info("Failed to update tag groups, will retry later.");
+            return Job.JOB_RETRY;
         }
 
         int status = response.getStatus();
@@ -606,23 +633,27 @@ class ChannelIntentHandler {
             dataStore.remove(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
             dataStore.remove(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles any pending tag group changes.
      *
-     * @param intent The tag group intent.
+     * @param job The airship job.
+     * @return The job result.
      */
-    private void onApplyTagGroupChanges(Intent intent) {
+    @Job.JobResult
+    private int onApplyTagGroupChanges(Job job) {
         Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
         Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
 
         // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
+        Bundle addTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
         TagUtils.combineTagGroups(addTagsBundle, pendingAddTags, pendingRemoveTags);
 
         // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = intent.getBundleExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
+        Bundle removeTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
         TagUtils.combineTagGroups(removeTagsBundle, pendingRemoveTags, pendingAddTags);
 
         dataStore.put(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingAddTags));
@@ -630,11 +661,14 @@ class ChannelIntentHandler {
 
         // Make sure we actually have tag changes to perform
         if (pushManager.getChannelId() != null && (!pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty())) {
-            Intent updateIntent = new Intent(context, AirshipService.class)
-                    .setAction(ACTION_UPDATE_TAG_GROUPS);
+            Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+                               .setAirshipComponent(PushManager.class)
+                               .build();
 
-            context.startService(updateIntent);
+            jobDispatcher.dispatch(updateJob);
         }
+
+        return Job.JOB_FINISHED;
     }
 
 }

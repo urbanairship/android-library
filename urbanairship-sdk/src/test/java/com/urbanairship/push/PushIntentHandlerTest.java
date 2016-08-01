@@ -14,8 +14,8 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.analytics.PushArrivedEvent;
+import com.urbanairship.job.Job;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -37,7 +37,6 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,28 +44,26 @@ import static org.mockito.Mockito.when;
 
 public class PushIntentHandlerTest extends BaseTestCase {
 
-    private Intent silentGcmIntent;
-    private Intent alertingGcmIntent;
+    public static final int  TEST_NOTIFICATION_ID = 123;
+
+    private Bundle pushBundle;
 
     private PushManager pushManager;
     private NotificationManagerCompat notificationManager;
     private Analytics analytics;
 
     private Notification notification;
-    public final int constantNotificationId = 123;
     private NotificationFactory notificationFactory;
 
     private PushIntentHandler intentHandler;
 
     @Before
     public void setup() {
+        pushBundle = new Bundle();
+        pushBundle.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
+        pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
+        pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
 
-        alertingGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
-                .putExtra(PushMessage.EXTRA_ALERT, "Test Push Alert!")
-                .putExtra(PushMessage.EXTRA_PUSH_ID, "testPushID");
-
-        silentGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
-                .putExtra(PushMessage.EXTRA_PUSH_ID, "silentPushID");
 
         pushManager = mock(PushManager.class);
         notificationManager = mock(NotificationManagerCompat.class);
@@ -87,7 +84,7 @@ public class PushIntentHandlerTest extends BaseTestCase {
 
             @Override
             public int getNextId(PushMessage pushMessage) {
-                return constantNotificationId;
+                return TEST_NOTIFICATION_ID;
             }
         };
 
@@ -100,14 +97,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
 
 
         analytics = mock(Analytics.class);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                PushArrivedEvent event = (PushArrivedEvent) invocation.getArguments()[0];
-                EventTestUtils.validateEventValue(event, "push_id", "MISSING_SEND_ID");
-                return null;
-            }
-        }).when(analytics).addEvent(any(PushArrivedEvent.class));
 
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
@@ -116,65 +105,26 @@ public class PushIntentHandlerTest extends BaseTestCase {
                 TestApplication.getApplication().preferenceDataStore, notificationManager);
     }
 
-
     /**
      * Test deliver push notification.
      */
     @Test
     public void testDeliverPush() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
-        verify(notificationManager).notify(constantNotificationId, notification);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
+
+        verify(notificationManager).notify(TEST_NOTIFICATION_ID, notification);
+        verify(analytics).addEvent(any(PushArrivedEvent.class));
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
 
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(),intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
-        assertEquals("One category should exist.", 1, intent.getCategories().size());
-    }
-
-    /**
-     * Test deliver push notification with a set send id.
-     */
-    @Test
-    public void testDeliverPushWithSendId() {
-        Intent alertingGcmIntent = new Intent(GcmConstants.ACTION_GCM_RECEIVE)
-                .putExtra(PushMessage.EXTRA_ALERT, "Test Push Alert!")
-                .putExtra(PushMessage.EXTRA_PUSH_ID, "testPushID")
-                .putExtra(PushMessage.EXTRA_SEND_ID, "testSendID");
-
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
-
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                PushArrivedEvent event = (PushArrivedEvent) invocation.getArguments()[0];
-                EventTestUtils.validateEventValue(event, "push_id", "testSendID");
-                return null;
-            }
-        }).when(analytics).addEvent(any(PushArrivedEvent.class));
-
-
-        intentHandler.handleIntent(pushIntent);
-        verify(notificationManager).notify(constantNotificationId, notification);
-
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
-        assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
-
-        Intent intent = shadowPendingIntent.getSavedIntent();
-        assertEquals("The intent action should match.", intent.getAction(), PushManager.ACTION_NOTIFICATION_OPENED_PROXY);
-        assertEquals("The push message bundles should match.", alertingGcmIntent.getExtras(),intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
+        assertEquals("The push message bundles should match.", pushBundle, intent.getExtras().getBundle(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE));
         assertEquals("One category should exist.", 1, intent.getCategories().size());
     }
 
@@ -183,16 +133,13 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushUserPushDisabled() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(false);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
         PushMessage push = PushMessage.fromIntent(i);
@@ -201,29 +148,27 @@ public class PushIntentHandlerTest extends BaseTestCase {
         assertEquals("No notification ID should be present", i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1), -1);
     }
 
-
     /**
      * Test deliver background notification.
      */
     @Test
     public void testDeliverBackgroundPush() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, silentGcmIntent);
-
-        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
+        pushBundle.remove(PushMessage.EXTRA_ALERT);
 
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
         notification = null;
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
+        ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
         Bundle extras = i.getExtras();
         PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
-        assertEquals("Push ID should equal pushMessage ID", "silentPushID", push.getCanonicalPushId());
+        assertEquals("Push ID should equal pushMessage ID", "testPushID", push.getCanonicalPushId());
         assertEquals("No notification ID should be present", -1, i.getIntExtra(PushManager.EXTRA_NOTIFICATION_ID, -1));
     }
 
@@ -232,10 +177,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushException() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
-
         // Set a notification factory that throws an exception
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
@@ -252,7 +193,8 @@ public class PushIntentHandlerTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
         verify(notificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
     }
@@ -262,9 +204,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testNotificationContentIntent() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
@@ -276,7 +215,8 @@ public class PushIntentHandlerTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -294,9 +234,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testNotificationDeleteIntent() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
@@ -308,7 +245,8 @@ public class PushIntentHandlerTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -326,9 +264,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushSoundDisabled() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
@@ -339,7 +274,9 @@ public class PushIntentHandlerTest extends BaseTestCase {
         notification.sound = Uri.parse("some://sound");
         notification.defaults = NotificationCompat.DEFAULT_ALL;
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
+
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include DEFAULT_SOUND.",
                 notification.defaults & NotificationCompat.DEFAULT_SOUND, 0);
@@ -351,9 +288,6 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushVibrateDisabled() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
@@ -364,7 +298,10 @@ public class PushIntentHandlerTest extends BaseTestCase {
         notification.defaults = NotificationCompat.DEFAULT_ALL;
         notification.vibrate = new long[] { 0L, 1L, 200L };
 
-        intentHandler.handleIntent(pushIntent);
+
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
+
         assertNull("The notification sound should be null.", notification.vibrate);
         assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
                 notification.defaults & NotificationCompat.DEFAULT_VIBRATE, 0);
@@ -375,23 +312,22 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushInAppMessage() {
-        alertingGcmIntent.putExtra(PushMessage.EXTRA_IN_APP_MESSAGE, new InAppMessage.Builder()
+        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
                 .create()
                 .toJsonValue()
                 .toString());
 
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
 
         // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
 
-        assertEquals(new PushMessage(alertingGcmIntent.getExtras()).getInAppMessage(), UAirship.shared().getInAppMessageManager().getPendingMessage());
+        assertEquals(new PushMessage(pushBundle).getInAppMessage(), UAirship.shared().getInAppMessageManager().getPendingMessage());
     }
 
     /**
@@ -399,14 +335,13 @@ public class PushIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testInQuietTime() {
-        Intent pushIntent = new Intent(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                .putExtra(PushIntentHandler.EXTRA_INTENT, alertingGcmIntent);
-
         when(pushManager.isVibrateEnabled()).thenReturn(true);
         when(pushManager.isSoundEnabled()).thenReturn(true);
         when(pushManager.isInQuietTime()).thenReturn(true);
 
-        intentHandler.handleIntent(pushIntent);
+        Job job = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE).setExtras(pushBundle).build();
+        intentHandler.performJob(job);
+
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
     }

@@ -8,22 +8,25 @@ import android.os.ResultReceiver;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
-
-import junit.framework.Assert;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowIntent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class RichPushUserTest extends BaseTestCase {
 
@@ -32,18 +35,17 @@ public class RichPushUserTest extends BaseTestCase {
 
     RichPushUser user;
     PreferenceDataStore dataStore;
-    ShadowApplication application;
+    JobDispatcher mockDispatcher;
     TestUserListener listener;
 
     @Before
     public void setUp() {
+        mockDispatcher = mock(JobDispatcher.class);
+
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        user = new RichPushUser(TestApplication.getApplication(), dataStore);
+        user = new RichPushUser(dataStore, mockDispatcher);
         listener = new TestUserListener();
         user.addListener(listener);
-
-        application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
     }
 
     /**
@@ -125,7 +127,7 @@ public class RichPushUserTest extends BaseTestCase {
         dataStore.put("com.urbanairship.user.PASSWORD", fakeToken);
         dataStore.put("com.urbanairship.user.ID", fakeUserId);
 
-        user = new RichPushUser(TestApplication.getApplication(), dataStore);
+        user = new RichPushUser(dataStore, mockDispatcher);
 
         assertEquals("User ID should match", fakeUserId, user.getId());
         assertEquals("User password should match", fakeToken, user.getPassword());
@@ -135,7 +137,7 @@ public class RichPushUserTest extends BaseTestCase {
 
 
     /**
-     * Test update
+     * Test update user.
      */
     @Test
     public void testUpdateUserFalse() throws InterruptedException {
@@ -144,8 +146,14 @@ public class RichPushUserTest extends BaseTestCase {
 
         user.update(false);
 
-        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
-        Assert.assertEquals(intent.getAction(), InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE);
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE);
+            }
+        }));
+
     }
 
     /**
@@ -157,10 +165,24 @@ public class RichPushUserTest extends BaseTestCase {
         // Update the user
         user.update(true);
 
-        // Send result to the receiver
-        ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+                    return false;
+                }
+
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                if (receiver == null) {
+                    return false;
+                }
+
+                // Send result to the receiver
+                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+                return true;
+            }
+        }));
 
         // Verify the listener received a success callback
         assertTrue("Listener should be notified of user update success.",
@@ -176,10 +198,24 @@ public class RichPushUserTest extends BaseTestCase {
         // Update the user
         user.update(true);
 
-        // Send result to the receiver
-        ResultReceiver receiver = application.peekNextStartedService()
-                                             .getParcelableExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+                    return false;
+                }
+
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                if (receiver == null) {
+                    return false;
+                }
+
+                // Send result to the receiver
+                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                return true;
+            }
+        }));
 
         // Verify the listener received a success callback
         assertFalse("Listener should be notified of user update failed.",

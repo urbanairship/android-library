@@ -14,10 +14,12 @@ import android.os.Looper;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipService;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -48,7 +50,6 @@ import java.util.concurrent.Executors;
  * server the next time the inbox is synchronized.
  */
 public class RichPushInbox extends AirshipComponent {
-
 
     /**
      * A listener interface for receiving event callbacks related to inbox updates.
@@ -114,26 +115,37 @@ public class RichPushInbox extends AirshipComponent {
     private final Map<String, RichPushMessage> readMessages = new HashMap<>();
 
     private final RichPushResolver richPushResolver;
-    private RichPushUser user;
+    private final RichPushUser user;
     private final Executor executor;
+    private final Context context;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final PreferenceDataStore dataStore;
+    private final JobDispatcher jobDispatcher;
 
     private int fetchCount = 0;
     private BroadcastReceiver foregroundReceiver;
-    private Context context;
-    private Handler handler = new Handler(Looper.getMainLooper());
     private InboxIntentHandler inboxIntentHandler;
-    private final PreferenceDataStore dataStore;
 
+
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     * @param dataStore The preference data store.
+     * @hide
+     */
     public RichPushInbox(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, new RichPushUser(context, dataStore), new RichPushResolver(context), Executors.newSingleThreadExecutor());
+        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)), new RichPushResolver(context), Executors.newSingleThreadExecutor());
     }
 
-    RichPushInbox(Context context, PreferenceDataStore dataStore, RichPushUser user, RichPushResolver resolver, Executor executor) {
+    @VisibleForTesting
+    RichPushInbox(Context context, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, RichPushUser user, RichPushResolver resolver, Executor executor) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
         this.richPushResolver = resolver;
         this.executor = executor;
+        this.jobDispatcher = jobDispatcher;
     }
 
     @Override
@@ -162,9 +174,11 @@ public class RichPushInbox extends AirshipComponent {
                 if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
                     fetchMessages();
                 } else {
-                    Intent serviceIntent = new Intent(context, AirshipService.class)
-                            .setAction(InboxIntentHandler.ACTION_SYNC_MESSAGE_STATE);
-                    context.startService(serviceIntent);
+                    Job job = Job.newBuilder(InboxIntentHandler.ACTION_SYNC_MESSAGE_STATE)
+                                 .setAirshipComponent(RichPushInbox.class)
+                                 .build();
+
+                    jobDispatcher.dispatch(job);
                 }
             }
         };
@@ -177,17 +191,13 @@ public class RichPushInbox extends AirshipComponent {
     }
 
     @Override
-    protected boolean acceptsIntentAction(@NonNull UAirship airship, @NonNull String action) {
+    @Job.JobResult
+    protected int onPerformJob(@NonNull UAirship airship, Job job) {
         if (inboxIntentHandler == null) {
             inboxIntentHandler = new InboxIntentHandler(context, airship, dataStore);
         }
 
-        return inboxIntentHandler.acceptsIntentAction(action);
-    }
-
-    @Override
-    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
-        inboxIntentHandler.handleIntent(intent);
+        return inboxIntentHandler.performJob(job);
     }
 
     @Override
@@ -200,6 +210,7 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Returns the {@link RichPushUser}.
+     *
      * @return The {@link RichPushUser}.
      */
     public RichPushUser getUser() {
@@ -340,7 +351,7 @@ public class RichPushInbox extends AirshipComponent {
      * is already in progress.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback, @Nullable  Looper looper) {
+    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback, @Nullable Looper looper) {
 
         final PendingResult<Boolean> pendingResult = new PendingResult<>(new PendingResult.ResultCallback<Boolean>() {
             @Override
@@ -371,12 +382,14 @@ public class RichPushInbox extends AirshipComponent {
             }
         };
 
-        Logger.debug("RichPushInbox - Starting update service.");
-        Intent intent = new Intent(context, AirshipService.class)
-                .setAction(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver);
+        Logger.debug("RichPushInbox - Updating messages");
 
-        context.startService(intent);
+        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .setAirshipComponent(RichPushInbox.class)
+                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                     .build();
+
+        jobDispatcher.dispatch(job);
 
         return pendingResult;
     }
@@ -647,6 +660,7 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Refreshes the inbox messages from the DB.
+     *
      * @param notify {@code true} to notify listeners, otherwise {@code false}.
      */
     void refresh(boolean notify) {

@@ -2,15 +2,14 @@
 
 package com.urbanairship.richpush;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.AirshipService;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -46,11 +45,11 @@ public class RichPushUser {
     private final List<Listener> listeners = new ArrayList<>();
 
     private final PreferenceDataStore preferences;
-    private final Context context;
+    private final JobDispatcher jobDispatcher;
 
-    RichPushUser(Context context, PreferenceDataStore preferenceDataStore) {
-        this.context = context;
+    RichPushUser(PreferenceDataStore preferenceDataStore, JobDispatcher jobDispatcher) {
         this.preferences = preferenceDataStore;
+        this.jobDispatcher = jobDispatcher;
 
         String password = preferences.getString(USER_PASSWORD_KEY, null);
 
@@ -104,15 +103,16 @@ public class RichPushUser {
             }
         };
 
-        Logger.debug("RichPushUser - Starting update service.");
-        Intent intent = new Intent(context, AirshipService.class)
-                .setAction(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
-                .putExtra(InboxIntentHandler.EXTRA_FORCEFULLY, forcefully);
+        Logger.debug("RichPushUser - Updating user.");
 
-        context.startService(intent);
+        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .setAirshipComponent(RichPushInbox.class)
+                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                     .putExtra(InboxIntentHandler.EXTRA_FORCEFULLY, forcefully)
+                     .build();
+
+        jobDispatcher.dispatch(job);
     }
-
 
     /**
      * Returns whether the user has been created.

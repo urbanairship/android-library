@@ -12,9 +12,10 @@ import android.os.Build;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Base64;
 
-import com.urbanairship.AirshipService;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.
@@ -38,11 +39,12 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         switch (intent.getAction()) {
             case GcmConstants.ACTION_GCM_RECEIVE:
-                Intent pushIntent = new Intent(context, AirshipService.class)
-                        .setAction(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                        .putExtra(PushIntentHandler.EXTRA_INTENT, intent);
+                Job messageJob = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                                    .setAirshipComponent(PushManager.class)
+                                    .setExtras(intent.getExtras())
+                                    .build();
 
-                startWakefulService(context, pushIntent);
+                JobDispatcher.shared(context).wakefulDispatch(messageJob);
 
                 if (this.isOrderedBroadcast()) {
                     this.setResultCode(Activity.RESULT_OK);
@@ -58,10 +60,11 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             case GcmConstants.ACTION_GCM_REGISTRATION:
 
                 // When we detect a GCM registration, make sure our GCM token is up-to-date.
-                Intent registrationIntent = new Intent(context, AirshipService.class)
-                        .setAction(ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION);
+                Job registrationJob = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                         .setAirshipComponent(PushManager.class)
+                                         .build();
 
-                startWakefulService(context, registrationIntent);
+                JobDispatcher.shared(context).wakefulDispatch(registrationJob);
                 break;
         }
     }

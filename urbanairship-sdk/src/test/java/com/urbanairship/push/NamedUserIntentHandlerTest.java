@@ -2,7 +2,6 @@
 
 package com.urbanairship.push;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
@@ -10,18 +9,20 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.UUID;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertNotEquals;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -53,9 +55,11 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
     private Map<String, Set<String>> removeTagsMap;
     private Bundle addTagsBundle;
     private Bundle removeTagsBundle;
+    private JobDispatcher mockDispatcher;
 
     @Before
     public void setup() {
+        mockDispatcher = mock(JobDispatcher.class);
         namedUserClient = Mockito.mock(NamedUserApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
@@ -74,7 +78,7 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         });
 
         intentHandler = new NamedUserIntentHandler(TestApplication.getApplication(), UAirship.shared(),
-                dataStore, namedUserClient);
+                dataStore, mockDispatcher, namedUserClient);
 
         Set<String> addTags = new HashSet<>();
         addTags.add("tag1");
@@ -119,8 +123,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-            intentHandler.handleIntent(intent);
+            Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+            Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
             // Verify the update was performed
             verify(namedUserClient).associate("namedUserID", "channelID");
@@ -147,8 +151,32 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+
+        // Verify the update was performed
+        verify(namedUserClient).associate("namedUserID", "channelID");
+
+        // Verify the last change token was not updated
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
+    }
+
+    /**
+     * Test associate named user fails if the status is 500
+     */
+    @Test
+    public void testAssociateNamedUserFailedRetry() {
+        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(namedUser.getId()).thenReturn("namedUserID");
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Perform the update
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_RETRY, intentHandler.performJob(job));
 
         // Verify the update was performed
         verify(namedUserClient).associate("namedUserID", "channelID");
@@ -175,8 +203,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-            intentHandler.handleIntent(intent);
+            Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+            Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
             // Verify the update was performed
             verify(namedUserClient).disassociate("channelID");
@@ -203,8 +231,32 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(namedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+
+        // Verify the update was performed
+        verify(namedUserClient).disassociate("channelID");
+
+        // Verify the last change token was not updated
+        assertNotEquals(changeToken, dataStore.getString(NamedUserIntentHandler.LAST_UPDATED_TOKEN_KEY, null));
+    }
+
+    /**
+     * Test associate named user fails if the status is 500
+     */
+    @Test
+    public void testDisassociateNamedUserFailedRetry() {
+        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(namedUser.getId()).thenReturn(null);
+
+        // Set up a 500 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        when(namedUserClient.disassociate("channelID")).thenReturn(response);
+
+        // Perform the update
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_RETRY, intentHandler.performJob(job));
 
         // Verify the update was performed
         verify(namedUserClient).disassociate("channelID");
@@ -222,8 +274,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -241,8 +293,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn(null);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -257,10 +309,13 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
     @Test
     public void testApplyTagGroupChanges() throws JsonException {
         // Apply tag groups
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
-        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
+                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
+                     .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+
 
         // Verify pending tags are saved
         assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
@@ -276,27 +331,25 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Apply tag groups
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
-        intent.putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle);
-        intent.putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
+                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
+                     .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify pending tags are saved
         assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
         assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
 
-
-        // Verify the push service intent to update the channel was started
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-
-        Intent serviceIntent;
-        while((serviceIntent = application.getNextStartedService()) != null) {
-            if (serviceIntent.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS)) {
-                break;
+        // Verify a new job to update tag group registration is dispatched
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
             }
-        }
-
-        Assert.assertEquals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS, serviceIntent.getAction());
+        }));
     }
 
     /**
@@ -317,8 +370,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
@@ -341,8 +394,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -366,8 +419,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_RETRY, intentHandler.performJob(job));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
@@ -390,8 +443,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         dataStore.remove(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(namedUserClient);
@@ -415,8 +468,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
@@ -436,8 +489,8 @@ public class NamedUserIntentHandlerTest extends BaseTestCase {
         dataStore.put(NamedUserIntentHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Perform the update
-        Intent intent = new Intent(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
-        intentHandler.handleIntent(intent);
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
 
         // Verify pending tag groups are empty
         assertNull(dataStore.getString(NamedUserIntentHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));

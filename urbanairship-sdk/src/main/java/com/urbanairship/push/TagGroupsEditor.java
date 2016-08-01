@@ -2,13 +2,13 @@
 
 package com.urbanairship.push;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.AirshipService;
+import com.urbanairship.AirshipComponent;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -36,9 +36,13 @@ public class TagGroupsEditor {
     private final String action;
     protected final Map<String, Set<String>> tagsToAdd = new HashMap<>();
     protected final Map<String, Set<String>> tagsToRemove = new HashMap<>();
+    private final JobDispatcher jobDispatcher;
+    private final Class<? extends AirshipComponent> component;
 
-    TagGroupsEditor(String action) {
+    TagGroupsEditor(String action, Class<? extends AirshipComponent> component, JobDispatcher jobDispatcher) {
         this.action = action;
+        this.jobDispatcher = jobDispatcher;
+        this.component = component;
     }
 
     /**
@@ -102,12 +106,13 @@ public class TagGroupsEditor {
             return;
         }
 
-        Intent i = new Intent(UAirship.getApplicationContext(), AirshipService.class)
-                .setAction(action)
-                .putExtra(EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
-                .putExtra(EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove));
+        Job job = Job.newBuilder(action)
+                     .setAirshipComponent(component)
+                     .putExtra(EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
+                     .putExtra(EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove))
+                     .build();
 
-        UAirship.getApplicationContext().startService(i);
+        jobDispatcher.dispatch(job);
     }
 
     /**

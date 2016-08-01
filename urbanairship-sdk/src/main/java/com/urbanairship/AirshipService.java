@@ -2,32 +2,33 @@
 
 package com.urbanairship;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.os.SystemClock;
-import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
-import android.util.SparseIntArray;
+
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.util.UAStringUtil;
+
+import java.util.HashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 /**
  * Urban Airship Service.
+ *
+ * @hide
  */
 public class AirshipService extends Service {
-
-    /**
-     * Intent extra to track the backoff delay.
-     */
-    private static final String EXTRA_BACK_OFF_MS = "com.urbanairship.EXTRA_BACK_OFF_MS";
 
     /**
      * The default starting back off time for retries in milliseconds
@@ -39,13 +40,19 @@ public class AirshipService extends Service {
      */
     protected static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 mins.
 
+    public static final String EXTRA_AIRSHIP_COMPONENT = "EXTRA_AIRSHIP_COMPONENT";
+    public static final String EXTRA_JOB_EXTRAS = "EXTRA_JOB_EXTRAS";
+    public static final String EXTRA_DELAY = "EXTRA_DELAY";
+
     private static final int MSG_INTENT_RECEIVED = 1;
-    private static final int MSG_INTENT_TASK_FINISHED = 2;
+    private static final int MSG_INTENT_JOB_FINISHED = 2;
 
     private volatile Looper looper;
     private volatile IncomingHandler handler;
     private int lastStartId = 0;
-    private final SparseIntArray runningTasks = new SparseIntArray();
+    private int runningJobs;
+
+    private static HashMap<String, Executor> executors = new HashMap<>();
 
     private final class IncomingHandler extends Handler {
         public IncomingHandler(Looper looper) {
@@ -56,11 +63,11 @@ public class AirshipService extends Service {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_INTENT_RECEIVED:
-                    onStartIntentTasks((Intent)msg.obj, msg.arg1);
+                    onHandleIntent((Intent) msg.obj, msg.arg1);
                     break;
 
-                case MSG_INTENT_TASK_FINISHED:
-                    onTaskFinished((Intent)msg.obj, msg.arg1);
+                case MSG_INTENT_JOB_FINISHED:
+                    onJobFinished((Intent) msg.obj, msg.arg1);
                     break;
             }
         }
@@ -101,21 +108,16 @@ public class AirshipService extends Service {
     }
 
     @WorkerThread
-    private void onStartIntentTasks(final Intent intent, int startId) {
-        Logger.debug("AirshipService - Starting tasks for intent: " + intent + " taskId: " + startId);
+    private void onHandleIntent(final Intent intent, int startId) {
+        Logger.debug("AirshipService - Starting tasks for intent: " + intent.getAction() + " taskId: " + startId);
 
         this.lastStartId = startId;
 
         final Message msg = handler.obtainMessage();
-        msg.what = MSG_INTENT_TASK_FINISHED;
+        msg.what = MSG_INTENT_JOB_FINISHED;
         msg.arg1 = startId;
         msg.obj = intent;
 
-        String action = intent.getAction();
-        if (action == null) {
-            handler.sendMessage(msg);
-            return;
-        }
 
         final UAirship airship = UAirship.waitForTakeOff();
         if (airship == null) {
@@ -124,103 +126,97 @@ public class AirshipService extends Service {
             return;
         }
 
-        int taskCount = 0;
+        String action = intent.getAction();
+        String componentName = intent.getStringExtra(EXTRA_AIRSHIP_COMPONENT);
+        Bundle extras = intent.getBundleExtra(EXTRA_JOB_EXTRAS);
 
-        for (final AirshipComponent component : airship.getComponents()) {
-            if (component.acceptsIntentAction(airship, intent.getAction())) {
-                taskCount ++;
-                component.serviceExecutor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        component.onHandleIntent(airship, intent);
-                        handler.sendMessage(msg);
+        final long delay = intent.getLongExtra(EXTRA_DELAY, 0);
+
+        if (action == null) {
+            handler.sendMessage(msg);
+            return;
+        }
+
+        final AirshipComponent component = findAirshipComponent(airship, componentName);
+
+        if (component == null) {
+            Logger.error("AirshipService - Unavailable to find airship components for job with action: " + action);
+            handler.sendMessage(msg);
+            return;
+        }
+
+        final Job job = Job.newBuilder(action)
+                           .setAirshipComponent(component.getClass())
+                           .setExtras(extras)
+                           .build();
+
+        Executor executor = executors.get(component.getClass().getName());
+        if (executor == null) {
+            executor = Executors.newSingleThreadExecutor();
+            executors.put(componentName, executor);
+        }
+
+        runningJobs++;
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                int result = component.onPerformJob(airship, job);
+                if (result == Job.JOB_RETRY) {
+
+                    long backOff = delay;
+                    if (backOff <= 0) {
+                        backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
+                    } else {
+                        backOff = Math.min(delay * 2, DEFAULT_MAX_BACK_OFF_TIME_MS);
                     }
-                });
-            }
-        }
 
-        if (taskCount == 0) {
-            handler.handleMessage(msg);
-        } else {
-            runningTasks.put(startId, taskCount);
-        }
+                    JobDispatcher.shared(getApplicationContext())
+                                 .dispatch(job, backOff, TimeUnit.MILLISECONDS);
+
+                    handler.sendMessage(msg);
+                }
+            }
+        });
     }
 
+    /**
+     * Called when a job is finished.
+     *
+     * @param intent The original intent.
+     * @param startId The intent's startId.
+     */
     @WorkerThread
-    private void onTaskFinished(Intent intent, int taskId) {
-        Logger.verbose("AirshipService - Task finished for id: " + taskId);
+    private void onJobFinished(Intent intent, int startId) {
+        Logger.verbose("AirshipService - Component finished job with startId: " + startId);
 
-        int taskCount = runningTasks.get(taskId, 0) - 1;
+        runningJobs--;
+        WakefulBroadcastReceiver.completeWakefulIntent(intent);
 
-        if (taskCount > 0) {
-            runningTasks.put(taskId, taskCount);
-        } else {
-            Logger.verbose("AirshipService - No more running tasks for id: " + taskId);
-
-            runningTasks.delete(taskId);
-            WakefulBroadcastReceiver.completeWakefulIntent(intent);
-        }
-
-        if (runningTasks.size() == 0) {
-            Logger.verbose("AirshipService - All tasks finished, stopping with last start ID: " + lastStartId);
+        if (runningJobs <= 0) {
+            runningJobs = 0;
+            Logger.verbose("AirshipService - All jobs finished, stopping with last startId: " + lastStartId);
             stopSelf(lastStartId);
         }
     }
 
     /**
-     * Schedules the intent to be retried with exponential backoff.
-     * </p>
-     * Retries work by adding {@link #EXTRA_BACK_OFF_MS} to the intent to track the backoff.
-     * This makes retries not work if its called with a new intent or an intent with its extras cleared.
+     * Finds the {@link AirshipComponent}s for a given job.
      *
-     * @param context The application context.
-     * @param intent The intent to retry.
+     * @param airship The UAirship instance.
+     * @param componentClassName The component's class name.
+     * @return The airship component.
      */
-    public static void retryServiceIntent(Context context, @NonNull Intent intent) {
-        retryServiceIntent(context, intent, DEFAULT_STARTING_BACK_OFF_TIME_MS, DEFAULT_MAX_BACK_OFF_TIME_MS);
-    }
-
-    /**
-     * Schedules the intent to be retried with exponential backoff.
-     * </p>
-     * Retries work by adding {@link #EXTRA_BACK_OFF_MS} to the intent to track the backoff.
-     * This makes retries not work if its called with a new intent or an intent with its extras cleared.
-     *
-     * @param context The application context.
-     * @param intent The intent to retry.
-     * @param initialDelay The initial delay.
-     * @param maxDelay The max delay.
-     */
-    public static void retryServiceIntent(Context context, @NonNull Intent intent, long initialDelay, long maxDelay) {
-        // Copy it so we don't modify the original intent
-        intent = new Intent(intent);
-
-        // Remove the wakeful broadcast extra so it does not log a warning that it already
-        // handled the wake lock. Since this value is private, we have to hard code it. In the
-        // unlikely case that this value changes in the future it will only cause any wakeful
-        // intents to log a warning.
-        intent.removeExtra("android.support.content.wakelockid");
-
-        // Calculate the backoff
-        long delay = intent.getLongExtra(EXTRA_BACK_OFF_MS, 0);
-        if (delay <= 0) {
-            delay = initialDelay;
-        } else {
-            delay = Math.min(delay * 2, maxDelay);
+    AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
+        if (UAStringUtil.isEmpty(componentClassName)) {
+            return null;
         }
 
-        // Store the backoff in the intent
-        intent.putExtra(EXTRA_BACK_OFF_MS, delay);
-
-        // Schedule the intent
-        Logger.verbose("AirshipService - Scheduling intent " + intent.getAction() + " in " + delay + " milliseconds.");
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        try {
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
-        } catch (SecurityException e) {
-            Logger.error("AirshipService - Failed to schedule intent " + intent.getAction(), e);
+        for (final AirshipComponent component : airship.getComponents()) {
+            if (component.getClass().getName().equals(componentClassName)) {
+                return component;
+            }
         }
+
+        return null;
     }
 }

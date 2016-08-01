@@ -2,21 +2,21 @@
 
 package com.urbanairship.push;
 
-import android.content.Intent;
-
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowIntent;
 
 import java.net.URL;
 
@@ -25,6 +25,10 @@ import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class NamedUserTest extends BaseTestCase {
@@ -34,13 +38,15 @@ public class NamedUserTest extends BaseTestCase {
     private AirshipConfigOptions mockAirshipConfigOptions;
     private NamedUser namedUser;
     private TestRequest testRequest;
+    private JobDispatcher mockDispatcher;
 
     @Before
     public void setUp() {
-        mockAirshipConfigOptions = Mockito.mock(AirshipConfigOptions.class);
+        mockDispatcher = mock(JobDispatcher.class);
+        mockAirshipConfigOptions = mock(AirshipConfigOptions.class);
         testRequest = new TestRequest();
 
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
+        RequestFactory mockRequestFactory = mock(RequestFactory.class);
         when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
         when(mockAirshipConfigOptions.getAppKey()).thenReturn("appKey");
@@ -48,7 +54,7 @@ public class NamedUserTest extends BaseTestCase {
 
         TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore);
+        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockDispatcher);
     }
 
     /**
@@ -61,13 +67,22 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(fakeNamedUserId);
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Intent action should be clearing pending named user tags",
-                NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            }
+        }));
 
-        startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Intent action should be to update named user",
-                NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
 
@@ -92,31 +107,50 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(null);
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Intent action should be clearing pending named user tags",
-                NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            }
+        }));
 
-        startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Intent action should be to update named user",
-                NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+
         assertNull("Named user ID should be null", namedUser.getId());
     }
 
     /**
-     * Test init starts named user and tags update service.
+     * Test init dispatches a job to update tag groups and the named user.
      */
     @Test
-    public void testInitStartNamedUserUpdateService() {
+    public void testInit() {
         namedUser.setId("test");
         ShadowApplication.getInstance().clearStartedServices();
 
         namedUser.init();
 
-        Intent updateIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, updateIntent.getAction());
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
 
-        Intent tagIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS, tagIntent.getAction());
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+            }
+        }));
     }
 
     /**
@@ -133,20 +167,22 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     /**
-     * Test force update changes the current token and starts the service.
+     * Test force update changes the current token and dispatches an update job.
      */
     @Test
     public void testForceUpdate() {
         String changeToken = namedUser.getChangeToken();
 
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
-
         namedUser.forceUpdate();
 
-        ShadowIntent intent = Shadows.shadowOf(application.peekNextStartedService());
-        assertEquals("Intent action should be to update named user",
-                intent.getAction(), NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
+
         assertNotSame("Change token should have changed", changeToken, namedUser.getChangeToken());
     }
 
@@ -171,68 +207,78 @@ public class NamedUserTest extends BaseTestCase {
     }
 
     /**
-     * Test editTagGroups apply starts the update named user tags service.
+     * Test editTagGroups apply dispatches a job to update the tag groups.
      */
     @Test
     public void testStartUpdateNamedUserTagsService() {
-
         namedUser.editTagGroups()
                  .addTag("tagGroup", "tag1")
-                 .addTag("tagGroup", "tag2")
-                 .addTag("tagGroup", "tag3")
-                 .removeTag("tagGroup", "tag3")
-                 .removeTag("tagGroup", "tag4")
                  .removeTag("tagGroup", "tag5")
                  .apply();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Tags Service", NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+            }
+        }));
     }
 
     /**
-     * Test editTagGroups apply does not start the service when addTags and removeTags are empty.
+     * Test editTagGroups apply does dispatch job when addTags and removeTags are empty.
      */
     @Test
     public void testEmptyAddTagsRemoveTags() {
-
         namedUser.editTagGroups().apply();
-
-        Intent startedIntent = ShadowApplication.getInstance().peekNextStartedService();
-        assertNull("Update named user tags service should not have started", startedIntent);
+        verifyZeroInteractions(mockDispatcher);
     }
 
     /**
-     * Test startUpdateService starts the update named user service.
+     * Test dispatchNamedUserUpdateJob dispatches a job to update the named user.
      */
     @Test
     public void testStartUpdateService() {
+        namedUser.dispatchNamedUserUpdateJob();
 
-        namedUser.startUpdateService();
-
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Service", NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+            }
+        }));
     }
 
     /**
-     * Test startUpdateTagsService starts the update named user tags service.
+     * Test dispatchUpdateTagGroupsJob dispatches a job to update the tag groups.
      */
     @Test
     public void testStartUpdateTagsService() {
+        namedUser.dispatchUpdateTagGroupsJob();
 
-        namedUser.startUpdateTagsService();
-
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Update Named User Tags Service", NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+            }
+        }));
     }
 
     /**
-     * Test startClearPendingTagsService starts the clear named user tags service.
+     * Test dispatchClearTagsJob dispatches a job to clear the pending tags.
      */
     @Test
     public void testStartClearPendingTagsService() {
-        namedUser.startClearPendingTagsService();
+        namedUser.dispatchClearTagsJob();
 
-        Intent startedIntent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals("Expect Clear Pending Tags Service", NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS, startedIntent.getAction());
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            }
+        }));
     }
 }

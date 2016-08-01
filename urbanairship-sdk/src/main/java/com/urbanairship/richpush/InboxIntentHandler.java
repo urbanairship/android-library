@@ -3,12 +3,12 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import com.urbanairship.job.Job;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -115,55 +115,41 @@ class InboxIntentHandler {
     }
 
     /**
-     * Checks if the intent handler accepts a given intent action.
+     * Called to handle jobs from {@link RichPushInbox#onPerformJob(UAirship, Job)}.
      *
-     * @param action The intent action.
-     * @return {@code true} if the intent handler accepts the action, otherwise {@code false}.
+     * @param job The airship job.
+     * @return The job result.
      */
-    boolean acceptsIntentAction(String action) {
-        switch (action) {
+    @Job.JobResult int performJob(Job job) {
+        switch (job.getAction()) {
             case ACTION_RICH_PUSH_USER_UPDATE:
-            case ACTION_RICH_PUSH_MESSAGES_UPDATE:
-            case ACTION_SYNC_MESSAGE_STATE:
-                return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Called to handle intents from {@link RichPushInbox#onHandleIntent(UAirship, Intent)}.
-     *
-     * @param intent The {@link com.urbanairship.AirshipService} intent.
-     */
-    void handleIntent(Intent intent) {
-        switch (intent.getAction()) {
-            case ACTION_RICH_PUSH_USER_UPDATE:
-                onUpdateUser(intent);
+                onUpdateUser(job);
                 break;
 
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
-                onUpdateMessages(intent);
+                onUpdateMessages(job);
                 break;
 
             case ACTION_SYNC_MESSAGE_STATE:
                 onSyncMessages();
                 break;
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles {@link #ACTION_RICH_PUSH_MESSAGES_UPDATE} intent.
      *
-     * @param intent The update intent.
+     * @param job The airship job.
      */
-    private void onUpdateMessages(Intent intent) {
+    private void onUpdateMessages(Job job) {
         if (!RichPushUser.isCreated()) {
             Logger.debug("InboxIntentHandler - User has not been created, canceling messages update");
-            respond(intent, false);
+            respond(job, false);
         } else {
             boolean success = this.updateMessages();
-            respond(intent, success);
+            respond(job, success);
 
             this.syncReadMessageState();
             this.syncDeletedMessageState();
@@ -181,10 +167,10 @@ class InboxIntentHandler {
     /**
      * Handles {@link #ACTION_RICH_PUSH_USER_UPDATE} intent.
      *
-     * @param intent The update intent.
+     * @param job The airship job.
      */
-    private void onUpdateUser(Intent intent) {
-        if (intent.getBooleanExtra(EXTRA_FORCEFULLY, false)) {
+    private void onUpdateUser(Job job) {
+        if (job.getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
             long lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0);
             long now = System.currentTimeMillis();
             if (!(lastUpdateTime > now || (lastUpdateTime + USER_UPDATE_INTERVAL_MS) < now)) {
@@ -200,7 +186,7 @@ class InboxIntentHandler {
             success = this.updateUser();
         }
 
-        respond(intent, success);
+        respond(job, success);
     }
 
     /**
@@ -553,11 +539,11 @@ class InboxIntentHandler {
     /**
      * Helper method to respond to result receiver.
      *
-     * @param intent The received intent.
+     * @param job The airship job.
      * @param status If the intent was successful or not.
      */
-    private void respond(Intent intent, boolean status) {
-        ResultReceiver receiver = intent.getParcelableExtra(EXTRA_RICH_PUSH_RESULT_RECEIVER);
+    private void respond(Job job, boolean status) {
+        ResultReceiver receiver = job.getExtras().getParcelable(EXTRA_RICH_PUSH_RESULT_RECEIVER);
         if (receiver != null) {
             if (status) {
                 receiver.send(STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());

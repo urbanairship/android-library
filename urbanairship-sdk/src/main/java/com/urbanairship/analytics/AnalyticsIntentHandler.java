@@ -2,29 +2,29 @@
 
 package com.urbanairship.analytics;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.VisibleForTesting;
-import android.support.annotation.WorkerThread;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.urbanairship.AirshipService;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Handles intents for {@link Analytics#onHandleIntent(UAirship, Intent)}.
+ * Handles intents for {@link Analytics#onPerformJob(UAirship, Job)}.
  */
 class AnalyticsIntentHandler {
 
@@ -108,75 +108,58 @@ class AnalyticsIntentHandler {
      */
     private static final long LOW_PRIORITY_BATCH_DELAY = 30000; // 30s
 
-
-    private long backoffMs = 0;
-
     private final Context context;
     private final EventDataManager dataManager;
     private final PreferenceDataStore preferenceDataStore;
     private final EventApiClient apiClient;
     private final UAirship airship;
+    private final JobDispatcher dispatcher;
 
     AnalyticsIntentHandler(Context context, UAirship airship, PreferenceDataStore preferenceDataStore) {
-        this(context, airship, preferenceDataStore, new EventDataManager(context, airship.getAirshipConfigOptions().getAppKey()), new EventApiClient(context));
+        this(context, airship, preferenceDataStore, JobDispatcher.shared(context), new EventDataManager(context, airship.getAirshipConfigOptions().getAppKey()), new EventApiClient(context));
     }
 
     @VisibleForTesting
-    AnalyticsIntentHandler(Context context, UAirship airship, PreferenceDataStore preferenceDataStore, EventDataManager dataManager, EventApiClient apiClient) {
+    AnalyticsIntentHandler(Context context, UAirship airship, PreferenceDataStore preferenceDataStore, JobDispatcher dispatcher, EventDataManager dataManager, EventApiClient apiClient) {
         this.airship = airship;
         this.context = context;
         this.dataManager = dataManager;
         this.preferenceDataStore = preferenceDataStore;
         this.apiClient = apiClient;
+        this.dispatcher = dispatcher;
     }
 
-    /**
-     * Checks if an intent action is allowed.
-     * @param action The intent action.
-     * @return {@code true} if the handler accepts the intent, otherwise {@code false}.
-     */
-    protected boolean acceptsIntentAction(String action) {
-        switch (action) {
+    public
+    @Job.JobResult
+    int performJob(Job job) {
+        Logger.verbose("AnalyticsIntentHandler - Received job with action: " + job.getAction());
+
+        switch (job.getAction()) {
             case ACTION_DELETE_ALL:
+                return onDeleteEvents();
+
             case ACTION_ADD:
+                return onAddEvent(job);
+
             case ACTION_SEND:
+                return onUploadEvents();
+
             case ACTION_UPDATE_ADVERTISING_ID:
-                return true;
-        }
+                return onUpdateAdvertisingId();
 
-        return false;
-    }
-
-    /**
-     * Handles {@link AirshipService} intents for {@link Analytics}.
-     * @param intent The intent.
-     */
-    protected void handleIntent(Intent intent) {
-        Logger.verbose("AnalyticsIntentHandler - Received intent: " + intent.getAction());
-
-        switch (intent.getAction()) {
-            case ACTION_DELETE_ALL:
-                onDeleteEvents();
-                break;
-            case ACTION_ADD:
-                onAddEvent(intent);
-                break;
-            case ACTION_SEND:
-                onUploadEvents();
-                break;
-            case ACTION_UPDATE_ADVERTISING_ID:
-                onUpdateAdvertisingId();
             default:
-                Logger.warn("AnalyticsIntentHandler - Unrecognized intent action: " + intent.getAction());
-                break;
+                Logger.warn("AnalyticsIntentHandler - Unrecognized job with action: " + job.getAction());
+                return Job.JOB_FINISHED;
         }
     }
 
     /**
      * Updates the advertising ID and limited ad tracking preference.
+     *
+     * @return The job result.
      */
-    @WorkerThread
-    private void onUpdateAdvertisingId() {
+    @Job.JobResult
+    private int onUpdateAdvertisingId() {
         AssociatedIdentifiers associatedIdentifiers = airship.getAnalytics().getAssociatedIdentifiers();
 
         String advertisingId = associatedIdentifiers.getAdvertisingId();
@@ -200,8 +183,9 @@ class AnalyticsIntentHandler {
                     limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                 } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
                     Logger.error("AnalyticsIntentHandler - Failed to retrieve and update advertising ID.", e);
-                    return;
+                    return Job.JOB_RETRY;
                 }
+
                 break;
         }
 
@@ -212,30 +196,44 @@ class AnalyticsIntentHandler {
                    .setAdvertisingId(advertisingId, limitedAdTrackingEnabled)
                    .apply();
         }
+
+        return Job.JOB_FINISHED;
+
     }
 
-    private void onDeleteEvents() {
+    /**
+     * Deletes all events.
+     *
+     * @return The job result.
+     */
+    @Job.JobResult
+    private int onDeleteEvents() {
         Logger.info("Deleting all analytic events.");
         dataManager.deleteAllEvents();
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Adds an event from an intent to the database.
      *
-     * @param intent An intent containing the event's content values to be added
+     * @param job A job containing the event's content values to be added
      * to the database.
+     * @return The job result.
      */
-    private void onAddEvent(Intent intent) {
-        String eventType = intent.getStringExtra(EXTRA_EVENT_TYPE);
-        String eventId = intent.getStringExtra(EXTRA_EVENT_ID);
-        String eventData = intent.getStringExtra(EXTRA_EVENT_DATA);
-        String eventTimeStamp = intent.getStringExtra(EXTRA_EVENT_TIME_STAMP);
-        String sessionId = intent.getStringExtra(EXTRA_EVENT_SESSION_ID);
-        int priority = intent.getIntExtra(EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
+    @Job.JobResult
+    private int onAddEvent(Job job) {
+        Bundle extras = job.getExtras();
+        String eventType = extras.getString(EXTRA_EVENT_TYPE);
+        String eventId = extras.getString(EXTRA_EVENT_ID);
+        String eventData = extras.getString(EXTRA_EVENT_DATA);
+        String eventTimeStamp = extras.getString(EXTRA_EVENT_TIME_STAMP);
+        String sessionId = extras.getString(EXTRA_EVENT_SESSION_ID);
+        int priority = extras.getInt(EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY);
 
         if (eventType == null || eventData == null || eventTimeStamp == null || eventId == null) {
             Logger.warn("Event service unable to add event with missing data.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         // Handle database max size exceeded
@@ -274,24 +272,29 @@ class AnalyticsIntentHandler {
                 }
                 break;
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Uploads events.
+     *
+     * @return The job result.
      */
-    private void onUploadEvents() {
+    @Job.JobResult
+    private int onUploadEvents() {
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
         final int eventCount = dataManager.getEventCount();
 
         if (airship.getPushManager().getChannelId() == null) {
             Logger.debug("AnalyticsIntentHandler - No channel ID, skipping analytics send.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (eventCount <= 0) {
             Logger.debug("AnalyticsIntentHandler - No events to send. Ending analytics upload.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         final int avgSize = dataManager.getDatabaseSize() / eventCount;
@@ -302,36 +305,26 @@ class AnalyticsIntentHandler {
 
         EventResponse response = apiClient.sendEvents(airship, events.values());
 
-        boolean isSuccess = response != null && response.getStatus() == 200;
-
-        if (isSuccess) {
-            Logger.info("Analytic events uploaded successfully.");
-
-            dataManager.deleteEvents(events.keySet());
-            backoffMs = 0;
-        } else {
-
-            if (backoffMs == 0) {
-                backoffMs = preferenceDataStore.getInt(MIN_BATCH_INTERVAL_KEY, EventResponse.MIN_BATCH_INTERVAL_MS);
-            } else {
-                backoffMs = Math.min(backoffMs * 2, preferenceDataStore.getInt(MAX_WAIT_KEY, EventResponse.MAX_WAIT_MS));
-            }
-
-            Logger.debug("Analytic events failed to send. Will retry in " + backoffMs + "ms.");
+        if (response == null || response.getStatus() != 200) {
+            Logger.debug("Analytic events failed, rescheduling.");
+            return Job.JOB_RETRY;
         }
 
+        Logger.debug("Analytic events uploaded.");
+        dataManager.deleteEvents(events.keySet());
+
+        // Update preferences
+        preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getMaxTotalSize());
+        preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.getMaxBatchSize());
+        preferenceDataStore.put(MAX_WAIT_KEY, response.getMaxWait());
+        preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.getMinBatchInterval());
+
         // If there are still events left, schedule the next send
-        if (!isSuccess || eventCount - events.size() > 0) {
-            Logger.debug("AnalyticsIntentHandler - Scheduling next event batch upload.");
+        if (eventCount - events.size() > 0) {
             scheduleEventUpload(getNextSendDelay());
         }
 
-        if (response != null) {
-            preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getMaxTotalSize());
-            preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.getMaxBatchSize());
-            preferenceDataStore.put(MAX_WAIT_KEY, response.getMaxWait());
-            preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.getMinBatchInterval());
-        }
+        return Job.JOB_FINISHED;
     }
 
     /**
@@ -340,7 +333,7 @@ class AnalyticsIntentHandler {
      * @return A delay in ms for the time the events should be sent.
      */
     private long getNextSendDelay() {
-        long nextSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0) + preferenceDataStore.getInt(MIN_BATCH_INTERVAL_KEY, EventResponse.MIN_BATCH_INTERVAL_MS) + backoffMs;
+        long nextSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0) + preferenceDataStore.getInt(MIN_BATCH_INTERVAL_KEY, EventResponse.MIN_BATCH_INTERVAL_MS);
         return Math.max(nextSendTime - System.currentTimeMillis(), 0);
     }
 
@@ -350,38 +343,38 @@ class AnalyticsIntentHandler {
      * @param milliseconds The milliseconds from the current time to schedule the event upload.
      */
     private void scheduleEventUpload(final long milliseconds) {
+        Logger.debug("AnalyticsIntentHandler - Scheduling next event batch upload.");
+
         long sendTime = System.currentTimeMillis() + milliseconds;
-
-        AlarmManager alarmManager = (AlarmManager) context
-                .getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(context, AirshipService.class);
-        intent.setAction(ACTION_SEND);
-
         long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
 
-        // Check if we should reschedule - previousAlarmTime is older than now or greater then the new send time
-        boolean reschedule = previousScheduledTime < System.currentTimeMillis() || previousScheduledTime > sendTime;
+        boolean isScheduled = dispatcher.isScheduled(ACTION_SEND);
 
-        // Schedule the alarm if we need to either reschedule or an existing pending intent does not exist
-        if (reschedule || PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_NO_CREATE) == null) {
-            Logger.verbose("AnalyticsIntentHandler - Scheduling event uploads in " + milliseconds + "ms.");
-
-            PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            try {
-                // Reschedule the intent
-                alarmManager.set(AlarmManager.RTC, sendTime, pendingIntent);
-                preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
-            } catch (SecurityException e) {
-                Logger.error("AnalyticsIntentHandler - Failed to schedule event uploads.", e);
-                long scheduledSendTime = -1;
-                preferenceDataStore.put(SCHEDULED_SEND_TIME, scheduledSendTime);
+        if (isScheduled) {
+            // If its currently retrying and we have no network access skip rescheduling
+            if (previousScheduledTime < System.currentTimeMillis() && !Network.isConnected()) {
+                Logger.verbose("AnalyticsIntentHandler - Uploads are currently retrying from a previous attempt.");
+                return;
             }
 
-        } else {
-            Logger.verbose("AnalyticsIntentHandler - Alarm already scheduled for an earlier time.");
-        }
-    }
+            // If its currently scheduled at an earlier time then skip rescheduling
+            if (previousScheduledTime <= sendTime) {
+                Logger.verbose("AnalyticsIntentHandler - Event upload already scheduled for an earlier time.");
+                return;
+            }
 
+            // Cancel the current job
+            dispatcher.cancel(ACTION_SEND);
+        }
+
+        Logger.verbose("AnalyticsIntentHandler - Scheduling event uploads in " + milliseconds + "ms.");
+
+        Job job = Job.newBuilder(ACTION_SEND)
+                     .setAirshipComponent(Analytics.class)
+                     .build();
+
+        dispatcher.dispatch(job, milliseconds, TimeUnit.MILLISECONDS);
+
+        preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
+    }
 }

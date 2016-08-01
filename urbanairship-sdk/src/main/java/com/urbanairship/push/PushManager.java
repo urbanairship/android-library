@@ -3,15 +3,16 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.AirshipService;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
@@ -232,6 +233,7 @@ public class PushManager extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
 
+    private final JobDispatcher jobDispatcher;
     private ChannelIntentHandler channelIntentHandler;
     private PushIntentHandler pushIntentHandler;
 
@@ -248,8 +250,15 @@ public class PushManager extends AirshipComponent {
      * @hide
      */
     public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions) {
+      this(context, preferenceDataStore, configOptions, JobDispatcher.shared(context));
+    }
+
+    @VisibleForTesting
+    PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, JobDispatcher dispatcher) {
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
+        this.jobDispatcher = dispatcher;
+
         DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
         factory.setColor(configOptions.notificationAccentColor);
         if (configOptions.notificationIcon != 0) {
@@ -279,10 +288,11 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-        Intent registrationIntent = new Intent(UAirship.getApplicationContext(), AirshipService.class)
-                .setAction(ChannelIntentHandler.ACTION_START_REGISTRATION);
+        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_START_REGISTRATION)
+                     .setAirshipComponent(PushManager.class)
+                     .build();
 
-        UAirship.getApplicationContext().startService(registrationIntent);
+        jobDispatcher.dispatch(job);
 
         // If we have a channel already check for pending tags
         if (getChannelId() != null) {
@@ -290,26 +300,10 @@ public class PushManager extends AirshipComponent {
         }
     }
 
-    @Override
-    protected boolean acceptsIntentAction(UAirship airship, @NonNull String action) {
-        switch (action) {
-            case ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS:
-            case ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
-            case ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED:
-            case ChannelIntentHandler.ACTION_START_REGISTRATION:
-            case ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
-            case ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION:
-            case PushIntentHandler.ACTION_RECEIVE_ADM_MESSAGE:
-            case PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE:
-                return true;
-        }
+    @Job.JobResult
+    protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
 
-        return false;
-    }
-
-    @Override
-    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
-        switch (intent.getAction()) {
+        switch (job.getAction()) {
             case ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
             case ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED:
@@ -319,18 +313,17 @@ public class PushManager extends AirshipComponent {
                 if (channelIntentHandler == null) {
                     channelIntentHandler = new ChannelIntentHandler(context, airship, preferenceDataStore);
                 }
-                channelIntentHandler.handleIntent(intent);
-                break;
+                return channelIntentHandler.performJob(job);
 
             case PushIntentHandler.ACTION_RECEIVE_ADM_MESSAGE:
             case PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE:
                 if (pushIntentHandler == null) {
                     pushIntentHandler = new PushIntentHandler(context, airship, preferenceDataStore);
                 }
-                pushIntentHandler.handleIntent(intent);
-                break;
+                return pushIntentHandler.performJob(job);
         }
 
+        return Job.JOB_FINISHED;
     }
 
     /**
@@ -535,10 +528,11 @@ public class PushManager extends AirshipComponent {
      * Update registration.
      */
     public void updateRegistration() {
-        Context ctx = UAirship.getApplicationContext();
-        Intent i = new Intent(ctx, AirshipService.class);
-        i.setAction(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
-        ctx.startService(i);
+        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                     .setAirshipComponent(PushManager.class)
+                     .build();
+
+        jobDispatcher.dispatch(job);
     }
 
     /**
@@ -857,7 +851,7 @@ public class PushManager extends AirshipComponent {
      * @return A {@link TagGroupsEditor}.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES) {
+        return new TagGroupsEditor(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, PushManager.class, jobDispatcher) {
             @Override
             public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
@@ -1008,12 +1002,14 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Starts the push service to update tag groups.
+     * Dispatches a job to update the tag groups.
      */
     void startUpdateTagsService() {
-        Intent tagUpdateIntent = new Intent(context, AirshipService.class)
-                .setAction(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
-        context.startService(tagUpdateIntent);
+        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setAirshipComponent(PushManager.class)
+                     .build();
+
+        jobDispatcher.dispatch(job);
     }
 
     /**

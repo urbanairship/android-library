@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.job.Job;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -49,11 +50,6 @@ class PushIntentHandler {
      * Action sent when a push is received by ADM.
      */
     static final String ACTION_RECEIVE_ADM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_ADM_MESSAGE";
-
-    /**
-     * Extra containing the received message intent.
-     */
-    static final String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
 
     /**
      * Key to store the push canonical IDs for push deduping.
@@ -95,23 +91,32 @@ class PushIntentHandler {
         this.notificationManager = notificationManager;
     }
 
-    protected void handleIntent(Intent intent) {
-        switch (intent.getAction()) {
+    /**
+     * Called to handle jobs from {@link PushManager#onPerformJob(UAirship, Job)}.
+     *
+     * @param job The airship job.
+     * @return The job result.
+     */
+    @Job.JobResult
+    protected int performJob(Job job) {
+        switch (job.getAction()) {
             case ACTION_RECEIVE_ADM_MESSAGE:
-                onAdmMessageReceived(intent);
+                onAdmMessageReceived(job);
                 break;
             case ACTION_RECEIVE_GCM_MESSAGE:
-                onGcmMessageReceived(intent);
+                onGcmMessageReceived(job);
                 break;
         }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
      * Handles incoming GCM messages.
      *
-     * @param intent The received intent.
+     * @param job The received job.
      */
-    private void onGcmMessageReceived(@NonNull Intent intent) {
+    private void onGcmMessageReceived(@NonNull Job job) {
         if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
             Logger.error("Received intent from invalid transport acting as GCM.");
             return;
@@ -122,34 +127,28 @@ class PushIntentHandler {
             return;
         }
 
-        Intent gcmIntent = intent.getParcelableExtra(EXTRA_INTENT);
-        if (gcmIntent == null) {
-            Logger.error("PushIntentHandler - Received GCM message missing original intent.");
-            return;
-        }
-
-        String sender = gcmIntent.getStringExtra("from");
+        String sender = job.getExtras().getString("from");
         if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
             Logger.info("Ignoring GCM message from sender: " + sender);
             return;
         }
 
-        if (GcmConstants.GCM_DELETED_MESSAGES_VALUE.equals(gcmIntent.getStringExtra(GcmConstants.EXTRA_GCM_MESSAGE_TYPE))) {
-            Logger.info("GCM deleted " + gcmIntent.getStringExtra(GcmConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
+        if (GcmConstants.GCM_DELETED_MESSAGES_VALUE.equals(job.getExtras().getString(GcmConstants.EXTRA_GCM_MESSAGE_TYPE))) {
+            Logger.info("GCM deleted " + job.getExtras().getString(GcmConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
             return;
         }
 
-        processMessage(new PushMessage(gcmIntent.getExtras()));
+        processMessage(new PushMessage(job.getExtras()));
     }
 
     /**
      * Handles incoming ADM messages.
      *
-     * @param intent The received intent.
+     * @param job The received job.
      */
-    private void onAdmMessageReceived(@NonNull Intent intent) {
+    private void onAdmMessageReceived(@NonNull Job job) {
         if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM) {
-            Logger.error("Received intent from invalid transport acting as ADM.");
+            Logger.error("PushIntentHandler - Received intent from invalid transport acting as ADM.");
             return;
         }
 
@@ -158,13 +157,7 @@ class PushIntentHandler {
             return;
         }
 
-        Intent admIntent = intent.getParcelableExtra(EXTRA_INTENT);
-        if (admIntent == null) {
-            Logger.error("PushIntentHandler - Received ADM message missing original intent.");
-            return;
-        }
-
-        processMessage(new PushMessage(admIntent.getExtras()));
+        processMessage(new PushMessage(job.getExtras()));
     }
 
     /**

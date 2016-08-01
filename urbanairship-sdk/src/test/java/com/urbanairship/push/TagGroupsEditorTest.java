@@ -2,8 +2,11 @@
 
 package com.urbanairship.push;
 
+import com.urbanairship.job.JobDispatcher;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,10 +18,12 @@ public class TagGroupsEditorTest {
 
     private final String tagGroup = "someTagGroup";
     private TagGroupsEditor editor;
+    private JobDispatcher mockDispatcher;
 
     @Before
     public void setUp() {
-        editor = new TagGroupsEditor("my action");
+        mockDispatcher = Mockito.mock(JobDispatcher.class);
+        editor = new TagGroupsEditor("my action", PushManager.class, mockDispatcher);
     }
 
     /**

@@ -12,14 +12,15 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
 
 import java.util.List;
@@ -30,8 +31,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 @SuppressWarnings("ResourceType")
 public class AnalyticsTest extends BaseTestCase {
@@ -40,11 +46,12 @@ public class AnalyticsTest extends BaseTestCase {
     ActivityMonitor.Listener activityMonitorListener;
     ActivityMonitor mockActivityMonitor;
     LocalBroadcastManager localBroadcastManager;
-    ShadowApplication shadowApplication;
+    JobDispatcher mockJobDispatcher;
 
 
     @Before
     public void setup() {
+        mockJobDispatcher = Mockito.mock(JobDispatcher.class);
         mockActivityMonitor = Mockito.mock(ActivityMonitor.class);
         ArgumentCaptor<ActivityMonitor.Listener> listenerCapture = ArgumentCaptor.forClass(ActivityMonitor.Listener.class);
 
@@ -54,14 +61,13 @@ public class AnalyticsTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockActivityMonitor);
+        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
+                airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockJobDispatcher, mockActivityMonitor);
+
         analytics.init();
 
         activityMonitorListener = listenerCapture.getValue();
         assertNotNull("Should set the listener on create", activityMonitorListener);
-
-        shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
-        shadowApplication.clearStartedServices();
 
         localBroadcastManager = LocalBroadcastManager.getInstance(TestApplication.getApplication());
         TestApplication.getApplication().setAnalytics(analytics);
@@ -77,8 +83,8 @@ public class AnalyticsTest extends BaseTestCase {
 
     /**
      * Test that when the app goes into the foreground, a new
-     * session id is created, a broadcast is sent for foreground, isForegorund
-     * is set to true, and a foreground event is added to the event service.
+     * session id is created, a broadcast is sent for foreground, isForeground
+     * is set to true, and a foreground event job is dispatched.
      */
     @Test
     public void testOnForeground() {
@@ -116,7 +122,6 @@ public class AnalyticsTest extends BaseTestCase {
     public void testOnBackground() {
         // Start analytics in the foreground
         activityMonitorListener.onForeground(0);
-        shadowApplication.clearStartedServices();
         assertTrue(analytics.isAppInForeground());
 
         analytics.setConversionSendId("some-id");
@@ -126,12 +131,16 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify that we clear the conversion send id
         assertNull("App background should clear the conversion send id", analytics.getConversionSendId());
 
-        // Verify that a app background event is sent to the service to be added
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNotNull("Going into background should start the event service", addEventIntent);
-        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), AnalyticsIntentHandler.ACTION_ADD);
-        assertEquals("Should add an app background event", AppBackgroundEvent.TYPE,
-                addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+        // Verify that a job to add a background event is dispatched
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        AppBackgroundEvent.TYPE.equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+            }
+        }));
 
         // Verify isAppInForeground is false
         assertFalse(analytics.isAppInForeground());
@@ -171,17 +180,20 @@ public class AnalyticsTest extends BaseTestCase {
 
         analytics.addEvent(event);
 
-        // Verify the intent contains the content values of the event
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNotNull(addEventIntent);
-        assertEquals("Should add an intent with action ADD", addEventIntent.getAction(), AnalyticsIntentHandler.ACTION_ADD);
-        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID), "event-id");
-        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA), "event-data");
-        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE), "event-type");
-        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP), "1000");
-        assertEquals(addEventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID), analytics.getSessionId());
-        assertEquals(addEventIntent.getIntExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, -100), Event.LOW_PRIORITY);
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
 
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        "event-id".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_ID)) &&
+                        "event-data".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_DATA)) &&
+                        "event-type".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE)) &&
+                        "1000".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP)) &&
+                        analytics.getSessionId().equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID)) &&
+                        0 == job.getExtras().getInt(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY);
+            }
+        }));
     }
 
     /**
@@ -198,8 +210,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, UAirship.ANDROID_PLATFORM);
 
         analytics.addEvent(new AppForegroundEvent(100));
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Should not add events if analytics is disabled", addEventIntent);
+        verifyZeroInteractions(mockJobDispatcher);
     }
 
     /**
@@ -208,12 +219,10 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddEventDisabledAnalytics() {
         analytics.setEnabled(false);
-        shadowApplication.clearStartedServices();
+        verify(mockJobDispatcher).dispatch(any(Job.class));
+        verifyNoMoreInteractions(mockJobDispatcher);
 
         analytics.addEvent(new AppForegroundEvent(100));
-
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Should not add events if analytics is disabled", addEventIntent);
     }
 
     /**
@@ -222,8 +231,7 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddNullEvent() {
         analytics.addEvent(null);
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Should not start the event service to add a null event", addEventIntent);
+        verifyZeroInteractions(mockJobDispatcher);
     }
 
     /**
@@ -242,18 +250,23 @@ public class AnalyticsTest extends BaseTestCase {
         Mockito.when(event.isValid()).thenReturn(false);
 
         analytics.addEvent(event);
-        Intent addEventIntent = shadowApplication.getNextStartedService();
-        assertNull("Should not start the event service to add a null event", addEventIntent);
+        verifyZeroInteractions(mockJobDispatcher);
     }
 
     /**
-     * Test disabling analytics should start the event service to delete all events.
+     * Test disabling analytics should start dispatch a job to delete all events.
      */
     @Test
     public void testDisableAnalytics() {
         analytics.setEnabled(false);
 
-        assertEquals(AnalyticsIntentHandler.ACTION_DELETE_ALL, shadowApplication.getNextStartedService().getAction());
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_DELETE_ALL);
+            }
+        }));
     }
 
     /**
@@ -269,7 +282,7 @@ public class AnalyticsTest extends BaseTestCase {
         Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
 
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStarted(eq(activity), anyLong());
+        verify(mockActivityMonitor).activityStarted(eq(activity), anyLong());
     }
 
     /**
@@ -283,25 +296,29 @@ public class AnalyticsTest extends BaseTestCase {
         TestApplication.getApplication().callback.onActivityStopped(activity);
 
         // Verify that the activity monitor was called with auto instrumentation
-        Mockito.verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
+        verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
     }
 
     // TODO: Remove this test for 8.0.0 since AssociatedIdentifiers.Builder() has been deprecated
     /**
-     * Test associating identifiers sends a associate identifiers event to the event service.
+     * Test associateIdentifiers dispatches a job to add a new associate_identifiers event.
      */
     @Test
     public void testAssociateIdentifiers() {
         analytics.associateIdentifiers(new AssociatedIdentifiers.Builder().create());
 
-        // Verify we started the event service to add the event
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
-        assertEquals("associate_identifiers", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+            }
+        }));
     }
 
     /**
-     * Test editAssociatedIdentifiers sends an associate identifiers event to the event service.
+     * Test editAssociatedIdentifiers  dispatches a job to add a new associate_identifiers event.
      */
     @Test
     public void testEditAssociatedIdentifiers() {
@@ -309,11 +326,17 @@ public class AnalyticsTest extends BaseTestCase {
                  .addIdentifier("customKey", "customValue")
                  .apply();
 
-        // Verify we started the event service to add the event
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
-        assertEquals("associate_identifiers", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+        // Verify we started created an add event job
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+            }
+        }));
 
+        // Verify identifiers are stored
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
         assertEquals(storedIds.getIds().get("customKey"), "customValue");
         assertEquals(storedIds.getIds().size(), 1);
@@ -331,10 +354,15 @@ public class AnalyticsTest extends BaseTestCase {
         // Make call to background
         activityMonitorListener.onBackground(0);
 
-        // Verify we started the event service to add the event
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
-        assertEquals("screen_tracking", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+        // Verify we started created an add event job
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+            }
+        }));
     }
 
     /**
@@ -342,16 +370,20 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testTrackingEventAddNewScreen () {
-
         analytics.trackScreen("test_screen_1");
 
         // Add another screen
         analytics.trackScreen("test_screen_2");
 
-        // Verify we started the event service to add the event
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(AnalyticsIntentHandler.ACTION_ADD, eventIntent.getAction());
-        assertEquals("screen_tracking", eventIntent.getStringExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+        // Verify we started created an add event job
+        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+            }
+        }));
     }
 
     /**
@@ -366,14 +398,14 @@ public class AnalyticsTest extends BaseTestCase {
         // Add another screen
         analytics.trackScreen("test_screen_1");
 
-        // Verify event service to add event is not started
-        assertNull(shadowApplication.getNextStartedService());
+        // Verify no jobs were created for the event
+        verifyZeroInteractions(mockJobDispatcher);
     }
 
 
     /**
-     * Test that foregrounding the app with advertising ID tracking enabled dispatches an intent to the
-     * event service.
+     * Test that foregrounding the app with advertising ID tracking enabled dispatches a job to update
+     * the advertising ID.
      */
     @Test
     public void testAdIdTrackingOnForeground() {
@@ -391,8 +423,13 @@ public class AnalyticsTest extends BaseTestCase {
         activityMonitorListener.onForeground(0);
         assertTrue(analytics.isAppInForeground());
 
-        // An advertising ID update event is sent.
-        Intent eventIntent = shadowApplication.getNextStartedService();
-        assertEquals(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID, eventIntent.getAction());
+        // Verify a job was dispatched fot update the advertising ID
+        verify(mockJobDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+            @Override
+            public boolean matches(Object argument) {
+                Job job = (Job) argument;
+                return job.getAction().equals(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID);
+            }
+        }));
     }
 }

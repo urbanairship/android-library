@@ -12,16 +12,18 @@ import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.AirshipService;
 import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.location.LocationRequestOptions;
 
@@ -55,6 +57,8 @@ public class Analytics extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
+    private final JobDispatcher jobDispatcher;
+
     private final int platform;
     private boolean inBackground;
 
@@ -76,20 +80,22 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options, int platform) {
-        this(context, preferenceDataStore, options, platform, new ActivityMonitor());
+        this(context, preferenceDataStore, options, platform, JobDispatcher.shared(context), new ActivityMonitor());
     }
 
     /**
-     * The Analytics constructor
-     *
+     * The Analytics constructor.
      * @param context The application context.
      * @param preferenceDataStore The preference data store.
-     * @param options The airship config options
+     * @param options The airship config options.
      * @param platform The device platform.
-     * @param activityMonitor Optional activityMonitor
+     * @param jobDispatcher The job dispatcher.
+     * @param activityMonitor Optional activityMonitor.
      */
+    @VisibleForTesting
     Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
-              @NonNull AirshipConfigOptions options, int platform, @NonNull ActivityMonitor activityMonitor) {
+              @NonNull AirshipConfigOptions options, int platform, @NonNull JobDispatcher jobDispatcher,
+              @NonNull ActivityMonitor activityMonitor) {
 
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
@@ -97,6 +103,7 @@ public class Analytics extends AirshipComponent {
         this.configOptions = options;
         this.activityMonitor = activityMonitor;
         this.platform = platform;
+        this.jobDispatcher = jobDispatcher;
     }
 
     @Override
@@ -116,12 +123,11 @@ public class Analytics extends AirshipComponent {
                     trackScreen(previousScreen);
                 }
 
-                // If advertising ID tracking is enabled, send an update intent to the event service.
+                // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
                 if (isAutoTrackAdvertisingIdEnabled()) {
-                    Intent i = new Intent(context, AirshipService.class)
-                            .setAction(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID);
-
-                    context.startService(i);
+                    jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                              .setAirshipComponent(Analytics.class)
+                                              .build());
                 }
 
                 // Send the foreground broadcast
@@ -150,17 +156,14 @@ public class Analytics extends AirshipComponent {
         });
     }
 
+
     @Override
-    protected boolean acceptsIntentAction(@NonNull UAirship airship, @NonNull String action) {
+    protected int onPerformJob(@NonNull UAirship airship, Job job) {
         if (analyticsIntentHandler == null) {
             analyticsIntentHandler = new AnalyticsIntentHandler(context, airship, preferenceDataStore);
         }
-        return analyticsIntentHandler.acceptsIntentAction(action);
-    }
 
-    @Override
-    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
-        analyticsIntentHandler.handleIntent(intent);
+        return analyticsIntentHandler.performJob(job);
     }
 
     @Override
@@ -242,21 +245,17 @@ public class Analytics extends AirshipComponent {
             Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
-        Intent i = new Intent(context, AirshipService.class)
-                .setAction(AnalyticsIntentHandler.ACTION_ADD)
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, event.getType())
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, event.getEventId())
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, eventPayload)
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, sessionId)
-                .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, event.getPriority());
+        Job addEventJob = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
+                             .setAirshipComponent(Analytics.class)
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, event.getType())
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, event.getEventId())
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, eventPayload)
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, sessionId)
+                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
+                             .build();
 
-
-        if (context.startService(i) == null) {
-            Logger.warn("Unable to start analytics service. Check that the event service is added to the manifest.");
-        } else {
-            Logger.debug("Analytics - Added event: " + event.getType() + ": " + eventPayload);
-        }
+        jobDispatcher.dispatch(addEventJob);
     }
 
     /**
@@ -418,10 +417,9 @@ public class Analytics extends AirshipComponent {
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
-            Intent i = new Intent(context, AirshipService.class)
-                    .setAction(AnalyticsIntentHandler.ACTION_DELETE_ALL);
-
-            context.startService(i);
+            jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_DELETE_ALL)
+                                      .setAirshipComponent(Analytics.class)
+                                      .build());
         }
 
         preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
@@ -454,7 +452,9 @@ public class Analytics extends AirshipComponent {
         preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
 
         if (enabled) {
-            context.startService(new Intent(context, AirshipService.class).setAction(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID));
+            jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                      .setAirshipComponent(Analytics.class)
+                                      .build());
         }
     }
 
@@ -565,9 +565,8 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        Intent sendAnalytics = new Intent(context, AirshipService.class)
-                .setAction(AnalyticsIntentHandler.ACTION_SEND);
-
-        context.startService(sendAnalytics);
+        jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+                                  .setAirshipComponent(Analytics.class)
+                                  .build());
     }
 }

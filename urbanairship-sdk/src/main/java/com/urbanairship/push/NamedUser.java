@@ -3,15 +3,16 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.UUID;
@@ -41,6 +42,7 @@ public class NamedUser extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
     private final Object lock = new Object();
+    private final JobDispatcher jobDispatcher;
     private NamedUserIntentHandler namedUserIntentHandler;
 
     /**
@@ -50,48 +52,34 @@ public class NamedUser extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      */
     public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {
+        this(context, preferenceDataStore, JobDispatcher.shared(context));
+    }
+
+    @VisibleForTesting
+    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, JobDispatcher dispatcher) {
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
+        this.jobDispatcher = dispatcher;
     }
 
     @Override
     protected void init() {
         // Start named user update
-        startUpdateService();
+        dispatchNamedUserUpdateJob();
 
         // Update named user tags if we have a named user
         if (getId() != null) {
-            startUpdateTagsService();
+            dispatchUpdateTagGroupsJob();
         }
     }
 
     @Override
-    protected boolean acceptsIntentAction(UAirship airship, @NonNull String action) {
-        switch (action) {
-            case NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
-            case NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-            case NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS:
-            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
-                return true;
+    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+        if (namedUserIntentHandler == null) {
+            namedUserIntentHandler = new NamedUserIntentHandler(context, airship, preferenceDataStore);
         }
 
-        return false;
-    }
-
-    @Override
-    protected void onHandleIntent(@NonNull UAirship airship, @NonNull Intent intent) {
-
-        switch (intent.getAction()) {
-            case NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
-            case NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS:
-            case NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS:
-            case NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER:
-                if (namedUserIntentHandler == null) {
-                    namedUserIntentHandler = new NamedUserIntentHandler(context, airship, preferenceDataStore);
-                }
-                namedUserIntentHandler.handleIntent(intent);
-                break;
-        }
+        return namedUserIntentHandler.performJob(job);
     }
 
     /**
@@ -109,7 +97,7 @@ public class NamedUser extends AirshipComponent {
     public void forceUpdate() {
         Logger.debug("NamedUser - force named user update.");
         updateChangeToken();
-        startUpdateService();
+        dispatchNamedUserUpdateJob();
     }
 
     /**
@@ -143,11 +131,9 @@ public class NamedUser extends AirshipComponent {
                 updateChangeToken();
 
                 // When named user ID change, clear pending named user tags.
-                Logger.debug("NamedUser - Clear pending named user tags.");
-                startClearPendingTagsService();
+                dispatchClearTagsJob();
 
-                Logger.debug("NamedUser - Start service to update named user.");
-                startUpdateService();
+                dispatchNamedUserUpdateJob();
             } else {
                 Logger.debug("NamedUser - Skipping update. Named user ID trimmed already matches existing named user: " + getId());
             }
@@ -160,7 +146,7 @@ public class NamedUser extends AirshipComponent {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+        return new TagGroupsEditor(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, NamedUser.class, jobDispatcher);
     }
 
     /**
@@ -190,32 +176,35 @@ public class NamedUser extends AirshipComponent {
     }
 
     /**
-     * Start service for named user update.
+     * Dispatches a job to update the named user.
      */
-    void startUpdateService() {
-        Intent i = new Intent(context, AirshipService.class)
-                .setAction(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+    void dispatchNamedUserUpdateJob() {
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER)
+                .setAirshipComponent(NamedUser.class)
+                .build();
 
-        context.startService(i);
+        jobDispatcher.dispatch(job);
     }
 
     /**
-     * Start service to clear pending named user tags.
+     * Dispatches a job to clear pending named user tags.
      */
-    void startClearPendingTagsService() {
-        Intent i = new Intent(context, AirshipService.class)
-                .setAction(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+    void dispatchClearTagsJob() {
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
+                     .setAirshipComponent(NamedUser.class)
+                     .build();
 
-        context.startService(i);
+        jobDispatcher.dispatch(job);
     }
 
     /**
-     * Start service for named user tags update.
+     * Dispatches a job to update the named user tag groups.
      */
-    void startUpdateTagsService() {
-        Intent i = new Intent(context, AirshipService.class)
-                .setAction(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+    void dispatchUpdateTagGroupsJob() {
+        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setAirshipComponent(NamedUser.class)
+                     .build();
 
-        context.startService(i);
+        jobDispatcher.dispatch(job);
     }
 }

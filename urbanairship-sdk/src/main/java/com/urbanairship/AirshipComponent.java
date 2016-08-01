@@ -2,25 +2,15 @@
 
 package com.urbanairship;
 
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import com.urbanairship.job.Job;
 
 /**
  * Base class for Urban Airship components.
  */
 public abstract class AirshipComponent {
-
-    /**
-     * Used by {@link AirshipService} to call {@link #onHandleIntent(UAirship, Intent)} for
-     * the component.
-     *
-     * @hide
-     */
-    final Executor serviceExecutor = Executors.newSingleThreadExecutor();
 
     /**
      * Initialize the manager.
@@ -39,30 +29,14 @@ public abstract class AirshipComponent {
     protected void tearDown() {}
 
     /**
-     * Called when {@link AirshipService} receives an intent for the component.
+     * Called when a scheduled {@link Job} is ready to perform.
      *
      * @param airship The airship instance.
-     * @param intent The intent.
-     *
-     * @hide
+     * @param job The scheduled job.
+     * @return The result of the job.
      */
     @WorkerThread
-    protected void onHandleIntent(@NonNull UAirship airship, @NonNull  Intent intent) {
-    }
-
-    /**
-     * Called by {@link AirshipService} to determine if the component can
-     * handle an intent. If {@code true}, then {@link #onHandleIntent(UAirship, Intent)}
-     * will be called in a worker thread with the delivered intent.
-     *
-     * @param airship The airship instance.
-     * @param action The intent action.
-     *
-     * @return {@code true} if the component can handle the intent, otherwise {@code false}.
-     *
-     * @hide
-     */
-    protected boolean acceptsIntentAction(@NonNull UAirship airship, @NonNull String action) {
-        return false;
+    protected @Job.JobResult int onPerformJob(@NonNull UAirship airship, Job job) {
+        return Job.JOB_FINISHED;
     }
 }
