@@ -54,11 +54,13 @@ public class CustomEventTest extends BaseTestCase {
         String interactionId = createFixedSizeString('b', 255);
         String interactionType = createFixedSizeString('c', 255);
         String transactionId = createFixedSizeString('d', 255);
+        String templateType = createFixedSizeString('e', 255);
 
         CustomEvent event = new CustomEvent.Builder(eventName)
                 .setTransactionId(transactionId)
                 .setInteraction(interactionType, interactionId)
                 .setEventValue(100.123456)
+                .setTemplateType(templateType)
                 .create();
 
         EventTestUtils.validateEventValue(event, "event_name", eventName);
@@ -66,6 +68,7 @@ public class CustomEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "transaction_id", transactionId);
         EventTestUtils.validateEventValue(event, "interaction_id", interactionId);
         EventTestUtils.validateEventValue(event, "interaction_type", interactionType);
+        EventTestUtils.validateEventValue(event, "template_type", templateType);
     }
 
     /**
@@ -261,6 +264,7 @@ public class CustomEventTest extends BaseTestCase {
 
         EventTestUtils.validateEventValue(event, "interaction_type", null);
         EventTestUtils.validateEventValue(event, "interaction_id", null);
+        EventTestUtils.validateEventValue(event, "template_type", null);
     }
 
     /**

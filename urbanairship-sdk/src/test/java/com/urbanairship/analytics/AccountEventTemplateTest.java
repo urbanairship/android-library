@@ -38,6 +38,7 @@ public class AccountEventTemplateTest extends BaseTestCase {
         CustomEvent event = AccountEventTemplate.newRegisteredTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.REGISTERED_ACCOUNT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -54,6 +55,7 @@ public class AccountEventTemplateTest extends BaseTestCase {
                                                 .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", AccountEventTemplate.REGISTERED_ACCOUNT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "account");
         EventTestUtils.validateEventValue(event, "event_value", 123000000L);
         EventTestUtils.validateEventValue(event, "transaction_id", "Wednesday 11/4/2015");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");

@@ -357,6 +357,8 @@ public class MediaEventTemplate {
             builder.addProperty(MEDIUM, this.medium);
         }
 
+        builder.setTemplateType("media");
+
         return builder.create();
     }
 }

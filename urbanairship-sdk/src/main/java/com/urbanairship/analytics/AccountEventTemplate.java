@@ -151,6 +151,8 @@ public class AccountEventTemplate {
             builder.addProperty(CATEGORY, this.category);
         }
 
+        builder.setTemplateType("account");
+
         return builder.create();
     }
 }

@@ -341,6 +341,8 @@ public class RetailEventTemplate {
             builder.addProperty(MEDIUM, this.medium);
         }
 
+        builder.setTemplateType("retail");
+
         return builder.create();
     }
 }
