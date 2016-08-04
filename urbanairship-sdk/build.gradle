@@ -25,7 +25,6 @@ android {
         targetSdkVersion 23
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""
-
         consumerProguardFiles 'consumer-proguard.txt'
     }
 
@@ -175,12 +174,6 @@ task bintrayUploadInternal {
     finalizedBy 'bintrayUpload'
 }
 
-
-//generates NativeBridge.java
-task templatizeNativeBridge(type: Exec) {
-    commandLine 'src/main/js/templatize'
-}
-
 task javadoc(dependsOn: 'javadocRelease')
 
 def getDexMethodCount() {
@@ -209,8 +202,6 @@ task runDexMethodCount << {
 }
 
 project.afterEvaluate {
-    prepareDebugDependencies.dependsOn(templatizeNativeBridge)
-    prepareReleaseDependencies.dependsOn(templatizeNativeBridge)
     runDexMethodCount.dependsOn(assembleRelease)
     bintrayUpload.dependsOn(assembleRelease)
 }
