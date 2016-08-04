@@ -37,9 +37,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Intent handler for incoming push messages.
+ * Job handler for incoming push messages.
  */
-class PushIntentHandler {
+class PushJobHandler {
 
     /**
      * Action sent when a push is received by GCM.
@@ -78,13 +78,13 @@ class PushIntentHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    PushIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    PushJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
         this(context, airship, dataStore, NotificationManagerCompat.from(context));
     }
 
     @VisibleForTesting
-    PushIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                      NotificationManagerCompat notificationManager) {
+    PushJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                   NotificationManagerCompat notificationManager) {
         this.context = context;
         this.dataStore = dataStore;
         this.airship = airship;
@@ -123,7 +123,7 @@ class PushIntentHandler {
         }
 
         if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("PushIntentHandler - Received intent from GCM without registering.");
+            Logger.error("PushJobHandler - Received intent from GCM without registering.");
             return;
         }
 
@@ -148,12 +148,12 @@ class PushIntentHandler {
      */
     private void onAdmMessageReceived(@NonNull Job job) {
         if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM) {
-            Logger.error("PushIntentHandler - Received intent from invalid transport acting as ADM.");
+            Logger.error("PushJobHandler - Received intent from invalid transport acting as ADM.");
             return;
         }
 
         if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("PushIntentHandler - Received intent from ADM without registering.");
+            Logger.error("PushJobHandler - Received intent from ADM without registering.");
             return;
         }
 
@@ -185,7 +185,7 @@ class PushIntentHandler {
         }
 
         if (message.isPing()) {
-            Logger.verbose("PushIntentHandler - Received UA Ping");
+            Logger.verbose("PushJobHandler - Received UA Ping");
             return;
         }
 
@@ -197,12 +197,12 @@ class PushIntentHandler {
         // Store any pending in-app messages
         InAppMessage inAppMessage = message.getInAppMessage();
         if (inAppMessage != null) {
-            Logger.debug("PushIntentHandler - Received a Push with an in-app message.");
+            Logger.debug("PushJobHandler - Received a Push with an in-app message.");
             airship.getInAppMessageManager().setPendingMessage(inAppMessage);
         }
 
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
-            Logger.debug("PushIntentHandler - Received a Rich Push.");
+            Logger.debug("PushJobHandler - Received a Rich Push.");
             refreshRichPushMessages();
         }
 
@@ -340,7 +340,7 @@ class PushIntentHandler {
         try {
             jsonList = JsonValue.parseString(dataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
         } catch (JsonException e) {
-            Logger.debug("PushIntentHandler - Unable to parse canonical Ids.", e);
+            Logger.debug("PushJobHandler - Unable to parse canonical Ids.", e);
         }
 
         List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();

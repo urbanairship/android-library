@@ -39,7 +39,7 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
         switch (intent.getAction()) {
             case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
 
-                Job messageJob = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_ADM_MESSAGE)
+                Job messageJob = Job.newBuilder(PushJobHandler.ACTION_RECEIVE_ADM_MESSAGE)
                                     .setAirshipComponent(PushManager.class)
                                     .setExtras(intent.getExtras())
                                     .build();
@@ -49,7 +49,7 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
             case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
 
-                Job registrationJob = Job.newBuilder(ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED)
+                Job registrationJob = Job.newBuilder(ChannelJobHandler.ACTION_ADM_REGISTRATION_FINISHED)
                                          .setAirshipComponent(PushManager.class)
                                          .setExtras(intent.getExtras())
                                          .build();

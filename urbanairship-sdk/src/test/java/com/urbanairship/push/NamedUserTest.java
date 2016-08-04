@@ -71,7 +71,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
 
@@ -79,7 +79,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -111,7 +111,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
 
@@ -119,7 +119,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -140,7 +140,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -148,7 +148,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -179,7 +179,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -220,7 +220,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
             }
         }));
     }
@@ -245,7 +245,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -261,7 +261,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -277,7 +277,7 @@ public class NamedUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
     }

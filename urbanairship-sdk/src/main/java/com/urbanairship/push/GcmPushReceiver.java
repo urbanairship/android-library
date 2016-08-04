@@ -39,7 +39,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         switch (intent.getAction()) {
             case GcmConstants.ACTION_GCM_RECEIVE:
-                Job messageJob = Job.newBuilder(PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE)
+                Job messageJob = Job.newBuilder(PushJobHandler.ACTION_RECEIVE_GCM_MESSAGE)
                                     .setAirshipComponent(PushManager.class)
                                     .setExtras(intent.getExtras())
                                     .build();
@@ -60,7 +60,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             case GcmConstants.ACTION_GCM_REGISTRATION:
 
                 // When we detect a GCM registration, make sure our GCM token is up-to-date.
-                Job registrationJob = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                Job registrationJob = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
                                          .setAirshipComponent(PushManager.class)
                                          .build();
 

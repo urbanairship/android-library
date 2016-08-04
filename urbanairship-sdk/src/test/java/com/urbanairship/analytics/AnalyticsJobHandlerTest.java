@@ -31,9 +31,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AnalyticsIntentHandlerTest extends BaseTestCase {
+public class AnalyticsJobHandlerTest extends BaseTestCase {
 
-    AnalyticsIntentHandler intentHandler;
+    AnalyticsJobHandler jobHandler;
     EventApiClient mockClient;
     EventDataManager mockDataManager;
     PushManager mockPushManager;
@@ -64,7 +64,7 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         channelId = "some channel ID";
         dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        intentHandler = new AnalyticsIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+        jobHandler = new AnalyticsJobHandler(TestApplication.getApplication(), UAirship.shared(),
                 dataStore, mockDispatcher, mockDataManager, mockClient);
     }
 
@@ -74,16 +74,16 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventAfterNextSendTime() {
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, "some-type")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "DATA!")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, "DATA!")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, "session id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify we add an event.
         Mockito.verify(mockDataManager, new Times(1)).insertEvent("some-type", "DATA!", "event id", "session id", "100");
@@ -93,7 +93,7 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }), eq(10000L), eq(TimeUnit.MILLISECONDS));
     }
@@ -105,28 +105,28 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
     @Test
     public void testAddEventBeforeNextSendTime() {
         // Set the last send time to the current time so the next send time is minBatchInterval
-        dataStore.put(AnalyticsIntentHandler.LAST_SEND_KEY, System.currentTimeMillis());
+        dataStore.put(AnalyticsJobHandler.LAST_SEND_KEY, System.currentTimeMillis());
 
         // Set the minBatchInterval to 20 seconds
-        dataStore.put(AnalyticsIntentHandler.MIN_BATCH_INTERVAL_KEY, 20000);
+        dataStore.put(AnalyticsJobHandler.MIN_BATCH_INTERVAL_KEY, 20000);
 
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, "some-type")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "DATA!")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, "DATA!")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, "session id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }), anyLong(), eq(TimeUnit.MILLISECONDS));
     }
@@ -136,10 +136,10 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventEmptyData() {
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify we don't add any events.
         Mockito.verify(mockDataManager, new Times(0)).insertEvent(anyString(), anyString(), anyString(), anyString(), anyString());
@@ -166,7 +166,7 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         when(mockDataManager.getEvents(1)).thenReturn(events);
 
         // Set the max batch size to 100
-        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100);
+        dataStore.put(AnalyticsJobHandler.MAX_BATCH_SIZE_KEY, 100);
 
         // Set up the response
         EventResponse response = mock(EventResponse.class);
@@ -180,10 +180,10 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Check mockClients receives the events
         Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
@@ -192,17 +192,17 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         Mockito.verify(mockDataManager).deleteEvents(events.keySet());
 
         // Verify responses are being saved
-        assertEquals(200, dataStore.getInt(AnalyticsIntentHandler.MAX_TOTAL_DB_SIZE_KEY, 0));
-        assertEquals(300, dataStore.getInt(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 0));
-        assertEquals(400, dataStore.getInt(AnalyticsIntentHandler.MAX_WAIT_KEY, 0));
-        assertEquals(100, dataStore.getInt(AnalyticsIntentHandler.MIN_BATCH_INTERVAL_KEY, 0));
+        assertEquals(200, dataStore.getInt(AnalyticsJobHandler.MAX_TOTAL_DB_SIZE_KEY, 0));
+        assertEquals(300, dataStore.getInt(AnalyticsJobHandler.MAX_BATCH_SIZE_KEY, 0));
+        assertEquals(400, dataStore.getInt(AnalyticsJobHandler.MAX_WAIT_KEY, 0));
+        assertEquals(100, dataStore.getInt(AnalyticsJobHandler.MIN_BATCH_INTERVAL_KEY, 0));
 
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }), anyLong(), eq(TimeUnit.MILLISECONDS));
     }
@@ -217,7 +217,7 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
             events.put("event " + i, "{ 'body' }");
         }
 
-        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100000);
+        dataStore.put(AnalyticsJobHandler.MAX_BATCH_SIZE_KEY, 100000);
 
         when(mockDataManager.getDatabaseSize()).thenReturn(100000);
         when(mockDataManager.getEventCount()).thenReturn(1000);
@@ -231,10 +231,10 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Check mockClients receives the events
         Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
@@ -260,10 +260,10 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         when(mockDataManager.getEvents(1)).thenReturn(events);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify uploadEvents returns early when no channel ID is present.
         Mockito.verify(mockClient, never()).sendEvents(UAirship.shared(), events.values());
@@ -280,16 +280,16 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
         when(mockDataManager.getDatabaseSize()).thenReturn(100);
         when(mockDataManager.getEvents(1)).thenReturn(events);
 
-        dataStore.put(AnalyticsIntentHandler.MAX_BATCH_SIZE_KEY, 100);
+        dataStore.put(AnalyticsJobHandler.MAX_BATCH_SIZE_KEY, 100);
 
 
         // Return a null response
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(null);
 
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
-        assertEquals(Job.JOB_RETRY, intentHandler.performJob(job));
+        assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         Mockito.verify(mockClient).sendEvents(UAirship.shared(), events.values());
 
@@ -303,25 +303,25 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
     @Test
     public void testAddingHighPriorityEvents() {
         // Set last send time to year 3005 so we don't upload immediately
-        dataStore.put(AnalyticsIntentHandler.LAST_SEND_KEY, 32661446400000L);
+        dataStore.put(AnalyticsJobHandler.LAST_SEND_KEY, 32661446400000L);
 
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, "some-type")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, "event id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, "100")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, "DATA!")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, "session id")
-                     .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, Event.HIGH_PRIORITY)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, "DATA!")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, "session id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, Event.HIGH_PRIORITY)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }), eq(1000L), eq(TimeUnit.MILLISECONDS));
     }
@@ -331,10 +331,10 @@ public class AnalyticsIntentHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeleteAll() {
-        Job job = Job.newBuilder(AnalyticsIntentHandler.ACTION_DELETE_ALL)
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_DELETE_ALL)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
         Mockito.verify(mockDataManager).deleteAllEvents();
     }
 }

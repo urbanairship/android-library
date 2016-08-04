@@ -36,11 +36,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class InboxIntentHandlerTest extends BaseTestCase {
+public class InboxJobHandlerTest extends BaseTestCase {
 
     private RichPushInbox inbox;
 
-    private InboxIntentHandler intentHandler;
+    private InboxJobHandler jobHandler;
 
     private List<TestRequest> requests;
     private Map<String, Response> responses;
@@ -85,7 +85,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         // Clear any user or password
         user.setUser(null, null);
 
-        intentHandler = new InboxIntentHandler(UAirship.shared(),
+        jobHandler = new InboxJobHandler(UAirship.shared(),
                 TestApplication.getApplication().preferenceDataStore,
                 requestFactory, mock(RichPushResolver.class));
     }
@@ -99,14 +99,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         // Clear any user or password
         user.setUser(null, null);
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                 .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
 
         // Verify no requests were made
@@ -122,19 +122,19 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Null response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", null);
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -144,7 +144,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals(300l, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -156,20 +156,20 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Return a 304 response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
                 new Response.Builder(HttpURLConnection.HTTP_NOT_MODIFIED).create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -179,7 +179,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals(300l, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -194,7 +194,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channelID");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -204,14 +204,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"messages\": []}")
                         .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request method and url
@@ -222,7 +222,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
 
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
-        assertEquals(600l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(600l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
 
         // Verify we updated the inbox
         verify(inbox).refresh(true);
@@ -240,7 +240,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channelID");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Return a 200 message list response with messages
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -256,15 +256,15 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                                 "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}")
                         .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request method and url
@@ -275,7 +275,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals("channelID", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
 
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
-        assertEquals(600l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(600l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
 
         // Verify we updated the inbox
         verify(inbox).refresh(true);
@@ -290,7 +290,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -298,15 +298,15 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .setResponseBody("{ failed }")
                 .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
 
         // Verify the request method and url
@@ -316,7 +316,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals(300l, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
 
@@ -326,7 +326,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         user.setUser("fakeUserId", "password");
 
         // Set the last refresh time
-        dataStore.put(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
+        dataStore.put(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 300l);
 
         // Return a 500 internal server error
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
@@ -334,14 +334,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .setResponseBody("{ failed }")
                         .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
 
         // Verify the request method and url
@@ -351,7 +351,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals(300l, testRequest.getIfModifiedSince());
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals(300l, dataStore.getLong(InboxIntentHandler.LAST_MESSAGE_REFRESH_TIME, 0));
+        assertEquals(300l, dataStore.getLong(InboxJobHandler.LAST_MESSAGE_REFRESH_TIME, 0));
     }
 
     /**
@@ -369,11 +369,11 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                 .create());
 
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify user name and user token was set
@@ -381,7 +381,7 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         assertEquals("someUserToken", user.getPassword());
 
         // Verify result receiver
-        assertEquals("Should return success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -407,18 +407,18 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .create());
 
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify user name and user token was set
         assertEquals("someUserId", user.getId());
         assertEquals("someUserToken", user.getPassword());
 
         // Verify result receiver
-        assertEquals("Should return success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -443,11 +443,11 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .create());
 
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify we did not create the user
         assertNull(user.getId());
@@ -465,18 +465,18 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/",
                 new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify we did not create the user
         assertNull(user.getId());
         assertNull(user.getPassword());
 
         // Verify result receiver
-        assertEquals(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, resultReceiver.lastResultCode);
+        assertEquals(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, resultReceiver.lastResultCode);
     }
 
     /**
@@ -497,14 +497,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"ok\" }")
                         .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -533,14 +533,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
                 .setResponseBody("{ \"ok\" }")
                 .create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return success code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
+        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
                 resultReceiver.lastResultCode);
 
         // Verify the request
@@ -562,14 +562,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         // Return a null channel
         when(mockPushManager.getChannelId()).thenReturn(null);
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
     }
 
@@ -585,14 +585,14 @@ public class InboxIntentHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
                 new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return error code", InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
+        assertEquals("Should return error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
                 resultReceiver.lastResultCode);
     }
 

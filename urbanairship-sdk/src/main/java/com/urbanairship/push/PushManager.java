@@ -234,8 +234,8 @@ public class PushManager extends AirshipComponent {
     private boolean channelCreationDelayEnabled;
 
     private final JobDispatcher jobDispatcher;
-    private ChannelIntentHandler channelIntentHandler;
-    private PushIntentHandler pushIntentHandler;
+    private ChannelJobHandler channelJobHandler;
+    private PushJobHandler pushJobHandler;
 
     private final Object tagLock = new Object();
 
@@ -288,7 +288,7 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_START_REGISTRATION)
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_START_REGISTRATION)
                      .setAirshipComponent(PushManager.class)
                      .build();
 
@@ -304,23 +304,23 @@ public class PushManager extends AirshipComponent {
     protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
 
         switch (job.getAction()) {
-            case ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS:
-            case ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
-            case ChannelIntentHandler.ACTION_ADM_REGISTRATION_FINISHED:
-            case ChannelIntentHandler.ACTION_START_REGISTRATION:
-            case ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
-            case ChannelIntentHandler.ACTION_UPDATE_PUSH_REGISTRATION:
-                if (channelIntentHandler == null) {
-                    channelIntentHandler = new ChannelIntentHandler(context, airship, preferenceDataStore);
+            case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
+            case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
+            case ChannelJobHandler.ACTION_ADM_REGISTRATION_FINISHED:
+            case ChannelJobHandler.ACTION_START_REGISTRATION:
+            case ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
+            case ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION:
+                if (channelJobHandler == null) {
+                    channelJobHandler = new ChannelJobHandler(context, airship, preferenceDataStore);
                 }
-                return channelIntentHandler.performJob(job);
+                return channelJobHandler.performJob(job);
 
-            case PushIntentHandler.ACTION_RECEIVE_ADM_MESSAGE:
-            case PushIntentHandler.ACTION_RECEIVE_GCM_MESSAGE:
-                if (pushIntentHandler == null) {
-                    pushIntentHandler = new PushIntentHandler(context, airship, preferenceDataStore);
+            case PushJobHandler.ACTION_RECEIVE_ADM_MESSAGE:
+            case PushJobHandler.ACTION_RECEIVE_GCM_MESSAGE:
+                if (pushJobHandler == null) {
+                    pushJobHandler = new PushJobHandler(context, airship, preferenceDataStore);
                 }
-                return pushIntentHandler.performJob(job);
+                return pushJobHandler.performJob(job);
         }
 
         return Job.JOB_FINISHED;
@@ -528,7 +528,7 @@ public class PushManager extends AirshipComponent {
      * Update registration.
      */
     public void updateRegistration() {
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
                      .setAirshipComponent(PushManager.class)
                      .build();
 
@@ -851,7 +851,7 @@ public class PushManager extends AirshipComponent {
      * @return A {@link TagGroupsEditor}.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, PushManager.class, jobDispatcher) {
+        return new TagGroupsEditor(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES, PushManager.class, jobDispatcher) {
             @Override
             public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP.equals(tagGroup)) {
@@ -1005,7 +1005,7 @@ public class PushManager extends AirshipComponent {
      * Dispatches a job to update the tag groups.
      */
     void startUpdateTagsService() {
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS)
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
                      .setAirshipComponent(PushManager.class)
                      .build();
 

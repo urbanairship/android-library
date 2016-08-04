@@ -93,7 +93,7 @@ public class RichPushUser {
         ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
-                boolean success = resultCode == InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS;
+                boolean success = resultCode == InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS;
 
                 synchronized (listeners) {
                     for (Listener listener : new ArrayList<>(listeners)) {
@@ -105,10 +105,10 @@ public class RichPushUser {
 
         Logger.debug("RichPushUser - Updating user.");
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .setAirshipComponent(RichPushInbox.class)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
-                     .putExtra(InboxIntentHandler.EXTRA_FORCEFULLY, forcefully)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                     .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
                      .build();
 
         jobDispatcher.dispatch(job);

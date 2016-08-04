@@ -137,8 +137,8 @@ public class AnalyticsTest extends BaseTestCase {
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
 
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        AppBackgroundEvent.TYPE.equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        AppBackgroundEvent.TYPE.equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
 
@@ -185,13 +185,13 @@ public class AnalyticsTest extends BaseTestCase {
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
 
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        "event-id".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_ID)) &&
-                        "event-data".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_DATA)) &&
-                        "event-type".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE)) &&
-                        "1000".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP)) &&
-                        analytics.getSessionId().equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID)) &&
-                        0 == job.getExtras().getInt(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "event-id".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_ID)) &&
+                        "event-data".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_DATA)) &&
+                        "event-type".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE)) &&
+                        "1000".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP)) &&
+                        analytics.getSessionId().equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID)) &&
+                        0 == job.getExtras().getInt(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY);
             }
         }));
     }
@@ -264,7 +264,7 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_DELETE_ALL);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_DELETE_ALL);
             }
         }));
     }
@@ -311,8 +311,8 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
     }
@@ -331,8 +331,8 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
 
@@ -359,8 +359,8 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
     }
@@ -380,8 +380,8 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(job.getExtras().getString(AnalyticsIntentHandler.EXTRA_EVENT_TYPE));
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
     }
@@ -428,7 +428,7 @@ public class AnalyticsTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID);
             }
         }));
     }

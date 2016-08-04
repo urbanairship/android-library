@@ -96,7 +96,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_START_REGISTRATION);
+                return job.getAction().equals(ChannelJobHandler.ACTION_START_REGISTRATION);
             }
         }));
 
@@ -694,7 +694,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
+                return job.getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
                         job.getAirshipComponentName().equals(PushManager.class.getName());
             }
         }));
@@ -722,7 +722,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -783,7 +783,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }
@@ -894,7 +894,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
 
@@ -929,7 +929,7 @@ public class PushManagerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }

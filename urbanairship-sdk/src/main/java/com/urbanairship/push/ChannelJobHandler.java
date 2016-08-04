@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Intent handler for channel registration
+ * Job handler for channel registration
  */
-class ChannelIntentHandler {
+class ChannelJobHandler {
 
     /**
      * Action to update pending channel tag groups.
@@ -123,13 +123,13 @@ class ChannelIntentHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    ChannelJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
         this(context, airship, dataStore, JobDispatcher.shared(context), new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    ChannelIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                         JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
+    ChannelJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                      JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
         this.context = context;
         this.dataStore = dataStore;
         this.channelClient = channelClient;
@@ -284,7 +284,7 @@ class ChannelIntentHandler {
 
         Intent admIntent = job.getExtras().getParcelable(EXTRA_INTENT);
         if (admIntent == null) {
-            Logger.error("ChannelIntentHandler - Received ADM message missing original intent.");
+            Logger.error("ChannelJobHandler - Received ADM message missing original intent.");
             return Job.JOB_FINISHED;
         }
 
@@ -318,11 +318,11 @@ class ChannelIntentHandler {
     @Job.JobResult
     private int onUpdateChannelRegistration() {
         if (isPushRegistering) {
-            Logger.verbose("ChannelIntentHandler - Push registration in progress, skipping registration update.");
+            Logger.verbose("ChannelJobHandler - Push registration in progress, skipping registration update.");
             return Job.JOB_FINISHED;
         }
 
-        Logger.verbose("ChannelIntentHandler - Performing channel registration.");
+        Logger.verbose("ChannelJobHandler - Performing channel registration.");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         String channelId = pushManager.getChannelId();
@@ -345,7 +345,7 @@ class ChannelIntentHandler {
     @Job.JobResult
     private int updateChannel(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("ChannelIntentHandler - Channel already up to date.");
+            Logger.verbose("ChannelJobHandler - Channel already up to date.");
             return Job.JOB_FINISHED;
         }
 
@@ -548,7 +548,7 @@ class ChannelIntentHandler {
         try {
             return ChannelRegistrationPayload.parseJson(payloadJSON);
         } catch (JsonException e) {
-            Logger.error("ChannelIntentHandler - Failed to parse payload from JSON.", e);
+            Logger.error("ChannelJobHandler - Failed to parse payload from JSON.", e);
             return null;
         }
     }

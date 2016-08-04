@@ -22,9 +22,9 @@ import java.util.Set;
 
 
 /**
- * Intent handler for the NamedUser.
+ * Job handler for the NamedUser.
  */
-class NamedUserIntentHandler {
+class NamedUserJobHandler {
 
     /**
      * Action to update pending named user tag groups.
@@ -78,12 +78,12 @@ class NamedUserIntentHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    NamedUserJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
         this(context, airship, dataStore, JobDispatcher.shared(context), new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    NamedUserIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, NamedUserApiClient client) {
+    NamedUserJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, NamedUserApiClient client) {
         this.context = context;
         this.dataStore = dataStore;
         this.client = client;
@@ -137,7 +137,7 @@ class NamedUserIntentHandler {
 
         if (changeToken != null && changeToken.equals(lastUpdatedToken)) {
             // Skip since no change has occurred (token remain the same).
-            Logger.debug("NamedUserIntentHandler - Named user already updated. Skipping.");
+            Logger.debug("NamedUserJobHandler - Named user already updated. Skipping.");
             return Job.JOB_FINISHED;
         }
 

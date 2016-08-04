@@ -124,7 +124,7 @@ public class RichPushInbox extends AirshipComponent {
 
     private int fetchCount = 0;
     private BroadcastReceiver foregroundReceiver;
-    private InboxIntentHandler inboxIntentHandler;
+    private InboxJobHandler inboxJobHandler;
 
 
     /**
@@ -174,7 +174,7 @@ public class RichPushInbox extends AirshipComponent {
                 if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
                     fetchMessages();
                 } else {
-                    Job job = Job.newBuilder(InboxIntentHandler.ACTION_SYNC_MESSAGE_STATE)
+                    Job job = Job.newBuilder(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
                                  .setAirshipComponent(RichPushInbox.class)
                                  .build();
 
@@ -193,11 +193,11 @@ public class RichPushInbox extends AirshipComponent {
     @Override
     @Job.JobResult
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
-        if (inboxIntentHandler == null) {
-            inboxIntentHandler = new InboxIntentHandler(context, airship, dataStore);
+        if (inboxJobHandler == null) {
+            inboxJobHandler = new InboxJobHandler(context, airship, dataStore);
         }
 
-        return inboxIntentHandler.performJob(job);
+        return inboxJobHandler.performJob(job);
     }
 
     @Override
@@ -378,15 +378,15 @@ public class RichPushInbox extends AirshipComponent {
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 fetchCount--;
-                pendingResult.setResult(resultCode == InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS);
+                pendingResult.setResult(resultCode == InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS);
             }
         };
 
         Logger.debug("RichPushInbox - Updating messages");
 
-        Job job = Job.newBuilder(InboxIntentHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .setAirshipComponent(RichPushInbox.class)
-                     .putExtra(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         jobDispatcher.dispatch(job);

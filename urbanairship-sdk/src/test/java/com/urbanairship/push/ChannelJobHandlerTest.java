@@ -38,7 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class ChannelIntentHandlerTest extends BaseTestCase {
+public class ChannelJobHandlerTest extends BaseTestCase {
     private static final String CHANNEL_LOCATION_KEY = "Location";
 
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
@@ -53,7 +53,7 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
     PreferenceDataStore dataStore;
     PushManager pushManager;
     ChannelApiClient client;
-    ChannelIntentHandler intentHandler;
+    ChannelJobHandler jobHandler;
     RichPushInbox richPushInbox;
     RichPushUser richPushUser;
     JobDispatcher mockDispatcher;
@@ -73,7 +73,7 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
 
 
         // Extend it to make handleIntent public so we can call it directly
-        intentHandler = new ChannelIntentHandler(TestApplication.getApplication(), UAirship.shared(),
+        jobHandler = new ChannelJobHandler(TestApplication.getApplication(), UAirship.shared(),
                 TestApplication.getApplication().preferenceDataStore, mockDispatcher, client);
 
         Set<String> addTags = new HashSet<>();
@@ -123,8 +123,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should exist in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should exist in preferences", fakeChannelLocation,
@@ -159,8 +159,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -183,8 +183,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -217,8 +217,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
         ;
 
         // Verify channel creation failed
@@ -248,8 +248,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -281,8 +281,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         // Return the response
         when(client.updateChannelWithPayload(channelLocation, payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify channel update succeeded
@@ -302,8 +302,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify update was called
         Mockito.verify(client).updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class));
@@ -317,7 +317,7 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }
@@ -328,17 +328,17 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
     @Test
     public void testApplyTagGroupChanges() throws JsonException {
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
                      .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify pending tags are saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -350,23 +350,23 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
                      .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify pending tags are saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
 
         // Verify a new job to update tag group registration is dispatched
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS);
+                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -380,8 +380,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
@@ -389,15 +389,15 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateChannelTags called
         Mockito.verify(client, Mockito.times(1)).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -406,19 +406,19 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
     @Test
     public void testUpdateChannelTagGroupsNoChannelId() throws JsonException {
         // Provide pending changes
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateChannelTags not called when channel ID doesn't exist
         verifyZeroInteractions(client);
 
         // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -430,8 +430,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
@@ -439,8 +439,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_RETRY, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify updateChannelTags called
         Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
@@ -455,12 +455,12 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        dataStore.remove(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
-        dataStore.remove(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
+        dataStore.remove(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
+        dataStore.remove(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
 
         // Perform an update without specify new tags
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(client);
@@ -475,8 +475,8 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
 
         // Set up a 400 response
         Response response = Mockito.mock(Response.class);
@@ -484,14 +484,14 @@ public class ChannelIntentHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelIntentHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, intentHandler.performJob(job));
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateChannelTags called
         Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap);
 
         // Verify pending tag groups are empty
-        junit.framework.Assert.assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        junit.framework.Assert.assertNull(dataStore.getString(ChannelIntentHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        junit.framework.Assert.assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
+        junit.framework.Assert.assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 }

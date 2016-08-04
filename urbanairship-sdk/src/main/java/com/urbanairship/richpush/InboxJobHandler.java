@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Intent handler for {@link RichPushInbox} component.
+ * Job handler for {@link RichPushInbox} component.
  */
-class InboxIntentHandler {
+class InboxJobHandler {
 
     /**
      * Starts the service in order to update just the {@link RichPushMessage}'s messages.
@@ -99,13 +99,13 @@ class InboxIntentHandler {
     private final PreferenceDataStore dataStore;
     private final UAirship airship;
 
-    InboxIntentHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    InboxJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
         this(airship, dataStore, new RequestFactory(), new RichPushResolver(context));
     }
 
     @VisibleForTesting
-    InboxIntentHandler(UAirship airship, PreferenceDataStore dataStore,
-                       RequestFactory requestFactory, RichPushResolver resolver) {
+    InboxJobHandler(UAirship airship, PreferenceDataStore dataStore,
+                    RequestFactory requestFactory, RichPushResolver resolver) {
         this.dataStore = dataStore;
         this.requestFactory = requestFactory;
         this.resolver = resolver;
@@ -145,7 +145,7 @@ class InboxIntentHandler {
      */
     private void onUpdateMessages(Job job) {
         if (!RichPushUser.isCreated()) {
-            Logger.debug("InboxIntentHandler - User has not been created, canceling messages update");
+            Logger.debug("InboxJobHandler - User has not been created, canceling messages update");
             respond(job, false);
         } else {
             boolean success = this.updateMessages();
@@ -202,7 +202,7 @@ class InboxIntentHandler {
             return false;
         }
 
-        Logger.verbose("InboxIntentHandler - Fetching inbox messages.");
+        Logger.verbose("InboxJobHandler - Fetching inbox messages.");
         Response response = requestFactory.createRequest("GET", getMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
@@ -210,7 +210,7 @@ class InboxIntentHandler {
                                           .setIfModifiedSince(dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0))
                                           .execute();
 
-        Logger.verbose("InboxIntentHandler - Fetch inbox messages response: " + response);
+        Logger.verbose("InboxJobHandler - Fetch inbox messages response: " + response);
 
         int status = response == null ? -1 : response.getStatus();
 
@@ -260,13 +260,13 @@ class InboxIntentHandler {
 
         for (JsonValue message : serverMessages) {
             if (!message.isJsonMap()) {
-                Logger.error("InboxIntentHandler - Invalid message payload: " + message);
+                Logger.error("InboxJobHandler - Invalid message payload: " + message);
                 continue;
             }
 
             String messageId = message.getMap().opt(RichPushMessage.MESSAGE_ID_KEY).getString();
             if (messageId == null) {
-                Logger.error("InboxIntentHandler - Invalid message payload, missing message ID: " + message);
+                Logger.error("InboxJobHandler - Invalid message payload, missing message ID: " + message);
                 continue;
             }
 
@@ -307,7 +307,7 @@ class InboxIntentHandler {
             return;
         }
 
-        Logger.verbose("InboxIntentHandler - Found " + idsToDelete.size() + " messages to delete.");
+        Logger.verbose("InboxJobHandler - Found " + idsToDelete.size() + " messages to delete.");
 
         /*
          * Note: If we can't delete the messages on the server, leave them untouched
@@ -318,7 +318,7 @@ class InboxIntentHandler {
             return;
         }
 
-        Logger.verbose("InboxIntentHandler - Deleting inbox messages with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Deleting inbox messages with payload: " + payload);
         Response response = requestFactory.createRequest("POST", deleteMessagesURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
@@ -326,7 +326,7 @@ class InboxIntentHandler {
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxIntentHandler - Delete inbox messages response: " + response);
+        Logger.verbose("InboxJobHandler - Delete inbox messages response: " + response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             resolver.deleteMessages(idsToDelete);
         }
@@ -349,7 +349,7 @@ class InboxIntentHandler {
             return;
         }
 
-        Logger.verbose("InboxIntentHandler - Found " + idsToUpdate.size() + " messages to mark read.");
+        Logger.verbose("InboxJobHandler - Found " + idsToUpdate.size() + " messages to mark read.");
 
         /*
          * Note: If we can't mark the messages read on the server, leave them untouched
@@ -360,7 +360,7 @@ class InboxIntentHandler {
             return;
         }
 
-        Logger.verbose("InboxIntentHandler - Marking inbox messages read request with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Marking inbox messages read request with payload: " + payload);
         Response response = requestFactory.createRequest("POST", markMessagesReadURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload.toString(), "application/json")
@@ -368,7 +368,7 @@ class InboxIntentHandler {
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxIntentHandler - Mark inbox messages read response: " + response);
+        Logger.verbose("InboxJobHandler - Mark inbox messages read response: " + response);
 
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             resolver.markMessagesReadOrigin(idsToUpdate);
@@ -407,7 +407,7 @@ class InboxIntentHandler {
     private boolean createUser() {
         String channelId = airship.getPushManager().getChannelId();
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("InboxIntentHandler - No Channel. User will be created after channel registrations finishes.");
+            Logger.debug("InboxJobHandler - No Channel. User will be created after channel registrations finishes.");
             return false;
         }
 
@@ -417,7 +417,7 @@ class InboxIntentHandler {
         }
 
         String payload = createNewUserPayload(channelId);
-        Logger.verbose("InboxIntentHandler - Creating Rich Push user with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Creating Rich Push user with payload: " + payload);
         Response response = requestFactory.createRequest("POST", userCreationURL)
                                           .setCredentials(airship.getAirshipConfigOptions().getAppKey(), airship.getAirshipConfigOptions().getAppSecret())
                                           .setRequestBody(payload, "application/json")
@@ -426,7 +426,7 @@ class InboxIntentHandler {
 
         // Check for failure
         if (response == null || response.getStatus() != HttpURLConnection.HTTP_CREATED) {
-            Logger.verbose("InboxIntentHandler - Rich Push user creation failed: " + response);
+            Logger.verbose("InboxJobHandler - Rich Push user creation failed: " + response);
             return false;
         }
 
@@ -440,12 +440,12 @@ class InboxIntentHandler {
                 userToken = credentials.get("password").getString();
             }
         } catch (JsonException ex) {
-            Logger.error("InboxIntentHandler - Unable to parse Rich Push user response: " + response);
+            Logger.error("InboxJobHandler - Unable to parse Rich Push user response: " + response);
             return false;
         }
 
         if (UAStringUtil.isEmpty(userId) || UAStringUtil.isEmpty(userToken)) {
-            Logger.error("InboxIntentHandler - Rich Push user creation failed: " + response);
+            Logger.error("InboxJobHandler - Rich Push user creation failed: " + response);
             return false;
         }
 
@@ -466,7 +466,7 @@ class InboxIntentHandler {
         String channelId = airship.getPushManager().getChannelId();
 
         if (UAStringUtil.isEmpty(channelId)) {
-            Logger.debug("InboxIntentHandler - No Channel. Skipping Rich Push user update.");
+            Logger.debug("InboxJobHandler - No Channel. Skipping Rich Push user update.");
             return false;
         }
 
@@ -477,14 +477,14 @@ class InboxIntentHandler {
         }
 
         String payload = createUpdateUserPayload(channelId);
-        Logger.verbose("InboxIntentHandler - Updating user with payload: " + payload);
+        Logger.verbose("InboxJobHandler - Updating user with payload: " + payload);
         Response response = requestFactory.createRequest("POST", userUpdateURL)
                                           .setCredentials(user.getId(), user.getPassword())
                                           .setRequestBody(payload, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
 
-        Logger.verbose("InboxIntentHandler - Update Rich Push user response: " + response);
+        Logger.verbose("InboxJobHandler - Update Rich Push user response: " + response);
         if (response != null && response.getStatus() == HttpURLConnection.HTTP_OK) {
             Logger.info("Rich Push user updated.");
             dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis());

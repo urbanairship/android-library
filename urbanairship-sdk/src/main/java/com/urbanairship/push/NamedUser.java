@@ -43,7 +43,7 @@ public class NamedUser extends AirshipComponent {
     private final Context context;
     private final Object lock = new Object();
     private final JobDispatcher jobDispatcher;
-    private NamedUserIntentHandler namedUserIntentHandler;
+    private NamedUserJobHandler namedUserJobHandler;
 
     /**
      * Creates a NamedUser.
@@ -75,11 +75,11 @@ public class NamedUser extends AirshipComponent {
 
     @Override
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
-        if (namedUserIntentHandler == null) {
-            namedUserIntentHandler = new NamedUserIntentHandler(context, airship, preferenceDataStore);
+        if (namedUserJobHandler == null) {
+            namedUserJobHandler = new NamedUserJobHandler(context, airship, preferenceDataStore);
         }
 
-        return namedUserIntentHandler.performJob(job);
+        return namedUserJobHandler.performJob(job);
     }
 
     /**
@@ -146,7 +146,7 @@ public class NamedUser extends AirshipComponent {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(NamedUserIntentHandler.ACTION_APPLY_TAG_GROUP_CHANGES, NamedUser.class, jobDispatcher);
+        return new TagGroupsEditor(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES, NamedUser.class, jobDispatcher);
     }
 
     /**
@@ -179,7 +179,7 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to update the named user.
      */
     void dispatchNamedUserUpdateJob() {
-        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_NAMED_USER)
+        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
                 .setAirshipComponent(NamedUser.class)
                 .build();
 
@@ -190,7 +190,7 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to clear pending named user tags.
      */
     void dispatchClearTagsJob() {
-        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
+        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
                      .setAirshipComponent(NamedUser.class)
                      .build();
 
@@ -201,7 +201,7 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to update the named user tag groups.
      */
     void dispatchUpdateTagGroupsJob() {
-        Job job = Job.newBuilder(NamedUserIntentHandler.ACTION_UPDATE_TAG_GROUPS)
+        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
                      .setAirshipComponent(NamedUser.class)
                      .build();
 

@@ -150,7 +150,7 @@ public class RichPushUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE);
+                return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
             }
         }));
 
@@ -169,17 +169,17 @@ public class RichPushUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
                 if (receiver == null) {
                     return false;
                 }
 
                 // Send result to the receiver
-                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
+                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
                 return true;
             }
         }));
@@ -202,17 +202,17 @@ public class RichPushUserTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                if (!job.getAction().equals(InboxIntentHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxIntentHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
+                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
                 if (receiver == null) {
                     return false;
                 }
 
                 // Send result to the receiver
-                receiver.send(InboxIntentHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
+                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
                 return true;
             }
         }));

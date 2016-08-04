@@ -72,7 +72,7 @@ public class Analytics extends AirshipComponent {
     private long screenStartTime;
 
     private final Object associatedIdentifiersLock = new Object();
-    private AnalyticsIntentHandler analyticsIntentHandler;
+    private AnalyticsJobHandler analyticsJobHandler;
 
     /**
      * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
@@ -125,7 +125,7 @@ public class Analytics extends AirshipComponent {
 
                 // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
                 if (isAutoTrackAdvertisingIdEnabled()) {
-                    jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID)
+                    jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
                                               .setAirshipComponent(Analytics.class)
                                               .build());
                 }
@@ -159,11 +159,11 @@ public class Analytics extends AirshipComponent {
 
     @Override
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
-        if (analyticsIntentHandler == null) {
-            analyticsIntentHandler = new AnalyticsIntentHandler(context, airship, preferenceDataStore);
+        if (analyticsJobHandler == null) {
+            analyticsJobHandler = new AnalyticsJobHandler(context, airship, preferenceDataStore);
         }
 
-        return analyticsIntentHandler.performJob(job);
+        return analyticsJobHandler.performJob(job);
     }
 
     @Override
@@ -245,14 +245,14 @@ public class Analytics extends AirshipComponent {
             Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
-        Job addEventJob = Job.newBuilder(AnalyticsIntentHandler.ACTION_ADD)
+        Job addEventJob = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
                              .setAirshipComponent(Analytics.class)
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TYPE, event.getType())
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_ID, event.getEventId())
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_DATA, eventPayload)
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_SESSION_ID, sessionId)
-                             .putExtra(AnalyticsIntentHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
+                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
                              .build();
 
         jobDispatcher.dispatch(addEventJob);
@@ -417,7 +417,7 @@ public class Analytics extends AirshipComponent {
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
-            jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_DELETE_ALL)
+            jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_DELETE_ALL)
                                       .setAirshipComponent(Analytics.class)
                                       .build());
         }
@@ -452,7 +452,7 @@ public class Analytics extends AirshipComponent {
         preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
 
         if (enabled) {
-            jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_UPDATE_ADVERTISING_ID)
+            jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
                                       .setAirshipComponent(Analytics.class)
                                       .build());
         }
@@ -565,7 +565,7 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        jobDispatcher.dispatch(Job.newBuilder(AnalyticsIntentHandler.ACTION_SEND)
+        jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                                   .setAirshipComponent(Analytics.class)
                                   .build());
     }
