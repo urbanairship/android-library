@@ -8,6 +8,12 @@ import java.math.BigDecimal;
  * A class that represents a custom media event template for the application.
  */
 public class MediaEventTemplate {
+
+    /**
+     * The media event template type.
+     */
+    public static final String MEDIA_EVENT_TEMPLATE = "media";
+
     /**
      * The browsed event name.
      */
@@ -357,7 +363,7 @@ public class MediaEventTemplate {
             builder.addProperty(MEDIUM, this.medium);
         }
 
-        builder.setTemplateType("media");
+        builder.setTemplateType(MEDIA_EVENT_TEMPLATE);
 
         return builder.create();
     }

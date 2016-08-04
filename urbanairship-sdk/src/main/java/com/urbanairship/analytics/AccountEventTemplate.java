@@ -10,6 +10,11 @@ import java.math.BigDecimal;
 public class AccountEventTemplate {
 
     /**
+     * The account event template type.
+     */
+    public static final String ACCOUNT_EVENT_TEMPLATE = "account";
+
+    /**
      * The registered account event name.
      */
     public static final String REGISTERED_ACCOUNT_EVENT = "registered_account";
@@ -151,7 +156,7 @@ public class AccountEventTemplate {
             builder.addProperty(CATEGORY, this.category);
         }
 
-        builder.setTemplateType("account");
+        builder.setTemplateType(ACCOUNT_EVENT_TEMPLATE);
 
         return builder.create();
     }

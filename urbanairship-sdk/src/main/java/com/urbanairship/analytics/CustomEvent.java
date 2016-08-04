@@ -430,7 +430,7 @@ public class CustomEvent extends Event {
          * @param templateType The event's template type.
          * @return The custom event builder.
          */
-        protected Builder setTemplateType(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String templateType) {
+        Builder setTemplateType(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String templateType) {
             this.templateType = templateType;
             return this;
         }
