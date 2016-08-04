@@ -67,6 +67,7 @@ public class UAirship {
     private final static Object airshipLock = new Object();
     volatile static boolean isFlying = false;
     volatile static boolean isTakingOff = false;
+
     static Application application;
     static UAirship sharedAirship;
 
@@ -76,7 +77,8 @@ public class UAirship {
      */
     public static boolean LOG_TAKE_OFF_STACKTRACE = false;
 
-    private static List<CancelableOperation> pendingAirshipRequests;
+    private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
+    private static boolean queuePendingAirshipRequests = true;
 
     List<AirshipComponent> components;
     ActionRegistry actionRegistry;
@@ -195,14 +197,11 @@ public class UAirship {
             }
         };
 
-        synchronized (airshipLock) {
-            if (isFlying) {
-                cancelableOperation.run();
-            } else {
-                if (pendingAirshipRequests == null) {
-                    pendingAirshipRequests = new ArrayList<>();
-                }
+        synchronized (pendingAirshipRequests) {
+            if (queuePendingAirshipRequests) {
                 pendingAirshipRequests.add(cancelableOperation);
+            } else {
+                cancelableOperation.run();
             }
         }
 
@@ -366,12 +365,12 @@ public class UAirship {
             }
 
             // Fire any pendingAirshipRequests
-            if (pendingAirshipRequests != null) {
-                List<CancelableOperation> pendingRequests = new ArrayList<>(pendingAirshipRequests);
-                for (Runnable pendingRequest : pendingRequests) {
+            synchronized (pendingAirshipRequests) {
+                queuePendingAirshipRequests = false;
+                for (Runnable pendingRequest : pendingAirshipRequests) {
                     pendingRequest.run();
                 }
-                pendingAirshipRequests = null;
+                pendingAirshipRequests.clear();
             }
 
             // Notify any blocking shared

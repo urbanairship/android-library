@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.2.2 - August 4, 2016
+==============================
+- Fixed blocking the calling thread when asynchronously requesting UAirship instance if the
+  application performs long operations in the onReadyCallback during takeOff.
+
 Version 7.2.1 - July 27, 2016
 =============================
 - Fixed an issue where the `quiet time enabled` setting wasn’t properly migrated from a key change in 7.1.0.
