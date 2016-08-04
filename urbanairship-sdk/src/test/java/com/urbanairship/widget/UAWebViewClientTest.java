@@ -3,11 +3,13 @@
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
+import android.os.AsyncTask;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -26,11 +28,14 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.Robolectric;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -68,6 +73,7 @@ public class UAWebViewClientTest extends BaseTestCase {
                 return webViewUrl;
             }
         });
+        when(webView.getContext()).thenReturn(TestApplication.getApplication());
 
         UAirship.shared().getWhitelist().addEntry("http://test-client");
 
@@ -255,8 +261,17 @@ public class UAWebViewClientTest extends BaseTestCase {
      */
     @Test
     @SuppressLint("NewApi")
-    public void testOnPageFinished() {
+    public void testOnPageFinished() throws InterruptedException {
         client.onPageFinished(webView, webViewUrl);
+
+        // Execute all async tasks on the THREAD_POOL_EXECUTOR
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR;
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+
+        // Process any async task onPostExecutes
+        Robolectric.flushForegroundThreadScheduler();
+
         verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
             @Override
             public boolean matches(Object argument) {
@@ -269,9 +284,19 @@ public class UAWebViewClientTest extends BaseTestCase {
      * Test the js interface is not injected if the url is not white listed.
      */
     @Test
-    public void testOnPageFinishedNotWhiteListed() {
+    @SuppressLint("NewApi")
+    public void testOnPageFinishedNotWhiteListed() throws InterruptedException {
         webViewUrl = "http://notwhitelisted";
         client.onPageFinished(webView, webViewUrl);
+
+        // Execute all async tasks on the THREAD_POOL_EXECUTOR
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR;
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+
+        // Process any async task onPostExecutes
+        Robolectric.flushForegroundThreadScheduler();
+
         verifyZeroInteractions(webView);
     }
 

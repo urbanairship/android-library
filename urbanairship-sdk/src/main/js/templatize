@@ -1,7 +1,0 @@
-#!/bin/bash
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-BYTES="`xxd < $DIR/NativeBridge.js -i | fmt -80000000 | sed 's/0x/(byte)0x/g'`"
-
-awk < $DIR/NativeBridge.java.template -v r="$BYTES" '{gsub(/_BYTES_/,r);print}' > $DIR/../java/com/urbanairship/js/NativeBridge.java

@@ -3,17 +3,23 @@
 package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.v4.os.AsyncTaskCompat;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -21,7 +27,6 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.js.NativeBridge;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
@@ -29,6 +34,10 @@ import com.urbanairship.util.UriUtils;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.WeakHashMap;
 
 /**
  * <p>
@@ -109,8 +119,11 @@ public class UAWebViewClient extends WebViewClient {
     private final Map<String, Credentials> authRequestCredentials = new HashMap<>();
     private ActionCompletionCallback actionCompletionCallback;
     private final ActionRunRequestFactory actionRunRequestFactory;
-    private static SimpleDateFormat dateFormatter;
 
+    private static SimpleDateFormat dateFormatter;
+    private static String nativeBridge;
+
+    private final Map<WebView, InjectJsBridgeTask> injectJsBridgeTaskMap = new WeakHashMap<>();
 
     /**
      * Default constructor.
@@ -417,7 +430,18 @@ public class UAWebViewClient extends WebViewClient {
         }
 
         Logger.info("Loading UrbanAirship Javascript interface.");
-        injectJavascriptInterface(view);
+        InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view);
+        injectJsBridgeTaskMap.put(view, task);
+        AsyncTaskCompat.executeParallel(task);
+    }
+
+    @CallSuper
+    @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        InjectJsBridgeTask task = injectJsBridgeTaskMap.remove(view);
+        if (task != null) {
+            task.cancel(true);
+        }
     }
 
     /**
@@ -460,50 +484,6 @@ public class UAWebViewClient extends WebViewClient {
         authRequestCredentials.remove(expectedAuthHost);
     }
 
-    /**
-     * Injects the Urban Airship Javascript interface into the web view.
-     *
-     * @param webView The web view.
-     */
-    @SuppressLint("NewAPI")
-    private void injectJavascriptInterface(WebView webView) {
-        RichPushMessage message = getMessage(webView);
-
-        if (dateFormatter == null) {
-            dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
-            dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
-
-        /*
-         * The native bridge will prototype _UAirship, so inject any additional
-         * functionality under _UAirship and the final UAirship object will have
-         * access to it.
-         */
-        StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
-
-        // Getters
-        sb.append(createGetter("getDeviceModel", Build.MODEL))
-          .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
-          .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
-          .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
-          .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
-          .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
-          .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
-          .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
-
-
-        // Append native bridge
-        sb.append(NativeBridge.getJavaScriptSource());
-
-        String javaScript = sb.toString();
-
-        if (Build.VERSION.SDK_INT >= 19) {
-            webView.evaluateJavascript(javaScript, null);
-        } else {
-            webView.loadUrl("javascript:" + javaScript);
-        }
-    }
-
     private String createGetter(String functionName, String value) {
         value = (value == null) ? "null" : JSONObject.quote(value);
         return String.format(Locale.US, "_UAirship.%s = function(){return %s;};", functionName, value);
@@ -540,5 +520,106 @@ public class UAWebViewClient extends WebViewClient {
         }
     }
 
+    /**
+     * Async task to inject the Javascript bridge.
+     */
+    private class InjectJsBridgeTask extends AsyncTask<Void, Void, String> {
 
+        private final WeakReference<WebView> webViewWeakReference;
+        private final Context context;
+
+        private InjectJsBridgeTask(Context context, WebView webView) {
+            this.context  = context.getApplicationContext();
+            this.webViewWeakReference = new WeakReference<>(webView);
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            WebView webView = webViewWeakReference.get();
+            if (webView == null) {
+                return null;
+            }
+
+            RichPushMessage message = getMessage(webView);
+
+            if (dateFormatter == null) {
+                dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
+                dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            }
+
+        /*
+         * The native bridge will prototype _UAirship, so inject any additional
+         * functionality under _UAirship and the final UAirship object will have
+         * access to it.
+         */
+            StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
+
+            // Getters
+            sb.append(createGetter("getDeviceModel", Build.MODEL))
+              .append(createGetter("getMessageId", (message != null) ? message.getMessageId() : null))
+              .append(createGetter("getMessageTitle", (message != null) ? message.getTitle() : null))
+              .append(createGetter("getMessageSentDate", (message != null) ? dateFormatter.format(message.getSentDate()) : null))
+              .append(createGetter("getMessageSentDateMS", (message != null) ? message.getSentDateMS() : -1))
+              .append(createGetter("getUserId", UAirship.shared().getInbox().getUser().getId()))
+              .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
+              .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
+
+            if (TextUtils.isEmpty(nativeBridge)) {
+                try {
+                    nativeBridge = readNativeBridge();
+                } catch (IOException e) {
+                    Logger.error("Failed to read native bridge.");
+                }
+            }
+
+            sb.append(nativeBridge);
+
+            return sb.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String jsBridge) {
+            WebView webView = webViewWeakReference.get();
+            if (webView == null) {
+                return;
+            }
+
+            injectJsBridgeTaskMap.remove(webView);
+
+            if (Build.VERSION.SDK_INT >= 19) {
+                webView.evaluateJavascript(jsBridge, null);
+            } else {
+                webView.loadUrl("javascript:" + jsBridge);
+            }
+        }
+
+        /**
+         * Helper method to read the native bridge from resources.
+         *
+         * @return The native bridge.
+         * @throws IOException
+         */
+        private String readNativeBridge() throws IOException {
+            InputStream input = context.getResources().openRawResource(R.raw.ua_native_bridge);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+            try {
+                byte[] buffer = new byte[1024];
+                int length;
+
+                while ((length = input.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, length);
+                }
+
+                return outputStream.toString();
+            } finally {
+                try {
+                    input.close();
+                    outputStream.close();
+                } catch (Exception e) {
+                    Logger.error("Failed to close streams", e);
+                }
+            }
+        }
+    }
 }
