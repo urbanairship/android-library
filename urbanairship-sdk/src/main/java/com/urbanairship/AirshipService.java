@@ -40,6 +40,11 @@ public class AirshipService extends Service {
      */
     protected static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 mins.
 
+    /**
+     * Time to wait for UAirship when processing messages.
+     */
+    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds
+
     public static final String EXTRA_AIRSHIP_COMPONENT = "EXTRA_AIRSHIP_COMPONENT";
     public static final String EXTRA_JOB_EXTRAS = "EXTRA_JOB_EXTRAS";
     public static final String EXTRA_DELAY = "EXTRA_DELAY";
@@ -58,6 +63,7 @@ public class AirshipService extends Service {
         public IncomingHandler(Looper looper) {
             super(looper);
         }
+
 
         @Override
         public void handleMessage(Message msg) {
@@ -118,10 +124,9 @@ public class AirshipService extends Service {
         msg.arg1 = startId;
         msg.obj = intent;
 
-
-        final UAirship airship = UAirship.waitForTakeOff();
+        final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
         if (airship == null) {
-            Logger.error("Airship unavailable, dropping intent: " + intent);
+            Logger.error("AirshipService - UAirship not ready. Dropping intent: " + intent);
             handler.sendMessage(msg);
             return;
         }

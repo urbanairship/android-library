@@ -117,17 +117,20 @@ public class UAirship {
                 throw new IllegalStateException("Take off must be called before shared()");
             }
 
-           return waitForTakeOff();
+            return waitForTakeOff(0);
         }
     }
 
     /**
      * Waits for UAirship to takeOff and be ready.
-     * @return The ready UAirship instance.
      *
+     * @param millis Time to wait for UAirship to be ready in milliseconds or {@code 0} to wait
+     * forever.
+     * @return The ready UAirship instance, or {@code null} if UAirship
+     * is not ready by the specified wait time.
      * @hide
      */
-    public static UAirship waitForTakeOff() {
+    public static UAirship waitForTakeOff(long millis) {
         synchronized (airshipLock) {
             if (isFlying) {
                 return sharedAirship;
@@ -138,7 +141,7 @@ public class UAirship {
             try {
                 while (!isFlying) {
                     try {
-                        airshipLock.wait();
+                        airshipLock.wait(millis);
                     } catch (InterruptedException ignored) {
                         interrupted = true;
                     }
@@ -672,6 +675,7 @@ public class UAirship {
 
     /**
      * The default Message Center.
+     *
      * @return The default message center.
      */
     public MessageCenter getMessageCenter() { return messageCenter; }

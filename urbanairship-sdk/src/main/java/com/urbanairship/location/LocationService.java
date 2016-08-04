@@ -95,6 +95,11 @@ public class LocationService extends Service {
     private static final int MSG_HANDLE_INTENT = 7;
 
     /**
+     * Time to wait for UAirship when processing messages.
+     */
+    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds
+
+    /**
      * Extra for location request options.
      */
     static final String EXTRA_LOCATION_REQUEST_OPTIONS = "com.urbanairship.location.EXTRA_LOCATION_REQUEST_OPTIONS";
@@ -168,12 +173,6 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, final int startId) {
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("LocationService - unable to start service, takeOff not called.");
-            stopSelf(startId);
-            return START_NOT_STICKY;
-        }
-
         Message msg = handler.obtainMessage();
         msg.arg1 = startId;
         msg.obj = intent;
@@ -528,6 +527,15 @@ public class LocationService extends Service {
         @Override
         public void handleMessage(Message msg) {
             Logger.verbose("LocationService - Received message: " + msg);
+
+            final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+            if (airship == null) {
+                Logger.error("LocationService - UAirship not ready. Dropping msg:" + msg);
+                if (msg.what == MSG_HANDLE_INTENT) {
+                    stopSelf(msg.arg1);
+                }
+                return;
+            }
 
             switch (msg.what) {
                 case MSG_UNSUBSCRIBE_UPDATES:
