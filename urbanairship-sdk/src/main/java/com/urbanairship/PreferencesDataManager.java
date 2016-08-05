@@ -32,19 +32,19 @@ class PreferencesDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqliteStatement(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
         bind(statement, 1, values.getAsString(COLUMN_NAME_KEY));
         bind(statement, 2, values.getAsString(COLUMN_NAME_VALUE));
     }
 
     @Override
-    protected SQLiteStatement getInsertStatement(String table, SQLiteDatabase db) {
+    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
         String sql = this.buildInsertStatement(table, COLUMN_NAME_KEY, COLUMN_NAME_VALUE);
         return db.compileStatement(sql);
     }
 
     @Override
-    protected void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);

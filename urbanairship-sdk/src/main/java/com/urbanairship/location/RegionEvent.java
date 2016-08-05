@@ -169,6 +169,16 @@ public class RegionEvent extends Event {
         return TYPE;
     }
 
+    /**
+     * Gets the boundary event type - will be either {@link RegionEvent#BOUNDARY_EVENT_ENTER} or
+     * {@link RegionEvent#BOUNDARY_EVENT_EXIT}.
+     *
+     * @return The boundary event type.
+     */
+    public @Boundary int getBoundaryEvent() {
+        return boundaryEvent;
+    }
+
     @Override
     protected final JsonMap getEventData() {
 

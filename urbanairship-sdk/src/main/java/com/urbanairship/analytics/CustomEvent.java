@@ -27,7 +27,7 @@ public class CustomEvent extends Event {
     /**
      * The event type.
      */
-    private static final String TYPE = "custom_event";
+    static final String TYPE = "custom_event";
 
     /**
      * The interaction ID key.
@@ -131,6 +131,60 @@ public class CustomEvent extends Event {
         this.metadata = builder.pushMetadata;
         this.templateType = builder.templateType;
         this.properties = new HashMap<>(builder.properties);
+    }
+
+    /**
+     * Gets the event name.
+     *
+     * @return The event name.
+     */
+    public String getEventName() {
+        return eventName;
+    }
+
+    /**
+     * Gets the event value.
+     *
+     * @return The event value.
+     */
+    public BigDecimal getEventValue() {
+        return eventValue;
+    }
+
+    /**
+     * Gets the transaction ID.
+     *
+     * @return The transaction ID.
+     */
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    /**
+     * Gets the interaction type.
+     *
+     * @return The interaction type.
+     */
+    public String getInteractionType() {
+        return interactionType;
+    }
+
+    /**
+     * Gets the interaction ID.
+     *
+     * @return The interaction ID.
+     */
+    public String getInteractionId() {
+        return interactionId;
+    }
+
+    /**
+     * Gets the event properties.
+     *
+     * @return The properties.
+     */
+    public Map<String, Object> getProperties() {
+        return properties;
     }
 
     @Override

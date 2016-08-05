@@ -2,6 +2,7 @@
 
 package com.urbanairship.util;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -58,8 +59,36 @@ public abstract class DataManager {
                 Logger.debug("DataManager - Downgrading database " + db + " from version " + oldVersion + " to " + newVersion);
                 DataManager.this.onDowngrade(db, oldVersion, newVersion);
             }
+
+            @Override
+            public void onConfigure(SQLiteDatabase db) {
+                super.onConfigure(db);
+                DataManager.this.onConfigure(db);
+            }
+
+            @Override
+            public void onOpen(SQLiteDatabase db) {
+                super.onOpen(db);
+                DataManager.this.onOpen(db);
+
+            }
         };
     }
+
+    /**
+     * Called when the database connection is opened.
+     *
+     * @param db The database.
+     */
+    protected void onOpen(SQLiteDatabase db) {};
+
+    /**
+     * Called when the database connection is configured.
+     *
+     * @param db The database.
+     */
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    protected  void onConfigure(SQLiteDatabase db) {};
 
     /**
      * Called when the database is created for the first time.
@@ -71,10 +100,11 @@ public abstract class DataManager {
     /**
      * Binds values to the statement. Used for bulk insert.
      *
+     * @param table The table name to operate on.
      * @param statement The statement to bind values to
      * @param values The values to bind
      */
-    protected abstract void bindValuesToSqliteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values);
+    protected abstract void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values);
 
     /**
      * Get the insert statement
@@ -100,7 +130,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("DataManager - Error opening writable database. Retrying...");
+                Logger.error("DataManager - Error opening writable database. Retrying...", e);
             }
         }
 
@@ -122,7 +152,7 @@ public abstract class DataManager {
                 // It's very bad for the app if the DB cannot be opened, so it's worth
                 // a sleep to wait for a lock to go away.
                 SystemClock.sleep(100);
-                Logger.error("DataManager - Error opening readable database. Retrying...");
+                Logger.error("DataManager - Error opening readable database. Retrying...", e);
             }
         }
 
@@ -193,6 +223,17 @@ public abstract class DataManager {
      */
     protected void bind(@NonNull SQLiteStatement statement, int index, int value) {
         statement.bindLong(index, value);
+    }
+
+    /**
+     * Helper to bind a double to a SQLiteStatement
+     *
+     * @param statement The SQLiteStatement to bind to
+     * @param index Index of the value to bind
+     * @param value The value to bind
+     */
+    protected void bind(@NonNull SQLiteStatement statement, int index, double value) {
+        statement.bindDouble(index, value);
     }
 
     /**
@@ -307,7 +348,7 @@ public abstract class DataManager {
 
         try {
             for (ContentValues value : values) {
-                if (tryExecuteStatement(statement, value)) {
+                if (tryExecuteStatement(table, statement, value)) {
                     inserted.add(value);
                 }
             }
@@ -410,6 +451,30 @@ public abstract class DataManager {
     }
 
     /**
+     * Queries the database with a raw SQL query
+     *
+     * @param query The SQL query
+     * @param selectionArgs Arguments to the WHERE clause
+     * @return A cursor with the query results, or null if anything went wrong
+     */
+    public Cursor rawQuery(@NonNull String query, String[] selectionArgs) {
+        SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            try {
+                return db.rawQuery(query, selectionArgs);
+            } catch (SQLException e) {
+                Logger.error("Query failed", e);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Closes the connection to the database
      */
     public void close() {
@@ -426,15 +491,16 @@ public abstract class DataManager {
      * Each try, it will clear the bindings of the statement, apply the values and try to execute the
      * statement.
      *
+     * @param table The table to operate on
      * @param statement Statement to execute
      * @param values ContentValues to bind to the statement
      * @return <code>true</code> if successful, otherwise <code>false</code>
      */
-    private boolean tryExecuteStatement(@NonNull SQLiteStatement statement, @NonNull ContentValues values) {
+    private boolean tryExecuteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             try {
                 statement.clearBindings();
-                bindValuesToSqliteStatement(statement, values);
+                bindValuesToSqliteStatement(table, statement, values);
                 statement.execute();
                 return true;
             } catch (Exception ex) {

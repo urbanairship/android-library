@@ -43,7 +43,7 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqliteStatement(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
         bind(statement, 1, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_ID));
         bind(statement, 2, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_URL));
         bind(statement, 3, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL));
@@ -59,7 +59,7 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected SQLiteStatement getInsertStatement(String table, SQLiteDatabase db) {
+    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
         String sql = this.buildInsertStatement(table, RichPushTable.COLUMN_NAME_MESSAGE_ID,
                 RichPushTable.COLUMN_NAME_MESSAGE_URL, RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, RichPushTable.COLUMN_NAME_MESSAGE_READ_URL,
                 RichPushTable.COLUMN_NAME_TITLE, RichPushTable.COLUMN_NAME_EXTRA, RichPushTable.COLUMN_NAME_UNREAD,
@@ -70,7 +70,7 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         switch (oldVersion) {
             case 1:
                 db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT + " TEXT;");
@@ -83,7 +83,7 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);

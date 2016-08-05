@@ -26,7 +26,9 @@ import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.location.LocationRequestOptions;
+import com.urbanairship.location.RegionEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,7 @@ public class Analytics extends AirshipComponent {
     private boolean inBackground;
 
     private final AirshipConfigOptions configOptions;
+    private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
     private String sessionId;
     private String conversionSendId;
     private String conversionMetadata;
@@ -72,6 +75,7 @@ public class Analytics extends AirshipComponent {
     private long screenStartTime;
 
     private final Object associatedIdentifiersLock = new Object();
+
     private AnalyticsJobHandler analyticsJobHandler;
 
     /**
@@ -256,6 +260,8 @@ public class Analytics extends AirshipComponent {
                              .build();
 
         jobDispatcher.dispatch(addEventJob);
+
+        applyListeners(event);
     }
 
     /**
@@ -557,6 +563,13 @@ public class Analytics extends AirshipComponent {
         }
 
         currentScreen = screen;
+
+        if (screen != null) {
+            for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
+                listener.onScreenTracked(screen);
+            }
+        }
+
         screenStartTime = System.currentTimeMillis();
     }
 
@@ -568,5 +581,47 @@ public class Analytics extends AirshipComponent {
         jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
                                   .setAirshipComponent(Analytics.class)
                                   .build());
+    }
+
+    /**
+     * Adds an {@link AnalyticsListener} for analytics events.
+     *
+     * @param analyticsListener The {@link AnalyticsListener}.
+     */
+    public void addAnalyticsListener(AnalyticsListener analyticsListener) {
+        synchronized (analyticsListeners) {
+            analyticsListeners.add(analyticsListener);
+        }
+    }
+
+    /**
+     * Removes an {@link AnalyticsListener} for analytics events.
+     *
+     * @param analyticsListener The {@link AnalyticsListener}.
+     */
+    public boolean removeAnalyticsListener(AnalyticsListener analyticsListener) {
+        synchronized (analyticsListeners) {
+            return analyticsListeners.remove(analyticsListener);
+        }
+    }
+
+    /**
+     * Applies the set {@link AnalyticsListener} instances to an event.
+     *
+     * @param event The event.
+     */
+    private void applyListeners(Event event) {
+        for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
+            switch (event.getType()) {
+                case CustomEvent.TYPE:
+                    listener.onCustomEventAdded((CustomEvent) event);
+                    break;
+                case RegionEvent.TYPE:
+                    listener.onRegionEventAdded((RegionEvent) event);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

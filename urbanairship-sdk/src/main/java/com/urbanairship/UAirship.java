@@ -18,6 +18,7 @@ import android.util.Log;
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -94,6 +95,7 @@ public class UAirship {
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
     NamedUser namedUser;
+    Automation automation;
 
     /**
      * Constructs an instance of UAirship.
@@ -554,6 +556,7 @@ public class UAirship {
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions();
         this.messageCenter = new MessageCenter();
+        this.automation = new Automation(application, airshipConfigOptions, analytics);
 
         for (AirshipComponent component : getComponents()) {
             component.init();
@@ -680,6 +683,15 @@ public class UAirship {
     public MessageCenter getMessageCenter() { return messageCenter; }
 
     /**
+     * Returns the {@link com.urbanairship.automation.Automation} instance.
+     *
+     * @return The {@link com.urbanairship.automation.Automation} instance.
+     */
+    public Automation getAutomation() {
+        return automation;
+    }
+
+    /**
      * Returns the platform type. The platform type is determined only once
      * by the first statement that applies:
      * <p/>
@@ -742,6 +754,7 @@ public class UAirship {
             components.add(analytics);
             components.add(messageCenter);
             components.add(namedUser);
+            components.add(automation);
         }
 
         return components;

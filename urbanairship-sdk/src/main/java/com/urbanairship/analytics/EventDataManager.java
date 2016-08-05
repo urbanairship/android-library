@@ -74,7 +74,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being upgraded
         Logger.debug("EventDataManager - Upgrading analytics database from version " + oldVersion + " to "
                 + newVersion + ", which will destroy all old data");
@@ -100,7 +100,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqliteStatement(SQLiteStatement statement, ContentValues values) {
+    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
         bind(statement, 1, values.getAsString(Events.COLUMN_NAME_TYPE));
         bind(statement, 2, values.getAsString(Events.COLUMN_NAME_EVENT_ID));
         bind(statement, 3, values.getAsString(Events.COLUMN_NAME_DATA));
@@ -110,7 +110,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected SQLiteStatement getInsertStatement(String table, SQLiteDatabase db) {
+    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
         String sql = this.buildInsertStatement(table, Events.COLUMN_NAME_TYPE,
                 Events.COLUMN_NAME_EVENT_ID, Events.COLUMN_NAME_DATA, Events.COLUMN_NAME_TIME,
                 Events.COLUMN_NAME_SESSION_ID, Events.COLUMN_NAME_EVENT_SIZE);
@@ -119,7 +119,7 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + Events.TABLE_NAME);
         onCreate(db);

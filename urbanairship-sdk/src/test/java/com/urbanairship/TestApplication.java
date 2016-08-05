@@ -8,6 +8,7 @@ import android.content.ContentProvider;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.Automation;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
@@ -69,6 +70,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.actionRegistry.registerDefaultActions();
         UAirship.sharedAirship.messageCenter = new MessageCenter();
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
+        UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics);
 
         ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(this), provider);
     }
