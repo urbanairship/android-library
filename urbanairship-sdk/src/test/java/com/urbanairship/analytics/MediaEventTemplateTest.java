@@ -35,6 +35,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
         CustomEvent event = MediaEventTemplate.newBrowsedTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -56,6 +57,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
                                               .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.BROWSED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
@@ -76,6 +78,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
         CustomEvent event = MediaEventTemplate.newStarredTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.STARRED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -97,6 +100,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
                                               .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.STARRED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "id", "\"starred-content-ID 1\"");
@@ -117,6 +121,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
         CustomEvent event = MediaEventTemplate.newSharedTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.SHARED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -138,6 +143,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
                                               .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.SHARED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
         EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
         EventTestUtils.validateNestedEventValue(event, "properties", "medium", "\"social\"");
@@ -160,6 +166,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
         CustomEvent event = MediaEventTemplate.newConsumedTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.CONSUMED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -181,6 +188,7 @@ public class MediaEventTemplateTest extends BaseTestCase {
                                               .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", MediaEventTemplate.CONSUMED_CONTENT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "media");
         EventTestUtils.validateEventValue(event, "event_value", 2990000.0);
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
         EventTestUtils.validateNestedEventValue(event, "properties", "category", "\"media-category\"");

@@ -10,6 +10,11 @@ import java.math.BigDecimal;
 public class RetailEventTemplate {
 
     /**
+     * The retail event template type.
+     */
+    public static final String RETAIL_EVENT_TEMPLATE = "retail";
+
+    /**
      * The browsed event name.
      */
     public static final String BROWSED_PRODUCT_EVENT = "browsed";
@@ -340,6 +345,8 @@ public class RetailEventTemplate {
         if (this.medium != null) {
             builder.addProperty(MEDIUM, this.medium);
         }
+
+        builder.setTemplateType(RETAIL_EVENT_TEMPLATE);
 
         return builder.create();
     }

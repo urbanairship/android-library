@@ -38,6 +38,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         CustomEvent event = RetailEventTemplate.newBrowsedTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.BROWSED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -59,6 +60,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.BROWSED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -79,6 +81,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         CustomEvent event = RetailEventTemplate.newAddedToCartTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.ADDED_TO_CART_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -100,6 +103,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.ADDED_TO_CART_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 1990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -120,6 +124,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         CustomEvent event = RetailEventTemplate.newStarredProductTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.STARRED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -141,6 +146,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.STARRED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");
@@ -161,6 +167,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         CustomEvent event = RetailEventTemplate.newSharedProductTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.SHARED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -182,6 +189,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.SHARED_PRODUCT_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 49990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "source", "\"facebook\"");
@@ -204,6 +212,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         CustomEvent event = RetailEventTemplate.newPurchasedTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.PURCHASED_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "false");
     }
 
@@ -225,6 +234,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.PURCHASED_EVENT);
+        EventTestUtils.validateEventValue(event, "template_type", "retail");
         EventTestUtils.validateEventValue(event, "event_value", 99990000);
         EventTestUtils.validateEventValue(event, "transaction_id", "123");
         EventTestUtils.validateNestedEventValue(event, "properties", "ltv", "true");

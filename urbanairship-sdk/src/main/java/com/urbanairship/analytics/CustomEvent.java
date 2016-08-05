@@ -75,6 +75,11 @@ public class CustomEvent extends Event {
     public static final String LAST_RECEIVED_METADATA = "last_received_metadata";
 
     /**
+     * The template type key.
+     */
+    public static final String TEMPLATE_TYPE = "template_type";
+
+    /**
      * The custom properties key.
      */
     public static final String PROPERTIES = "properties";
@@ -112,6 +117,7 @@ public class CustomEvent extends Event {
     private final String interactionId;
     private final String sendId;
     private final String metadata;
+    private final String templateType;
     private final Map<String, Object> properties;
 
 
@@ -123,6 +129,7 @@ public class CustomEvent extends Event {
         this.interactionId = UAStringUtil.isEmpty(builder.interactionId) ? null : builder.interactionId;
         this.sendId = builder.pushSendId;
         this.metadata = builder.pushMetadata;
+        this.templateType = builder.templateType;
         this.properties = new HashMap<>(builder.properties);
     }
 
@@ -142,6 +149,7 @@ public class CustomEvent extends Event {
         data.put(INTERACTION_ID, interactionId);
         data.put(INTERACTION_TYPE, interactionType);
         data.put(TRANSACTION_ID, transactionId);
+        data.put(TEMPLATE_TYPE, templateType);
 
         if (eventValue != null) {
             data.put(EVENT_VALUE, eventValue.movePointRight(6).longValue());
@@ -214,6 +222,11 @@ public class CustomEvent extends Event {
             isValid = false;
         }
 
+        if (templateType != null && templateType.length() > MAX_CHARACTER_LENGTH) {
+            Logger.error("Template type is larger than " + MAX_CHARACTER_LENGTH + " characters.");
+            isValid = false;
+        }
+
         if (properties.size() > MAX_PROPERTIES) {
             Logger.error("Number of custom properties exceeds " + MAX_PROPERTIES);
             isValid = false;
@@ -273,6 +286,7 @@ public class CustomEvent extends Event {
         private String interactionId;
         private String pushSendId;
         private String pushMetadata;
+        private String templateType;
         private Map<String, Object> properties = new HashMap<>();
 
         /**
@@ -411,6 +425,17 @@ public class CustomEvent extends Event {
         }
 
         /**
+         * Sets the template type for the event.
+         *
+         * @param templateType The event's template type.
+         * @return The custom event builder.
+         */
+        Builder setTemplateType(@Size(min = 1, max = MAX_CHARACTER_LENGTH) String templateType) {
+            this.templateType = templateType;
+            return this;
+        }
+
+        /**
          * Adds a custom property to the event.
          * <p/>
          * If the max number of properties exceeds {@link #MAX_PROPERTIES}, or if the name or value
@@ -532,6 +557,5 @@ public class CustomEvent extends Event {
             event.track();
             return event;
         }
-
     }
 }
