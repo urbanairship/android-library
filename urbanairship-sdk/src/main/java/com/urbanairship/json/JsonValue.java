@@ -473,6 +473,24 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
+     *
+     * Wraps a double as a JsonValue.
+     *
+     * @param value The value as a double.
+     * @return The JsonValue object.
+     */
+    @NonNull
+    public static JsonValue wrap(double value) {
+        Double d = value;
+        if (d.isInfinite() || d.isNaN()) {
+            return JsonValue.NULL;
+        }
+
+        return JsonValue.wrapOpt(value);
+    }
+
+
+    /**
      * Wraps a JsonSerializable object as a JsonValue.
      *
      * @param value The value as a JsonSerializable object.

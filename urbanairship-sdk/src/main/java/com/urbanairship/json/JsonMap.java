@@ -319,6 +319,17 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * Add a key and value to the JSON map.
          *
          * @param key The key as a String.
+         * @param value The value as a double.
+         * @return The JSON map builder.
+         */
+        public Builder put(@NonNull String key, double value) {
+            return put(key, JsonValue.wrap(value));
+        }
+
+        /**
+         * Add a key and value to the JSON map.
+         *
+         * @param key The key as a String.
          * @param value The value as a char.
          * @return The JSON map builder.
          */

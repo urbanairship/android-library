@@ -355,11 +355,7 @@ public class JsonValueTest extends BaseTestCase {
      */
     @Test
     public void testDoubleNAN() throws JsonException {
-        // Expect the exception
-        exception.expect(JsonException.class);
-        exception.expectMessage("Invalid Double value: " + Double.NaN);
-
-        JsonValue.wrap(Double.NaN);
+        assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NaN));
     }
 
     /**
@@ -367,11 +363,7 @@ public class JsonValueTest extends BaseTestCase {
      */
     @Test
     public void testDoubleNegativeInfinity() throws JsonException {
-        // Expect the exception
-        exception.expect(JsonException.class);
-        exception.expectMessage("Invalid Double value: " + Double.NEGATIVE_INFINITY);
-
-        JsonValue.wrap(Double.NEGATIVE_INFINITY);
+        assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NEGATIVE_INFINITY));
     }
 
     /**
@@ -379,11 +371,7 @@ public class JsonValueTest extends BaseTestCase {
      */
     @Test
     public void testDoublePositiveInfinity() throws JsonException {
-        // Expect the exception
-        exception.expect(JsonException.class);
-        exception.expectMessage("Invalid Double value: " + Double.POSITIVE_INFINITY);
-
-        JsonValue.wrap(Double.POSITIVE_INFINITY);
+        assertEquals(JsonValue.NULL, JsonValue.wrap(Double.POSITIVE_INFINITY));
     }
 
 
