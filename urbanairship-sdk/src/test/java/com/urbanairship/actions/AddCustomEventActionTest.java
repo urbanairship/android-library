@@ -48,7 +48,8 @@ public class AddCustomEventActionTest extends BaseTestCase {
                 Action.SITUATION_WEB_VIEW_INVOCATION,
                 Action.SITUATION_PUSH_RECEIVED,
                 Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
-                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_AUTOMATION
         };
 
         analytics = mock(Analytics.class);

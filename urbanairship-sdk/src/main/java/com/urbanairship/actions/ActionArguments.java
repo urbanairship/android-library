@@ -17,13 +17,22 @@ public final class ActionArguments {
     public static final String RICH_PUSH_ID_METADATA = "com.urbanairship.RICH_PUSH_ID_METADATA";
 
     /**
-     * Metadata attached to action arguments when launching actions from a push message.
+     * Metadata attached to action arguments when running actions from a push message.
      * The value is stored as a {@link com.urbanairship.push.PushMessage}.
      */
     public static final String PUSH_MESSAGE_METADATA = "com.urbanairship.PUSH_MESSAGE";
 
+    /**
+     * Metadata attached to action argument when running actions from a {@link com.urbanairship.push.notifications.NotificationActionButton}
+     * with {@link com.urbanairship.push.notifications.LocalizableRemoteInput}.
+     */
     public static final String REMOTE_INPUT_METADATA = "com.urbanairship.REMOTE_INPUT";
 
+    /**
+     * Metadata attached to action arguments when running scheduled actions from {@link com.urbanairship.automation.Automation}.
+     * The value is stored as a {@link com.urbanairship.automation.ActionSchedule}.
+     */
+    public static final String ACTION_SCHEDULE_METADATA = "com.urbanairship.ACTION_SCHEDULE";
 
     /**
      * Metadata attached to action arguments when triggering an action from by name.

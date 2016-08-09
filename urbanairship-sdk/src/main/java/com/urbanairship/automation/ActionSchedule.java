@@ -2,11 +2,26 @@
 
 package com.urbanairship.automation;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Class representing an automation action schedule - wraps {@link ActionScheduleInfo} with schedule
  * metadata.
  */
-public class ActionSchedule {
+public class ActionSchedule implements Parcelable {
+
+    public static final Creator<ActionSchedule> CREATOR = new Creator<ActionSchedule>() {
+        @Override
+        public ActionSchedule createFromParcel(Parcel in) {
+            return new ActionSchedule(in);
+        }
+
+        @Override
+        public ActionSchedule[] newArray(int size) {
+            return new ActionSchedule[size];
+        }
+    };
 
     private final String id;
     private final ActionScheduleInfo info;
@@ -23,6 +38,24 @@ public class ActionSchedule {
         this.id = id;
         this.info = info;
         this.count = count;
+    }
+
+    protected ActionSchedule(Parcel in) {
+        id = in.readString();
+        info = in.readParcelable(ActionScheduleInfo.class.getClassLoader());
+        count = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeParcelable(info, flags);
+        dest.writeInt(count);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     /**

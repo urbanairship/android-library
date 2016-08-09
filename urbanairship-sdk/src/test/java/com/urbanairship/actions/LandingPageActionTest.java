@@ -94,7 +94,8 @@ public class LandingPageActionTest extends BaseTestCase {
         @Action.Situation int[] situations = new int[] {
                 Action.SITUATION_PUSH_OPENED,
                 Action.SITUATION_MANUAL_INVOCATION,
-                Action.SITUATION_WEB_VIEW_INVOCATION
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_AUTOMATION
         };
 
         for (@Action.Situation int situation : situations) {

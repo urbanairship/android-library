@@ -11,7 +11,7 @@ import com.urbanairship.UAirship;
  * Action for opening Android Pay deep links.
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
- * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL as string
  * <p/>

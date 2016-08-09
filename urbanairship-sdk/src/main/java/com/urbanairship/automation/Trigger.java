@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
@@ -17,7 +19,7 @@ import java.lang.annotation.RetentionPolicy;
  * Trigger defines a condition to execute an {@link ActionSchedule}. Use {@link Triggers} to build
  * triggers.
  */
-public class Trigger {
+public class Trigger implements Parcelable {
 
     @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW })
     @Retention(RetentionPolicy.SOURCE)
@@ -67,6 +69,18 @@ public class Trigger {
      */
     public static final int SCREEN_VIEW = 7;
 
+    public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
+        @Override
+        public Trigger createFromParcel(Parcel in) {
+            return new Trigger(in);
+        }
+
+        @Override
+        public Trigger[] newArray(int size) {
+            return new Trigger[size];
+        }
+    };
+
     private final int type;
     private final double goal;
     private final JsonPredicate predicate;
@@ -75,6 +89,65 @@ public class Trigger {
         this.type = type;
         this.goal = goal;
         this.predicate = predicate;
+    }
+
+    public Trigger(Parcel in) {
+        double goal;
+        int type;
+        JsonPredicate predicate = null;
+
+        switch (in.readInt()) {
+            case LIFE_CYCLE_BACKGROUND:
+                type = LIFE_CYCLE_BACKGROUND;
+                break;
+            case LIFE_CYCLE_FOREGROUND:
+                type = LIFE_CYCLE_FOREGROUND;
+                break;
+            case REGION_ENTER:
+                type = REGION_ENTER;
+                break;
+            case REGION_EXIT:
+                type = REGION_EXIT;
+                break;
+            case CUSTOM_EVENT_COUNT:
+                type = CUSTOM_EVENT_COUNT;
+                break;
+            case CUSTOM_EVENT_VALUE:
+                type = CUSTOM_EVENT_VALUE;
+                break;
+            case SCREEN_VIEW:
+                type = SCREEN_VIEW;
+                break;
+            default:
+                throw new IllegalStateException("Invalid trigger type from parcel.");
+        }
+
+        goal = in.readDouble();
+
+        JsonValue predicateJson = in.readParcelable(JsonValue.class.getClassLoader());
+        if (predicateJson != null) {
+            try {
+                predicate = JsonPredicate.parse(predicateJson);
+            } catch (JsonException e) {
+                throw new IllegalStateException("Invalid trigger predicate from parcel.", e);
+            }
+        }
+
+        this.type = type;
+        this.goal = goal;
+        this.predicate = predicate;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(type);
+        dest.writeDouble(goal);
+        dest.writeParcelable(predicate == null ? null : predicate.toJsonValue(), flags);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     /**

@@ -29,7 +29,7 @@ import java.net.URLEncoder;
  * if the action is triggered with a payload that sets "cache_on_receive" to true.
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_PUSH_RECEIVED, SITUATION_WEB_VIEW_INVOCATION,
- * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL defined as either a String or a Map containing the key
  * "url" that defines the URL. The map argument value can also define a "cache_on_receive" flag
@@ -144,7 +144,9 @@ public class LandingPageAction extends Action {
             case SITUATION_WEB_VIEW_INVOCATION:
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_AUTOMATION:
                 return parseUri(arguments) != null;
+            case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             default:
                 return false;
         }

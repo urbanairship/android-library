@@ -205,8 +205,19 @@ public final class ActionRegistry {
         addCustomEventEntry.setPredicate(new Predicate() {
             @Override
             public boolean apply(ActionArguments arguments) {
-                return Action.SITUATION_MANUAL_INVOCATION == arguments.getSituation() ||
-                        Action.SITUATION_WEB_VIEW_INVOCATION == arguments.getSituation();
+                switch (arguments.getSituation()) {
+                    case Action.SITUATION_AUTOMATION:
+                    case Action.SITUATION_MANUAL_INVOCATION:
+                    case Action.SITUATION_WEB_VIEW_INVOCATION:
+                        return true;
+
+                    case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
+                    case Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+                    case Action.SITUATION_PUSH_OPENED:
+                    case Action.SITUATION_PUSH_RECEIVED:
+                    default:
+                        return false;
+                }
             }
         });
 

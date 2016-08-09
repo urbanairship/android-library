@@ -14,7 +14,7 @@ import com.urbanairship.json.JsonValue;
  * Action to schedule {@link ActionScheduleInfo}.
  * <p/>
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION,
- * and SITUATION_PUSH_RECEIVED.
+ * SITUATION_AUTOMATION, and SITUATION_PUSH_RECEIVED.
  * <p/>
  * Accepted argument value - JsonValue defined by {@link ActionScheduleInfo#parseJson(JsonValue)}.
  * <p/>
@@ -42,6 +42,7 @@ public class ScheduleAction extends Action {
             case Action.SITUATION_MANUAL_INVOCATION:
             case Action.SITUATION_WEB_VIEW_INVOCATION:
             case Action.SITUATION_PUSH_RECEIVED:
+            case Action.SITUATION_AUTOMATION:
                 return arguments.getValue().toJsonValue().isJsonMap();
 
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:

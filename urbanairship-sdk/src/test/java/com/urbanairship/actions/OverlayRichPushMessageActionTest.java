@@ -39,7 +39,8 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
                 Action.SITUATION_PUSH_OPENED,
                 Action.SITUATION_MANUAL_INVOCATION,
                 Action.SITUATION_WEB_VIEW_INVOCATION,
-                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_AUTOMATION
         };
 
         // Rejected situations (All - accepted)

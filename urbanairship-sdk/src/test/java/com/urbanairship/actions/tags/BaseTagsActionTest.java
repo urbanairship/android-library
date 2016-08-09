@@ -29,7 +29,7 @@ public class BaseTagsActionTest extends BaseTestCase {
         action = new BaseTagsAction() {
             @Override
             public ActionResult perform(ActionArguments arguments) {
-                return null;
+                return ActionResult.newEmptyResult();
             }
         };
 
@@ -37,7 +37,10 @@ public class BaseTagsActionTest extends BaseTestCase {
                 Action.SITUATION_PUSH_OPENED,
                 Action.SITUATION_MANUAL_INVOCATION,
                 Action.SITUATION_WEB_VIEW_INVOCATION,
-                Action.SITUATION_PUSH_RECEIVED
+                Action.SITUATION_PUSH_RECEIVED,
+                Action.SITUATION_AUTOMATION,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
         };
     }
 

@@ -386,8 +386,11 @@ class AutomationDataManager extends DataManager {
         performSubSetOperations(ids, MAX_ARG_COUNT, new SetOperation<String>() {
             @Override
             public boolean perform(List<String> subset) {
-                Cursor c = query(ActionSchedulesTable.TABLE_NAME, null, ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " IN ( " + UAStringUtil.repeat("?", subset.size(), ", ") + " )", subset.toArray(new String[subset.size()]), null);
+
+                String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " IN ( " + UAStringUtil.repeat("?", subset.size(), ", ") + ")";
+                Cursor c = rawQuery(query, subset.toArray(new String[subset.size()]));
                 schedules.addAll(generateSchedules(c));
+
                 return true;
             }
         });

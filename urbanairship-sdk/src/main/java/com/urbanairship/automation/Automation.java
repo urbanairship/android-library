@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.LocalBroadcastManager;
@@ -13,6 +14,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
@@ -26,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -285,8 +289,15 @@ public class Automation extends AirshipComponent {
                             continue;
                         }
 
-                        for (ActionRunRequest actionRunRequest : schedule.getInfo().getActionRunRequests()) {
-                            actionRunRequest.run();
+                        Bundle metadata = new Bundle();
+                        metadata.putParcelable(ActionArguments.ACTION_SCHEDULE_METADATA, schedule);
+
+                        for (Map.Entry<String, JsonValue> entry : schedule.getInfo().getActions().entrySet()) {
+                            ActionRunRequest.createRequest(entry.getKey())
+                                            .setValue(entry.getValue())
+                                            .setSituation(Action.SITUATION_AUTOMATION)
+                                            .setMetadata(metadata)
+                                            .run();
                         }
 
                         if (schedule.getCount() + 1 >= schedule.getInfo().getLimit()) {

@@ -39,7 +39,8 @@ public class ToastActionTest extends BaseTestCase {
                 Action.SITUATION_MANUAL_INVOCATION,
                 Action.SITUATION_WEB_VIEW_INVOCATION,
                 Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_AUTOMATION
         };
 
         // Rejected situations (All - accepted)

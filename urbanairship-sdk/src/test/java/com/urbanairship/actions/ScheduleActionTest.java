@@ -48,7 +48,8 @@ public class ScheduleActionTest extends BaseTestCase {
         this.acceptedSituations = new int[] {
                 Action.SITUATION_PUSH_RECEIVED,
                 Action.SITUATION_MANUAL_INVOCATION,
-                Action.SITUATION_WEB_VIEW_INVOCATION
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_AUTOMATION
         };
 
         // Rejected situations
