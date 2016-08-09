@@ -277,7 +277,7 @@ public class ActionScheduleInfo implements Parcelable {
          * Builds the ActionScheduleInfo instance.
          *
          * @return The new ActionScheduleInfo instance.
-         * @throws IllegalArgumentException if either no actions are set,
+         * @throws IllegalArgumentException if either no actions are set, no triggers are added,
          * or the start time is set after the end time.
          */
         public ActionScheduleInfo build() {
@@ -287,6 +287,10 @@ public class ActionScheduleInfo implements Parcelable {
 
             if (start > -1 && end > -1 && end < start) {
                 throw new IllegalArgumentException("End must be after start.");
+            }
+
+            if (triggers.isEmpty()) {
+                throw new IllegalArgumentException("Must contain at least 1 trigger.");
             }
 
             return new ActionScheduleInfo(this);
