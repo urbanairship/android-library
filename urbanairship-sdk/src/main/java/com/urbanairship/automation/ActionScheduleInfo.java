@@ -5,8 +5,11 @@ package com.urbanairship.automation;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.DateUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -113,6 +116,50 @@ public class ActionScheduleInfo {
     }
 
     /**
+     * Parses an ActionScheduleInfo from a JsonValue.
+     * </p>
+     * The expected JsonValue is a map containing:
+     * <pre>
+     * - "group": Optional. Group identifier. Useful to cancel schedules for a specific campaign.
+     * - "start": Optional. Start time as an ISO 8601 timestamp. Time before the schedule starts listening for events.
+     * - "end": Optional. End time as an ISO 8601 timestamp. After the schedule is past the end time it will automatically be canceled.
+     * - "triggers": Required. An array of triggers. Trigger payload as defined by {@link Trigger#predicate}.
+     * - "limit": Optional, defaults to 1. Number of times to trigger the actions payload before cancelling the schedule.
+     * - "actions": Required. Actions payload to run when one or more of the triggers meets its goal.
+     *</pre>
+     *
+     * @param value The schedule.
+     * @return The parsed ActionScheduleInfo.
+     * @throws JsonException If the JsonValue does not produce a valid ActionScheduleInfo.
+     */
+    public static ActionScheduleInfo parseJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
+
+        ActionScheduleInfo.Builder builder = newBuilder()
+                .addAllActions(jsonMap.opt("actions").optMap())
+                .setLimit(jsonMap.opt("limit").getInt(1))
+                .setGroup(jsonMap.opt("group").getString(null));
+
+        if (jsonMap.containsKey("end")) {
+            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt("end").getString(), -1));
+        }
+
+        if (jsonMap.containsKey("start")) {
+            builder.setStart(DateUtils.parseIso8601(jsonMap.opt("start").getString(), -1));
+        }
+
+        for (JsonValue triggerJson : jsonMap.opt("triggers").optList()) {
+            builder.addTrigger(Trigger.parseJson(triggerJson));
+        }
+
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Invalid schedule info", e);
+        }
+    }
+
+    /**
      * Builder class.
      */
     public static class Builder {
@@ -205,16 +252,16 @@ public class ActionScheduleInfo {
          * Builds the ActionScheduleInfo instance.
          *
          * @return The new ActionScheduleInfo instance.
-         * @throws IllegalStateException if either no actions are set
+         * @throws IllegalArgumentException if either no actions are set,
          * or the start time is set after the end time.
          */
         public ActionScheduleInfo build() {
             if (actions.isEmpty()) {
-                throw new IllegalStateException("Actions required.");
+                throw new IllegalArgumentException("Actions required.");
             }
 
             if (start > -1 && end > -1 && end < start) {
-                throw new IllegalStateException("End must be after start.");
+                throw new IllegalArgumentException("End must be after start.");
             }
 
             return new ActionScheduleInfo(this);

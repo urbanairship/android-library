@@ -131,4 +131,8 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void setInbox(RichPushInbox inbox) {
         UAirship.shared().inbox = inbox;
     }
+
+    public void setAutomation(Automation automation) {
+        UAirship.shared().automation = automation;
+    }
 }

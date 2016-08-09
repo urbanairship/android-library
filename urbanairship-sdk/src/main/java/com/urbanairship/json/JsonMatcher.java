@@ -61,12 +61,18 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
      * Parses a JsonValue object into a JsonMatcher.
      *
      * @param jsonValue The predicate as a JsonValue.
-     * @return The matcher as a JsonMatcher.
+     * @return The parsed JsonMatcher.
+     * @throws JsonException If the JSON is invalid.
      */
-    public static JsonMatcher parse(JsonValue jsonValue) {
-        JsonMap map = jsonValue == null ? JsonMap.EMPTY_MAP : jsonValue.optMap();
-        if (map == null || map.isEmpty()) {
-            return null;
+    public static JsonMatcher parse(JsonValue jsonValue) throws JsonException {
+        if (jsonValue == null || !jsonValue.isJsonMap() || jsonValue.optMap().isEmpty()) {
+            throw new JsonException("Unable to parse empty JsonValue: " + jsonValue);
+        }
+
+        JsonMap map = jsonValue.optMap();
+
+        if (!map.containsKey(VALUE_KEY)) {
+            throw new JsonException("JsonMatcher must contain a value matcher.");
         }
 
         JsonMatcher.Builder builder = JsonMatcher.newBuilder()

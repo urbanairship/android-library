@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 public class JsonPredicateTest extends BaseTestCase {
@@ -341,7 +342,7 @@ public class JsonPredicateTest extends BaseTestCase {
     }
 
     @Test
-    public void testParse() {
+    public void testParse() throws JsonException {
         JsonPredicate andOr = JsonPredicate.newBuilder()
                                            .setPredicateType(JsonPredicate.AND_PREDICATE_TYPE)
                                            .addMatcher(JsonMatcher.newBuilder()
@@ -386,4 +387,33 @@ public class JsonPredicateTest extends BaseTestCase {
         assertEquals(predicate, JsonPredicate.parse(predicate.toJsonValue()));
     }
 
+    /**
+     * Test parsing a JsonMatcher directly produces a JsonPredicate.
+     */
+    @Test
+    public void testParseJsonMatcher() throws JsonException {
+        JsonMatcher matcher = JsonMatcher.newBuilder()
+                .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("mittens")))
+                .build();
+
+        JsonPredicate predicate = JsonPredicate.parse(matcher.toJsonValue());
+        assertNotNull(predicate);
+        assertTrue(predicate.apply(JsonValue.wrap("mittens")));
+    }
+
+    /**
+     * Test parsing an empty JsonMap throws a JsonException.
+     */
+    @Test(expected = JsonException.class)
+    public void testParseEmptyMap() throws JsonException {
+        JsonPredicate.parse(JsonMap.EMPTY_MAP.toJsonValue());
+    }
+
+    /**
+     * Test parsing an invalid JsonValue throws a JsonException.
+     */
+    @Test(expected = JsonException.class)
+    public void testParseInvalidJson() throws JsonException {
+        JsonPredicate.parse(JsonValue.wrap("not valid"));
+    }
 }

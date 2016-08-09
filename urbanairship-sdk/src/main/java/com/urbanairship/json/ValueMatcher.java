@@ -92,9 +92,6 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      */
     public static ValueMatcher parse(JsonValue jsonValue) {
         JsonMap map = jsonValue == null ? JsonMap.EMPTY_MAP : jsonValue.optMap();
-        if (map == null || map.isEmpty()) {
-            return null;
-        }
 
         JsonValue equals = map.get(EQUALS_VALUE_KEY);
         Double min = map.containsKey(MIN_VALUE_KEY) ? map.get(MIN_VALUE_KEY).getDouble(0) : null;

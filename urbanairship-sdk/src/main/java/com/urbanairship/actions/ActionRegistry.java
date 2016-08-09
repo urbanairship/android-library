@@ -224,6 +224,14 @@ public final class ActionRegistry {
 
         registerAction(new ToastAction(),
                 ToastAction.DEFAULT_REGISTRY_NAME);
+
+        registerAction(new CancelSchedulesAction(),
+                CancelSchedulesAction.DEFAULT_REGISTRY_NAME,
+                CancelSchedulesAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+        registerAction(new ScheduleAction(),
+                ScheduleAction.DEFAULT_REGISTRY_NAME,
+                ScheduleAction.DEFAULT_REGISTRY_SHORT_NAME);
     }
 
     /**

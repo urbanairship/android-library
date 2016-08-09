@@ -2,6 +2,7 @@
 
 package com.urbanairship.json;
 
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.Predicate;
@@ -13,16 +14,16 @@ import java.util.List;
 
 /**
  * Class abstracting a JSON predicate. The predicate is contained to the following schema:
- *
+ * <p/>
  * <predicate>       := <json_matcher> | <not> | <and> | <or>
  * <not>             := { "not": { <predicate> } }
  * <and>             := { "and": [<predicate>, <predicate>, …] }
  * <or>              := { "or": [<predicate>, <predicate>, …] }
- *
+ * <p/>
  * <json_matcher>    := { <selector>, "value": { <value_matcher> }} | { "value": {<value_matcher>}}
  * <selector>        := <scope>, "key": string | "key": string | <scope>
  * <scope>           := "scope": string | "scope": [string, string, …]
-
+ * <p/>
  * <value_matcher>   := <numeric_matcher> | <string_matcher> | <presence_matcher>
  * <numeric_matcher> := "equals": number | "at_least": number | "at_most": number | "at_least": number, "at_most": number
  * <string_matcher>  := "equals": string
@@ -36,7 +37,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
 
 
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef({ OR_PREDICATE_TYPE, AND_PREDICATE_TYPE, NOT_PREDICATE_TYPE})
+    @StringDef({ OR_PREDICATE_TYPE, AND_PREDICATE_TYPE, NOT_PREDICATE_TYPE })
     public @interface PredicateType {}
 
     private final List<Predicate<JsonSerializable>> items;
@@ -67,55 +68,63 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
      * Parses a JsonValue object into a JsonPredicate.
      *
      * @param jsonValue The predicate as a JsonValue.
-     * @return The predicate as a JsonPredicate.
+     * @return The parsed JsonPredicate.
+     * @throws JsonException If the jsonValue defines invalid JsonPredicate.
      */
-    public static JsonPredicate parse(JsonValue jsonValue) {
-        JsonMap map = jsonValue == null ? JsonMap.EMPTY_MAP : jsonValue.optMap();
-        if (map.isEmpty()) {
-            return null;
+    public static JsonPredicate parse(JsonValue jsonValue) throws JsonException {
+        if (jsonValue == null || !jsonValue.isJsonMap() || jsonValue.optMap().isEmpty()) {
+            throw new JsonException("Unable to parse empty JsonValue: " + jsonValue);
         }
 
-        String type = map.iterator().next().getKey();
-        if (type == null) {
-            return null;
-        }
+        JsonMap map = jsonValue.optMap();
 
         JsonPredicate.Builder builder = JsonPredicate.newBuilder();
 
-        switch (type) {
-            case AND_PREDICATE_TYPE:
-                builder.setPredicateType(AND_PREDICATE_TYPE);
-                break;
+        String type = getPredicateType(map);
+        if (type != null) {
 
-            case OR_PREDICATE_TYPE:
-                builder.setPredicateType(OR_PREDICATE_TYPE);
-                break;
+            builder.setPredicateType(type);
+            for (JsonValue child : map.opt(type).optList()) {
+                if (!child.isJsonMap()) {
+                    continue;
+                }
 
-            case NOT_PREDICATE_TYPE:
-                builder.setPredicateType(NOT_PREDICATE_TYPE);
-                break;
-            default:
-                return null;
+                // If the child contains a predicate type then its predicate
+                if (getPredicateType(child.optMap()) != null) {
+                    builder.addPredicate(parse(child));
+                    continue;
+                }
+
+                // Otherwise its a matcher
+                builder.addMatcher(JsonMatcher.parse(child));
+            }
+        } else {
+            builder.addMatcher(JsonMatcher.parse(jsonValue));
         }
 
-        for (JsonValue child : map.opt(type).optList()) {
-            if (!child.isJsonMap()) {
-                continue;
-            }
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Unable to parse JsonPredicate.", e);
+        }
+    }
 
-            JsonPredicate predicate = parse(child);
-            if (predicate != null) {
-                builder.addPredicate(predicate);
-                continue;
-            }
-
-            JsonMatcher matcher = JsonMatcher.parse(child);
-            if (matcher != null) {
-                builder.addMatcher(matcher);
-            }
+    @PredicateType
+    @Nullable
+    private static String getPredicateType(JsonMap jsonMap) {
+        if (jsonMap.containsKey(AND_PREDICATE_TYPE)) {
+            return AND_PREDICATE_TYPE;
         }
 
-        return builder.build();
+        if (jsonMap.containsKey(OR_PREDICATE_TYPE)) {
+            return OR_PREDICATE_TYPE;
+        }
+
+        if (jsonMap.containsKey(NOT_PREDICATE_TYPE)) {
+            return NOT_PREDICATE_TYPE;
+        }
+
+        return null;
     }
 
     @Override
@@ -196,11 +205,15 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
          *
          * @return The JsonPredicate instance.
          * @throws IllegalArgumentException if a NOT predicate has more than one matcher or predicate
-         * defined.
+         * defined, or if the predicate does not contain at least 1 child predicate or matcher.
          */
         public JsonPredicate build() {
             if (type.equals(NOT_PREDICATE_TYPE) && items.size() > 1) {
-                throw new IllegalStateException("`NOT` predicate type only supports a single matcher or predicate.");
+                throw new IllegalArgumentException("`NOT` predicate type only supports a single matcher or predicate.");
+            }
+
+            if (items.isEmpty()) {
+                throw new IllegalArgumentException("Predicate must contain at least 1 matcher or child predicate.");
             }
 
             return new JsonPredicate(this);

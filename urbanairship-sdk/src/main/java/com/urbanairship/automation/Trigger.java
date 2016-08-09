@@ -5,7 +5,10 @@ package com.urbanairship.automation;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -105,4 +108,65 @@ public class Trigger {
         return predicate;
     }
 
+    /**
+     * Parses a Trigger from a JsonValue.
+     * <p/>
+     * The expected JsonValue is a map containing:
+     * <pre>
+     * - "goal": Required. The trigger's goal. Either the count of event occurrences or the aggregate value of custom event values ("custom_event_value").
+     * - "predicate": Optional. Json predicate as defined by {@link JsonPredicate} scheme.
+     * - "type": Required. Either "custom_event_value", "custom_event_count", "foreground", "background",
+     *           "region_enter", "region_exit", or "screen".
+     * </pre>
+     *
+     * @param value The trigger JSON.
+     * @return The parsed Trigger.
+     * @throws JsonException If the JsonValue does not produce a valid Trigger.
+     */
+    public static Trigger parseJson(JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
+
+        @TriggerType int type;
+        JsonPredicate predicate = jsonMap.containsKey("predicate") ? JsonPredicate.parse(jsonMap.opt("predicate")) : null;
+        double goal = jsonMap.opt("goal").getDouble(-1);
+        if (goal < 0) {
+            throw new JsonException("Trigger goal must be defined and greater than 0.");
+        }
+
+        String typeString = jsonMap.opt("type").getString("").toLowerCase();
+        switch (typeString) {
+            case "custom_event_count":
+                type = CUSTOM_EVENT_COUNT;
+                break;
+
+            case "custom_event_value":
+                type = CUSTOM_EVENT_VALUE;
+                break;
+
+            case "foreground":
+                type = LIFE_CYCLE_FOREGROUND;
+                break;
+
+            case "background":
+                type = LIFE_CYCLE_BACKGROUND;
+                break;
+
+            case "screen":
+                type = SCREEN_VIEW;
+                break;
+
+            case "region_enter":
+                type = REGION_ENTER;
+                break;
+
+            case "region_exit":
+                type = REGION_EXIT;
+                break;
+
+            default:
+                throw new JsonException("Invalid trigger type: " + typeString);
+        }
+
+        return new Trigger(type, goal, predicate);
+    }
 }

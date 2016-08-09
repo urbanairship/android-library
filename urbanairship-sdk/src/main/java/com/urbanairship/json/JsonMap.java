@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSerializable {
 
-    static final JsonMap EMPTY_MAP = new JsonMap(null);
+    public static final JsonMap EMPTY_MAP = new JsonMap(null);
 
     private final Map<String, JsonValue> map;
 
@@ -162,6 +162,11 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
         if (object instanceof JsonMap) {
             return map.equals(((JsonMap) object).map);
         }
+
+        if (object instanceof JsonValue) {
+            return map.equals(((JsonValue) object).optMap().map);
+        }
+
         return false;
     }
 

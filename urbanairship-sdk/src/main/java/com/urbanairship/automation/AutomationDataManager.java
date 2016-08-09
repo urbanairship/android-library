@@ -599,7 +599,9 @@ class AutomationDataManager extends DataManager {
             int type = cursor.getInt(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_TYPE));
             double goal = cursor.getDouble(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_GOAL));
             double count = cursor.getDouble(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_PROGRESS));
-            JsonPredicate predicate = JsonPredicate.parse(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_PREDICATE))));
+
+            JsonValue predicateJson = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_PREDICATE)));
+            JsonPredicate predicate = predicateJson.optMap().isEmpty() ? null : JsonPredicate.parse(predicateJson);
             String id = cursor.getString(cursor.getColumnIndex(TriggersTable._ID));
             String scheduleId = cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_SCHEDULE_ID));
             long start = cursor.getLong(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_START));
