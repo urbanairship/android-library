@@ -56,4 +56,11 @@ public class ActionScheduleInfoTest extends BaseTestCase {
     public void testParseInvalidJson() throws JsonException {
         ActionScheduleInfo.parseJson(JsonValue.NULL);
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyTriggers() throws JsonException {
+        new ActionScheduleInfo.Builder()
+                .addAction("cool", JsonValue.wrap("story"))
+                .build();
+    }
 }

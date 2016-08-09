@@ -2,9 +2,10 @@
 
 package com.urbanairship.automation;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -19,10 +20,22 @@ import java.util.Map;
 /**
  * Class encapsulating the implementor-set information for an action schedule.
  */
-public class ActionScheduleInfo {
+public class ActionScheduleInfo implements Parcelable {
+
+    public static final Creator<ActionScheduleInfo> CREATOR = new Creator<ActionScheduleInfo>() {
+        @Override
+        public ActionScheduleInfo createFromParcel(Parcel in) {
+            return new ActionScheduleInfo(in);
+        }
+
+        @Override
+        public ActionScheduleInfo[] newArray(int size) {
+            return new ActionScheduleInfo[size];
+        }
+    };
 
     private final List<Trigger> triggers;
-    private final Map<String, JsonSerializable> actions;
+    private final Map<String, JsonValue> actions;
     private final int limit;
     private final String group;
     private final long start;
@@ -35,6 +48,33 @@ public class ActionScheduleInfo {
         this.group = builder.group;
         this.start = builder.start;
         this.end = builder.end;
+    }
+
+    protected ActionScheduleInfo(Parcel in) {
+        this.triggers = in.createTypedArrayList(Trigger.CREATOR);
+        this.limit = in.readInt();
+        this.group = in.readString();
+        this.start = in.readLong();
+        this.end = in.readLong();
+
+        this.actions = JsonValue.wrapOpt(in.readParcelable(JsonValue.class.getClassLoader()))
+                                .optMap()
+                                .getMap();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(triggers);
+        dest.writeInt(limit);
+        dest.writeString(group);
+        dest.writeLong(start);
+        dest.writeLong(end);
+        dest.writeParcelable(JsonValue.wrapOpt(actions), flags);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     /**
@@ -60,23 +100,8 @@ public class ActionScheduleInfo {
      *
      * @return A map of action names to action values.
      */
-    public Map<String, JsonSerializable> getActions() {
+    public Map<String, JsonValue> getActions() {
         return actions;
-    }
-
-    /**
-     * Gets the schedule actions as a list of {@link ActionRunRequest} objects.
-     *
-     * @return A list of {@link ActionRunRequest} objects.
-     */
-    public List<ActionRunRequest> getActionRunRequests() {
-        List<ActionRunRequest> list = new ArrayList<>();
-        for (Map.Entry<String, JsonSerializable> entry : actions.entrySet()) {
-            ActionRunRequest actionRunRequest = ActionRunRequest.createRequest(entry.getKey()).setValue(entry.getValue());
-            list.add(actionRunRequest);
-        }
-
-        return list;
     }
 
     /**
@@ -164,7 +189,7 @@ public class ActionScheduleInfo {
      */
     public static class Builder {
         private List<Trigger> triggers = new ArrayList<>();
-        private Map<String, JsonSerializable> actions = new HashMap<>();
+        private Map<String, JsonValue> actions = new HashMap<>();
         private String group;
         private long start = -1;
         private long end = -1;
@@ -189,7 +214,7 @@ public class ActionScheduleInfo {
          * @return The Builder instance.
          */
         public Builder addAction(String actionName, JsonSerializable actionValue) {
-            actions.put(actionName, actionValue);
+            actions.put(actionName, actionValue.toJsonValue());
             return this;
         }
 
@@ -252,7 +277,7 @@ public class ActionScheduleInfo {
          * Builds the ActionScheduleInfo instance.
          *
          * @return The new ActionScheduleInfo instance.
-         * @throws IllegalArgumentException if either no actions are set,
+         * @throws IllegalArgumentException if either no actions are set, no triggers are added,
          * or the start time is set after the end time.
          */
         public ActionScheduleInfo build() {
@@ -262,6 +287,10 @@ public class ActionScheduleInfo {
 
             if (start > -1 && end > -1 && end < start) {
                 throw new IllegalArgumentException("End must be after start.");
+            }
+
+            if (triggers.isEmpty()) {
+                throw new IllegalArgumentException("Must contain at least 1 trigger.");
             }
 
             return new ActionScheduleInfo(this);

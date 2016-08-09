@@ -14,7 +14,7 @@ import java.util.List;
  * Action to cancel automation schedules.
  * <p/>
  * Accepted situations: SITUATION_MANUAL_INVOCATION, SITUATION_WEB_VIEW_INVOCATION,
- * and SITUATION_PUSH_RECEIVED.
+ * SITUATION_AUTOMATION, and SITUATION_PUSH_RECEIVED.
  * <p/>
  * Accepted argument value - Either {@link #ALL} or a map with:
  * <ul>
@@ -61,6 +61,7 @@ public class CancelSchedulesAction extends Action {
             case Action.SITUATION_MANUAL_INVOCATION:
             case Action.SITUATION_WEB_VIEW_INVOCATION:
             case Action.SITUATION_PUSH_RECEIVED:
+            case Action.SITUATION_AUTOMATION:
                 if (arguments.getValue().toJsonValue().isString()) {
                     return ALL.equalsIgnoreCase(arguments.getValue().getString());
                 }

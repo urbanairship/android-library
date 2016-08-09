@@ -23,7 +23,7 @@ import com.urbanairship.richpush.RichPushMessage;
  * in the form of {@code message:<MESSAGE_ID>}.
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
- * SITUATION_MANUAL_INVOCATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument values: The specified message ID, or {@code "auto"}
  * to look for the message ID in the {@link ActionArguments#getMetadata()}.
@@ -53,6 +53,7 @@ public class OverlayRichPushMessageAction extends Action {
             case SITUATION_WEB_VIEW_INVOCATION:
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
+            case SITUATION_AUTOMATION:
                 if (arguments.getValue().getString() == null) {
                     return false;
                 }

@@ -39,6 +39,7 @@ public class ShareActionTest extends BaseTestCase {
         assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "share text")));
         assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "share text")));
         assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON, "share text")));
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_AUTOMATION, "share text")));
     }
 
     /**

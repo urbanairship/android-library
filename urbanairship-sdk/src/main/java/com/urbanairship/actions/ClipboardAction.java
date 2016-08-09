@@ -17,7 +17,7 @@ import com.urbanairship.UAirship;
  * <p/>
  * Accepted situations: SITUATION_PUSH_OPENED, SITUATION_WEB_VIEW_INVOCATION,
  * SITUATION_MANUAL_INVOCATION, SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
- * and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
+ * SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value - A string with the clipboard text or a map with:
  * <ul>
@@ -59,6 +59,7 @@ public class ClipboardAction extends Action {
             case Action.SITUATION_PUSH_OPENED:
             case Action.SITUATION_MANUAL_INVOCATION:
             case Action.SITUATION_WEB_VIEW_INVOCATION:
+            case Action.SITUATION_AUTOMATION:
 
                 if (arguments.getValue().getMap() != null) {
                     return arguments.getValue().getMap().get("text").isString();

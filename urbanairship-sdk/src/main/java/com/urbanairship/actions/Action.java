@@ -55,7 +55,8 @@ public abstract class Action {
             SITUATION_PUSH_OPENED,
             SITUATION_WEB_VIEW_INVOCATION,
             SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+            SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+            SITUATION_AUTOMATION
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Situation {}
@@ -89,6 +90,11 @@ public abstract class Action {
      * Situation where an action is triggered from a background notification action button.
      */
     public final static int SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON = 5;
+
+    /**
+     * Situation where an action is triggered from {@link com.urbanairship.automation.Automation}.
+     */
+    public final static int SITUATION_AUTOMATION = 6;
 
     /**
      * Performs the action, with pre/post execution calls,

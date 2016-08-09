@@ -54,8 +54,6 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
         validateEntry(registry.getEntry("^csa"), "^csa", "cancel_scheduled_actions");
         validateEntry(registry.getEntry("^sa"), "^sa", "schedule_actions");
-
-
     }
 
     /**
