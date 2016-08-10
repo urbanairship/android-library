@@ -14,8 +14,8 @@ class TriggerEntry extends Trigger {
     private final double progress;
     private final long start;
 
-    TriggerEntry(@TriggerType  int type, double limit, JsonPredicate predicate, String id, String scheduleId, double progress, long start) {
-        super(type, limit, predicate);
+    TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, double progress, long start) {
+        super(type, goal, predicate);
         this.id = id;
         this.scheduleId = scheduleId;
         this.progress = progress;

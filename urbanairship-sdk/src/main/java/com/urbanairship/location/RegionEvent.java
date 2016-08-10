@@ -179,6 +179,15 @@ public class RegionEvent extends Event {
         return boundaryEvent;
     }
 
+    /**
+     * Gets the boundary event region ID.
+     *
+     * @return The region ID.
+     */
+    public String getRegionId() {
+        return regionId;
+    }
+
     @Override
     protected final JsonMap getEventData() {
 

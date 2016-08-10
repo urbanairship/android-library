@@ -59,7 +59,7 @@ public class ScheduleAction extends Action {
         try {
             ActionScheduleInfo info = ActionScheduleInfo.parseJson(arguments.getValue().toJsonValue());
             ActionSchedule schedule = UAirship.shared().getAutomation().schedule(info);
-            return ActionResult.newResult(ActionValue.wrap(schedule.getId()));
+            return schedule == null ? ActionResult.newEmptyResult() : ActionResult.newResult(ActionValue.wrap(schedule.getId()));
         } catch (JsonException e) {
             return ActionResult.newErrorResult(e);
         }

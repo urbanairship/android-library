@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +80,7 @@ class AutomationDataManager extends DataManager {
     /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 71;
+    private static final int DATABASE_VERSION = 1;
 
     /**
      * Query for retrieving schedules with a JOIN.
@@ -201,6 +203,10 @@ class AutomationDataManager extends DataManager {
 
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Logs that the database is being downgraded
+        Logger.debug("AutomationDataManager - Downgrading automation database from version " + oldVersion + " to "
+                + newVersion + ", which will destroy all old data");
+
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TriggersTable.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ActionSchedulesTable.TABLE_NAME);
@@ -225,27 +231,31 @@ class AutomationDataManager extends DataManager {
      * Deletes a schedule given an ID.
      *
      * @param scheduleId The schedule ID.
-     * @return {@code true} if successful, {@code false} otherwise.
      */
-    boolean deleteSchedule(String scheduleId) {
-        return delete(ActionSchedulesTable.TABLE_NAME, ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " = ?", new String[] { scheduleId }) > 0;
+    void deleteSchedule(String scheduleId) {
+        if (delete(ActionSchedulesTable.TABLE_NAME, ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " = ?", new String[] { scheduleId }) < 0) {
+            Logger.warn("AutomationDataManager - failed to delete schedule for schedule ID " + scheduleId);
+        }
     }
 
     /**
      * Deletes schedules given a group.
      *
      * @param group The schedule group.
-     * @return {@code true} if successful, {@code false} otherwise.
      */
-    boolean deleteSchedules(String group) {
-        return delete(ActionSchedulesTable.TABLE_NAME, ActionSchedulesTable.COLUMN_NAME_GROUP + " = ?", new String[] { group }) > 0;
+    void deleteSchedules(String group) {
+        if (delete(ActionSchedulesTable.TABLE_NAME, ActionSchedulesTable.COLUMN_NAME_GROUP + " = ?", new String[] { group }) < 0) {
+            Logger.warn("AutomationDataManager - failed to delete schedules for group " + group);
+        }
     }
 
     /**
      * Deletes all schedules.
      */
     void deleteSchedules() {
-        delete(ActionSchedulesTable.TABLE_NAME, null, null);
+        if (delete(ActionSchedulesTable.TABLE_NAME, null, null) < 0) {
+            Logger.warn("AutomationDataManager - failed to delete schedules");
+        }
     }
 
     /**
@@ -308,10 +318,10 @@ class AutomationDataManager extends DataManager {
      * @param schedules The list of {@link ActionScheduleInfo} instances.
      * @return A list of inserted {@link ActionSchedule} instances.
      */
-    List<ActionSchedule> bulkInsertSchedules(List<ActionScheduleInfo> schedules) {
+    List<ActionSchedule> insertSchedules(List<ActionScheduleInfo> schedules) {
+        Map<String, ActionSchedule> added = new HashMap<>();
         Set<ContentValues> schedulesToAdd = new HashSet<>();
         Set<ContentValues> triggersToAdd = new HashSet<>();
-        List<ActionSchedule> added = new ArrayList<>();
 
         for (ActionScheduleInfo actionScheduleInfo : schedules) {
             String id = UUID.randomUUID().toString();
@@ -322,55 +332,28 @@ class AutomationDataManager extends DataManager {
                 triggersToAdd.add(value);
             }
 
-            added.add(new ActionSchedule(id, actionScheduleInfo, 0));
+            ActionSchedule schedule = new ActionSchedule(id, actionScheduleInfo, 0);
+            added.put(schedule.getId(), schedule);
         }
 
-        List<ContentValues> insertedSchedules = bulkInsert(ActionSchedulesTable.TABLE_NAME, schedulesToAdd.toArray(new ContentValues[schedulesToAdd.size()]));
+        Map<String, ContentValues[]> toAdd = new LinkedHashMap<>();
+        toAdd.put(ActionSchedulesTable.TABLE_NAME, schedulesToAdd.toArray(new ContentValues[schedulesToAdd.size()]));
+        toAdd.put(TriggersTable.TABLE_NAME, triggersToAdd.toArray(new ContentValues[triggersToAdd.size()]));
 
-        if (insertedSchedules == null) {
-            return null;
+        List<ActionSchedule> inserted = new ArrayList<>();
+        List<ContentValues> contentValuesList = bulkInsert(toAdd).get(ActionSchedulesTable.TABLE_NAME);
+
+        if (contentValuesList != null) {
+            for (ContentValues contentValues : contentValuesList) {
+                String insertedId = contentValues.getAsString(ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID);
+                if (added.containsKey(insertedId)) {
+                    inserted.add(added.get(insertedId));
+                }
+            }
         }
 
-        List<ContentValues> insertedTriggers = bulkInsert(TriggersTable.TABLE_NAME, triggersToAdd.toArray(new ContentValues[triggersToAdd.size()]));
-
-        if (insertedTriggers == null) {
-            return null;
-        }
-
-        return added;
+        return inserted;
     }
-
-    /**
-     * Inserts a schedule.
-     *
-     * @param actionScheduleInfo The {@link ActionScheduleInfo} instance.
-     * @return The inserted {@link ActionSchedule} instance.
-     */
-    ActionSchedule insertSchedule(ActionScheduleInfo actionScheduleInfo) {
-
-        String id = UUID.randomUUID().toString();
-        ContentValues contentValues = getScheduleInfoContentValues(actionScheduleInfo, id);
-
-        if (insert(ActionSchedulesTable.TABLE_NAME, contentValues) <= 0) {
-            return null;
-        }
-
-        Set<ContentValues> triggerValues = new HashSet<>();
-        for (Trigger trigger : actionScheduleInfo.getTriggers()) {
-            ContentValues value = getTriggerContentValues(trigger, id, actionScheduleInfo.getStart());
-            triggerValues.add(value);
-        }
-
-        List<ContentValues> inserted = bulkInsert(TriggersTable.TABLE_NAME, triggerValues.toArray(new ContentValues[triggerValues.size()]));
-
-
-        if (inserted == null) {
-            return null;
-        }
-
-        return new ActionSchedule(id, actionScheduleInfo, 0);
-    }
-
 
     // for update methods
 
@@ -385,13 +368,11 @@ class AutomationDataManager extends DataManager {
 
         performSubSetOperations(ids, MAX_ARG_COUNT, new SetOperation<String>() {
             @Override
-            public boolean perform(List<String> subset) {
+            public void perform(List<String> subset) {
 
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " IN ( " + UAStringUtil.repeat("?", subset.size(), ", ") + ")";
                 Cursor c = rawQuery(query, subset.toArray(new String[subset.size()]));
                 schedules.addAll(generateSchedules(c));
-
-                return true;
             }
         });
 
@@ -440,6 +421,7 @@ class AutomationDataManager extends DataManager {
 
         final SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
+            Logger.error("AutomationDataManager - Unable to update automation rules.");
             return;
         }
 
@@ -453,7 +435,7 @@ class AutomationDataManager extends DataManager {
 
             performSubSetOperations(entry.getValue(), MAX_ARG_COUNT, new SetOperation<String>() {
                 @Override
-                public boolean perform(List<String> subset) {
+                public void perform(List<String> subset) {
 
                     String inStatement = UAStringUtil.repeat("?", subset.size(), ", ");
                     SQLiteStatement statement = db.compileStatement(entry.getKey() + " IN ( " + inStatement + " )");
@@ -462,14 +444,21 @@ class AutomationDataManager extends DataManager {
                     }
 
                     statement.execute();
-
-                    return true;
                 }
             });
         }
 
         db.setTransactionSuccessful();
         db.endTransaction();
+    }
+
+    long getScheduleCount() {
+        final SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            return -1;
+        }
+
+        return DatabaseUtils.queryNumEntries(db, ActionSchedulesTable.TABLE_NAME);
     }
 
     // Helpers
@@ -479,7 +468,7 @@ class AutomationDataManager extends DataManager {
      * @param <T> The list element type.
      */
     interface SetOperation<T> {
-        boolean perform(List<T> subset);
+        void perform(List<T> subset);
     }
 
     /**
@@ -494,17 +483,12 @@ class AutomationDataManager extends DataManager {
         List<T> remaining = new ArrayList<>(ids);
 
         while (!remaining.isEmpty()) {
-            boolean result;
             if (remaining.size() > subSetCount) {
-                result = operation.perform(remaining.subList(0, subSetCount));
+                operation.perform(remaining.subList(0, subSetCount));
                 remaining = remaining.subList(subSetCount, remaining.size());
             } else {
-                result = operation.perform(remaining);
+                operation.perform(remaining);
                 remaining.clear();
-            }
-
-            if (!result) {
-                return;
             }
         }
     }

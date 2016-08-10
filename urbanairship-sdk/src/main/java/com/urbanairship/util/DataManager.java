@@ -20,7 +20,9 @@ import com.urbanairship.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An abstract class to manage a SQLiteDatabase.
@@ -361,6 +363,55 @@ public abstract class DataManager {
         } catch (Exception ex) {
             Logger.error("Unable to insert into database", ex);
         } finally {
+            db.endTransaction();
+        }
+
+        return inserted;
+    }
+
+    /**
+     * Inserts several items into different database tables
+     *
+     * @param values A map of table names to arrays of values to insert into the database
+     * @return A map of table names to their respective lists of the values inserted into the database
+     */
+    public Map<String, List<ContentValues>> bulkInsert(@NonNull Map<String, ContentValues[]> values) {
+        SQLiteDatabase db = getWritableDatabase();
+        Map<String, List<ContentValues>> inserted = new HashMap<>();
+
+        if (db == null) {
+            return inserted;
+        }
+
+        db.beginTransaction();
+        try {
+            for (Map.Entry<String, ContentValues[]> entry : values.entrySet()) {
+                List<ContentValues> list = new ArrayList<>();
+                SQLiteStatement statement = getInsertStatement(entry.getKey(), db);
+
+                if (entry.getValue().length == 0) {
+                    continue;
+                }
+
+                for (ContentValues value : entry.getValue()) {
+                    if (!tryExecuteStatement(entry.getKey(), statement, value)) {
+                        Logger.warn("Unable to insert into database table " + entry.getKey() + " - aborting inserts.");
+                        inserted.clear();
+                        return inserted;
+                    }
+
+                    list.add(value);
+                }
+
+                inserted.put(entry.getKey(), list);
+            }
+        } catch (Exception ex) {
+            Logger.error("Unable to insert into database", ex);
+        } finally{
+            if (!inserted.isEmpty()) {
+                db.setTransactionSuccessful();
+            }
+
             db.endTransaction();
         }
 

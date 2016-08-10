@@ -34,6 +34,11 @@ public class ActionScheduleInfo implements Parcelable {
         }
     };
 
+    /**
+     * The triggers limit for a single schedule.
+     */
+    public static final long TRIGGER_LIMIT = 10;
+
     private final List<Trigger> triggers;
     private final Map<String, JsonValue> actions;
     private final int limit;
@@ -277,8 +282,8 @@ public class ActionScheduleInfo implements Parcelable {
          * Builds the ActionScheduleInfo instance.
          *
          * @return The new ActionScheduleInfo instance.
-         * @throws IllegalArgumentException if either no actions are set, no triggers are added,
-         * or the start time is set after the end time.
+         * @throws IllegalArgumentException if either no actions are set, no triggers or more than
+         * {@link #TRIGGER_LIMIT} triggers are set, or the start time is set after the end time.
          */
         public ActionScheduleInfo build() {
             if (actions.isEmpty()) {
@@ -291,6 +296,10 @@ public class ActionScheduleInfo implements Parcelable {
 
             if (triggers.isEmpty()) {
                 throw new IllegalArgumentException("Must contain at least 1 trigger.");
+            }
+
+            if (triggers.size() > TRIGGER_LIMIT) {
+                throw new IllegalArgumentException("No more than " + TRIGGER_LIMIT + " triggers allowed.");
             }
 
             return new ActionScheduleInfo(this);

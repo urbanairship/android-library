@@ -39,7 +39,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testDeleteSchedule() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
 
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules();
         assertEquals(20, retrieved.size());
 
@@ -52,7 +52,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testDeleteSchedulesByTag() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
 
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules();
         assertEquals(20, retrieved.size());
 
@@ -64,7 +64,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testDeleteSchedules() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules();
         assertEquals(20, retrieved.size());
 
@@ -77,7 +77,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testDeleteSchedulesByList() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
 
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules();
         assertEquals(20, retrieved.size());
 
@@ -90,7 +90,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testGetSchedule() {
         ActionScheduleInfo actionScheduleInfo = createSchedules(1).get(0);
         Trigger trigger = actionScheduleInfo.getTriggers().get(0);
-        dataManager.insertSchedule(actionScheduleInfo);
+        dataManager.insertSchedules(Collections.singletonList(actionScheduleInfo));
 
         ActionSchedule retrieved = dataManager.getSchedule(dataManager.getSchedules("group 0").get(0).getId());
         assertEquals(actionScheduleInfo.getGroup(), retrieved.getInfo().getGroup());
@@ -124,7 +124,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
             schedules.add(schedule);
         }
 
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules("group");
         assertEquals(20, retrieved.size());
     }
@@ -132,14 +132,14 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testGetSchedules() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<ActionSchedule> retrieved = dataManager.getSchedules();
         assertEquals(20, retrieved.size());
     }
 
     @Test
     public void testGetSchedulesWithList() {
-        dataManager.bulkInsertSchedules(createSchedules(2));
+        dataManager.insertSchedules(createSchedules(2));
         List<ActionSchedule> retrieved = dataManager.getSchedules(new HashSet<>(Arrays.asList(dataManager.getSchedules().get(0).getId(), dataManager.getSchedules().get(1).getId())));
         assertEquals(2, retrieved.size());
     }
@@ -147,7 +147,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testGetTriggers() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.bulkInsertSchedules(schedules);
+        dataManager.insertSchedules(schedules);
         List<TriggerEntry> retrieved = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(20, retrieved.size());
     }
@@ -180,7 +180,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                         .addTrigger(secondTrigger)
                                                                         .build();
 
-        dataManager.bulkInsertSchedules(Arrays.asList(firstActionScheduleInfo, secondActionScheduleInfo));
+        dataManager.insertSchedules(Arrays.asList(firstActionScheduleInfo, secondActionScheduleInfo));
         List<ActionSchedule> schedules = dataManager.getSchedules();
         Collections.sort(schedules, new Comparator<ActionSchedule>() {
             @Override
@@ -233,7 +233,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testInsertSchedule() {
         ActionScheduleInfo actionScheduleInfo = createSchedules(1).get(0);
         Trigger trigger = actionScheduleInfo.getTriggers().get(0);
-        dataManager.insertSchedule(actionScheduleInfo);
+        dataManager.insertSchedules(Collections.singletonList(actionScheduleInfo));
 
         List<ActionSchedule> schedules = dataManager.getSchedules();
         assertEquals(1, schedules.size());
@@ -260,7 +260,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testUpdateLists() {
         List<ActionScheduleInfo> schedules = createSchedules(20);
 
-        List<ActionSchedule> inserted = dataManager.bulkInsertSchedules(schedules);
+        List<ActionSchedule> inserted = dataManager.insertSchedules(schedules);
         List<String> ids = new ArrayList<>();
         for (ActionSchedule schedule : inserted) {
             ids.add(schedule.getId());

@@ -41,7 +41,7 @@ public class ActionScheduleInfoTest extends BaseTestCase {
 
         // Schedule Info
         assertEquals(10, info.getLimit());
-        assertEquals(actions, JsonValue.wrap(info.getActions()));
+        assertEquals(actions, JsonValue.wrap(info.getActions()).getMap());
         assertEquals(10000L, info.getStart());
         assertEquals(15000L, info.getEnd());
         assertEquals("group id", info.getGroup());
