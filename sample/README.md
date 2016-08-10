@@ -4,7 +4,7 @@ Sample application for the Urban Airship SDK.
 
 ## Setup
 
-1) Update the [airshipconfig.properties](src/main/assets/airshipconfig.properties) file
+1) Update the [airshipconfig.properties](src/main/assets/airshipconfig.properties.sample) file
 to use your application's config.
 
 2) Configure a push provider:
