@@ -63,6 +63,8 @@ class FusedLocationAdapter implements LocationAdapter {
 
         Logger.verbose("FusedLocationAdapter - Requesting updates.");
         LocationRequest locationRequest = createLocationRequest(options);
+
+        //noinspection MissingPermission
         LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, intent);
     }
 
@@ -129,6 +131,11 @@ class FusedLocationAdapter implements LocationAdapter {
         client = null;
     }
 
+    @Override
+    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+        // fused location handles this internally
+    }
+
     /**
      * Creates Google Play Service's LocationRequest from LocationRequestOptions
      *
@@ -189,6 +196,8 @@ class FusedLocationAdapter implements LocationAdapter {
             };
 
             Logger.verbose("FusedLocationAdapter - Starting single location request.");
+
+            //noinspection MissingPermission
             LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, fusedLocationListener, Looper.myLooper());
         }
 

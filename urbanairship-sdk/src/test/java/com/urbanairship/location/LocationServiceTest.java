@@ -200,8 +200,7 @@ public class LocationServiceTest extends BaseTestCase {
     }
 
     /**
-     * Test location updates are canceled and requested again when
-     * a provider is enabled/disabled.
+     * Test UALocationProvider is notified of changes to the availability of system location providers.
      */
     @Test
     public void testLocationUpdateProviderChange() {
@@ -213,11 +212,8 @@ public class LocationServiceTest extends BaseTestCase {
         // Should of connected to the provider
         verify(mockProvider, times(1)).connect();
 
-        // Should cancel any previous updates
-        verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
-
-        // Should do the actual requests
-        verify(mockProvider, times(1)).requestLocationUpdates(any(LocationRequestOptions.class), any(PendingIntent.class));
+        // Should notify provider of the change
+        verify(mockProvider, times(1)).onSystemLocationProvidersChanged(eq(locationManager.getLocationRequestOptions()), any(PendingIntent.class));
     }
 
     /**
