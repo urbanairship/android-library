@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.2.3 - August 11, 2016
+===============================
+- Fixed Location module from constantly canceling and requesting location updates when using the
+  standard location adapter and location services are disabled.
+- Fixed building the sample and library on PCs.
+
 Version 7.2.2 - August 4, 2016
 ==============================
 - Fixed blocking the calling thread when asynchronously requesting UAirship instance if the
