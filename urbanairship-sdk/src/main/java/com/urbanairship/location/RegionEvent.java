@@ -186,7 +186,7 @@ public class RegionEvent extends Event {
                     .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
                     .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
                     .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
-                    .put(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
+                    .putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi());
 
             if (proximityRegion.getLatitude() != null) {
                 proximityRegionData.put(LATITUDE, Double.toString(proximityRegion.getLatitude()));
