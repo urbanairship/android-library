@@ -167,4 +167,24 @@ class UALocationProvider {
 
         isConnected = false;
     }
+
+    /**
+     * Called when a system location provider availability changes.
+     *
+     * @param options Current location request options.
+     * @param intent The pending intent used to start location updates.
+     */
+    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+        Logger.verbose("UALocationProvider - Available location providers changed.");
+
+        if (!isConnected) {
+            return;
+        }
+
+        if (connectedAdapter == null) {
+            return;
+        }
+
+        connectedAdapter.onSystemLocationProvidersChanged(options, intent);
+    }
 }

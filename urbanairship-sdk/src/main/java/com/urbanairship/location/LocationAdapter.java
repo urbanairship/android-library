@@ -49,4 +49,11 @@ interface LocationAdapter {
      * Disconnects the adapter.
      */
     void disconnect();
+
+    /**
+     * Called when a system location provider availability changes.
+     * @param options Current location request options.
+     * @param intent The pending intent used to start location updates.
+     */
+    void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent);
 }

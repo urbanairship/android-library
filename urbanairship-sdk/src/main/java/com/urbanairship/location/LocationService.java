@@ -329,13 +329,10 @@ public class LocationService extends Service {
         }
 
         /*
-         * If a provider is enabled or disabled we can assume we were
-         * using standard location. Stop any location updates and start
-         * it again so it picks up the best location provider.
+         * If a provider is enabled or disabled notify the adapters so they can update providers.
          */
         if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
-            Logger.debug("LocationService - Restarting location updates. " +
-                    "One of the location providers was enabled or disabled.");
+            Logger.debug("LocationService - One of the location providers was enabled or disabled.");
 
             LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
             PendingIntent pendingIntent = createLocationUpdateIntent();
@@ -348,9 +345,7 @@ public class LocationService extends Service {
                     .put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, options);
 
             locationProvider.connect();
-            locationProvider.cancelRequests(pendingIntent);
-            locationProvider.requestLocationUpdates(options, pendingIntent);
-
+            locationProvider.onSystemLocationProvidersChanged(options, pendingIntent);
             return;
         }
 
