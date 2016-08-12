@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.2.4 - August 12, 2016
+===============================
+- Fixed potential NPE in applications using the Gimbal adapter when serializing a RegionEvent without an RSSI value set.
+
 Version 7.2.3 - August 11, 2016
 ===============================
 - Fixed Location module from constantly canceling and requesting location updates when using the
