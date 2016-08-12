@@ -83,6 +83,11 @@ class AutomationDataManager extends DataManager {
     private static final int DATABASE_VERSION = 1;
 
     /**
+     * Appended to the end of schedules GET queries to group rows by schedule ID.
+     */
+    private static final String ORDER_SCHEDULES_STATEMENT = " ORDER BY " + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " ASC";
+
+    /**
      * Query for retrieving schedules with a JOIN.
      */
     static final String GET_SCHEDULES_QUERY = "SELECT * FROM " + ActionSchedulesTable.TABLE_NAME + " a INNER JOIN " + TriggersTable.TABLE_NAME + " b ON a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + "=b." + TriggersTable.COLUMN_NAME_SCHEDULE_ID;
@@ -296,7 +301,7 @@ class AutomationDataManager extends DataManager {
      * @return The list of {@link ActionSchedule} instances.
      */
     List<ActionSchedule> getSchedules(String group) {
-        String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_GROUP + "=?";
+        String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_GROUP + "=?" + ORDER_SCHEDULES_STATEMENT;
         Cursor c = rawQuery(query, new String[] { String.valueOf(group) });
         return generateSchedules(c);
     }
@@ -307,7 +312,7 @@ class AutomationDataManager extends DataManager {
      * @return The list of {@link ActionSchedule} instances.
      */
     List<ActionSchedule> getSchedules() {
-        String query = GET_SCHEDULES_QUERY;
+        String query = GET_SCHEDULES_QUERY + ORDER_SCHEDULES_STATEMENT;
         Cursor c = rawQuery(query, null);
         return generateSchedules(c);
     }
@@ -370,7 +375,7 @@ class AutomationDataManager extends DataManager {
             @Override
             public void perform(List<String> subset) {
 
-                String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " IN ( " + UAStringUtil.repeat("?", subset.size(), ", ") + ")";
+                String query = GET_SCHEDULES_QUERY + " WHERE a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " IN ( " + UAStringUtil.repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
                 Cursor c = rawQuery(query, subset.toArray(new String[subset.size()]));
                 schedules.addAll(generateSchedules(c));
             }

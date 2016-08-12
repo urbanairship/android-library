@@ -440,8 +440,8 @@ public class Automation extends AirshipComponent {
                 // Schedule ID to triggers map
                 Map<String, String> triggerMap = new HashMap<>();
 
-                List<String> schedulesToIncrement = new ArrayList<>();
-                List<String> schedulesToDelete = new ArrayList<>();
+                Set<String> schedulesToIncrement = new HashSet<>();
+                Set<String> schedulesToDelete = new HashSet<>();
                 Set<String> triggeredSchedules = new HashSet<>();
 
                 for (TriggerEntry trigger : triggerEntries) {
@@ -489,8 +489,8 @@ public class Automation extends AirshipComponent {
                 }
 
                 HashMap<String, List<String>> updatesMap = new HashMap<>();
-                updatesMap.put(AutomationDataManager.SCHEDULES_TO_DELETE_QUERY, schedulesToDelete);
-                updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, schedulesToIncrement);
+                updatesMap.put(AutomationDataManager.SCHEDULES_TO_DELETE_QUERY, new ArrayList<>(schedulesToDelete));
+                updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, new ArrayList<>(schedulesToIncrement));
 
                 // Don't need to waste DB time updating triggers if they'll be deleted in a schedule
                 // delete propagation.

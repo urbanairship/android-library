@@ -99,9 +99,21 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(actionScheduleInfo.getStart(), retrieved.getInfo().getStart());
         assertEquals(actionScheduleInfo.getLimit(), retrieved.getInfo().getLimit());
 
-        assertEquals(trigger.getGoal(), retrieved.getInfo().getTriggers().get(0).getGoal(), 0.0);
-        assertEquals(trigger.getPredicate(), retrieved.getInfo().getTriggers().get(0).getPredicate());
-        assertEquals(trigger.getType(), retrieved.getInfo().getTriggers().get(0).getType());
+        List<Trigger> scheduleTriggers = retrieved.getInfo().getTriggers();
+        Collections.sort(scheduleTriggers, new Comparator<Trigger>() {
+            @Override
+            public int compare(Trigger lhs, Trigger rhs) {
+                if (lhs.getType() == Trigger.LIFE_CYCLE_FOREGROUND) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+
+        assertEquals(trigger.getGoal(), scheduleTriggers.get(0).getGoal(), 0.0);
+        assertEquals(trigger.getPredicate(), scheduleTriggers.get(0).getPredicate());
+        assertEquals(trigger.getType(), scheduleTriggers.get(0).getType());
         assertEquals(0, retrieved.getCount());
     }
 
@@ -243,9 +255,21 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(actionScheduleInfo.getStart(), schedules.get(0).getInfo().getStart());
         assertEquals(actionScheduleInfo.getLimit(), schedules.get(0).getInfo().getLimit());
 
-        assertEquals(trigger.getGoal(), schedules.get(0).getInfo().getTriggers().get(0).getGoal(), 0.0);
-        assertEquals(trigger.getPredicate(), schedules.get(0).getInfo().getTriggers().get(0).getPredicate());
-        assertEquals(trigger.getType(), schedules.get(0).getInfo().getTriggers().get(0).getType());
+        List<Trigger> scheduleTriggers = schedules.get(0).getInfo().getTriggers();
+        Collections.sort(scheduleTriggers, new Comparator<Trigger>() {
+            @Override
+            public int compare(Trigger lhs, Trigger rhs) {
+                if (lhs.getType() == Trigger.LIFE_CYCLE_FOREGROUND) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+
+        assertEquals(trigger.getGoal(), scheduleTriggers.get(0).getGoal(), 0.0);
+        assertEquals(trigger.getPredicate(), scheduleTriggers.get(0).getPredicate());
+        assertEquals(trigger.getType(), scheduleTriggers.get(0).getType());
         assertEquals(0, schedules.get(0).getCount());
 
         List<TriggerEntry> triggers = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
@@ -283,8 +307,12 @@ public class AutomationDataManagerTest extends BaseTestCase {
     private List<ActionScheduleInfo> createSchedules(int amount) {
         List<ActionScheduleInfo> schedules = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
-            Trigger trigger = Triggers.newForegroundTriggerBuilder()
+            Trigger foreground = Triggers.newForegroundTriggerBuilder()
                                       .setGoal(10)
+                                      .build();
+
+            Trigger background = Triggers.newBackgroundTriggerBuilder()
+                                      .setGoal(3)
                                       .build();
 
             ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
@@ -293,7 +321,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .setEnd(System.currentTimeMillis() + 100000)
                                                             .setLimit(100)
                                                             .addAction("test_action", JsonValue.wrap("action_value"))
-                                                            .addTrigger(trigger)
+                                                            .addTrigger(foreground)
+                                                            .addTrigger(background)
                                                             .build();
             schedules.add(schedule);
         }
