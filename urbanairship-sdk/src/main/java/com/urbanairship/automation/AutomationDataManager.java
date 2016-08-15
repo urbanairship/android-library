@@ -392,7 +392,7 @@ class AutomationDataManager extends DataManager {
      */
     List<TriggerEntry> getTriggers(int type) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = query(TriggersTable.TABLE_NAME, null, TriggersTable.COLUMN_NAME_TYPE + " =?", new String[] { String.valueOf(type) }, null, null);
+        Cursor cursor = query(TriggersTable.TABLE_NAME, null, TriggersTable.COLUMN_NAME_TYPE + " =? AND " + TriggersTable.COLUMN_NAME_START + " < ?", new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()) }, null, null);
 
         if (cursor == null) {
             return triggers;
@@ -596,10 +596,9 @@ class AutomationDataManager extends DataManager {
             JsonPredicate predicate = predicateJson.optMap().isEmpty() ? null : JsonPredicate.parse(predicateJson);
             String id = cursor.getString(cursor.getColumnIndex(TriggersTable._ID));
             String scheduleId = cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_SCHEDULE_ID));
-            long start = cursor.getLong(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_START));
 
             //noinspection WrongConstant
-            return new TriggerEntry(type, goal, predicate, id, scheduleId, count, start);
+            return new TriggerEntry(type, goal, predicate, id, scheduleId, count);
         } catch (JsonException e) {
             Logger.error("AutomationDataManager - failed to generate trigger from cursor.");
             return null;

@@ -158,6 +158,15 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
     @Test
     public void testGetTriggers() {
+        // Triggers that have yet to start should not be returned by the data manager.
+        ActionScheduleInfo futureSchedule = ActionScheduleInfo.newBuilder()
+                .addAction("test_action", JsonValue.wrap("action_value"))
+                .addTrigger(Triggers.newForegroundTriggerBuilder().setGoal(3).build())
+                .setLimit(5)
+                .setGroup("group")
+                .setStart(System.currentTimeMillis() + 1000)
+                .build();
+        dataManager.insertSchedules(Collections.singletonList(futureSchedule));
         List<ActionScheduleInfo> schedules = createSchedules(20);
         dataManager.insertSchedules(schedules);
         List<TriggerEntry> retrieved = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
@@ -275,7 +284,6 @@ public class AutomationDataManagerTest extends BaseTestCase {
         List<TriggerEntry> triggers = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(1, triggers.size());
         assertEquals(trigger.getGoal(), triggers.get(0).getGoal(), 0.0);
-        assertEquals(actionScheduleInfo.getStart(), triggers.get(0).getStart());
         assertEquals(trigger.getPredicate(), triggers.get(0).getPredicate());
         assertEquals(trigger.getType(), triggers.get(0).getType());
     }

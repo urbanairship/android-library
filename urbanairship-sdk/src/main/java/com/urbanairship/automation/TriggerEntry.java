@@ -12,14 +12,12 @@ class TriggerEntry extends Trigger {
     private final String id;
     private final String scheduleId;
     private final double progress;
-    private final long start;
 
-    TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, double progress, long start) {
+    TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, double progress) {
         super(type, goal, predicate);
         this.id = id;
         this.scheduleId = scheduleId;
         this.progress = progress;
-        this.start = start;
     }
 
     /**
@@ -47,14 +45,5 @@ class TriggerEntry extends Trigger {
      */
     String getScheduleId() {
         return scheduleId;
-    }
-
-    /**
-     * The schedules start time in milliseconds.
-     *
-     * @return Start time in milliseconds.
-     */
-    long getStart() {
-        return start;
     }
 }

@@ -15,9 +15,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.PendingResult;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
@@ -42,17 +43,22 @@ import java.util.concurrent.Executors;
  */
 public class Automation extends AirshipComponent {
 
-    private final int THREAD_COUNT = 5;
+    private static final String KEY_PREFIX = "com.urbanairship.automation";
+    private static final String AUTOMATION_ENABLED_KEY = KEY_PREFIX + ".AUTOMATION_ENABLED";
 
     private final Context context;
     private final AutomationDataManager dataManager;
     private final Executor eventProcessingExecutor = Executors.newSingleThreadExecutor();
-    private final Executor dbRequestProcessingExecutor = Executors.newFixedThreadPool(THREAD_COUNT);
+    private final Executor dbRequestProcessingExecutor = Executors.newCachedThreadPool();
+    private final PreferenceDataStore preferenceDataStore;
 
     private final Analytics analytics;
 
     private BroadcastReceiver broadcastReceiver;
     private AnalyticsListener analyticsListener;
+
+    private boolean automationEnabled = false;
+    private boolean mainProcess = false;
 
     /**
      * Automation schedules limit.
@@ -67,14 +73,15 @@ public class Automation extends AirshipComponent {
      * @param analytics The analytics instance.
      * @hide
      */
-    public Automation(@NonNull Context context, AirshipConfigOptions configOptions, Analytics analytics) {
-        this(context, analytics, new AutomationDataManager(context, configOptions.getAppKey()));
+    public Automation(@NonNull Context context, @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics, @NonNull PreferenceDataStore preferenceDataStore) {
+        this(context, analytics, new AutomationDataManager(context, configOptions.getAppKey()), preferenceDataStore);
     }
 
-    Automation(@NonNull Context context, Analytics analytics, AutomationDataManager dataManager) {
+    Automation(@NonNull Context context, @NonNull Analytics analytics, @NonNull AutomationDataManager dataManager, @NonNull PreferenceDataStore preferenceDataStore) {
         this.context = context;
         this.analytics = analytics;
         this.dataManager = dataManager;
+        this.preferenceDataStore = preferenceDataStore;
     }
 
     @Override
@@ -135,12 +142,15 @@ public class Automation extends AirshipComponent {
         broadcastManager.registerReceiver(broadcastReceiver, filter);
 
         analytics.addAnalyticsListener(analyticsListener);
+        mainProcess = true;
+        automationEnabled = preferenceDataStore.getBoolean(AUTOMATION_ENABLED_KEY, false);
     }
 
     @Override
     protected void tearDown() {
         LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
         analytics.removeAnalyticsListener(analyticsListener);
+        mainProcess = false;
     }
 
     /**
@@ -154,15 +164,31 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public ActionSchedule schedule(ActionScheduleInfo scheduleInfo) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return null;
+        }
+
         if (dataManager.getScheduleCount() >= SCHEDULES_LIMIT) {
             Logger.error("AutomationDataManager - unable to insert schedule due to exceeded schedule limit.");
             return null;
         }
 
         List<ActionSchedule> insertSchedules = dataManager.insertSchedules(Collections.singletonList(scheduleInfo));
-        ActionSchedule insertedSchedule = insertSchedules.isEmpty() ? null : insertSchedules.get(0);
+
+        if (insertSchedules.isEmpty()) {
+            return null;
+        }
+
+        ActionSchedule insertedSchedule = insertSchedules.get(0);
+
+        if (!automationEnabled) {
+            automationEnabled = true;
+            preferenceDataStore.put(AUTOMATION_ENABLED_KEY, true);
+        }
 
         Logger.debug("Automation - action schedule inserted: " + insertedSchedule);
+
         return insertedSchedule;
     }
 
@@ -199,13 +225,25 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> schedule(List<ActionScheduleInfo> scheduleInfos) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return new ArrayList<>();
+        }
+
         if (dataManager.getScheduleCount() + scheduleInfos.size() >= SCHEDULES_LIMIT) {
             Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
             return Collections.emptyList();
         }
 
         List<ActionSchedule> actionSchedules = dataManager.insertSchedules(scheduleInfos);
-        Logger.debug("Automation - action schedule inserted: " + actionSchedules);
+        if (!actionSchedules.isEmpty()) {
+            if (!automationEnabled) {
+                automationEnabled = true;
+                preferenceDataStore.put(AUTOMATION_ENABLED_KEY, true);
+            }
+
+            Logger.debug("Automation - action schedule inserted: " + actionSchedules);
+        }
 
         return actionSchedules;
     }
@@ -240,6 +278,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancel(String id) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return;
+        }
+
         dataManager.deleteSchedule(id);
     }
 
@@ -264,6 +307,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancel(List<String> ids) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return;
+        }
+
         dataManager.bulkDeleteSchedules(ids);
     }
 
@@ -288,6 +336,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancelGroup(String group) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return;
+        }
+
         dataManager.deleteSchedules(group);
     }
 
@@ -310,6 +363,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancelAll() {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return;
+        }
+
         dataManager.deleteSchedules();
     }
 
@@ -334,6 +392,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public ActionSchedule getSchedule(String id) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return null;
+        }
+
         return dataManager.getSchedule(id);
     }
 
@@ -363,6 +426,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> getSchedules() {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return new ArrayList<>();
+        }
+
         return dataManager.getSchedules();
     }
 
@@ -392,6 +460,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> getSchedules(String group) {
+        if (!mainProcess) {
+            Logger.error("Automation - requests may only be handled on the main process.");
+            return new ArrayList<>();
+        }
+
         return dataManager.getSchedules(group);
     }
 
@@ -424,6 +497,10 @@ public class Automation extends AirshipComponent {
      * @param value The trigger value to increment by.
      */
     private void onEventAdded(final JsonSerializable json, final int type, final double value) {
+        if (!automationEnabled || !mainProcess) {
+            return;
+        }
+
         Logger.debug("Automation - updating triggers with type: " + type);
 
         eventProcessingExecutor.execute(new Runnable() {
@@ -445,7 +522,7 @@ public class Automation extends AirshipComponent {
                 Set<String> triggeredSchedules = new HashSet<>();
 
                 for (TriggerEntry trigger : triggerEntries) {
-                    if ((json != null && (trigger.getPredicate() != null && !trigger.getPredicate().apply(json))) || trigger.getStart() > System.currentTimeMillis()) {
+                    if ((json != null && (trigger.getPredicate() != null && !trigger.getPredicate().apply(json)))) {
                         continue;
                     }
 
