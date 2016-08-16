@@ -31,6 +31,7 @@ import static junit.framework.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -107,6 +108,49 @@ public class AutomationTest extends BaseTestCase {
         verify(automationDataManager, never()).getSchedules(anySet());
 
         updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 1.0), Collections.singletonList("1"));
+        verify(automationDataManager).updateLists(updatesMap);
+    }
+
+    @Test
+    public void testCustomEventValueMatch() throws Exception {
+        // This will test that if the custom event value gets reduced to an integer in the action parsing process, a proper comparison will still be made in the value matching.
+        String json = "{\"actions\":" +
+                "{\"test_action\":\"action_value\"}," +
+                "\"limit\": 5," +
+                "\"group\": \"group\"," +
+                "\"triggers\": [" +
+                    "{\"type\": \"custom_event_value\"," +
+                        "\"goal\": 4.0," +
+                        "\"predicate\": {" +
+                            "\"and\" : [" +
+                                "{\"key\": \"event_name\",\"value\": {\"equals\": \"name\"}}," +
+                                "{\"key\": \"event_value\",\"value\": {\"equals\": 5}}" +
+                            "]" +
+                        "}" +
+                    "}" +
+                "]}";
+
+        ActionScheduleInfo actionScheduleInfo = ActionScheduleInfo.parseJson(JsonValue.parseString(json));
+        Trigger trigger = actionScheduleInfo.getTriggers().get(0);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
+
+        when(automationDataManager.insertSchedules(Collections.singletonList(actionScheduleInfo))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+        automation.schedule(actionScheduleInfo);
+
+        when(automationDataManager.getTriggers(Trigger.CUSTOM_EVENT_VALUE)).thenReturn(Collections.singletonList(triggerEntry));
+        when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+
+        new CustomEvent.Builder("name")
+                .setEventValue(5.0)
+                .create()
+                .track();
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager, atLeastOnce()).getTriggers(anyInt());
+        updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, Collections.singletonList("automation id"));
+        updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 5.0), Collections.EMPTY_LIST);
+        updatesMap.put(AutomationDataManager.TRIGGERS_TO_RESET_QUERY, Collections.singletonList("1"));
         verify(automationDataManager).updateLists(updatesMap);
     }
 

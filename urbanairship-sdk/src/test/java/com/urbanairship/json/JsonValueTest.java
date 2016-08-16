@@ -485,4 +485,17 @@ public class JsonValueTest extends BaseTestCase {
     public void testIsJsonList() throws JsonException {
         assertTrue(JsonValue.wrap(new ArrayList<String>()).isJsonList());
     }
+
+    /**
+     * Tests the double handling in {@link JsonValue#equals(Object)}.
+     */
+    @Test
+    public void testNumberEquals() {
+        JsonValue doubleValue = JsonValue.wrap(1.5);
+        JsonValue intValue = JsonValue.wrap(1);
+        assertFalse(intValue.equals(doubleValue));
+
+        doubleValue = JsonValue.wrap(1.0);
+        assertTrue(intValue.equals(doubleValue));
+    }
 }
