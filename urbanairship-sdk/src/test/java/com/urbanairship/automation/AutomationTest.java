@@ -8,6 +8,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
@@ -30,6 +31,7 @@ import static junit.framework.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,7 +39,7 @@ import static org.mockito.Mockito.when;
 
 public class AutomationTest extends BaseTestCase {
 
-    private static final int SLEEP_TIME = 20;
+    private static final int SLEEP_TIME = 25;
     
     private AutomationDataManager automationDataManager;
     private Automation automation;
@@ -49,7 +51,7 @@ public class AutomationTest extends BaseTestCase {
     @Before
     public void setUp() {
         automationDataManager = mock(AutomationDataManager.class);
-        automation = new Automation(RuntimeEnvironment.application, UAirship.shared().getAnalytics(), automationDataManager);
+        automation = new Automation(RuntimeEnvironment.application, UAirship.shared().getAnalytics(), automationDataManager, TestApplication.getApplication().preferenceDataStore);
         automation.init();
 
         customEventTrigger = Triggers.newCustomEventTriggerBuilder()
@@ -85,11 +87,11 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 0.0);
 
         List<TriggerEntry> triggerEntries = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            triggerEntries.add(new TriggerEntry(Trigger.CUSTOM_EVENT_COUNT, 5, Triggers.newCustomEventTriggerBuilder().setCountGoal(5).setEventName("other name").build().getPredicate(), String.valueOf(i), "id " + i, 0.0, -1));
+            triggerEntries.add(new TriggerEntry(Trigger.CUSTOM_EVENT_COUNT, 5, Triggers.newCustomEventTriggerBuilder().setCountGoal(5).setEventName("other name").build().getPredicate(), String.valueOf(i), "id " + i, 0.0));
         }
         triggerEntries.add(triggerEntry);
 
@@ -110,13 +112,56 @@ public class AutomationTest extends BaseTestCase {
     }
 
     @Test
+    public void testCustomEventValueMatch() throws Exception {
+        // This will test that if the custom event value gets reduced to an integer in the action parsing process, a proper comparison will still be made in the value matching.
+        String json = "{\"actions\":" +
+                "{\"test_action\":\"action_value\"}," +
+                "\"limit\": 5," +
+                "\"group\": \"group\"," +
+                "\"triggers\": [" +
+                    "{\"type\": \"custom_event_value\"," +
+                        "\"goal\": 4.0," +
+                        "\"predicate\": {" +
+                            "\"and\" : [" +
+                                "{\"key\": \"event_name\",\"value\": {\"equals\": \"name\"}}," +
+                                "{\"key\": \"event_value\",\"value\": {\"equals\": 5}}" +
+                            "]" +
+                        "}" +
+                    "}" +
+                "]}";
+
+        ActionScheduleInfo actionScheduleInfo = ActionScheduleInfo.parseJson(JsonValue.parseString(json));
+        Trigger trigger = actionScheduleInfo.getTriggers().get(0);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
+
+        when(automationDataManager.insertSchedules(Collections.singletonList(actionScheduleInfo))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+        automation.schedule(actionScheduleInfo);
+
+        when(automationDataManager.getTriggers(Trigger.CUSTOM_EVENT_VALUE)).thenReturn(Collections.singletonList(triggerEntry));
+        when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+
+        new CustomEvent.Builder("name")
+                .setEventValue(5.0)
+                .create()
+                .track();
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager, atLeastOnce()).getTriggers(anyInt());
+        updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, Collections.singletonList("automation id"));
+        updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 5.0), Collections.EMPTY_LIST);
+        updatesMap.put(AutomationDataManager.TRIGGERS_TO_RESET_QUERY, Collections.singletonList("1"));
+        verify(automationDataManager).updateLists(updatesMap);
+    }
+
+    @Test
     public void testCustomEventNoMatch() throws Exception {
         when(automationDataManager.insertSchedules(Collections.singletonList(customEventActionSchedule))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", customEventActionSchedule, 0)));
         String id  = automation.schedule(customEventActionSchedule).getId();
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.CUSTOM_EVENT_COUNT)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", customEventActionSchedule, 0)));
 
@@ -140,7 +185,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "customEventActionSchedule id", 1.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "customEventActionSchedule id", 1.0);
         when(automationDataManager.getTriggers(Trigger.CUSTOM_EVENT_COUNT)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", customEventActionSchedule, 0)));
 
@@ -166,7 +211,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 1.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate(), "1", "automation id", 1.0);
         when(automationDataManager.getTriggers(Trigger.CUSTOM_EVENT_COUNT)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", customEventActionSchedule, 3)));
 
@@ -223,7 +268,7 @@ public class AutomationTest extends BaseTestCase {
         String id  = automation.schedule(schedule).getId();
         assertEquals("automation id", id);
 
-        TriggerEntry enterEntry = new TriggerEntry(enter.getType(), enter.getGoal(), enter.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry enterEntry = new TriggerEntry(enter.getType(), enter.getGoal(), enter.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.REGION_ENTER)).thenReturn(Collections.singletonList(enterEntry));
 
         RegionEvent event = new RegionEvent("region_id", "source", RegionEvent.BOUNDARY_EVENT_ENTER);
@@ -256,7 +301,7 @@ public class AutomationTest extends BaseTestCase {
         String id  = automation.schedule(schedule).getId();
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.REGION_EXIT)).thenReturn(Collections.singletonList(triggerEntry));
 
         RegionEvent event = new RegionEvent("region_id", "source", RegionEvent.BOUNDARY_EVENT_EXIT);
@@ -290,7 +335,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
@@ -325,7 +370,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.LIFE_CYCLE_BACKGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
@@ -361,7 +406,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
         when(automationDataManager.getTriggers(Trigger.SCREEN_VIEW)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
@@ -396,7 +441,7 @@ public class AutomationTest extends BaseTestCase {
 
         assertEquals("automation id", id);
 
-        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 2.0, -1);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 2.0);
         when(automationDataManager.getTriggers(Trigger.SCREEN_VIEW)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
@@ -426,5 +471,27 @@ public class AutomationTest extends BaseTestCase {
 
         latch.await();
         verify(automationDataManager).insertSchedules(Collections.singletonList(customEventActionSchedule));
+    }
+
+    @Test
+    public void testInactivityWithoutSchedules() throws Exception {
+        when(automationDataManager.insertSchedules(Collections.singletonList(customEventActionSchedule))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", customEventActionSchedule, 0)));
+
+        new CustomEvent.Builder("name")
+                .create()
+                .track();
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager, never()).getTriggers(anyInt());
+        automation.schedule(customEventActionSchedule);
+
+        new CustomEvent.Builder("name")
+                .create()
+                .track();
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager).getTriggers(anyInt());
     }
 }

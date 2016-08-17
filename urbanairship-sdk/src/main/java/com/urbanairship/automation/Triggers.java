@@ -223,13 +223,25 @@ public class Triggers {
         }
 
         /**
-         * Sets the trigger goal.
+         * Sets the goal for {@link Trigger#CUSTOM_EVENT_COUNT} triggers.
          *
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
         public CustomEventTriggerBuilder setCountGoal(double goal) {
             this.type = Trigger.CUSTOM_EVENT_COUNT;
+            this.goal = goal;
+            return this;
+        }
+
+        /**
+         * Sets the goal for {@link Trigger#CUSTOM_EVENT_VALUE} triggers.
+         *
+         * @param goal The trigger goal.
+         * @return The Builder instance.
+         */
+        public CustomEventTriggerBuilder setValueGoal(double goal) {
+            this.type = Trigger.CUSTOM_EVENT_VALUE;
             this.goal = goal;
             return this;
         }
