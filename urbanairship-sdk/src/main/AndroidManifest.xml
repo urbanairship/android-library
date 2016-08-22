@@ -110,8 +110,7 @@
             android:name="com.urbanairship.UrbanAirshipProvider"
             android:authorities="${applicationId}.urbanairship.provider"
             android:permission="${applicationId}.permission.UA_DATA"
-            android:exported="true"
-            android:multiprocess="true" />
+            android:exported="true" />
 
     </application>
 </manifest>

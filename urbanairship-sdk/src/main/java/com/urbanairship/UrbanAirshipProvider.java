@@ -104,6 +104,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
 
         Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
 
+        UAirship.isMainProcess = true;
         return true;
     }
 
