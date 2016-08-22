@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import android.content.Intent;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
@@ -19,6 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
@@ -469,7 +472,10 @@ public class AutomationTest extends BaseTestCase {
             }
         });
 
-        latch.await();
+        while (!latch.await(1, TimeUnit.MILLISECONDS)) {
+            Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
+        }
+
         verify(automationDataManager).insertSchedules(Collections.singletonList(customEventActionSchedule));
     }
 
