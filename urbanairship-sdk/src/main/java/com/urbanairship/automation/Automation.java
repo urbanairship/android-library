@@ -17,6 +17,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
@@ -39,7 +40,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * This class is the primary interface to the Urban Airship On Device Automation API.
+ * This class is the primary interface to the Urban Airship On Device Automation API. If accessed outside
+ * of the main process, the class methods will no-op.
  */
 public class Automation extends AirshipComponent {
 
@@ -85,6 +87,11 @@ public class Automation extends AirshipComponent {
 
     @Override
     protected void init() {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         if (broadcastReceiver == null) {
             broadcastReceiver = new BroadcastReceiver() {
                 @Override
@@ -146,6 +153,11 @@ public class Automation extends AirshipComponent {
 
     @Override
     protected void tearDown() {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
         analytics.removeAnalyticsListener(analyticsListener);
     }
@@ -161,6 +173,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public ActionSchedule schedule(ActionScheduleInfo scheduleInfo) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return null;
+        }
+
         if (dataManager.getScheduleCount() >= SCHEDULES_LIMIT) {
             Logger.error("AutomationDataManager - unable to insert schedule due to exceeded schedule limit.");
             return null;
@@ -194,6 +211,11 @@ public class Automation extends AirshipComponent {
      * to {@link #SCHEDULES_LIMIT}.
      */
     public void scheduleAsync(final ActionScheduleInfo scheduleInfo, @Nullable final PendingResult.ResultCallback<ActionSchedule> callback) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -217,6 +239,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> schedule(List<ActionScheduleInfo> scheduleInfos) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return Collections.emptyList();
+        }
+
         if (dataManager.getScheduleCount() + scheduleInfos.size() >= SCHEDULES_LIMIT) {
             Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
             return Collections.emptyList();
@@ -246,6 +273,11 @@ public class Automation extends AirshipComponent {
      * to {@link #SCHEDULES_LIMIT}.
      */
     public void scheduleAsync(final List<ActionScheduleInfo> scheduleInfos, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -265,6 +297,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancel(String id) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dataManager.deleteSchedule(id);
     }
 
@@ -274,6 +311,11 @@ public class Automation extends AirshipComponent {
      * @param id The schedule ID.
      */
     public void cancelAsync(final String id) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -289,6 +331,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancel(List<String> ids) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dataManager.bulkDeleteSchedules(ids);
     }
 
@@ -298,6 +345,11 @@ public class Automation extends AirshipComponent {
      * @param ids The list of schedule IDs.
      */
     public void cancelAsync(final List<String> ids) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -313,6 +365,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancelGroup(String group) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dataManager.deleteSchedules(group);
     }
 
@@ -322,6 +379,11 @@ public class Automation extends AirshipComponent {
      * @param group The schedule group.
      */
     public void cancelGroupAsync(final String group) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -335,6 +397,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public void cancelAll() {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dataManager.deleteSchedules();
     }
 
@@ -342,6 +409,11 @@ public class Automation extends AirshipComponent {
      * Cancels all schedules asynchronously.
      */
     public void cancelAllAsync() {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -359,6 +431,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public ActionSchedule getSchedule(String id) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return null;
+        }
+
         return dataManager.getSchedule(id);
     }
 
@@ -369,6 +446,11 @@ public class Automation extends AirshipComponent {
      * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
      */
     public void getScheduleAsync(final String id, final PendingResult.ResultCallback<ActionSchedule> callback) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -388,6 +470,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> getSchedules() {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return Collections.emptyList();
+        }
+
         return dataManager.getSchedules();
     }
 
@@ -397,6 +484,11 @@ public class Automation extends AirshipComponent {
      * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
      */
     public void getSchedulesAsync(final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -417,6 +509,11 @@ public class Automation extends AirshipComponent {
      */
     @WorkerThread
     public List<ActionSchedule> getSchedules(String group) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return Collections.emptyList();
+        }
+
         return dataManager.getSchedules(group);
     }
 
@@ -427,6 +524,11 @@ public class Automation extends AirshipComponent {
      * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
      */
     public void getSchedulesAsync(final String group, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -449,6 +551,11 @@ public class Automation extends AirshipComponent {
      * @param value The trigger value to increment by.
      */
     private void onEventAdded(final JsonSerializable json, final int type, final double value) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return;
+        }
+        
         if (!automationEnabled) {
             return;
         }

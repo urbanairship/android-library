@@ -68,6 +68,7 @@ public class UAirship {
     private final static Object airshipLock = new Object();
     volatile static boolean isFlying = false;
     volatile static boolean isTakingOff = false;
+    volatile static boolean isMainProcess = false;
 
     static Application application;
     static UAirship sharedAirship;
@@ -524,6 +525,15 @@ public class UAirship {
      */
     public static boolean isTakingOff() {
         return isTakingOff;
+    }
+
+    /**
+     * Tests if the current process is the main process.
+     *
+     * @return <code>true</code> if currently within the main process; <code>false</code> otherwise.
+     */
+    public static boolean isMainProcess() {
+        return isMainProcess;
     }
 
     /**
