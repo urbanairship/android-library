@@ -9,6 +9,7 @@ import android.support.annotation.Size;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushMessage;
@@ -23,7 +24,7 @@ import java.util.Map;
 /**
  * A class that represents a custom event for the application.
  */
-public class CustomEvent extends Event {
+public class CustomEvent extends Event implements JsonSerializable {
     /**
      * The event type.
      */
@@ -240,6 +241,22 @@ public class CustomEvent extends Event {
         }
 
         return data.build();
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+        JsonMap.Builder data = JsonMap.newBuilder()
+                                      .put(EVENT_NAME, eventName)
+                                      .put(INTERACTION_ID, interactionId)
+                                      .put(INTERACTION_TYPE, interactionType)
+                                      .put(TRANSACTION_ID, transactionId)
+                                      .put(PROPERTIES, JsonValue.wrapOpt(properties));
+
+        if (eventValue != null) {
+            data.putOpt(EVENT_VALUE, eventValue.doubleValue());
+        }
+
+        return data.build().toJsonValue();
     }
 
     @Override
