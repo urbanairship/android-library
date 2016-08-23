@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
@@ -207,23 +209,23 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfo The {@link ActionScheduleInfo} instance.
      * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
      * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be null
-     * if the scheduling failed or the schedule count is greater than or equal
-     * to {@link #SCHEDULES_LIMIT}.
+     * if the scheduling failed, the schedule count is greater than or equal to {@link #SCHEDULES_LIMIT},
+     * or the scheduling was attempted off of the main process.
      */
     public void scheduleAsync(final ActionScheduleInfo scheduleInfo, @Nullable final PendingResult.ResultCallback<ActionSchedule> callback) {
+        final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation and executing callback.");
+            runCallback(callback, null, looper);
             return;
         }
 
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                ActionSchedule schedule = schedule(scheduleInfo);
-
-                if (callback != null) {
-                    callback.onResult(schedule);
-                }
+                final ActionSchedule schedule = schedule(scheduleInfo);
+                runCallback(callback, schedule, looper);
             }
         });
     }
@@ -269,23 +271,23 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfos The list of {@link ActionScheduleInfo} instances.
      * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
      * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
-     * {@link Collections#emptyList()} if the scheduling failed or the schedule count is greater than or equal
-     * to {@link #SCHEDULES_LIMIT}.
+     * {@link Collections#emptyList()} if the scheduling failed, the schedule count is greater than or equal
+     * to {@link #SCHEDULES_LIMIT}, or the scheduling was attempted off of the main process.
      */
     public void scheduleAsync(final List<ActionScheduleInfo> scheduleInfos, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation and executing callback.");
+            runCallback(callback, Collections.<ActionSchedule>emptyList(), looper);
             return;
         }
 
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                List<ActionSchedule> schedule = schedule(scheduleInfos);
-
-                if (callback != null) {
-                    callback.onResult(schedule);
-                }
+                final List<ActionSchedule> schedule = schedule(scheduleInfos);
+                runCallback(callback, schedule, looper);
             }
         });
     }
@@ -430,6 +432,7 @@ public class Automation extends AirshipComponent {
      * @return The retrieved {@link ActionSchedule}.
      */
     @WorkerThread
+    @Nullable
     public ActionSchedule getSchedule(String id) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
@@ -443,22 +446,24 @@ public class Automation extends AirshipComponent {
      * Gets a schedule for a given schedule ID asynchronously.
      *
      * @param id The schedule ID.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
+     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * null if the schedule does not exist or the get was attempted off of the main process.
      */
     public void getScheduleAsync(final String id, final PendingResult.ResultCallback<ActionSchedule> callback) {
+        final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation and executing callback.");
+            runCallback(callback, null, looper);
             return;
         }
 
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                ActionSchedule schedule = getSchedule(id);
-
-                if (callback != null) {
-                    callback.onResult(schedule);
-                }
+                final ActionSchedule schedule = getSchedule(id);
+                runCallback(callback, schedule, looper);
             }
         });
     }
@@ -481,22 +486,24 @@ public class Automation extends AirshipComponent {
     /**
      * Gets all schedules asynchronously.
      *
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
+     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * {@link Collections#emptyList()} if no schedules exist or the get was attempted off of the main process.
      */
     public void getSchedulesAsync(final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation and executing callback.");
+            runCallback(callback, Collections.<ActionSchedule>emptyList(), looper);
             return;
         }
 
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                List<ActionSchedule> schedule = getSchedules();
-
-                if (callback != null) {
-                    callback.onResult(schedule);
-                }
+                final List<ActionSchedule> schedules = getSchedules();
+                runCallback(callback, schedules, looper);
             }
         });
     }
@@ -521,22 +528,24 @@ public class Automation extends AirshipComponent {
      * Gets all schedules for a given group asynchronously.
      *
      * @param group The group.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation.
+     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * {@link Collections#emptyList()} if no schedules exist or the get was attempted off of the main process.
      */
     public void getSchedulesAsync(final String group, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+        final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
+
         if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation and executing callback.");
+            runCallback(callback, Collections.<ActionSchedule>emptyList(), looper);
             return;
         }
 
         dbRequestProcessingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                List<ActionSchedule> schedule = getSchedules(group);
-
-                if (callback != null) {
-                    callback.onResult(schedule);
-                }
+                final List<ActionSchedule> schedules = getSchedules(group);
+                runCallback(callback, schedules, looper);
             }
         });
     }
@@ -650,6 +659,27 @@ public class Automation extends AirshipComponent {
                 dataManager.updateLists(updatesMap);
             }
         });
+    }
+
+    /**
+     * Runs a {@link com.urbanairship.PendingResult.ResultCallback} instance for a given result. The
+     * callback is posted to the thread's looper, and will default to the main looper if one doesn't exist.
+     *
+     * @param callback The callback.
+     * @param result The result.
+     * @param looper The looper to which the callback is posted.
+     * @param <T> The result type.
+     */
+    private <T> void runCallback(@Nullable final PendingResult.ResultCallback<T> callback, @Nullable final T result, Looper looper) {
+        if (callback != null) {
+            Handler handler = new Handler(looper);
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onResult(result);
+                }
+            });
+        }
     }
 
 }
