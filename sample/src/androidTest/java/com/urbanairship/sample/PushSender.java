@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -44,17 +45,25 @@ public class PushSender {
     public void send(PushPayload payload) throws InterruptedException {
         int sendMesgRetryCount = 0;
         int MAX_SEND_MESG_RETRIES = 3;
+        URL url;
+
+        try {
+            url = new URL(pushUrl);
+        } catch (MalformedURLException e) {
+            Log.e(TAG, "Failed to send message with an invalid push URL.");
+            return;
+        }
 
         while (sendMesgRetryCount < MAX_SEND_MESG_RETRIES) {
             Log.i(TAG, "Created message to send: " + payload.toJsonValue().toString());
-            try {
-                request(payload.toString());
-                return;
-            } catch (MalformedURLException e) {
-                Log.e(TAG, "Failed to send message: " + payload.toJsonValue().toString(), e);
+            boolean retry = request(payload.toString(), url);
+
+            if (retry) {
                 int SEND_MESG_RETRY_DELAY = 3000;
                 Thread.sleep(SEND_MESG_RETRY_DELAY);
                 sendMesgRetryCount++;
+            } else {
+                sendMesgRetryCount = MAX_SEND_MESG_RETRIES;
             }
         }
     }
@@ -63,20 +72,31 @@ public class PushSender {
      * Actually sends the push message
      *
      * @param message The json formatted message to be sent
-     * @throws MalformedURLException
+     * @param url The push URL
+     * @return <code>true</code> to retry the request at a later time, otherwise <code>false</code>.
      */
-    private void request(String message) throws MalformedURLException {
-        URL url = new URL(pushUrl);
+    private boolean request(String message, URL url) {
 
         Response response = requestFactory.createRequest("POST", url)
                                           .setCredentials(appKey, masterSecret)
                                           .setRequestBody(message, "application/json")
                                           .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
                                           .execute();
-        if (response == null) {
-            Log.e(TAG, "Failed to receive a response.");
-        } else {
-            Log.d(TAG, "Received a response: " + response);
+        // 5xx
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            Log.e(TAG, "Failed to receive a response. Will retry");
+            return true;
         }
+        // 4xx
+        if (UAHttpStatusUtil.inClientErrorRange(response.getStatus())) {
+            Log.e(TAG, "Failed to send message: " + message + ". Received a response: " + response);
+            return false;
+        }
+        // 2xx
+        if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
+            Log.d(TAG, "Received a response: " + response);
+            return false;
+        }
+        return false;
     }
 }
