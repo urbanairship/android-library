@@ -10,7 +10,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
@@ -73,7 +73,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
 
         if (isFinishing()) {
             // Check if we still have an error
-            int error = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+            int error = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(this);
             if (error == ConnectionResult.SUCCESS && UAirship.shared().getPushManager().isPushEnabled()) {
                 // Resolved the error, make sure the service is started
                 UAirship.shared().getPushManager().updateRegistration();
@@ -88,11 +88,11 @@ public class PlayServicesErrorActivity extends FragmentActivity {
     private void checkPlayServices() {
         Logger.info("Checking Google Play services.");
 
-        int error = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        int error = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(this);
         if (error == ConnectionResult.SUCCESS) {
             Logger.info("Google Play services available!");
             finish();
-        } else if (GooglePlayServicesUtil.isUserRecoverableError(error)) {
+        } else if (GooglePlayServicesUtilWrapper.isUserRecoverableError(error)) {
             Logger.info("Google Play services recoverable error: " + error);
             ErrorDialogFragment.createInstance(error).show(getSupportFragmentManager(), DIALOG_TAG);
         } else {
@@ -134,8 +134,8 @@ public class PlayServicesErrorActivity extends FragmentActivity {
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Get the error code and retrieve the appropriate dialog
             int errorCode = this.getArguments().getInt(DIALOG_ERROR);
-            return GooglePlayServicesUtil.getErrorDialog(errorCode,
-                    this.getActivity(), REQUEST_RESOLVE_ERROR);
+            return GoogleApiAvailability.getInstance().getErrorDialog(this.getActivity(), errorCode,
+                    REQUEST_RESOLVE_ERROR);
         }
 
         @Override

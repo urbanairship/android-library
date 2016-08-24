@@ -4,11 +4,11 @@ package com.urbanairship.push;
 
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 import com.urbanairship.google.PlayServicesUtils;
 
 import java.io.IOException;
@@ -58,7 +58,7 @@ class GcmRegistrar {
         }
 
         try {
-            int playServicesStatus = GooglePlayServicesUtil.isGooglePlayServicesAvailable(UAirship.getApplicationContext());
+            int playServicesStatus = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(UAirship.getApplicationContext());
             if (ConnectionResult.SUCCESS != playServicesStatus) {
                 Logger.error("Google Play services is currently unavailable.");
                 return false;
