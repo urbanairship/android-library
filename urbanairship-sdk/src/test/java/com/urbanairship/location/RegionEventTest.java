@@ -39,13 +39,13 @@ public class RegionEventTest extends BaseTestCase {
 
         event.setProximityRegion(proximityRegion);
 
-        String expectedData = "{\"proximity\":{\"proximity_id\":\"test_proximity_region\",\"minor\":2," +
+        JsonValue expectedData = JsonValue.parseString("{\"proximity\":{\"proximity_id\":\"test_proximity_region\",\"minor\":2," +
                 "\"longitude\":\"0.0\",\"rssi\":-59,\"latitude\":\"0.0\",\"major\":1},\"source\":\"source\"," +
                 "\"region_id\":\"region_id\",\"action\":\"enter\",\"circular_region\":{\"radius\":\"10.0\"," +
-                "\"longitude\":\"180.0000000\",\"latitude\":\"90.0000000\"}}";
+                "\"longitude\":\"180.0000000\",\"latitude\":\"90.0000000\"}}");
 
         // test isValid returns true for valid region event
-        assertEquals(expectedData, event.getEventData().toString());
+        assertEquals(expectedData.getMap(), event.getEventData());
     }
 
     /**
