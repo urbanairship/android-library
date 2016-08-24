@@ -10,13 +10,12 @@ import android.support.annotation.VisibleForTesting;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.util.Network;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -114,6 +113,7 @@ class AnalyticsJobHandler {
     private final EventApiClient apiClient;
     private final UAirship airship;
     private final JobDispatcher dispatcher;
+    private boolean isScheduled;
 
     AnalyticsJobHandler(Context context, UAirship airship, PreferenceDataStore preferenceDataStore) {
         this(context, airship, preferenceDataStore, JobDispatcher.shared(context), new EventDataManager(context, airship.getAirshipConfigOptions().getAppKey()), new EventApiClient(context));
@@ -283,6 +283,9 @@ class AnalyticsJobHandler {
      */
     @Job.JobResult
     private int onUploadEvents() {
+        isScheduled = false;
+        dispatcher.cancel(ACTION_SEND);
+
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
         final int eventCount = dataManager.getEventCount();
@@ -343,22 +346,14 @@ class AnalyticsJobHandler {
      * @param milliseconds The milliseconds from the current time to schedule the event upload.
      */
     private void scheduleEventUpload(final long milliseconds) {
-        Logger.debug("AnalyticsJobHandler - Scheduling next event batch upload.");
+        Logger.verbose("AnalyticsJobHandler - Requesting to schedule event upload with delay " + milliseconds + "ms.");
 
         long sendTime = System.currentTimeMillis() + milliseconds;
         long previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0);
 
-        boolean isScheduled = dispatcher.isScheduled(ACTION_SEND);
-
         if (isScheduled) {
-            // If its currently retrying and we have no network access skip rescheduling
-            if (previousScheduledTime < System.currentTimeMillis() && !Network.isConnected()) {
-                Logger.verbose("AnalyticsJobHandler - Uploads are currently retrying from a previous attempt.");
-                return;
-            }
-
             // If its currently scheduled at an earlier time then skip rescheduling
-            if (previousScheduledTime <= sendTime) {
+            if (previousScheduledTime <= sendTime &&  previousScheduledTime >= System.currentTimeMillis()) {
                 Logger.verbose("AnalyticsJobHandler - Event upload already scheduled for an earlier time.");
                 return;
             }
@@ -376,5 +371,6 @@ class AnalyticsJobHandler {
         dispatcher.dispatch(job, milliseconds, TimeUnit.MILLISECONDS);
 
         preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
+        isScheduled = true;
     }
 }

@@ -117,19 +117,8 @@ public class JobDispatcher {
                     .getSystemService(Context.ALARM_SERVICE);
 
             alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
         }
-    }
-
-    /**
-     * Checks if a job is scheduled with the given job action.
-     *
-     * @param action The job's action.
-     */
-    public boolean isScheduled(String action) {
-        Intent intent = new Intent(context, AirshipService.class)
-                .setAction(action);
-
-        return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 
     /**
