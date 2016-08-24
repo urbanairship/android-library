@@ -70,6 +70,7 @@ class PushJobHandler {
     private final UAirship airship;
     private final PreferenceDataStore dataStore;
     private final Context context;
+    private final NotificationManagerCompat notificationManagerCompat;
 
     /**
      * Default constructor.
@@ -89,6 +90,7 @@ class PushJobHandler {
         this.dataStore = dataStore;
         this.airship = airship;
         this.notificationManager = notificationManager;
+        this.notificationManagerCompat = NotificationManagerCompat.from(context);
     }
 
     /**
@@ -207,7 +209,7 @@ class PushJobHandler {
         }
 
         Integer notificationId = null;
-        if (!airship.getPushManager().getUserNotificationsEnabled()) {
+        if (!(airship.getPushManager().getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled())) {
             Logger.info("User notifications disabled. Unable to display notification for message: " + message);
         } else {
             notificationId = showNotification(message, airship.getPushManager().getNotificationFactory());
