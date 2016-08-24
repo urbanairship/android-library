@@ -18,6 +18,11 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.UAirship;
+import com.urbanairship.sample.utils.ActionsPayload;
+import com.urbanairship.sample.utils.InAppMessagePayload;
+import com.urbanairship.sample.utils.PushPayload;
+import com.urbanairship.sample.utils.PushSender;
+import com.urbanairship.sample.utils.RichPushPayload;
 import com.urbanairship.util.UAStringUtil;
 
 import org.junit.After;
