@@ -301,20 +301,20 @@ public class JsonValueTest extends BaseTestCase {
         map.put("map", primitiveMap);
         map.put("collection", primitiveList);
 
-        String expected = "{\"short\":3,\"char\":\"c\",\"byte\":2,\"int\":1,\"String\":\"String\"," +
+        JsonValue expected = JsonValue.parseString("{\"short\":3,\"char\":\"c\",\"byte\":2,\"int\":1,\"String\":\"String\"," +
                 "\"map\":{\"short\":3,\"byte\":2,\"char\":\"c\",\"String\":\"String\",\"int\":1," +
                 "\"boolean\":true,\"double\":1.2},\"boolean\":true,\"collection\":[\"String\",1.2," +
-                "false,1,\"c\",2,3],\"double\":1.2}";
+                "false,1,\"c\",2,3],\"double\":1.2}");
 
-        assertEquals(expected, JsonValue.wrap(map).toString());
+        assertEquals(expected.getMap(), JsonValue.wrap(map));
 
         // List
         List<Object> list = new ArrayList<>(primitiveList);
         list.add(primitiveList);
 
-        expected = "[\"String\",1.2,false,1,\"c\",2,3,[\"String\",1.2,false,1,\"c\",2,3]]";
+        expected = JsonValue.parseString("[\"String\",1.2,false,1,\"c\",2,3,[\"String\",1.2,false,1,\"c\",2,3]]");
 
-        assertEquals(expected, JsonValue.wrap(list).toString());
+        assertEquals(expected.getList(), JsonValue.wrap(list).getList());
     }
 
 

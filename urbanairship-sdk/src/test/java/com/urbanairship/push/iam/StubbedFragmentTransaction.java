@@ -155,4 +155,14 @@ public class StubbedFragmentTransaction extends FragmentTransaction {
     public int commitAllowingStateLoss() {
         return 0;
     }
+
+    @Override
+    public void commitNow() {
+
+    }
+
+    @Override
+    public void commitNowAllowingStateLoss() {
+
+    }
 }

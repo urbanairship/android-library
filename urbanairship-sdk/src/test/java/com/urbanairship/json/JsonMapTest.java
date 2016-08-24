@@ -60,10 +60,9 @@ public class JsonMapTest extends BaseTestCase {
      * Test toString produces a JSON encoded String.
      */
     @Test
-    public void testToString() throws JSONException {
-        String expected = "{\"some-key\":\"some-value\",\"another-key\":\"another-value\"}";
-
-        assertEquals(expected, jsonMap.toString());
+    public void testToString() throws JsonException {
+        JsonValue parsedValue = JsonValue.parseString(jsonMap.toString());
+        assertEquals(parsedValue.getMap(), jsonMap);
     }
 
     /**

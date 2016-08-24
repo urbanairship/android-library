@@ -3,6 +3,8 @@
 package com.urbanairship.analytics;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
 import junit.framework.Assert;
 
@@ -16,17 +18,17 @@ public class ScreenTrackingEventTest extends BaseTestCase {
      * Test screen tracking event data formatting directly
      */
     @Test
-    public void testScreenTrackingEventData() throws JSONException {
+    public void testScreenTrackingEventData() throws JSONException, JsonException {
 
         String screen = "test_screen";
 
         ScreenTrackingEvent event = new ScreenTrackingEvent(screen, "previous_screen", 0, 1);
 
-        String expectedData ="{\"screen\":\"test_screen\",\"duration\":\"0.001\",\"exited_time\"" +
-                ":\"0.001\",\"previous_screen\":\"previous_screen\",\"entered_time\":\"0.000\"}";
+        JsonValue expected = JsonValue.parseString("{\"screen\":\"test_screen\",\"duration\":\"0.001\",\"exited_time\"" +
+                ":\"0.001\",\"previous_screen\":\"previous_screen\",\"entered_time\":\"0.000\"}");
 
         // Test isValid returns true for valid region event with expected data
-        Assert.assertEquals(expectedData, event.getEventData().toString());
+        Assert.assertEquals(expected.getMap(), event.getEventData());
     }
 
     /**
