@@ -12,14 +12,11 @@ import java.util.List;
  */
 class EventResponse {
 
-    static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; //5 MB
-    static final int MIN_TOTAL_DB_SIZE_BYTES = 10 * 1024;       //10 KB
+    static final int MAX_TOTAL_DB_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    static final int MIN_TOTAL_DB_SIZE_BYTES = 10 * 1024;       // 10 KB
 
-    static final int MAX_BATCH_SIZE_BYTES = 500 * 1024; //500 KB
-    static final int MIN_BATCH_SIZE_BYTES = 1024;       //1 KB
-
-    static final int MAX_WAIT_MS = 14 * 24 * 3600 * 1000;   // 14 days
-    static final int MIN_WAIT_MS = 7 * 24 * 3600 * 1000;    // 7 days
+    static final int MAX_BATCH_SIZE_BYTES = 500 * 1024; // 500 KB
+    static final int MIN_BATCH_SIZE_BYTES = 10 * 1024;  // 10 KB
 
     static final int MIN_BATCH_INTERVAL_MS = 60 * 1000;             // 60 seconds
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
@@ -48,7 +45,7 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Total");
             if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
                         MIN_TOTAL_DB_SIZE_BYTES,
                         MAX_TOTAL_DB_SIZE_BYTES);
             }
@@ -65,29 +62,12 @@ class EventResponse {
         if (response.getResponseHeaders() != null) {
             List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Batch");
             if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
                         MIN_BATCH_SIZE_BYTES,
                         MAX_BATCH_SIZE_BYTES);
             }
         }
         return MIN_BATCH_SIZE_BYTES;
-    }
-
-    /**
-     * Returns the maximum wait time.
-     *
-     * @return The maximum wait time as an Integer.
-     */
-    int getMaxWait() {
-        if (response.getResponseHeaders() != null) {
-            List<String> headerList = response.getResponseHeaders().get("X-UA-Max-Wait");
-            if (headerList != null && headerList.size() > 0) {
-                return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
-                        MIN_WAIT_MS,
-                        MAX_WAIT_MS);
-            }
-        }
-        return MIN_WAIT_MS;
     }
 
     /**

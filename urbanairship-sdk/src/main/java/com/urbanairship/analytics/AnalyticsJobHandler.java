@@ -81,9 +81,14 @@ class AnalyticsJobHandler {
 
 
     /**
+     * Batch delay between multiple event uploads in milliseconds.
+     */
+    private static final long MULTIPLE_BATCH_DELAY = 1000; // 1s
+
+    /**
      * Batch delay for high priority events in milliseconds.
      */
-    private static final long HIGH_PRIORITY_BATCH_DELAY = 1000; // 1s
+    private static final long HIGH_PRIORITY_BATCH_DELAY = 0; // 0s
 
     /**
      * Batch delay for normal priority events in milliseconds.
@@ -97,7 +102,6 @@ class AnalyticsJobHandler {
 
     static final String MAX_TOTAL_DB_SIZE_KEY = "com.urbanairship.analytics.MAX_TOTAL_DB_SIZE";
     static final String MAX_BATCH_SIZE_KEY = "com.urbanairship.analytics.MAX_BATCH_SIZE";
-    static final String MAX_WAIT_KEY = "com.urbanairship.analytics.MAX_WAIT";
     static final String MIN_BATCH_INTERVAL_KEY = "com.urbanairship.analytics.MIN_BATCH_INTERVAL";
     static final String LAST_SEND_KEY = "com.urbanairship.analytics.LAST_SEND";
     static final String SCHEDULED_SEND_TIME = "com.urbanairship.analytics.SCHEDULED_SEND_TIME";
@@ -309,7 +313,8 @@ class AnalyticsJobHandler {
         EventResponse response = apiClient.sendEvents(airship, events.values());
 
         if (response == null || response.getStatus() != 200) {
-            Logger.debug("Analytic events failed, rescheduling.");
+            Logger.debug("Analytic events failed, retrying.");
+            isScheduled = true;
             return Job.JOB_RETRY;
         }
 
@@ -319,12 +324,11 @@ class AnalyticsJobHandler {
         // Update preferences
         preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.getMaxTotalSize());
         preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.getMaxBatchSize());
-        preferenceDataStore.put(MAX_WAIT_KEY, response.getMaxWait());
         preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.getMinBatchInterval());
 
         // If there are still events left, schedule the next send
         if (eventCount - events.size() > 0) {
-            scheduleEventUpload(getNextSendDelay());
+            scheduleEventUpload(MULTIPLE_BATCH_DELAY);
         }
 
         return Job.JOB_FINISHED;

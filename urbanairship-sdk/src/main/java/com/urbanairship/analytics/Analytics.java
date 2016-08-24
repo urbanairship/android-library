@@ -249,6 +249,7 @@ public class Analytics extends AirshipComponent {
             Logger.error("Analytics - Failed to add event " + event.getType());
         }
 
+        Logger.verbose("Analytics - Adding event: " + event.getType());
         Job addEventJob = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
                              .setAirshipComponent(Analytics.class)
                              .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())

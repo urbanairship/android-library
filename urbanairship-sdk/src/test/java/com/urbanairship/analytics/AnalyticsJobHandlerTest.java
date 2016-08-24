@@ -173,7 +173,6 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
         when(response.getMaxTotalSize()).thenReturn(200);
         when(response.getMaxBatchSize()).thenReturn(300);
-        when(response.getMaxWait()).thenReturn(400);
         when(response.getMinBatchInterval()).thenReturn(100);
 
         // Return the response
@@ -194,7 +193,6 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Verify responses are being saved
         assertEquals(200, dataStore.getInt(AnalyticsJobHandler.MAX_TOTAL_DB_SIZE_KEY, 0));
         assertEquals(300, dataStore.getInt(AnalyticsJobHandler.MAX_BATCH_SIZE_KEY, 0));
-        assertEquals(400, dataStore.getInt(AnalyticsJobHandler.MAX_WAIT_KEY, 0));
         assertEquals(100, dataStore.getInt(AnalyticsJobHandler.MIN_BATCH_INTERVAL_KEY, 0));
 
         // Check it schedules an upload
@@ -323,7 +321,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                 Job job = (Job) argument;
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
-        }), eq(1000L), eq(TimeUnit.MILLISECONDS));
+        }), eq(0l), eq(TimeUnit.MILLISECONDS));
     }
 
     /**

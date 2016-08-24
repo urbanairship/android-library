@@ -46,39 +46,39 @@ public class EventResponseTest extends BaseTestCase {
                 EventResponse.MAX_TOTAL_DB_SIZE_BYTES);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES / 1024 + 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxTotalSize(),
                 EventResponse.MAX_TOTAL_DB_SIZE_BYTES);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_TOTAL_DB_SIZE_BYTES / 1024 - 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxTotalSize(),
-                EventResponse.MAX_TOTAL_DB_SIZE_BYTES - 1);
+                EventResponse.MAX_TOTAL_DB_SIZE_BYTES - 1024);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES / 1024));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxTotalSize(),
                 EventResponse.MIN_TOTAL_DB_SIZE_BYTES);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES / 1024 - 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxTotalSize(),
                 EventResponse.MIN_TOTAL_DB_SIZE_BYTES);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_TOTAL_DB_SIZE_BYTES / 1024 + 1));
         responseHeaders.put("X-UA-Max-Total", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxTotalSize(),
-                EventResponse.MIN_TOTAL_DB_SIZE_BYTES + 1);
+                EventResponse.MIN_TOTAL_DB_SIZE_BYTES + 1024);
     }
 
     /**
@@ -89,96 +89,46 @@ public class EventResponseTest extends BaseTestCase {
         List<String> stringList = new ArrayList<>();
 
         // Test a value at the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES /1024));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxBatchSize(),
                 EventResponse.MAX_BATCH_SIZE_BYTES);
 
         // Test a value above the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES / 1024 + 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the max",
                 eventResponse.getMaxBatchSize(),
                 EventResponse.MAX_BATCH_SIZE_BYTES);
 
         // Test a value below the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MAX_BATCH_SIZE_BYTES / 1024 - 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxBatchSize(),
-                EventResponse.MAX_BATCH_SIZE_BYTES - 1);
+                EventResponse.MAX_BATCH_SIZE_BYTES - 1024);
 
         // Test a value at the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES / 1024));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxBatchSize(),
                 EventResponse.MIN_BATCH_SIZE_BYTES);
 
         // Test a value below the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES - 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES / 1024 - 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should constrain to the min",
                 eventResponse.getMaxBatchSize(),
                 EventResponse.MIN_BATCH_SIZE_BYTES);
 
         // Test a value above the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES + 1));
+        stringList.add(0, String.valueOf(EventResponse.MIN_BATCH_SIZE_BYTES / 1024 + 1));
         responseHeaders.put("X-UA-Max-Batch", stringList);
         assertEquals("Should allow values between the min and max",
                 eventResponse.getMaxBatchSize(),
-                EventResponse.MIN_BATCH_SIZE_BYTES + 1);
-    }
-
-    /**
-     * Test that the max wait time constrains the values between its max and min.
-     */
-    @Test
-    public void testMaxWait() {
-        List<String> stringList = new ArrayList<>();
-
-        // Test a value at the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should constrain to the max",
-                eventResponse.getMaxWait(),
-                EventResponse.MAX_WAIT_MS);
-
-        // Test a value above the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS + 1));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should constrain to the max",
-                eventResponse.getMaxWait(),
-                EventResponse.MAX_WAIT_MS);
-
-        // Test a value below the max
-        stringList.add(0, String.valueOf(EventResponse.MAX_WAIT_MS - 1));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should allow values between the min and max",
-                eventResponse.getMaxWait(),
-                EventResponse.MAX_WAIT_MS - 1);
-
-        // Test a value at the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should constrain to the min",
-                eventResponse.getMaxWait(),
-                EventResponse.MIN_WAIT_MS);
-
-        // Test a value below the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS - 1));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should constrain to the min",
-                eventResponse.getMaxWait(),
-                EventResponse.MIN_WAIT_MS);
-
-        // Test a value above the min
-        stringList.add(0, String.valueOf(EventResponse.MIN_WAIT_MS + 1));
-        responseHeaders.put("X-UA-Max-Wait", stringList);
-        assertEquals("Should allow values between the min and max",
-                eventResponse.getMaxWait(),
-                EventResponse.MIN_WAIT_MS + 1);
+                EventResponse.MIN_BATCH_SIZE_BYTES + 1024);
     }
 
     /**
