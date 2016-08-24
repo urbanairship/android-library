@@ -1,6 +1,6 @@
 /* Copyright 2016 Urban Airship and Contributors */
 
-package com.urbanairship.sample;
+package com.urbanairship.sample.utils;
 
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -11,7 +11,7 @@ import java.util.Collections;
 /**
  * Helper class to create the push payload.
  */
-class PushPayload implements JsonSerializable {
+public class PushPayload implements JsonSerializable {
 
     static final String AUDIENCE = "audience";
     static final String DEVICE_TYPES = "device_types";
@@ -154,7 +154,7 @@ class PushPayload implements JsonSerializable {
          * @param alert The alert string.
          * @return The builder object.
          */
-        Builder setAlert(String alert) {
+        public Builder setAlert(String alert) {
             this.alert = alert;
             return this;
         }
@@ -165,7 +165,7 @@ class PushPayload implements JsonSerializable {
          * @param richPushPayload The rich push payload.
          * @return The builder object.
          */
-        Builder setRichPushMessage(RichPushPayload richPushPayload) {
+        public Builder setRichPushMessage(RichPushPayload richPushPayload) {
             this.richPushPayload = richPushPayload;
             return this;
         }
@@ -176,7 +176,7 @@ class PushPayload implements JsonSerializable {
          * @param inApp The in-app message payload.
          * @return The builder object.
          */
-        Builder setInAppMessage(InAppMessagePayload inApp) {
+        public Builder setInAppMessage(InAppMessagePayload inApp) {
             this.inAppMessagePayload = inApp;
             return this;
         }
@@ -186,7 +186,7 @@ class PushPayload implements JsonSerializable {
          *
          * @return The builder object.
          */
-        PushPayload build() {
+        public PushPayload build() {
             return new PushPayload(this);
         }
     }

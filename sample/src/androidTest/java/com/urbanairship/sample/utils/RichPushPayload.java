@@ -1,6 +1,6 @@
 /* Copyright 2016 Urban Airship and Contributors */
 
-package com.urbanairship.sample;
+package com.urbanairship.sample.utils;
 
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
