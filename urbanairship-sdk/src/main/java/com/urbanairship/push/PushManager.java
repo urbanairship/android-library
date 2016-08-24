@@ -7,6 +7,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
@@ -232,6 +233,7 @@ public class PushManager extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final AirshipConfigOptions configOptions;
     private boolean channelCreationDelayEnabled;
+    private final NotificationManagerCompat notificationManagerCompat;
 
     private final JobDispatcher jobDispatcher;
     private ChannelJobHandler channelJobHandler;
@@ -274,6 +276,8 @@ public class PushManager extends AirshipComponent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
         }
+
+        this.notificationManagerCompat = NotificationManagerCompat.from(context);
     }
 
     @Override
@@ -488,7 +492,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if opted in for push.
      */
     public boolean isOptIn() {
-        return isPushEnabled() && isPushAvailable() && getUserNotificationsEnabled();
+        return isPushEnabled() && isPushAvailable() && getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled();
     }
 
     /**
