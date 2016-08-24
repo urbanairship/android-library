@@ -14,6 +14,8 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.location.CircularRegion;
+import com.urbanairship.location.ProximityRegion;
 import com.urbanairship.location.RegionEvent;
 
 import org.junit.After;
@@ -122,7 +124,8 @@ public class AutomationTest extends BaseTestCase {
                 "\"limit\": 5," +
                 "\"group\": \"group\"," +
                 "\"triggers\": [" +
-                    "{\"type\": \"custom_event_value\"," +
+                    "{" +
+                        "\"type\": \"custom_event_value\"," +
                         "\"goal\": 4.0," +
                         "\"predicate\": {" +
                             "\"and\" : [" +
@@ -154,6 +157,52 @@ public class AutomationTest extends BaseTestCase {
         updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, Collections.singletonList("automation id"));
         updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 5.0), Collections.EMPTY_LIST);
         updatesMap.put(AutomationDataManager.TRIGGERS_TO_RESET_QUERY, Collections.singletonList("1"));
+        verify(automationDataManager).updateLists(updatesMap);
+    }
+
+    @Test
+    public void testRegionEventValueMatch() throws Exception {
+        String json = "{\"actions\":" +
+                "{\"test_action\":\"action_value\"}," +
+                "\"limit\": 5," +
+                "\"group\": \"group\"," +
+                "\"triggers\": [" +
+                    "{" +
+                        "\"type\": \"region_enter\"," +
+                        "\"goal\": 4.0," +
+                        "\"predicate\": {" +
+                            "\"and\" : [" +
+                                "{\"key\": \"region_id\",\"value\": {\"equals\": \"region_id\"}}," +
+                                "{\"key\": \"latitude\",\"scope\":[\"proximity\"],\"value\": {\"equals\": 5.0}}," +
+                                "{\"key\": \"source\",\"value\": {\"equals\": \"test_source\"}}" +
+                            "]" +
+                        "}" +
+                    "}" +
+                "]}";
+
+        ActionScheduleInfo actionScheduleInfo = ActionScheduleInfo.parseJson(JsonValue.parseString(json));
+        Trigger trigger = actionScheduleInfo.getTriggers().get(0);
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
+
+        when(automationDataManager.insertSchedules(Collections.singletonList(actionScheduleInfo))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+        automation.schedule(actionScheduleInfo);
+
+        when(automationDataManager.getTriggers(Trigger.REGION_ENTER)).thenReturn(Collections.singletonList(triggerEntry));
+        when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", actionScheduleInfo, 0)));
+
+        RegionEvent event = new RegionEvent("region_id", "test_source", RegionEvent.BOUNDARY_EVENT_ENTER);
+        ProximityRegion proximityRegion = new ProximityRegion("id", 2, 3);
+        proximityRegion.setCoordinates(5.0, 6.0);
+        CircularRegion circularRegion = new CircularRegion(1.0, 2.0, 3.0);
+        event.setProximityRegion(proximityRegion);
+        event.setCircularRegion(circularRegion);
+
+        UAirship.shared().getAnalytics().addEvent(event);
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager, atLeastOnce()).getTriggers(anyInt());
+        updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 1.0), Collections.singletonList("1"));
         verify(automationDataManager).updateLists(updatesMap);
     }
 
@@ -308,6 +357,11 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getTriggers(Trigger.REGION_EXIT)).thenReturn(Collections.singletonList(triggerEntry));
 
         RegionEvent event = new RegionEvent("region_id", "source", RegionEvent.BOUNDARY_EVENT_EXIT);
+        ProximityRegion proximityRegion = new ProximityRegion("id", 2, 3);
+        CircularRegion circularRegion = new CircularRegion(1.0, 2.0, 3.0);
+
+        event.setProximityRegion(proximityRegion);
+        event.setCircularRegion(circularRegion);
         UAirship.shared().getAnalytics().addEvent(event);
 
         Thread.sleep(SLEEP_TIME);

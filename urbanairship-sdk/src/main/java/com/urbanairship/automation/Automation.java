@@ -26,7 +26,6 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
@@ -111,28 +110,21 @@ public class Automation extends AirshipComponent {
             analyticsListener = new AnalyticsListener() {
                 @Override
                 public void onRegionEventAdded(RegionEvent regionEvent) {
-                    if (regionEvent.getBoundaryEvent() == RegionEvent.BOUNDARY_EVENT_ENTER) {
-                        onEventAdded(JsonValue.wrapOpt(regionEvent.getRegionId()), Trigger.REGION_ENTER, 1.00);
-                    } else {
-                        onEventAdded(JsonValue.wrapOpt(regionEvent.getRegionId()), Trigger.REGION_EXIT, 1.00);
-                    }
+                    int type = regionEvent.getBoundaryEvent() == RegionEvent.BOUNDARY_EVENT_ENTER ? Trigger.REGION_ENTER : Trigger.REGION_EXIT;
+                    onEventAdded(regionEvent.toJsonValue(), type, 1.00);
                 }
 
                 @Override
                 public void onCustomEventAdded(CustomEvent customEvent) {
-                    JsonMap.Builder data = JsonMap.newBuilder()
-                                                  .put(CustomEvent.EVENT_NAME, customEvent.getEventName())
-                                                  .put(CustomEvent.INTERACTION_ID, customEvent.getInteractionId())
-                                                  .put(CustomEvent.INTERACTION_TYPE, customEvent.getInteractionType())
-                                                  .put(CustomEvent.TRANSACTION_ID, customEvent.getTransactionId())
-                                                  .put(CustomEvent.PROPERTIES, JsonValue.wrapOpt(customEvent.getProperties()));
+                    double value = 1.00;
+                    int type = Trigger.CUSTOM_EVENT_COUNT;
 
                     if (customEvent.getEventValue() != null) {
-                        data.put(CustomEvent.EVENT_VALUE, customEvent.getEventValue().doubleValue());
-                        onEventAdded(data.build(), Trigger.CUSTOM_EVENT_VALUE, customEvent.getEventValue().doubleValue());
+                        value = customEvent.getEventValue().doubleValue();
+                        type = Trigger.CUSTOM_EVENT_VALUE;
                     }
 
-                    onEventAdded(data.build(), Trigger.CUSTOM_EVENT_COUNT, 1.00);
+                    onEventAdded(customEvent.toJsonValue(), type, value);
                 }
 
                 @Override

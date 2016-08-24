@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
+import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 /**
@@ -146,6 +147,7 @@ public class Triggers {
             } else {
                 predicate = JsonPredicate.newBuilder()
                                          .addMatcher(JsonMatcher.newBuilder()
+                                                                .setKey(RegionEvent.REGION_ID)
                                                                 .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap(regionId)))
                                                                 .build())
                                          .build();

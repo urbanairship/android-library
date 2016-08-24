@@ -9,6 +9,8 @@ import android.support.annotation.Size;
 import com.urbanairship.Logger;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,7 +20,7 @@ import java.util.Locale;
  * A RegionEvent defines a region with an identifier, major and minor and optional
  * proximityRegion and/or circularRegion.
  */
-public class RegionEvent extends Event {
+public class RegionEvent extends Event implements JsonSerializable {
     /**
      * The event type.
      */
@@ -27,7 +29,7 @@ public class RegionEvent extends Event {
     /**
      * The region ID key.
      */
-    private static final String REGION_ID = "region_id";
+    public static final String REGION_ID = "region_id";
 
     /**
      * The region source key.
@@ -179,15 +181,6 @@ public class RegionEvent extends Event {
         return boundaryEvent;
     }
 
-    /**
-     * Gets the boundary event region ID.
-     *
-     * @return The region ID.
-     */
-    public String getRegionId() {
-        return regionId;
-    }
-
     @Override
     protected final JsonMap getEventData() {
 
@@ -229,6 +222,43 @@ public class RegionEvent extends Event {
         }
 
         return data.build();
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+
+        if (!isValid()) {
+            return null;
+        }
+
+        JsonMap.Builder data = JsonMap.newBuilder()
+                                      .put(REGION_ID, regionId)
+                                      .put(SOURCE, source)
+                                      .put(BOUNDARY_EVENT, boundaryEvent == 1 ? "enter" : "exit");
+
+        if (proximityRegion != null && proximityRegion.isValid()) {
+            JsonMap.Builder proximityRegionData = JsonMap.newBuilder()
+                                                         .put(PROXIMITY_REGION_ID, proximityRegion.getProximityId())
+                                                         .put(PROXIMITY_REGION_MAJOR, proximityRegion.getMajor())
+                                                         .put(PROXIMITY_REGION_MINOR, proximityRegion.getMinor())
+                                                         .putOpt(PROXIMITY_REGION_RSSI, proximityRegion.getRssi())
+                                                         .putOpt(LATITUDE, proximityRegion.getLatitude())
+                                                         .putOpt(LATITUDE, proximityRegion.getLatitude());
+
+            data.put(RegionEvent.PROXIMITY_REGION, proximityRegionData.build());
+        }
+
+        if (circularRegion != null && circularRegion.isValid()) {
+            JsonMap circularRegionData = JsonMap.newBuilder()
+                                                .put(CIRCULAR_REGION_RADIUS, circularRegion.getRadius())
+                                                .put(LATITUDE, circularRegion.getLatitude())
+                                                .put(LONGITUDE,  circularRegion.getLongitude())
+                                                .build();
+
+            data.put(CIRCULAR_REGION, circularRegionData);
+        }
+
+        return data.build().toJsonValue();
     }
 
     /**
