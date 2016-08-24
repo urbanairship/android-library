@@ -39,7 +39,7 @@
     <!-- Message Center -->
     <string name="ua_message_center_title">Message Center</string>
     <string name="ua_empty_message_list">No Messages</string>
-    <string name="ua_message_not_selected">No Message Selected</string>
+    <string name="ua_message_not_selected">No Messages Selected</string>
     <string name="ua_mc_failed_to_load">Unable to load message. Please try again later.</string>
     <string name="ua_retry_button">Retry</string>
     <string name="ua_ok">Ok</string>

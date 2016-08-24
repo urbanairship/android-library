@@ -230,11 +230,12 @@ public class MessageCenterFragment extends Fragment {
     protected void showMessage(String messageId) {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
-            return;
+            currentMessageId = null;
+            currentMessagePosition = -1;
+        } else {
+            currentMessageId = messageId;
+            currentMessagePosition = getMessages().indexOf(message);
         }
-
-        currentMessageId = messageId;
-        currentMessagePosition = getMessages().indexOf(message);
 
         if (isTwoPane) {
             String tag = messageId == null ? "EMPTY_MESSAGE" : messageId;
@@ -250,7 +251,7 @@ public class MessageCenterFragment extends Fragment {
 
             messageListFragment.setCurrentMessage(messageId);
 
-        } else {
+        } else if (message != null) {
             Intent intent = new Intent()
                     .setPackage(getContext().getPackageName())
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
