@@ -8,12 +8,12 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
+import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 
 import java.util.concurrent.Semaphore;
 
@@ -73,7 +73,7 @@ class FusedLocationAdapter implements LocationAdapter {
         final Semaphore semaphore = new Semaphore(0);
 
         try {
-            int playServicesStatus = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+            int playServicesStatus = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
                 Logger.debug("FusedLocationAdapter - Google Play services is currently unavailable, unable to connect for fused location.");
                 return false;
