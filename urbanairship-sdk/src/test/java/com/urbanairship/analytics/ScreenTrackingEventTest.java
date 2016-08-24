@@ -18,7 +18,7 @@ public class ScreenTrackingEventTest extends BaseTestCase {
      * Test screen tracking event data formatting directly
      */
     @Test
-    public void testScreenTrackingEventData() throws JSONException, JsonException {
+    public void testScreenTrackingEventData() throws JsonException {
 
         String screen = "test_screen";
 
