@@ -30,6 +30,7 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,15 +117,12 @@ public class Automation extends AirshipComponent {
 
                 @Override
                 public void onCustomEventAdded(CustomEvent customEvent) {
-                    double value = 1.00;
-                    int type = Trigger.CUSTOM_EVENT_COUNT;
+                    onEventAdded(customEvent.toJsonValue(), Trigger.CUSTOM_EVENT_COUNT, 1.00);
 
-                    if (customEvent.getEventValue() != null) {
-                        value = customEvent.getEventValue().doubleValue();
-                        type = Trigger.CUSTOM_EVENT_VALUE;
+                    BigDecimal eventValue = customEvent.getEventValue();
+                    if (eventValue != null) {
+                        onEventAdded(customEvent.toJsonValue(), Trigger.CUSTOM_EVENT_VALUE, eventValue.doubleValue());
                     }
-
-                    onEventAdded(customEvent.toJsonValue(), type, value);
                 }
 
                 @Override
