@@ -242,17 +242,25 @@ public class RichPushInbox extends AirshipComponent {
 
     /**
      * Starts an activity that can display a {@link RichPushMessage}. An implicit intent with the intent
-     * action {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE} with the message ID supplied as the data
+     * action {@code com.urbanairship.VIEW_RICH_PUSH_INBOX} with the message ID supplied as the data
      * in the form of {@code message:<MESSAGE_ID>} will be attempted first. If the intent
-     * fails to start an activity, the {@link MessageActivity} will be started instead.
+     * fails then the action {@code com.urbanairship.VIEW_MESSAGE_INTENT_ACTION} will be tried. Finally,
+     * it will fall back to the {@link MessageActivity} activity.
      *
      * @param messageId An ID of a {@link RichPushMessage} to display.
      */
     public void startMessageActivity(@NonNull String messageId) {
-        Intent intent = new Intent(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION)
+        Intent intent = new Intent(RichPushInbox.VIEW_INBOX_INTENT_ACTION)
                 .setPackage(context.getPackageName())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
+
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+            return;
+        }
+
+        intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
 
         if (intent.resolveActivity(context.getPackageManager()) == null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {

@@ -128,7 +128,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Handle the "com.urbanairship.VIEW_RICH_PUSH_INBOX" intent action.
         if (RichPushInbox.VIEW_INBOX_INTENT_ACTION.equals(getIntent().getAction())) {
-            navigate(R.id.nav_message_center);
+            Fragment fragment = navigate(R.id.nav_message_center);
+
+            if (getIntent().getData() != null && getIntent().getData().getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+                String messageId = getIntent().getData().getSchemeSpecificPart();
+                if (fragment != null && fragment instanceof MessageCenterFragment) {
+                    ((MessageCenterFragment) fragment).setMessageID(messageId);
+                }
+            }
 
             // Clear the action so we don't handle it again
             getIntent().setAction(null);
@@ -181,15 +188,16 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void navigate(int id) {
+    private Fragment navigate(int id) {
         currentNavPosition = id;
         navigation.setCheckedItem(id);
 
-        if (getSupportFragmentManager().findFragmentByTag("content_frag" + id) != null) {
-            return;
+        Fragment fragment =  getSupportFragmentManager().findFragmentByTag("content_frag" + id);
+
+        if (fragment != null) {
+            return fragment;
         }
 
-        Fragment fragment;
         switch (id) {
             case R.id.nav_home:
                 setTitle(R.string.home_title);
@@ -198,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.nav_message_center:
                 setTitle(R.string.message_center_title);
                 fragment = new MessageCenterFragment();
+
 
                 // Dismiss this Message Center indicator if it's being displayed
                 if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()){
@@ -211,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 Log.e(TAG, "Unexpected navigation item");
-                return;
+                return null;
         }
 
         currentNavPosition = id;
@@ -221,6 +230,8 @@ public class MainActivity extends AppCompatActivity {
                                    .commit();
 
         drawer.closeDrawer(GravityCompat.START);
+
+        return fragment;
     }
 
     /**
