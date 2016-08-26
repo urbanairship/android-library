@@ -42,6 +42,7 @@ public class MessageCenterFragment extends Fragment {
     private static final String STATE_CURRENT_MESSAGE_ID = "STATE_CURRENT_MESSAGE_ID";
     private static final String STATE_CURRENT_MESSAGE_POSITION = "STATE_CURRENT_MESSAGE_POSITION";
     private static final String STATE_ABS_LIST_VIEW = "STATE_ABS_LIST_VIEW";
+    private static final String STATE_PENDING_MESSAGE_ID = "STATE_PENDING_MESSAGE_ID";
 
     private RichPushInbox.Predicate predicate;
 
@@ -50,6 +51,8 @@ public class MessageCenterFragment extends Fragment {
 
     private String currentMessageId;
     private int currentMessagePosition;
+
+    private String pendingMessageId;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
         @Override
@@ -64,7 +67,7 @@ public class MessageCenterFragment extends Fragment {
      * @param messageId The message's ID to display.
      * @return {@link MessageCenterFragment} instance.
      */
-    static MessageCenterFragment newInstance(String messageId) {
+    public static MessageCenterFragment newInstance(String messageId) {
         MessageCenterFragment message = new MessageCenterFragment();
         Bundle arguments = new Bundle();
         arguments.putString(START_MESSAGE_ID, messageId);
@@ -80,8 +83,8 @@ public class MessageCenterFragment extends Fragment {
         if (savedInstanceState != null) {
             currentMessagePosition = savedInstanceState.getInt(STATE_CURRENT_MESSAGE_POSITION, -1);
             currentMessageId = savedInstanceState.getString(STATE_CURRENT_MESSAGE_ID, null);
+            pendingMessageId = savedInstanceState.getString(STATE_PENDING_MESSAGE_ID, null);
         }
-
     }
 
     /**
@@ -114,7 +117,7 @@ public class MessageCenterFragment extends Fragment {
         messageListFragment.setPredicate(predicate);
 
         if (savedInstanceState == null && getArguments() != null && getArguments().containsKey(START_MESSAGE_ID)) {
-            showMessage(getArguments().getString(START_MESSAGE_ID));
+            pendingMessageId = getArguments().getString(START_MESSAGE_ID);
         }
 
         // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
@@ -165,6 +168,7 @@ public class MessageCenterFragment extends Fragment {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
         savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
+        savedInstanceState.putString(STATE_PENDING_MESSAGE_ID, pendingMessageId);
 
         // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
         if (messageListFragment != null && messageListFragment.getAbsListView() != null) {
@@ -206,6 +210,11 @@ public class MessageCenterFragment extends Fragment {
         }
 
         updateCurrentMessage();
+
+        if (pendingMessageId != null) {
+            showMessage(pendingMessageId);
+            pendingMessageId = null;
+        }
     }
 
     @Override
@@ -216,10 +225,24 @@ public class MessageCenterFragment extends Fragment {
 
     /**
      * Gets messages from the inbox filtered by the local predicate
+     *
      * @return The filtered list of messages.
      */
     private List<RichPushMessage> getMessages() {
         return UAirship.shared().getInbox().getMessages(predicate);
+    }
+
+    /**
+     * Sets the message ID to display.
+     *
+     * @param messageId The message ID.
+     */
+    public void setMessageID(String messageId) {
+        if (isResumed()) {
+            showMessage(messageId);
+        } else {
+            this.pendingMessageId = messageId;
+        }
     }
 
     /**
