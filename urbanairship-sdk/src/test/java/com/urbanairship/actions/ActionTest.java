@@ -5,6 +5,7 @@ package com.urbanairship.actions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
@@ -34,8 +35,9 @@ public class ActionTest extends BaseTestCase {
         // Create a test action that verifies the result, handle, and arguments
         // in each method
         TestAction action = new TestAction(true, expectedResult) {
+            @NonNull
             @Override
-            public ActionResult perform(ActionArguments arguments) {
+            public ActionResult perform(@NonNull ActionArguments arguments) {
                 assertEquals("Action arguments is a different instance then the passed in arguments",
                         arguments, originalArguments);
 
@@ -46,7 +48,7 @@ public class ActionTest extends BaseTestCase {
             }
 
             @Override
-            public void onStart(ActionArguments arguments) {
+            public void onStart(@NonNull ActionArguments arguments) {
                 super.onStart(arguments);
 
                 assertEquals("Bundle does not contain the passed in metadata",
@@ -57,7 +59,7 @@ public class ActionTest extends BaseTestCase {
             }
 
             @Override
-            public void onFinish(ActionArguments arguments, ActionResult result) {
+            public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
                 super.onFinish(arguments, result);
 
                 assertEquals("Bundle does not contain the passed in metadata",
@@ -121,8 +123,9 @@ public class ActionTest extends BaseTestCase {
         final IllegalStateException exception = new IllegalStateException("oh no!");
 
         TestAction action = new TestAction(true, performResult) {
+            @NonNull
             @Override
-            public ActionResult perform(ActionArguments arguments) {
+            public ActionResult perform(@NonNull ActionArguments arguments) {
                 super.perform(arguments);
                 throw exception;
             }
@@ -168,8 +171,9 @@ public class ActionTest extends BaseTestCase {
         // Create an action that starts an activity for a result
         final Intent activityIntent = new Intent();
         final TestAction action = new TestAction() {
+            @NonNull
             @Override
-            public ActionResult perform(ActionArguments arguments) {
+            public ActionResult perform(@NonNull ActionArguments arguments) {
                 Action.ActivityResult result = startActivityForResult(activityIntent);
 
                 // Verify the result and data

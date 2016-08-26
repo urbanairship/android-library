@@ -67,7 +67,6 @@ class NamedUserJobHandler {
 
     private final NamedUser namedUser;
     private final PushManager pushManager;
-    private final Context context;
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
 
@@ -79,12 +78,11 @@ class NamedUserJobHandler {
      * @param dataStore The preference data store.
      */
     NamedUserJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, JobDispatcher.shared(context), new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+        this(airship, dataStore, JobDispatcher.shared(context), new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    NamedUserJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, NamedUserApiClient client) {
-        this.context = context;
+    NamedUserJobHandler(UAirship airship, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, NamedUserApiClient client) {
         this.dataStore = dataStore;
         this.client = client;
         this.namedUser = airship.getNamedUser();

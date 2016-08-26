@@ -37,7 +37,7 @@ public class SampleAirshipReceiver extends AirshipReceiver {
     }
 
     @Override
-    protected void onChannelRegistrationFailed(Context context) {
+    protected void onChannelRegistrationFailed(@NonNull Context context) {
         Log.i(TAG, "Channel registration failed.");
     }
 

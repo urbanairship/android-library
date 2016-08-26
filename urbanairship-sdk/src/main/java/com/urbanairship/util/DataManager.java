@@ -82,7 +82,7 @@ public abstract class DataManager {
      *
      * @param db The database.
      */
-    protected void onOpen(SQLiteDatabase db) {};
+    protected void onOpen(SQLiteDatabase db) {}
 
     /**
      * Called when the database connection is configured.
@@ -90,7 +90,7 @@ public abstract class DataManager {
      * @param db The database.
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected  void onConfigure(SQLiteDatabase db) {};
+    protected  void onConfigure(SQLiteDatabase db) {}
 
     /**
      * Called when the database is created for the first time.

@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
@@ -78,12 +79,12 @@ public class PushJobHandlerTest extends BaseTestCase {
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
-            public Notification createNotification(PushMessage pushMessage, int notificationId) {
+            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
                 return notification;
             }
 
             @Override
-            public int getNextId(PushMessage pushMessage) {
+            public int getNextId(@NonNull PushMessage pushMessage) {
                 return TEST_NOTIFICATION_ID;
             }
         };
@@ -180,12 +181,12 @@ public class PushJobHandlerTest extends BaseTestCase {
         // Set a notification factory that throws an exception
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
-            public Notification createNotification(PushMessage pushMessage, int notificationId) {
+            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
                 throw new RuntimeException("Unable to create and display notification.");
             }
 
             @Override
-            public int getNextId(PushMessage pushMessage) {
+            public int getNextId(@NonNull PushMessage pushMessage) {
                 return 0;
             }
         };

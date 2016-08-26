@@ -2,6 +2,8 @@
 
 package com.urbanairship.actions;
 
+import android.support.annotation.NonNull;
+
 /**
  * Test action that tracks what methods were called
  */
@@ -25,25 +27,26 @@ public class TestAction extends Action {
         this.result = result;
     }
 
+    @NonNull
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
         this.performCalled = true;
         this.runArgs = arguments;
         return result;
     }
 
     @Override
-    public void onStart(ActionArguments arguments) {
+    public void onStart(@NonNull ActionArguments arguments) {
         onStartCalled = true;
     }
 
     @Override
-    public void onFinish(ActionArguments arguments, ActionResult result) {
+    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
         onFinishCalled = true;
     }
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         return acceptsArguments;
     }
 }

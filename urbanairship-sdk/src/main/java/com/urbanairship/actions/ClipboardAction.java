@@ -72,6 +72,7 @@ public class ClipboardAction extends Action {
         }
     }
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull final ActionArguments arguments) {
 

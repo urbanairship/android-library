@@ -2,6 +2,8 @@
 
 package com.urbanairship;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.http.Request;
 import com.urbanairship.http.Response;
 
@@ -79,6 +81,7 @@ public class TestRequest extends Request {
     }
 
 
+    @NonNull
     @Override
     public Request setIfModifiedSince(long milliseconds) {
         super.setIfModifiedSince(milliseconds);

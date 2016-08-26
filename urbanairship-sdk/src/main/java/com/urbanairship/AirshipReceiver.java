@@ -288,7 +288,7 @@ public class AirshipReceiver extends BroadcastReceiver {
         private final PushMessage message;
         private final int notificationId;
 
-        private NotificationInfo(@NonNull PushMessage message, @NonNull int notificationId) {
+        private NotificationInfo(@NonNull PushMessage message, int notificationId) {
             this.message = message;
             this.notificationId = notificationId;
         }

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InAppMessage implements Parcelable, JsonSerializable {
 
-    private static final long DEFAULT_EXPIRY_MS = 2592000000l; // 30 days
+    private static final long DEFAULT_EXPIRY_MS = 2592000000L; // 30 days
 
     @IntDef({POSITION_TOP, POSITION_BOTTOM})
     @Retention(RetentionPolicy.SOURCE)
@@ -424,44 +424,59 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         if (this == o) {
             return true;
         }
-
-        if (!(o instanceof InAppMessage)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        InAppMessage other = (InAppMessage) o;
+        InAppMessage that = (InAppMessage) o;
 
-        return (id == null ? other.id == null : id.equals(other.id)) &&
-                (alert == null ? other.alert == null : alert.equals(other.alert)) &&
-                (buttonGroupId == null ? other.buttonGroupId == null : buttonGroupId.equals(other.buttonGroupId)) &&
-                (extras.equals(other.extras)) &&
-                (clickActionValues.equals(other.clickActionValues)) &&
-                (buttonActionValues.equals(other.buttonActionValues)) &&
-                (primaryColor == null ? other.primaryColor == null : primaryColor.equals(other.primaryColor)) &&
-                (secondaryColor == null ? other.secondaryColor == null : secondaryColor.equals(other.secondaryColor)) &&
-                (durationMilliseconds == null ? other.durationMilliseconds == null : durationMilliseconds.equals(other.durationMilliseconds)) &&
-                (position == other.position) &&
-                (expiryMS == other.expiryMS);
+        if (expiryMS != that.expiryMS) {
+            return false;
+        }
+        if (position != that.position) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (alert != null ? !alert.equals(that.alert) : that.alert != null) {
+            return false;
+        }
+        if (durationMilliseconds != null ? !durationMilliseconds.equals(that.durationMilliseconds) : that.durationMilliseconds != null) {
+            return false;
+        }
+        if (primaryColor != null ? !primaryColor.equals(that.primaryColor) : that.primaryColor != null) {
+            return false;
+        }
+        if (secondaryColor != null ? !secondaryColor.equals(that.secondaryColor) : that.secondaryColor != null) {
+            return false;
+        }
+        if (buttonGroupId != null ? !buttonGroupId.equals(that.buttonGroupId) : that.buttonGroupId != null) {
+            return false;
+        }
+        if (!clickActionValues.equals(that.clickActionValues)) {
+            return false;
+        }
+        if (!extras.equals(that.extras)) {
+            return false;
+        }
+        return buttonActionValues.equals(that.buttonActionValues);
+
     }
 
     @Override
     public int hashCode() {
-        // Start with a non-zero constant.
-        int result = 13;
-
-        // Include a hash for each field.
-        result = 31 * result + (id == null ? 0 : id.hashCode());
-        result = 31 * result + (alert == null ? 0 : alert.hashCode());
-        result = 31 * result + (buttonGroupId == null ? 0 : buttonGroupId.hashCode());
-        result = 31 * result + extras.hashCode();
-        result = 31 * result + clickActionValues.hashCode();
-        result = 31 * result + buttonActionValues.hashCode();
-        result = 31 * result + (secondaryColor == null ? 0 : secondaryColor);
-        result = 31 * result + (primaryColor == null ? 0 : primaryColor);
-        result = 31 * result + (durationMilliseconds == null ? 0 : durationMilliseconds.hashCode());
+        int result = (int) (expiryMS ^ (expiryMS >>> 32));
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (alert != null ? alert.hashCode() : 0);
+        result = 31 * result + (durationMilliseconds != null ? durationMilliseconds.hashCode() : 0);
+        result = 31 * result + (primaryColor != null ? primaryColor.hashCode() : 0);
+        result = 31 * result + (secondaryColor != null ? secondaryColor.hashCode() : 0);
         result = 31 * result + position;
-        result = 31 * result + Long.valueOf(expiryMS).hashCode();
-
+        result = 31 * result + (buttonGroupId != null ? buttonGroupId.hashCode() : 0);
+        result = 31 * result + clickActionValues.hashCode();
+        result = 31 * result + extras.hashCode();
+        result = 31 * result + buttonActionValues.hashCode();
         return result;
     }
 

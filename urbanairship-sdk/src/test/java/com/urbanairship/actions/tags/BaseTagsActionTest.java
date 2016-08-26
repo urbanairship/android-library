@@ -2,6 +2,8 @@
 
 package com.urbanairship.actions.tags;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -27,8 +29,9 @@ public class BaseTagsActionTest extends BaseTestCase {
     @Before
     public void setup() {
         action = new BaseTagsAction() {
+            @NonNull
             @Override
-            public ActionResult perform(ActionArguments arguments) {
+            public ActionResult perform(@NonNull ActionArguments arguments) {
                 return ActionResult.newEmptyResult();
             }
         };

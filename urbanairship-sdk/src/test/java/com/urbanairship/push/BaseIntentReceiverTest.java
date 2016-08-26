@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
@@ -41,7 +42,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnChannelRegistrationSucceeded() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected void onChannelRegistrationSucceeded(Context context, String channelId) {
+            protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
                 super.onChannelRegistrationSucceeded(context, channelId);
 
                 assertNotNull(context);
@@ -78,7 +79,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnChannelRegistrationFailed() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected void onChannelRegistrationFailed(Context context) {
+            protected void onChannelRegistrationFailed(@NonNull Context context) {
                 super.onChannelRegistrationFailed(context);
                 assertNotNull(context);
             }
@@ -99,7 +100,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnPushReceived() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected void onPushReceived(Context context, PushMessage message, int notificationId) {
+            protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
                 super.onPushReceived(context, message, notificationId);
 
                 assertNotNull(context);
@@ -126,7 +127,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnBackgroundPushReceived() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected void onBackgroundPushReceived(Context context, PushMessage message) {
+            protected void onBackgroundPushReceived(@NonNull Context context, @NonNull PushMessage message) {
                 super.onBackgroundPushReceived(context, message);
 
                 assertNotNull(context);
@@ -165,7 +166,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         BroadcastReceiver.PendingResult result = Mockito.mock(BroadcastReceiver.PendingResult.class);
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected boolean onNotificationOpened(Context context, PushMessage message, int notificationId) {
+            protected boolean onNotificationOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
                 super.onNotificationOpened(context, message, notificationId);
 
                 assertNotNull(context);
@@ -193,7 +194,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnNotificationActionOpened() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected boolean onNotificationActionOpened(Context context, PushMessage message, int notificationId, String buttonId, boolean isForeground) {
+            protected boolean onNotificationActionOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId, @NonNull String buttonId, boolean isForeground) {
                 super.onNotificationActionOpened(context, message, notificationId, buttonId, isForeground);
 
                 assertNotNull(context);
@@ -239,7 +240,7 @@ public class BaseIntentReceiverTest extends BaseTestCase {
     public void testOnNotificationDismissed() {
         TestReceiver receiver = new TestReceiver() {
             @Override
-            protected void onNotificationDismissed(Context context, PushMessage message, int notificationId) {
+            protected void onNotificationDismissed(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
                 super.onNotificationDismissed(context, message, notificationId);
 
                 assertNotNull(context);
@@ -271,39 +272,39 @@ public class BaseIntentReceiverTest extends BaseTestCase {
         boolean onNotificationDismissedCalled = false;
 
         @Override
-        protected void onChannelRegistrationSucceeded(Context context, String channelId) {
+        protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
             onChannelRegistrationSucceededCalled = true;
         }
 
         @Override
-        protected void onChannelRegistrationFailed(Context context) {
+        protected void onChannelRegistrationFailed(@NonNull Context context) {
             onChannelRegistrationFailedCalled = true;
         }
 
         @Override
-        protected void onPushReceived(Context context, PushMessage message, int notificationId) {
+        protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
             onPushReceivedCalled = true;
         }
 
         @Override
-        protected void onBackgroundPushReceived(Context context, PushMessage message) {
+        protected void onBackgroundPushReceived(@NonNull Context context, @NonNull PushMessage message) {
             onBackgroundPushReceivedCalled = true;
         }
 
         @Override
-        protected boolean onNotificationOpened(Context context, PushMessage message, int notificationId) {
+        protected boolean onNotificationOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
             onNotificationOpenedCalled = true;
             return true;
         }
 
         @Override
-        protected boolean onNotificationActionOpened(Context context, PushMessage message, int notificationId, String buttonId, boolean isForeground) {
+        protected boolean onNotificationActionOpened(@NonNull Context context, @NonNull PushMessage message, int notificationId, @NonNull String buttonId, boolean isForeground) {
             onNotificationActionOpenedCalled = true;
             return true;
         }
 
         @Override
-        protected void onNotificationDismissed(Context context, PushMessage message, int notificationId) {
+        protected void onNotificationDismissed(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
             onNotificationDismissedCalled = true;
         }
     }

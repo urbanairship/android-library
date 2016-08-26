@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Locale;
 
 /**
  * A class containing utility methods related to bitmaps.
@@ -63,7 +64,7 @@ public class BitmapUtils {
             Logger.verbose("BitmapUtils - Failed to delete temp file: " + outputFile);
         }
 
-        Logger.debug(String.format("BitmapUtils - Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d. SampleSize: %d",
+        Logger.debug(String.format(Locale.US, "BitmapUtils - Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d. SampleSize: %d",
                 url, width, height, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight(), options.inSampleSize));
 
         return bitmap;

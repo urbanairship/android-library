@@ -71,15 +71,15 @@ public class UrbanAirshipResolver {
      * Register a ContentObserver to listen for updates to the supplied URI.
      *
      * @param uri The URI you want to listen to updates for.
-     * @param notifyForDescendents If <code>true</code> changes to URIs beginning with <code>uri</code>
+     * @param notifyForDescendants If <code>true</code> changes to URIs beginning with <code>uri</code>
      * will also cause notifications to be sent. If <code>false</code> only changes to the exact URI
      * specified by <em>uri</em> will cause notifications to be sent. If true, than any URI values
      * at or below the specified URI will also trigger a match.
      * @param observer The ContentObserver you want to alert when the supplied URI is updated.
      */
-    public void registerContentObserver(Uri uri, boolean notifyForDescendents, ContentObserver observer) {
+    public void registerContentObserver(Uri uri, boolean notifyForDescendants, ContentObserver observer) {
         try {
-            this.getResolver().registerContentObserver(uri, notifyForDescendents, observer);
+            this.getResolver().registerContentObserver(uri, notifyForDescendants, observer);
         } catch (IllegalArgumentException e) {
             Logger.warn("Unable to register content observer for uri: " + uri);
         }
