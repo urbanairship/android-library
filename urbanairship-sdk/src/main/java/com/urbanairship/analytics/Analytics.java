@@ -600,9 +600,9 @@ public class Analytics extends AirshipComponent {
      *
      * @param analyticsListener The {@link AnalyticsListener}.
      */
-    public boolean removeAnalyticsListener(AnalyticsListener analyticsListener) {
+    public void removeAnalyticsListener(AnalyticsListener analyticsListener) {
         synchronized (analyticsListeners) {
-            return analyticsListeners.remove(analyticsListener);
+            analyticsListeners.remove(analyticsListener);
         }
     }
 
@@ -615,10 +615,14 @@ public class Analytics extends AirshipComponent {
         for (AnalyticsListener listener : new ArrayList<>(analyticsListeners)) {
             switch (event.getType()) {
                 case CustomEvent.TYPE:
-                    listener.onCustomEventAdded((CustomEvent) event);
+                    if (event instanceof CustomEvent) {
+                        listener.onCustomEventAdded((CustomEvent) event);
+                    }
                     break;
                 case RegionEvent.TYPE:
-                    listener.onRegionEventAdded((RegionEvent) event);
+                    if (event instanceof RegionEvent) {
+                        listener.onRegionEventAdded((RegionEvent) event);
+                    }
                     break;
                 default:
                     break;

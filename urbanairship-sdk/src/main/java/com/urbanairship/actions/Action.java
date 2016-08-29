@@ -196,9 +196,7 @@ public abstract class Action {
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 int[] receiverResults = resultData.getIntArray(ActionActivity.RESULT_INTENT_EXTRA);
                 if (receiverResults != null && receiverResults.length == result.length) {
-                    for (int i = 0; i < result.length; i++) {
-                        result[i] = receiverResults[i];
-                    }
+                    System.arraycopy(receiverResults, 0, result, 0, result.length);
                 }
 
                 synchronized (result) {

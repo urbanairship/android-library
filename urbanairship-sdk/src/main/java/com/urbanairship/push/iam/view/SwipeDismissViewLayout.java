@@ -280,7 +280,7 @@ public class SwipeDismissViewLayout extends FrameLayout {
             if (dragHelper.checkTouchSlop(ViewDragHelper.DIRECTION_HORIZONTAL)) {
                 View child = dragHelper.findTopChildUnder((int) event.getX(), (int) event.getY());
                 if (child != null && !ViewCompat.canScrollHorizontally(child, dragHelper.getTouchSlop())) {
-                    dragHelper.captureChildView(child, MotionEventCompat.getPointerId(event, 0));
+                    dragHelper.captureChildView(child, event.getPointerId(0));
                     return dragHelper.getViewDragState() == ViewDragHelper.STATE_DRAGGING;
                 }
             }

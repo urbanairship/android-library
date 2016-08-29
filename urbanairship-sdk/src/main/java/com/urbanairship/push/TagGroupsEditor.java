@@ -6,13 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.Logger;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,7 +53,7 @@ public class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor addTag(@NonNull String tagGroup, @NonNull String tag) {
-        return addTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
+        return addTags(tagGroup, Collections.singleton(tag));
     }
 
     /**
@@ -79,7 +79,7 @@ public class TagGroupsEditor {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor removeTag(@NonNull String tagGroup, @NonNull String tag) {
-        return removeTags(tagGroup, new HashSet<>(Arrays.asList(tag)));
+        return removeTags(tagGroup, Collections.singleton((tag)));
     }
 
     /**

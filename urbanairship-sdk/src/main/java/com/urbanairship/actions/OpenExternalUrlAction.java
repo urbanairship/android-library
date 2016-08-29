@@ -36,6 +36,7 @@ public class OpenExternalUrlAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^u";
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         Uri uri = UriUtils.parse(arguments.getValue().getString());

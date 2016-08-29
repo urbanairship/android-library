@@ -4,6 +4,7 @@ package com.urbanairship.actions;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
@@ -39,7 +40,7 @@ public class OpenRichPushInboxAction extends Action {
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         switch (arguments.getSituation()) {
             case SITUATION_PUSH_OPENED:
             case SITUATION_WEB_VIEW_INVOCATION:
@@ -55,8 +56,9 @@ public class OpenRichPushInboxAction extends Action {
         }
     }
 
+    @NonNull
     @Override
-    public ActionResult perform(ActionArguments arguments) {
+    public ActionResult perform(@NonNull ActionArguments arguments) {
 
         String messageId = arguments.getValue().getString();
 

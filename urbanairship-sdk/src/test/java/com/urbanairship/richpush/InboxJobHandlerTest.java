@@ -5,6 +5,7 @@ package com.urbanairship.richpush;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
@@ -65,6 +66,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
         responses = new HashMap();
 
         RequestFactory requestFactory = new RequestFactory() {
+            @NonNull
             public Request createRequest(String requestMethod, URL url) {
                 TestRequest request = new TestRequest();
                 request.setURL(url);

@@ -36,9 +36,6 @@ class MessageItemView extends FrameLayout {
     private boolean isHighlighted;
     private OnClickListener selectionListener;
 
-    private Typeface titleFont;
-    private Typeface dateFont;
-
     private Typeface titleTypeface;
     private Typeface titleReadTypeface;
 
@@ -89,10 +86,10 @@ class MessageItemView extends FrameLayout {
         }
 
         dateTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemDateTextAppearance, -1);
-        dateFont = ViewUtils.createTypeface(context, dateTextAppearance);
+        Typeface dateFont = ViewUtils.createTypeface(context, dateTextAppearance);
 
         titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, -1);
-        titleFont = ViewUtils.createTypeface(context, titleTextAppearance);
+        Typeface titleFont = ViewUtils.createTypeface(context, titleTextAppearance);
 
         int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, -1);
         if (background > 0) {

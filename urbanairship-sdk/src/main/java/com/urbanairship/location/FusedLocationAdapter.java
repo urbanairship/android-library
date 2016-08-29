@@ -100,7 +100,7 @@ class FusedLocationAdapter implements LocationAdapter {
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
-                    public void onConnectionFailed(ConnectionResult connectionResult) {
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
                         Logger.verbose("FusedLocationAdapter - Google Play services failed to connect for fused location.");
                         semaphore.release();
                     }

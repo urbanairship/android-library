@@ -35,6 +35,7 @@ public class RemoveTagsAction extends BaseTagsAction {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^-t";
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         Set<String> tags = getTags(arguments);

@@ -58,12 +58,10 @@ public class OverlayRichPushMessageAction extends Action {
                     return false;
                 }
 
-                if (MESSAGE_ID_PLACEHOLDER.equalsIgnoreCase(arguments.getValue().getString())) {
-                    return arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA) ||
-                            arguments.getMetadata().containsKey(ActionArguments.PUSH_MESSAGE_METADATA);
-                }
+                return !MESSAGE_ID_PLACEHOLDER.equalsIgnoreCase(arguments.getValue().getString()) ||
+                        arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA) ||
+                        arguments.getMetadata().containsKey(ActionArguments.PUSH_MESSAGE_METADATA);
 
-                return true;
             case SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_PUSH_RECEIVED:
             default:
@@ -71,6 +69,7 @@ public class OverlayRichPushMessageAction extends Action {
         }
     }
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
 

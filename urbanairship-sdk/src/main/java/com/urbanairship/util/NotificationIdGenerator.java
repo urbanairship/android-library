@@ -31,11 +31,11 @@ public class NotificationIdGenerator {
         SharedPreferences prefs = getPreferences();
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(key, value);
-        editor.commit();
+        editor.apply();
     }
 
-    private static int getInt(String key, int defvalue) {
-        return getPreferences().getInt(key, defvalue);
+    private static int getInt(String key, int defValue) {
+        return getPreferences().getInt(key, defValue);
     }
 
     //implicitly resets the count
@@ -61,7 +61,7 @@ public class NotificationIdGenerator {
     public static void setRange(@IntRange(from = 0, to = MAX_RANGE) int newRange) {
 
         if (newRange > MAX_RANGE) {
-            Logger.error("The maximum numer of notifications allowed is " + MAX_RANGE + ". Limiting alert id range to conform.");
+            Logger.error("The maximum number of notifications allowed is " + MAX_RANGE + ". Limiting alert id range to conform.");
             newRange = MAX_RANGE;
         }
 

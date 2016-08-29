@@ -8,12 +8,12 @@ import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-import com.urbanairship.job.Job;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
+import com.urbanairship.job.Job;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -24,7 +24,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -502,7 +502,7 @@ class InboxJobHandler {
      */
     private String createNewUserPayload(@NonNull String channelId) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put(getPayloadChannelsKey(), Arrays.asList(channelId));
+        payload.put(getPayloadChannelsKey(), Collections.singletonList(channelId));
         return JsonValue.wrapOpt(payload).toString();
     }
 
@@ -513,7 +513,7 @@ class InboxJobHandler {
      */
     private String createUpdateUserPayload(@NonNull String channelId) {
         Map<String, Object> addChannels = new HashMap<>();
-        addChannels.put(PAYLOAD_ADD_KEY, Arrays.asList(channelId));
+        addChannels.put(PAYLOAD_ADD_KEY, Collections.singletonList(channelId));
 
         Map<String, Object> payload = new HashMap<>();
         payload.put(getPayloadChannelsKey(), addChannels);
@@ -527,12 +527,10 @@ class InboxJobHandler {
      * @return The payload channels key as a string.
      */
     private String getPayloadChannelsKey() {
-        switch (airship.getPlatformType()) {
-            case UAirship.AMAZON_PLATFORM:
-                return PAYLOAD_AMAZON_CHANNELS_KEY;
-
-            default:
-                return PAYLOAD_ANDROID_CHANNELS_KEY;
+        if (airship.getPlatformType() == UAirship.AMAZON_PLATFORM) {
+            return PAYLOAD_AMAZON_CHANNELS_KEY;
+        } else {
+            return PAYLOAD_ANDROID_CHANNELS_KEY;
         }
     }
 

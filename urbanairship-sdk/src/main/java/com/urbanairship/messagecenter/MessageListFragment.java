@@ -177,7 +177,7 @@ public class MessageListFragment extends Fragment {
             ListView listView = (ListView) absListView;
 
             int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
-            if (color != -1) {
+            if (color != -1 && listView.getDivider() != null) {
                 DrawableCompat.setTint(listView.getDivider(), color);
                 DrawableCompat.setTintMode(listView.getDivider(), PorterDuff.Mode.SRC);
             }

@@ -312,6 +312,8 @@ public class UAWebViewClient extends WebViewClient {
 
                                        String errorMessage = null;
                                        switch (result.getStatus()) {
+                                           case ActionResult.STATUS_COMPLETED:
+                                               break;
                                            case ActionResult.STATUS_ACTION_NOT_FOUND:
                                                errorMessage = String.format("Action %s not found", name);
                                                break;

@@ -77,8 +77,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
             }
         });
 
-        jobHandler = new NamedUserJobHandler(TestApplication.getApplication(), UAirship.shared(),
-                dataStore, mockDispatcher, namedUserClient);
+        jobHandler = new NamedUserJobHandler(UAirship.shared(), dataStore, mockDispatcher, namedUserClient);
 
         Set<String> addTags = new HashSet<>();
         addTags.add("tag1");

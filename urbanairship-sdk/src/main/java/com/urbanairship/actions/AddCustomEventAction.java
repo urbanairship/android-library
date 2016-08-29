@@ -47,6 +47,7 @@ public class AddCustomEventAction extends Action {
      */
     public static final String DEFAULT_REGISTRY_NAME = "add_custom_event_action";
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
 
@@ -120,7 +121,7 @@ public class AddCustomEventAction extends Action {
     }
 
     @Override
-    public boolean acceptsArguments(ActionArguments arguments) {
+    public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         if (arguments.getValue().getMap() != null) {
             if (arguments.getValue().getMap().get("event_name") == null) {
                 Logger.debug("CustomEventAction requires an event name in the event data.");

@@ -2,6 +2,7 @@
 
 package com.urbanairship.analytics;
 
+import android.content.pm.PackageInfo;
 import android.os.Build;
 
 import com.urbanairship.UAirship;
@@ -31,6 +32,7 @@ class AppForegroundEvent extends Event {
 
     @Override
     protected final JsonMap getEventData() {
+        PackageInfo packageInfo = UAirship.getPackageInfo();
         return JsonMap.newBuilder()
                 .put(CONNECTION_TYPE_KEY, getConnectionType())
                 .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
@@ -40,7 +42,7 @@ class AppForegroundEvent extends Event {
                 .put(NOTIFICATION_TYPES_KEY, JsonValue.wrapOpt(getNotificationTypes()).getList())
                 .put(OS_VERSION_KEY, Build.VERSION.RELEASE)
                 .put(LIB_VERSION_KEY, UAirship.getVersion())
-                .put(PACKAGE_VERSION_KEY, UAirship.getPackageInfo().versionName)
+                .putOpt(PACKAGE_VERSION_KEY, packageInfo != null ? packageInfo.versionName : null)
                 .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
                 .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
                 .put(LAST_METADATA_KEY, UAirship.shared().getPushManager().getLastReceivedMetadata())

@@ -64,6 +64,7 @@ public class ShareAction extends Action {
         }
     }
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         final Context context = UAirship.getApplicationContext();

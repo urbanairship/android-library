@@ -48,8 +48,8 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
                 @Override
                 public ActionResult perform(@NonNull ActionArguments arguments) {
                     int[] result = requestPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
-                    for (int i = 0; i < result.length; i++) {
-                        if (result[i] == PackageManager.PERMISSION_GRANTED) {
+                    for (int element : result) {
+                        if (element == PackageManager.PERMISSION_GRANTED) {
                             return ActionResult.newResult(ActionValue.wrap(true));
                         }
                     }

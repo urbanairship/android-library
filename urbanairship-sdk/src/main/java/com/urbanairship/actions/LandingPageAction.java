@@ -73,56 +73,54 @@ public class LandingPageAction extends Action {
      */
     public static final String CACHE_ON_RECEIVE_KEY = "cache_on_receive";
 
+    @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
 
-        switch (arguments.getSituation()) {
-            case SITUATION_PUSH_RECEIVED:
-                if (shouldCacheOnReceive(arguments)) {
-                    // Cache the landing page by loading the url in a web view
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postAtFrontOfQueue(new Runnable() {
-                        @Override
-                        public void run() {
-                            UAWebView webView = new UAWebView(UAirship.getApplicationContext());
-
-                            if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
-                                String messageId = uri.getSchemeSpecificPart();
-                                RichPushMessage message = UAirship.shared()
-                                                                  .getInbox()
-                                                                  .getMessage(messageId);
-                                if (message != null) {
-                                    webView.loadRichPushMessage(message);
-                                } else {
-                                    Logger.debug("LandingPageAction - Message " + messageId + " not found.");
-                                }
-                            } else {
-                                webView.loadUrl(uri.toString());
-                            }
-                        }
-                    });
-
-                }
-                break;
-            default:
-                final Intent actionIntent = new Intent(SHOW_LANDING_PAGE_INTENT_ACTION, uri)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        .setPackage(UAirship.getPackageName());
-
-
+        if (arguments.getSituation() == SITUATION_PUSH_RECEIVED) {
+            if (shouldCacheOnReceive(arguments)) {
+                // Cache the landing page by loading the url in a web view
                 Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(new Runnable() {
+                handler.postAtFrontOfQueue(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            UAirship.getApplicationContext().startActivity(actionIntent);
-                        } catch (ActivityNotFoundException ex) {
-                            Logger.error("Unable to view a landing page for uri " + uri + ". The landing page's" +
-                                    "intent filter is missing the scheme: " + uri.getScheme());
+                        UAWebView webView = new UAWebView(UAirship.getApplicationContext());
+
+                        if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
+                            String messageId = uri.getSchemeSpecificPart();
+                            RichPushMessage message = UAirship.shared()
+                                                              .getInbox()
+                                                              .getMessage(messageId);
+                            if (message != null) {
+                                webView.loadRichPushMessage(message);
+                            } else {
+                                Logger.debug("LandingPageAction - Message " + messageId + " not found.");
+                            }
+                        } else {
+                            webView.loadUrl(uri.toString());
                         }
                     }
                 });
+            }
+        } else {
+            final Intent actionIntent = new Intent(SHOW_LANDING_PAGE_INTENT_ACTION, uri)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .setPackage(UAirship.getPackageName());
+
+
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        UAirship.getApplicationContext().startActivity(actionIntent);
+                    } catch (ActivityNotFoundException ex) {
+                        Logger.error("Unable to view a landing page for uri " + uri + ". The landing page's" +
+                                "intent filter is missing the scheme: " + uri.getScheme());
+                    }
+                }
+            });
         }
 
         return ActionResult.newEmptyResult();

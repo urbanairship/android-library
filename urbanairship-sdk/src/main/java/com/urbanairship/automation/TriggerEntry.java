@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import android.os.Parcel;
+
 import com.urbanairship.json.JsonPredicate;
 
 /**
@@ -12,6 +14,20 @@ class TriggerEntry extends Trigger {
     private final String id;
     private final String scheduleId;
     private final double progress;
+
+    // TriggerEntry should never be used as a Parceable, this is here to please the linter.
+    public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
+        @Override
+        public Trigger createFromParcel(Parcel in) {
+            return new Trigger(in);
+        }
+
+        @Override
+        public Trigger[] newArray(int size) {
+            return new Trigger[size];
+        }
+    };
+
 
     TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, double progress) {
         super(type, goal, predicate);

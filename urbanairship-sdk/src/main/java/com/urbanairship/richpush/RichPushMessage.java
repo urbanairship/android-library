@@ -3,6 +3,7 @@
 package com.urbanairship.richpush;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.UAirship;
@@ -290,7 +291,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
     }
 
     @Override
-    public int compareTo(RichPushMessage another) {
+    public int compareTo(@NonNull RichPushMessage another) {
         return this.getMessageId().compareTo(another.getMessageId());
     }
 
