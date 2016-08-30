@@ -24,6 +24,7 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -790,7 +791,7 @@ public class PushManager extends AirshipComponent {
         }
 
         QuietTimeInterval quietTimeInterval = QuietTimeInterval.parseJson(preferenceDataStore.getString(QUIET_TIME_INTERVAL, null));
-        return quietTimeInterval != null && quietTimeInterval.isInQuietTime();
+        return quietTimeInterval != null && quietTimeInterval.isInQuietTime(Calendar.getInstance());
     }
 
     /**

@@ -41,9 +41,10 @@ class QuietTimeInterval implements JsonSerializable {
      * Determines whether we are currently in the middle of "Quiet Time".  Returns false if Quiet Time is disabled,
      * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
      *
+     * @param now Reference time for determining if interval is in quiet time.
      * @return A boolean indicating whether it is currently "Quiet Time".
      */
-    public boolean isInQuietTime() {
+    public boolean isInQuietTime(Calendar now) {
 
         Date[] quietTimeInterval = getQuietTimeIntervalDateArray();
         if (quietTimeInterval == null) {
@@ -52,14 +53,13 @@ class QuietTimeInterval implements JsonSerializable {
             return false;
         }
 
-        Calendar now = Calendar.getInstance();
         Calendar start = new GregorianCalendar();
         start.setTime(quietTimeInterval[0]);
 
         Calendar end = new GregorianCalendar();
         end.setTime(quietTimeInterval[1]);
 
-        return now.after(start) && now.before(end);
+        return !(now.before(start) || now.after(end));
     }
 
     /**
@@ -78,26 +78,17 @@ class QuietTimeInterval implements JsonSerializable {
         start.set(Calendar.HOUR_OF_DAY, startHour);
         start.set(Calendar.MINUTE, startMin);
         start.set(Calendar.SECOND, 0);
+        start.set(Calendar.MILLISECOND, 0);
 
         // Prepare the end date.
         Calendar end = Calendar.getInstance();
         end.set(Calendar.HOUR_OF_DAY, endHour);
         end.set(Calendar.MINUTE, endMin);
         end.set(Calendar.SECOND, 0);
+        end.set(Calendar.MILLISECOND, 0);
 
-        // if the start time hasn't happened yet
-        // but the end time is before the start time,
-        // subtract a day
-        Calendar now = Calendar.getInstance();
-        if (start.after(now) && end.before(start)) {
-            start.add(Calendar.DAY_OF_YEAR, -1);
-        }
-
-        // If the end Hour is before the start hour we assume the end time
-        // is referring to an earlier hour the next day so we add a day to the
-        // end time. Add one day.
-        if (endHour < startHour) {
-            end.add(Calendar.DATE, 1);
+        if (!end.after(start)) {
+            end.add(Calendar.DAY_OF_YEAR, 1);
         }
 
         Date startDate = start.getTime();
