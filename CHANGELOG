@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 7.3.0 - August 31, 2016
+===============================
+- Added Custom Event templates.
+- Added action automation to schedule actions to run when predefined conditions are met.
+- Added action situation `SITUATION_AUTOMATION` for actions that are triggered from automation.
+- Added action "schedule_actions" to support scheduling actions from the Actions framework.
+- Added action "cancel_scheduled_actions" to support canceling scheduled actions in the Actions framework.
+- Fixed Quiet Time issue resulting in intervals occasionally starting a day early.
+- Fixed issue resulting in latent uploads of event batches greater than 1KB.
+- Built SDK against Android N.
+
 Version 7.2.4 - August 12, 2016
 ===============================
 - Fixed potential NPE in applications using the Gimbal adapter when serializing a RegionEvent without an RSSI value set.
