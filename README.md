@@ -22,13 +22,13 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:7.2.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:7.3.+'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:23.4.0'
+     compile 'com.android.support:cardview-v7:24.2.0'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:9.0.2'
+     compile 'com.google.android.gms:play-services-location:9.4.0'
    }
 ```
 
