@@ -475,22 +475,6 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
-     * Associates identifiers with the device. This will create and add an event
-     * that will be sent up with other analytics events. Previous
-     * associated identifiers will be replaced.
-     *
-     * @param identifiers An {@link AssociatedIdentifiers} instance.
-     * @deprecated Marked to be removed in 8.0.0. Use editAssociatedIdentifiers() instead.
-     */
-    @Deprecated
-    public void associateIdentifiers(@NonNull AssociatedIdentifiers identifiers) {
-        synchronized (associatedIdentifiersLock) {
-            preferenceDataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers);
-            addEvent(new AssociateIdentifiersEvent(identifiers));
-        }
-    }
-
-    /**
      * Edits the currently stored associated identifiers. All changes made in the editor are batched,
      * and not stored until you call apply(). Calling apply() on the editor will associate the
      * identifiers with the device and add an event that will be sent up with other analytics

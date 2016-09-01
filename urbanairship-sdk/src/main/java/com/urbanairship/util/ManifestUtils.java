@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.push.BaseIntentReceiver;
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.
@@ -80,7 +79,7 @@ public class ManifestUtils {
             for (ActivityInfo info : receivers) {
                 try {
                     Class receiverClass = Class.forName(info.name);
-                    if (BaseIntentReceiver.class.isAssignableFrom(receiverClass) || AirshipReceiver.class.isAssignableFrom(receiverClass)) {
+                    if (AirshipReceiver.class.isAssignableFrom(receiverClass)) {
                         if (info.exported) {
                             Logger.error("Receiver " + info.name + " is exported. This might " +
                                     "allow outside applications to message the receiver. Make sure the intent is protected by a " +

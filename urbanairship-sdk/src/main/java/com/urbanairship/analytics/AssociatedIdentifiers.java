@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * Creates a map of associated identifier. Used to associate identifiers with
- * {@link Analytics#associateIdentifiers(AssociatedIdentifiers)}.
+ * {@link Analytics#editAssociatedIdentifiers()}.
  */
 public class AssociatedIdentifiers implements JsonSerializable {
     /**
@@ -35,17 +35,6 @@ public class AssociatedIdentifiers implements JsonSerializable {
     private static final String LIMITED_AD_TRACKING_ENABLED_KEY = "com.urbanairship.limited_ad_tracking_enabled";
 
     private final Map<String, String> ids;
-
-    /**
-     * Creates an AssociatedIdentifiers object from a
-     * {@link com.urbanairship.analytics.AssociatedIdentifiers.Builder}.
-     *
-     * @param builder The AssociatedIdentifiers builder.
-     *
-     */
-    AssociatedIdentifiers(Builder builder) {
-        this.ids = new HashMap<>(builder.ids);
-    }
 
     /**
      * Creates an AssociatedIdentifiers object.
@@ -204,55 +193,5 @@ public class AssociatedIdentifiers implements JsonSerializable {
          * @param idsToRemove Identifiers to remove.
          */
         abstract void onApply(boolean clear, Map<String, String> idsToAdd, List<String> idsToRemove);
-    }
-
-
-    /**
-     * Builder to construct AssociatedIdentifiers.
-     *
-     * @deprecated Marked to be removed in 8.0.0. Use Editor instead.
-     */
-    @Deprecated
-    public static class Builder {
-        private final Map<String, String> ids = new HashMap<>();
-
-        /**
-         * Sets the Android advertising ID.
-         *
-         * @param adId The Android advertising ID.
-         * @return The builder object.
-         * @deprecated Marked to be removed in 8.0.0.
-         */
-        @Deprecated
-        public Builder setAdvertisingId(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String adId) {
-            ids.put(ADVERTISING_ID_KEY, adId);
-            return this;
-        }
-
-        /**
-         * Sets an identifier.
-         *
-         * @param key The custom ID's key.
-         * @param value The custom ID's value.
-         * @return The builder object.
-         * @deprecated Marked to be removed in 8.0.0.
-         */
-        @Deprecated
-        public Builder setIdentifier(@NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String key,
-                                     @NonNull @Size(min = 1, max = MAX_CHARACTER_COUNT) String value) {
-            ids.put(key, value);
-            return this;
-        }
-
-        /**
-         * Creates the AssociatedIdentifiers instance.
-         *
-         * @return The AssociatedIdentifiers instance.
-         * @deprecated Marked to be removed in 8.0.0.
-         */
-        @Deprecated
-        public AssociatedIdentifiers create() {
-            return new AssociatedIdentifiers(this);
-        }
     }
 }

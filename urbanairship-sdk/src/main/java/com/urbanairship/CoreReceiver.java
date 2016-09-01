@@ -14,7 +14,6 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
-import com.urbanairship.push.BaseIntentReceiver;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.iam.InAppMessage;
@@ -254,13 +253,13 @@ public class CoreReceiver extends BroadcastReceiver {
 
         } else {
 
-            if (getResultCode() != BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED) {
+            if (getResultCode() != AirshipReceiver.RESULT_ACTIVITY_LAUNCHED) {
                 PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
                 if (contentIntent != null) {
                     try {
                         contentIntent.send();
                         if (isOrderedBroadcast()) {
-                            setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+                            setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
                         }
                     } catch (PendingIntent.CanceledException e) {
                         Logger.debug("Failed to send notification's contentIntent, already canceled.");
@@ -268,7 +267,7 @@ public class CoreReceiver extends BroadcastReceiver {
                 } else if (options.autoLaunchApplication) {
                     // Set the result if its an ordered broadcast
                     if (launchApplication(context) && isOrderedBroadcast()) {
-                        setResultCode(BaseIntentReceiver.RESULT_ACTIVITY_LAUNCHED);
+                        setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
                     }
                 }
             }

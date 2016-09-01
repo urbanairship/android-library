@@ -12,6 +12,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.WindowManager;
 
+import com.urbanairship.AirshipReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
@@ -78,8 +79,8 @@ public abstract class NotificationFactory {
      * Creates a <code>Notification</code> for an incoming push message.
      * <p/>
      * In order to handle notification opens, the application should register a broadcast receiver
-     * that extends {@link com.urbanairship.push.BaseIntentReceiver}. When the notification is opened
-     * it will call {@link com.urbanairship.push.BaseIntentReceiver#onNotificationOpened(Context, PushMessage, int)}
+     * that extends {@link com.urbanairship.AirshipReceiver}. When the notification is opened
+     * it will call {@link com.urbanairship.AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
      * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
      * or {@code false} is returned, an open will be handled by either starting the launcher activity or
      * by sending the notification's content intent if it is present.

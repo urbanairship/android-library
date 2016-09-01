@@ -156,7 +156,6 @@ public class AirshipReceiver extends BroadcastReceiver {
                 return;
             }
 
-            onChannelRegistrationSucceeded(context, channel);
             boolean isCreateRequest = intent.getBooleanExtra(PushManager.EXTRA_CHANNEL_CREATE_REQUEST, true);
             if (isCreateRequest) {
                 onChannelCreated(context, channel);
@@ -188,19 +187,6 @@ public class AirshipReceiver extends BroadcastReceiver {
 
         onNotificationDismissed(context, new NotificationInfo(message, id));
     }
-
-
-    /**
-     * Called when channel registration succeeded.
-     *
-     * @param context The application context.
-     * @param channelId The channel ID.
-     *
-     * @deprecated Use {@link #onChannelCreated(Context, String)} and {@link #onChannelUpdated(Context, String)}
-     * instead.
-     */
-    @Deprecated
-    protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {}
 
     /**
      * Called when a channel ID is updated.

@@ -626,18 +626,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Returns the current named user.
-     *
-     * @return The named user.
-     * @deprecated Use {@link UAirship#getNamedUser()} instead.
-     */
-    @Deprecated
-    @NonNull
-    public NamedUser getNamedUser() {
-        return UAirship.shared().getNamedUser();
-    }
-
-    /**
      * Returns the current set of tags.
      * <p/>
      * An empty set indicates that no tags are set on this channel.

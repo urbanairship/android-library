@@ -42,7 +42,7 @@ public class AirshipReceiverTest extends BaseTestCase {
 
     /**
      * Test parsing the ACTION_CHANNEL_UPDATED intent with the EXTRA_CHANNEL_CREATE_REQUEST extra set to true
-     * (for channel ID creation) calls onChannelRegistrationSucceeded and onChannelCreated.
+     * (for channel ID creation) calls onChannelCreated.
      */
     @Test
     public void testOnChannelCreateSucceeded() {
@@ -52,12 +52,6 @@ public class AirshipReceiverTest extends BaseTestCase {
 
         receiver = new AirshipReceiver() {
             @Override
-            protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
-                callbackCount++;
-                assertNotNull(context);
-                assertEquals("channel id", channelId);
-            }
-            @Override
             protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
                 callbackCount++;
                 assertNotNull(context);
@@ -70,12 +64,12 @@ public class AirshipReceiverTest extends BaseTestCase {
         };
 
         receiver.onReceive(context, intent);
-        assertEquals(2, callbackCount);
+        assertEquals(1, callbackCount);
     }
 
     /**
      * Test parsing the ACTION_CHANNEL_UPDATED intent with the EXTRA_CHANNEL_CREATE_REQUEST extra set to false
-     * (for channel ID updates) calls onChannelRegistrationSucceeded and onChannelUpdated.
+     * (for channel ID updates) calls onChannelUpdated.
      */
     @Test
     public void testOnChannelUpdateSucceeded() {
@@ -85,12 +79,6 @@ public class AirshipReceiverTest extends BaseTestCase {
 
         receiver = new AirshipReceiver() {
             @Override
-            protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
-                callbackCount++;
-                assertNotNull(context);
-                assertEquals("channel id", channelId);
-            }
-            @Override
             protected void onChannelCreated(@NonNull Context context, @NonNull String channelId) {
                 throw new RuntimeException();
             }
@@ -103,25 +91,7 @@ public class AirshipReceiverTest extends BaseTestCase {
         };
 
         receiver.onReceive(context, intent);
-        assertEquals(2, callbackCount);
-    }
-
-    /**
-     * Test parsing the ACTION_CHANNEL_UPDATED intents does not call onChannelRegistrationSucceeded
-     * if the channel ID is missing.
-     */
-    @Test
-    public void testOnChannelRegistrationSucceededMissingChannelId() {
-        Intent intent = new Intent(PushManager.ACTION_CHANNEL_UPDATED);
-
-        receiver = new AirshipReceiver() {
-            @Override
-            protected void onChannelRegistrationSucceeded(@NonNull Context context, @NonNull String channelId) {
-                fail();
-            }
-        };
-
-        receiver.onReceive(context, intent);
+        assertEquals(1, callbackCount);
     }
 
     /**
