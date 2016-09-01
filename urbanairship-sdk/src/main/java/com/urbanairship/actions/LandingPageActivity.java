@@ -28,7 +28,6 @@ import android.widget.ProgressBar;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
@@ -117,12 +116,10 @@ public class LandingPageActivity extends Activity {
             setContentView(createDefaultLandingPageView());
         }
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            ActionBar actionBar = getActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayOptions(
-                        ActionBar.DISPLAY_HOME_AS_UP, ActionBar.DISPLAY_HOME_AS_UP);
-            }
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayOptions(
+                    ActionBar.DISPLAY_HOME_AS_UP, ActionBar.DISPLAY_HOME_AS_UP);
         }
 
         webView = (UAWebView) findViewById(android.R.id.primary);
@@ -136,16 +133,11 @@ public class LandingPageActivity extends Activity {
         }
 
         // Workaround render issue with older android devices
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        if (Build.VERSION.SDK_INT >= 12) {
-            webView.setAlpha(0);
-        } else {
-            webView.setVisibility(View.INVISIBLE);
-        }
-
+        webView.setAlpha(0);
         webView.setWebViewClient(new UAWebViewClient() {
             @Override
             public void onPageFinished(final WebView view, String url) {
@@ -186,7 +178,7 @@ public class LandingPageActivity extends Activity {
             public Bitmap getDefaultVideoPoster() {
 
                 // Re-enable hardware rending if we detect a video in the message
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                     webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
                 }
 
@@ -218,29 +210,11 @@ public class LandingPageActivity extends Activity {
         return false;
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Activity instrumentation for analytic tracking
-        Analytics.activityStarted(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        // Activity instrumentation for analytic tracking
-        Analytics.activityStopped(this);
-    }
-
     @SuppressLint("NewApi")
     @Override
     public void onResume() {
         super.onResume();
-        if (Build.VERSION.SDK_INT >= 11) {
-            webView.onResume();
-        }
+        webView.onResume();
 
         // Start loading the landing page
         loadLandingPage();
@@ -250,9 +224,7 @@ public class LandingPageActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
-        if (Build.VERSION.SDK_INT >= 11) {
-            webView.onPause();
-        }
+        webView.onPause();
 
         // Stop any loading
         webView.stopLoading();
@@ -269,17 +241,6 @@ public class LandingPageActivity extends Activity {
      */
     @SuppressLint("NewApi")
     private void crossFade(final View in, final View out) {
-        if (Build.VERSION.SDK_INT < 12) {
-            if (in != null) {
-                in.setVisibility(View.VISIBLE);
-            }
-
-            if (out != null) {
-                out.setVisibility(View.GONE);
-            }
-            return;
-        }
-
         if (in != null) {
             in.animate().alpha(1f).setDuration(200);
         }

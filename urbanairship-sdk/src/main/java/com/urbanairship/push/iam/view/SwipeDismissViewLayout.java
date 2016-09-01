@@ -173,7 +173,6 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * @return The view's y translation as a fraction of its height.
      */
     @Keep
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public float getYFraction() {
         final int height = getHeight();
         if (height == 0) {
@@ -189,7 +188,6 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * Used to animate a view into the screen with a ObjectAnimator.
      */
     @Keep
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void setYFraction(final float yFraction) {
 
         // The view's height is only populated after the view has been laid out. We can workaround
@@ -219,7 +217,6 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * @return The view's x translation as a fraction of its width.
      */
     @Keep
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public float getXFraction() {
         final int width = getWidth();
         if (width == 0) {
@@ -235,7 +232,6 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * Used to animate a view into the screen with a ObjectAnimator.
      */
     @Keep
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void setXFraction(final float xFraction) {
 
         // The view's width is only populated after the view has been laid out. We can workaround
@@ -339,10 +335,8 @@ public class SwipeDismissViewLayout extends FrameLayout {
                 dragPercent = moved / (float) range;
             }
 
-            if (Build.VERSION.SDK_INT > 11) {
-                view.setAlpha(1 - dragPercent);
-                invalidate();
-            }
+            view.setAlpha(1 - dragPercent);
+            invalidate();
         }
 
         @Override

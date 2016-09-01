@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,15 +17,14 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.LandingPageAction;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.messagecenter.MessageActivity;
 import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
@@ -228,13 +226,8 @@ public class RichPushInbox extends AirshipComponent {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         if (intent.resolveActivity(context.getPackageManager()) == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                // Fallback to our MessageCenterActivity
-                intent.setClass(context, MessageCenterActivity.class);
-            } else {
-                Logger.error("Failed to display inbox. No activities available.");
-                return;
-            }
+            // Fallback to our MessageCenterActivity
+            intent.setClass(context, MessageCenterActivity.class);
         }
 
         context.startActivity(intent);
@@ -263,12 +256,8 @@ public class RichPushInbox extends AirshipComponent {
         intent.setAction(RichPushInbox.VIEW_MESSAGE_INTENT_ACTION);
 
         if (intent.resolveActivity(context.getPackageManager()) == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                // Fallback to our MessageCenterActivity
-                intent.setClass(context, MessageCenterActivity.class);
-            } else {
-                intent.setAction(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION);
-            }
+            // Fallback to our MessageCenterActivity
+            intent.setClass(context, MessageCenterActivity.class);
         }
 
         context.startActivity(intent);

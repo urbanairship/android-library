@@ -2,11 +2,9 @@
 
 package com.urbanairship.push.iam;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.pm.ActivityInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -126,14 +124,12 @@ public class InAppMessageManager extends AirshipComponent {
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingMessage = isDisplayAsapEnabled();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            fragmentFactory = new InAppMessageFragmentFactory() {
-                @Override
-                public InAppMessageFragment createFragment(InAppMessage message) {
-                    return new InAppMessageFragment();
-                }
-            };
-        }
+        fragmentFactory = new InAppMessageFragmentFactory() {
+            @Override
+            public InAppMessageFragment createFragment(InAppMessage message) {
+                return new InAppMessageFragment();
+            }
+        };
     }
 
     @Override
@@ -300,7 +296,6 @@ public class InAppMessageManager extends AirshipComponent {
      * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
-    @TargetApi(14)
     public boolean showPendingMessage(@NonNull Activity activity) {
         return showPendingMessage(activity, android.R.id.content);
     }
@@ -314,7 +309,6 @@ public class InAppMessageManager extends AirshipComponent {
      * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
-    @TargetApi(14)
     public boolean showPendingMessage(@NonNull Activity activity, @IdRes int containerId) {
         synchronized (pendingMessageLock) {
             InAppMessage pending = getPendingMessage();
@@ -353,7 +347,6 @@ public class InAppMessageManager extends AirshipComponent {
      * @return {@code true} if a {@link InAppMessageFragment} was added and displayed in the
      * activity, otherwise {@code false}.
      */
-    @TargetApi(14)
     public boolean showPendingMessage(@NonNull Activity activity, @IdRes int containerId, @AnimatorRes int enterAnimation, @AnimatorRes int exitAnimation) {
         final InAppMessage pending;
 
@@ -371,11 +364,6 @@ public class InAppMessageManager extends AirshipComponent {
 
         //noinspection ConstantConditions
         if (activity == null || pending == null) {
-            return false;
-        }
-
-        if (Build.VERSION.SDK_INT < 14) {
-            Logger.error("InAppMessageManager - Unable to show in-app messages on Android versions older than API 14 (Ice Cream Sandwich).");
             return false;
         }
 
@@ -589,7 +577,6 @@ public class InAppMessageManager extends AirshipComponent {
         }
 
         @Override
-        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         public void onPause(InAppMessageFragment fragment) {
             Logger.verbose("InAppMessageManager - InAppMessageFragment paused: " + fragment);
             if (fragment != currentFragment) {
@@ -639,7 +626,6 @@ public class InAppMessageManager extends AirshipComponent {
      * @param application The application.
      * @hide
      */
-    @TargetApi(14)
     public static void registerLifeCycleCallbacks(Application application) {
         if (lifeCycleCallbacks == null) {
             lifeCycleCallbacks = new LifeCycleCallbacks(application) {
@@ -713,7 +699,6 @@ public class InAppMessageManager extends AirshipComponent {
      *
      * @hide
      */
-    @TargetApi(14)
     public static void unregisterLifeCycleCallbacks() {
         if (lifeCycleCallbacks != null) {
             lifeCycleCallbacks.unregister();

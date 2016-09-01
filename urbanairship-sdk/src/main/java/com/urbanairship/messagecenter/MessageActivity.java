@@ -2,8 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -16,7 +14,6 @@ import com.urbanairship.richpush.RichPushMessage;
 /**
  * Manages the message view pager and display messages
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageActivity extends ThemedActivity {
 
     private static final String FRAGMENT_TAG = "MessageFragment";

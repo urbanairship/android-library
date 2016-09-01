@@ -106,11 +106,9 @@ public class UAWebView extends WebView {
     private void init(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         WebSettings settings = getSettings();
 
-        if (Build.VERSION.SDK_INT >= 7) {
-            settings.setAppCacheEnabled(true);
-            settings.setAppCachePath(getCachePath());
-            settings.setDomStorageEnabled(true);
-        }
+        settings.setAppCacheEnabled(true);
+        settings.setAppCachePath(getCachePath());
+        settings.setDomStorageEnabled(true);
 
         if (Build.VERSION.SDK_INT >= 21) {
             if (attrs != null) {
@@ -186,18 +184,13 @@ public class UAWebView extends WebView {
         // Add auth to landing page content URLs
         if (url != null && url.startsWith(UAirship.shared().getAirshipConfigOptions().landingPageContentURL)) {
             // Do pre auth if we can
-            if (Build.VERSION.SDK_INT >= 8) {
-                AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
-                HashMap<String, String> headers = new HashMap<>();
-                headers.put("Authorization", createBasicAuth(options.getAppKey(), options.getAppSecret()));
+            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Authorization", createBasicAuth(options.getAppKey(), options.getAppSecret()));
 
-                super.loadUrl(url, headers);
-            } else {
-                super.loadUrl(url);
-            }
+            super.loadUrl(url, headers);
 
             // Set the client auth request
-            AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
             setClientAuthRequest(url, options.getAppKey(), options.getAppSecret());
         } else {
             super.loadUrl(url);
@@ -236,14 +229,10 @@ public class UAWebView extends WebView {
         RichPushUser user = UAirship.shared().getInbox().getUser();
 
         // Send authorization in the headers if the web view supports it
-        if (Build.VERSION.SDK_INT >= 8) {
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", createBasicAuth(user.getId(), user.getPassword()));
 
-            loadUrl(message.getMessageBodyUrl(), headers);
-        } else {
-            loadUrl(message.getMessageBodyUrl());
-        }
+        loadUrl(message.getMessageBodyUrl(), headers);
 
         currentMessage = message;
 

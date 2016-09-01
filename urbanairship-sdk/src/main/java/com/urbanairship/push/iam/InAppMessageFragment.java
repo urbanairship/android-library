@@ -3,7 +3,6 @@
 package com.urbanairship.push.iam;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,7 +33,6 @@ import java.util.Map;
 /**
  * A fragment that displays an in-app message.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class InAppMessageFragment extends Fragment {
 
     private static Boolean isCardViewAvailable;
