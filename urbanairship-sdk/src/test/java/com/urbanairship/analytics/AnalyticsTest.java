@@ -299,24 +299,6 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
     }
 
-    // TODO: Remove this test for 8.0.0 since AssociatedIdentifiers.Builder() has been deprecated
-    /**
-     * Test associateIdentifiers dispatches a job to add a new associate_identifiers event.
-     */
-    @Test
-    public void testAssociateIdentifiers() {
-        analytics.associateIdentifiers(new AssociatedIdentifiers.Builder().create());
-
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "associate_identifiers".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
-            }
-        }));
-    }
-
     /**
      * Test editAssociatedIdentifiers  dispatches a job to add a new associate_identifiers event.
      */

@@ -142,21 +142,6 @@ public class LocalizableRemoteInput {
          *
          * @param choices An int array.
          * @return The builder with the choices set.
-         *
-         * @deprecated Use {@link #setChoices(int)} instead.
-         */
-        @Deprecated
-        public Builder setChoices(int[] choices) {
-            this.choices = choices;
-            this.choicesArray = 0;
-            return this;
-        }
-
-        /**
-         * Set the choices value.
-         *
-         * @param choices An int array.
-         * @return The builder with the choices set.
          */
         public Builder setChoices(@ArrayRes int choices) {
             this.choices = null;

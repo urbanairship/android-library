@@ -614,19 +614,5 @@ public class CustomEvent extends Event implements JsonSerializable {
         public CustomEvent create() {
             return new CustomEvent(this);
         }
-
-        /**
-         * Create the custom event and adds the event to Analytics.
-         *
-         * @return The created custom event.
-         *
-         * @deprecated Use {@link CustomEvent#track()} instead.
-         */
-        @Deprecated
-        public CustomEvent addEvent() {
-            CustomEvent event = create();
-            event.track();
-            return event;
-        }
     }
 }
