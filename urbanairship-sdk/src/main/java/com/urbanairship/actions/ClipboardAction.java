@@ -5,7 +5,6 @@ package com.urbanairship.actions;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -90,14 +89,9 @@ public class ClipboardAction extends Action {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    ClipboardManager clipboardManager = (ClipboardManager) UAirship.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText(label, text);
-                    clipboardManager.setPrimaryClip(clip);
-                } else {
-                    android.text.ClipboardManager clipboardManager = (android.text.ClipboardManager) UAirship.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboardManager.setText(text);
-                }
+                ClipboardManager clipboardManager = (ClipboardManager) UAirship.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText(label, text);
+                clipboardManager.setPrimaryClip(clip);
             }
         });
 

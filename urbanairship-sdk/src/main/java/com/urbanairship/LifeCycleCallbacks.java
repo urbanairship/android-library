@@ -2,7 +2,6 @@
 
 package com.urbanairship;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Application.ActivityLifecycleCallbacks;
@@ -11,7 +10,6 @@ import android.os.Bundle;
 /**
  * This helper class registers lifecycle callbacks.
  */
-@TargetApi(14)
 public abstract class LifeCycleCallbacks {
     private final Application application;
     private final ActivityLifecycleCallbacks activityLifecycleCallbacks;

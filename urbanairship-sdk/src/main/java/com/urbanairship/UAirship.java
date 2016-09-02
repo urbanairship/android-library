@@ -269,20 +269,10 @@ public class UAirship {
             throw new IllegalArgumentException("Application argument must not be null");
         }
 
-        if (Looper.myLooper() != null && Looper.getMainLooper() == Looper.myLooper()) {
-            // Workaround for https://code.google.com/p/android/issues/detail?id=20915.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                try {
-                    Class.forName("android.os.AsyncTask");
-                } catch (ClassNotFoundException e) {
-                    Logger.error("AsyncTask workaround failed.", e);
-                }
-            }
-
-        } else {
+        if (Looper.myLooper() == null || Looper.getMainLooper() != Looper.myLooper()) {
             Logger.error("takeOff() must be called on the main thread!");
         }
-
+        
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
             for (StackTraceElement element : new Exception().getStackTrace()) {
@@ -305,10 +295,8 @@ public class UAirship {
             isTakingOff = true;
 
             UAirship.application = application;
-            if (Build.VERSION.SDK_INT >= 14) {
-                Analytics.registerLifeCycleCallbacks(application);
-                InAppMessageManager.registerLifeCycleCallbacks(application);
-            }
+            Analytics.registerLifeCycleCallbacks(application);
+            InAppMessageManager.registerLifeCycleCallbacks(application);
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -390,10 +378,8 @@ public class UAirship {
                 return;
             }
 
-            if (Build.VERSION.SDK_INT >= 14) {
-                Analytics.unregisterLifeCycleCallbacks();
-                InAppMessageManager.unregisterLifeCycleCallbacks();
-            }
+            Analytics.unregisterLifeCycleCallbacks();
+            InAppMessageManager.unregisterLifeCycleCallbacks();
 
             // Block until takeoff is finished
             UAirship airship = UAirship.shared();

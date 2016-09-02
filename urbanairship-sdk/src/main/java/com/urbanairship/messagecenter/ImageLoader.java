@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -11,7 +10,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.http.HttpResponseCache;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,7 +33,6 @@ import java.util.concurrent.Executors;
 /**
  * Asynchronous bitmap loader for image views.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 class ImageLoader {
 
     private static final String CACHE_DIR = "urbanairship-cache";

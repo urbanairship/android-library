@@ -2,8 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -21,7 +19,6 @@ import java.util.Set;
  * The default {@link android.widget.AbsListView.MultiChoiceModeListener} for the {@link MessageListFragment}
  * to handle multiple selection.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
 
     private final MessageListFragment messageListFragment;

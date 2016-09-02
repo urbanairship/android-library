@@ -12,7 +12,6 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 
 /**
  * An activity that is used by the Action framework to enable starting other activities
@@ -104,21 +103,5 @@ public class ActionActivity extends Activity {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         finish();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Activity instrumentation for analytic tracking
-        Analytics.activityStarted(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        // Activity instrumentation for analytic tracking
-        Analytics.activityStopped(this);
     }
 }

@@ -2,14 +2,12 @@
 
 package com.urbanairship.analytics;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -176,48 +174,6 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
-     * Call this in your Activity's <code>onStart</code> method to notify Analytics that the activity has started.
-     * This is non-blocking and should be called on the application's main thread. If your application
-     * targets Android Ice Cream Sandwich (api 14) or above, this method is no longer required.
-     *
-     * @param activity The activity that is currently starting.
-     */
-    public static void activityStarted(@NonNull final Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            return;
-        }
-
-        final long timeMS = System.currentTimeMillis();
-        UAirship.shared(new UAirship.OnReadyCallback() {
-            @Override
-            public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().activityMonitor.activityStarted(activity, timeMS);
-            }
-        });
-    }
-
-    /**
-     * Call this in your Activity's <code>onStop</code> method to notify Analytics that the activity has stopped.
-     * This is non-blocking and should be called on the application's main thread. If your application
-     * targets Android Ice Cream Sandwich (api 14) or above, this method is no longer required.
-     *
-     * @param activity The activity that is currently stopping.
-     */
-    public static void activityStopped(@NonNull final Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            return;
-        }
-
-        final long timeMS = System.currentTimeMillis();
-        UAirship.shared(new UAirship.OnReadyCallback() {
-            @Override
-            public void onAirshipReady(UAirship airship) {
-                airship.getAnalytics().activityMonitor.activityStopped(activity, timeMS);
-            }
-        });
-    }
-
-    /**
      * Determines if the application is in the foreground.
      *
      * @return <code>true</code> if the application is in the foreground, otherwise
@@ -360,7 +316,6 @@ public class Analytics extends AirshipComponent {
      * @param application The application.
      * @hide
      */
-    @TargetApi(14)
     public static void registerLifeCycleCallbacks(@NonNull Application application) {
         if (lifeCycleCallbacks == null) {
             lifeCycleCallbacks = new LifeCycleCallbacks(application) {
@@ -396,7 +351,6 @@ public class Analytics extends AirshipComponent {
      *
      * @hide
      */
-    @TargetApi(14)
     public static void unregisterLifeCycleCallbacks() {
         if (lifeCycleCallbacks != null) {
             lifeCycleCallbacks.unregister();

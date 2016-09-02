@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,7 +24,6 @@ import com.urbanairship.widget.UAWebViewClient;
 /**
  * Fragment that displays a {@link RichPushMessage}.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageFragment extends Fragment {
 
     private static final String MESSAGE_ID_KEY = "com.urbanairship.richpush.URL_KEY";

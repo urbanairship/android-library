@@ -2,11 +2,9 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.DrawableRes;
@@ -35,7 +33,6 @@ import java.util.List;
 /**
  * Fragment that displays the Urban Airship Message Center.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageListFragment extends Fragment {
 
     private SwipeRefreshLayout refreshLayout;

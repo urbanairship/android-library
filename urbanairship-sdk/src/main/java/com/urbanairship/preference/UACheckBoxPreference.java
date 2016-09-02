@@ -45,7 +45,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     }
 
     private void init() {
-        if (Build.VERSION.SDK_INT >= 14 && getContext().getApplicationContext() instanceof Application) {
+        if (getContext().getApplicationContext() instanceof Application) {
             Application application = (Application) getContext().getApplicationContext();
             lifeCycleCallbacks = new LifeCycleCallbacks(application) {
                 @Override

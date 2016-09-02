@@ -2,11 +2,9 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -22,7 +20,6 @@ import com.urbanairship.R;
  * Activity that automatically uses the AppCompat support library if its available and the application
  * extends the app compat theme.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public abstract class ThemedActivity extends FragmentActivity {
 
     private static Boolean isAppCompatDependencyAvailable;

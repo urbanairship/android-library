@@ -2,13 +2,11 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
@@ -34,7 +32,6 @@ import java.util.List;
  * and messages will be displayed either in a split view using {@link MessageFragment} or by
  * triggering {@link RichPushInbox#startMessageActivity(String)}.
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MessageCenterFragment extends Fragment {
 
     private static final String START_MESSAGE_ID = "START_MESSAGE_ID";
@@ -146,17 +143,15 @@ public class MessageCenterFragment extends Fragment {
             isTwoPane = true;
 
             // Color the linear layout divider if we are running on JELLY_BEAN or newer
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                LinearLayout layoutContainer = (LinearLayout) view.findViewById(R.id.container);
-                TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
-                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
-                if (color != -1) {
-                    DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
-                    DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
-                }
-
-                attributes.recycle();
+            LinearLayout layoutContainer = (LinearLayout) view.findViewById(R.id.container);
+            TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
+            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
+            if (color != -1) {
+                DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
+                DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
             }
+
+            attributes.recycle();
         } else {
             isTwoPane = false;
         }

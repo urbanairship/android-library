@@ -2,11 +2,9 @@
 
 package com.urbanairship.push.iam;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.os.Build;
 import android.os.Looper;
 import android.view.ViewGroup;
 
@@ -50,7 +48,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private Analytics mockAnalytics;
 
     @Before
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void before() {
         mockActivity = mock(Activity.class);
         when(mockActivity.getFragmentManager()).thenReturn(mock(FragmentManager.class));
@@ -118,7 +115,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Test showing the pending in-app message.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowPendingMessage() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
@@ -154,7 +150,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * and the pending in-app message to not be displayed.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowExpiredPendingMessage() {
 
         final InAppMessage expired = new InAppMessage.Builder()
@@ -199,7 +194,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Test showing the pending in-app message when its already showing does not show a second time.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowPendingMessageAlreadyShowing() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
@@ -225,7 +219,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * set.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingMessageShowAsap() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
@@ -253,7 +246,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * next activity is resumed.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testActivityResumedShowAsap() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
@@ -279,7 +271,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Test when the app foregrounds it tries to show the pending in-app message on next activity resume.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testActivityResume() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
@@ -306,7 +297,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * message exists.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingMessageGeneratesReplaceEvent() {
         final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
         // Set the pending in-app message
@@ -340,7 +330,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * being displayed.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testSetPendingNoReplaceEvent() {
         final InAppMessage otherMessage = new InAppMessage.Builder().setId(UUID.randomUUID().toString()).create();
 
@@ -369,7 +358,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Test init checks and removes a expired pending in app message.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testInit() {
         final InAppMessage expired = new InAppMessage.Builder()
                 .setExpiry(0l)
@@ -408,7 +396,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
      * Test showing the pending in-app message in a container that does not exist.
      */
     @Test
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void testShowMessageInvalidContainerId() {
         // Set up a mocked transaction
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);

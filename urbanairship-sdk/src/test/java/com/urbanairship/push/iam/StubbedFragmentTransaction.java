@@ -2,14 +2,11 @@
 
 package com.urbanairship.push.iam;
 
-import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.view.View;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class StubbedFragmentTransaction extends FragmentTransaction {
     @NonNull
     @Override

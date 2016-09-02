@@ -2,7 +2,6 @@
 
 package com.urbanairship;
 
-import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -10,7 +9,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -41,7 +39,6 @@ import java.util.concurrent.Executors;
  * that allows the user to copy the Channel or optionally open a url with the channel as
  * an argument.
  */
-@TargetApi(Build.VERSION_CODES.FROYO)
 class ChannelCapture extends AirshipComponent {
 
     /**
@@ -116,7 +113,7 @@ class ChannelCapture extends AirshipComponent {
             @Override
             public void run() {
                 // Clipboard must be initialized on a thread with a prepared looper
-                clipboard = Build.VERSION.SDK_INT >= 11 ? new ClipboardHoneyComb() : new ClipboardFroyo();
+                clipboard = new ClipboardHoneyComb();
 
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(Analytics.ACTION_APP_FOREGROUND);
@@ -318,7 +315,6 @@ class ChannelCapture extends AirshipComponent {
     /**
      * Clipboard interface for HoneyComb and newer devices.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private class ClipboardHoneyComb implements Clipboard {
 
         private final ClipboardManager clipboardManager;
@@ -354,28 +350,4 @@ class ChannelCapture extends AirshipComponent {
             clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
         }
     }
-
-    /**
-     * Clipboard interface for Froyo and newer devices.
-     */
-    private class ClipboardFroyo implements Clipboard {
-
-        private final android.text.ClipboardManager clipboardManager;
-
-        ClipboardFroyo() {
-
-            clipboardManager = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        }
-
-        @Override
-        public String getText() {
-            return String.valueOf(clipboardManager.getText());
-        }
-
-        @Override
-        public void clear() {
-            clipboardManager.setText("");
-        }
-    }
-
 }
