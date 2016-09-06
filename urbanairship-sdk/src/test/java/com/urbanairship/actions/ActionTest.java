@@ -2,15 +2,12 @@
 
 package com.urbanairship.actions;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
-import org.robolectric.shadows.ShadowApplication;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -157,71 +154,5 @@ public class ActionTest extends BaseTestCase {
         assertTrue("Result should be 'null'", result.getValue().isNull());
         assertEquals("Result should have the COMPLETED status",
                 ActionResult.STATUS_COMPLETED, result.getStatus());
-    }
-
-    /**
-     * Test starting an activity for a result
-     */
-    @Test
-    public void testStartActivityForResult() throws InterruptedException {
-        // Set up expected result from the activity
-        final int expectedCode = 1;
-        final Intent expectedData = new Intent();
-
-        // Create an action that starts an activity for a result
-        final Intent activityIntent = new Intent();
-        final TestAction action = new TestAction() {
-            @NonNull
-            @Override
-            public ActionResult perform(@NonNull ActionArguments arguments) {
-                Action.ActivityResult result = startActivityForResult(activityIntent);
-
-                // Verify the result and data
-                assertEquals("Unexpected result code", expectedCode, result.getResultCode());
-                assertEquals("Unexpected result data", expectedData, result.getIntent());
-
-                return super.perform(arguments);
-            }
-        };
-
-        // Run the action in a different thread because starting activity
-        // for result blocks
-        Thread actionThread = new Thread(new Runnable() {
-            public void run() {
-                action.run(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "arg"));
-            }
-        });
-        actionThread.start();
-
-        // Wait til we have a started activity from the action thread
-        ShadowApplication application = ShadowApplication.getInstance();
-        for (int i = 0; i < 10; i++) {
-            Intent intent = application.peekNextStartedActivity();
-            if (intent != null && intent.getComponent().getClassName().equals(ActionActivity.class.getName())) {
-                break;
-            }
-            Thread.sleep(10);
-        }
-
-        // Verify the intent
-        Intent intent = application.getNextStartedActivity();
-        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.getFlags());
-        assertEquals(intent.getComponent().getClassName(), ActionActivity.class.getName());
-        assertEquals(activityIntent, intent.getParcelableExtra(ActionActivity.START_ACTIVITY_INTENT_EXTRA));
-
-        ResultReceiver receiver = intent.getParcelableExtra(ActionActivity.RESULT_RECEIVER_EXTRA);
-        assertNotNull(receiver);
-
-        // Send the result
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(ActionActivity.RESULT_INTENT_EXTRA, expectedData);
-        receiver.send(expectedCode, bundle);
-
-        // Thread should be able to finish
-        actionThread.join(100);
-        assertFalse("Thread is not finishing", actionThread.isAlive());
-
-        // Make sure the perform was actually called
-        assertTrue("Action did not perform", action.performCalled);
     }
 }
