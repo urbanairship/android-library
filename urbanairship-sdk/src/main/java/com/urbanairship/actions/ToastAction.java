@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.widget.Toast;
 
@@ -78,17 +76,17 @@ public class ToastAction extends Action {
             length = Toast.LENGTH_SHORT;
         }
 
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (length == Toast.LENGTH_LONG) {
-                    Toast.makeText(UAirship.getApplicationContext(), text, Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(UAirship.getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        if (length == Toast.LENGTH_LONG) {
+            Toast.makeText(UAirship.getApplicationContext(), text, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(UAirship.getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+        }
 
         return ActionResult.newResult(arguments.getValue());
+    }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
     }
 }
