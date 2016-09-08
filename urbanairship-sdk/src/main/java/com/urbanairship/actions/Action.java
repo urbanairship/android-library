@@ -2,21 +2,10 @@
 
 package com.urbanairship.actions;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.ResultReceiver;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -46,6 +35,11 @@ import java.lang.annotation.RetentionPolicy;
  * going to sleep should request a wake lock before performing. This is especially
  * important for actions that are performing in SITUATION_PUSH_RECEIVED, when a
  * push is delivered when the device is not active.
+ * <p/>
+ * The value returned by {@link #shouldRunOnMainThread()} determines which thread should
+ * run the action if executed asynchronously. If an action involves a UI interaction, this
+ * method should be overridden to return true so that the action definitely runs before the
+ * app state changes.
  */
 public abstract class Action {
 
@@ -168,131 +162,12 @@ public abstract class Action {
     }
 
     /**
-     * Requests permissions.
+     * Determines which thread runs the action.
      *
-     * @param permissions The permissions to request.
-     * @return The result from requesting permissions.
+     * @return {@code true} if the action should be run on the main thread, or {@code false} if the
+     * action should run on a background thread.
      */
-    @TargetApi(Build.VERSION_CODES.M)
-    public final int[] requestPermissions(@NonNull String... permissions) {
-        Context context = UAirship.getApplicationContext();
-
-        boolean permissionsDenied = false;
-
-        final int[] result = new int[permissions.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = context.checkSelfPermission(permissions[i]);
-            if (result[i] == PackageManager.PERMISSION_DENIED) {
-                permissionsDenied = true;
-            }
-        }
-
-        if (!permissionsDenied) {
-            return result;
-        }
-
-        ResultReceiver receiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
-            @Override
-            public void onReceiveResult(int resultCode, Bundle resultData) {
-                int[] receiverResults = resultData.getIntArray(ActionActivity.RESULT_INTENT_EXTRA);
-                if (receiverResults != null && receiverResults.length == result.length) {
-                    System.arraycopy(receiverResults, 0, result, 0, result.length);
-                }
-
-                synchronized (result) {
-                    result.notify();
-                }
-            }
-        };
-
-        Intent actionIntent = new Intent(context, ActionActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setPackage(UAirship.getPackageName())
-                .putExtra(ActionActivity.PERMISSIONS_EXTRA, permissions)
-                .putExtra(ActionActivity.RESULT_RECEIVER_EXTRA, receiver);
-
-        synchronized (result) {
-            context.startActivity(actionIntent);
-            try {
-                result.wait();
-            } catch (InterruptedException e) {
-                Logger.error("Thread interrupted when waiting for result from activity.", e);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Starts an activity for a result.
-     *
-     * @param intent The activity to start.
-     * @return The result of the activity in a ActivityResult object.
-     */
-    @NonNull
-    public final ActivityResult startActivityForResult(@NonNull Intent intent) {
-        final ActivityResult result = new ActivityResult();
-
-        ResultReceiver receiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
-            @Override
-            public void onReceiveResult(int resultCode, Bundle resultData) {
-                result.setResult(resultCode, (Intent) resultData.getParcelable(ActionActivity.RESULT_INTENT_EXTRA));
-                synchronized (result) {
-                    result.notify();
-                }
-            }
-        };
-
-        Context context = UAirship.getApplicationContext();
-        Intent actionIntent = new Intent(context, ActionActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setPackage(UAirship.getPackageName())
-                .putExtra(ActionActivity.START_ACTIVITY_INTENT_EXTRA, intent)
-                .putExtra(ActionActivity.RESULT_RECEIVER_EXTRA, receiver);
-
-        synchronized (result) {
-            context.startActivity(actionIntent);
-            try {
-                result.wait();
-            } catch (InterruptedException e) {
-                Logger.error("Thread interrupted when waiting for result from activity.", e);
-                return new ActivityResult();
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Wraps the result code and data from starting an activity
-     * for a result.
-     */
-    public static class ActivityResult {
-        private int resultCode = Activity.RESULT_CANCELED;
-        private Intent intent;
-
-        /**
-         * Gets the result intent.
-         *
-         * @return The result intent from the activity.
-         */
-        public Intent getIntent() {
-            return intent;
-        }
-
-        /**
-         * Gets the result code from the activity.
-         *
-         * @return The result code from the activity.
-         */
-        public int getResultCode() {
-            return resultCode;
-        }
-
-
-        private void setResult(int resultCode, Intent intent) {
-            this.resultCode = resultCode;
-            this.intent = intent;
-        }
+    public boolean shouldRunOnMainThread() {
+        return false;
     }
 }

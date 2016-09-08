@@ -109,4 +109,9 @@ public class OverlayRichPushMessageAction extends Action {
 
         return ActionResult.newEmptyResult();
     }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
+    }
 }

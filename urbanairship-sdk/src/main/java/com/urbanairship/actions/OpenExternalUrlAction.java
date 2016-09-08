@@ -74,4 +74,9 @@ public class OpenExternalUrlAction extends Action {
 
         }
     }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
+    }
 }

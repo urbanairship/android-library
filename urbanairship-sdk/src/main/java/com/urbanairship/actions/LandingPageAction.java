@@ -211,5 +211,10 @@ public class LandingPageAction extends Action {
 
         return false;
     }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
+    }
 }
 
