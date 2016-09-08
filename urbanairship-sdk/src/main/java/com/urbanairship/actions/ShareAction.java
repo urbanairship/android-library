@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LabeledIntent;
 import android.content.pm.ResolveInfo;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.R;
@@ -112,12 +110,7 @@ public class ShareAction extends Action {
                                   .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
 
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                context.startActivity(chooserIntent);
-            }
-        });
+        context.startActivity(chooserIntent);
 
         return ActionResult.newEmptyResult();
     }
@@ -130,5 +123,10 @@ public class ShareAction extends Action {
      */
     protected boolean excludePackage(String packageName) {
         return ignoredPackages.contains(packageName);
+    }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
     }
 }

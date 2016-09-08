@@ -35,6 +35,11 @@ import java.lang.annotation.RetentionPolicy;
  * going to sleep should request a wake lock before performing. This is especially
  * important for actions that are performing in SITUATION_PUSH_RECEIVED, when a
  * push is delivered when the device is not active.
+ * <p/>
+ * The value returned by {@link #shouldRunOnMainThread()} determines which thread should
+ * run the action if executed asynchronously. If an action involves a UI interaction, this
+ * method should be overridden to return true so that the action definitely runs before the
+ * app state changes.
  */
 public abstract class Action {
 
@@ -154,5 +159,15 @@ public abstract class Action {
      */
     public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
 
+    }
+
+    /**
+     * Determines which thread runs the action.
+     *
+     * @return {@code true} if the action should be run on the main thread, or {@code false} if the
+     * action should run on a background thread.
+     */
+    public boolean shouldRunOnMainThread() {
+        return false;
     }
 }

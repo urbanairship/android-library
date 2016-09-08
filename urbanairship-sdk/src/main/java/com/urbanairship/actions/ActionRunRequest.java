@@ -8,18 +8,23 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 /**
  * ActionRunRequests provides a fluent API for running Actions.
  * <p/>
- * Each action is run on its own thread when triggered asynchronously. If the
- * async run is triggered on the UI thread or a thread with a prepared looper,
+ * If an action entails a UI interaction, {@link Action#shouldRunOnMainThread()} will be
+ * overridden to return true so that the action runs on the UI thread when triggered
+ * asynchronously. If called by the UI thread, the action will run immediately, otherwise it will
+ * be posted to the main thread's looper. All other actions will run on their own thread.
+ * If the async run is triggered on the UI thread or a thread with a prepared looper,
  * the optional {@link com.urbanairship.actions.ActionCompletionCallback} will be
  * executed on the calling thread by sending a message to the calling thread's handler.
  * If the calling thread does not have a prepared looper, the callback will be
@@ -166,33 +171,27 @@ public class ActionRunRequest {
      * @return The action's result.
      */
     @NonNull
+    @WorkerThread
     public ActionResult runSync() {
-        return runSync(createActionArguments());
-    }
+        final ActionArguments arguments = createActionArguments();
+        final Semaphore semaphore = new Semaphore(0);
 
-    /**
-     * Runs the action synchronously with the given action arguments.
-     *
-     * @param arguments The action arguments.
-     * @return The action's result.
-     */
-    @NonNull
-    private ActionResult runSync(ActionArguments arguments) {
-        if (actionName != null) {
-            ActionRegistry.Entry entry = lookUpAction(actionName);
-            if (entry == null) {
-                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
-            } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
-                Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
-                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
-            } else {
-                return entry.getActionForSituation(situation).run(arguments);
+
+        ActionRunnable runnable = new ActionRunnable(arguments) {
+            @Override
+            void onFinish(ActionArguments arguments, ActionResult result) {
+                semaphore.release();
             }
-        } else if (action != null) {
-            return action.run(arguments);
+        };
+
+        if (shouldRunOnMain(arguments)) {
+            new Handler(Looper.getMainLooper()).post(runnable);
         } else {
-            return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
+            executor.execute(runnable);
         }
+
+        semaphore.tryAcquire();
+        return runnable.result;
     }
 
     /**
@@ -226,26 +225,38 @@ public class ActionRunRequest {
         }
 
         final ActionArguments arguments = createActionArguments();
-
         final Handler handler = new Handler(looper);
 
-        executor.execute(new Runnable() {
+        ActionRunnable runnable = new ActionRunnable(arguments) {
             @Override
-            public void run() {
-                final ActionResult result = runSync(arguments);
-
+            void onFinish(final ActionArguments arguments, final ActionResult result) {
                 if (callback == null) {
                     return;
                 }
 
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.onFinish(arguments, result);
-                    }
-                });
+                if (handler.getLooper() == Looper.myLooper()) {
+                    callback.onFinish(arguments, result);
+                } else {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onFinish(arguments, result);
+                        }
+                    });
+                }
+
             }
-        });
+        };
+
+        if (shouldRunOnMain(arguments)) {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                runnable.run();
+            } else {
+                new Handler(Looper.getMainLooper()).post(runnable);
+            }
+        } else {
+            executor.execute(runnable);
+        }
     }
 
     /**
@@ -276,5 +287,72 @@ public class ActionRunRequest {
         }
 
         return UAirship.shared().getActionRegistry().getEntry(actionName);
+    }
+
+    /**
+     * Helper method to check if the request should run on the main thread.
+     *
+     * @param arguments The action arguments.
+     * @return {@code true} if the action should run on the main thread, otherwise {@code false}
+     */
+    private boolean shouldRunOnMain(ActionArguments arguments) {
+        if (action != null) {
+            return action.shouldRunOnMainThread();
+        }
+
+        ActionRegistry.Entry entry = lookUpAction(actionName);
+        return entry != null && entry.getActionForSituation(arguments.getSituation()).shouldRunOnMainThread();
+    }
+
+    /**
+     * Helper method to actually run the action.
+     *
+     * @param arguments The action arguments.
+     * @return The action's result.
+     */
+    @NonNull
+    private ActionResult executeAction(ActionArguments arguments) {
+        if (actionName != null) {
+            ActionRegistry.Entry entry = lookUpAction(actionName);
+            if (entry == null) {
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
+            } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
+                Logger.info("Action " + actionName + " will not be run. Registry predicate rejected the arguments: " + arguments);
+                return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
+            } else {
+                return entry.getActionForSituation(situation).run(arguments);
+            }
+        } else if (action != null) {
+            return action.run(arguments);
+        } else {
+            return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
+        }
+    }
+
+    /**
+     * Helper runnable for running the action request and retaining the result.
+     */
+    private abstract class ActionRunnable implements Runnable {
+
+        private ActionResult result;
+        private final ActionArguments arguments;
+
+        public ActionRunnable(ActionArguments arguments) {
+            this.arguments = arguments;
+        }
+
+        @Override
+        public final void run() {
+            result = executeAction(arguments);
+            onFinish(arguments, result);
+        }
+
+        /**
+         * Called when the action is finished.
+         *
+         * @param arguments The arguments.
+         * @param result The action result.
+         */
+        abstract void onFinish(ActionArguments arguments, ActionResult result);
     }
 }

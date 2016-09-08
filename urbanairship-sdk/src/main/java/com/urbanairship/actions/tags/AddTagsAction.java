@@ -46,4 +46,5 @@ public class AddTagsAction extends BaseTagsAction {
 
         return ActionResult.newEmptyResult();
     }
+
 }

@@ -99,4 +99,8 @@ public class ClipboardAction extends Action {
         return ActionResult.newResult(arguments.getValue());
     }
 
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
+    }
 }
