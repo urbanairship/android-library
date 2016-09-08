@@ -35,69 +35,6 @@ import java.io.IOException;
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:orientation="vertical"
-    android:paddingTop="2dip"
-    android:layout_alignParentTop="true"
-    android:layout_height="fill_parent">
-
-  <ImageView android:id="@+id/icon"
-      android:src="@drawable/icon_1"
-      android:layout_marginRight="4dip"
-      android:layout_marginLeft="5dip"
-      android:layout_width="100dip"
-      android:layout_height="100dip" />
-
-  <!-- The custom notification requires a subject field.
-  To accommodate multiple lines in this layout this
-  field is hidden. Visibility is set to gone. -->
-  <TextView android:id="@+id/subject"
-      android:text="Subject"
-      android:layout_alignTop="@+id/icon"
-      android:layout_toRightOf="@+id/icon"
-      android:layout_height="wrap_content"
-      android:layout_width="wrap_content"
-      android:maxLines="1" android:visibility="gone"/>
-
-  <!-- The message block. Standard text size is 14dip
-  but is reduced here to maximize content. -->
-  <TextView android:id="@+id/message"
-      android:textSize="12dip"
-      android:textColor="#FF000000"
-      android:text="Message"
-      android:maxLines="4"
-      android:layout_marginTop="0dip"
-      android:layout_marginRight="2dip"
-      android:layout_marginLeft="0dip"
-      android:layout_height="wrap_content"
-      android:layout_toRightOf="@+id/icon"
-      android:layout_width="wrap_content" />
-
-</RelativeLayout>
- * }
- * </pre>
- * <p>
- * Note: If you are planning on targeting Honeycomb devices (and beyond), the above layout will not display
- * properly, as it will show black text on the default black background that Honeycomb and above uses for notifications.
- * Instead of explicitly setting a light background color, which may look out of place across multiple devices,
- * you should set the <code>android:textAppearance</code> property on your TextViews to
- * <code>@android:style/TextAppearance.StatusBar.EventContent.Title</code> or
- * <code>@android:style/TextAppearance.StatusBar.EventContent</code>, which were introduced in API level 9, to ensure
- * that your layout will adapt gracefully as the platform changes.
- * <p>
- * Because these styles are not available prior to API level 9, if you intend to make your app backwards compatible with
- * prior API levels, you can do so by building for the newer API but set an older minimum SDK setting for your app, and
- * including the level 9 compatible layout in its own resource directory, called "layout-v9".  See the Push Sample application
- * for a concrete example.
- * <p>
- * Below is a sample Honeycomb-compatible layout, similar to the one above:
- *
- * <pre>
- *
- * {@code
- *
-   <RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:orientation="vertical"
     android:paddingTop="0dip"
     android:layout_alignParentTop="true"
     android:layout_height="fill_parent">
