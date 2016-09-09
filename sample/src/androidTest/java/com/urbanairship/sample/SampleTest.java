@@ -309,7 +309,7 @@ public class SampleTest {
         pushSender.send(pushPayload);
 
         // click YES button
-        UiObject yesButton = device.findObject(new UiSelector().text("Yes"));
+        UiObject yesButton = device.findObject(new UiSelector().textStartsWith("Yes"));
         yesButton.waitForExists(10000);
         yesButton.click();
 
@@ -325,7 +325,7 @@ public class SampleTest {
         pushSender.send(pushPayload);
 
         // click NO button
-        UiObject noButton = device.findObject(new UiSelector().text("No"));
+        UiObject noButton = device.findObject(new UiSelector().textStartsWith("No"));
         noButton.waitForExists(5000);
         noButton.click();
 
