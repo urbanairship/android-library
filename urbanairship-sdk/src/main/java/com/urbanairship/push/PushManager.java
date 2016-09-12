@@ -226,6 +226,10 @@ public class PushManager extends AirshipComponent {
     static final String GCM_INSTANCE_ID_TOKEN_KEY = KEY_PREFIX + ".GCM_INSTANCE_ID_TOKEN_KEY";
     static final String APID_KEY = KEY_PREFIX + ".APID";
 
+    // As of version 8.0.0
+    static final String REGISTRATION_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
+    static final String REGISTRATION_TOKEN_MIGRATED_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_MIGRATED_KEY";
+
     //singleton stuff
     private final Context context;
     private NotificationFactory notificationFactory;
@@ -289,6 +293,7 @@ public class PushManager extends AirshipComponent {
 
         this.migratePushEnabledSettings();
         this.migrateQuietTimeSettings();
+        this.migrateRegistrationTokenSettings();
 
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
@@ -474,16 +479,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        if (getPushTokenRegistrationEnabled()) {
-            switch (UAirship.shared().getPlatformType()) {
-                case UAirship.AMAZON_PLATFORM:
-                    return !UAStringUtil.isEmpty(getAdmId());
-                case UAirship.ANDROID_PLATFORM:
-                    return !UAStringUtil.isEmpty(getGcmToken());
-            }
-        }
-
-        return false;
+        return getPushTokenRegistrationEnabled() && !UAStringUtil.isEmpty(getRegistrationToken());
     }
 
     /**
@@ -512,16 +508,14 @@ public class PushManager extends AirshipComponent {
         switch (UAirship.shared().getPlatformType()) {
             case UAirship.ANDROID_PLATFORM:
                 builder.setDeviceType("android");
-                if (getPushTokenRegistrationEnabled()) {
-                    builder.setPushAddress(getGcmToken());
-                }
                 break;
             case UAirship.AMAZON_PLATFORM:
                 builder.setDeviceType("amazon");
-                if (getPushTokenRegistrationEnabled()) {
-                    builder.setPushAddress(getAdmId());
-                }
                 break;
+        }
+
+        if (getPushTokenRegistrationEnabled()) {
+            builder.setPushAddress(getRegistrationToken());
         }
 
         return builder.build();
@@ -655,16 +649,6 @@ public class PushManager extends AirshipComponent {
 
             return normalizedTags;
         }
-    }
-
-    /**
-     * Returns the currently registered ADM ID.
-     *
-     * @return An ADM identifier string, or null if not present.
-     */
-    @Nullable
-    public String getAdmId() {
-        return preferenceDataStore.getString(ADM_REGISTRATION_ID_KEY, null);
     }
 
     /**
@@ -985,15 +969,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets the registered ADM ID.
-     *
-     * @param admId An ADM identifier string.
-     */
-    void setAdmId(String admId) {
-        preferenceDataStore.put(ADM_REGISTRATION_ID_KEY, admId);
-    }
-
-    /**
      * Dispatches a job to update the tag groups.
      */
     void startUpdateTagsService() {
@@ -1005,22 +980,22 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Sets the GCM Instance ID token.
+     * Sets the GCM Instance ID or ADM ID token.
      *
-     * @param token The Instance ID token.
+     * @param token The GCM Instance ID or ADM ID token.
      */
-    void setGcmToken(String token) {
-        preferenceDataStore.put(GCM_INSTANCE_ID_TOKEN_KEY, token);
+    void setRegistrationToken(String token) {
+        preferenceDataStore.put(REGISTRATION_TOKEN_KEY, token);
     }
 
     /**
-     * Gets the GCM Instance ID token.
+     * Gets the GCM Instance ID or ADM ID token.
      *
-     * @return The GCM token.
+     * @return The GCM or ADM token.
      */
     @Nullable
-    public String getGcmToken() {
-        return preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
+    public String getRegistrationToken() {
+        return preferenceDataStore.getString(REGISTRATION_TOKEN_KEY, null);
     }
 
     /**
@@ -1100,5 +1075,32 @@ public class PushManager extends AirshipComponent {
         preferenceDataStore.remove(QuietTime.START_MIN_KEY);
         preferenceDataStore.remove(QuietTime.END_HOUR_KEY);
         preferenceDataStore.remove(QuietTime.END_MIN_KEY);
+    }
+
+    /**
+     * Migrates the stored registration token.
+     */
+    void migrateRegistrationTokenSettings() {
+        if (preferenceDataStore.getBoolean(REGISTRATION_TOKEN_MIGRATED_KEY, false)) {
+            return;
+        }
+
+        Logger.info("Migrating registration token preference");
+
+        String token = null;
+        switch (UAirship.shared().getPlatformType()) {
+            case UAirship.ANDROID_PLATFORM:
+                token = preferenceDataStore.getString(GCM_INSTANCE_ID_TOKEN_KEY, null);
+                break;
+            case UAirship.AMAZON_PLATFORM:
+                token = preferenceDataStore.getString(ADM_REGISTRATION_ID_KEY, null);
+                break;
+        }
+
+        if (!UAStringUtil.isEmpty(token)) {
+            setRegistrationToken(token);
+        }
+
+        preferenceDataStore.put(REGISTRATION_TOKEN_MIGRATED_KEY, true);
     }
 }

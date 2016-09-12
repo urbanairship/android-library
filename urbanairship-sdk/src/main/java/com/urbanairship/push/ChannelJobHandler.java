@@ -244,12 +244,12 @@ class ChannelJobHandler {
 
                 String admId = AdmUtils.getRegistrationId(context);
                 if (admId == null) {
-                    pushManager.setAdmId(null);
+                    pushManager.setRegistrationToken(null);
                     AdmUtils.startRegistration(context);
                     isPushRegistering = true;
-                } else if (!admId.equals(pushManager.getAdmId())) {
+                } else if (!admId.equals(pushManager.getRegistrationToken())) {
                     Logger.info("ADM registration successful. Registration ID: " + admId);
-                    pushManager.setAdmId(admId);
+                    pushManager.setRegistrationToken(admId);
                 }
 
                 break;
@@ -294,7 +294,7 @@ class ChannelJobHandler {
             String registrationID = admIntent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
             if (registrationID != null) {
                 Logger.info("ADM registration successful. Registration ID: " + registrationID);
-                pushManager.setAdmId(registrationID);
+                pushManager.setRegistrationToken(registrationID);
             }
         }
 

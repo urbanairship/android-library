@@ -37,9 +37,9 @@ class GcmRegistrar {
             return;
         }
 
-        if (!token.equals(UAirship.shared().getPushManager().getGcmToken())) {
+        if (!token.equals(UAirship.shared().getPushManager().getRegistrationToken())) {
             Logger.info("GCM registration successful. Token: " + token);
-            UAirship.shared().getPushManager().setGcmToken(token);
+            UAirship.shared().getPushManager().setRegistrationToken(token);
         } else {
             Logger.verbose("GCM token up to date.");
         }
