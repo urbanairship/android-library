@@ -523,25 +523,14 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test set GCM Instance ID token
+     * Test set push token
      */
     @Test
-    public void testSetGcmToken() {
-        String gcmToken = "fakeGcmToken";
-        pushManager.setGcmToken("fakeGcmToken");
+    public void testSetPushToken() {
+        String pushToken = "fakePushToken";
+        pushManager.setRegistrationToken(pushToken);
 
-        assertEquals(gcmToken, pushManager.getGcmToken());
-    }
-
-    /**
-     * Test set ADM ID
-     */
-    @Test
-    public void testSetAdmId() {
-        String admId = "fakeAdmId";
-        pushManager.setAdmId("fakeAdmId");
-
-        assertEquals(admId, pushManager.getAdmId());
+        assertEquals(pushToken, pushManager.getRegistrationToken());
     }
 
     /**
@@ -550,7 +539,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testOptInPushDisabled() {
         pushManager.setPushEnabled(false);
-        pushManager.setGcmToken("fakeGcmId");
+        pushManager.setRegistrationToken("fakeGcmId");
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -564,7 +553,7 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.setPushEnabled(true);
         pushManager.setUserNotificationsEnabled(true);
-        pushManager.setAdmId("fakeAdmId");
+        pushManager.setRegistrationToken("fakeAdmId");
         pushManager.setPushTokenRegistrationEnabled(true);
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
@@ -579,7 +568,7 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.setPushEnabled(true);
         pushManager.setUserNotificationsEnabled(true);
-        pushManager.setGcmToken("fakeGcmId");
+        pushManager.setRegistrationToken("fakeGcmId");
         pushManager.setPushTokenRegistrationEnabled(true);
 
         assertEquals("OptIn should be true", true, pushManager.isOptIn());
@@ -593,7 +582,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         pushManager.setPushEnabled(true);
-        pushManager.setGcmToken(null);
+        pushManager.setRegistrationToken(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -606,7 +595,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
         pushManager.setPushEnabled(true);
-        pushManager.setAdmId(null);
+        pushManager.setRegistrationToken(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
@@ -619,7 +608,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-        pushManager.setGcmToken("GCM_TOKEN");
+        pushManager.setRegistrationToken("GCM_TOKEN");
         pushManager.setPushTokenRegistrationEnabled(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
@@ -636,7 +625,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-        pushManager.setAdmId("ADM_ID");
+        pushManager.setRegistrationToken("ADM_ID");
         pushManager.setPushTokenRegistrationEnabled(true);
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
@@ -798,10 +787,10 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setPushTokenRegistrationEnabled(true);
         assertTrue(pushManager.getPushTokenRegistrationEnabled());
 
-        pushManager.setGcmToken(null);
+        pushManager.setRegistrationToken(null);
         assertFalse(pushManager.isPushAvailable());
 
-        pushManager.setGcmToken("fakeGcmToken");
+        pushManager.setRegistrationToken("fakeGcmToken");
         assertTrue(pushManager.isPushAvailable());
     }
 
@@ -813,7 +802,7 @@ public class PushManagerTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
 
         pushManager.setPushTokenRegistrationEnabled(false);
-        pushManager.setGcmToken("fakeGcmToken");
+        pushManager.setRegistrationToken("fakeGcmToken");
 
         assertFalse(pushManager.getPushTokenRegistrationEnabled());
         assertFalse(pushManager.isPushAvailable());
@@ -999,5 +988,49 @@ public class PushManagerTest extends BaseTestCase {
 
         // Verify quiet time is still disabled
         assertFalse(pushManager.isQuietTimeEnabled());
+    }
+
+    /**
+     * Test migrating the GCM instance ID setting to the registration token setting.
+     */
+    @Test
+    public void testMigrateGcmRegistrationTokenSettings() {
+        TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
+
+        // Initialize the GCM instance ID token
+        preferenceDataStore.put(PushManager.REGISTRATION_TOKEN_MIGRATED_KEY, false);
+        preferenceDataStore.put(PushManager.GCM_INSTANCE_ID_TOKEN_KEY, "gcmIdToken");
+
+        // Verify that registration token has not been set
+        assertNull(preferenceDataStore.getString(PushManager.REGISTRATION_TOKEN_KEY, null));
+
+        // Migrate the GCM instance ID token
+        pushManager.migrateRegistrationTokenSettings();
+
+        // Verify that the token has been migrated to the new setting
+        assertEquals("gcmIdToken", preferenceDataStore.getString(PushManager.REGISTRATION_TOKEN_KEY, null));
+        assertTrue(preferenceDataStore.getBoolean(PushManager.REGISTRATION_TOKEN_MIGRATED_KEY, false));
+    }
+
+    /**
+     * Test migrating the ADM registration ID setting to the registration token setting.
+     */
+    @Test
+    public void testMigrateAdmRegistrationTokenSettings() {
+        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
+
+        // Initialize the ADM ID token
+        preferenceDataStore.put(PushManager.REGISTRATION_TOKEN_MIGRATED_KEY, false);
+        preferenceDataStore.put(PushManager.ADM_REGISTRATION_ID_KEY, "admIdToken");
+
+        // Verify that registration token has not been set
+        assertNull(preferenceDataStore.getString(PushManager.REGISTRATION_TOKEN_KEY, null));
+
+        // Migrate the ADM ID token
+        pushManager.migrateRegistrationTokenSettings();
+
+        // Verify that the token has been migrated to the new setting
+        assertEquals("admIdToken", preferenceDataStore.getString(PushManager.REGISTRATION_TOKEN_KEY, null));
+        assertTrue(preferenceDataStore.getBoolean(PushManager.REGISTRATION_TOKEN_MIGRATED_KEY, false));
     }
 }
