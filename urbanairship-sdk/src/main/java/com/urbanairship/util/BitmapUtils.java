@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 
@@ -35,6 +36,7 @@ public class BitmapUtils {
      * @return The scaled bitmap.
      * @throws IOException
      */
+    @Nullable
     public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
         Logger.verbose("BitmapUtils - Fetching image from: " + url);
 

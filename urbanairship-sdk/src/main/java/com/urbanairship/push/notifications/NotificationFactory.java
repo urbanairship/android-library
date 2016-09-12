@@ -4,76 +4,215 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.support.annotation.ColorInt;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
-import android.view.WindowManager;
 
 import com.urbanairship.AirshipReceiver;
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.BitmapUtils;
+import com.urbanairship.util.NotificationIdGenerator;
 import com.urbanairship.util.UAStringUtil;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
- * This abstract class provides a pathway for customizing the display of push notifications
+ * Notification factory that provides a pathway for customizing the display of push notifications
  * in the Android <code>NotificationManager</code>.
- *
- * @see SystemNotificationFactory
- * @see DefaultNotificationFactory
- * @see CustomLayoutNotificationFactory
+ * <p/>
+ * {@link DefaultNotificationFactory} is used by default and applies the big text style. For custom
+ * layouts, see {@link CustomLayoutNotificationFactory}.
  */
-public abstract class NotificationFactory {
+public class NotificationFactory {
 
-    /**
-     * Notification Factory default flags.
-     */
-    static final int NOTIFICATION_DEFAULTS = NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE;
-
-    private final static int BIG_IMAGE_HEIGHT_DP = 240;
-    private final static double BIG_IMAGE_SCREEN_WIDTH_PERCENT = .75;
+    private int titleId;
+    private int smallIconId;
+    private int largeIcon;
+    private Uri sound = null;
+    private int constantNotificationId = -1;
+    private int accentColor = NotificationCompat.COLOR_DEFAULT;
+    private int notificationDefaults = NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE;
 
     private final Context context;
 
-    public NotificationFactory(Context context) {
+    /**
+     * Default constructor.
+     *
+     * @param context The application context.
+     */
+    public NotificationFactory(@NonNull Context context) {
         this.context = context.getApplicationContext();
+        titleId = context.getApplicationInfo().labelRes;
+        smallIconId = context.getApplicationInfo().icon;
     }
 
-    public Context getContext() {
+    /**
+     * Set the optional constant notification ID.
+     *
+     * @param id The integer ID as an int.
+     */
+    public NotificationFactory setConstantNotificationId(int id) {
+        constantNotificationId = id;
+        return this;
+    }
+
+    /**
+     * Get the constant notification ID.
+     *
+     * @return The constant notification ID as an int.
+     */
+    public int getConstantNotificationId() {
+        return constantNotificationId;
+    }
+
+    /**
+     * Set the title used in the notification layout.
+     *
+     * @param titleId The title as an int. A value of -1 will not display a title. A value of 0 will
+     * display the application name as the title. A string resource ID will display the specified
+     * string as the title.
+     */
+    public void setTitleId(@StringRes int titleId) {
+        this.titleId = titleId;
+    }
+
+    /**
+     * Get the title used in the notification layout.
+     *
+     * @return The title as an int.
+     */
+    @StringRes
+    public int getTitleId() {
+        return titleId;
+    }
+
+    /**
+     * Set the small icon used in the notification layout.
+     *
+     * @param smallIconId The small icon ID as an int.
+     */
+    public void setSmallIconId(@DrawableRes int smallIconId) {
+        this.smallIconId = smallIconId;
+    }
+
+    /**
+     * Get the small icon used in the notification layout.
+     *
+     * @return The small icon ID as an int.
+     */
+    @DrawableRes
+    public int getSmallIconId() {
+        return smallIconId;
+    }
+
+    /**
+     * Set the sound played when the notification arrives.
+     *
+     * @param sound The sound as a Uri.
+     */
+    public void setSound(Uri sound) {
+        this.sound = sound;
+    }
+
+    /**
+     * Get the sound played when the notification arrives.
+     *
+     * @return The sound as a Uri.
+     */
+    public Uri getSound() {
+        return sound;
+    }
+
+    /**
+     * Set the large icon used in the notification layout.
+     *
+     * @param largeIcon The large icon ID as an int.
+     */
+    public void setLargeIcon(@DrawableRes int largeIcon) {
+        this.largeIcon = largeIcon;
+    }
+
+    /**
+     * Get the large icon used in the notification layout.
+     *
+     * @return The large icon ID as a int.
+     */
+    @DrawableRes
+    public int getLargeIcon() {
+        return largeIcon;
+    }
+
+    /**
+     * Set the accent color used in the notification.
+     *
+     * @param accentColor The accent color of the main notification icon.
+     */
+    public void setColor(@ColorInt int accentColor) {
+        this.accentColor = accentColor;
+    }
+
+    /**
+     * Get the accent color used in the notification.
+     *
+     * @return The accent color as an int.
+     */
+    @ColorInt
+    public int getColor() {
+        return accentColor;
+    }
+
+    /**
+     * Gets the default notification options.
+     *
+     * @return The default notification options.
+     */
+    public int getNotificationDefaultOptions() {
+        return notificationDefaults;
+    }
+
+    /**
+     * Sets the default notification options. Defaults to
+     * {@code NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE}.
+     *
+     * @param defaults The default options.
+     */
+    public void setNotificationDefaultOptions(int defaults) {
+        this.notificationDefaults = defaults;
+    }
+
+    /**
+     * Gets the default title for the notification. If the {@link #getTitleId()} is 0,
+     * the application label will be used, if greater than 0 the string will be fetched
+     * from the resources, and if negative an empty String
+     *
+     * @return The default notification title.
+     */
+    protected String getTitle(@NonNull PushMessage message) {
+        if (message.getTitle() != null) {
+            return message.getTitle();
+        }
+
+        if (getTitleId() == 0) {
+            return getContext().getPackageManager().getApplicationLabel(getContext().getApplicationInfo()).toString();
+        } else if (getTitleId() > 0) {
+            return getContext().getString(getTitleId());
+        }
+
+        return "";
+    }
+
+    /**
+     * Gets application context.
+     *
+     * @return The application context.
+     */
+    @NonNull
+    protected Context getContext() {
         return context;
     }
-
-    static final String TITLE_KEY = "title";
-    static final String SUMMARY_KEY = "summary";
-    static final String ALERT_KEY = "alert";
-
-    // Notification styles
-    static final String TYPE_KEY = "type";
-    static final String BIG_TEXT_KEY = "big_text";
-    static final String BIG_PICTURE_KEY = "big_picture";
-    static final String INBOX_KEY = "inbox";
-    static final String LINES_KEY = "lines";
-
-    // Wearable
-    static final String INTERACTIVE_TYPE_KEY = "interactive_type";
-    static final String INTERACTIVE_ACTIONS_KEY = "interactive_actions";
-    static final String BACKGROUND_IMAGE_KEY = "background_image";
-    static final String EXTRA_PAGES_KEY = "extra_pages";
 
     /**
      * Creates a <code>Notification</code> for an incoming push message.
@@ -90,7 +229,77 @@ public abstract class NotificationFactory {
      * @return The notification to display, or <code>null</code> if no notification is desired.
      */
     @Nullable
-    public abstract Notification createNotification(@NonNull PushMessage message, int notificationId);
+    public Notification createNotification(@NonNull final PushMessage message, final int notificationId) {
+        if (UAStringUtil.isEmpty(message.getAlert())) {
+            return null;
+        }
+
+        NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null);
+        return builder.build();
+    }
+
+    /**
+     * Creates a NotificationCompat.Builder with the default settings applied.
+     *
+     * @param message The PushMessage.
+     * @param notificationId The notification id.
+     * @param defaultStyle The default notification style.
+     * @return A NotificationCompat.Builder.
+     */
+    protected NotificationCompat.Builder createNotificationBuilder(@NonNull PushMessage message, int notificationId, @Nullable NotificationCompat.Style defaultStyle) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext())
+                .setContentTitle(getTitle(message))
+                .setContentText(message.getAlert())
+                .setAutoCancel(true)
+                .setSmallIcon(getSmallIconId())
+                .setColor(getColor())
+                .setLocalOnly(message.isLocalOnly())
+                .setPriority(message.getPriority())
+                .setCategory(message.getCategory())
+                .setVisibility(message.getVisibility());
+
+        int defaults = getNotificationDefaultOptions();
+        if (message.getSound(getContext()) != null) {
+            builder.setSound(message.getSound(getContext()));
+
+            // Remove the Notification.DEFAULT_SOUND flag
+            defaults &= ~Notification.DEFAULT_SOUND;
+        } else if (getSound() != null) {
+            builder.setSound(getSound());
+
+            // Remove the Notification.DEFAULT_SOUND flag
+            defaults &= ~Notification.DEFAULT_SOUND;
+        }
+
+        builder.setDefaults(defaults);
+
+        if (getLargeIcon() > 0) {
+            builder.setLargeIcon(BitmapFactory.decodeResource(getContext().getResources(), getLargeIcon()));
+        }
+
+        if (message.getSummary() != null) {
+            builder.setSubText(message.getSummary());
+        }
+
+        // Public notification
+        builder.extend(new PublicNotificationExtender(getContext(), message)
+                .setAccentColor(getColor())
+                .setLargeIcon(getLargeIcon())
+                .setSmallIcon(getSmallIconId()));
+
+
+        // Wearable support
+        builder.extend(new WearableNotificationExtender(getContext(), message, notificationId));
+
+        // Notification action buttons
+        builder.extend(new ActionsNotificationExtender(getContext(), message, notificationId));
+
+        // Styles
+        builder.extend(new StyleNotificationExtender(getContext(), message)
+                .setDefaultStyle(defaultStyle));
+
+        return builder;
+    }
 
     /**
      * Creates a notification ID based on the message and payload.
@@ -102,301 +311,11 @@ public abstract class NotificationFactory {
      * @param pushMessage The push message.
      * @return An integer ID for the next notification.
      */
-    public abstract int getNextId(@NonNull PushMessage pushMessage);
-
-    /**
-     * Creates a notification extender with actions applied.
-     * @param message The push message.
-     * @param notificationId The notification ID.
-     * @return The notification extender.
-     */
-    protected final NotificationCompat.Extender createNotificationActionsExtender(@NonNull PushMessage message, int notificationId) {
-        NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(message.getInteractiveNotificationType());
-
-        final List<NotificationCompat.Action> androidActions = new ArrayList<>();
-
-        if (actionGroup != null) {
-            androidActions.addAll(actionGroup.createAndroidActions(getContext(), message, notificationId, message.getInteractiveActionsPayload()));
+    public int getNextId(@NonNull PushMessage pushMessage) {
+        if (constantNotificationId > 0) {
+            return constantNotificationId;
+        } else {
+            return NotificationIdGenerator.nextID();
         }
-
-        return new NotificationCompat.Extender() {
-            @Override
-            public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
-
-                for (NotificationCompat.Action action : androidActions) {
-                    builder.addAction(action);
-                }
-
-                return builder;
-            }
-        };
-    }
-
-    /**
-     * Creates a notification extender with wearable extensions.
-     * @param message The push message.
-     * @param notificationId The notification ID.
-     * @return The wearable notification extender.
-     * @throws IOException
-     */
-    protected final NotificationCompat.WearableExtender createWearableExtender(@NonNull PushMessage message, int notificationId) throws IOException {
-        NotificationCompat.WearableExtender extender = new NotificationCompat.WearableExtender();
-
-        String wearablePayload = message.getWearablePayload();
-        if (wearablePayload == null) {
-            return extender;
-        }
-
-        JsonMap wearableJson;
-        try {
-            wearableJson = JsonValue.parseString(wearablePayload).optMap();
-        } catch (JsonException e) {
-            Logger.error("Failed to parse wearable payload.", e);
-            return extender;
-        }
-
-        String actionGroupId = wearableJson.opt(INTERACTIVE_TYPE_KEY).getString();
-        String actionsPayload = wearableJson.opt(INTERACTIVE_ACTIONS_KEY).toString();
-        if (UAStringUtil.isEmpty(actionsPayload)) {
-            actionsPayload = message.getInteractiveActionsPayload();
-        }
-
-        if (!UAStringUtil.isEmpty(actionGroupId)) {
-            NotificationActionButtonGroup actionGroup = UAirship.shared().getPushManager().getNotificationActionGroup(actionGroupId);
-
-            if (actionGroup != null) {
-                List<NotificationCompat.Action> androidActions = actionGroup.createAndroidActions(getContext(), message, notificationId, actionsPayload);
-                extender.addActions(androidActions);
-            }
-        }
-
-        String backgroundUrl = wearableJson.opt(BACKGROUND_IMAGE_KEY).getString();
-        if (!UAStringUtil.isEmpty(backgroundUrl)) {
-            try {
-                Bitmap bitmap = fetchBigImage(new URL(backgroundUrl));
-                extender.setBackground(bitmap);
-            } catch (MalformedURLException e) {
-                Logger.error("Wearable background url is malformed.", e);
-            }
-        }
-
-        JsonList pages = wearableJson.opt(EXTRA_PAGES_KEY).optList();
-        for (JsonValue page : pages) {
-            if (!page.isJsonMap()) {
-                continue;
-            }
-            extender.addPage(createWearPage(page.optMap()));
-        }
-
-        return extender;
-    }
-
-    /**
-     * Creates a notification style.
-     * @param message The push message.
-     * @return The notification style or null if it failed to be created.
-     * @throws IOException
-     */
-    protected final NotificationCompat.Style createNotificationStyle(@NonNull PushMessage message) throws IOException {
-        String stylePayload = message.getStylePayload();
-        if (stylePayload == null) {
-            return null;
-        }
-
-        JsonMap styleJson;
-        try {
-            styleJson = JsonValue.parseString(stylePayload).optMap();
-        } catch (JsonException e) {
-            Logger.error("Failed to parse notification style payload.", e);
-            return null;
-        }
-
-        String type = styleJson.opt(TYPE_KEY).getString("");
-
-        switch (type) {
-            case BIG_TEXT_KEY:
-                return createBigTextStyle(styleJson);
-            case INBOX_KEY:
-                return createInboxStyle(styleJson);
-            case BIG_PICTURE_KEY:
-                return createBigPictureStyle(styleJson);
-        }
-
-        return null;
-    }
-
-    /**
-     * Creates the pages of the wearable notification.
-     * @param page The JsonMap page.
-     * @return The notification with pages.
-     */
-    private Notification createWearPage(@NonNull JsonMap page) {
-        NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
-
-        String title = page.opt(TITLE_KEY).getString();
-        if (!UAStringUtil.isEmpty(title)) {
-            style.setBigContentTitle(title);
-        }
-
-        String alert = page.opt(ALERT_KEY).getString();
-        if (!UAStringUtil.isEmpty(alert)) {
-            style.bigText(alert);
-        }
-
-        return new NotificationCompat.Builder(context)
-                .setAutoCancel(true)
-                .setStyle(style)
-                .build();
-    }
-
-    /**
-     * Creates the big text notification style.
-     * @param styleJson The JsonMap style.
-     * @return The big text style.
-     */
-    private NotificationCompat.Style createBigTextStyle(@NonNull JsonMap styleJson) {
-        NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
-
-        String title = styleJson.opt(TITLE_KEY).getString();
-        String summary = styleJson.opt(SUMMARY_KEY).getString();
-
-        String bigText = styleJson.opt(BIG_TEXT_KEY).getString();
-        if (!UAStringUtil.isEmpty(bigText)) {
-            style.bigText(bigText);
-        }
-
-        if (!UAStringUtil.isEmpty(title)) {
-            style.setBigContentTitle(title);
-        }
-
-        if (!UAStringUtil.isEmpty(summary)) {
-            style.setSummaryText(summary);
-        }
-
-        return style;
-    }
-
-    /**
-     * Creates the big picture notification style.
-     * @param styleJson The JsonMap style.
-     * @return The big picture style or null if it failed to be created.
-     * @throws IOException
-     */
-    private NotificationCompat.BigPictureStyle createBigPictureStyle(@NonNull JsonMap styleJson) throws IOException {
-        NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
-
-        String title = styleJson.opt(TITLE_KEY).getString();
-        String summary = styleJson.opt(SUMMARY_KEY).getString();
-
-        try {
-            URL url = new URL(styleJson.opt(BIG_PICTURE_KEY).getString(""));
-            Bitmap bitmap = fetchBigImage(url);
-            if (bitmap == null) {
-                Logger.error("Failed to create big picture style, unable to fetch image: " + url);
-                return null;
-            }
-            style.bigPicture(fetchBigImage(url));
-        } catch (MalformedURLException e) {
-            Logger.error("Malformed big picture URL.", e);
-            return null;
-        }
-
-        if (!UAStringUtil.isEmpty(title)) {
-            style.setBigContentTitle(title);
-        }
-
-        if (!UAStringUtil.isEmpty(summary)) {
-            style.setSummaryText(summary);
-        }
-
-        return style;
-    }
-
-    /**
-     * Creates the inbox notification style.
-     * @param styleJson The JsonMap style.
-     * @return The inbox style.
-     */
-    private NotificationCompat.InboxStyle createInboxStyle(@NonNull JsonMap styleJson) {
-        NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
-
-        String title = styleJson.opt(TITLE_KEY).getString();
-        String summary = styleJson.opt(SUMMARY_KEY).getString();
-
-        JsonList lines = styleJson.opt(LINES_KEY).optList();
-        for (JsonValue line : lines) {
-            String lineValue = line.getString();
-            if (UAStringUtil.isEmpty(lineValue)) {
-                style.addLine(lineValue);
-            }
-        }
-
-        if (!UAStringUtil.isEmpty(title)) {
-            style.setBigContentTitle(title);
-        }
-
-        if (!UAStringUtil.isEmpty(summary)) {
-            style.setSummaryText(summary);
-        }
-
-        return style;
-    }
-
-    /**
-     * Creates the public version notification.
-     * @param message The push message.
-     * @param notificationIcon The notification icon.
-     * @return The public version notification or null if it failed to be created.
-     */
-    protected final Notification createPublicVersionNotification(@NonNull PushMessage message, int notificationIcon) {
-
-        if (!UAStringUtil.isEmpty(message.getPublicNotificationPayload())) {
-            try {
-                JsonMap jsonMap = JsonValue.parseString(message.getPublicNotificationPayload()).optMap();
-
-                NotificationCompat.Builder publicBuilder = new NotificationCompat.Builder(getContext())
-                        .setContentTitle(jsonMap.opt(TITLE_KEY).getString(""))
-                        .setContentText(jsonMap.opt(ALERT_KEY).getString(""))
-                        .setAutoCancel(true)
-                        .setSmallIcon(notificationIcon);
-
-                if (jsonMap.containsKey(SUMMARY_KEY)) {
-                    publicBuilder.setSubText(jsonMap.opt(SUMMARY_KEY).getString(""));
-                }
-                return publicBuilder.build();
-            } catch (JsonException e) {
-                Logger.error("Failed to parse public notification.", e);
-            }
-        }
-
-        return null;
-    }
-
-
-    /**
-     * Fetches a big image for a given URL. Attempts to sample the image down to a reasonable size
-     * before loading into memory.
-     * @param url The image URL.
-     * @return The bitmap, or null if it failed to be fetched.
-     * @throws IOException
-     */
-    @Nullable
-    private Bitmap fetchBigImage(@Nullable URL url) throws IOException {
-        if (url == null) {
-            return null;
-        }
-
-        Logger.info("Fetching notification image at URL: " + url);
-        WindowManager window = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        window.getDefaultDisplay().getMetrics(dm);
-
-        // Since notifications do not take up the entire screen, request 3/4 the longest device dimension
-        int reqWidth = (int) (Math.max(dm.widthPixels, dm.heightPixels) * BIG_IMAGE_SCREEN_WIDTH_PERCENT);
-
-        // Big images have a max height of 240dp
-        int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
-
-        return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
     }
 }

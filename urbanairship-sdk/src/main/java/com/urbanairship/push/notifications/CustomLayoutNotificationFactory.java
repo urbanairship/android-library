@@ -4,259 +4,81 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
-import android.net.Uri;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.util.NotificationIdGenerator;
-
-import java.io.IOException;
+import com.urbanairship.util.UAStringUtil;
 
 /**
- * A notification factory that allows the use of layout XML and a custom notification sound.
+ * A notification factory that allows the use of layout XML. The default binding will
+ * bind the following:
+ *  - small icon to {@code android.R.id.icon}
+ *  - title to {@code android.R.id.title}
+ *  - summary/subtitle to {@code android.R.id.summary}
+ *  - alert/message to {@code android.R.id.message}
  *
- * A layout resource is required. It can include a <code>ImageView</code>
- *
- * It must include an <code>ImageView</code> for an icon, a
- * <code>TextView</code> for the alert subject or title, and a <code>TextView</code> for
- * the alert message. Each of these is required, but if your layout does not make use of one or
- * more of the items, set the visibility to <code>gone</code> (<code>android:visibility="gone"</code>).
- *
- * A sample layout.xml file:
- *
- * <pre>
- * {@code
-
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:orientation="vertical"
-    android:paddingTop="0dip"
-    android:layout_alignParentTop="true"
-    android:layout_height="fill_parent">
-
-  <ImageView android:id="@+id/icon"
-      android:src="@drawable/icon"
-      android:layout_marginRight="10dip"
-      android:layout_marginLeft="0dip"
-      android:layout_width="65dip"
-      android:layout_height="65dip" />
-
-  <!-- The custom notification requires a subject field.
-  To accommodate multiple lines in this layout this
-  field is hidden. Visibility is set to gone. -->
-  <TextView android:id="@+id/subject"
-      android:text="Subject"
-      android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent.Title"
-      android:layout_alignTop="@+id/icon"
-      android:layout_toRightOf="@+id/icon"
-      android:layout_height="wrap_content"
-      android:layout_width="wrap_content"
-      android:maxLines="1" android:visibility="gone"/>
-
-  <!-- The message block. Standard text size is 14dip
-  but is reduced here to maximize content. -->
-  <TextView android:id="@+id/message"
-      android:textSize="12dip"
-      android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent"
-      android:text="Message"
-      android:maxLines="4"
-      android:layout_marginTop="0dip"
-      android:layout_marginRight="2dip"
-      android:layout_marginLeft="0dip"
-      android:layout_height="wrap_content"
-      android:layout_toRightOf="@+id/icon"
-      android:layout_width="wrap_content" />
-
-   </RelativeLayout>
- * }
- * </pre>
- *
- *
- * <p>
- * And here is a sample implementation:
- *
- * <pre>
- *
- * {@code
-
-       CustomLayoutNotificationFactory nf = new CustomLayoutNotificationFactory(this);
-       nf.layout = R.layout.notification_layout; // The layout resource to use
-       nf.layoutIconDrawableId = R.drawable.notification_icon; // The icon you want to display
-       nf.layoutIconId = R.id.icon; // The icon's layout 'id'
-       nf.layoutSubjectId = R.id.subject; // The id for the 'subject' field
-       nf.layoutMessageId = R.id.message; // The id for the 'message' field
-
-       //set this ID to a value > 0 if you want a new notification to replace the previous one
-       nf.constantNotificationId = 100;
-
-       //set this if you want a custom sound to play
-       nf.soundUri = Uri.parse("android.resource://"+this.getPackageName()+"/" +R.raw.notification_mp3);
-
-       // Set the factory
-       UAirship.shared().getPushManager().setNotificationBuilder(nf);
- * }
- * </pre>
+ * Custom binding can be applied by overriding {@link #onBindContentView(RemoteViews, PushMessage, int)}. To
+ * customize the builder, override {@link #extendBuilder(NotificationCompat.Builder, PushMessage, int)}.
  */
 public class CustomLayoutNotificationFactory extends NotificationFactory {
 
-    /**
-     * The layout resource.
-     * <p/>
-     * For example, if the layout is <code>notification_layout.xml</code>, use <code>R.layout.notification_layout</code>.
-     */
-    public int layout;
-
+    private final int layoutId;
 
     /**
-     * The layout id for the icon.
-     * <p/>
-     * For example: <code>R.id.icon</code>. This field will be populated with the icon drawable.
+     * Default constructor.
+     * @param context The application context.
+     * @param layoutId The custom content view.
      */
-    public int layoutIconId;
-
-
-    /**
-     * The layout id for the subject <code>TextView</code>.
-     * <p/>
-     * For example: <code>R.id.subject</code>. This field will be populated with the application name.
-     */
-    public int layoutSubjectId;
-
-    /**
-     * The layout id for the message <code>TextView</code>.
-     * <p/>
-     * For example: <code>R.id.message</code>. This field will be populated with the alert message.
-     */
-    public int layoutMessageId;
-
-    /**
-     * The icon drawable to display in the custom layout.
-     * <p/>
-     * For example: <code>R.drawable.notification_icon</code>
-     */
-    public int layoutIconDrawableId;
-
-    /**
-     * The icon drawable to display in the status bar.
-     */
-    public int statusBarIconDrawableId;
-
-
-    /**
-     * An optional constant notification ID.
-     * <p/>
-     * By default, this builder uses unique, incremented notification IDs.
-     * That ID scheme ensures that all notifications are displayed until
-     * dismissed by a user. However, if a single notification scheme is desired
-     * where each new notification replaces the previous one, set this to
-     * a value greater than zero.
-     * <p/>
-     * If <code>constantNotificationId <= 0</code>, the standard incrementing
-     * behavior will be used.
-     */
-    public int constantNotificationId = -1;
-
-    /**
-     * An optional sound URI.
-     * <p/>
-     * If not <code>null</code>, the sound at this URI will be played
-     * when a notification is received.
-     */
-    public Uri soundUri;
-
-    public CustomLayoutNotificationFactory(Context context) {
+    public CustomLayoutNotificationFactory(@NonNull Context context, @LayoutRes int layoutId) {
         super(context);
-        layoutIconDrawableId = statusBarIconDrawableId = context.getApplicationInfo().icon;
+        this.layoutId = layoutId;
     }
 
+    @Nullable
     @Override
-    public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
-        String alert = pushMessage.getAlert();
-        // do not display a notification if there is not an alert
-        if (alert == null || alert.length() == 0) {
+    public final Notification createNotification(@NonNull PushMessage message, int notificationId) {
+        if (UAStringUtil.isEmpty(message.getAlert())) {
             return null;
         }
 
+        RemoteViews contentView = new RemoteViews(getContext().getPackageName(), layoutId);
+        onBindContentView(contentView, message, notificationId);
 
-        RemoteViews contentView = new RemoteViews(getContext().getPackageName(), layout);
-        if (layoutIconId == 0 || layoutSubjectId == 0 || layoutMessageId == 0) {
-            Logger.error("The CustomLayoutNotificationFactory object contains an invalid identifier (value of 0). layoutIconId: "
-                    + layoutIconId + " layoutSubjectId: " + layoutSubjectId + " layoutMessageId: " + layoutMessageId);
-            throw new IllegalArgumentException("Unable to build notification. CustomLayoutNotificationFactory missing required parameter.");
-        }
+        NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null)
+                .setCustomContentView(contentView);
 
-        contentView.setTextViewText(layoutSubjectId, pushMessage.getTitle() != null ? pushMessage.getTitle() : UAirship.getAppName());
-        contentView.setTextViewText(layoutMessageId, alert);
-        contentView.setImageViewResource(layoutIconId, layoutIconDrawableId);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext())
-                .setContent(contentView)
-                .setAutoCancel(true)
-                .setSmallIcon(statusBarIconDrawableId)
-                .setLocalOnly(pushMessage.isLocalOnly())
-                .setPriority(pushMessage.getPriority())
-                .setCategory(pushMessage.getCategory())
-                .setVisibility(pushMessage.getVisibility());
-
-        // Public notification - Android L and above.
-        Notification publicNotification = createPublicVersionNotification(pushMessage, layoutIconId);
-        if (publicNotification != null) {
-            builder.setPublicVersion(publicNotification);
-        }
-
-
-        int defaults = NOTIFICATION_DEFAULTS;
-
-        if (soundUri != null) {
-            builder.setSound(soundUri);
-
-            // Remove the DEFAULT_SOUND flag
-            defaults &= ~NotificationCompat.DEFAULT_SOUND;
-        }
-
-        builder.setDefaults(defaults);
-
-
-        NotificationCompat.Style style = null;
-        try {
-            style = createNotificationStyle(pushMessage);
-        } catch (IOException e) {
-            Logger.error("Failed to create notification style.", e);
-        }
-
-        if (style != null) {
-            builder.setStyle(style);
-        }
-
-        if (!pushMessage.isLocalOnly()) {
-            try {
-                builder.extend(createWearableExtender(pushMessage, notificationId));
-            } catch (IOException e) {
-                Logger.error("Failed to create wearable extender.", e);
-            }
-        }
-
-        builder.extend(createNotificationActionsExtender(pushMessage, notificationId));
-
-        Notification notification = builder.build();
-        // workaround to resolve bug where support library NotificationCompat.Builder ignores custom RemoteView
-        notification.contentView = contentView;
-
-        return notification;
+        return extendBuilder(builder, message, notificationId).build();
     }
 
-    @Override
-    public int getNextId(@NonNull PushMessage pushMessage) {
-        if (constantNotificationId > 0) {
-            return constantNotificationId;
-        } else {
-            return NotificationIdGenerator.nextID();
-        }
+    /**
+     * Called to apply any final overrides to the builder before the notification is built.
+     *
+     * @param builder The notification builder.
+     * @param message The push message.
+     * @param notificationId The notification ID.
+     * @return The notification builder.
+     */
+    public NotificationCompat.Builder extendBuilder(@NonNull NotificationCompat.Builder builder, @NonNull PushMessage message, int notificationId) {
+        return builder;
     }
 
+
+    /**
+     * Called to bind the content view to the push message.
+     *
+     * @param contentView The custom content view.
+     * @param pushMessage The push message.
+     * @param notificationId The notification ID.
+     */
+    public void onBindContentView(@NonNull RemoteViews contentView, @NonNull PushMessage pushMessage, int notificationId) {
+        contentView.setTextViewText(android.R.id.title, pushMessage.getTitle() != null ? pushMessage.getTitle() : UAirship.getAppName());
+        contentView.setTextViewText(android.R.id.message, pushMessage.getAlert());
+        contentView.setTextViewText(android.R.id.summary, pushMessage.getSummary());
+        contentView.setImageViewResource(android.R.id.icon, getSmallIconId());
+    }
 }

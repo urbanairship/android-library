@@ -406,7 +406,6 @@ public class PushManager extends AirshipComponent {
      * @param factory The notification factory
      * @see com.urbanairship.push.notifications.NotificationFactory
      * @see com.urbanairship.push.notifications.DefaultNotificationFactory
-     * @see com.urbanairship.push.notifications.SystemNotificationFactory
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationFactory
      */
     public void setNotificationFactory(@NonNull NotificationFactory factory) {

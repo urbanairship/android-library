@@ -17,14 +17,14 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 
-public class SystemNotificationFactoryTest extends BaseTestCase {
+public class NotificationFactoryTest extends BaseTestCase {
 
-    private SystemNotificationFactory factory;
+    private NotificationFactory factory;
     private PushMessage pushMessage;
 
     @Before
     public void setup() {
-        factory = new SystemNotificationFactory(RuntimeEnvironment.application);
+        factory = new NotificationFactory(RuntimeEnvironment.application);
 
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!!!");
