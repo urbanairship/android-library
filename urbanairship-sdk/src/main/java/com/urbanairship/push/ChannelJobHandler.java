@@ -282,16 +282,16 @@ class ChannelJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Intent admIntent = job.getExtras().getParcelable(EXTRA_INTENT);
-        if (admIntent == null) {
+        Bundle admExtras = job.getExtras();
+        if (admExtras.isEmpty()) {
             Logger.error("ChannelJobHandler - Received ADM message missing original intent.");
             return Job.JOB_FINISHED;
         }
 
-        if (admIntent.hasExtra(ADMConstants.LowLevel.EXTRA_ERROR)) {
-            Logger.error("ADM error occurred: " + admIntent.getStringExtra(ADMConstants.LowLevel.EXTRA_ERROR));
+        if (admExtras.containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
+            Logger.error("ADM error occurred: " + admExtras.getString(ADMConstants.LowLevel.EXTRA_ERROR));
         } else {
-            String registrationID = admIntent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
+            String registrationID = admExtras.getString(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
             if (registrationID != null) {
                 Logger.info("ADM registration successful. Registration ID: " + registrationID);
                 pushManager.setRegistrationToken(registrationID);

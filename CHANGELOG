@@ -11,6 +11,7 @@ Version 8.0.0 - September 12, 2016
 - Rewrote CustomLayoutNotificationFactory to simplify custom view creation.
 - Fixed in-app message background color display on pre 5.x devices without the card view.
 - Fixed notification display failure when receiving a big picture URL to an unsupported file type.
+- Fixed regression introduced in 7.3.0 where ADM fails to generate a registration token.
 
 Version 7.3.0 - August 31, 2016
 ===============================
