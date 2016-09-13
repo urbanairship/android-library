@@ -19,7 +19,7 @@ import com.urbanairship.util.UAStringUtil;
 /**
  * Notification builder extender to add the public notification defined by a {@link PushMessage}.
  */
-class PublicNotificationExtender implements NotificationCompat.Extender {
+public class PublicNotificationExtender implements NotificationCompat.Extender {
 
     static final String TITLE_KEY = "title";
     static final String SUMMARY_KEY = "summary";

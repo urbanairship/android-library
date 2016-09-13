@@ -27,7 +27,7 @@ import java.net.URL;
 /**
  * Notification builder extender to add the public notification defined by a {@link PushMessage}.
  */
-class StyleNotificationExtender implements NotificationCompat.Extender {
+public class StyleNotificationExtender implements NotificationCompat.Extender {
 
     private final static int BIG_IMAGE_HEIGHT_DP = 240;
     private final static double BIG_IMAGE_SCREEN_WIDTH_PERCENT = .75;

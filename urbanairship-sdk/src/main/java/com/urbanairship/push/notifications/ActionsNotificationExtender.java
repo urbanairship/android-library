@@ -13,7 +13,7 @@ import com.urbanairship.push.PushMessage;
  * Notification builder extender to add UA notification action buttons to a
  * notification.
  */
-class ActionsNotificationExtender implements NotificationCompat.Extender {
+public class ActionsNotificationExtender implements NotificationCompat.Extender {
 
     private PushMessage message;
     private Context context;

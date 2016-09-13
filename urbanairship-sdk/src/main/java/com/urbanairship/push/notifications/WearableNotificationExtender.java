@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Notification builder extender to add the wearable overrides defined by a {@link PushMessage}.
  */
-class WearableNotificationExtender implements NotificationCompat.Extender {
+public class WearableNotificationExtender implements NotificationCompat.Extender {
 
     private static final int BACKGROUND_IMAGE_HEIGHT_PX = 480;
     private static final int BACKGROUND_IMAGE_WIDTH_PX = 480;
