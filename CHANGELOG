@@ -3,7 +3,7 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
-Version 8.0.0 - September 12, 2016
+Version 8.0.0 - September 13, 2016
 ==================================
 - Removed deprecated APIs.
 - Updated minSdkVersion to 16.
