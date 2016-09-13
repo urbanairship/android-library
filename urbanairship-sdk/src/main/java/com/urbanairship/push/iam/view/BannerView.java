@@ -4,6 +4,8 @@ package com.urbanairship.push.iam.view;
 
 import android.content.Context;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
@@ -46,12 +48,7 @@ public class BannerView extends FrameLayout implements Banner {
     public BannerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         content = new BannerContent(context, this, attrs, defStyleAttr);
-
-        if (getBackground() != null) {
-            getBackground().setColorFilter(content.getPrimaryColor(), PorterDuff.Mode.MULTIPLY);
-        } else {
-            setBackgroundColor(content.getPrimaryColor());
-        }
+        updateBackground(content.getPrimaryColor());
     }
 
     @Override
@@ -76,17 +73,25 @@ public class BannerView extends FrameLayout implements Banner {
 
     @Override
     public void setPrimaryColor(int color) {
-        if (getBackground() != null) {
-            getBackground().setColorFilter(color, PorterDuff.Mode.MULTIPLY);
-        } else {
-            setBackgroundColor(color);
-        }
-
+        updateBackground(color);
         content.setPrimaryColor(color);
     }
 
     @Override
     public void setSecondaryColor(int color) {
         content.setSecondaryColor(color);
+    }
+
+    private void updateBackground(int color) {
+        if (getBackground() == null) {
+            setBackgroundColor(color);
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && getBackground() instanceof GradientDrawable) {
+            ((GradientDrawable) getBackground()).setColor(color);
+        } else {
+            getBackground().setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+        }
     }
 }
