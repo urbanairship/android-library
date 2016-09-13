@@ -22,7 +22,7 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:7.3.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:8.0.+'
 
      // Recommended for in-app messaging
      compile 'com.android.support:cardview-v7:24.2.0'
@@ -84,4 +84,11 @@ A [sample](sample) application is available that showcases the majority of the f
 the Urban Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properites.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
 
+## Sample Test
+An automated test is available to test basic pushes, message center and in-app messages with the Sample application.
 
+To run the test suite on an emulator or device with API 21+:
+
+```
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.appKey="APP_KEY" -Pandroid.testInstrumentationRunnerArguments.masterSecret="MASTER_SECRET"
+```

@@ -3,6 +3,15 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.0.0 - September 12, 2016
+==================================
+- Removed deprecated APIs.
+- Updated minSdkVersion to 16.
+- Allowed actions to run on the UI thread.
+- Rewrote CustomLayoutNotificationFactory to simplify custom view creation.
+- Fixed in-app message background color display on pre 5.x devices without the card view.
+- Fixed notification display failure when receiving a big picture URL to an unsupported file type.
+
 Version 7.3.0 - August 31, 2016
 ===============================
 - Added Custom Event templates.
