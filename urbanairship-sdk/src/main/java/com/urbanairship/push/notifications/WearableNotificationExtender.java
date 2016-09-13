@@ -50,7 +50,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
      * @param message The push message.
      * @param notificationId The notification ID.
      */
-    WearableNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
+    public WearableNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
         this.context = context;
         this.message = message;
         this.notificationId = notificationId;

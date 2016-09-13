@@ -37,7 +37,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param context The application context.
      * @param message The push message.
      */
-    PublicNotificationExtender(@NonNull  Context context, @NonNull PushMessage message) {
+    public PublicNotificationExtender(@NonNull  Context context, @NonNull PushMessage message) {
         this.context = context;
         this.message = message;
         this.smallIconId = context.getApplicationInfo().icon;
@@ -49,7 +49,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param accentColor The notification's accent color.
      * @return The PublicNotificationExtender to chain calls.
      */
-    PublicNotificationExtender setAccentColor(@ColorInt int accentColor) {
+    public PublicNotificationExtender setAccentColor(@ColorInt int accentColor) {
         this.accentColor = accentColor;
         return this;
     }
@@ -60,7 +60,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param smallIcon The small icon.
      * @return The PublicNotificationExtender to chain calls.
      */
-    PublicNotificationExtender setSmallIcon(@DrawableRes int smallIcon) {
+    public PublicNotificationExtender setSmallIcon(@DrawableRes int smallIcon) {
         this.smallIconId = smallIcon;
         return this;
     }
@@ -71,7 +71,7 @@ public class PublicNotificationExtender implements NotificationCompat.Extender {
      * @param largeIcon The large icon.
      * @return The PublicNotificationExtender to chain calls.
      */
-    PublicNotificationExtender setLargeIcon(@DrawableRes int largeIcon) {
+    public PublicNotificationExtender setLargeIcon(@DrawableRes int largeIcon) {
         this.largeIconId = largeIcon;
         return this;
     }

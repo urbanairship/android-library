@@ -26,7 +26,7 @@ public class ActionsNotificationExtender implements NotificationCompat.Extender 
      * @param message The push message.
      * @param notificationId The notification ID.
      */
-    ActionsNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
+    public ActionsNotificationExtender(@NonNull Context context, @NonNull PushMessage message, int notificationId) {
         this.context = context.getApplicationContext();
         this.message = message;
         this.notificationId = notificationId;

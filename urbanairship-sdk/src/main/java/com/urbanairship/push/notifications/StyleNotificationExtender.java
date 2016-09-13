@@ -51,7 +51,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
      * @param context The application context.
      * @param message The push message.
      */
-    StyleNotificationExtender(Context context, PushMessage message) {
+    public StyleNotificationExtender(Context context, PushMessage message) {
         this.context = context.getApplicationContext();
         this.message = message;
     }
@@ -63,7 +63,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
      * @param defaultStyle The default style.
      * @return The StyleNotificationExtender to chain calls.
      */
-    StyleNotificationExtender setDefaultStyle(NotificationCompat.Style defaultStyle) {
+    public StyleNotificationExtender setDefaultStyle(NotificationCompat.Style defaultStyle) {
         this.defaultStyle = defaultStyle;
         return this;
     }
