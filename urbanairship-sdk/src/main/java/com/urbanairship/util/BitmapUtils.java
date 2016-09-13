@@ -66,6 +66,11 @@ public class BitmapUtils {
             Logger.verbose("BitmapUtils - Failed to delete temp file: " + outputFile);
         }
 
+        if (bitmap == null) {
+            Logger.error("BitmapUtils - Failed to create bitmap for URL: " + url);
+            return null;
+        }
+
         Logger.debug(String.format(Locale.US, "BitmapUtils - Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d. SampleSize: %d",
                 url, width, height, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight(), options.inSampleSize));
 
