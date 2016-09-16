@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.0.1 - September 16, 2016
+==================================
+- Fixed message center duplicate ID crash in nested fragments.
+
 Version 8.0.0 - September 13, 2016
 ==================================
 - Removed deprecated APIs.
