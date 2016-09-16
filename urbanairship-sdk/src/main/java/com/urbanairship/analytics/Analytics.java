@@ -2,20 +2,16 @@
 
 package com.urbanairship.analytics;
 
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.content.LocalBroadcastManager;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -42,22 +38,12 @@ public class Analytics extends AirshipComponent {
     private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
     private static final String ADVERTISING_ID_AUTO_TRACKING_KEY = KEY_PREFIX + ".ADVERTISING_ID_TRACKING";
 
-    /**
-     * Intent action for application foreground.
-     */
-    public static final String ACTION_APP_FOREGROUND = "com.urbanairship.analytics.APP_FOREGROUND";
+    private static ActivityMonitor.Listener listener;
 
-    /**
-     * Intent action for application background.
-     */
-    public static final String ACTION_APP_BACKGROUND = "com.urbanairship.analytics.APP_BACKGROUND";
-
-    private static LifeCycleCallbacks lifeCycleCallbacks;
-
-    private final ActivityMonitor activityMonitor;
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
     private final JobDispatcher jobDispatcher;
+    private final ActivityMonitor activityMonitor;
 
     private final int platform;
     private boolean inBackground;
@@ -81,8 +67,9 @@ public class Analytics extends AirshipComponent {
      *
      * @hide
      */
-    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions options, int platform) {
-        this(context, preferenceDataStore, options, platform, JobDispatcher.shared(context), new ActivityMonitor());
+    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                     @NonNull AirshipConfigOptions options, int platform, @NonNull ActivityMonitor activityMonitor) {
+        this(context, preferenceDataStore, options, platform, JobDispatcher.shared(context), activityMonitor);
     }
 
     /**
@@ -92,7 +79,6 @@ public class Analytics extends AirshipComponent {
      * @param options The airship config options.
      * @param platform The device platform.
      * @param jobDispatcher The job dispatcher.
-     * @param activityMonitor Optional activityMonitor.
      */
     @VisibleForTesting
     Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
@@ -103,61 +89,39 @@ public class Analytics extends AirshipComponent {
         this.preferenceDataStore = preferenceDataStore;
         this.inBackground = true; //application is starting
         this.configOptions = options;
-        this.activityMonitor = activityMonitor;
         this.platform = platform;
         this.jobDispatcher = jobDispatcher;
+        this.activityMonitor = activityMonitor;
     }
 
     @Override
     protected void init() {
         startNewSession();
 
-        this.activityMonitor.setListener(new ActivityMonitor.Listener() {
+        listener = new ActivityMonitor.Listener() {
             @Override
-            public void onForeground(long timeMS) {
-                // Start a new environment when the app enters the foreground
-                startNewSession();
-
-                inBackground = false;
-
-                // If the app backgrounded, there should be no current screen
-                if (currentScreen == null) {
-                    trackScreen(previousScreen);
-                }
-
-                // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
-                if (isAutoTrackAdvertisingIdEnabled()) {
-                    jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
-                                              .setAirshipComponent(Analytics.class)
-                                              .build());
-                }
-
-                // Send the foreground broadcast
-                LocalBroadcastManager.getInstance(context)
-                                     .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
-
-                addEvent(new AppForegroundEvent(timeMS));
+            public void onForeground(final long time) {
+               Analytics.this.onForeground(time);
             }
 
             @Override
-            public void onBackground(long timeMS) {
-                inBackground = true;
-
-                // Stop tracking screen
-                trackScreen(null);
-
-                addEvent(new AppBackgroundEvent(timeMS));
-
-                // Send the background broadcast
-                LocalBroadcastManager.getInstance(context)
-                                     .sendBroadcast(new Intent(Analytics.ACTION_APP_BACKGROUND));
-
-                setConversionSendId(null);
-                setConversionMetadata(null);
+            public void onBackground(final long time) {
+                Analytics.this.onBackground(time);
             }
-        });
+        };
+
+        activityMonitor.addListener(listener);
+
+        if (activityMonitor.isAppForegrounded()) {
+            onForeground(System.currentTimeMillis());
+        }
     }
 
+    @Override
+    protected void tearDown() {
+        activityMonitor.removeListener(listener);
+        listener = null;
+    }
 
     @Override
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
@@ -166,11 +130,6 @@ public class Analytics extends AirshipComponent {
         }
 
         return analyticsJobHandler.performJob(job);
-    }
-
-    @Override
-    protected void tearDown() {
-        activityMonitor.setListener(null);
     }
 
     /**
@@ -311,50 +270,46 @@ public class Analytics extends AirshipComponent {
     }
 
     /**
-     * Registers analytics for life cycle callbacks.
+     * Called when the app is foregrounded.
      *
-     * @param application The application.
-     * @hide
+     * @param timeMS Time of foregrounding.
      */
-    public static void registerLifeCycleCallbacks(@NonNull Application application) {
-        if (lifeCycleCallbacks == null) {
-            lifeCycleCallbacks = new LifeCycleCallbacks(application) {
-                @Override
-                public void onActivityStarted(final Activity activity) {
-                    final long timeStamp = System.currentTimeMillis();
-                    UAirship.shared(new UAirship.OnReadyCallback() {
-                        @Override
-                        public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().activityMonitor.activityStarted(activity, timeStamp);
-                        }
-                    });
-                }
+    void onForeground(long timeMS) {
+        // Start a new environment when the app enters the foreground
+        startNewSession();
 
-                @Override
-                public void onActivityStopped(final Activity activity) {
-                    final long timeStamp = System.currentTimeMillis();
-                    UAirship.shared(new UAirship.OnReadyCallback() {
-                        @Override
-                        public void onAirshipReady(UAirship airship) {
-                            airship.getAnalytics().activityMonitor.activityStopped(activity, timeStamp);
-                        }
-                    });
-                }
-            };
+        inBackground = false;
 
-            lifeCycleCallbacks.register();
+        // If the app backgrounded, there should be no current screen
+        if (currentScreen == null) {
+            trackScreen(previousScreen);
         }
+
+        // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
+        if (isAutoTrackAdvertisingIdEnabled()) {
+            jobDispatcher.dispatch(Job.newBuilder(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                      .setAirshipComponent(Analytics.class)
+                                      .build());
+        }
+
+        addEvent(new AppForegroundEvent(timeMS));
     }
 
     /**
-     * Unregisters analytics for life cycle callbacks.
+     * Called when the app is backgrounded.
      *
-     * @hide
+     * @param timeMS Time of backgrounding.
      */
-    public static void unregisterLifeCycleCallbacks() {
-        if (lifeCycleCallbacks != null) {
-            lifeCycleCallbacks.unregister();
-        }
+    void onBackground(long timeMS) {
+        inBackground = true;
+
+        // Stop tracking screen
+        trackScreen(null);
+
+        addEvent(new AppBackgroundEvent(timeMS));
+
+        setConversionSendId(null);
+        setConversionMetadata(null);
     }
 
     /**

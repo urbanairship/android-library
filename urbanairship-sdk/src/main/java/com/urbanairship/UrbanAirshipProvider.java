@@ -105,6 +105,7 @@ public final class UrbanAirshipProvider extends ContentProvider {
         Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
 
         UAirship.isMainProcess = true;
+        ActivityMonitor.shared(getContext().getApplicationContext());
         return true;
     }
 

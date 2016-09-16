@@ -2,11 +2,9 @@
 
 package com.urbanairship.location;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -20,16 +18,15 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.SparseArray;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.json.JsonException;
 
 import java.util.ArrayList;
@@ -53,16 +50,9 @@ public class UALocationManager extends AirshipComponent {
 
     private int nextSingleLocationRequestId = 1;
     private final SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
-
+    private final ActivityMonitor.Listener listener;
     private final PreferenceDataStore preferenceDataStore;
-
-    private BroadcastReceiver appStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            updateServiceConnection();
-        }
-    };
-
+    private final ActivityMonitor activityMonitor;
 
     /**
      * List of location listeners.
@@ -115,29 +105,34 @@ public class UALocationManager extends AirshipComponent {
      * @param preferenceDataStore The preferences data store.
      * @hide
      */
-    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore) {
+    public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
         this.messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
+        this.listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onForeground(long time) {
+                UALocationManager.this.updateServiceConnection();
+            }
+
+            @Override
+            public void onBackground(long time) {
+                UALocationManager.this.updateServiceConnection();
+            }
+        };
+        this.activityMonitor = activityMonitor;
     }
 
     @Override
     protected void init() {
         preferenceDataStore.addListener(preferenceChangeListener);
-
-        // Set up a broadcast receiver to listen for app foreground events.
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-
-        LocalBroadcastManager.getInstance(context).registerReceiver(appStateReceiver, filter);
+        activityMonitor.addListener(listener);
         updateServiceConnection();
     }
 
     @Override
     protected void tearDown() {
-        preferenceDataStore.removeListener(preferenceChangeListener);
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(appStateReceiver);
+        activityMonitor.removeListener(listener);
     }
 
 

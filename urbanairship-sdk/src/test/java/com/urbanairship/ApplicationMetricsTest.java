@@ -2,11 +2,7 @@
 
 package com.urbanairship;
 
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
-
-import com.urbanairship.analytics.Analytics;
-
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,12 +13,21 @@ import static org.mockito.Mockito.mock;
 public class ApplicationMetricsTest extends BaseTestCase {
 
     private ApplicationMetrics metrics;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
         PreferenceDataStore preferenceDataStore = new PreferenceDataStore(TestApplication.getApplication(), mock(UrbanAirshipResolver.class));
-        metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore);
+        activityMonitor = new TestActivityMonitor();
+        activityMonitor.register();
+
+        metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore, activityMonitor);
         metrics.init();
+    }
+
+    @After
+    public void takeDown() {
+        activityMonitor.unregister();
     }
 
     /**
@@ -40,9 +45,8 @@ public class ApplicationMetricsTest extends BaseTestCase {
      */
     @Test
     public void testLastOpenTimeTracking() {
-        // Send the foreground broadcast to update last open time
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        // Foreground the app to update last open time
+        activityMonitor.startActivity();
 
         // Make sure the time is greater than 0
         assertTrue("Last open time should of updated", metrics.getLastOpenTimeMillis() > 0);

@@ -9,12 +9,11 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.push.PushManager;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +39,7 @@ public class ChannelCaptureTest extends BaseTestCase {
     private AirshipConfigOptions configOptions;
     private ClipboardManager clipboardManager;
     private NotificationManagerCompat mockNotificationManager;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
@@ -52,8 +52,10 @@ public class ChannelCaptureTest extends BaseTestCase {
                 .build();
 
         mockPushManager = mock(PushManager.class);
+        activityMonitor = new TestActivityMonitor();
+        activityMonitor.register();
 
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -66,6 +68,11 @@ public class ChannelCaptureTest extends BaseTestCase {
         capture.init();
     }
 
+    @After
+    public void takeDown() {
+        activityMonitor.unregister();
+    }
+
     /**
      * Test app foreground when the clipboard contains the clipboard capture token
      * but the channel does not exist.
@@ -75,10 +82,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn(null);
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Verify we did not post a notification
         verifyZeroInteractions(mockNotificationManager);
@@ -92,9 +96,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
 
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Verify we did not post a notification
         verifyZeroInteractions(mockNotificationManager);
@@ -109,9 +111,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("WHAT!", "OK!"));
 
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Verify we did not post a notification
         verifyZeroInteractions(mockNotificationManager);
@@ -126,9 +126,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken("/oh_hi")));
 
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Capture the posted notification
         ArgumentCaptor<Notification> argumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -180,9 +178,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         // Set the token without a Url
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Capture the posted notification
         ArgumentCaptor<Notification> argumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -227,7 +223,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Reinitialize it
         capture.tearDown();
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -242,9 +238,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         when(mockPushManager.getChannelId()).thenReturn("channel ID");
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Channel", generateToken(null)));
 
-        // Send the foreground broadcast
-        LocalBroadcastManager.getInstance(TestApplication.getApplication())
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         // Verify we did not post a notification
         verifyZeroInteractions(mockNotificationManager);

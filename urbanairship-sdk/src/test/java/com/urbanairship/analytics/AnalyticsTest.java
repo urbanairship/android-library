@@ -2,14 +2,12 @@
 
 package com.urbanairship.analytics;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
@@ -17,13 +15,8 @@ import com.urbanairship.job.JobDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.robolectric.Shadows;
-import org.robolectric.shadows.support.v4.ShadowLocalBroadcastManager;
-
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,8 +25,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -43,31 +34,23 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public class AnalyticsTest extends BaseTestCase {
 
     Analytics analytics;
-    ActivityMonitor.Listener activityMonitorListener;
-    ActivityMonitor mockActivityMonitor;
     LocalBroadcastManager localBroadcastManager;
     JobDispatcher mockJobDispatcher;
-
+    ActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
         mockJobDispatcher = Mockito.mock(JobDispatcher.class);
-        mockActivityMonitor = Mockito.mock(ActivityMonitor.class);
-        ArgumentCaptor<ActivityMonitor.Listener> listenerCapture = ArgumentCaptor.forClass(ActivityMonitor.Listener.class);
 
-        Mockito.doNothing().when(mockActivityMonitor).setListener(listenerCapture.capture());
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
         this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockJobDispatcher, mockActivityMonitor);
+                airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockJobDispatcher, new TestActivityMonitor());
 
         analytics.init();
-
-        activityMonitorListener = listenerCapture.getValue();
-        assertNotNull("Should set the listener on create", activityMonitorListener);
 
         localBroadcastManager = LocalBroadcastManager.getInstance(TestApplication.getApplication());
         TestApplication.getApplication().setAnalytics(analytics);
@@ -83,20 +66,20 @@ public class AnalyticsTest extends BaseTestCase {
 
     /**
      * Test that when the app goes into the foreground, a new
-     * session id is created, a broadcast is sent for foreground, isForeground
+     * session id is created, a broadcast is sent for foreground, isAppForegrounded
      * is set to true, and a foreground event job is dispatched.
      */
     @Test
     public void testOnForeground() {
         // Start analytics in the background
-        activityMonitorListener.onBackground(0);
+        analytics.onBackground(0);
 
         assertFalse(analytics.isAppInForeground());
 
         // Grab the session id to compare it to a new session id
         String sessionId = analytics.getSessionId();
 
-        activityMonitorListener.onForeground(0);
+        analytics.onForeground(0);
 
         // Verify that we generate a new session id
         assertNotNull(analytics.getSessionId());
@@ -105,12 +88,6 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify isAppInForeground is true
         assertTrue(analytics.isAppInForeground());
-
-        // Verify we sent a broadcast intent for app foreground
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.shadows.support.v4.Shadows.shadowOf(localBroadcastManager);
-        List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
-        assertEquals("Should of sent a foreground local broadcast",
-                broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_FOREGROUND);
     }
 
     /**
@@ -121,12 +98,12 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testOnBackground() {
         // Start analytics in the foreground
-        activityMonitorListener.onForeground(0);
+        analytics.onForeground(0);
         assertTrue(analytics.isAppInForeground());
 
         analytics.setConversionSendId("some-id");
 
-        activityMonitorListener.onBackground(0);
+        analytics.onBackground(0);
 
         // Verify that we clear the conversion send id
         assertNull("App background should clear the conversion send id", analytics.getConversionSendId());
@@ -144,12 +121,6 @@ public class AnalyticsTest extends BaseTestCase {
 
         // Verify isAppInForeground is false
         assertFalse(analytics.isAppInForeground());
-
-        // Verify we sent a broadcast intent for app background
-        ShadowLocalBroadcastManager shadowLocalBroadcastManager = org.robolectric.shadows.support.v4.Shadows.shadowOf(localBroadcastManager);
-        List<Intent> broadcasts = shadowLocalBroadcastManager.getSentBroadcastIntents();
-        assertEquals("Should of sent a background local broadcast",
-                broadcasts.get(broadcasts.size() - 1).getAction(), Analytics.ACTION_APP_BACKGROUND);
     }
 
     /**
@@ -207,7 +178,7 @@ public class AnalyticsTest extends BaseTestCase {
                 .setAnalyticsEnabled(false)
                 .build();
 
-        analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, UAirship.ANDROID_PLATFORM);
+        analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, UAirship.ANDROID_PLATFORM, new TestActivityMonitor());
 
         analytics.addEvent(new AppForegroundEvent(100));
         verifyZeroInteractions(mockJobDispatcher);
@@ -270,36 +241,6 @@ public class AnalyticsTest extends BaseTestCase {
     }
 
     /**
-     * Test life cycle activity events when an activity is started
-     */
-    @SuppressLint("NewApi")
-    public void testActivityLifeCycleEventsActivityStarted() {
-        Activity activity = new Activity();
-
-        TestApplication.getApplication().callback.onActivityStarted(activity);
-
-        // The activity started is posted on the looper
-        Shadows.shadowOf(Looper.myLooper()).runToEndOfTasks();
-
-        // Verify that the activity monitor was called with auto instrumentation
-        verify(mockActivityMonitor).activityStarted(eq(activity), anyLong());
-    }
-
-    /**
-     * Test life cycle activity events when an activity is stopped
-     */
-    @SuppressLint("NewApi")
-    public void testActivityLifeCycleEventsActivityStopped() {
-        Activity activity = new Activity();
-
-        // The activity stopped is posted on the looper
-        TestApplication.getApplication().callback.onActivityStopped(activity);
-
-        // Verify that the activity monitor was called with auto instrumentation
-        verify(mockActivityMonitor).activityStopped(eq(activity), anyLong());
-    }
-
-    /**
      * Test editAssociatedIdentifiers  dispatches a job to add a new associate_identifiers event.
      */
     @Test
@@ -334,7 +275,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.trackScreen("test_screen");
 
         // Make call to background
-        activityMonitorListener.onBackground(0);
+        analytics.onBackground(0);
 
         // Verify we started created an add event job
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
@@ -399,10 +340,10 @@ public class AnalyticsTest extends BaseTestCase {
         assertTrue(analytics.isAutoTrackAdvertisingIdEnabled());
 
         // Start analytics in the background.
-        activityMonitorListener.onBackground(0);
+        analytics.onBackground(0);
         assertFalse(analytics.isAppInForeground());
 
-        activityMonitorListener.onForeground(0);
+        analytics.onForeground(0);
         assertTrue(analytics.isAppInForeground());
 
         // Verify a job was dispatched fot update the advertising ID

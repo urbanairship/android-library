@@ -2,18 +2,15 @@
 
 package com.urbanairship.automation;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
-import android.support.v4.content.LocalBroadcastManager;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -50,15 +47,14 @@ public class Automation extends AirshipComponent {
     private static final String KEY_PREFIX = "com.urbanairship.automation";
     private static final String AUTOMATION_ENABLED_KEY = KEY_PREFIX + ".AUTOMATION_ENABLED";
 
-    private final Context context;
     private final AutomationDataManager dataManager;
     private final Executor eventProcessingExecutor = Executors.newSingleThreadExecutor();
     private final Executor dbRequestProcessingExecutor = Executors.newCachedThreadPool();
     private final PreferenceDataStore preferenceDataStore;
-
+    private final ActivityMonitor.Listener listener;
     private final Analytics analytics;
+    private final ActivityMonitor activityMonitor;
 
-    private BroadcastReceiver broadcastReceiver;
     private AnalyticsListener analyticsListener;
 
     private boolean automationEnabled = false;
@@ -76,15 +72,29 @@ public class Automation extends AirshipComponent {
      * @param analytics The analytics instance.
      * @hide
      */
-    public Automation(@NonNull Context context, @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics, @NonNull PreferenceDataStore preferenceDataStore) {
-        this(context, analytics, new AutomationDataManager(context, configOptions.getAppKey()), preferenceDataStore);
+    public Automation(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
+                      @NonNull Analytics analytics, @NonNull PreferenceDataStore preferenceDataStore,
+                      @NonNull ActivityMonitor activityMonitor) {
+        this(analytics, new AutomationDataManager(context, configOptions.getAppKey()), preferenceDataStore, activityMonitor);
     }
 
-    Automation(@NonNull Context context, @NonNull Analytics analytics, @NonNull AutomationDataManager dataManager, @NonNull PreferenceDataStore preferenceDataStore) {
-        this.context = context;
+    Automation(@NonNull Analytics analytics, @NonNull AutomationDataManager dataManager,
+               @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         this.analytics = analytics;
         this.dataManager = dataManager;
         this.preferenceDataStore = preferenceDataStore;
+        this.listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onForeground(long time) {
+                Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
+            }
+
+            @Override
+            public void onBackground(long time) {
+                Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_BACKGROUND, 1.00);
+            }
+        };
+        this.activityMonitor = activityMonitor;
     }
 
     @Override
@@ -92,19 +102,6 @@ public class Automation extends AirshipComponent {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
             return;
-        }
-
-        if (broadcastReceiver == null) {
-            broadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    if (intent.getAction().equals(Analytics.ACTION_APP_BACKGROUND)) {
-                        onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_BACKGROUND, 1.00);
-                    } else {
-                        onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
-                    }
-                }
-            };
         }
 
         if (analyticsListener == null) {
@@ -132,13 +129,7 @@ public class Automation extends AirshipComponent {
             };
         }
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-
-        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
-        broadcastManager.registerReceiver(broadcastReceiver, filter);
-
+        activityMonitor.addListener(listener);
         analytics.addAnalyticsListener(analyticsListener);
         automationEnabled = preferenceDataStore.getBoolean(AUTOMATION_ENABLED_KEY, false);
     }
@@ -150,8 +141,7 @@ public class Automation extends AirshipComponent {
             return;
         }
 
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
-        analytics.removeAnalyticsListener(analyticsListener);
+        activityMonitor.removeListener(listener);
     }
 
     /**

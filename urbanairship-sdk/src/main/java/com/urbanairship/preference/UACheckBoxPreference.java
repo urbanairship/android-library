@@ -4,7 +4,6 @@ package com.urbanairship.preference;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -14,7 +13,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.LifeCycleCallbacks;
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.UAirship;
 
 /**
@@ -24,7 +23,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     protected boolean isChecked = false;
     private static final long PREFERENCE_DELAY_MS = 1000;
 
-    private LifeCycleCallbacks lifeCycleCallbacks;
+    private ActivityMonitor.Listener listener;
     private Runnable applyAirshipPreferenceRunnable;
     private Handler handler;
 
@@ -45,22 +44,19 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     }
 
     private void init() {
-        if (getContext().getApplicationContext() instanceof Application) {
-            Application application = (Application) getContext().getApplicationContext();
-            lifeCycleCallbacks = new LifeCycleCallbacks(application) {
-                @Override
-                public void onActivityStopped(Activity activity) {
-                    applyAirshipPreferenceRunnable.run();
-                }
-            };
-        }
+        listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onActivityPaused(Activity activity) {
+                applyAirshipPreferenceRunnable.run();
+            }
+        };
 
         applyAirshipPreferenceRunnable = new Runnable() {
             @Override
             public void run() {
                 handler.removeCallbacks(applyAirshipPreferenceRunnable);
-                if (lifeCycleCallbacks != null) {
-                    lifeCycleCallbacks.unregister();
+                if (listener != null) {
+                    ActivityMonitor.shared(getContext().getApplicationContext()).removeListener(listener);
                 }
 
                 onApplyAirshipPreference(UAirship.shared(), isChecked);
@@ -90,8 +86,8 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
         super.setChecked(value);
         isChecked = value;
 
-        if (lifeCycleCallbacks != null) {
-            lifeCycleCallbacks.register();
+        if (listener != null) {
+            ActivityMonitor.shared(getContext().getApplicationContext()).addListener(listener);
         }
 
         handler.removeCallbacks(applyAirshipPreferenceRunnable);

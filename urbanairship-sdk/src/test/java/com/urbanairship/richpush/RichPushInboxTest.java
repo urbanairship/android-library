@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
 import com.urbanairship.TestApplication;
@@ -58,7 +59,7 @@ public class RichPushInboxTest extends BaseTestCase {
             }
         };
 
-        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor);
+        inbox = new RichPushInbox(context, TestApplication.getApplication().preferenceDataStore, mockDispatcher, mockUser, resolver, executor, new ActivityMonitor());
 
         // Only the "even" messages
         testPredicate = new RichPushInbox.Predicate() {

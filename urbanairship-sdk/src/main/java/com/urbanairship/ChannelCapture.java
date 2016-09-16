@@ -3,24 +3,20 @@
 package com.urbanairship;
 
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 
 import com.urbanairship.actions.ClipboardAction;
 import com.urbanairship.actions.ToastAction;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
@@ -65,7 +61,8 @@ class ChannelCapture extends AirshipComponent {
     private final PushManager pushManager;
     private final NotificationManagerCompat notificationManager;
     private Clipboard clipboard;
-    private final BroadcastReceiver broadcastReceiver;
+    private final ActivityMonitor.Listener listener;
+    private final ActivityMonitor activityMonitor;
 
     Executor executor = Executors.newSingleThreadExecutor();
 
@@ -76,21 +73,19 @@ class ChannelCapture extends AirshipComponent {
      * @param configOptions The airship config options.
      * @param pushManager The push manager instance.
      */
-    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager) {
-        this(context, configOptions, pushManager, NotificationManagerCompat.from(context));
+    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, ActivityMonitor activityMonitor) {
+        this(context, configOptions, pushManager, NotificationManagerCompat.from(context), activityMonitor);
     }
 
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
-                   NotificationManagerCompat notificationManager) {
-
+                   NotificationManagerCompat notificationManager, ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
         this.notificationManager = notificationManager;
-
-        this.broadcastReceiver = new BroadcastReceiver() {
+        this.listener = new ActivityMonitor.Listener() {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onForeground(long time) {
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -99,6 +94,7 @@ class ChannelCapture extends AirshipComponent {
                 });
             }
         };
+        this.activityMonitor = activityMonitor;
     }
 
 
@@ -115,17 +111,14 @@ class ChannelCapture extends AirshipComponent {
                 // Clipboard must be initialized on a thread with a prepared looper
                 clipboard = new ClipboardHoneyComb();
 
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-                LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
-                broadcastManager.registerReceiver(broadcastReceiver, filter);
+                activityMonitor.addListener(listener);
             }
         });
     }
 
     @Override
     protected void tearDown() {
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
+        activityMonitor.removeListener(listener);
     }
 
     /**
