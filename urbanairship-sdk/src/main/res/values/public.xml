@@ -91,7 +91,7 @@
 
     <!-- Ids -->
     <public name="close_button" type="id" />
-    <public name="message_list_fragment" type="id" />
+    <public name="message_list_container" type="id" />
     <public name="retry_button" type="id" />
     <public name="error" type="id" />
 
