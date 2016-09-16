@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<fragment
-    android:id="@+id/message_list_fragment"
-    android:name="com.urbanairship.messagecenter.MessageListFragment"
+<FrameLayout
+    android:id="@+id/message_list_container"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"/>

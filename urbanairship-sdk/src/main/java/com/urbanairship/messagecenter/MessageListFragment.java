@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -28,12 +29,27 @@ import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ViewUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Fragment that displays the Urban Airship Message Center.
  */
 public class MessageListFragment extends Fragment {
+
+
+    /**
+     * Interface that defines the callback when the
+     * list view is ready. See {@link #getAbsListViewAsync(OnListViewReadyCallback)}.
+     */
+    public interface OnListViewReadyCallback {
+        /**
+         * Called when the list view is ready.
+         *
+         * @param absListView The abstract list view.
+         */
+        void onListViewReady(AbsListView absListView);
+    }
 
     private SwipeRefreshLayout refreshLayout;
     private AbsListView absListView;
@@ -43,6 +59,8 @@ public class MessageListFragment extends Fragment {
     private ImageLoader imageLoader;
     private String currentMessageId;
     private RichPushInbox.Predicate predicate;
+    private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
+
 
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
@@ -118,6 +136,11 @@ public class MessageListFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureList(view);
+
+        for (OnListViewReadyCallback callback : new ArrayList<>(pendingCallbacks)) {
+            callback.onListViewReady(absListView);
+        }
+        pendingCallbacks.clear();
     }
 
     /**
@@ -271,6 +294,22 @@ public class MessageListFragment extends Fragment {
     }
 
     /**
+     * Gets the message list view once it is ready. The callback will be called
+     * on the main thread. If the list view is already ready, the callback will
+     * be called immediately.
+     *
+     * @param callback The on ready callback.
+     */
+    @MainThread
+    public void getAbsListViewAsync(OnListViewReadyCallback callback) {
+       if (absListView != null) {
+           callback.onListViewReady(absListView);
+       } else {
+           pendingCallbacks.add(callback);
+       }
+    }
+
+    /**
      * Returns a the {@link RichPushMessage} at a given position.
      *
      * @param position The list position.
@@ -289,6 +328,12 @@ public class MessageListFragment extends Fragment {
 
         // Tear down any selection in progress
         absListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        pendingCallbacks.clear();
     }
 
     /**

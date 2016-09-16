@@ -45,10 +45,10 @@ public class MessageCenterFragment extends Fragment {
 
     private MessageListFragment messageListFragment;
     private boolean isTwoPane;
+    private boolean isViewConfigured;
 
     private String currentMessageId;
     private int currentMessagePosition;
-
     private String pendingMessageId;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
@@ -72,7 +72,6 @@ public class MessageCenterFragment extends Fragment {
         return message;
     }
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,9 +84,9 @@ public class MessageCenterFragment extends Fragment {
     }
 
     /**
-     * Subclasses can override to replace with their own layout.  If doing so, the
-     * returned view hierarchy <em>must</em> have contain a {@link MessageListFragment} whose id
-     * is {@code R.id.message_list_fragment}.
+     * Subclasses can override to replace with their own layout. If doing so, the
+     * returned view hierarchy <em>must</em> must contain a place holder view with ID
+     * {@code R.id.message_list_container}.
      *
      * @param inflater The LayoutInflater object that can be used to inflate
      * any views in the fragment,
@@ -101,15 +100,15 @@ public class MessageCenterFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_mc, container, false);
-        ensureView(view);
+        configureView(view);
         return view;
     }
 
     @CallSuper
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(View view, final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ensureView(view);
+        configureView(view);
 
         messageListFragment.setPredicate(predicate);
 
@@ -118,25 +117,36 @@ public class MessageCenterFragment extends Fragment {
         }
 
         // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
-        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW) && messageListFragment.getAbsListView() != null) {
-            messageListFragment.getAbsListView().onRestoreInstanceState(savedInstanceState.getParcelable(STATE_ABS_LIST_VIEW));
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW)) {
+            messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
+                @Override
+                public void onListViewReady(AbsListView absListView) {
+                    absListView.onRestoreInstanceState(savedInstanceState.getParcelable(STATE_ABS_LIST_VIEW));
+                }
+            });
         }
     }
 
     /**
-     * Ensures that the content view contains a message list fragment.
+     * Configures the content view.
      *
      * @param view The content view.
      */
-    private void ensureView(View view) {
-        if (messageListFragment != null) {
+    private void configureView(View view) {
+        if (isViewConfigured) {
             return;
         }
+        isViewConfigured = true;
 
-        messageListFragment = (MessageListFragment) getChildFragmentManager().findFragmentById(R.id.message_list_fragment);
-        if (messageListFragment == null) {
-            throw new RuntimeException("Your content must have a MessageListFragment whose id attribute is 'R.id.message_list_fragment'");
+        if (view.findViewById(R.id.message_list_container) == null) {
+            throw new RuntimeException("Content must have a place holder view whose id attribute is 'R.id.message_list_container'");
         }
+
+        messageListFragment = new MessageListFragment();
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.message_list_container, messageListFragment, "messageList")
+                .commit();
 
         // The presence of a message_container indicates we are running in a split mode
         if (view.findViewById(R.id.message_container) != null) {
@@ -160,6 +170,12 @@ public class MessageCenterFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        isViewConfigured = false;
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
         savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
@@ -176,24 +192,30 @@ public class MessageCenterFragment extends Fragment {
     /**
      * Called to configure the messageListFragment.
      *
-     * @param messageListFragment The messsage list fragment.
+     * @param messageListFragment The message list fragment.
      */
     protected void configureMessageListFragment(final MessageListFragment messageListFragment) {
-        messageListFragment.getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                RichPushMessage message = messageListFragment.getMessage(position);
-                if (message != null) {
-                    showMessage(message.getMessageId());
-                }
+            public void onListViewReady(AbsListView absListView) {
+                absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        RichPushMessage message = messageListFragment.getMessage(position);
+                        if (message != null) {
+                            showMessage(message.getMessageId());
+                        }
+                    }
+                });
+
+                absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
+                absListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+                // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+                absListView.setSaveEnabled(false);
             }
         });
-
-        messageListFragment.getAbsListView().setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
-        messageListFragment.getAbsListView().setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-
-        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
-        messageListFragment.getAbsListView().setSaveEnabled(false);
     }
 
     @Override
@@ -255,6 +277,10 @@ public class MessageCenterFragment extends Fragment {
             currentMessagePosition = getMessages().indexOf(message);
         }
 
+        if (messageListFragment == null) {
+            return;
+        }
+
         if (isTwoPane) {
             String tag = messageId == null ? "EMPTY_MESSAGE" : messageId;
             if (getChildFragmentManager().findFragmentByTag(tag) != null) {
@@ -299,6 +325,10 @@ public class MessageCenterFragment extends Fragment {
                 currentMessagePosition = Math.min(messages.size() - 1, currentMessagePosition);
                 currentMessageId = messages.get(currentMessagePosition).getMessageId();
             }
+        }
+
+        if (messageListFragment == null) {
+            return;
         }
 
         if (isTwoPane) {
