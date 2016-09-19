@@ -170,7 +170,7 @@ class InboxJobHandler {
      * @param job The airship job.
      */
     private void onUpdateUser(Job job) {
-        if (job.getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
+        if (!job.getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
             long lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0);
             long now = System.currentTimeMillis();
             if (!(lastUpdateTime > now || (lastUpdateTime + USER_UPDATE_INTERVAL_MS) < now)) {
