@@ -4,6 +4,7 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -25,7 +26,11 @@ import java.util.List;
  */
 class StandardLocationAdapter implements LocationAdapter {
 
+    private static final int STANDARD_LOCATION_ADAPTER_INTENT_FLAG = 2;
+
     private final LocationManager locationManager;
+    private final Context context;
+    private final Intent locationUpdatesIntent;
 
     private static String currentProvider;
 
@@ -36,11 +41,15 @@ class StandardLocationAdapter implements LocationAdapter {
      */
     StandardLocationAdapter(Context context) {
         this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        this.context = context;
+        this.locationUpdatesIntent = new Intent(context, LocationService.class).setAction(UALocationProvider.ACTION_LOCATION_UPDATE);
     }
 
     @Override
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
         Criteria criteria = createCriteria(options);
+        PendingIntent intent = PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        locationManager.removeUpdates(intent);
 
         List<String> providers = locationManager.getProviders(criteria, false);
         if (providers != null) {
@@ -73,7 +82,7 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
+    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
         Criteria criteria = createCriteria(options);
         String bestProvider = getBestProvider(criteria, options);
 
@@ -83,19 +92,22 @@ class StandardLocationAdapter implements LocationAdapter {
         }
 
         Logger.verbose("StandardLocationAdapter - Refreshing updates, best provider might of changed.");
-        locationManager.removeUpdates(pendingIntent);
-        requestLocationUpdates(options, pendingIntent);
+        requestLocationUpdates(options);
     }
 
     @Override
     public void disconnect() {
     }
 
-
     @Override
-    public void cancelLocationUpdates(@NonNull PendingIntent intent) {
+    public void cancelLocationUpdates() {
+        PendingIntent pendingIntent = PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE);
+        if (pendingIntent != null) {
+            locationManager.removeUpdates(pendingIntent);
+            pendingIntent.cancel();
+        }
+
         Logger.verbose("StandardLocationAdapter - Canceling location updates.");
-        locationManager.removeUpdates(intent);
         currentProvider = null;
     }
 
@@ -103,6 +115,11 @@ class StandardLocationAdapter implements LocationAdapter {
     @NonNull
     public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         return new SingleLocationRequest(locationCallback, options);
+    }
+
+    @Override
+    public boolean isUpdatesRequested() {
+        return PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 
 
@@ -158,7 +175,6 @@ class StandardLocationAdapter implements LocationAdapter {
             return locationManager.getBestProvider(criteria, true);
         }
     }
-
 
     /**
      * Class that encapsulated the actual request to the standard Android

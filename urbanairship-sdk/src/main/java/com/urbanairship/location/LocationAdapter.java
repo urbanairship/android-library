@@ -2,7 +2,6 @@
 
 package com.urbanairship.location;
 
-import android.app.PendingIntent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
@@ -24,18 +23,15 @@ interface LocationAdapter {
 
     /**
      * Cancels location updates.
-     *
-     * @param intent The pending intent used to start location updates.
      */
-    void cancelLocationUpdates(@NonNull PendingIntent intent);
+    void cancelLocationUpdates();
 
     /**
      * Requests location updates.
      *
      * @param options The location request options.
-     * @param intent The pending intent used to start location updates.
      */
-    void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent);
+    void requestLocationUpdates(@NonNull LocationRequestOptions options);
 
     /**
      * Connects the adapter.
@@ -52,8 +48,15 @@ interface LocationAdapter {
 
     /**
      * Called when a system location provider availability changes.
+     *
      * @param options Current location request options.
-     * @param intent The pending intent used to start location updates.
      */
-    void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent);
+    void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options);
+
+    /**
+     * Checks if the adapter's pending intent already exists.
+     *
+     * @return {@code true} if updates have already been requested, otherwise {@code false}.
+     */
+    boolean isUpdatesRequested();
 }

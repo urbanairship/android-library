@@ -2,7 +2,6 @@
 
 package com.urbanairship.location;
 
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
@@ -79,11 +78,6 @@ public class LocationServiceTest extends BaseTestCase {
             }
         };
 
-
-        // Reset the static properties
-        LocationService.areUpdatesStopped = false;
-        LocationService.lastUpdateOptions = null;
-
         locationService.onCreate();
 
         locationManager.setBackgroundLocationAllowed(true);
@@ -96,21 +90,23 @@ public class LocationServiceTest extends BaseTestCase {
     @Test
     public void testStartUpdates() {
         LocationRequestOptions options = locationManager.getLocationRequestOptions();
+        when(mockProvider.isUpdatesRequested()).thenReturn(false);
 
         // Request updates
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
+        when(mockProvider.isUpdatesRequested()).thenReturn(true);
         // Request the update again, should ignore the update for the same request options.
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
-        // Should of connected to the provider
+        // Should connect to the provider only when requesting or canceling
         verify(mockProvider, times(1)).connect();
 
-        // Should cancel any previous updates
-        verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
+        // Should not cancel any previous updates
+        verify(mockProvider, times(0)).cancelRequests();
 
-        // Should do the actual requests
-        verify(mockProvider, times(1)).requestLocationUpdates(eq(options), any(PendingIntent.class));
+        // Should do the actual request only once
+        verify(mockProvider, times(1)).requestLocationUpdates(eq(options));
     }
 
     /**
@@ -132,11 +128,8 @@ public class LocationServiceTest extends BaseTestCase {
         // Should of connected to the provider 2 times - 1 for each update request.
         verify(mockProvider, times(2)).connect();
 
-        // Should of cancel previous requests 2 times - 1 for each update request.
-        verify(mockProvider, times(2)).cancelRequests(any(PendingIntent.class));
-
         // Should do the actual requests
-        verify(mockProvider, times(1)).requestLocationUpdates(eq(options), any(PendingIntent.class));
+        verify(mockProvider, times(1)).requestLocationUpdates(eq(options));
     }
 
     /**
@@ -148,14 +141,14 @@ public class LocationServiceTest extends BaseTestCase {
 
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
-        // Should of cancel previous requests
-        verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
+        // Should cancel previous requests
+        verify(mockProvider, times(1)).cancelRequests();
 
         // Send stop again to verify it doesn't bother canceling requests
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
-        // Should skip stopping if it knows it previously stopped.
-        verify(mockProvider, times(1)).cancelRequests(any(PendingIntent.class));
+        // Will continue to call cancel until requests stop
+        verify(mockProvider, times(2)).cancelRequests();
     }
 
     /**
@@ -167,7 +160,7 @@ public class LocationServiceTest extends BaseTestCase {
         Bundle bundle = new Bundle();
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE, bundle);
         verify(mockAnalytics).recordLocation(eq(location), Mockito.any(LocationRequestOptions.class), eq(LocationEvent.UPDATE_TYPE_CONTINUOUS));
     }
 
@@ -176,7 +169,7 @@ public class LocationServiceTest extends BaseTestCase {
      */
     @Test
     public void testLocationUpdateNullLocation() {
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE);
 
         // Should not call record location
         verify(mockAnalytics, times(0)).recordLocation(any(Location.class));
@@ -194,7 +187,7 @@ public class LocationServiceTest extends BaseTestCase {
         Bundle bundle = new Bundle();
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE, bundle);
 
         // Should not call record location
         verify(mockAnalytics, times(0)).recordLocation(any(Location.class));
@@ -208,13 +201,13 @@ public class LocationServiceTest extends BaseTestCase {
         Bundle bundle = new Bundle();
         bundle.putBoolean(LocationManager.KEY_PROVIDER_ENABLED, true);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE, bundle);
 
         // Should of connected to the provider
         verify(mockProvider, times(1)).connect();
 
         // Should notify provider of the change
-        verify(mockProvider, times(1)).onSystemLocationProvidersChanged(eq(locationManager.getLocationRequestOptions()), any(PendingIntent.class));
+        verify(mockProvider, times(1)).onSystemLocationProvidersChanged(eq(locationManager.getLocationRequestOptions()));
     }
 
     /**
@@ -224,16 +217,16 @@ public class LocationServiceTest extends BaseTestCase {
      */
     @Test
     public void testStartingLocationAfterUpdate() {
-        locationManager.getPreferenceDataStore().put("com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS", locationManager.getLocationRequestOptions());
+        locationManager.setLastUpdateOptions(locationManager.getLocationRequestOptions());
+        when(mockProvider.isUpdatesRequested()).thenReturn(true);
 
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, null);
-
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE);
         sendIntent(LocationService.ACTION_CHECK_LOCATION_UPDATES);
 
         // Verify no request was made
         verify(mockProvider, times(0)).connect();
-        verify(mockProvider, times(0)).cancelRequests(any(PendingIntent.class));
-        verify(mockProvider, times(0)).requestLocationUpdates(eq(locationManager.getLocationRequestOptions()), any(PendingIntent.class));
+        verify(mockProvider, times(0)).cancelRequests();
+        verify(mockProvider, times(0)).requestLocationUpdates(eq(locationManager.getLocationRequestOptions()));
     }
 
     /**
@@ -408,7 +401,7 @@ public class LocationServiceTest extends BaseTestCase {
         final Location location = new Location("location");
         Bundle bundle = new Bundle();
         bundle.putParcelable(LocationManager.KEY_LOCATION_CHANGED, location);
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE, bundle);
 
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
@@ -426,7 +419,7 @@ public class LocationServiceTest extends BaseTestCase {
         locationHandler.handleMessage(message);
 
         // Send another location
-        sendIntent(LocationService.ACTION_LOCATION_UPDATE, bundle);
+        sendIntent(UALocationProvider.ACTION_LOCATION_UPDATE, bundle);
 
         // Verify the messenger was notified only from the previous location
         verify(mockMessenger, times(1)).send(argThat(new ArgumentMatcher<Message>() {

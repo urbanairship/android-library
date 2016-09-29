@@ -2,6 +2,7 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -22,7 +23,11 @@ import java.util.concurrent.Semaphore;
  */
 class FusedLocationAdapter implements LocationAdapter {
 
+    private static final int FUSED_LOCATION_ADAPTER_INTENT_FLAG = 1;
+
     private final Context context;
+    private final Intent locationUpdatesIntent;
+
     private GoogleApiClient client;
 
     /**
@@ -32,6 +37,7 @@ class FusedLocationAdapter implements LocationAdapter {
      */
     FusedLocationAdapter(Context context) {
         this.context = context;
+        this.locationUpdatesIntent = new Intent(context, LocationService.class).setAction(UALocationProvider.ACTION_LOCATION_UPDATE);
     }
 
     @Override
@@ -44,24 +50,32 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void cancelLocationUpdates(@NonNull PendingIntent intent) {
+    public void cancelLocationUpdates() {
+        PendingIntent pendingIntent = PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE);
+        if (pendingIntent == null) {
+            return;
+        }
+
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to cancel location updates.");
             return;
         }
 
         Logger.verbose("FusedLocationAdapter - Canceling updates.");
-        LocationServices.FusedLocationApi.removeLocationUpdates(client, intent);
+        LocationServices.FusedLocationApi.removeLocationUpdates(client, pendingIntent);
+        pendingIntent.cancel();
     }
 
     @Override
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
+        PendingIntent intent = PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
             return;
         }
 
-        Logger.verbose("FusedLocationAdapter - Requesting updates.");
+        Logger.verbose("FusedLocationAdapter - Requesting updates: " + options);
         LocationRequest locationRequest = createLocationRequest(options);
 
         //noinspection MissingPermission
@@ -132,8 +146,13 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
         // fused location handles this internally
+    }
+
+    @Override
+    public boolean isUpdatesRequested() {
+        return PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 
     /**
