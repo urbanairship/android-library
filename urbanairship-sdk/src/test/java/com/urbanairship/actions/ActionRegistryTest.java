@@ -38,7 +38,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions();
-        assertEquals("Default entries changed", 14, registry.getEntries().size());
+        assertEquals("Default entries changed", 15, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
@@ -54,6 +54,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
         validateEntry(registry.getEntry("^csa"), "^csa", "cancel_scheduled_actions");
         validateEntry(registry.getEntry("^sa"), "^sa", "schedule_actions");
+        validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
     }
 
     /**
@@ -111,7 +112,7 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test the add custom event default predicate accepts Action.SITUATION_MANUAL_INVOCATION and
+     * Test that the fetch device info default predicate accepts Action.SITUATION_MANUAL_INVOCATION and
      * Action.SITUATION_WEB_VIEW_INVOCATION.
      */
     @Test
@@ -127,6 +128,43 @@ public class ActionRegistryTest extends BaseTestCase {
         assertTrue("Add custom event should accept WEB_VIEW_INVOCATION.",
                 entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
     }
+
+    /**
+     * Test that the fetch device info default predicate rejects Action.SITUATION_PUSH_RECEIVED and
+     * Action.SITUATION_PUSH_OPENED.
+     */
+    @Test
+    public void testFetchDeviceInfoDefaultPredicateReject() {
+        registry.registerDefaultActions();
+
+        ActionRegistry.Entry entry = registry.getEntry("fetch_device_info");
+        assertNotNull("Fetch device info should have a default predicate", entry.getPredicate());
+
+        assertFalse("Fetch device info should reject PUSH_RECEIVED.",
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
+
+        assertFalse("Fetch device info should reject PUSH_OPENED.",
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "value", null)));
+    }
+
+    /**
+     * Test the add custom event default predicate accepts Action.SITUATION_MANUAL_INVOCATION and
+     * Action.SITUATION_WEB_VIEW_INVOCATION.
+     */
+    @Test
+    public void testFetchDeviceInfoDefaultPredicateAccepts() {
+        registry.registerDefaultActions();
+
+        ActionRegistry.Entry entry = registry.getEntry("fetch_device_info");
+        assertNotNull("Fetch device info should have a default predicate", entry.getPredicate());
+
+        assertTrue("Fetch device info should accept MANUAL_INVOCATION.",
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", null)));
+
+        assertTrue("Fetch device info should accept WEB_VIEW_INVOCATION.",
+                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
+    }
+
 
     /**
      * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
