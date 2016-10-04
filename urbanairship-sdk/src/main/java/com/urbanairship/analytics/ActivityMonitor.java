@@ -23,12 +23,14 @@ class ActivityMonitor {
     private final Handler handler;
     private Listener listener;
     private long lastActivityStopTimeStamp;
+    private boolean isForeground;
 
     private final Runnable notifyBackgroundRunnable = new Runnable() {
         @Override
         public void run() {
             if (startedActivities.isEmpty()) {
                 synchronized (this) {
+                    isForeground = false;
                     if (listener != null) {
                         listener.onBackground(lastActivityStopTimeStamp);
                     }
@@ -67,8 +69,9 @@ class ActivityMonitor {
 
         startedActivities.add(activity.hashCode());
 
-        if (startedActivities.size() == 1) {
+        if (!isForeground) {
             synchronized (this) {
+                isForeground = true;
                 if (listener != null) {
                     listener.onForeground(timeStamp);
                 }
@@ -92,7 +95,7 @@ class ActivityMonitor {
         startedActivities.remove(activity.hashCode());
         lastActivityStopTimeStamp = timeStamp;
 
-        if (startedActivities.isEmpty()) {
+        if (startedActivities.isEmpty() && isForeground) {
             handler.postDelayed(notifyBackgroundRunnable, BACKGROUND_DELAY_MS);
         }
     }
