@@ -176,7 +176,6 @@ public class ActionRunRequest {
         final ActionArguments arguments = createActionArguments();
         final Semaphore semaphore = new Semaphore(0);
 
-
         ActionRunnable runnable = new ActionRunnable(arguments) {
             @Override
             void onFinish(ActionArguments arguments, ActionResult result) {
@@ -190,7 +189,13 @@ public class ActionRunRequest {
             executor.execute(runnable);
         }
 
-        semaphore.tryAcquire();
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException ex) {
+            Logger.error("Failed to run action with arguments " + arguments);
+           return ActionResult.newErrorResult(ex);
+        }
+
         return runnable.result;
     }
 
@@ -334,7 +339,7 @@ public class ActionRunRequest {
      */
     private abstract class ActionRunnable implements Runnable {
 
-        private ActionResult result;
+        private volatile ActionResult result;
         private final ActionArguments arguments;
 
         public ActionRunnable(ActionArguments arguments) {
