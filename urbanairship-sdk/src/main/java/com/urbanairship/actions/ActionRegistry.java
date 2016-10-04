@@ -243,6 +243,18 @@ public final class ActionRegistry {
         registerAction(new ScheduleAction(),
                 ScheduleAction.DEFAULT_REGISTRY_NAME,
                 ScheduleAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+        Entry fetchDeviceInfoEntry = registerAction(new FetchDeviceInfoAction(),
+                FetchDeviceInfoAction.DEFAULT_REGISTRY_NAME,
+                FetchDeviceInfoAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+        fetchDeviceInfoEntry.setPredicate(new Predicate() {
+            @Override
+            public boolean apply(ActionArguments arguments) {
+                return arguments.getSituation() == Action.SITUATION_WEB_VIEW_INVOCATION ||
+                        arguments.getSituation() == Action.SITUATION_MANUAL_INVOCATION;
+            }
+        });
     }
 
     /**
