@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.0.2 - October 4, 2016
+===============================
+- Fixed analytics issue causing app foreground events during screen rotation.
+- Fixed bug when running actions synchronously.
+- Reduced inbox user update calls.
+
 Version 8.0.1 - September 16, 2016
 ==================================
 - Fixed message center duplicate ID crash in nested fragments.
