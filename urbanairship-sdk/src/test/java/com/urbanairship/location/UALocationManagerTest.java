@@ -3,6 +3,7 @@
 package com.urbanairship.location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
@@ -21,7 +22,7 @@ public class UALocationManagerTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore);
+        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
         options = new LocationRequestOptions.Builder().setMinDistance(100).create();
     }
 

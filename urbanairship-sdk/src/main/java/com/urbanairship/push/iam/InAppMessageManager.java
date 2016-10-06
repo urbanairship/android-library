@@ -3,7 +3,6 @@
 package com.urbanairship.push.iam;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,9 +13,8 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
-import com.urbanairship.Cancelable;
-import com.urbanairship.LifeCycleCallbacks;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
@@ -71,20 +69,12 @@ public class InAppMessageManager extends AirshipComponent {
      */
     private final static long DEFAULT_ACTIVITY_RESUME_DELAY_MS = 3000;
 
-    /**
-     * A small delay that allows activity configuration changes to happen before we consider the app
-     * backgrounded.
-     */
-    private final static long BACKGROUND_DELAY_MS = 500;
-
     // Static properties for lifecycle callbacks
-    private static LifeCycleCallbacks lifeCycleCallbacks;
-    private static Cancelable activityResumedOperation;
-    private static int activityCount = 0;
-    private static boolean isForeground = false;
+    private static ActivityMonitor.Listener listener;
 
     private final PreferenceDataStore dataStore;
     private final Handler handler;
+    private final ActivityMonitor activityMonitor;
 
     private WeakReference<Activity> activityReference;
     private InAppMessageFragment currentFragment;
@@ -118,11 +108,12 @@ public class InAppMessageManager extends AirshipComponent {
      * @param dataStore The preference data store.
      * @hide
      */
-    public InAppMessageManager(@NonNull PreferenceDataStore dataStore) {
+    public InAppMessageManager(@NonNull PreferenceDataStore dataStore, @NonNull ActivityMonitor activityMonitor) {
         this.dataStore = dataStore;
         autoDisplayDelayMs = DEFAULT_ACTIVITY_RESUME_DELAY_MS;
         handler = new Handler(Looper.getMainLooper());
         autoDisplayPendingMessage = isDisplayAsapEnabled();
+        this.activityMonitor = activityMonitor;
 
         fragmentFactory = new InAppMessageFragmentFactory() {
             @Override
@@ -141,10 +132,35 @@ public class InAppMessageManager extends AirshipComponent {
             UAirship.shared().getAnalytics().addEvent(resolutionEvent);
             setPendingMessage(null);
         }
+
+        listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onForeground(long time) {
+                InAppMessageManager.this.onForeground();
+            }
+
+            @Override
+            public void onActivityResumed(Activity activity) {
+                InAppMessageManager.this.onActivityResumed(activity);
+            }
+
+            @Override
+            public void onActivityPaused(Activity activity) {
+                InAppMessageManager.this.onActivityPaused(activity);
+            }
+        };
+
+        activityMonitor.addListener(listener);
+        if (activityMonitor.isAppForegrounded()) {
+            onForeground();
+        }
     }
 
     @Override
     protected void tearDown() {
+        activityMonitor.removeListener(listener);
+
+        listener = null;
         handler.removeCallbacks(displayRunnable);
     }
 
@@ -620,88 +636,5 @@ public class InAppMessageManager extends AirshipComponent {
         }
     };
 
-    /**
-     * Registers life cycle callbacks.
-     *
-     * @param application The application.
-     * @hide
-     */
-    public static void registerLifeCycleCallbacks(Application application) {
-        if (lifeCycleCallbacks == null) {
-            lifeCycleCallbacks = new LifeCycleCallbacks(application) {
-                @Override
-                public void onActivityStarted(final Activity activity) {
-                    activityCount++;
 
-                    if (!isForeground) {
-                        isForeground = true;
-                        if (UAirship.isFlying()) {
-                            UAirship.shared().getInAppMessageManager().onForeground();
-                        } else {
-                            UAirship.shared(new UAirship.OnReadyCallback() {
-                                @Override
-                                public void onAirshipReady(UAirship airship) {
-                                    UAirship.shared().getInAppMessageManager().onForeground();
-                                }
-                            });
-                        }
-                    }
-                }
-
-                @Override
-                public void onActivityStopped(final Activity activity) {
-                    activityCount--;
-
-                    if (activityCount == 0) {
-                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (activityCount == 0) {
-                                    isForeground = false;
-                                }
-                            }
-                        }, BACKGROUND_DELAY_MS);
-                    }
-                }
-
-                @Override
-                public void onActivityResumed(Activity activity) {
-                    final WeakReference<Activity> weakReference = new WeakReference<>(activity);
-
-                    activityResumedOperation = UAirship.shared(new UAirship.OnReadyCallback() {
-                        @Override
-                        public void onAirshipReady(UAirship airship) {
-                            Activity activity = weakReference.get();
-                            if (activity != null) {
-                                UAirship.shared().getInAppMessageManager().onActivityResumed(activity);
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void onActivityPaused(final Activity activity) {
-                    if (activityResumedOperation != null && !activityResumedOperation.isDone()) {
-                        activityResumedOperation.cancel();
-                        return;
-                    }
-
-                    UAirship.shared().getInAppMessageManager().onActivityPaused(activity);
-                }
-            };
-
-            lifeCycleCallbacks.register();
-        }
-    }
-
-    /**
-     * Unregisters the life cycle callbacks.
-     *
-     * @hide
-     */
-    public static void unregisterLifeCycleCallbacks() {
-        if (lifeCycleCallbacks != null) {
-            lifeCycleCallbacks.unregister();
-        }
-    }
 }

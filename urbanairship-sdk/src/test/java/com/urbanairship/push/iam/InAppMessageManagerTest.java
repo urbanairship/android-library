@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.view.ViewGroup;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
@@ -62,7 +63,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
                 .setExpiry(Long.MAX_VALUE / 1000 * 1000) // Work around for precision loss issue
                 .create();
 
-        inAppMessageManager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore);
+        inAppMessageManager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
     }
 
     /**

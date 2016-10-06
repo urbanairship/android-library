@@ -15,6 +15,7 @@ import android.os.RemoteException;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.LocationEvent;
@@ -66,7 +67,7 @@ public class LocationServiceTest extends BaseTestCase {
 
         shadowLooper = Shadows.shadowOf(Looper.myLooper());
 
-        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore);
+        locationManager = new UALocationManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
         TestApplication.getApplication().setLocationManager(locationManager);
 
         locationService = new LocationService() {

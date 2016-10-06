@@ -295,8 +295,6 @@ public class UAirship {
             isTakingOff = true;
 
             UAirship.application = application;
-            Analytics.registerLifeCycleCallbacks(application);
-            InAppMessageManager.registerLifeCycleCallbacks(application);
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -378,8 +376,7 @@ public class UAirship {
                 return;
             }
 
-            Analytics.unregisterLifeCycleCallbacks();
-            InAppMessageManager.unregisterLifeCycleCallbacks();
+            application.unregisterActivityLifecycleCallbacks(ActivityMonitor.shared(application));
 
             // Block until takeoff is finished
             UAirship airship = UAirship.shared();
@@ -540,19 +537,19 @@ public class UAirship {
         this.preferenceDataStore.init();
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions, getPlatformType());
-        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore);
-        this.inbox = new RichPushInbox(application, preferenceDataStore);
-        this.locationManager = new UALocationManager(application, preferenceDataStore);
-        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore);
+        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions, getPlatformType(), ActivityMonitor.shared(application));
+        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions);
         this.namedUser = new NamedUser(application, preferenceDataStore);
-        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager);
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, ActivityMonitor.shared(application));
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions();
         this.messageCenter = new MessageCenter();
-        this.automation = new Automation(application, airshipConfigOptions, analytics, preferenceDataStore);
+        this.automation = new Automation(application, airshipConfigOptions, analytics, preferenceDataStore, ActivityMonitor.shared(application));
 
         for (AirshipComponent component : getComponents()) {
             component.init();

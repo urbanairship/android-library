@@ -2,10 +2,8 @@
 
 package com.urbanairship.richpush;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,15 +12,14 @@ import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.content.LocalBroadcastManager;
 
+import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.messagecenter.MessageActivity;
@@ -119,9 +116,10 @@ public class RichPushInbox extends AirshipComponent {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
+    private final ActivityMonitor.Listener listener;
+    private final ActivityMonitor activityMonitor;
 
     private int fetchCount = 0;
-    private BroadcastReceiver foregroundReceiver;
     private InboxJobHandler inboxJobHandler;
 
 
@@ -132,18 +130,36 @@ public class RichPushInbox extends AirshipComponent {
      * @param dataStore The preference data store.
      * @hide
      */
-    public RichPushInbox(Context context, PreferenceDataStore dataStore) {
-        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)), new RichPushResolver(context), Executors.newSingleThreadExecutor());
+    public RichPushInbox(Context context, PreferenceDataStore dataStore, ActivityMonitor activityMonitor) {
+        this(context, dataStore, JobDispatcher.shared(context), new RichPushUser(dataStore, JobDispatcher.shared(context)),
+                new RichPushResolver(context), Executors.newSingleThreadExecutor(), activityMonitor);
     }
 
     @VisibleForTesting
-    RichPushInbox(Context context, PreferenceDataStore dataStore, JobDispatcher jobDispatcher, RichPushUser user, RichPushResolver resolver, Executor executor) {
+    RichPushInbox(Context context, PreferenceDataStore dataStore, final JobDispatcher jobDispatcher,
+                  RichPushUser user, RichPushResolver resolver, Executor executor, ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
         this.richPushResolver = resolver;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
+        this.listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onForeground(long time) {
+                RichPushInbox.this.fetchMessages();
+            }
+
+            @Override
+            public void onBackground(long time) {
+                Job job = Job.newBuilder(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                             .setAirshipComponent(RichPushInbox.class)
+                             .build();
+
+                jobDispatcher.dispatch(job);
+            }
+        };
+        this.activityMonitor = activityMonitor;
     }
 
     @Override
@@ -166,26 +182,7 @@ public class RichPushInbox extends AirshipComponent {
 
         refresh(false);
 
-        foregroundReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (Analytics.ACTION_APP_FOREGROUND.equals(intent.getAction())) {
-                    fetchMessages();
-                } else {
-                    Job job = Job.newBuilder(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                                 .setAirshipComponent(RichPushInbox.class)
-                                 .build();
-
-                    jobDispatcher.dispatch(job);
-                }
-            }
-        };
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-        filter.addAction(Analytics.ACTION_APP_BACKGROUND);
-
-        LocalBroadcastManager.getInstance(context).registerReceiver(foregroundReceiver, filter);
+        activityMonitor.addListener(listener);
     }
 
     @Override
@@ -200,10 +197,7 @@ public class RichPushInbox extends AirshipComponent {
 
     @Override
     protected void tearDown() {
-        if (foregroundReceiver != null) {
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(foregroundReceiver);
-            foregroundReceiver = null;
-        }
+        activityMonitor.removeListener(listener);
     }
 
     /**

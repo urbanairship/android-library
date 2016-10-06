@@ -2,14 +2,8 @@
 
 package com.urbanairship;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
-
-import com.urbanairship.analytics.Analytics;
 
 /**
  * ApplicationMetrics stores metric information about the application.
@@ -19,31 +13,30 @@ public class ApplicationMetrics extends AirshipComponent {
     private static final String LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN";
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
+    private final ActivityMonitor.Listener listener;
+    private final ActivityMonitor activityMonitor;
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            preferenceDataStore.put(LAST_OPEN_KEY, System.currentTimeMillis());
-        }
-    };
-
-    ApplicationMetrics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {
+    ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore,
+                       @NonNull ActivityMonitor activityMonitor) {
         this.preferenceDataStore = preferenceDataStore;
         this.context = context.getApplicationContext();
+        this.listener = new ActivityMonitor.Listener() {
+            @Override
+            public void onForeground(long time) {
+                preferenceDataStore.put(LAST_OPEN_KEY, time);
+            }
+        };
+        this.activityMonitor = activityMonitor;
     }
 
     @Override
     protected void init() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Analytics.ACTION_APP_FOREGROUND);
-
-        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(context);
-        broadcastManager.registerReceiver(broadcastReceiver, filter);
+        activityMonitor.addListener(listener);
     }
 
     @Override
     protected void tearDown() {
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadcastReceiver);
+        activityMonitor.removeListener(listener);
     }
 
     /**

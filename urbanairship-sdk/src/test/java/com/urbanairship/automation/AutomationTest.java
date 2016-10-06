@@ -2,16 +2,14 @@
 
 package com.urbanairship.automation;
 
-import android.content.Intent;
 import android.os.Looper;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.CircularRegion;
@@ -21,7 +19,7 @@ import com.urbanairship.location.RegionEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Robolectric;
 import org.robolectric.Shadows;
 
 import java.util.ArrayList;
@@ -48,6 +46,7 @@ public class AutomationTest extends BaseTestCase {
     
     private AutomationDataManager automationDataManager;
     private Automation automation;
+    private TestActivityMonitor activityMonitor;
 
     private Trigger customEventTrigger;
     private ActionScheduleInfo customEventActionSchedule;
@@ -55,8 +54,11 @@ public class AutomationTest extends BaseTestCase {
 
     @Before
     public void setUp() {
+        activityMonitor = new TestActivityMonitor();
+        activityMonitor.register();
+
         automationDataManager = mock(AutomationDataManager.class);
-        automation = new Automation(RuntimeEnvironment.application, UAirship.shared().getAnalytics(), automationDataManager, TestApplication.getApplication().preferenceDataStore);
+        automation = new Automation(UAirship.shared().getAnalytics(), automationDataManager, TestApplication.getApplication().preferenceDataStore, activityMonitor);
         automation.init();
 
         customEventTrigger = Triggers.newCustomEventTriggerBuilder()
@@ -83,6 +85,7 @@ public class AutomationTest extends BaseTestCase {
     public void takeDown() {
         updatesMap.clear();
         automation.tearDown();
+        activityMonitor.unregister();
     }
 
     @Test
@@ -396,8 +399,7 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
-        LocalBroadcastManager.getInstance(RuntimeEnvironment.application)
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_FOREGROUND));
+        activityMonitor.startActivity();
 
         Thread.sleep(SLEEP_TIME);
 
@@ -431,12 +433,14 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getTriggers(Trigger.LIFE_CYCLE_BACKGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
 
-        LocalBroadcastManager.getInstance(RuntimeEnvironment.application)
-                             .sendBroadcast(new Intent(Analytics.ACTION_APP_BACKGROUND));
+        activityMonitor.startActivity();
+        activityMonitor.stopActivity();
+
+        Robolectric.flushForegroundThreadScheduler();
 
         Thread.sleep(SLEEP_TIME);
 
-        verify(automationDataManager).getTriggers(anyInt());
+        verify(automationDataManager, atLeastOnce()).getTriggers(anyInt());
         verify(automationDataManager, never()).getSchedules(anySet());
 
         updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 1.0), Collections.singletonList("1"));
