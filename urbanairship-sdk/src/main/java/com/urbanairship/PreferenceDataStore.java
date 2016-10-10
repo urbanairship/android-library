@@ -211,7 +211,16 @@ public final class PreferenceDataStore {
      * @param key The preference name.
      */
     public void remove(@NonNull String key) {
-        getPreference(key).put(null);
+        Preference preference = null;
+        synchronized (preferences) {
+            if (preferences.containsKey(key)) {
+                preference = preferences.get(key);
+            }
+        }
+
+        if (preference != null) {
+            preference.put(null);
+        }
     }
 
     /**

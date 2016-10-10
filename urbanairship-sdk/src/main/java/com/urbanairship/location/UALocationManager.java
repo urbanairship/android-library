@@ -37,9 +37,10 @@ import java.util.List;
  */
 public class UALocationManager extends AirshipComponent {
 
-    static final String LOCATION_UPDATES_ENABLED_KEY = "com.urbanairship.location.LOCATION_UPDATES_ENABLED";
-    static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
-    static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
+    private static final String LAST_REQUESTED_LOCATION_OPTIONS_KEY = "com.urbanairship.location.LAST_REQUESTED_LOCATION_OPTIONS";
+    private static final String LOCATION_UPDATES_ENABLED_KEY = "com.urbanairship.location.LOCATION_UPDATES_ENABLED";
+    private static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
+    private static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
 
     private final Messenger messenger;
     private final Context context;
@@ -221,6 +222,38 @@ public class UALocationManager extends AirshipComponent {
     }
 
     /**
+     * Sets the last update's location request options.
+     *
+     * @param lastUpdateOptions The last update's location request options.
+     */
+    void setLastUpdateOptions(@Nullable LocationRequestOptions lastUpdateOptions) {
+        preferenceDataStore.put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, lastUpdateOptions);
+    }
+
+    /**
+     * Gets the last update's location request options.  If no options have been set, it will default to null.
+     *
+     * @return The last update's location request options.
+     * */
+    @Nullable
+    LocationRequestOptions getLastUpdateOptions() {
+        String jsonString = preferenceDataStore.getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
+        LocationRequestOptions lastUpdateOptions = null;
+
+        if (jsonString != null) {
+            try {
+                lastUpdateOptions = LocationRequestOptions.parseJson(jsonString);
+            } catch (JsonException e) {
+                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
+            }
+        }
+
+        return lastUpdateOptions;
+    }
+
+    /**
      * Adds a listener for locations updates.  The listener will only be notified
      * of continuous location updates, not single location requests.
      *
@@ -320,15 +353,6 @@ public class UALocationManager extends AirshipComponent {
         }
 
         return request;
-    }
-
-    /**
-     * Gets the PreferenceDataStore.
-     *
-     * @return The PreferenceDataStore.
-     */
-    PreferenceDataStore getPreferenceDataStore() {
-        return preferenceDataStore;
     }
 
     /**

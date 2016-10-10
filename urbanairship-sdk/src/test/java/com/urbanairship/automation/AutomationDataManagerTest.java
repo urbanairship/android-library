@@ -164,7 +164,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                 .addTrigger(Triggers.newForegroundTriggerBuilder().setGoal(3).build())
                 .setLimit(5)
                 .setGroup("group")
-                .setStart(System.currentTimeMillis() + 1000)
+                .setStart(System.currentTimeMillis() + 1000000)
                 .build();
         dataManager.insertSchedules(Collections.singletonList(futureSchedule));
         List<ActionScheduleInfo> schedules = createSchedules(20);

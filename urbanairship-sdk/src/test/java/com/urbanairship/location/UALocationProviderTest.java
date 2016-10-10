@@ -2,21 +2,15 @@
 
 package com.urbanairship.location;
 
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
-import com.urbanairship.TestApplication;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Matchers;
-
-import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -33,8 +27,6 @@ public class UALocationProviderTest extends BaseTestCase {
     public ExpectedException exception = ExpectedException.none();
 
     UALocationProvider provider;
-
-    PendingIntent pendingIntent;
 
     LocationAdapter mockAdapterOne;
     LocationAdapter mockAdapterTwo;
@@ -55,7 +47,6 @@ public class UALocationProviderTest extends BaseTestCase {
 
         provider = new UALocationProvider(mockAdapterOne, mockAdapterTwo);
 
-        pendingIntent = PendingIntent.getService(TestApplication.getApplication(), 1, new Intent().addCategory(UUID.randomUUID().toString()), 0);
         options = LocationRequestOptions.createDefaultOptions();
     }
 
@@ -114,15 +105,16 @@ public class UALocationProviderTest extends BaseTestCase {
         when(mockAdapterOne.connect()).thenReturn(false);
         when(mockAdapterTwo.connect()).thenReturn(true);
 
-        provider.cancelRequests(pendingIntent);
+        provider.connect();
+        provider.cancelRequests();
 
         // Verify we attempted to connect to both adapters
         verify(mockAdapterOne, times(1)).connect();
         verify(mockAdapterTwo, times(1)).connect();
 
         // Verify we only canceled requests on the adapter that was connected
-        verify(mockAdapterOne, times(0)).cancelLocationUpdates(Matchers.refEq(pendingIntent));
-        verify(mockAdapterTwo, times(1)).cancelLocationUpdates(Matchers.refEq(pendingIntent));
+        verify(mockAdapterOne, times(0)).cancelLocationUpdates();
+        verify(mockAdapterTwo, times(1)).cancelLocationUpdates();
     }
 
     /**
@@ -134,10 +126,10 @@ public class UALocationProviderTest extends BaseTestCase {
         when(mockAdapterTwo.connect()).thenReturn(true);
         provider.connect();
 
-        provider.requestLocationUpdates(options, pendingIntent);
+        provider.requestLocationUpdates(options);
 
-        verify(mockAdapterTwo).requestLocationUpdates(eq(options), Matchers.refEq(pendingIntent));
-        verify(mockAdapterOne, times(0)).requestLocationUpdates(eq(options), Matchers.refEq(pendingIntent));
+        verify(mockAdapterTwo).requestLocationUpdates(eq(options));
+        verify(mockAdapterOne, times(0)).requestLocationUpdates(eq(options));
     }
 
     /**
@@ -148,7 +140,7 @@ public class UALocationProviderTest extends BaseTestCase {
     public void testRequestLocationUpdatesNotConnected() {
         exception.expect(IllegalStateException.class);
         exception.expectMessage("Provider must be connected before making requests.");
-        provider.requestLocationUpdates(options, pendingIntent);
+        provider.requestLocationUpdates(options);
     }
 
     /**
@@ -210,10 +202,10 @@ public class UALocationProviderTest extends BaseTestCase {
     @Test
     public void testRequestLocationUpdatesNoPermissions() {
         when(mockAdapterOne.connect()).thenReturn(true);
-        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestLocationUpdates(options, pendingIntent);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestLocationUpdates(options);
 
         provider.connect();
-        provider.requestLocationUpdates(options, pendingIntent);
+        provider.requestLocationUpdates(options);
     }
 
     /**
@@ -222,9 +214,10 @@ public class UALocationProviderTest extends BaseTestCase {
     @Test
     public void testCancelLocationUpdatesNoPermissions() {
         when(mockAdapterOne.connect()).thenReturn(true);
-        doThrow(new SecurityException("Nope")).when(mockAdapterOne).cancelLocationUpdates(pendingIntent);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).cancelLocationUpdates();
 
-        provider.cancelRequests(pendingIntent);
+        provider.connect();
+        provider.cancelRequests();
     }
 
 }

@@ -2,7 +2,6 @@
 
 package com.urbanairship.location;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -22,7 +21,13 @@ import java.util.List;
  */
 class UALocationProvider {
 
+    /**
+     * Action used for location updates.
+     */
+    static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
+
     private final List<LocationAdapter> adapters = new ArrayList<>();
+
     private LocationAdapter connectedAdapter;
     private boolean isConnected = false;
 
@@ -45,32 +50,24 @@ class UALocationProvider {
     }
 
     /**
-     * Cancels all location requests for a given pending intent.
-     *
-     * @param intent The intent to cancel.
+     * Cancels all location requests for the connected adapter's pending intent.
      */
-    public void cancelRequests(@NonNull PendingIntent intent) {
+    public void cancelRequests() {
         Logger.verbose("UALocationProvider - Canceling location requests.");
 
-        /*
-         * Need to cancel requests on all providers regardless of the current
-         * connected provider because pending intents persist between app starts
-         * and there is no way to determine what provider was used previously.
-         */
-        for (LocationAdapter adapter : adapters) {
-            Logger.verbose("UALocationProvider - Canceling location requests for adapter: " + adapter);
+        if (!isConnected) {
+            throw new IllegalStateException("Provider must be connected before making requests.");
+        }
 
-            if (adapter == connectedAdapter || adapter.connect()) {
-                try {
-                    adapter.cancelLocationUpdates(intent);
-                } catch (Exception ex) {
-                    Logger.verbose("Unable to cancel location updates: " + ex.getMessage());
-                }
-            }
+        if (connectedAdapter == null) {
+            Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
+            return;
+        }
 
-            if (adapter != connectedAdapter) {
-                adapter.disconnect();
-            }
+        try {
+            connectedAdapter.cancelLocationUpdates();
+        } catch (Exception ex) {
+            Logger.error("Unable to cancel location updates: " + ex.getMessage());
         }
     }
 
@@ -78,10 +75,9 @@ class UALocationProvider {
      * Requests location updates.
      *
      * @param options The request options.
-     * @param intent A pending intent to be sent for each location update.
      * @throws IllegalStateException if the provider is not connected.
      */
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
         if (!isConnected) {
             throw new IllegalStateException("Provider must be connected before making requests.");
         }
@@ -93,7 +89,7 @@ class UALocationProvider {
 
         Logger.verbose("UALocationProvider - Requesting location updates: " + options);
         try {
-            connectedAdapter.requestLocationUpdates(options, intent);
+            connectedAdapter.requestLocationUpdates(options);
         } catch (Exception ex) {
             Logger.error("Unable to request location updates: " + ex.getMessage());
         }
@@ -138,10 +134,28 @@ class UALocationProvider {
 
         for (LocationAdapter adapter : adapters) {
             Logger.verbose("UALocationProvider - Attempting to connect to location adapter: " + adapter);
+
             if (adapter.connect()) {
                 Logger.verbose("UALocationProvider - Connected to location adapter: " + adapter);
-                connectedAdapter = adapter;
-                break;
+
+                if (connectedAdapter == null) {
+                    connectedAdapter = adapter;
+                } else {
+
+                    /*
+                     * Need to cancel requests on all providers regardless of the current
+                     * connected provider because pending intents persist between app starts
+                     * and there is no way to determine what provider was used previously.
+                     */
+
+                    try {
+                        adapter.cancelLocationUpdates();
+                    } catch (Exception ex) {
+                        Logger.error("Unable to cancel location updates: " + ex.getMessage());
+                    }
+
+                    adapter.disconnect();
+                }
             } else {
                 Logger.verbose("UALocationProvider - Failed to connect to location adapter: " + adapter);
             }
@@ -172,9 +186,8 @@ class UALocationProvider {
      * Called when a system location provider availability changes.
      *
      * @param options Current location request options.
-     * @param intent The pending intent used to start location updates.
      */
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options, @NonNull PendingIntent intent) {
+    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
         Logger.verbose("UALocationProvider - Available location providers changed.");
 
         if (!isConnected) {
@@ -185,6 +198,10 @@ class UALocationProvider {
             return;
         }
 
-        connectedAdapter.onSystemLocationProvidersChanged(options, intent);
+        connectedAdapter.onSystemLocationProvidersChanged(options);
+    }
+
+    boolean isUpdatesRequested() {
+        return connectedAdapter != null && connectedAdapter.isUpdatesRequested();
     }
 }
