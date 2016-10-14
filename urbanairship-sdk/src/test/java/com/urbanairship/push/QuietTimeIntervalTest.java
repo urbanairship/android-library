@@ -9,8 +9,6 @@ import com.urbanairship.json.JsonValue;
 import org.junit.Test;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,33 +56,26 @@ public class QuietTimeIntervalTest extends BaseTestCase {
                 .setEndMin(15)
                 .build();
 
-        Date[] intervalDates = interval.getQuietTimeIntervalDateArray();
-
-        Calendar start = new GregorianCalendar();
-        Calendar end = new GregorianCalendar();
         Calendar now = Calendar.getInstance();
 
-        start.setTime(intervalDates[0]);
-        end.setTime(intervalDates[1]);
-
-        assertEquals(3, start.get(Calendar.HOUR_OF_DAY));
-        assertEquals(4, end.get(Calendar.HOUR_OF_DAY));
-        assertEquals(30, start.get(Calendar.MINUTE));
-        assertEquals(15, end.get(Calendar.MINUTE));
-
-        // Check that a time between 3:30 and 4:15 is in quiet time
+        // 3:30 should be in quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 45);
+        now.set(Calendar.MINUTE, 30);
         assertTrue(interval.isInQuietTime(now));
 
-        // Check that a time before 3:30 is not in quiet time
+        // 4:15 should be in quiet time
+        now.set(Calendar.HOUR_OF_DAY, 4);
+        now.set(Calendar.MINUTE, 15);
+        assertTrue(interval.isInQuietTime(now));
+
+        // 3:29 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 10);
+        now.set(Calendar.MINUTE, 29);
         assertFalse(interval.isInQuietTime(now));
 
-        // Check that a time after 4:15 is not in quiet time
+        // 4:15 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 4);
-        now.set(Calendar.MINUTE, 20);
+        now.set(Calendar.MINUTE, 16);
         assertFalse(interval.isInQuietTime(now));
     }
 
@@ -97,31 +88,26 @@ public class QuietTimeIntervalTest extends BaseTestCase {
                 .setEndMin(15)
                 .build();
 
-        Calendar end = new GregorianCalendar();
         Calendar now = Calendar.getInstance();
 
-        end.setTime(interval.getQuietTimeIntervalDateArray()[1]);
-        assertEquals(end.get(Calendar.DAY_OF_YEAR), now.get(Calendar.DAY_OF_YEAR) + 1);
-
-        // Check that a time after 3:30 is in quiet time
+        // 3:30 should be in quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 45);
+        now.set(Calendar.MINUTE, 30);
         assertTrue(interval.isInQuietTime(now));
 
-        // Check that a time before 3:30 is not in quiet time
+        // 3:15 should be in quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 10);
+        now.set(Calendar.MINUTE, 15);
+        assertTrue(interval.isInQuietTime(now));
+
+        // 3:29 should be out of quiet time
+        now.set(Calendar.HOUR_OF_DAY, 3);
+        now.set(Calendar.MINUTE, 29);
         assertFalse(interval.isInQuietTime(now));
 
-        // Check that a time before 3:15 the next day is in quiet time
+        // 3:16 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 10);
-        now.set(Calendar.DAY_OF_YEAR, Calendar.getInstance().get(Calendar.DAY_OF_YEAR) + 1);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time after 3:15 the next day is not in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 20);
+        now.set(Calendar.MINUTE, 16);
         assertFalse(interval.isInQuietTime(now));
     }
 
@@ -135,31 +121,21 @@ public class QuietTimeIntervalTest extends BaseTestCase {
                 .setEndMin(30)
                 .build();
 
-        Calendar end = new GregorianCalendar();
         Calendar now = Calendar.getInstance();
 
-        end.setTime(interval.getQuietTimeIntervalDateArray()[1]);
-        assertEquals(end.get(Calendar.DAY_OF_YEAR), now.get(Calendar.DAY_OF_YEAR) + 1);
-
-        // Check that a time after 3:30 is in quiet time
+        // 3:30 should be in quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 45);
+        now.set(Calendar.MINUTE, 30);
         assertTrue(interval.isInQuietTime(now));
 
-        // Check that a time before 3:30 is not in quiet time
+        // 3:29 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 10);
+        now.set(Calendar.MINUTE, 29);
         assertFalse(interval.isInQuietTime(now));
 
-        // Check that a time before 3:15 the next day is in quiet time
+        // 3:31 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 10);
-        now.set(Calendar.DAY_OF_YEAR, Calendar.getInstance().get(Calendar.DAY_OF_YEAR) + 1);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time after 3:15 the next day is not in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 3);
-        now.set(Calendar.MINUTE, 40);
+        now.set(Calendar.MINUTE, 31);
         assertFalse(interval.isInQuietTime(now));
     }
 
@@ -174,21 +150,20 @@ public class QuietTimeIntervalTest extends BaseTestCase {
 
         Calendar now = Calendar.getInstance();
 
-        // Check that a time after 0:00 is in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 0);
-        now.set(Calendar.MINUTE, 1);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time before 23:59 is in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 23);
-        now.set(Calendar.MINUTE, 58);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time after 23:59 the next day is not in quiet time
+        // 0:00 should be in quiet time
         now.set(Calendar.HOUR_OF_DAY, 0);
         now.set(Calendar.MINUTE, 0);
-        now.set(Calendar.DAY_OF_YEAR, Calendar.getInstance().get(Calendar.DAY_OF_YEAR) + 1);
-        assertFalse(interval.isInQuietTime(now));
+        assertTrue(interval.isInQuietTime(now));
+
+        // 23:59 should be in quiet time
+        now.set(Calendar.HOUR_OF_DAY, 23);
+        now.set(Calendar.MINUTE, 59);
+        assertTrue(interval.isInQuietTime(now));
+
+        // 12:00 should be in quiet time
+        now.set(Calendar.HOUR_OF_DAY, 12);
+        now.set(Calendar.MINUTE, 00);
+        assertTrue(interval.isInQuietTime(now));
 
         interval = new QuietTimeInterval.Builder()
                 .setStartHour(23)
@@ -197,45 +172,24 @@ public class QuietTimeIntervalTest extends BaseTestCase {
                 .setEndMin(0)
                 .build();
 
-        Calendar end = new GregorianCalendar();
-        now = Calendar.getInstance();
-
-        end.setTime(interval.getQuietTimeIntervalDateArray()[1]);
-        assertEquals(end.get(Calendar.DAY_OF_YEAR), now.get(Calendar.DAY_OF_YEAR) + 1);
-
-        // Check that a time before 53:59 is not in quiet time
+        // 23:59 is in quiet time
         now.set(Calendar.HOUR_OF_DAY, 23);
-        now.set(Calendar.MINUTE, 58);
-        now.set(Calendar.SECOND, 0);
-        now.set(Calendar.MILLISECOND, 999);
+        now.set(Calendar.MINUTE, 59);
+        assertTrue(interval.isInQuietTime(now));
+
+        // 0:00 should be in quiet time
+        now.set(Calendar.HOUR_OF_DAY, 0);
+        now.set(Calendar.MINUTE, 0);
+        assertTrue(interval.isInQuietTime(now));
+
+        // 0:01 should be out of quiet time
+        now.set(Calendar.HOUR_OF_DAY, 0);
+        now.set(Calendar.MINUTE, 1);
         assertFalse(interval.isInQuietTime(now));
 
-        // Check that a time at 53:59 is in quiet time
+        // 23:58 should be out of quiet time
         now.set(Calendar.HOUR_OF_DAY, 23);
-        now.set(Calendar.MINUTE, 59);
-        now.set(Calendar.SECOND, 0);
-        now.set(Calendar.MILLISECOND, 0);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time after 53:59 is in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 23);
-        now.set(Calendar.MINUTE, 59);
-        now.set(Calendar.SECOND, 5);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time at 0:00 the next day is in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 0);
-        now.set(Calendar.MINUTE, 0);
-        now.set(Calendar.SECOND, 0);
-        now.set(Calendar.MILLISECOND, 0);
-        now.set(Calendar.DAY_OF_YEAR, Calendar.getInstance().get(Calendar.DAY_OF_YEAR) + 1);
-        assertTrue(interval.isInQuietTime(now));
-
-        // Check that a time after 0:00 the next day is not in quiet time
-        now.set(Calendar.HOUR_OF_DAY, 0);
-        now.set(Calendar.MINUTE, 0);
-        now.set(Calendar.SECOND, 0);
-        now.set(Calendar.MILLISECOND, 5);
+        now.set(Calendar.MINUTE, 58);
         assertFalse(interval.isInQuietTime(now));
     }
 }
