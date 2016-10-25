@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -87,6 +88,28 @@ public class FetchDeviceInfoActionTest extends BaseTestCase {
         assertEquals(channelId, result.get(FetchDeviceInfoAction.CHANNEL_ID_KEY).getString());
         assertEquals(true, result.get(FetchDeviceInfoAction.PUSH_OPT_IN_KEY).getBoolean(false));
         assertEquals(JsonValue.wrap(tags), result.get(FetchDeviceInfoAction.TAGS_KEY));
+        assertEquals(true, result.get(FetchDeviceInfoAction.LOCATION_ENABLED_KEY).getBoolean(false));
+        assertEquals(namedUserId, result.get(FetchDeviceInfoAction.NAMED_USER_ID_KEY).getString());
+    }
+
+    /**
+     * Test perform with valid JSON.
+     */
+    @Test
+    public void testPerformWithoutTags() throws JsonException {
+        String channelId = "channel_id";
+        String namedUserId = "named_user";
+
+        when(pushManager.getChannelId()).thenReturn(channelId);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.getTags()).thenReturn(new HashSet<String>());
+        when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
+        when(namedUser.getId()).thenReturn(namedUserId);
+
+        JsonMap result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)).getValue().getMap();
+        assertEquals(channelId, result.get(FetchDeviceInfoAction.CHANNEL_ID_KEY).getString());
+        assertEquals(true, result.get(FetchDeviceInfoAction.PUSH_OPT_IN_KEY).getBoolean(false));
+        assertNull(result.get(FetchDeviceInfoAction.TAGS_KEY));
         assertEquals(true, result.get(FetchDeviceInfoAction.LOCATION_ENABLED_KEY).getBoolean(false));
         assertEquals(namedUserId, result.get(FetchDeviceInfoAction.NAMED_USER_ID_KEY).getString());
     }
