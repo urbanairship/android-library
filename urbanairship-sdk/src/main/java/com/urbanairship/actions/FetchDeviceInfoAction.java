@@ -4,11 +4,11 @@ package com.urbanairship.actions;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+
+import java.util.Set;
 
 /**
  * Action to fetch a map of device properties.
@@ -77,10 +77,9 @@ public class FetchDeviceInfoAction extends Action {
                 .put(LOCATION_ENABLED_KEY, UAirship.shared().getLocationManager().isLocationUpdatesEnabled())
                 .putOpt(NAMED_USER_ID_KEY, UAirship.shared().getNamedUser().getId());
 
-        try {
-            properties.put(TAGS_KEY, JsonValue.wrap(UAirship.shared().getPushManager().getTags()));
-        } catch (JsonException ignored) {
-            Logger.warn("FetchDeviceInfoAction - failed to parse device tags.");
+        Set<String> tags = UAirship.shared().getPushManager().getTags();
+        if (!tags.isEmpty()) {
+            properties.put(TAGS_KEY, JsonValue.wrapOpt(tags));
         }
 
         return ActionResult.newResult(new ActionValue(properties.build().toJsonValue()));
