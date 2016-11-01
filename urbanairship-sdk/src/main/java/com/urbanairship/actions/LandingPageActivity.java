@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,12 +28,15 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
+
+import java.lang.ref.WeakReference;
 
 /**
  * An activity that displays a landing page.
@@ -42,7 +46,8 @@ import com.urbanairship.widget.UAWebViewClient;
  * by providing a metadata element com.urbanairship.action.LANDING_PAGE_VIEW with
  * the specified view resource. When supplying a custom view, a
  * {@link com.urbanairship.widget.UAWebView} must be defined with id
- * android.R.id.primary with an optional progress view with id android.R.id.progress.
+ * android.R.id.primary inside a content holder with id android.R.id.content_holder.
+ * An optional progress view with id android.R.id.progress can be added to the webview.
  * An optional close button can be added by defining it in the layout and setting
  * the android:onClick="onCloseButtonClick". The onCloseButtonClick method will
  * close the landing page by finishing the activity.
@@ -62,6 +67,21 @@ public class LandingPageActivity extends Activity {
     public static final String LANDING_PAGE_VIEW_KEY = "com.urbanairship.action.LANDING_PAGE_VIEW";
 
     /**
+     * The content's width payload key
+     */
+    public static final String WIDTH_KEY = "width";
+
+    /**
+     * The content's height payload key
+     */
+    public static final String HEIGHT_KEY = "height";
+
+    /**
+     * The content's aspectLock payload key
+     */
+    public static final String ASPECT_LOCK_KEY = "aspectLock";
+
+    /**
      * Metadata extra to specify the web view's background color when displaying landing pages.
      */
     public static final String LANDING_PAGE_BACKGROUND_COLOR = "com.urbanairship.LANDING_PAGE_BACKGROUND_COLOR";
@@ -73,6 +93,9 @@ public class LandingPageActivity extends Activity {
     private int webViewBackgroundColor = -1;
     private Handler handler;
     private Uri uri;
+    private int width;
+    private int height;
+    private boolean aspectLock;
 
     @SuppressLint("NewApi")
     @Override
@@ -103,6 +126,11 @@ public class LandingPageActivity extends Activity {
         handler = new Handler();
         uri = intent.getData();
 
+
+        this.height = intent.getIntExtra(HEIGHT_KEY, 0);
+        this.width = intent.getIntExtra(WIDTH_KEY, 0);
+        this.aspectLock = intent.getBooleanExtra(ASPECT_LOCK_KEY, false) && height != 0 && width != 0;
+
         if (uri == null) {
             Logger.warn("LandingPageActivity - No landing page uri to load.");
             finish();
@@ -115,6 +143,8 @@ public class LandingPageActivity extends Activity {
         } else {
             setContentView(createDefaultLandingPageView());
         }
+
+        applySizeConstraints();
 
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
@@ -283,7 +313,6 @@ public class LandingPageActivity extends Activity {
 
         frameLayout.addView(webView, webViewLayoutParams);
 
-
         ProgressBar progressBar = new ProgressBar(this);
         progressBar.setIndeterminate(true);
         progressBar.setId(android.R.id.progress);
@@ -295,6 +324,61 @@ public class LandingPageActivity extends Activity {
         frameLayout.addView(progressBar, progressBarLayoutParams);
 
         return frameLayout;
+    }
+
+    public void applySizeConstraints() {
+        if (width == 0 && height == 0) {
+            return;
+        }
+
+        View view = findViewById(R.id.content_holder);
+        if (view == null) {
+            return;
+        }
+
+        final WeakReference<View> viewWeakReference = new WeakReference<>(view);
+        view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                View view = viewWeakReference.get();
+                if (view == null) {
+                    return true;
+                }
+
+                ViewGroup.LayoutParams params = view.getLayoutParams();
+
+                int parentWidth = view.getMeasuredWidth();
+                int parentHeight = view.getMeasuredHeight();
+
+                int normalizedWidth = Math.min(parentWidth, width);
+                int normalizedHeight = Math.min(parentHeight, height);
+
+                if (aspectLock && (normalizedWidth != width || normalizedHeight != height)) {
+                    float landingPageAspect = (float) width / height;
+                    float parentAspect = (float) parentWidth / parentHeight;
+
+                    if (parentAspect > landingPageAspect) {
+                        normalizedWidth =  (int) ((float) width * parentHeight / height);
+                    } else {
+                        normalizedHeight = (int) ((float) height * parentWidth / width);
+                    }
+                }
+
+                if (normalizedHeight > 0) {
+                    params.height = normalizedHeight;
+                }
+
+                if (normalizedWidth > 0) {
+                    params.width = normalizedWidth;
+                }
+
+                view.setLayoutParams(params);
+
+                view.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                return true;
+            }
+        });
     }
 
     /**

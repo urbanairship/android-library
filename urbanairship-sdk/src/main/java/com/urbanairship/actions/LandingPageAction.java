@@ -3,11 +3,13 @@
 package com.urbanairship.actions;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.util.TypedValue;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
@@ -32,8 +34,12 @@ import java.net.URLEncoder;
  * SITUATION_MANUAL_INVOCATION, SITUATION_AUTOMATION, and SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON.
  * <p/>
  * Accepted argument value types: URL defined as either a String or a Map containing the key
- * "url" that defines the URL. The map argument value can also define a "cache_on_receive" flag
- * to enable or disable caching when a SITUATION_PUSH_RECEIVED. Caching is disabled by default.
+ * "url" that defines the URL, an optional width and height in points as an int or "fill" string,
+ *  an optional aspectLock option as a boolean.
+ *  The aspectLock option guarantees that if the message does not fit, it will be resized at the
+ *  same aspect ratio defined by the provided width and height parameters. The map argument value
+ *  can also define a "cache_on_receive" flag to enable or disable caching when a
+ *  SITUATION_PUSH_RECEIVED. Caching is disabled by default.
  * <p/>
  * <pre>{@code Note: URLs in the format of "u:<content-id>" will be treated as a short url and
  * used to construct a separate url using the content id. }</pre>
@@ -68,6 +74,21 @@ public class LandingPageAction extends Action {
     public static final String URL_KEY = "url";
 
     /**
+     * The content's width payload key
+     */
+    public static final String WIDTH_KEY = "width";
+
+    /**
+     * The content's height payload key
+     */
+    public static final String HEIGHT_KEY = "height";
+
+    /**
+     * The content's aspectLock payload key
+     */
+    public static final String ASPECT_LOCK_KEY = "aspectLock";
+
+    /**
      * The payload key for indicating if the landing page should be cached
      * when triggered in Action.SITUATION_PUSH_RECEIVED
      */
@@ -77,6 +98,27 @@ public class LandingPageAction extends Action {
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
         final Uri uri = parseUri(arguments);
+        int width = 0;
+        int height = 0;
+        boolean aspectLock = false;
+        Context context = UAirship.getApplicationContext();
+
+        // Parse width
+        if (arguments.getValue().getMap() != null) {
+            int widthPoints = arguments.getValue().getMap().opt(WIDTH_KEY).getInt(0);
+            width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());;
+        }
+
+        // Parse height
+        if (arguments.getValue().getMap() != null) {
+            int heightPoints = arguments.getValue().getMap().opt(HEIGHT_KEY).getInt(0);
+            height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, heightPoints, context.getResources().getDisplayMetrics());
+        }
+
+        // Parse aspectLock
+        if (arguments.getValue().getMap() != null) {
+            aspectLock = arguments.getValue().getMap().opt(ASPECT_LOCK_KEY).getBoolean(false);
+        }
 
         if (arguments.getSituation() == SITUATION_PUSH_RECEIVED) {
             if (shouldCacheOnReceive(arguments)) {
@@ -106,8 +148,10 @@ public class LandingPageAction extends Action {
         } else {
             final Intent actionIntent = new Intent(SHOW_LANDING_PAGE_INTENT_ACTION, uri)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .putExtra(WIDTH_KEY, width)
+                    .putExtra(HEIGHT_KEY, height)
+                    .putExtra(ASPECT_LOCK_KEY, aspectLock)
                     .setPackage(UAirship.getPackageName());
-
 
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(new Runnable() {
@@ -217,4 +261,3 @@ public class LandingPageAction extends Action {
         return true;
     }
 }
-
