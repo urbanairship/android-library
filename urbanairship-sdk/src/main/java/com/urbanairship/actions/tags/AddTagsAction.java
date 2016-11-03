@@ -2,12 +2,11 @@
 
 package com.urbanairship.actions.tags;
 
-import android.support.annotation.NonNull;
-
 import com.urbanairship.Logger;
-import com.urbanairship.actions.ActionArguments;
-import com.urbanairship.actions.ActionResult;
+import com.urbanairship.UAirship;
+import com.urbanairship.push.TagGroupsEditor;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -15,7 +14,18 @@ import java.util.Set;
  * <p/>
  * Accepted situations: all
  * <p/>
- * Accepted argument value types: String for a single tag or Collection of Strings for multiple tags.
+ * Accepted argument value types: A string for a single tag, a Collection of Strings for multiple tags,
+ * or a JSON payload for tag groups. An example JSON payload:
+ * {
+ *     "channel": {
+ *         "channel_tag_group": ["channel_tag_1", "channel_tag_2"],
+ *         "other_channel_tag_group": ["other_channel_tag_1"]
+ *     },
+ *     "named_user": {
+ *         "named_user_tag_group": ["named_user_tag_1", "named_user_tag_2"],
+ *         "other_named_user_tag_group": ["other_named_user_tag_1"]
+ *     }
+ * }
  * <p/>
  * Result value: <code>null</code>
  * <p/>
@@ -35,16 +45,35 @@ public class AddTagsAction extends BaseTagsAction {
      */
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^+t";
 
-    @NonNull
     @Override
-    public ActionResult perform(@NonNull ActionArguments arguments) {
-        Set<String> tags = getTags(arguments);
+    void applyChannelTags(Set<String> tags) {
         Logger.info("AddTagsAction - Adding tags: " + tags);
-
         tags.addAll(getPushManager().getTags());
         getPushManager().setTags(tags);
+    }
 
-        return ActionResult.newEmptyResult();
+    @Override
+    void applyChannelTagGroups(Map<String, Set<String>> tags) {
+        Logger.info("AddTagsAction - Adding channel tag groups: " + tags);
+
+        TagGroupsEditor tagGroupsEditor = getPushManager().editTagGroups();
+        for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
+            tagGroupsEditor.addTags(entry.getKey(), entry.getValue());
+        }
+
+        tagGroupsEditor.apply();
+    }
+
+    @Override
+    void applyNamedUserTagGroups(Map<String, Set<String>> tags) {
+        Logger.info("AddTagsAction - Adding named user tag groups: " + tags);
+
+        TagGroupsEditor tagGroupsEditor = UAirship.shared().getNamedUser().editTagGroups();
+        for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
+            tagGroupsEditor.addTags(entry.getKey(), entry.getValue());
+        }
+
+        tagGroupsEditor.apply();
     }
 
 }

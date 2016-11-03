@@ -45,7 +45,7 @@ public class TagGroupsEditor {
     private final JobDispatcher jobDispatcher;
     private final Class<? extends AirshipComponent> component;
 
-    TagGroupsEditor(String action, Class<? extends AirshipComponent> component, JobDispatcher jobDispatcher) {
+    public TagGroupsEditor(String action, Class<? extends AirshipComponent> component, JobDispatcher jobDispatcher) {
         this.action = action;
         this.jobDispatcher = jobDispatcher;
         this.component = component;
