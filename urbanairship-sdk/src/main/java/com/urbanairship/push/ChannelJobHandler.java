@@ -92,6 +92,11 @@ class ChannelJobHandler {
     static final String PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
 
     /**
+     * Key for storing the pending channel set tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_CHANNEL_SET_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_SET_TAG_GROUPS";
+
+    /**
      * Response body key for the channel ID.
      */
     private static final String CHANNEL_ID_KEY = "channel_id";
@@ -115,6 +120,50 @@ class ChannelJobHandler {
     private final Context context;
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
+    private final TagGroupHandler tagGroupHandler;
+
+    private final TagGroupHandler.TagAccess tagAccess = new TagGroupHandler.TagAccess() {
+        @Override
+        public Map<String, Set<String>> getPendingSetTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_SET_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public Map<String, Set<String>> getPendingRemoveTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public Map<String, Set<String>> getPendingAddTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public void setPendingSetTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_CHANNEL_SET_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void setPendingAddTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void setPendingRemoveTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void removePendingSetTags() {
+            dataStore.remove(PENDING_CHANNEL_SET_TAG_GROUPS_KEY);
+        }
+
+        @Override
+        public void removePendingAddRemoveTags() {
+            dataStore.remove(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
+            dataStore.remove(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
+        }
+};
 
     /**
      * Default constructor.
@@ -137,6 +186,7 @@ class ChannelJobHandler {
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
         this.jobDispatcher = jobDispatcher;
+        this.tagGroupHandler = new TagGroupHandler(tagAccess, channelClient, jobDispatcher);
     }
 
     /**
@@ -606,35 +656,8 @@ class ChannelJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
-        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
+        return tagGroupHandler.updateTagGroup(channelId);
 
-        // Make sure we actually have tag changes to perform
-        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
-            Logger.verbose("Channel pending tag group changes empty. Skipping update.");
-            return Job.JOB_FINISHED;
-        }
-
-        Response response = channelClient.updateTagGroups(channelId, pendingAddTags, pendingRemoveTags);
-
-        // 5xx or no response
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("Failed to update tag groups, will retry later.");
-            return Job.JOB_RETRY;
-        }
-
-        int status = response.getStatus();
-
-        Logger.info("Channel tag groups update finished with status: " + status);
-
-        // Clear pending groups if success, forbidden, or bad request
-        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-            // Clear pending
-            dataStore.remove(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
-            dataStore.remove(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
-        }
-
-        return Job.JOB_FINISHED;
     }
 
     /**
@@ -645,22 +668,8 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
-        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
-
-        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
-        TagUtils.combineTagGroups(addTagsBundle, pendingAddTags, pendingRemoveTags);
-
-        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
-        TagUtils.combineTagGroups(removeTagsBundle, pendingRemoveTags, pendingAddTags);
-
-        dataStore.put(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingAddTags));
-        dataStore.put(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingRemoveTags));
-
         // Make sure we actually have tag changes to perform
-        if (pushManager.getChannelId() != null && (!pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty())) {
+        if (pushManager.getChannelId() != null && tagGroupHandler.applyTagGroupChanges(job)) {
             Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                                .setAirshipComponent(PushManager.class)
                                .build();

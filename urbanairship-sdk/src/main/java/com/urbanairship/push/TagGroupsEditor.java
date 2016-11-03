@@ -33,9 +33,15 @@ public class TagGroupsEditor {
      */
     static final String EXTRA_ADD_TAG_GROUPS = "EXTRA_ADD_TAG_GROUPS";
 
+    /**
+     * Extra containing tag groups to set to channel tag groups or named user tags.
+     */
+    static final String EXTRA_SET_TAG_GROUPS = "EXTRA_SET_TAG_GROUPS";
+
     private final String action;
     protected final Map<String, Set<String>> tagsToAdd = new HashMap<>();
     protected final Map<String, Set<String>> tagsToRemove = new HashMap<>();
+    protected final Map<String, Set<String>> tagsToSet = new HashMap<>();
     private final JobDispatcher jobDispatcher;
     private final Class<? extends AirshipComponent> component;
 
@@ -68,6 +74,42 @@ public class TagGroupsEditor {
             return this;
         }
         updateTags(tagsToAdd, tagsToRemove, tagGroup, tags);
+        TagUtils.squashTags(tagsToSet, tagsToAdd, tagsToRemove);
+        return this;
+    }
+
+    /**
+     * Set a tag to the tag group.
+     *
+     * @param tagGroup The tag group string.
+     * @param tag The tag string.
+     * @return The TagGroupsEditor.
+     */
+    public TagGroupsEditor setTag(@NonNull String tagGroup, @NonNull String tag) {
+        return setTags(tagGroup, Collections.singleton(tag));
+    }
+
+    /**
+     * Set a set of tags to the tag group.
+     *
+     * @param tagGroup The tag group string.
+     * @param tags The tags set.
+     * @return The TagGroupsEditor
+     */
+    public TagGroupsEditor setTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
+        if (!isValid(tagGroup, tags)) {
+            return this;
+        }
+
+        Set<String> normalizedTags = TagUtils.normalizeTags(tags);
+        if (tagsToSet.containsKey(tagGroup)) {
+            tagsToSet.get(tagGroup).addAll(normalizedTags);
+        } else {
+            tagsToSet.put(tagGroup, new HashSet<>(normalizedTags));
+        }
+
+        tagsToAdd.remove(tagGroup);
+        tagsToRemove.remove(tagGroup);
         return this;
     }
 
@@ -94,6 +136,7 @@ public class TagGroupsEditor {
             return this;
         }
         updateTags(tagsToRemove, tagsToAdd, tagGroup, tags);
+        TagUtils.squashTags(tagsToSet, tagsToAdd, tagsToRemove);
         return this;
     }
 
@@ -101,8 +144,8 @@ public class TagGroupsEditor {
      * Apply the tag group changes.
      */
     public void apply() {
-        if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty()) {
-            Logger.info("Skipping tag group update because tags to add and tags to remove are both empty.");
+        if (tagsToAdd.isEmpty() && tagsToRemove.isEmpty() && tagsToSet.isEmpty()) {
+            Logger.info("Skipping tag group update because tags to add, tags to remove, and tags to set are all empty.");
             return;
         }
 
@@ -110,6 +153,7 @@ public class TagGroupsEditor {
                      .setAirshipComponent(component)
                      .putExtra(EXTRA_ADD_TAG_GROUPS, convertToBundle(tagsToAdd))
                      .putExtra(EXTRA_REMOVE_TAG_GROUPS, convertToBundle(tagsToRemove))
+                     .putExtra(EXTRA_SET_TAG_GROUPS, convertToBundle(tagsToSet))
                      .build();
 
         jobDispatcher.dispatch(job);

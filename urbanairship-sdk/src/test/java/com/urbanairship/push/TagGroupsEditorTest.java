@@ -280,4 +280,48 @@ public class TagGroupsEditorTest {
         assertEquals("Expect size to be 3", 3, editor.tagsToAdd.get(tagGroup).size());
         assertEquals("Expect tags to match", expectedTags, editor.tagsToAdd.get(tagGroup));
     }
+
+    /**
+     * Test set tag.
+     */
+    @Test
+    public void testSetTag() {
+        Set<String> expectedTags = new HashSet<>();
+        expectedTags.add("tag1");
+        expectedTags.add("tag2");
+        expectedTags.add("tag3");
+
+        editor.addTag(tagGroup, "add1").addTag(tagGroup, "add2");
+
+        assertEquals("Expect size to be 0", 0, editor.tagsToSet.size());
+        assertEquals("Expect size to be 1", 1, editor.tagsToAdd.size());
+
+        editor.setTag(tagGroup, "tag1").setTag(tagGroup, "tag2").setTag(tagGroup, "tag3");
+
+        assertEquals("Expect size to be 1", 1, editor.tagsToSet.size());
+        assertEquals("Expect size to be 3", 3, editor.tagsToSet.get(tagGroup).size());
+        assertEquals("Expect tags to match", expectedTags, editor.tagsToSet.get(tagGroup));
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+
+        editor.removeTag(tagGroup, "tag1");
+
+        assertEquals("Expect size to be 2", 2, editor.tagsToSet.get(tagGroup).size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+        editor.addTag(tagGroup, "tag1");
+
+        assertEquals("Expect size to be 3", 3, editor.tagsToSet.get(tagGroup).size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+
+        editor.removeTag(tagGroup, "tag1").removeTag(tagGroup, "tag2").removeTag(tagGroup, "tag3");
+
+        assertEquals("Expect size to be 0", 0, editor.tagsToSet.size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToRemove.size());
+        assertEquals("Expect size to be 0", 0, editor.tagsToAdd.size());
+    }
+
 }

@@ -26,6 +26,7 @@ import org.robolectric.Shadows;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,7 +35,9 @@ import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -53,8 +56,10 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
     private Map<String, Set<String>> addTagsMap;
     private Map<String, Set<String>> removeTagsMap;
+    private Map<String, Set<String>> setTagsMap;
     private Bundle addTagsBundle;
     private Bundle removeTagsBundle;
+    private Bundle setTagsBundle;
     private JobDispatcher mockDispatcher;
 
     @Before
@@ -91,6 +96,12 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         removeTagsMap = new HashMap<>();
         removeTagsMap.put("tagGroup", removeTags);
 
+        Set<String> setTags = new HashSet<>();
+        setTags.add("tag6");
+        setTags.add("tag7");
+        setTagsMap = new HashMap<>();
+        setTagsMap.put("tagGroup", setTags);
+
         addTagsBundle = new Bundle();
         for (Map.Entry<String, Set<String>> entry : addTagsMap.entrySet()) {
             addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
@@ -99,6 +110,11 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         removeTagsBundle = new Bundle();
         for (Map.Entry<String, Set<String>> entry : removeTagsMap.entrySet()) {
             removeTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        setTagsBundle = new Bundle();
+        for (Map.Entry<String, Set<String>> entry : setTagsMap.entrySet()) {
+            setTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
 
         Shadows.shadowOf(RuntimeEnvironment.application).clearStartedServices();
@@ -307,6 +323,8 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testApplyTagGroupChanges() throws JsonException {
+        when(namedUser.getId()).thenReturn("namedUserId");
+
         // Apply tag groups
         Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
@@ -319,6 +337,79 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Verify pending tags are saved
         assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
         assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test apply set tag group changes updates the pending tag groups.
+     */
+    @Test
+    public void testApplySetTagGroupChanges() throws JsonException {
+        when(namedUser.getId()).thenReturn("namedUserId");
+        Map<String, Set<String>> addOtherTagsMap = new HashMap<>();
+        addOtherTagsMap.put("otherGroup", new HashSet<>(Arrays.asList("tag8", "tag9")));
+        for (Map.Entry<String, Set<String>> entry : addOtherTagsMap.entrySet()) {
+            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+        // Apply initial add/remove tag groups
+        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
+                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
+                     .build();
+
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        // Apply set tag groups
+        job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                 .putExtra(TagGroupsEditor.EXTRA_SET_TAG_GROUPS, setTagsBundle)
+                 .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+
+        // Verify pending set tags are saved and pending add/remove tags are removed
+        assertEquals(JsonValue.wrap(setTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, null));
+        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY)).isEmpty());
+        Assert.assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+
+        // Add more tags
+        job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                 .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
+                 .build();
+
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        setTagsMap.get("tagGroup").addAll(addTagsMap.get("tagGroup"));
+
+        // Verify added tags have been saved to pending set tags
+        assertEquals(JsonValue.wrap(setTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, null));
+        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY)).isEmpty());
+        Assert.assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+
+        // Remove subset of set tags
+        job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                 .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, setTagsBundle)
+                 .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        // Verify removed tags have been removed from pending set tags
+        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, null));
+        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY)).isEmpty());
+        Assert.assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
+
+        // Apply new set tag groups
+        job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                 .putExtra(TagGroupsEditor.EXTRA_SET_TAG_GROUPS, removeTagsBundle)
+                 .build();
+
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+
+        // Verify pending set tags overwrote previous pending set tags
+        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, null));
+        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY)).isEmpty());
+        Assert.assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -365,7 +456,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
-        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null)).thenReturn(response);
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
@@ -373,11 +464,43 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
-        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null);
 
         // Verify pending tag groups are empty
         assertNull(dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
         assertNull(dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, null));
+    }
+
+    /**
+     * Test update named user set tag groups succeeds if the status is 200 and clears pending tags.
+     */
+    @Test
+    public void testUpdateNamedUserSetTagGroupsSucceed() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Provide pending changes
+        dataStore.put(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, JsonValue.wrap(setTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
+        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+
+        // Set up a 200 response
+        Response response = Mockito.mock(Response.class);
+        when(namedUserClient.updateTagGroups("namedUserId", null, null, setTagsMap)).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        // Perform the update
+        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        // Verify updateNamedUserTags called
+        verify(namedUserClient).updateTagGroups("namedUserId", null, null, setTagsMap);
+
+        // Verify job is dispatched to update add / remove tag groups
+        verify(mockDispatcher).dispatch(any(Job.class));
+
+        // Verify pending tag groups are empty
+        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, null));
     }
 
     /**
@@ -414,7 +537,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
-        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null)).thenReturn(response);
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
@@ -422,7 +545,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
-        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null);
 
         // Verify pending tags persist
         assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));
@@ -463,7 +586,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Set up a 400 response
         Response response = Mockito.mock(Response.class);
-        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap)).thenReturn(response);
+        when(namedUserClient.updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null)).thenReturn(response);
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
@@ -471,7 +594,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
-        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap);
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", addTagsMap, removeTagsMap, null);
 
         // Verify pending tag groups are empty
         assertNull(dataStore.getString(NamedUserJobHandler.PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, null));

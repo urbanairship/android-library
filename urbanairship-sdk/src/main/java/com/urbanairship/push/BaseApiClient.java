@@ -26,6 +26,7 @@ abstract class BaseApiClient {
     private static final String AUDIENCE_KEY = "audience";
     private static final String ADD_KEY = "add";
     private static final String REMOVE_KEY = "remove";
+    private static final String SET_KEY = "set";
 
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;
@@ -41,11 +42,13 @@ abstract class BaseApiClient {
      * @param audienceId The audienceId.
      * @param addTags The map of tags to add.
      * @param removeTags The map of tags to remove.
+     * @param setTags The map of tags to set.
      * @return The response or null if an error occurred.
      */
     Response updateTagGroups(@NonNull String audienceId,
-                             @NonNull Map<String, Set<String>> addTags,
-                             @NonNull Map<String, Set<String>> removeTags) {
+                             Map<String, Set<String>> addTags,
+                             Map<String, Set<String>> removeTags,
+                             Map<String, Set<String>> setTags) {
 
         URL tagUrl = getDeviceUrl(getTagGroupPath());
         if (tagUrl == null) {
@@ -53,8 +56,9 @@ abstract class BaseApiClient {
             return null;
         }
 
-        if (addTags.isEmpty() && removeTags.isEmpty()) {
-            Logger.error("Both addTags and removeTags cannot be empty.");
+        if ((addTags != null && addTags.isEmpty()) && (removeTags != null && removeTags.isEmpty())
+                && (setTags != null && setTags.isEmpty())) {
+            Logger.error("addTags, removeTags, and setTags cannot all be empty.");
             return null;
         }
 
@@ -63,10 +67,13 @@ abstract class BaseApiClient {
 
         audience.put(getTagGroupAudienceSelector(), audienceId);
         payload.put(AUDIENCE_KEY, audience);
-        if (!addTags.isEmpty()) {
+        if (setTags != null && !setTags.isEmpty()) {
+            payload.put(SET_KEY, setTags);
+        }
+        if (addTags != null && !addTags.isEmpty()) {
             payload.put(ADD_KEY, addTags);
         }
-        if (!removeTags.isEmpty()) {
+        if (removeTags != null && !removeTags.isEmpty()) {
             payload.put(REMOVE_KEY, removeTags);
         }
 

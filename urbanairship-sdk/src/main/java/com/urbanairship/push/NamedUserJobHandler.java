@@ -3,7 +3,6 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
@@ -46,6 +45,10 @@ class NamedUserJobHandler {
      */
     static final String PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
 
+    /**
+     * Key for storing the pending named user set tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_NAMED_USER_SET_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_SET_TAG_GROUPS_KEY";
 
     /**
      * Action to update named user association or disassociation.
@@ -69,6 +72,50 @@ class NamedUserJobHandler {
     private final PushManager pushManager;
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
+    private final TagGroupHandler tagGroupHandler;
+
+    private final TagGroupHandler.TagAccess tagAccess = new TagGroupHandler.TagAccess() {
+        @Override
+        public Map<String, Set<String>> getPendingSetTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_SET_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public Map<String, Set<String>> getPendingRemoveTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public Map<String, Set<String>> getPendingAddTags() {
+            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY));
+        }
+
+        @Override
+        public void setPendingSetTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_NAMED_USER_SET_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void setPendingAddTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void setPendingRemoveTags(Map<String, Set<String>> tags) {
+            dataStore.put(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
+        }
+
+        @Override
+        public void removePendingSetTags() {
+            dataStore.remove(PENDING_NAMED_USER_SET_TAG_GROUPS_KEY);
+        }
+
+        @Override
+        public void removePendingAddRemoveTags() {
+            dataStore.remove(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
+            dataStore.remove(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
+        }
+    };
 
     /**
      * Default constructor.
@@ -88,6 +135,7 @@ class NamedUserJobHandler {
         this.namedUser = airship.getNamedUser();
         this.pushManager = airship.getPushManager();
         this.jobDispatcher = jobDispatcher;
+        this.tagGroupHandler = new TagGroupHandler(tagAccess, client, jobDispatcher);
     }
 
     /**
@@ -194,33 +242,7 @@ class NamedUserJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY));
-        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY));
-
-        // Make sure we actually have tag changes to perform
-        if (pendingAddTags.isEmpty() && pendingRemoveTags.isEmpty()) {
-            Logger.verbose("Named user pending tag group changes empty. Skipping update.");
-            return Job.JOB_FINISHED;
-        }
-
-        Response response = client.updateTagGroups(namedUser.getId(), pendingAddTags, pendingRemoveTags);
-
-        // 5xx or no response
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("Failed to update tag groups, will retry later.");
-            return Job.JOB_RETRY;
-        }
-
-        int status = response.getStatus();
-
-        Logger.info("Update named user tag groups finished with status: " + status);
-
-        // Clear pending groups if success, forbidden, or bad request
-        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-            onClearTagGroups();
-        }
-
-        return Job.JOB_FINISHED;
+        return tagGroupHandler.updateTagGroup(namedUserId);
     }
 
     /**
@@ -231,22 +253,8 @@ class NamedUserJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        Map<String, Set<String>> pendingAddTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY));
-        Map<String, Set<String>> pendingRemoveTags = TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY));
-
-        // Add tags from bundle to pendingAddTags and remove them from pendingRemoveTags.
-        Bundle addTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS);
-        TagUtils.combineTagGroups(addTagsBundle, pendingAddTags, pendingRemoveTags);
-
-        // Add tags from bundle to pendingRemoveTags and remove them from pendingAddTags.
-        Bundle removeTagsBundle = job.getExtras().getBundle(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS);
-        TagUtils.combineTagGroups(removeTagsBundle, pendingRemoveTags, pendingAddTags);
-
-        dataStore.put(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingAddTags));
-        dataStore.put(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(pendingRemoveTags));
-
         // Make sure we actually have tag changes to perform
-        if (namedUser.getId() != null && (!pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty())) {
+        if (namedUser.getId() != null && tagGroupHandler.applyTagGroupChanges(job)) {
             Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                     .setAirshipComponent(NamedUser.class)
                     .build();
@@ -266,6 +274,7 @@ class NamedUserJobHandler {
     private int onClearTagGroups() {
         dataStore.remove(PENDING_NAMED_USER_ADD_TAG_GROUPS_KEY);
         dataStore.remove(PENDING_NAMED_USER_REMOVE_TAG_GROUPS_KEY);
+        dataStore.remove(PENDING_NAMED_USER_SET_TAG_GROUPS_KEY);
 
         return Job.JOB_FINISHED;
     }

@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,6 +104,46 @@ class TagUtils {
             // Remove tags from tagsToRemove.
             if (tagsToRemove.containsKey(group)) {
                 tagsToRemove.get(group).removeAll(tags);
+            }
+        }
+    }
+
+    /**
+     * Squashes maps of tags to add and remove into the map of tags to set.
+     *
+     * @param tagsToSet The tags to set.
+     * @param tagsToAdd The tags to add.
+     * @param tagsToRemove The tags to remove.
+     */
+    static void squashTags(Map<String, Set<String>> tagsToSet, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
+        // return if there are no tags to set
+        if (tagsToSet.isEmpty()) {
+            return;
+        }
+
+        // squash remove tags
+        if (!tagsToRemove.isEmpty()) {
+            for (Map.Entry<String, Set<String>> entry : new ArrayList<>(tagsToRemove.entrySet())) {
+                // if tags will be set to a group, remove from the current set payload.
+                if (tagsToSet.containsKey(entry.getKey())) {
+                    tagsToSet.get(entry.getKey()).removeAll(entry.getValue());
+                    if (tagsToSet.get(entry.getKey()).isEmpty()) {
+                        tagsToSet.remove(entry.getKey());
+                    }
+
+                    tagsToRemove.remove(entry.getKey());
+                }
+            }
+        }
+
+        // squash add tags
+        if (!tagsToAdd.isEmpty()) {
+            for (Map.Entry<String, Set<String>> entry : new ArrayList<>(tagsToAdd.entrySet())) {
+                // if tags will be set to a group, add to that set payload instead
+                if (tagsToSet.containsKey(entry.getKey())) {
+                    tagsToSet.get(entry.getKey()).addAll(entry.getValue());
+                    tagsToAdd.remove(entry.getKey());
+                }
             }
         }
     }
