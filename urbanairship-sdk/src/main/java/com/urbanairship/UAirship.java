@@ -4,6 +4,7 @@ package com.urbanairship;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -40,6 +41,11 @@ import java.util.List;
  * the class on <code>Application.onCreate()</code>.
  */
 public class UAirship {
+
+    /**
+     * Broadcast that is sent when UAirship is finished taking off.
+     */
+    public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -361,6 +367,13 @@ public class UAirship {
                 }
                 pendingAirshipRequests.clear();
             }
+
+            // Send AirshipReady intent for other plugins that depend on UA
+            Intent readyIntent = new Intent(ACTION_AIRSHIP_READY)
+                    .setPackage(UAirship.getPackageName())
+                    .addCategory(UAirship.getPackageName());
+
+            application.sendBroadcast(readyIntent, UAirship.getUrbanAirshipPermission());
 
             // Notify any blocking shared
             airshipLock.notifyAll();

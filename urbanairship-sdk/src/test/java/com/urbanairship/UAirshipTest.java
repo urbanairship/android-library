@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.app.Application;
+import android.content.Intent;
 import android.os.Looper;
 
 import org.junit.After;
@@ -11,10 +12,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 
 public class UAirshipTest extends BaseTestCase {
 
@@ -70,12 +75,16 @@ public class UAirshipTest extends BaseTestCase {
 
         // Block until its ready
         UAirship.shared();
-
         looper.runToEndOfTasks();
 
         assertTrue(testCallback.onReadyCalled);
         assertTrue(takeOffCallback.onReadyCalled);
         assertFalse(cancelCallback.onReadyCalled);
+
+        // Verify the airship ready intent was fired
+        List<Intent> intents = ShadowApplication.getInstance().getBroadcastIntents();
+        assertEquals(intents.size(), 1);
+        assertEquals(intents.get(0).getAction(), UAirship.ACTION_AIRSHIP_READY);
     }
 
     /**
@@ -89,7 +98,6 @@ public class UAirshipTest extends BaseTestCase {
 
         UAirship.takeOff(null);
     }
-
     /**
      * Test that we throw an illegal state exception when shared() is called before
      * takeOff
