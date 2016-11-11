@@ -50,7 +50,7 @@ public class JobDispatcher {
 
     @VisibleForTesting
     JobDispatcher(Context context) {
-        this.context = context;
+        this.context = context.getApplicationContext();
     }
 
     /**

@@ -277,7 +277,16 @@ public class UAirship {
 
         if (Looper.myLooper() == null || Looper.getMainLooper() != Looper.myLooper()) {
             Logger.error("takeOff() must be called on the main thread!");
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            try {
+                // Workaround for https://code.google.com/p/android/issues/detail?id=20915.
+                Class.forName("android.os.AsyncTask");
+            } catch (ClassNotFoundException e) {
+                Logger.error("AsyncTask workaround failed.", e);
+            }
         }
+
+
         
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();

@@ -288,9 +288,16 @@ public class LocationService extends Service {
         }
 
 
-        Location location = (Location) (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED) ?
-                                        intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
-                                        intent.getParcelableExtra("com.google.android.location.LOCATION"));
+        // Fused location sometimes has an "Unmarshalling unknown type" runtime exception on 4.4.2 devices
+        Location location;
+        try {
+            location = (Location) (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED) ?
+                        intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
+                        intent.getParcelableExtra("com.google.android.location.LOCATION"));
+        } catch (Exception e) {
+            Logger.error("Unable to process extract location.", e);
+            return;
+        }
 
         if (location != null) {
             Logger.info("Received location update: " + location);

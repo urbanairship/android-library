@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.0.4 - November 11, 2016
+=================================
+- Fixed `unmarshalling unknown type` exception when using location updates.
+- Fixed NPE in AirshipService.
+- Updated minSDKVersion to 15 from 16.
+
 Version 8.0.3 - October 13, 2016
 ================================
 - Fixed quiet time if end hour is before the start hour.
