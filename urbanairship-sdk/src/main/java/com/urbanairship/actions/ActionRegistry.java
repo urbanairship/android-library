@@ -202,24 +202,7 @@ public final class ActionRegistry {
         Entry addCustomEventEntry = registerAction(new AddCustomEventAction(),
                 AddCustomEventAction.DEFAULT_REGISTRY_NAME);
 
-        addCustomEventEntry.setPredicate(new Predicate() {
-            @Override
-            public boolean apply(ActionArguments arguments) {
-                switch (arguments.getSituation()) {
-                    case Action.SITUATION_AUTOMATION:
-                    case Action.SITUATION_MANUAL_INVOCATION:
-                    case Action.SITUATION_WEB_VIEW_INVOCATION:
-                        return true;
-
-                    case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
-                    case Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
-                    case Action.SITUATION_PUSH_OPENED:
-                    case Action.SITUATION_PUSH_RECEIVED:
-                    default:
-                        return false;
-                }
-            }
-        });
+        addCustomEventEntry.setPredicate(rejectPushReceivedPredicate);
 
         registerAction(new OpenRichPushInboxAction(),
                 OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
