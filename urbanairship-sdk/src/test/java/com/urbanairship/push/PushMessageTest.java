@@ -166,7 +166,7 @@ public class PushMessageTest extends BaseTestCase {
         extras.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
 
         PushMessage pushMessage = new PushMessage(extras);
-        assertEquals("The push bundle should match.", extras, pushMessage.getPushBundle());
+        assertBundlesEquals("The push bundle should match.", extras, pushMessage.getPushBundle());
     }
 
     /**
@@ -608,7 +608,7 @@ public class PushMessageTest extends BaseTestCase {
 
         PushMessage message = PushMessage.fromIntent(intent);
         assertNotNull(message);
-        assertEquals(bundle, message.getPushBundle());
+        assertBundlesEquals(bundle, message.getPushBundle());
     }
 
     /**

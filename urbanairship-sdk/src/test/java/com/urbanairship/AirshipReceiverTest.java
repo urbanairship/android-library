@@ -130,7 +130,7 @@ public class AirshipReceiverTest extends BaseTestCase {
             protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, boolean notificationPosted) {
                 callbackCount++;
 
-                assertEquals(pushBundle, message.getPushBundle());
+                assertBundlesEquals(pushBundle, message.getPushBundle());
                 assertTrue(notificationPosted);
             }
 
@@ -139,7 +139,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 callbackCount++;
 
                 assertNotNull(context);
-                assertEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
+                assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(101, notificationInfo.getNotificationId());
             }
         };
@@ -163,7 +163,7 @@ public class AirshipReceiverTest extends BaseTestCase {
             protected void onPushReceived(@NonNull Context context, @NonNull PushMessage message, boolean notificationPosted) {
                 callbackCount++;
 
-                assertEquals(pushBundle, message.getPushBundle());
+                assertBundlesEquals(pushBundle, message.getPushBundle());
                 assertFalse(notificationPosted);
             }
 
@@ -216,7 +216,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 callbackCount++;
 
                 assertNotNull(context);
-                assertEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
+                assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(100, notificationInfo.getNotificationId());
                 return true;
             }
@@ -246,7 +246,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 callbackCount++;
 
                 assertNotNull(context);
-                assertEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
+                assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(100, notificationInfo.getNotificationId());
                 assertEquals("button id", buttonInfo.getButtonId());
                 assertEquals(remoteInput, buttonInfo.getRemoteInput());
@@ -299,7 +299,7 @@ public class AirshipReceiverTest extends BaseTestCase {
                 callbackCount++;
 
                 assertNotNull(context);
-                assertEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
+                assertBundlesEquals(pushBundle, notificationInfo.getMessage().getPushBundle());
                 assertEquals(101, notificationInfo.getNotificationId());
             }
         };

@@ -12,6 +12,7 @@ import com.urbanairship.BaseTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.res.builder.RobolectricPackageManager;
 import org.robolectric.shadows.ShadowApplication;
 
@@ -27,7 +28,7 @@ public class ShareActionTest extends BaseTestCase {
     @Before
     public void setup() {
         action = new ShareAction();
-        packageManager = (RobolectricPackageManager) ShadowApplication.getInstance().getPackageManager();
+        packageManager = (RobolectricPackageManager) RuntimeEnvironment.application.getPackageManager();
     }
 
     /**

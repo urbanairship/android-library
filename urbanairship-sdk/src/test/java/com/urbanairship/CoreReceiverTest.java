@@ -107,7 +107,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 Intent other = (Intent) argument;
 
                 return PushManager.ACTION_NOTIFICATION_OPENED.equals(other.getAction()) &&
-                        intent.getExtras().equals(other.getExtras()) &&
+                        areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }
@@ -180,7 +180,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 Intent other = (Intent) argument;
 
                 return PushManager.ACTION_NOTIFICATION_OPENED.equals(other.getAction()) &&
-                        intent.getExtras().equals(other.getExtras()) &&
+                        areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }
@@ -244,7 +244,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 Intent other = (Intent) argument;
 
                 return PushManager.ACTION_NOTIFICATION_DISMISSED.equals(other.getAction()) &&
-                        intent.getExtras().equals(other.getExtras()) &&
+                        areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }

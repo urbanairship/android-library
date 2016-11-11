@@ -18,8 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
-import org.robolectric.shadows.ShadowNotification;
 import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.concurrent.Executor;
@@ -30,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 @SuppressLint("NewApi")
 public class ChannelCaptureTest extends BaseTestCase {
@@ -133,35 +132,35 @@ public class ChannelCaptureTest extends BaseTestCase {
         verify(mockNotificationManager).notify(eq(3000), argumentCaptor.capture());
 
         // Verify the notification
-        ShadowNotification notification = Shadows.shadowOf(argumentCaptor.getValue());
-        assertEquals(".TestApplication", notification.getContentTitle());
-        assertEquals("channel ID", notification.getContentText());
-        assertEquals(2, notification.getActions().size());
+        Notification notification = argumentCaptor.getValue();
+        assertEquals(".TestApplication", shadowOf(notification).getContentTitle());
+        assertEquals("channel ID", shadowOf(notification).getContentText());
+        assertEquals(2, notification.actions.length);
 
         // Notification pending intent
-        ShadowPendingIntent shadowPendingContentIntent = Shadows.shadowOf(notification.getRealNotification().contentIntent);
+        ShadowPendingIntent shadowPendingContentIntent = shadowOf(notification.contentIntent);
         Intent contentIntent = shadowPendingContentIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", contentIntent.getAction());
         assertEquals(3000, contentIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
         assertEquals("{\"open_external_url_action\":\"https:\\/\\/go.urbanairship.com\\/\\/oh_hi\"}", contentIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
 
         // Copy action
-        Notification.Action copyAction = notification.getActions().get(0);
+        Notification.Action copyAction = notification.actions[0];
         assertEquals("Copy", copyAction.title);
 
         // Copy action pending intent
-        ShadowPendingIntent shadowCopyPendingIntent = Shadows.shadowOf(copyAction.actionIntent);
+        ShadowPendingIntent shadowCopyPendingIntent = shadowOf(copyAction.actionIntent);
         Intent copyIntent = shadowCopyPendingIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", copyIntent.getAction());
         assertEquals(3000, copyIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
         assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"},\"toast_action\":\"Channel copied to clipboard!\"}", copyIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
 
         // Save action
-        Notification.Action saveAction = notification.getActions().get(1);
+        Notification.Action saveAction =  notification.actions[1];
         assertEquals("Save", saveAction.title);
 
         // Save action pending intent
-        ShadowPendingIntent shadowOpenPendingIntent = Shadows.shadowOf(saveAction.actionIntent);
+        ShadowPendingIntent shadowOpenPendingIntent = shadowOf(saveAction.actionIntent);
         Intent openIntent = shadowOpenPendingIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", copyIntent.getAction());
         assertEquals(3000, copyIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
@@ -185,24 +184,24 @@ public class ChannelCaptureTest extends BaseTestCase {
         verify(mockNotificationManager).notify(eq(3000), argumentCaptor.capture());
 
         // Verify the notification
-        ShadowNotification notification = Shadows.shadowOf(argumentCaptor.getValue());
-        assertEquals(".TestApplication", notification.getContentTitle());
-        assertEquals("channel ID", notification.getContentText());
-        assertEquals(1, notification.getActions().size());
+        Notification notification = argumentCaptor.getValue();
+        assertEquals(".TestApplication", shadowOf(notification).getContentTitle());
+        assertEquals("channel ID", shadowOf(notification).getContentText());
+        assertEquals(1, notification.actions.length);
 
         // Notification pending intent - should default to the copy intent
-        ShadowPendingIntent shadowPendingContentIntent = Shadows.shadowOf(notification.getRealNotification().contentIntent);
+        ShadowPendingIntent shadowPendingContentIntent = shadowOf(notification.contentIntent);
         Intent contentIntent = shadowPendingContentIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", contentIntent.getAction());
         assertEquals(3000, contentIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
         assertEquals("{\"clipboard_action\":{\"text\":\"channel ID\",\"label\":\"Urban Airship Channel\"},\"toast_action\":\"Channel copied to clipboard!\"}", contentIntent.getStringExtra("com.urbanairship.EXTRA_ACTIONS"));
 
         // Copy action
-        Notification.Action copyAction = notification.getActions().get(0);
+        Notification.Action copyAction = notification.actions[0];
         assertEquals("Copy", copyAction.title);
 
         // Copy action pending intent
-        ShadowPendingIntent shadowCopyPendingIntent = Shadows.shadowOf(copyAction.actionIntent);
+        ShadowPendingIntent shadowCopyPendingIntent = shadowOf(copyAction.actionIntent);
         Intent copyIntent = shadowCopyPendingIntent.getSavedIntent();
         assertEquals("com.urbanairship.ACTION_CHANNEL_CAPTURE", copyIntent.getAction());
         assertEquals(3000, copyIntent.getIntExtra("com.urbanairship.EXTRA_NOTIFICATION_ID", -1));
