@@ -309,6 +309,9 @@ public class RetailEventTemplate {
 
         if (this.value != null) {
             builder.setEventValue(this.value);
+        }
+
+        if (PURCHASED_EVENT.equals(this.eventName) && this.value != null) {
             builder.addProperty(LIFETIME_VALUE, true);
         } else {
             builder.addProperty(LIFETIME_VALUE, false);
