@@ -94,8 +94,7 @@ public class ActionRegistryTest extends BaseTestCase {
     }
 
     /**
-     * Test the add custom event default predicate rejects Action.SITUATION_PUSH_RECEIVED and
-     * Action.SITUATION_PUSH_OPENED.
+     * Test the add custom event default predicate rejects Action.SITUATION_PUSH_RECEIVED.
      */
     @Test
     public void testAddCustomEventDefaultPredicateReject() {
@@ -106,27 +105,6 @@ public class ActionRegistryTest extends BaseTestCase {
 
         assertFalse("Add custom event should reject PUSH_RECEIVED.",
                 entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "value", null)));
-
-        assertFalse("Add custom event should reject PUSH_OPENED.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "value", null)));
-    }
-
-    /**
-     * Test that the fetch device info default predicate accepts Action.SITUATION_MANUAL_INVOCATION and
-     * Action.SITUATION_WEB_VIEW_INVOCATION.
-     */
-    @Test
-    public void testAddCustomEventDefaultPredicateAccepts() {
-        registry.registerDefaultActions();
-
-        ActionRegistry.Entry entry = registry.getEntry("add_custom_event_action");
-        assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
-
-        assertTrue("Add custom event should accept MANUAL_INVOCATION.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "value", null)));
-
-        assertTrue("Add custom event should accept WEB_VIEW_INVOCATION.",
-                entry.getPredicate().apply(ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "value", null)));
     }
 
     /**
