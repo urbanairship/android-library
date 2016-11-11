@@ -52,18 +52,17 @@ public class AirshipService extends Service {
     private static final int MSG_INTENT_RECEIVED = 1;
     private static final int MSG_INTENT_JOB_FINISHED = 2;
 
-    private volatile Looper looper;
-    private volatile IncomingHandler handler;
+    private Looper looper;
+    private IncomingHandler handler;
     private int lastStartId = 0;
     private int runningJobs;
 
     private static HashMap<String, Executor> executors = new HashMap<>();
 
     private final class IncomingHandler extends Handler {
-        public IncomingHandler(Looper looper) {
+        IncomingHandler(Looper looper) {
             super(looper);
         }
-
 
         @Override
         public void handleMessage(Message msg) {
@@ -115,14 +114,19 @@ public class AirshipService extends Service {
 
     @WorkerThread
     private void onHandleIntent(final Intent intent, int startId) {
-        Logger.debug("AirshipService - Starting tasks for intent: " + intent.getAction() + " taskId: " + startId);
-
         this.lastStartId = startId;
 
         final Message msg = handler.obtainMessage();
         msg.what = MSG_INTENT_JOB_FINISHED;
         msg.arg1 = startId;
         msg.obj = intent;
+
+        if (intent == null || intent.getAction() == null) {
+            handler.sendMessage(msg);
+            return;
+        }
+
+        Logger.debug("AirshipService - Starting tasks for intent: " + intent.getAction() + " taskId: " + startId);
 
         final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
         if (airship == null) {
@@ -131,26 +135,18 @@ public class AirshipService extends Service {
             return;
         }
 
-        String action = intent.getAction();
-        String componentName = intent.getStringExtra(EXTRA_AIRSHIP_COMPONENT);
-        Bundle extras = intent.getBundleExtra(EXTRA_JOB_EXTRAS);
-
+        final String componentName = intent.getStringExtra(EXTRA_AIRSHIP_COMPONENT);
+        final Bundle extras = intent.getBundleExtra(EXTRA_JOB_EXTRAS);
         final long delay = intent.getLongExtra(EXTRA_DELAY, 0);
-
-        if (action == null) {
-            handler.sendMessage(msg);
-            return;
-        }
-
         final AirshipComponent component = findAirshipComponent(airship, componentName);
 
         if (component == null) {
-            Logger.error("AirshipService - Unavailable to find airship components for job with action: " + action);
+            Logger.error("AirshipService - Unavailable to find airship components for job with action: " + intent.getAction());
             handler.sendMessage(msg);
             return;
         }
 
-        final Job job = Job.newBuilder(action)
+        final Job job = Job.newBuilder(intent.getAction())
                            .setAirshipComponent(component.getClass())
                            .setExtras(extras)
                            .build();
@@ -195,7 +191,10 @@ public class AirshipService extends Service {
         Logger.verbose("AirshipService - Component finished job with startId: " + startId);
 
         runningJobs--;
-        WakefulBroadcastReceiver.completeWakefulIntent(intent);
+
+        if (intent != null) {
+            WakefulBroadcastReceiver.completeWakefulIntent(intent);
+        }
 
         if (runningJobs <= 0) {
             runningJobs = 0;
