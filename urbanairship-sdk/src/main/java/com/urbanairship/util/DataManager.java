@@ -2,6 +2,7 @@
 
 package com.urbanairship.util;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -66,14 +67,29 @@ public abstract class DataManager {
                 super.onConfigure(db);
                 DataManager.this.onConfigure(db);
             }
+
+            @Override
+            public void onOpen(SQLiteDatabase db) {
+                super.onOpen(db);
+                DataManager.this.onOpen(db);
+
+            }
         };
     }
+
+    /**
+     * Called when the database connection is opened.
+     *
+     * @param db The database.
+     */
+    protected void onOpen(SQLiteDatabase db) {}
 
     /**
      * Called when the database connection is configured.
      *
      * @param db The database.
      */
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected  void onConfigure(SQLiteDatabase db) {}
 
     /**

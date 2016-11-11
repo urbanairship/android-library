@@ -2,12 +2,14 @@
 
 package com.urbanairship.automation;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
@@ -217,9 +219,17 @@ class AutomationDataManager extends DataManager {
     }
 
     @Override
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
         db.setForeignKeyConstraintsEnabled(true);
+    }
+
+    @Override
+    protected void onOpen(SQLiteDatabase db) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && !db.isReadOnly()) {
+            db.execSQL("PRAGMA foreign_keys=ON;");
+        }
     }
     
     /**

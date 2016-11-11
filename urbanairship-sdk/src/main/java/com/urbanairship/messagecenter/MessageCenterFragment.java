@@ -7,6 +7,7 @@ import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
@@ -153,15 +154,17 @@ public class MessageCenterFragment extends Fragment {
             isTwoPane = true;
 
             // Color the linear layout divider if we are running on JELLY_BEAN or newer
-            LinearLayout layoutContainer = (LinearLayout) view.findViewById(R.id.container);
-            TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
-            int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
-            if (color != -1) {
-                DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
-                DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                LinearLayout layoutContainer = (LinearLayout) view.findViewById(R.id.container);
+                TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
+                if (color != -1) {
+                    DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
+                    DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
+                }
 
-            attributes.recycle();
+                attributes.recycle();
+            }
         } else {
             isTwoPane = false;
         }
