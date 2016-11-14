@@ -29,6 +29,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class AnalyticsJobHandlerTest extends BaseTestCase {
@@ -74,6 +75,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventAfterNextSendTime() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
@@ -104,6 +107,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventBeforeNextSendTime() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         // Set the last send time to the current time so the next send time is minBatchInterval
         dataStore.put(AnalyticsJobHandler.LAST_SEND_KEY, System.currentTimeMillis());
 
@@ -132,6 +137,27 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
     }
 
     /**
+     * Test adding an event when analytics is disabled.
+     */
+    @Test
+    public void testAddEventAnalyticsDisabled() {
+        when(mockAnalytics.isEnabled()).thenReturn(false);
+
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, "DATA!")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, "session id")
+                     .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, Event.NORMAL_PRIORITY)
+                     .build();
+
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        verifyZeroInteractions(mockDataManager);
+    }
+
+    /**
      * Tests adding an event from intent no-ops when the event data is empty.
      */
     @Test
@@ -150,6 +176,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testSendingEvents() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
 
@@ -210,6 +238,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testSendEventMaxCount() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         Map<String, String> events = new HashMap<>();
         for (int i = 0; i < 500; i++) {
             events.put("event " + i, "{ 'body' }");
@@ -246,8 +276,35 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testSendingWithNoChannelID() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         // Return null when channel ID is expected
         channelId = null;
+
+        Map<String, String> events = new HashMap<>();
+        events.put("firstEvent", "{ 'firstEventBody' }");
+
+        // Satisfy event count check to avoid early return.
+        when(mockDataManager.getEventCount()).thenReturn(1);
+        // Return the event when it asks for 1
+        when(mockDataManager.getEvents(1)).thenReturn(events);
+
+        // Start the upload process
+        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+                     .build();
+
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+
+        // Verify uploadEvents returns early when no channel ID is present.
+        Mockito.verify(mockClient, never()).sendEvents(UAirship.shared(), events.values());
+    }
+
+    /**
+     * Test sending events when analytics is disabled.
+     */
+    @Test
+    public void testSendingWithAnalyticsDisabled() {
+        when(mockAnalytics.isEnabled()).thenReturn(false);
 
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
@@ -272,6 +329,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testSendEventsFails() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         Map<String, String> events = new HashMap<>();
         events.put("firstEvent", "{ 'firstEventBody' }");
         when(mockDataManager.getEventCount()).thenReturn(1);
@@ -300,6 +359,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddingHighPriorityEvents() {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
         // Set last send time to year 3005 so we don't upload immediately
         dataStore.put(AnalyticsJobHandler.LAST_SEND_KEY, 32661446400000L);
 

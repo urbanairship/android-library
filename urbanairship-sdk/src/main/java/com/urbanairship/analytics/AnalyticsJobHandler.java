@@ -227,6 +227,10 @@ class AnalyticsJobHandler {
      */
     @Job.JobResult
     private int onAddEvent(Job job) {
+        if (!airship.getAnalytics().isEnabled()) {
+            return Job.JOB_FINISHED;
+        }
+
         Bundle extras = job.getExtras();
         String eventType = extras.getString(EXTRA_EVENT_TYPE);
         String eventId = extras.getString(EXTRA_EVENT_ID);
@@ -293,6 +297,10 @@ class AnalyticsJobHandler {
         preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
 
         final int eventCount = dataManager.getEventCount();
+
+        if (!airship.getAnalytics().isEnabled()) {
+            return Job.JOB_FINISHED;
+        }
 
         if (airship.getPushManager().getChannelId() == null) {
             Logger.debug("AnalyticsJobHandler - No channel ID, skipping analytics send.");
