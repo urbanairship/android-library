@@ -37,8 +37,7 @@ import java.util.Map;
  * <p/>
  * Default Registration Name: add_custom_event_action
  * <p/>
- * Default Registration Predicate: Only accepts SITUATION_WEB_VIEW_INVOCATION, SITUATION_AUTOMATION,
- * and SITUATION_MANUAL_INVOCATION
+ * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED
  */
 public class AddCustomEventAction extends Action {
 

@@ -94,9 +94,8 @@ class TagGroupHandler {
      * Handles any pending tag group changes.
      *
      * @param job The airship job.
-     * @return The job result.
      */
-    boolean applyTagGroupChanges(Job job) {
+    void applyTagGroupChanges(Job job) {
         Map<String, Set<String>> pendingAddTags = tagAccess.getPendingAddTags();
         Map<String, Set<String>> pendingRemoveTags = tagAccess.getPendingRemoveTags();
         Map<String, Set<String>> pendingSetTags = tagAccess.getPendingSetTags();
@@ -139,8 +138,6 @@ class TagGroupHandler {
         tagAccess.setPendingAddTags(pendingAddTags);
         tagAccess.setPendingRemoveTags(pendingRemoveTags);
         tagAccess.setPendingSetTags(pendingSetTags);
-
-        return !pendingAddTags.isEmpty() || !pendingRemoveTags.isEmpty() || !pendingSetTags.isEmpty();
     }
 
     /**

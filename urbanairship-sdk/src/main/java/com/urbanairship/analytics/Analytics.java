@@ -79,6 +79,7 @@ public class Analytics extends AirshipComponent {
      * @param options The airship config options.
      * @param platform The device platform.
      * @param jobDispatcher The job dispatcher.
+     * @param activityMonitor The activity monitor.
      */
     @VisibleForTesting
     Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,

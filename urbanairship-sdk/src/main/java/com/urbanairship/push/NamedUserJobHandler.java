@@ -253,8 +253,9 @@ class NamedUserJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        // Make sure we actually have tag changes to perform
-        if (namedUser.getId() != null && tagGroupHandler.applyTagGroupChanges(job)) {
+        tagGroupHandler.applyTagGroupChanges(job);
+
+        if (namedUser.getId() != null ) {
             Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                     .setAirshipComponent(NamedUser.class)
                     .build();

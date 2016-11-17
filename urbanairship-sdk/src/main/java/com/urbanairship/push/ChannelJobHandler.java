@@ -668,8 +668,9 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        // Make sure we actually have tag changes to perform
-        if (pushManager.getChannelId() != null && tagGroupHandler.applyTagGroupChanges(job)) {
+        tagGroupHandler.applyTagGroupChanges(job);
+
+        if (pushManager.getChannelId() != null) {
             Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                                .setAirshipComponent(PushManager.class)
                                .build();
