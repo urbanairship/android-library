@@ -72,6 +72,7 @@ class ChannelCapture extends AirshipComponent {
      * @param context The application context.
      * @param configOptions The airship config options.
      * @param pushManager The push manager instance.
+     * @param activityMonitor The activity monitor instance.
      */
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, ActivityMonitor activityMonitor) {
         this(context, configOptions, pushManager, NotificationManagerCompat.from(context), activityMonitor);
