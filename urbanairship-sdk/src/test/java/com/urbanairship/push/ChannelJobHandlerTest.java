@@ -299,7 +299,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testApplyTagGroupChanges() throws JsonException {
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -321,7 +321,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -349,7 +349,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -383,7 +383,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return a null named user ID
         pushManager.setChannel(null, null);
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -410,7 +410,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups

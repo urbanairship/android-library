@@ -103,8 +103,8 @@ class TagUtils {
         Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(pendingAddTags);
         Map<String, Set<String>> removeTags = TagUtils.convertToTagsMap(pendingRemoveTags);
 
-        TagGroupMutation mutation = TagGroupMutation.newAddRemoveMutation(addTags, removeTags);
-        List<TagGroupMutation> mutations = Collections.singletonList(mutation);
+        TagGroupsMutation mutation = TagGroupsMutation.newAddRemoveMutation(addTags, removeTags);
+        List<TagGroupsMutation> mutations = Collections.singletonList(mutation);
 
         dataStore.put(tagsMutationKey, JsonValue.wrapOpt(mutations));
 

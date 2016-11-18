@@ -28,7 +28,7 @@ public class TagGroupsEditor {
     static final String EXTRA_TAG_GROUP_MUTATIONS = "EXTRA_TAG_GROUP_MUTATIONS";
 
     private final String action;
-    private final List<TagGroupMutation> mutations = new ArrayList<>();
+    private final List<TagGroupsMutation> mutations = new ArrayList<>();
     private final JobDispatcher jobDispatcher;
     private final Class<? extends AirshipComponent> component;
 
@@ -69,7 +69,7 @@ public class TagGroupsEditor {
             return this;
         }
 
-        mutations.add(TagGroupMutation.newAddTagsMutation(tagGroup, tags));
+        mutations.add(TagGroupsMutation.newAddTagsMutation(tagGroup, tags));
         return this;
     }
 
@@ -104,7 +104,7 @@ public class TagGroupsEditor {
             tags = TagUtils.normalizeTags(tags);
         }
 
-        mutations.add(TagGroupMutation.newSetTagsMutation(tagGroup, tags));
+        mutations.add(TagGroupsMutation.newSetTagsMutation(tagGroup, tags));
         return this;
     }
 
@@ -139,7 +139,7 @@ public class TagGroupsEditor {
             return this;
         }
 
-        mutations.add(TagGroupMutation.newRemoveTagsMutation(tagGroup, tags));
+        mutations.add(TagGroupsMutation.newRemoveTagsMutation(tagGroup, tags));
         return this;
     }
 
@@ -147,7 +147,7 @@ public class TagGroupsEditor {
      * Apply the tag group changes.
      */
     public void apply() {
-        List<TagGroupMutation> collapsedMutations = TagGroupMutation.collapseMutations(mutations);
+        List<TagGroupsMutation> collapsedMutations = TagGroupsMutation.collapseMutations(mutations);
         if (mutations.isEmpty()) {
             return;
         }

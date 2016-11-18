@@ -90,7 +90,7 @@ class ChannelJobHandler {
     /**
      * Key for storing the pending channel remove tags changes in the {@link PreferenceDataStore}.
      */
-    static final String PENDINGL_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
+    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
 
     /**
      * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
@@ -607,7 +607,7 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdateTagGroup() {
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDINGL_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         String channelId = pushManager.getChannelId();
         if (channelId == null) {
@@ -615,7 +615,7 @@ class ChannelJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        List<TagGroupMutation> mutations = TagGroupMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
 
         if (mutations.isEmpty()) {
             Logger.verbose( "ChannelJobHandler - No pending tag group updates. Skipping update.");
@@ -626,12 +626,12 @@ class ChannelJobHandler {
 
         // 5xx or no response
         if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("TagGroupHandler - Failed to update tag groups, will retry later.");
+            Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
             return Job.JOB_RETRY;
         }
 
         int status = response.getStatus();
-        Logger.info("TagGroupHandler - Update tag groups finished with status: " + status);
+        Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
         if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
             mutations.remove(0);
 
@@ -642,7 +642,7 @@ class ChannelJobHandler {
             }
 
             if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                                    .setAirshipComponent(PushManager.class)
                                    .build();
 
@@ -661,18 +661,18 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDINGL_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
 
-        List<TagGroupMutation> mutations = TagGroupMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
         try {
             JsonValue jsonValue = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
-            mutations.addAll(TagGroupMutation.fromJsonList(jsonValue.optList()));
+            mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
         } catch (JsonException e) {
             Logger.error("Failed to parse tag group change:", e);
             return Job.JOB_FINISHED;
         }
 
-        mutations = TagGroupMutation.collapseMutations(mutations);
+        mutations = TagGroupsMutation.collapseMutations(mutations);
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
         if (pushManager.getChannelId() != null) {

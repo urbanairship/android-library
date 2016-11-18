@@ -42,7 +42,7 @@ abstract class BaseApiClient {
      *
      * @return The response or null if an error occurred.
      */
-    Response updateTagGroups(@NonNull String audienceId, @NonNull TagGroupMutation mutation) {
+    Response updateTagGroups(@NonNull String audienceId, @NonNull TagGroupsMutation mutation) {
 
         URL tagUrl = getDeviceUrl(getTagGroupPath());
         if (tagUrl == null) {

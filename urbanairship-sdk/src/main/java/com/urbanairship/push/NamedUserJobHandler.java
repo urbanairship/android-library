@@ -19,7 +19,6 @@ import com.urbanairship.util.UAStringUtil;
 import java.net.HttpURLConnection;
 import java.util.List;
 
-import static com.urbanairship.push.ChannelJobHandler.PENDINGL_REMOVE_TAG_GROUPS_KEY;
 import static com.urbanairship.push.TagUtils.migrateTagGroups;
 
 
@@ -49,7 +48,7 @@ class NamedUserJobHandler {
     static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
 
     /**
-     * Key for storing the pending named user set tags changes in the {@link PreferenceDataStore}.
+     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
      */
     static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
 
@@ -203,18 +202,18 @@ class NamedUserJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDINGL_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
 
-        List<TagGroupMutation> mutations = TagGroupMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
         try {
             JsonValue jsonValue = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
-            mutations.addAll(TagGroupMutation.fromJsonList(jsonValue.optList()));
+            mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
         } catch (JsonException e) {
             Logger.error("Failed to parse tag group change:", e);
             return Job.JOB_FINISHED;
         }
 
-        mutations = TagGroupMutation.collapseMutations(mutations);
+        mutations = TagGroupsMutation.collapseMutations(mutations);
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
 
@@ -234,7 +233,7 @@ class NamedUserJobHandler {
      */
     @Job.JobResult
     private int onUpdateTagGroup() {
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDINGL_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         String namedUserId = namedUser.getId();
         if (namedUserId == null) {
@@ -242,7 +241,7 @@ class NamedUserJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        List<TagGroupMutation> mutations = TagGroupMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
 
         if (mutations.isEmpty()) {
             Logger.verbose( "NamedUserJobHandler - No pending tag group updates. Skipping update.");
@@ -270,7 +269,7 @@ class NamedUserJobHandler {
 
 
             if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
                                    .setAirshipComponent(PushManager.class)
                                    .build();
 

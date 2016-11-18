@@ -279,7 +279,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
     public void testApplyTagGroupChanges() throws JsonException {
         when(namedUser.getId()).thenReturn("namedUserId");
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -301,7 +301,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Return a named user ID
         when(namedUser.getId()).thenReturn("namedUserId");
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -329,7 +329,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Return a named user ID
         when(namedUser.getId()).thenReturn("namedUserId");
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -363,7 +363,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Return a null named user ID
         when(namedUser.getId()).thenReturn(null);
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -390,7 +390,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Provide pending changes
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
@@ -444,7 +444,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Provide pending changes
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups

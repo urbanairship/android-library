@@ -1,3 +1,5 @@
+/* Copyright 2016 Urban Airship and Contributors */
+
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
@@ -19,7 +21,7 @@ import java.util.Set;
 /**
  * Defines a tag group mutations.
  */
-class TagGroupMutation implements JsonSerializable {
+class TagGroupsMutation implements JsonSerializable {
 
     private static final String ADD_KEY = "add";
     private static final String REMOVE_KEY = "remove";
@@ -36,7 +38,7 @@ class TagGroupMutation implements JsonSerializable {
      * @param removeTags Map of pending remove tags.
      * @param setTags Map of pending set tags.
      */
-    private TagGroupMutation(Map<String, Set<String>> addTags, Map<String, Set<String>> removeTags, Map<String, Set<String>> setTags) {
+    private TagGroupsMutation(Map<String, Set<String>> addTags, Map<String, Set<String>> removeTags, Map<String, Set<String>> setTags) {
         this.addTags = addTags;
         this.removeTags = removeTags;
         this.setTags = setTags;
@@ -49,11 +51,11 @@ class TagGroupMutation implements JsonSerializable {
      * @param tags Tags to add.
      * @return Tag group mutation.
      */
-    static TagGroupMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    static TagGroupsMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
-        return new TagGroupMutation(tagMap, null, null);
+        return new TagGroupsMutation(tagMap, null, null);
     }
 
     /**
@@ -63,25 +65,25 @@ class TagGroupMutation implements JsonSerializable {
      * @param tags Tags to remove.
      * @return Tag group mutation.
      */
-    static TagGroupMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    static TagGroupsMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
-        return new TagGroupMutation(null, tagMap, null);
+        return new TagGroupsMutation(null, tagMap, null);
     }
 
     /**
-     * Creates a mutation to remove to a group.
+     * Creates a mutation to set tags to a group.
      *
      * @param group Group ID.
-     * @param tags Tags to remove.
+     * @param tags Tags to set.
      * @return Tag group mutation.
      */
-    static TagGroupMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    static TagGroupsMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
-        return new TagGroupMutation(null, null, tagMap);
+        return new TagGroupsMutation(null, null, tagMap);
     }
 
     /**
@@ -91,7 +93,7 @@ class TagGroupMutation implements JsonSerializable {
      * @param pendingRemoveTags Map of pending remove tags.
      * @return Tag group mutation.
      */
-    static TagGroupMutation newAddRemoveMutation(Map<String, Set<String>> pendingAddTags, Map<String, Set<String>> pendingRemoveTags) {
+    static TagGroupsMutation newAddRemoveMutation(Map<String, Set<String>> pendingAddTags, Map<String, Set<String>> pendingRemoveTags) {
         Map<String, Set<String>> normalizedPendingAddTags = new HashMap<>();
         Map<String, Set<String>> normalizedPendingRemoveTags = new HashMap<>();
 
@@ -135,7 +137,7 @@ class TagGroupMutation implements JsonSerializable {
             }
         }
 
-        return new TagGroupMutation(normalizedPendingAddTags, normalizedPendingRemoveTags, null);
+        return new TagGroupsMutation(normalizedPendingAddTags, normalizedPendingRemoveTags, null);
     }
 
     /**
@@ -144,7 +146,7 @@ class TagGroupMutation implements JsonSerializable {
      * @param mutations List of mutations to collapse.
      * @return A new list of collapsed mutations.
      */
-    static List<TagGroupMutation> collapseMutations(List<TagGroupMutation> mutations) {
+    static List<TagGroupsMutation> collapseMutations(List<TagGroupsMutation> mutations) {
         if (mutations == null || mutations.isEmpty()) {
             return Collections.emptyList();
         }
@@ -153,7 +155,7 @@ class TagGroupMutation implements JsonSerializable {
         HashMap<String, Set<String>> removeTags = new HashMap<>();
         HashMap<String, Set<String>> setTags = new HashMap<>();
 
-        for (TagGroupMutation mutation : mutations) {
+        for (TagGroupsMutation mutation : mutations) {
             // Add tags
             if (mutation.addTags != null) {
                 for (Map.Entry<String, Set<String>> entry : mutation.addTags.entrySet()) {
@@ -198,7 +200,7 @@ class TagGroupMutation implements JsonSerializable {
                         continue;
                     }
 
-                    // Remove to the set tag groups if we can
+                    // Remove from the set tag groups if we can
                     if (setTags.containsKey(group)) {
                         setTags.get(group).removeAll(tags);
                         continue;
@@ -233,7 +235,7 @@ class TagGroupMutation implements JsonSerializable {
                     }
 
                     // Set tags
-                    setTags.put(group, tags == null ? new HashSet<String>() : tags);
+                    setTags.put(group, tags == null ? new HashSet<String>() : new HashSet<>(tags));
 
                     // Remove from add and remove tags
                     removeTags.remove(group);
@@ -242,17 +244,17 @@ class TagGroupMutation implements JsonSerializable {
             }
         }
 
-        List<TagGroupMutation> collapsedMutations = new ArrayList<>();
+        List<TagGroupsMutation> collapsedMutations = new ArrayList<>();
 
         // Set must be a separate mutation
         if (!setTags.isEmpty()) {
-            TagGroupMutation mutation = new TagGroupMutation(null, null, setTags);
+            TagGroupsMutation mutation = new TagGroupsMutation(null, null, setTags);
             collapsedMutations.add(mutation);
         }
 
         // Add and remove can be collapsed into one mutation
         if (!addTags.isEmpty() || !removeTags.isEmpty()) {
-            TagGroupMutation mutation = new TagGroupMutation(addTags, removeTags, null);
+            TagGroupsMutation mutation = new TagGroupsMutation(addTags, removeTags, null);
             collapsedMutations.add(mutation);
         }
 
@@ -279,7 +281,7 @@ class TagGroupMutation implements JsonSerializable {
     }
 
     @Nullable
-    public static TagGroupMutation fromJsonValue(JsonValue jsonValue) {
+    public static TagGroupsMutation fromJsonValue(JsonValue jsonValue) {
         JsonMap jsonMap = jsonValue.optMap();
 
         Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(jsonMap.get(ADD_KEY));
@@ -290,16 +292,16 @@ class TagGroupMutation implements JsonSerializable {
             return null;
         }
 
-        return new TagGroupMutation(addTags, removeTags, setTags);
+        return new TagGroupsMutation(addTags, removeTags, setTags);
     }
 
     @NonNull
-    public static List<TagGroupMutation> fromJsonList(JsonList jsonList) {
-        List<TagGroupMutation> mutations = new ArrayList<>();
+    public static List<TagGroupsMutation> fromJsonList(JsonList jsonList) {
+        List<TagGroupsMutation> mutations = new ArrayList<>();
 
         if (jsonList != null) {
             for (JsonValue value : jsonList) {
-                TagGroupMutation mutation = fromJsonValue(value);
+                TagGroupsMutation mutation = fromJsonValue(value);
                 if (mutation != null) {
                     mutations.add(mutation);
                 }
@@ -319,7 +321,7 @@ class TagGroupMutation implements JsonSerializable {
             return false;
         }
 
-        TagGroupMutation mutation = (TagGroupMutation) o;
+        TagGroupsMutation mutation = (TagGroupsMutation) o;
 
         if (addTags != null ? !addTags.equals(mutation.addTags) : mutation.addTags != null) {
             return false;

@@ -71,7 +71,7 @@ public class BaseApiClientTest extends BaseTestCase {
                 .setResponseBody("{ \"ok\": true}")
                 .create();
 
-        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         Response response = client.updateTagGroups("identifier", mutation);
 
         assertNotNull("Response should not be null", response);

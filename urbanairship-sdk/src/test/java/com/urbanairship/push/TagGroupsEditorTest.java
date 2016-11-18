@@ -82,7 +82,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
                     return false;
                 }
 
-                TagGroupMutation expected = TagGroupMutation.newSetTagsMutation(tagGroup, new HashSet<String>());
+                TagGroupsMutation expected = TagGroupsMutation.newSetTagsMutation(tagGroup, new HashSet<String>());
 
                 JsonValue actual;
                 try {
