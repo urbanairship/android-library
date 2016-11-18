@@ -10,13 +10,11 @@ import com.urbanairship.Logger;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Base class for the NamedUser and Channel Api Clients.
@@ -40,15 +38,11 @@ abstract class BaseApiClient {
      * Update the tag groups for the given identifier.
      *
      * @param audienceId The audienceId.
-     * @param addTags The map of tags to add.
-     * @param removeTags The map of tags to remove.
-     * @param setTags The map of tags to set.
+     * @param mutation The tag group mutation.
+     *
      * @return The response or null if an error occurred.
      */
-    Response updateTagGroups(@NonNull String audienceId,
-                             Map<String, Set<String>> addTags,
-                             Map<String, Set<String>> removeTags,
-                             Map<String, Set<String>> setTags) {
+    Response updateTagGroups(@NonNull String audienceId, @NonNull TagGroupMutation mutation) {
 
         URL tagUrl = getDeviceUrl(getTagGroupPath());
         if (tagUrl == null) {
@@ -56,28 +50,16 @@ abstract class BaseApiClient {
             return null;
         }
 
-        if ((addTags != null && addTags.isEmpty()) && (removeTags != null && removeTags.isEmpty())
-                && (setTags != null && setTags.isEmpty())) {
-            Logger.error("addTags, removeTags, and setTags cannot all be empty.");
-            return null;
-        }
+        JsonMap payload = JsonMap.newBuilder()
+                                 .putAll(mutation.toJsonValue().optMap())
+                                 .put(AUDIENCE_KEY, JsonMap.newBuilder()
+                                                           .put(getTagGroupAudienceSelector(), audienceId)
+                                                           .build())
+                                 .build();
 
-        Map<String, Object> payload = new HashMap<>();
-        Map<String, Object> audience = new HashMap<>();
 
-        audience.put(getTagGroupAudienceSelector(), audienceId);
-        payload.put(AUDIENCE_KEY, audience);
-        if (setTags != null && !setTags.isEmpty()) {
-            payload.put(SET_KEY, setTags);
-        }
-        if (addTags != null && !addTags.isEmpty()) {
-            payload.put(ADD_KEY, addTags);
-        }
-        if (removeTags != null && !removeTags.isEmpty()) {
-            payload.put(REMOVE_KEY, removeTags);
-        }
 
-        String tagPayload = JsonValue.wrapOpt(payload).toString();
+        String tagPayload = payload.toString();
         Logger.info("Updating tag groups with payload: " + tagPayload);
 
         Response response = performRequest(getDeviceUrl(getTagGroupPath()), "POST", tagPayload);

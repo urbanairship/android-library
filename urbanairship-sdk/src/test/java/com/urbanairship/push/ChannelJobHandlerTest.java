@@ -2,8 +2,7 @@
 
 package com.urbanairship.push;
 
-import android.os.Bundle;
-
+import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
@@ -16,6 +15,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushUser;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -24,18 +24,13 @@ import org.mockito.Mockito;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -48,20 +43,14 @@ public class ChannelJobHandlerTest extends BaseTestCase {
     private final String fakeChannelLocation = "https://go.urbanairship.com/api/channels/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeResponseBody = "{\"channel_id\": \"AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE\"}";
 
-    private Map<String, Set<String>> addTagsMap;
-    private Map<String, Set<String>> removeTagsMap;
-    private Map<String, Set<String>> setTagsMap;
-    private Bundle addTagsBundle;
-    private Bundle removeTagsBundle;
-    private Bundle setTagsBundle;
 
-    PreferenceDataStore dataStore;
-    PushManager pushManager;
-    ChannelApiClient client;
-    ChannelJobHandler jobHandler;
-    RichPushInbox richPushInbox;
-    RichPushUser richPushUser;
-    JobDispatcher mockDispatcher;
+    private PreferenceDataStore dataStore;
+    private PushManager pushManager;
+    private ChannelApiClient client;
+    private ChannelJobHandler jobHandler;
+    private RichPushInbox richPushInbox;
+    private RichPushUser richPushUser;
+    private JobDispatcher mockDispatcher;
 
     @Before
     public void setUp() {
@@ -80,39 +69,6 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Extend it to make handleIntent public so we can call it directly
         jobHandler = new ChannelJobHandler(TestApplication.getApplication(), UAirship.shared(),
                 TestApplication.getApplication().preferenceDataStore, mockDispatcher, client);
-
-        Set<String> addTags = new HashSet<>();
-        addTags.add("tag1");
-        addTags.add("tag2");
-        addTagsMap = new HashMap<>();
-        addTagsMap.put("tagGroup", addTags);
-
-        Set<String> removeTags = new HashSet<>();
-        removeTags.add("tag4");
-        removeTags.add("tag5");
-        removeTagsMap = new HashMap<>();
-        removeTagsMap.put("tagGroup", removeTags);
-
-        Set<String> setTags = new HashSet<>();
-        setTags.add("tag6");
-        setTags.add("tag7");
-        setTagsMap = new HashMap<>();
-        setTagsMap.put("tagGroup", setTags);
-
-        addTagsBundle = new Bundle();
-        for (Map.Entry<String, Set<String>> entry : addTagsMap.entrySet()) {
-            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
-
-        removeTagsBundle = new Bundle();
-        for (Map.Entry<String, Set<String>> entry : removeTagsMap.entrySet()) {
-            removeTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
-
-        setTagsBundle = new Bundle();
-        for (Map.Entry<String, Set<String>> entry : setTagsMap.entrySet()) {
-            setTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
     }
 
     /**
@@ -343,93 +299,18 @@ public class ChannelJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testApplyTagGroupChanges() throws JsonException {
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
         Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
-                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
+                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify pending tags are saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
-    }
-
-    /**
-     * Test apply set tag group changes updates the pending tag groups.
-     */
-    @Test
-    public void testApplySetTagGroupChanges() throws JsonException {
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-        Map<String, Set<String>> addOtherTagsMap = new HashMap<>();
-        addOtherTagsMap.put("otherGroup", new HashSet<>(Arrays.asList("tag8", "tag9")));
-        for (Map.Entry<String, Set<String>> entry : addOtherTagsMap.entrySet()) {
-            addTagsBundle.putStringArrayList(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
-
-        // Apply initial add/remove tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
-                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
-                     .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Apply set tag groups
-        job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_SET_TAG_GROUPS, setTagsBundle)
-                     .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-
-        // Verify pending set tags are saved and pending add/remove tags are removed
-        assertEquals(JsonValue.wrap(setTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY)).isEmpty());
-
-        // Add more tags
-        job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
-                     .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        setTagsMap.get("tagGroup").addAll(addTagsMap.get("tagGroup"));
-
-        // Verify added tags have been saved to pending set tags
-        assertEquals(JsonValue.wrap(setTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY)).isEmpty());
-
-        // Remove subset of set tags
-        job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                 .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, setTagsBundle)
-                 .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify removed tags have been removed from pending set tags
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY)).isEmpty());
-
-        // Apply new set tag groups
-        job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                 .putExtra(TagGroupsEditor.EXTRA_SET_TAG_GROUPS, removeTagsBundle)
-                 .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-
-        // Verify pending set tags overwrote previous pending set tags
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(addOtherTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertTrue(TagUtils.convertToTagsMap(dataStore.getJsonValue(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY)).isEmpty());
+        assertEquals(mutations, dataStore.getJsonValue(ChannelJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY));
     }
 
     /**
@@ -437,20 +318,18 @@ public class ChannelJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testApplyTagGroupChangesSchedulesUpload() throws JsonException {
-        // Set Channel ID and channel location
+        // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
         Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_ADD_TAG_GROUPS, addTagsBundle)
-                     .putExtra(TagGroupsEditor.EXTRA_REMOVE_TAG_GROUPS, removeTagsBundle)
+                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify pending tags are saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify a new job to update tag group registration is dispatched
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
@@ -463,158 +342,116 @@ public class ChannelJobHandlerTest extends BaseTestCase {
     }
 
     /**
-     * Test update channel tag groups succeeds if the status is 200 and clears pending tags.
+     * Test update tag groups succeeds if the status is 200 and clears pending tags.
      */
     @Test
-    public void testUpdateChannelTagGroupsSucceed() throws JsonException {
-        // Return a channel ID
+    public void testUpdateTagGroups() throws JsonException {
+        // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        // Provide pending changes
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
+
+        // Apply tag groups
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                     .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
-        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null)).thenReturn(response);
+        when(client.updateTagGroups(fakeChannelId, mutation)).thenReturn(response);
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
-        // Verify updateChannelTags called
-        Mockito.verify(client, Mockito.times(1)).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null);
+        // Verify update tag groups called
+        Mockito.verify(client).updateTagGroups(fakeChannelId, mutation);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        assertNull(dataStore.getString(ChannelJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
     }
 
     /**
-     * Test update channel set tag groups succeeds if the status is 200 and clears pending tags.
+     * Test update tag groups without a channel ID fails.
      */
     @Test
-    public void testUpdateChannelSetTagGroupsSucceed() throws JsonException {
-        // Return a channel ID
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+    public void testUpdateTagGroupsNoChannel() throws JsonException {
+        // Return a null named user ID
+        pushManager.setChannel(null, null);
 
-        // Provide pending changes
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, JsonValue.wrap(setTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
-        // Set up a 200 response
-        Response response = Mockito.mock(Response.class);
-        when(client.updateTagGroups(fakeChannelId, null, null, setTagsMap)).thenReturn(response);
-        when(response.getStatus()).thenReturn(200);
+        // Apply tag groups
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                     .build();
 
-        // Perform the update
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify updateChannelTags called
-        verify(client).updateTagGroups(fakeChannelId, null, null, setTagsMap);
-
-        // Verify job is dispatched to update add / remove tag groups
-        verify(mockDispatcher).dispatch(any(Job.class));
-
-        // Verify pending tag groups are empty
-        assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_SET_TAG_GROUPS_KEY, null));
-    }
-
-    /**
-     * Test update channel tag groups without channel fails and save pending tags.
-     */
-    @Test
-    public void testUpdateChannelTagGroupsNoChannelId() throws JsonException {
-        // Provide pending changes
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
-        // Verify updateChannelTags not called when channel ID doesn't exist
+        // Verify update tag groups not called when channel ID doesn't exist
         verifyZeroInteractions(client);
-
-        // Verify pending tags saved
-        assertEquals(JsonValue.wrap(addTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        assertEquals(JsonValue.wrap(removeTagsMap).toString(), dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
     }
 
     /**
-     * Test update channel tag groups fails if the status is 500 and save pending tags.
+     * Test update tag groups fails if the status is 500.
      */
     @Test
-    public void testUpdateChannelTagGroupsServerError() throws JsonException {
-        // Return a channel ID
+    public void testUpdateTagGroupsServerError() throws JsonException {
+        // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
         // Provide pending changes
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
+        TagGroupMutation mutation = TagGroupMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
+
+        // Apply tag groups
+        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                     .build();
+
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
-        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null)).thenReturn(response);
+        when(client.updateTagGroups(fakeChannelId, mutation)).thenReturn(response);
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
+        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
-        // Verify updateChannelTags called
-        Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null);
+        // Verify update tag groups is called
+        Mockito.verify(client).updateTagGroups(fakeChannelId, mutation);
+
+        // Verify pending tags persist
+        assertNotNull(dataStore.getString(ChannelJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
     }
 
     /**
-     * Test don't update channel tags if both pendingAddTags and pendingRemoveTags are empty.
+     * Test don't update tag groups if pending tag group mutations are empty.
      */
     @Test
-    public void testNoUpdateWithEmptyTags() {
-        // Return a channel ID
+    public void testNoUpdateTagGroupsWithEmptyTags() {
+        // Return a named user ID
         pushManager.setChannel(fakeChannelId, fakeChannelLocation);
 
-        // Provide pending changes
-        dataStore.remove(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
-        dataStore.remove(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
-
-        // Perform an update without specify new tags
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify it didn't cause a client update
-        verifyZeroInteractions(client);
-    }
-
-    /**
-     * Test update channel tag groups fails if the status is 400 and clears pending tags.
-     */
-    @Test
-    public void testUpdateChannelTagGroupsBadRequest() throws JsonException {
-        // Return a channel ID
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-
-        // Provide pending changes
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrap(addTagsMap).toString());
-        dataStore.put(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrap(removeTagsMap).toString());
-
-        // Set up a 400 response
-        Response response = Mockito.mock(Response.class);
-        when(client.updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null)).thenReturn(response);
-        when(response.getStatus()).thenReturn(400);
+        // Clear pending changes
+        dataStore.remove(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         // Perform the update
         Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
-        // Verify updateChannelTags called
-        Mockito.verify(client).updateTagGroups(fakeChannelId, addTagsMap, removeTagsMap, null);
-
-        // Verify pending tag groups are empty
-        junit.framework.Assert.assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, null));
-        junit.framework.Assert.assertNull(dataStore.getString(ChannelJobHandler.PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, null));
+        // Verify it didn't cause a client update
+        verifyZeroInteractions(client);
     }
 }
