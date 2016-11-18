@@ -14,9 +14,10 @@ import java.util.Map;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
-public class TagRichPushTestUtilsTest extends BaseTestCase {
+public class TagUtilsTest extends BaseTestCase {
 
     /**
      * Test converting a JsonValue to a tags map
@@ -38,14 +39,13 @@ public class TagRichPushTestUtilsTest extends BaseTestCase {
     }
 
     /**
-     * Test converting a null and non-JsonMap returns empty map
+     * Test converting a null and non-JsonMap returns null.
      */
     @Test
     public void testConvertNullToTagsMap() throws JsonException {
-        Map<String, Set<String>> emptyMap = new HashMap<>();
-        assertEquals("Should be emptyMap", emptyMap, TagUtils.convertToTagsMap(null));
+        assertNull(TagUtils.convertToTagsMap(null));
 
         JsonValue jsonString = JsonValue.parseString("non-JsonMap");
-        assertEquals("Should be emptyMap", emptyMap, TagUtils.convertToTagsMap(jsonString));
+        assertNull(TagUtils.convertToTagsMap(jsonString));
     }
 }

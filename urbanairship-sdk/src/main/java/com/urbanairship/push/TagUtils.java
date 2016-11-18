@@ -2,13 +2,13 @@
 
 package com.urbanairship.push;
 
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonValue;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,30 +21,6 @@ import java.util.Set;
 class TagUtils {
 
     private static final int MAX_TAG_LENGTH = 127;
-
-    /**
-     * Converts a JSONValue to a Tags Map
-     */
-    @NonNull
-    static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-
-        if (jsonValue != null && jsonValue.isJsonMap()) {
-            for (Map.Entry<String, JsonValue> groupEntry : jsonValue.getMap()) {
-                Set<String> tags = new HashSet<>();
-                for (JsonValue tag : groupEntry.getValue().getList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
-                if (!tags.isEmpty()) {
-                    tagGroups.put(groupEntry.getKey(), tags);
-                }
-            }
-        }
-
-        return tagGroups;
-    }
 
     /**
      * Normalizes a set of tags. Each tag will be trimmed of white space and any tag that
@@ -76,75 +52,63 @@ class TagUtils {
     }
 
     /**
-     * Combine the tags from bundle with the pending tags.
+     * Converts a JSONValue to a Tags Map.
      *
-     * @param tagsBundle The tags bundle.
-     * @param tagsToAdd The pending tags to add tags to.
-     * @param tagsToRemove The pending tags to remove tags from.
+     * @param jsonValue The value to convert.
+     * @return A tag group map.
      */
-    static void combineTagGroups(Bundle tagsBundle, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
-        if (tagsBundle == null) {
-            return;
+    static Map<String, Set<String>> convertToTagsMap(JsonValue jsonValue) {
+        if (jsonValue == null || jsonValue.isNull()) {
+            return null;
         }
 
-        for (String group : tagsBundle.keySet()) {
-            List<String> tags = tagsBundle.getStringArrayList(group);
+        Map<String, Set<String>> tagGroups = new HashMap<>();
 
-            if (tags == null) {
-                continue;
-            }
+        if (jsonValue.isJsonMap()) {
+            for (Map.Entry<String, JsonValue> groupEntry : jsonValue.getMap()) {
+                Set<String> tags = new HashSet<>();
+                for (JsonValue tag : groupEntry.getValue().getList()) {
+                    if (tag.isString()) {
+                        tags.add(tag.getString());
+                    }
+                }
 
-            // Add tags to tagsToAdd.
-            if (tagsToAdd.containsKey(group)) {
-                tagsToAdd.get(group).addAll(tags);
-            } else {
-                tagsToAdd.put(group, new HashSet<>(tags));
-            }
-
-            // Remove tags from tagsToRemove.
-            if (tagsToRemove.containsKey(group)) {
-                tagsToRemove.get(group).removeAll(tags);
+                tagGroups.put(groupEntry.getKey(), tags);
             }
         }
+
+        if (tagGroups.isEmpty()) {
+            return null;
+        }
+
+        return tagGroups;
     }
 
     /**
-     * Squashes maps of tags to add and remove into the map of tags to set.
+     * Converts the old tag group store to tag mutations.
      *
-     * @param tagsToSet The tags to set.
-     * @param tagsToAdd The tags to add.
-     * @param tagsToRemove The tags to remove.
+     * @param dataStore The data store.
+     * @param pendingAddTagsKey The old pending add tags key.
+     * @param pendingRemoveTagsKey The old pending remove tags key.
+     * @param tagsMutationKey The new mutation key.
      */
-    static void squashTags(Map<String, Set<String>> tagsToSet, Map<String, Set<String>> tagsToAdd, Map<String, Set<String>> tagsToRemove) {
-        // return if there are no tags to set
-        if (tagsToSet.isEmpty()) {
+    static void migrateTagGroups(PreferenceDataStore dataStore, String pendingAddTagsKey, String pendingRemoveTagsKey, String tagsMutationKey) {
+        JsonValue pendingAddTags = dataStore.getJsonValue(pendingAddTagsKey);
+        JsonValue pendingRemoveTags = dataStore.getJsonValue(pendingRemoveTagsKey);
+
+        if (pendingAddTags.isNull() && pendingRemoveTags.isNull()) {
             return;
         }
 
-        // squash remove tags
-        if (!tagsToRemove.isEmpty()) {
-            for (Map.Entry<String, Set<String>> entry : new ArrayList<>(tagsToRemove.entrySet())) {
-                // if tags will be set to a group, remove from the current set payload.
-                if (tagsToSet.containsKey(entry.getKey())) {
-                    tagsToSet.get(entry.getKey()).removeAll(entry.getValue());
-                    if (tagsToSet.get(entry.getKey()).isEmpty()) {
-                        tagsToSet.remove(entry.getKey());
-                    }
+        Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(pendingAddTags);
+        Map<String, Set<String>> removeTags = TagUtils.convertToTagsMap(pendingRemoveTags);
 
-                    tagsToRemove.remove(entry.getKey());
-                }
-            }
-        }
+        TagGroupsMutation mutation = TagGroupsMutation.newAddRemoveMutation(addTags, removeTags);
+        List<TagGroupsMutation> mutations = Collections.singletonList(mutation);
 
-        // squash add tags
-        if (!tagsToAdd.isEmpty()) {
-            for (Map.Entry<String, Set<String>> entry : new ArrayList<>(tagsToAdd.entrySet())) {
-                // if tags will be set to a group, add to that set payload instead
-                if (tagsToSet.containsKey(entry.getKey())) {
-                    tagsToSet.get(entry.getKey()).addAll(entry.getValue());
-                    tagsToAdd.remove(entry.getKey());
-                }
-            }
-        }
+        dataStore.put(tagsMutationKey, JsonValue.wrapOpt(mutations));
+
+        dataStore.remove(pendingAddTagsKey);
+        dataStore.remove(pendingRemoveTagsKey);
     }
 }

@@ -108,7 +108,6 @@ public class CoreReceiver extends BroadcastReceiver {
         // Clear the in-app message if it matches the push send Id
         clearInAppMessage(message.getSendId());
 
-
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtras(intent.getExtras())
                 .setPackage(UAirship.getPackageName())

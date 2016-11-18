@@ -28,8 +28,9 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+
+import static com.urbanairship.push.TagUtils.migrateTagGroups;
 
 /**
  * Job handler for channel registration
@@ -84,17 +85,17 @@ class ChannelJobHandler {
     /**
      * Key for storing the pending channel add tags changes in the {@link PreferenceDataStore}.
      */
-    static final String PENDING_CHANNEL_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
+    static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
 
     /**
      * Key for storing the pending channel remove tags changes in the {@link PreferenceDataStore}.
      */
-    static final String PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
+    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
 
     /**
-     * Key for storing the pending channel set tags changes in the {@link PreferenceDataStore}.
+     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
      */
-    static final String PENDING_CHANNEL_SET_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_SET_TAG_GROUPS";
+    static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
 
     /**
      * Response body key for the channel ID.
@@ -120,50 +121,7 @@ class ChannelJobHandler {
     private final Context context;
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
-    private final TagGroupHandler tagGroupHandler;
 
-    private final TagGroupHandler.TagAccess tagAccess = new TagGroupHandler.TagAccess() {
-        @Override
-        public Map<String, Set<String>> getPendingSetTags() {
-            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_SET_TAG_GROUPS_KEY));
-        }
-
-        @Override
-        public Map<String, Set<String>> getPendingRemoveTags() {
-            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY));
-        }
-
-        @Override
-        public Map<String, Set<String>> getPendingAddTags() {
-            return TagUtils.convertToTagsMap(dataStore.getJsonValue(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY));
-        }
-
-        @Override
-        public void setPendingSetTags(Map<String, Set<String>> tags) {
-            dataStore.put(PENDING_CHANNEL_SET_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
-        }
-
-        @Override
-        public void setPendingAddTags(Map<String, Set<String>> tags) {
-            dataStore.put(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
-        }
-
-        @Override
-        public void setPendingRemoveTags(Map<String, Set<String>> tags) {
-            dataStore.put(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY, JsonValue.wrapOpt(tags));
-        }
-
-        @Override
-        public void removePendingSetTags() {
-            dataStore.remove(PENDING_CHANNEL_SET_TAG_GROUPS_KEY);
-        }
-
-        @Override
-        public void removePendingAddRemoveTags() {
-            dataStore.remove(PENDING_CHANNEL_REMOVE_TAG_GROUPS_KEY);
-            dataStore.remove(PENDING_CHANNEL_ADD_TAG_GROUPS_KEY);
-        }
-};
 
     /**
      * Default constructor.
@@ -186,7 +144,6 @@ class ChannelJobHandler {
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
         this.jobDispatcher = jobDispatcher;
-        this.tagGroupHandler = new TagGroupHandler(tagAccess, channelClient, jobDispatcher);
     }
 
     /**
@@ -650,14 +607,50 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdateTagGroup() {
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+
         String channelId = pushManager.getChannelId();
         if (channelId == null) {
             Logger.verbose("Failed to update channel tags due to null channel ID.");
             return Job.JOB_FINISHED;
         }
 
-        return tagGroupHandler.updateTagGroup(channelId);
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
 
+        if (mutations.isEmpty()) {
+            Logger.verbose( "ChannelJobHandler - No pending tag group updates. Skipping update.");
+            return Job.JOB_FINISHED;
+        }
+
+        Response response = channelClient.updateTagGroups(channelId, mutations.get(0));
+
+        // 5xx or no response
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
+            return Job.JOB_RETRY;
+        }
+
+        int status = response.getStatus();
+        Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
+        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
+            mutations.remove(0);
+
+            if (mutations.isEmpty()) {
+                dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
+            } else {
+                dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
+            }
+
+            if (!mutations.isEmpty()) {
+                Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+                                   .setAirshipComponent(PushManager.class)
+                                   .build();
+
+                jobDispatcher.dispatch(updateJob);
+            }
+        }
+
+        return Job.JOB_FINISHED;
     }
 
     /**
@@ -668,7 +661,19 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onApplyTagGroupChanges(Job job) {
-        tagGroupHandler.applyTagGroupChanges(job);
+        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
+
+        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
+        try {
+            JsonValue jsonValue = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
+            mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
+        } catch (JsonException e) {
+            Logger.error("Failed to parse tag group change:", e);
+            return Job.JOB_FINISHED;
+        }
+
+        mutations = TagGroupsMutation.collapseMutations(mutations);
+        dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
         if (pushManager.getChannelId() != null) {
             Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
@@ -680,5 +685,4 @@ class ChannelJobHandler {
 
         return Job.JOB_FINISHED;
     }
-
 }
