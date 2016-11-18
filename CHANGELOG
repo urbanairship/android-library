@@ -3,6 +3,16 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.1.0 - November 18, 2016
+=================================
+- Added support for resizable landing pages.
+- Added support for being able to perform `set` operation on tag groups.
+- Added support for tag groups in the add and remove tag actions.
+- Added FetchDeviceInfoAction to get an updated snapshot of the devices information from the JS bridge.
+- Added broadcast event "com.urbanairship.AIRSHIP_READY" when Airship is ready.
+- Changed default predicate on the AddCustomEventAction to accept more situations.
+- Changed RetailEventTemplate to only set `ltv` on purchase events.
+
 Version 8.0.4 - November 11, 2016
 =================================
 - Fixed `unmarshalling unknown type` exception when using location updates.
