@@ -13,6 +13,10 @@ Urban Airship SDK for Android.
 We accept pull requests! If you would like to submit a pull request, please fill out and submit a
 Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement.html).
 
+## Requirements
+- minSdkVersion 15+
+- compileSdkVersion 25
+
 ## Quickstart
 
 Include Urban Airship into the build.gradle file:
@@ -22,29 +26,16 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:8.0.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:8.1.+'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:24.2.0'
+     compile 'com.android.support:cardview-v7:25.0.1'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:9.4.0'
+     compile 'com.google.android.gms:play-services-location:9.8.0'
    }
 ```
 
-Verify the `applicationId` is set:
-
-```
-   android {
-     ...
-
-     defaultConfig {
-       ...
-
-       applicationId "com.example.application"
-     }
-   }
-```
 
 Create a new `airshipconfig.properties` file with your application’s settings:
 
