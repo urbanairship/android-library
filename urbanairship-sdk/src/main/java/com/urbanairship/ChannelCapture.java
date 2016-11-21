@@ -60,7 +60,7 @@ class ChannelCapture extends AirshipComponent {
     private final AirshipConfigOptions configOptions;
     private final PushManager pushManager;
     private final NotificationManagerCompat notificationManager;
-    private Clipboard clipboard;
+    private ClipboardManager clipboardManager;
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
 
@@ -105,13 +105,11 @@ class ChannelCapture extends AirshipComponent {
             return;
         }
 
-        // Magic must be prepared on a thread with a prepared looper
+        // ClipboardManager must be prepared on a thread with a prepared looper
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                // Clipboard must be initialized on a thread with a prepared looper
-                clipboard = new ClipboardHoneyComb();
-
+                clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                 activityMonitor.addListener(listener);
             }
         });
@@ -132,9 +130,29 @@ class ChannelCapture extends AirshipComponent {
             return;
         }
 
-        String clipboardText;
+        // Clipboard is null on a few VodaPhone devices
+        if (clipboardManager == null) {
+            return;
+        }
+
+        String clipboardText = null;
         try {
-            clipboardText = clipboard.getText();
+            if (!clipboardManager.hasPrimaryClip()) {
+                return;
+            }
+
+            ClipData primaryClip = clipboardManager.getPrimaryClip();
+
+            if (primaryClip != null && primaryClip.getItemCount() > 0) {
+
+                for (int i = 0; i < primaryClip.getItemCount(); i++) {
+                    ClipData.Item item = primaryClip.getItemAt(i);
+                    CharSequence text = item.getText();
+                    if (text != null) {
+                        clipboardText = text.toString();
+                    }
+                }
+            }
         } catch (SecurityException e) {
             Logger.debug("Unable to read clipboard: " + e.getMessage());
             return;
@@ -155,7 +173,8 @@ class ChannelCapture extends AirshipComponent {
         }
 
         try {
-            clipboard.clear();
+            // Clear the clipboard
+            clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
         } catch (SecurityException e) {
             Logger.debug("Unable to clear clipboard: " + e.getMessage());
         }
@@ -286,62 +305,5 @@ class ChannelCapture extends AirshipComponent {
                 .putExtra(EXTRA_ACTIONS, JsonValue.wrapOpt(actionPayload).toString());
 
         return PendingIntent.getActivity(context, NOTIFICATION_ID, intent, 0);
-    }
-
-    /**
-     * Common clipboard interface.
-     */
-    private interface Clipboard {
-
-        /**
-         * Gets the text from the clipboard.
-         *
-         * @return The clipboard text or null if the clipboard is empty.
-         */
-        String getText();
-
-        /**
-         * Clears the clipboard's text.
-         */
-        void clear();
-    }
-
-    /**
-     * Clipboard interface for HoneyComb and newer devices.
-     */
-    private class ClipboardHoneyComb implements Clipboard {
-
-        private final ClipboardManager clipboardManager;
-
-        ClipboardHoneyComb() {
-            clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        }
-
-        @Override
-        public String getText() {
-            if (!clipboardManager.hasPrimaryClip()) {
-                return null;
-            }
-
-            ClipData primaryClip = clipboardManager.getPrimaryClip();
-
-            if (primaryClip != null && primaryClip.getItemCount() > 0) {
-
-                for (int i = 0; i < primaryClip.getItemCount(); i++) {
-                    ClipData.Item item = primaryClip.getItemAt(i);
-                    CharSequence text = item.getText();
-                    if (text != null) {
-                        return text.toString();
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public void clear() {
-            clipboardManager.setPrimaryClip(ClipData.newPlainText("", ""));
-        }
     }
 }
