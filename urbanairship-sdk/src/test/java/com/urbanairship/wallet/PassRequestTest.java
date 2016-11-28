@@ -77,6 +77,7 @@ public class PassRequestTest extends BaseTestCase{
                 "        \"type\" : \"multiple\"\n" +
                 "    },\n" +
                 "    \"tag\": \"Text Tag\",\n" +
+                "    \"externalId\": \"id123\",\n" +
                 "    \"fields\":{\n" +
                 "        \"Text\":{\n" +
                 "           \"value\":\"Text Value\",\n" +
@@ -117,6 +118,7 @@ public class PassRequestTest extends BaseTestCase{
                 .setBarcodeAltText("abc1234567890", "label")
                 .setBarcodeValue("abc1234567890", "label")
                 .setTag("Text Tag")
+                .setExternalId("id123")
                 .addField(field);
 
         Executor executor = new Executor() {
