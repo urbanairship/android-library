@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.2.0 - November 29, 2016
+=================================
+- Added external ID setter to PassRequest class.
+- Fixed MessageListFragment empty view when recreating the fragment's view.
+
 Version 8.1.1 - November 21, 2016
 =================================
 - Fixed rare NPE when ClipboardManager service is unavailable.

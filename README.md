@@ -26,7 +26,7 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:8.1.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:8.2.+'
 
      // Recommended for in-app messaging
      compile 'com.android.support:cardview-v7:25.0.1'
