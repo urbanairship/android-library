@@ -43,12 +43,14 @@ public class PassRequest {
     private static final String PUBLIC_URL_KEY = "publicURL";
     private static final String PUBLIC_URL_TYPE_KEY = "type";
     private static final String TAG_KEY = "tag";
+    private static final String EXTERNAL_ID_KEY = "externalId";
 
     private final String apiKey;
     private final String templateId;
     private final Collection<Field> fields;
     private final Collection<Field> headers;
     private final String tag;
+    private final String externalId;
     private final RequestFactory requestFactory;
     private final Executor requestExecutor;
 
@@ -67,6 +69,7 @@ public class PassRequest {
         this.fields = builder.fields;
         this.headers = builder.headers;
         this.tag = builder.tag;
+        this.externalId = builder.externalId;
         this.requestFactory = requestFactory;
         this.requestExecutor = requestExecutor;
     }
@@ -148,6 +151,7 @@ public class PassRequest {
                         .put(FIELDS_KEY, fieldsJson.build())
                         .putOpt(TAG_KEY, tag)
                         .put(PUBLIC_URL_KEY, JsonMap.newBuilder().put(PUBLIC_URL_TYPE_KEY, "multiple").build())
+                        .putOpt(EXTERNAL_ID_KEY, externalId)
                         .build();
 
                 Request httpRequest = requestFactory.createRequest("POST", url)
@@ -203,7 +207,7 @@ public class PassRequest {
 
     @Override
     public String toString() {
-        return "PassRequest{ apiKey: " + apiKey + ", templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", headers: " + headers + " }";
+        return "PassRequest{ apiKey: " + apiKey + ", templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", externalId: " + externalId + ", headers: " + headers + " }";
     }
 
     /**
@@ -215,6 +219,7 @@ public class PassRequest {
         private List<Field> fields = new ArrayList<>();
         private List<Field> headers = new ArrayList<>();
         private String tag;
+        private String externalId;
 
         /**
          * Sets the API key.
@@ -311,6 +316,17 @@ public class PassRequest {
          */
         public Builder setTag(@NonNull String tag) {
             this.tag = tag;
+            return this;
+        }
+
+        /**
+         * Sets the external ID.
+         *
+         * @param externalId The external ID.
+         * @return Builder object.
+         */
+        public Builder setExternalId(@NonNull String externalId) {
+            this.externalId = externalId;
             return this;
         }
 
