@@ -328,6 +328,8 @@ public class MessageListFragment extends Fragment {
 
         // Tear down any selection in progress
         absListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
+        absListView = null;
+        refreshLayout = null;
     }
 
     @Override
