@@ -189,10 +189,21 @@ public class MessageFragment extends Fragment {
         webView.onPause();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        this.webView = null;
+        this.progressBar = null;
+    }
+
     /**
      * Retries loading the message.
      */
     protected void retry() {
+        if (webView == null) {
+            return;
+        }
+
         showProgress();
         error = null;
         webView.loadRichPushMessage(message);
@@ -202,6 +213,10 @@ public class MessageFragment extends Fragment {
      * Shows the progress bar
      */
     protected void showProgress() {
+        if (webView == null) {
+            return;
+        }
+
         if (errorPage != null && errorPage.getVisibility() == View.VISIBLE) {
             errorPage.animate()
                      .alpha(0f)
@@ -224,6 +239,10 @@ public class MessageFragment extends Fragment {
      * Shows the message.
      */
     protected void showMessage() {
+        if (webView == null) {
+            return;
+        }
+
         webView.animate()
                .alpha(1f)
                .setDuration(200)
