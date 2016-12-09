@@ -183,6 +183,10 @@ class AnalyticsJobHandler {
 
                 try {
                     AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
+                    if (adInfo == null) {
+                        break;
+                    }
+
                     advertisingId = adInfo.getId();
                     limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                 } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
@@ -365,7 +369,7 @@ class AnalyticsJobHandler {
 
         if (isScheduled) {
             // If its currently scheduled at an earlier time then skip rescheduling
-            if (previousScheduledTime <= sendTime &&  previousScheduledTime >= System.currentTimeMillis()) {
+            if (previousScheduledTime <= sendTime && previousScheduledTime >= System.currentTimeMillis()) {
                 Logger.verbose("AnalyticsJobHandler - Event upload already scheduled for an earlier time.");
                 return;
             }
