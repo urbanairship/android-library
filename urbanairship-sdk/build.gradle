@@ -11,14 +11,14 @@ apply plugin: 'jacoco'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    buildToolsVersion '25.0.1'
 
     lintOptions {
         abortOnError false
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 15
         targetSdkVersion 25
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""

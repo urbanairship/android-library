@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.2.2 - December 9, 2016
+================================
+- Fixed regression where minSDK reverted back to 16.
+- Fixed possible NPE when auto tracking advertising ID.
+- Removed `.js` extension on the ua_native_bridge file.
+
 Version 8.2.1 - December 6, 2016
 ================================
 - Fixed MessageFragment empty view when recreating the fragment's view.
