@@ -3,6 +3,10 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.2.3 - December 16, 2016
+=================================
+- Updated consumer proguard rule for parcelables to prevent preserving all names in Parcelable classes.
+
 Version 8.2.2 - December 9, 2016
 ================================
 - Fixed regression where minSDK reverted back to 16.
