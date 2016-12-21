@@ -495,7 +495,7 @@
 
         <UrbanAirshipActionButton
             foreground="true"
-            id="search"
+            id="book"
             android:icon="@drawable/ua_ic_notification_button_book"
             android:label="@string/ua_notification_button_book_now"/>
 
