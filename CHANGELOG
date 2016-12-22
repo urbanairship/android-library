@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.2.4 - December 22, 2016
+=================================
+- Fixed rare crash in location service for some older devices.
+- Fixed typo in `book now` interactive notification button.
+
 Version 8.2.3 - December 16, 2016
 =================================
 - Updated consumer proguard rule for parcelables to prevent preserving all names in Parcelable classes.
