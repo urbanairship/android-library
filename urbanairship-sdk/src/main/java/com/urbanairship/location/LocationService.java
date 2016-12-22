@@ -277,20 +277,19 @@ public class LocationService extends Service {
             return;
         }
 
-        // If a provider is enabled or disabled notify the adapters so they can update providers.
-        if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
-            Logger.debug("LocationService - One of the location providers was enabled or disabled.");
-
-            LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
-            locationProvider.connect();
-            locationProvider.onSystemLocationProvidersChanged(options);
-            return;
-        }
-
-
         // Fused location sometimes has an "Unmarshalling unknown type" runtime exception on 4.4.2 devices
         Location location;
         try {
+            // If a provider is enabled or disabled notify the adapters so they can update providers.
+            if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
+                Logger.debug("LocationService - One of the location providers was enabled or disabled.");
+
+                LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
+                locationProvider.connect();
+                locationProvider.onSystemLocationProvidersChanged(options);
+                return;
+            }
+
             location = (Location) (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED) ?
                         intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED) :
                         intent.getParcelableExtra("com.google.android.location.LOCATION"));
