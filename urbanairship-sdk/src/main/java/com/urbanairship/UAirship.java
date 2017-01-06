@@ -286,8 +286,6 @@ public class UAirship {
             }
         }
 
-
-        
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
             for (StackTraceElement element : new Exception().getStackTrace()) {
@@ -566,7 +564,7 @@ public class UAirship {
         this.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions);
         this.namedUser = new NamedUser(application, preferenceDataStore);
-        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, ActivityMonitor.shared(application));
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions();
@@ -704,6 +702,15 @@ public class UAirship {
      */
     public Automation getAutomation() {
         return automation;
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.ChannelCapture} instance.
+     *
+     * @return The {@link com.urbanairship.ChannelCapture} instance.
+     */
+    public ChannelCapture getChannelCapture() {
+        return channelCapture;
     }
 
     /**

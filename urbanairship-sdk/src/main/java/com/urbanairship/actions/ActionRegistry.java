@@ -238,6 +238,10 @@ public final class ActionRegistry {
                         arguments.getSituation() == Action.SITUATION_MANUAL_INVOCATION;
             }
         });
+
+        registerAction(new ChannelCaptureAction(),
+                ChannelCaptureAction.DEFAULT_REGISTRY_NAME,
+                ChannelCaptureAction.DEFAULT_REGISTRY_SHORT_NAME);
     }
 
     /**

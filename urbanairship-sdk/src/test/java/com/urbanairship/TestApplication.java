@@ -64,7 +64,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions);
-        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions();
@@ -134,5 +134,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setAutomation(Automation automation) {
         UAirship.shared().automation = automation;
+    }
+
+    public void setChannelCapture(ChannelCapture channelCapture) {
+        UAirship.shared().channelCapture = channelCapture;
     }
 }

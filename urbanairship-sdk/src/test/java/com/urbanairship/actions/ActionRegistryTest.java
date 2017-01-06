@@ -38,7 +38,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions();
-        assertEquals("Default entries changed", 15, registry.getEntries().size());
+        assertEquals("Default entries changed", 16, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
@@ -55,6 +55,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^csa"), "^csa", "cancel_scheduled_actions");
         validateEntry(registry.getEntry("^sa"), "^sa", "schedule_actions");
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
+        validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
     }
 
     /**

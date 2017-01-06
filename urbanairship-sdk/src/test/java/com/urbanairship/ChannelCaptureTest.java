@@ -21,8 +21,10 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowPendingIntent;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -38,6 +40,7 @@ public class ChannelCaptureTest extends BaseTestCase {
     private AirshipConfigOptions configOptions;
     private ClipboardManager clipboardManager;
     private NotificationManagerCompat mockNotificationManager;
+    private PreferenceDataStore dataStore;
     private TestActivityMonitor activityMonitor;
 
     @Before
@@ -48,13 +51,15 @@ public class ChannelCaptureTest extends BaseTestCase {
         configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
+                .setChannelCaptureEnabled(true)
                 .build();
 
         mockPushManager = mock(PushManager.class);
         activityMonitor = new TestActivityMonitor();
         activityMonitor.register();
+        dataStore = TestApplication.getApplication().preferenceDataStore;
 
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, activityMonitor);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, dataStore, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -222,7 +227,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Reinitialize it
         capture.tearDown();
-        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, activityMonitor);
+        capture = new ChannelCapture(RuntimeEnvironment.application, configOptions, mockPushManager, mockNotificationManager, dataStore, activityMonitor);
 
         // Replace the executor so it runs everything right away
         capture.executor = new Executor() {
@@ -241,6 +246,19 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         // Verify we did not post a notification
         verifyZeroInteractions(mockNotificationManager);
+    }
+
+    @Test
+    public void testEnable() {
+        capture.enable(100, TimeUnit.SECONDS);
+        assertNotEquals(dataStore.getLong(ChannelCapture.CHANNEL_CAPTURE_ENABLED_KEY, 0), 0);
+    }
+
+    @Test
+    public void testDisable() {
+        capture.enable(100, TimeUnit.SECONDS);
+        capture.disable();
+        assertEquals(dataStore.getLong(ChannelCapture.CHANNEL_CAPTURE_ENABLED_KEY, -1), 0);
     }
 
     /**

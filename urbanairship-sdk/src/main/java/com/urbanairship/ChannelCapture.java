@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -35,7 +36,9 @@ import java.util.concurrent.Executors;
  * that allows the user to copy the Channel or optionally open a url with the channel as
  * an argument.
  */
-class ChannelCapture extends AirshipComponent {
+public class ChannelCapture extends AirshipComponent {
+
+    static final String CHANNEL_CAPTURE_ENABLED_KEY = "com.urbanairship.CHANNEL_CAPTURE_ENABLED";
 
     /**
      * Broadcast action when the clipboard notification is tapped.
@@ -63,6 +66,7 @@ class ChannelCapture extends AirshipComponent {
     private ClipboardManager clipboardManager;
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
+    private final PreferenceDataStore preferenceDataStore;
 
     Executor executor = Executors.newSingleThreadExecutor();
 
@@ -74,12 +78,14 @@ class ChannelCapture extends AirshipComponent {
      * @param pushManager The push manager instance.
      * @param activityMonitor The activity monitor instance.
      */
-    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, ActivityMonitor activityMonitor) {
-        this(context, configOptions, pushManager, NotificationManagerCompat.from(context), activityMonitor);
+    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
+                   PreferenceDataStore preferenceDataStore, ActivityMonitor activityMonitor) {
+        this(context, configOptions, pushManager, NotificationManagerCompat.from(context), preferenceDataStore, activityMonitor);
     }
 
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
-                   NotificationManagerCompat notificationManager, ActivityMonitor activityMonitor) {
+                   NotificationManagerCompat notificationManager, PreferenceDataStore preferenceDataStore,
+                   ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
@@ -95,16 +101,13 @@ class ChannelCapture extends AirshipComponent {
                 });
             }
         };
+        this.preferenceDataStore = preferenceDataStore;
         this.activityMonitor = activityMonitor;
     }
 
 
     @Override
     protected void init() {
-        if (!this.configOptions.channelCaptureEnabled) {
-            return;
-        }
-
         // ClipboardManager must be prepared on a thread with a prepared looper
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
@@ -113,6 +116,28 @@ class ChannelCapture extends AirshipComponent {
                 activityMonitor.addListener(listener);
             }
         });
+    }
+
+    /**
+     * Enable channel capture for the specified period of time.
+     *
+     * @param duration The duration of time.
+     * @param unit The time unit.
+     */
+    public void enable(long duration, TimeUnit unit) {
+        long milliDuration = unit.toMillis(duration);
+        preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, System.currentTimeMillis() + milliDuration);
+    }
+
+    /**
+     * Disable channel capture.
+     *
+     * <p>
+     *     Note that this method will not disable channel capture if it is globally enabled.
+     * </p>
+     */
+    public void disable() {
+        preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
     }
 
     @Override
@@ -125,6 +150,13 @@ class ChannelCapture extends AirshipComponent {
      * the token is available.
      */
     private void checkClipboard() {
+        if (!this.configOptions.channelCaptureEnabled) {
+            if (this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
+                this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
+                return;
+            }
+        }
+
         String channel = pushManager.getChannelId();
         if (UAStringUtil.isEmpty(channel)) {
             return;
