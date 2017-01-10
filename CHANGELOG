@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+
+Version 8.2.5 - January 9, 2016
+===============================
+- Fixed bug that caused devices running Ice Cream Sandwich to crash when
+  fetching the default Bluetooth adapter.
+
 Version 8.2.4 - December 22, 2016
 =================================
 - Fixed rare crash in location service for some older devices.

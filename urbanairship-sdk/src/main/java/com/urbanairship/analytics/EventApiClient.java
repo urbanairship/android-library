@@ -111,6 +111,13 @@ class EventApiClient {
 
         double sentAt = System.currentTimeMillis() / 1000.0;
 
+        // CE-2745: Calling BluetoothAdapter.getDefaultAdapter() results in a RuntimeException on
+        // devices running Ice Cream Sandwich http://stackoverflow.com/a/15036421
+        String bluetoothEnabled = "false";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            bluetoothEnabled = Boolean.toString(isBluetoothEnabled());
+        }
+
         Request request = requestFactory.createRequest("POST", analyticsServerUrl)
                                         .setRequestBody(payload, "application/json")
                                         .setCompressRequestBody(true)
@@ -132,7 +139,7 @@ class EventApiClient {
                                         .setHeader("X-UA-Location-Permission", getLocationPermission())
                                         .setHeader("X-UA-Location-Service-Enabled",
                                                 Boolean.toString(airship.getLocationManager().isLocationUpdatesEnabled()))
-                                        .setHeader("X-UA-Bluetooth-Status", Boolean.toString(isBluetoothEnabled()))
+                                        .setHeader("X-UA-Bluetooth-Status", bluetoothEnabled)
                                         .setHeader("X-UA-User-ID", airship.getInbox().getUser().getId());
 
 
