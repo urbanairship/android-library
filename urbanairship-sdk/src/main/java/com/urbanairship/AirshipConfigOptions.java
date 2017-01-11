@@ -330,7 +330,7 @@ public class AirshipConfigOptions {
         private int productionLogLevel = DEFAULT_PRODUCTION_LOG_LEVEL;
         private boolean autoLaunchApplication = true;
         private boolean channelCreationDelayEnabled = false;
-        private boolean channelCaptureEnabled = false;
+        private boolean channelCaptureEnabled = true;
         private int notificationIcon;
         private int notificationAccentColor;
         private String walletUrl = "https://wallet-api.urbanairship.com";

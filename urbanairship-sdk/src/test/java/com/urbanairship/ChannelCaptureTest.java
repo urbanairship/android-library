@@ -51,7 +51,6 @@ public class ChannelCaptureTest extends BaseTestCase {
         configOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
-                .setChannelCaptureEnabled(true)
                 .build();
 
         mockPushManager = mock(PushManager.class);
@@ -68,13 +67,14 @@ public class ChannelCaptureTest extends BaseTestCase {
                 runnable.run();
             }
         };
-
+        capture.enable(600, TimeUnit.SECONDS);
         capture.init();
     }
 
     @After
     public void takeDown() {
         activityMonitor.unregister();
+        capture.disable();
     }
 
     /**

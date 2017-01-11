@@ -131,10 +131,6 @@ public class ChannelCapture extends AirshipComponent {
 
     /**
      * Disable channel capture.
-     *
-     * <p>
-     *     Note that this method will not disable channel capture if it is globally enabled.
-     * </p>
      */
     public void disable() {
         preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
@@ -151,10 +147,13 @@ public class ChannelCapture extends AirshipComponent {
      */
     private void checkClipboard() {
         if (!this.configOptions.channelCaptureEnabled) {
-            if (this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
-                this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
-                return;
-            }
+            return;
+        }
+
+        if (UAirship.shared().getPushManager().isPushEnabled()
+                && this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
+            this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
+            return;
         }
 
         String channel = pushManager.getChannelId();
