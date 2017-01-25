@@ -4,8 +4,9 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 
@@ -13,10 +14,8 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 
-import org.apache.xerces.util.URI;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static junit.framework.Assert.assertEquals;
@@ -153,6 +152,15 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         Mockito.when(resources.getIdentifier(Mockito.eq("test_sound"), Mockito.anyString(), Mockito.anyString())).thenReturn(5);
         Mockito.when(context.getApplicationContext()).thenReturn(context);
         Mockito.when(context.getResources()).thenReturn(resources);
+
+        // Additional config required for SDKs 21+
+        Configuration config = new Configuration();
+        config.setToDefaults();
+        Mockito.when(resources.getConfiguration()).thenReturn(config);
+        if (Build.VERSION.SDK_INT >= 23) {
+            // Background cannot be translucent
+            Mockito.when(resources.getColor(Mockito.anyInt(), Mockito.any(Resources.Theme.class))).thenReturn(0xFFFFFFFF);
+        }
 
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_SOUND, "test_sound");

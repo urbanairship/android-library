@@ -4,8 +4,10 @@ package com.urbanairship.widget;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import com.urbanairship.BaseTestCase;
@@ -272,12 +274,16 @@ public class UAWebViewClientTest extends BaseTestCase {
         // Process any async task onPostExecutes
         Robolectric.flushForegroundThreadScheduler();
 
-        verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object argument) {
-                return ((String) argument).startsWith("javascript:");
-            }
-        }));
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
+                @Override
+                public boolean matches(Object argument) {
+                    return ((String) argument).startsWith("javascript:");
+                }
+            }));
+        } else {
+            verify(webView).evaluateJavascript(any(String.class), eq((ValueCallback<String>) null));
+        }
     }
 
     /**
@@ -394,7 +400,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         String url = "uairship://android-run-action-cb/actionName/%7Binvalid_json%7D%7D%7D/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
+        verifyWebView("UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
     }
 
     /**
@@ -422,7 +428,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         String url = "uairship://android-run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
+        verifyWebView("UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
     }
 
     /**
@@ -450,7 +456,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         String url = "uairship://android-run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
+        verifyWebView("UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
     }
 
     /**
@@ -478,7 +484,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         String url = "uairship://android-run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        verify(webView).loadUrl("javascript:UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
+        verifyWebView("UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
     }
 
     /**
@@ -506,8 +512,7 @@ public class UAWebViewClientTest extends BaseTestCase {
         String url = "uairship://android-run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
-        // Verify the callback
-        verify(webView).loadUrl("javascript:UAirship.finishAction(null, \"action_result\", 'callbackId');");
+        verifyWebView("UAirship.finishAction(null, \"action_result\", 'callbackId');");
 
         // Verify the action request
         verify(runRequest).run(any(ActionCompletionCallback.class));
@@ -545,5 +550,13 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         // Verify our callback was called
         verify(completionCallback).onFinish(arguments, result);
+    }
+
+    private void verifyWebView(String s) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            verify(webView).loadUrl("javascript:" + s);
+        } else {
+            verify(webView).evaluateJavascript(s, null);
+        }
     }
 }

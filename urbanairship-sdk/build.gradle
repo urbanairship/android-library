@@ -49,8 +49,9 @@ dependencies {
     provided files('libs/amazon-device-messaging-1.0.1.jar')
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.9.5'
-    testCompile 'org.robolectric:robolectric:3.1'
-    testCompile 'org.robolectric:shadows-support-v4:3.1'
+    testCompile 'org.robolectric:robolectric:3.2.2'
+    testCompile 'org.robolectric:shadows-support-v4:3.2.2'
+    testCompile 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
     doclava("com.google.doclava:doclava:1.0.6")
 }
 
@@ -80,6 +81,18 @@ android.libraryVariants.all { variant ->
             addStringOption "federate android", "http://developer.android.com/reference"
             addStringOption "federationxml android", "docs/android-22.xml"
             addStringOption "templatedir", "docs/template"
+        }
+    }
+}
+
+android {
+    testOptions {
+        unitTests.all {
+            def enabled_sdks = "18"
+            if (project.hasProperty("sdks")) {
+                enabled_sdks = sdks
+            }
+            systemProperty 'robolectric.enabledSdks', enabled_sdks
         }
     }
 }
