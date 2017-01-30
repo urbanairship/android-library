@@ -14,8 +14,6 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.R;
-
 /**
  * Activity that automatically uses the AppCompat support library if its available and the application
  * extends the app compat theme.
@@ -182,7 +180,12 @@ public abstract class ThemedActivity extends FragmentActivity {
             return false;
         }
 
-        TypedArray a = activity.obtainStyledAttributes(new int[]{ R.attr.colorPrimary });
+        int colorPrimary = activity.getResources().getIdentifier("colorPrimary", "attr", activity.getPackageName());
+        if (colorPrimary == 0) {
+            return false;
+        }
+
+        TypedArray a = activity.obtainStyledAttributes(new int[]{ colorPrimary });
         final boolean isAvailable = a.hasValue(0);
         a.recycle();
 
