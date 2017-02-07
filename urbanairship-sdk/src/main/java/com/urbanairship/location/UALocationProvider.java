@@ -2,10 +2,14 @@
 
 package com.urbanairship.location;
 
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -15,49 +19,54 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static android.app.PendingIntent.getService;
+
 /**
  * Location provider that automatically selects between the standard android location
- * and the fused location.  This class is not thread safe.
+ * and the fused location. This class is not thread safe.
  */
 class UALocationProvider {
 
-    /**
-     * Action used for location updates.
-     */
-    static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
-
-    private final List<LocationAdapter> adapters = new ArrayList<>();
-
+    @Nullable
     private LocationAdapter connectedAdapter;
     private boolean isConnected = false;
+
+    private final List<LocationAdapter> adapters = new ArrayList<>();
+    private final Context context;
+    private final Intent locationUpdateIntent;
 
     /**
      * UALocationProvider constructor.
      *
      * @param context The application context.
+     * @param locationUpdateIntent The update intent to send for location responses.
      */
-    public UALocationProvider(@NonNull Context context) {
+    UALocationProvider(@NonNull Context context, @NonNull Intent locationUpdateIntent) {
+        this.context = context;
+        this.locationUpdateIntent = locationUpdateIntent;
+
         // This is to prevent a log message saying Google Play Services is unavailable on amazon devices.
         if (PlayServicesUtils.isGooglePlayStoreAvailable(context) && PlayServicesUtils.isFusedLocationDependencyAvailable()) {
-            adapters.add(new FusedLocationAdapter(context));
+            adapters.add(new FusedLocationAdapter());
         }
 
-        adapters.add(new StandardLocationAdapter(context));
+        adapters.add(new StandardLocationAdapter());
     }
 
-    UALocationProvider(LocationAdapter... adapters) {
+    @VisibleForTesting
+    UALocationProvider(@NonNull Context context, @NonNull Intent locationUpdateIntent, LocationAdapter... adapters) {
+        this.context = context;
+        this.locationUpdateIntent = locationUpdateIntent;
         this.adapters.addAll(Arrays.asList(adapters));
     }
+
 
     /**
      * Cancels all location requests for the connected adapter's pending intent.
      */
-    public void cancelRequests() {
+    void cancelRequests() {
         Logger.verbose("UALocationProvider - Canceling location requests.");
-
-        if (!isConnected) {
-            throw new IllegalStateException("Provider must be connected before making requests.");
-        }
+        connect();
 
         if (connectedAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
@@ -65,7 +74,10 @@ class UALocationProvider {
         }
 
         try {
-            connectedAdapter.cancelLocationUpdates();
+            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
+            if (pendingIntent != null) {
+                connectedAdapter.cancelLocationUpdates(context, pendingIntent);
+            }
         } catch (Exception ex) {
             Logger.error("Unable to cancel location updates: " + ex.getMessage());
         }
@@ -77,10 +89,8 @@ class UALocationProvider {
      * @param options The request options.
      * @throws IllegalStateException if the provider is not connected.
      */
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
-        if (!isConnected) {
-            throw new IllegalStateException("Provider must be connected before making requests.");
-        }
+    void requestLocationUpdates(@NonNull LocationRequestOptions options) {
+        connect();
 
         if (connectedAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
@@ -89,7 +99,8 @@ class UALocationProvider {
 
         Logger.verbose("UALocationProvider - Requesting location updates: " + options);
         try {
-            connectedAdapter.requestLocationUpdates(options);
+            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            connectedAdapter.requestLocationUpdates(context, options, pendingIntent);
         } catch (Exception ex) {
             Logger.error("Unable to request location updates: " + ex.getMessage());
         }
@@ -104,10 +115,9 @@ class UALocationProvider {
      * @throws IllegalStateException if the provider is not connected.
      */
     @Nullable
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
-        if (!isConnected) {
-            throw new IllegalStateException("Provider must be connected before making requests.");
-        }
+    PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+        connect();
+
 
         if (connectedAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
@@ -117,7 +127,7 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
 
         try {
-            return connectedAdapter.requestSingleLocation(locationCallback, options);
+            return connectedAdapter.requestSingleLocation(context, locationCallback, options);
         } catch (Exception ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
             return null;
@@ -125,9 +135,10 @@ class UALocationProvider {
     }
 
     /**
-     * Connects to the provider. This method blocks.
+     * Connects to the provider.
      */
-    public void connect() {
+    @WorkerThread
+    private void connect() {
         if (isConnected) {
             return;
         }
@@ -135,7 +146,7 @@ class UALocationProvider {
         for (LocationAdapter adapter : adapters) {
             Logger.verbose("UALocationProvider - Attempting to connect to location adapter: " + adapter);
 
-            if (adapter.connect()) {
+            if (adapter.connect(context)) {
                 Logger.verbose("UALocationProvider - Connected to location adapter: " + adapter);
 
                 if (connectedAdapter == null) {
@@ -149,12 +160,15 @@ class UALocationProvider {
                      */
 
                     try {
-                        adapter.cancelLocationUpdates();
+                        PendingIntent pendingIntent = PendingIntent.getService(context, adapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
+                        if (pendingIntent != null) {
+                            adapter.cancelLocationUpdates(context, pendingIntent);
+                        }
                     } catch (Exception ex) {
                         Logger.error("Unable to cancel location updates: " + ex.getMessage());
                     }
 
-                    adapter.disconnect();
+                    adapter.disconnect(context);
                 }
             } else {
                 Logger.verbose("UALocationProvider - Failed to connect to location adapter: " + adapter);
@@ -167,7 +181,7 @@ class UALocationProvider {
     /**
      * Disconnects the provider and cancel any location requests.
      */
-    public void disconnect() {
+    void onDestroy() {
         if (!isConnected) {
             return;
         }
@@ -175,7 +189,7 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Disconnecting from location provider.");
 
         if (connectedAdapter != null) {
-            connectedAdapter.disconnect();
+            connectedAdapter.disconnect(context);
             connectedAdapter = null;
         }
 
@@ -187,21 +201,29 @@ class UALocationProvider {
      *
      * @param options Current location request options.
      */
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
+    void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
         Logger.verbose("UALocationProvider - Available location providers changed.");
 
-        if (!isConnected) {
-            return;
-        }
+        connect();
 
-        if (connectedAdapter == null) {
-            return;
+        if (connectedAdapter != null) {
+            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            connectedAdapter.onSystemLocationProvidersChanged(context, options, pendingIntent);
         }
-
-        connectedAdapter.onSystemLocationProvidersChanged(options);
     }
 
-    boolean isUpdatesRequested() {
-        return connectedAdapter != null && connectedAdapter.isUpdatesRequested();
+    /**
+     * Checks if updates are currently being requested or not.
+     *
+     * @return {@code true} if updates are being requested, otherwise {@code false}.
+     */
+    boolean areUpdatesRequested() {
+        connect();
+
+        if (connectedAdapter == null) {
+            return false;
+        }
+
+        return getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 }

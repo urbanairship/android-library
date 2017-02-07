@@ -4,7 +4,6 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -26,30 +25,15 @@ import java.util.List;
  */
 class StandardLocationAdapter implements LocationAdapter {
 
-    private static final int STANDARD_LOCATION_ADAPTER_INTENT_FLAG = 2;
-
-    private final LocationManager locationManager;
-    private final Context context;
-    private final Intent locationUpdatesIntent;
+    private static final int REQUEST_CODE = 2;
 
     private static String currentProvider;
 
-    /**
-     * Creates a standard location provider.
-     *
-     * @param context The application context.
-     */
-    StandardLocationAdapter(Context context) {
-        this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        this.context = context;
-        this.locationUpdatesIntent = new Intent(context, LocationService.class).setAction(UALocationProvider.ACTION_LOCATION_UPDATE);
-    }
-
     @Override
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
+    public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
         Criteria criteria = createCriteria(options);
-        PendingIntent intent = PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        locationManager.removeUpdates(intent);
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationManager.removeUpdates(pendingIntent);
 
         List<String> providers = locationManager.getProviders(criteria, false);
         if (providers != null) {
@@ -57,11 +41,11 @@ class StandardLocationAdapter implements LocationAdapter {
                 Logger.verbose("StandardLocationAdapter - Update " +
                         "listening provider enable/disabled for: " + provider);
                 //noinspection MissingPermission
-                locationManager.requestLocationUpdates(provider, Long.MAX_VALUE, Float.MAX_VALUE, intent);
+                locationManager.requestLocationUpdates(provider, Long.MAX_VALUE, Float.MAX_VALUE, pendingIntent);
             }
         }
 
-        String bestProvider = getBestProvider(criteria, options);
+        String bestProvider = getBestProvider(context, criteria, options);
         if (!UAStringUtil.isEmpty(bestProvider)) {
             Logger.verbose("StandardLocationAdapter - Requesting location updates from provider: " + bestProvider);
 
@@ -72,19 +56,19 @@ class StandardLocationAdapter implements LocationAdapter {
                     bestProvider,
                     options.getMinTime(),
                     options.getMinDistance(),
-                    intent);
+                    pendingIntent);
         }
     }
 
     @Override
-    public boolean connect() {
+    public boolean connect(@NonNull Context context) {
         return true;
     }
 
     @Override
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
+    public void onSystemLocationProvidersChanged(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
         Criteria criteria = createCriteria(options);
-        String bestProvider = getBestProvider(criteria, options);
+        String bestProvider = getBestProvider(context, criteria, options);
 
         if (!UAStringUtil.isEmpty(currentProvider) && currentProvider.equals(bestProvider)) {
             Logger.verbose("StandardLocationAdapter - Already listening for updates from the best provider: " + currentProvider);
@@ -92,20 +76,22 @@ class StandardLocationAdapter implements LocationAdapter {
         }
 
         Logger.verbose("StandardLocationAdapter - Refreshing updates, best provider might of changed.");
-        requestLocationUpdates(options);
+        requestLocationUpdates(context, options, pendingIntent);
     }
 
     @Override
-    public void disconnect() {
+    public int getRequestCode() {
+        return REQUEST_CODE;
     }
 
     @Override
-    public void cancelLocationUpdates() {
-        PendingIntent pendingIntent = PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE);
-        if (pendingIntent != null) {
-            locationManager.removeUpdates(pendingIntent);
-            pendingIntent.cancel();
-        }
+    public void disconnect(@NonNull Context context) {
+    }
+
+    @Override
+    public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationManager.removeUpdates(pendingIntent);
 
         Logger.verbose("StandardLocationAdapter - Canceling location updates.");
         currentProvider = null;
@@ -113,15 +99,9 @@ class StandardLocationAdapter implements LocationAdapter {
 
     @Override
     @NonNull
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
-        return new SingleLocationRequest(locationCallback, options);
+    public PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+        return new SingleLocationRequest(context, locationCallback, options);
     }
-
-    @Override
-    public boolean isUpdatesRequested() {
-        return PendingIntent.getService(context, STANDARD_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE) != null;
-    }
-
 
     /**
      * Creates a location criteria from a LocationRequestOptions.
@@ -155,11 +135,14 @@ class StandardLocationAdapter implements LocationAdapter {
     /**
      * Gets the best provider for the given criteria and location request options.
      *
+     * @param context The application context.
      * @param criteria The criteria that the returned providers must match.
      * @param options The location request options.
      * @return The best provider, or null if one does not exist.
      */
-    private String getBestProvider(@NonNull Criteria criteria, @NonNull LocationRequestOptions options) {
+    private String getBestProvider(@NonNull Context context, @NonNull Criteria criteria, @NonNull LocationRequestOptions options) {
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
         if (options.getPriority() == LocationRequestOptions.PRIORITY_NO_POWER) {
             List<String> availableProviders = locationManager.getProviders(criteria, true);
             if (availableProviders == null) {
@@ -188,17 +171,20 @@ class StandardLocationAdapter implements LocationAdapter {
 
         private final AndroidLocationListener currentProviderListener;
         private final AndroidLocationListener providerEnabledListeners;
+        private LocationManager locationManager;
 
         /**
          * SingleLocationRequest constructor.
          *
+         * @param context The application context.
          * @param locationCallback The location callback.
          * @param options The locationRequestOptions.
          */
-        SingleLocationRequest(@NonNull LocationCallback locationCallback, @NonNull final LocationRequestOptions options) {
+        SingleLocationRequest(@NonNull final Context context, @NonNull LocationCallback locationCallback, @NonNull final LocationRequestOptions options) {
             super(locationCallback);
             this.options = options;
             this.criteria = createCriteria(options);
+            this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             currentProviderListener = new AndroidLocationListener() {
                 @Override
@@ -212,7 +198,7 @@ class StandardLocationAdapter implements LocationAdapter {
                     Logger.verbose("StandardLocationAdapter - Provider disabled: " + provider);
                     synchronized (this) {
                         if (!isDone()) {
-                            listenForLocationChanges();
+                            listenForLocationChanges(context);
                         }
                     }
                 }
@@ -224,9 +210,9 @@ class StandardLocationAdapter implements LocationAdapter {
                     Logger.verbose("StandardLocationAdapter - Provider enabled: " + provider);
                     synchronized (this) {
                         if (!isDone()) {
-                            String bestProvider = getBestProvider(criteria, options);
+                            String bestProvider = getBestProvider(context, criteria, options);
                             if (bestProvider != null && !bestProvider.equals(currentProvider)) {
-                                listenForLocationChanges();
+                                listenForLocationChanges(context);
                             }
                         }
                     }
@@ -237,16 +223,16 @@ class StandardLocationAdapter implements LocationAdapter {
                 listenForProvidersEnabled();
             }
 
-            listenForLocationChanges();
+            listenForLocationChanges(context);
         }
 
-        private void listenForLocationChanges() {
+        private void listenForLocationChanges(@NonNull Context context) {
             if (currentProvider != null) {
                 //noinspection MissingPermission
                 locationManager.removeUpdates(currentProviderListener);
             }
 
-            String bestProvider = getBestProvider(criteria, options);
+            String bestProvider = getBestProvider(context, criteria, options);
 
             currentProvider = bestProvider;
 

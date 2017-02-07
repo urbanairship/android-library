@@ -102,6 +102,12 @@ public class LocationService extends Service {
      */
     static final String ACTION_CHECK_LOCATION_UPDATES = "com.urbanairship.location.ACTION_CHECK_LOCATION_UPDATES";
 
+    /**
+     * Action used for location updates.
+     */
+    static final String ACTION_LOCATION_UPDATE = "com.urbanairship.location.ACTION_LOCATION_UPDATE";
+
+
 
     private final Set<Messenger> subscribedClients = new HashSet<>();
     private final HashMap<Messenger, SparseArray<PendingResult<Location>>> pendingResultMap = new HashMap<>();
@@ -121,7 +127,7 @@ public class LocationService extends Service {
 
     @Override
     public void onDestroy() {
-        locationProvider.disconnect();
+        locationProvider.onDestroy();
         looper.quit();
         super.onDestroy();
         Logger.verbose("LocationService - Service destroyed.");
@@ -139,7 +145,8 @@ public class LocationService extends Service {
         handler = new IncomingHandler(looper);
         messenger = new Messenger(handler);
 
-        locationProvider = new UALocationProvider(getApplicationContext());
+        Intent updateIntent = new Intent(getApplicationContext(), LocationService.class).setAction(ACTION_LOCATION_UPDATE);
+        locationProvider = new UALocationProvider(getApplicationContext(), updateIntent);
 
         Logger.verbose("LocationService - Service created.");
     }
@@ -167,7 +174,7 @@ public class LocationService extends Service {
             case ACTION_CHECK_LOCATION_UPDATES:
                 onCheckLocationUpdates();
                 break;
-            case UALocationProvider.ACTION_LOCATION_UPDATE:
+            case ACTION_LOCATION_UPDATE:
                 onLocationUpdate(intent);
                 break;
         }
@@ -222,8 +229,6 @@ public class LocationService extends Service {
         Logger.verbose("LocationService - Single location request for client: " + client + " ID: " + requestId);
         Logger.info("Requesting single location update with request options: " + options);
 
-
-        locationProvider.connect();
         PendingResult<Location> pendingResult = locationProvider.requestSingleLocation(new LocationCallback() {
             @Override
             public void onResult(Location location) {
@@ -285,7 +290,6 @@ public class LocationService extends Service {
                 Logger.debug("LocationService - One of the location providers was enabled or disabled.");
 
                 LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
-                locationProvider.connect();
                 locationProvider.onSystemLocationProvidersChanged(options);
                 return;
             }
@@ -326,8 +330,7 @@ public class LocationService extends Service {
             LocationRequestOptions options = UAirship.shared().getLocationManager().getLocationRequestOptions();
             LocationRequestOptions lastLocationOptions = UAirship.shared().getLocationManager().getLastUpdateOptions();
 
-            if (!options.equals(lastLocationOptions) || !locationProvider.isUpdatesRequested()) {
-                locationProvider.connect();
+            if (!options.equals(lastLocationOptions) || !locationProvider.areUpdatesRequested()) {
                 locationProvider.requestLocationUpdates(options);
                 UAirship.shared().getLocationManager().setLastUpdateOptions(options);
             }
@@ -336,7 +339,6 @@ public class LocationService extends Service {
         }
 
         Logger.debug("LocationService - Stopping updates.");
-        locationProvider.connect();
         locationProvider.cancelRequests();
     }
 
