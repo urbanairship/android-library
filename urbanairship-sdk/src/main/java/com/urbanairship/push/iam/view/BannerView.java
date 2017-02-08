@@ -7,6 +7,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import com.urbanairship.R;
@@ -17,7 +18,7 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup;
  */
 public class BannerView extends FrameLayout implements Banner {
 
-    private final BannerContent content;
+    private final BannerContentView contentView;
 
     /**
      * Construct a banner view.
@@ -47,39 +48,42 @@ public class BannerView extends FrameLayout implements Banner {
      */
     public BannerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        content = new BannerContent(context, this, attrs, defStyleAttr);
-        updateBackground(content.getPrimaryColor());
+        View.inflate(context, R.layout.ua_iam_content, this);
+
+        this.contentView = (BannerContentView) findViewById(R.id.iam_banner_content);
+
+        updateBackground(contentView.getPrimaryColor());
     }
 
     @Override
     public void setOnDismissClickListener(OnDismissClickListener onClickListener) {
-        content.setOnDismissClickListener(onClickListener);
+        contentView.setOnDismissClickListener(onClickListener);
     }
 
     @Override
     public void setOnActionClickListener(OnActionClickListener onClickListener) {
-        content.setOnActionClickListener(onClickListener);
+        contentView.setOnActionClickListener(onClickListener);
     }
 
     @Override
     public void setText(CharSequence text) {
-        content.setText(text);
+        contentView.setText(text);
     }
 
     @Override
     public void setNotificationActionButtonGroup(NotificationActionButtonGroup group) {
-        content.setNotificationActionButtonGroup(group);
+        contentView.setNotificationActionButtonGroup(group);
     }
 
     @Override
     public void setPrimaryColor(int color) {
         updateBackground(color);
-        content.setPrimaryColor(color);
+        contentView.setPrimaryColor(color);
     }
 
     @Override
     public void setSecondaryColor(int color) {
-        content.setSecondaryColor(color);
+        contentView.setSecondaryColor(color);
     }
 
     private void updateBackground(int color) {

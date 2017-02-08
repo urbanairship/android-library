@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
+import android.view.View;
 
 import com.urbanairship.R;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -16,7 +17,7 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup;
  */
 public class BannerCardView extends CardView implements Banner {
 
-    private final BannerContent content;
+    private final BannerContentView contentView;
 
     /**
      * Construct a banner card view.
@@ -46,7 +47,9 @@ public class BannerCardView extends CardView implements Banner {
      */
     public BannerCardView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        content = new BannerContent(context, this, attrs, defStyleAttr);
+
+        View.inflate(context, R.layout.ua_iam_content, this);
+        this.contentView = (BannerContentView) findViewById(R.id.iam_banner_content);
 
         if (attrs != null) {
             TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr, R.style.InAppMessage_Banner);
@@ -72,37 +75,37 @@ public class BannerCardView extends CardView implements Banner {
             a.recycle();
         }
 
-        setCardBackgroundColor(content.getPrimaryColor());
+        setCardBackgroundColor(contentView.getPrimaryColor());
     }
 
     @Override
     public void setOnDismissClickListener(OnDismissClickListener onClickListener) {
-        content.setOnDismissClickListener(onClickListener);
+        contentView.setOnDismissClickListener(onClickListener);
     }
 
     @Override
     public void setOnActionClickListener(OnActionClickListener onClickListener) {
-        content.setOnActionClickListener(onClickListener);
+        contentView.setOnActionClickListener(onClickListener);
     }
 
     @Override
     public void setText(CharSequence text) {
-        content.setText(text);
+        contentView.setText(text);
     }
 
     @Override
     public void setNotificationActionButtonGroup(NotificationActionButtonGroup group) {
-        content.setNotificationActionButtonGroup(group);
+        contentView.setNotificationActionButtonGroup(group);
     }
 
     @Override
     public void setPrimaryColor(int color) {
         setCardBackgroundColor(color);
-        content.setPrimaryColor(color);
+        contentView.setPrimaryColor(color);
     }
 
     @Override
     public void setSecondaryColor(int color) {
-        content.setSecondaryColor(color);
+        contentView.setSecondaryColor(color);
     }
 }
