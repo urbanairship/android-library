@@ -2,7 +2,6 @@ package com.urbanairship.location;
 
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -10,8 +9,8 @@ import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationRequest;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
@@ -20,28 +19,15 @@ import java.util.concurrent.Semaphore;
 
 /**
  * Location adapter for Google's fused location provider.
+ * @hide
  */
 class FusedLocationAdapter implements LocationAdapter {
 
-    private static final int FUSED_LOCATION_ADAPTER_INTENT_FLAG = 1;
-
-    private final Context context;
-    private final Intent locationUpdatesIntent;
-
+    private static final int REQUEST_CODE = 1;
     private GoogleApiClient client;
 
-    /**
-     * Creates a fused location adapter.
-     *
-     * @param context The application context.
-     */
-    FusedLocationAdapter(Context context) {
-        this.context = context;
-        this.locationUpdatesIntent = new Intent(context, LocationService.class).setAction(UALocationProvider.ACTION_LOCATION_UPDATE);
-    }
-
     @Override
-    public PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+    public PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
             return null;
@@ -50,12 +36,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void cancelLocationUpdates() {
-        PendingIntent pendingIntent = PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE);
-        if (pendingIntent == null) {
-            return;
-        }
-
+    public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to cancel location updates.");
             return;
@@ -67,8 +48,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void requestLocationUpdates(@NonNull LocationRequestOptions options) {
-        PendingIntent intent = PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
 
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
@@ -79,11 +59,11 @@ class FusedLocationAdapter implements LocationAdapter {
         LocationRequest locationRequest = createLocationRequest(options);
 
         //noinspection MissingPermission
-        LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, intent);
+        LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, pendingIntent);
     }
 
     @Override
-    public boolean connect() {
+    public boolean connect(@NonNull Context context) {
         final Semaphore semaphore = new Semaphore(0);
 
         try {
@@ -127,7 +107,7 @@ class FusedLocationAdapter implements LocationAdapter {
             semaphore.acquire();
         } catch (InterruptedException ex) {
             Logger.error("FusedLocationAdapter - Exception while connecting to fused location", ex);
-            disconnect();
+            disconnect(context);
             return false;
         }
 
@@ -135,7 +115,7 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void disconnect() {
+    public void disconnect(@NonNull Context context) {
         if (client != null && client.isConnected()) {
             client.disconnect();
         }
@@ -146,13 +126,13 @@ class FusedLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
+    public void onSystemLocationProvidersChanged(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
         // fused location handles this internally
     }
 
     @Override
-    public boolean isUpdatesRequested() {
-        return PendingIntent.getService(context, FUSED_LOCATION_ADAPTER_INTENT_FLAG, locationUpdatesIntent, PendingIntent.FLAG_NO_CREATE) != null;
+    public int getRequestCode() {
+        return REQUEST_CODE;
     }
 
     /**

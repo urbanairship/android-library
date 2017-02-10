@@ -2,6 +2,8 @@
 
 package com.urbanairship.location;
 
+import android.app.PendingIntent;
+import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
@@ -9,54 +11,69 @@ import com.urbanairship.PendingResult;
 
 /**
  * The common interface for communicating with different location sources.
+ *
+ * @hide
  */
-interface LocationAdapter {
+public interface LocationAdapter {
+
     /**
      * Requests a single location update.
      *
+     * @param context The application context.
      * @param locationCallback The location callback.
      * @param options The location request options.
      * @return PendingLocationResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options);
+    PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options);
 
     /**
      * Cancels location updates.
+     *
+     * @param context The application context.
+     * @param pendingIntent The pending intent.
      */
-    void cancelLocationUpdates();
+    void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent);
 
     /**
      * Requests location updates.
      *
+     * @param context The application context.
      * @param options The location request options.
+     * @param pendingIntent The pending intent.
      */
-    void requestLocationUpdates(@NonNull LocationRequestOptions options);
+    void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent);
 
     /**
      * Connects the adapter.
      *
+     * @param context The application context.
      * @return <code>true</code> if the adapter connected,
      * <code>false</code> otherwise.
      */
-    boolean connect();
+    boolean connect(@NonNull Context context);
 
     /**
      * Disconnects the adapter.
+     *
+     * @param context The application context.
      */
-    void disconnect();
+    void disconnect(@NonNull Context context);
 
     /**
      * Called when a system location provider availability changes.
      *
+     * @param context The application context.
      * @param options Current location request options.
+     * @param pendingIntent The pending intent.
      */
-    void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options);
+    void onSystemLocationProvidersChanged(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent);
 
     /**
-     * Checks if the adapter's pending intent already exists.
+     * Returns the adapter's request code.
      *
-     * @return {@code true} if updates have already been requested, otherwise {@code false}.
+     * @return The adapter's request code.
      */
-    boolean isUpdatesRequested();
+    int getRequestCode();
+
 }
