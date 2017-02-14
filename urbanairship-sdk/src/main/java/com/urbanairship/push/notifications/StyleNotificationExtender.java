@@ -1,4 +1,4 @@
-/* Copyright 2016 Urban Airship and Contributors */
+/* Copyright 2017 Urban Airship and Contributors */
 
 package com.urbanairship.push.notifications;
 
@@ -199,7 +199,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         JsonList lines = styleJson.opt(LINES_KEY).optList();
         for (JsonValue line : lines) {
             String lineValue = line.getString();
-            if (UAStringUtil.isEmpty(lineValue)) {
+            if (!UAStringUtil.isEmpty(lineValue)) {
                 style.addLine(lineValue);
             }
         }
