@@ -270,7 +270,7 @@ public class AirshipReceiver extends BroadcastReceiver {
     /**
      * Contains information about a posted notification.
      */
-    protected static class NotificationInfo {
+    public static class NotificationInfo {
         private final PushMessage message;
         private final int notificationId;
 
@@ -302,7 +302,7 @@ public class AirshipReceiver extends BroadcastReceiver {
     /**
      * Contains info about a notification action button.
      */
-    protected static class ActionButtonInfo {
+    public static class ActionButtonInfo {
         private final String buttonId;
         private final boolean isForeground;
         private final Bundle remoteInput;
