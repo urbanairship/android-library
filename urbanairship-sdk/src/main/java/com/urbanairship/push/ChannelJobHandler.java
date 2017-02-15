@@ -9,13 +9,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
-import com.amazon.device.messaging.ADMConstants;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.amazon.AdmUtils;
-import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
@@ -53,9 +49,9 @@ class ChannelJobHandler {
     static final String ACTION_START_REGISTRATION = "com.urbanairship.push.ACTION_START_REGISTRATION";
 
     /**
-     * Action notifying the service that ADM registration has finished.
+     * Action notifying the service that registration has finished.
      */
-    static final String ACTION_ADM_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_ADM_REGISTRATION_FINISHED";
+    static final String ACTION_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_REGISTRATION_FINISHED";
 
     /**
      * Action to update channel registration.
@@ -67,10 +63,6 @@ class ChannelJobHandler {
      */
     static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
 
-    /**
-     * Extra containing the received message intent.
-     */
-    static final String EXTRA_INTENT = "com.urbanairship.push.EXTRA_INTENT";
 
     /**
      * Data store key for the last successfully registered channel payload.
@@ -161,8 +153,8 @@ class ChannelJobHandler {
             case ACTION_UPDATE_PUSH_REGISTRATION:
                 return onUpdatePushRegistration();
 
-            case ACTION_ADM_REGISTRATION_FINISHED:
-                return onAdmRegistrationFinished(job);
+            case ACTION_REGISTRATION_FINISHED:
+                return onRegistrationFinished(job);
 
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
                 return onUpdateChannelRegistration();
@@ -192,7 +184,9 @@ class ChannelJobHandler {
 
         isRegistrationStarted = true;
 
-        if (isPushRegistrationAllowed()) {
+        PushProvider provider = pushManager.getPushProvider();
+
+        if (provider != null && provider.isAvailable(context)) {
             isPushRegistering = true;
 
             // Update the push registration
@@ -214,54 +208,29 @@ class ChannelJobHandler {
     }
 
     /**
-     * Updates the push registration for either ADM or GCM.
+     * Updates the push registration.
      *
      * @return The job result.
      */
     @Job.JobResult
     private int onUpdatePushRegistration() {
-        isPushRegistering = false;
+        isPushRegistering = true;
 
-        switch (airship.getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
+        PushProvider provider = pushManager.getPushProvider();
+        String currentToken = pushManager.getRegistrationToken();
 
-                if (!PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
-                    Logger.error("GCM is unavailable. Unable to register for push notifications. If using " +
-                            "the modular Google Play Services dependencies, make sure the application includes " +
-                            "the com.google.android.gms:play-services-gcm dependency.");
-                    break;
-                }
+        if (provider == null || !provider.isAvailable(context)) {
+            Logger.error("Registration failed. Push provider unavailable: " + provider);
+            isPushRegistering = false;
+        } else if (UAStringUtil.isEmpty(currentToken) || provider.shouldUpdateRegistration(context, currentToken)) {
+            pushManager.setRegistrationToken(null);
 
-                try {
-                    GcmRegistrar.register();
-                } catch (IOException | SecurityException e) {
-                    Logger.error("GCM registration failed, will retry. GCM error: " + e.getMessage());
-                    isPushRegistering = true;
-                    return Job.JOB_RETRY;
-                }
-
-                break;
-
-            case UAirship.AMAZON_PLATFORM:
-
-                if (!AdmUtils.isAdmSupported()) {
-                    Logger.error("ADM is not supported on this device.");
-                    break;
-                }
-
-                String admId = AdmUtils.getRegistrationId(context);
-                if (admId == null) {
-                    pushManager.setRegistrationToken(null);
-                    AdmUtils.startRegistration(context);
-                    isPushRegistering = true;
-                } else if (!admId.equals(pushManager.getRegistrationToken())) {
-                    Logger.info("ADM registration successful. Registration ID: " + admId);
-                    pushManager.setRegistrationToken(admId);
-                }
-
-                break;
-            default:
-                Logger.error("Unknown platform type. Unable to register for push.");
+            try {
+                provider.startRegistration(context);
+            } catch (IOException | SecurityException e) {
+                Logger.error("Push registration failed, will retry. Error: " + e.getMessage());
+                return Job.JOB_RETRY;
+            }
         }
 
         if (!isPushRegistering) {
@@ -277,32 +246,34 @@ class ChannelJobHandler {
     }
 
     /**
-     * Called when ADM registration is finished.
+     * Called when registration is finished.
      *
      * @param job The registration job.
      * @return The job result.
      */
     @Job.JobResult
-    private int onAdmRegistrationFinished(@NonNull Job job) {
-        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM || !AdmUtils.isAdmAvailable()) {
-            Logger.error("Received intent from invalid transport acting as ADM.");
+    private int onRegistrationFinished(@NonNull Job job) {
+        Bundle extras = job.getExtras();
+        String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
+
+        PushProvider provider = pushManager.getPushProvider();
+
+        if (provider == null || !provider.getClass().toString().equals(providerClass)) {
+            Logger.error("Received registration finished callback from unexpected push provider: " + providerClass);
             return Job.JOB_FINISHED;
         }
 
-        Bundle admExtras = job.getExtras();
-        if (admExtras.isEmpty()) {
-            Logger.error("ChannelJobHandler - Received ADM message missing original intent.");
+        if (!provider.isAvailable(context)) {
+            Logger.error("Received registration finished callback when provider is unavailable. Ignoring.");
             return Job.JOB_FINISHED;
         }
 
-        if (admExtras.containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
-            Logger.error("ADM error occurred: " + admExtras.getString(ADMConstants.LowLevel.EXTRA_ERROR));
+        String registrationID = extras.getString(PushProviderBridge.EXTRA_REGISTRATION_ID);
+        if (registrationID != null) {
+            Logger.info("Push registration successful. Registration ID: " + registrationID);
+            pushManager.setRegistrationToken(registrationID);
         } else {
-            String registrationID = admExtras.getString(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
-            if (registrationID != null) {
-                Logger.info("ADM registration successful. Registration ID: " + registrationID);
-                pushManager.setRegistrationToken(registrationID);
-            }
+            Logger.error("Push registration failed for provider: " + provider);
         }
 
         isPushRegistering = false;
@@ -506,30 +477,6 @@ class ChannelJobHandler {
         }
 
         return null;
-    }
-
-    /**
-     * Check if the push registration is allowed for the current platform.
-     *
-     * @return <code>true</code> if push registration is allowed.
-     */
-    private boolean isPushRegistrationAllowed() {
-        switch (airship.getPlatformType()) {
-            case UAirship.ANDROID_PLATFORM:
-                if (!airship.getAirshipConfigOptions().isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-                    Logger.info("Unable to register for push. GCM transport type is not allowed.");
-                    return false;
-                }
-                return true;
-            case UAirship.AMAZON_PLATFORM:
-                if (!airship.getAirshipConfigOptions().isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-                    Logger.info("Unable to register for push. ADM transport type is not allowed.");
-                    return false;
-                }
-                return true;
-            default:
-                return false;
-        }
     }
 
     /**

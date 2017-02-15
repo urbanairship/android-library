@@ -1,4 +1,4 @@
-/* Copyright 2016 Urban Airship and Contributors */
+/* Copyright 2017 Urban Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -14,13 +14,27 @@ import android.util.Base64;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.push.gcm.GcmPushProvider;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.
  */
 public class GcmPushReceiver extends WakefulBroadcastReceiver {
+
+    /**
+     * This intent action indicates a push notification has been received from GCM.
+     */
+    static final String ACTION_GCM_RECEIVE = "com.google.android.c2dm.intent.RECEIVE";
+
+    /**
+     * This intent action indicates a registration from GCM.
+     */
+    static final String ACTION_GCM_REGISTRATION = "com.google.android.c2dm.intent.REGISTRATION";
+
+    /**
+     * This intent action indicates a registration change.
+     */
+    static final String ACTION_INSTANCE_ID = "com.google.android.gms.iid.InstanceID";
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -38,13 +52,8 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
         }
 
         switch (intent.getAction()) {
-            case GcmConstants.ACTION_GCM_RECEIVE:
-                Job messageJob = Job.newBuilder(PushJobHandler.ACTION_RECEIVE_GCM_MESSAGE)
-                                    .setAirshipComponent(PushManager.class)
-                                    .setExtras(intent.getExtras())
-                                    .build();
-
-                JobDispatcher.shared(context).wakefulDispatch(messageJob);
+            case ACTION_GCM_RECEIVE:
+                PushProviderBridge.receivedPush(context, GcmPushProvider.class, intent.getExtras());
 
                 if (this.isOrderedBroadcast()) {
                     this.setResultCode(Activity.RESULT_OK);
@@ -52,19 +61,14 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
                 break;
 
-            case GcmConstants.ACTION_INSTANCE_ID:
+            case ACTION_INSTANCE_ID:
                 startInstanceIdService(context, intent);
 
                 break;
 
-            case GcmConstants.ACTION_GCM_REGISTRATION:
+            case ACTION_GCM_REGISTRATION:
+                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class);
 
-                // When we detect a GCM registration, make sure our GCM token is up-to-date.
-                Job registrationJob = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                         .setAirshipComponent(PushManager.class)
-                                         .build();
-
-                JobDispatcher.shared(context).wakefulDispatch(registrationJob);
                 break;
         }
     }
@@ -94,6 +98,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         // Send the intent to the InstanceIdService or the GcmIntentService
         try {
+
             ComponentName componentName = startWakefulService(context, intent);
             if (isOrderedBroadcast()) {
                 setResultCode(componentName == null ? 404 : Activity.RESULT_OK);

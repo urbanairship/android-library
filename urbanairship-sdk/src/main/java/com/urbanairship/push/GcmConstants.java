@@ -4,7 +4,9 @@ package com.urbanairship.push;
 
 /**
  * Common GCM Constants used by Urban Airship.
+ * @deprecated Will be removed in 9.0.0.
  */
+@Deprecated
 public interface GcmConstants {
     /**
      * This intent action indicates a push notification has been received from GCM.
@@ -37,6 +39,4 @@ public interface GcmConstants {
      * The message type value sent in {@link #EXTRA_GCM_MESSAGE_TYPE} when GCM deleted pending messages.
      */
     String GCM_DELETED_MESSAGES_VALUE = "deleted_messages";
-
-
 }

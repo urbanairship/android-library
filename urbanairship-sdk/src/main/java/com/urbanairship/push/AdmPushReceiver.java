@@ -1,4 +1,4 @@
-/* Copyright 2016 Urban Airship and Contributors */
+/* Copyright 2017 Urban Airship and Contributors */
 
 package com.urbanairship.push;
 
@@ -11,8 +11,7 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.push.adm.AdmPushProvider;
 
 /**
  * AdmPushReceiver listens for incoming ADM registration responses and messages.
@@ -32,23 +31,17 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
         switch (intent.getAction()) {
             case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
-
-                Job messageJob = Job.newBuilder(PushJobHandler.ACTION_RECEIVE_ADM_MESSAGE)
-                                    .setAirshipComponent(PushManager.class)
-                                    .setExtras(intent.getExtras())
-                                    .build();
-
-                JobDispatcher.shared(context).wakefulDispatch(messageJob);
+                PushProviderBridge.receivedPush(context, AdmPushProvider.class, intent.getExtras());
                 break;
 
             case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
 
-                Job registrationJob = Job.newBuilder(ChannelJobHandler.ACTION_ADM_REGISTRATION_FINISHED)
-                                         .setAirshipComponent(PushManager.class)
-                                         .setExtras(intent.getExtras())
-                                         .build();
+                if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
+                    Logger.error("ADM error occurred: " + intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
+                }
 
-                JobDispatcher.shared(context).wakefulDispatch(registrationJob);
+                String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
+                PushProviderBridge.registrationFinished(context, AdmPushProvider.class, registrationID);
                 break;
         }
 

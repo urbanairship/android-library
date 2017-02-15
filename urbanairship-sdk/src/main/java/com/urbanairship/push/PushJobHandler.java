@@ -13,7 +13,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.job.Job;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -22,6 +21,7 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionService;
 import com.urbanairship.analytics.PushArrivedEvent;
+import com.urbanairship.job.Job;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
@@ -42,14 +42,9 @@ import java.util.concurrent.TimeUnit;
 class PushJobHandler {
 
     /**
-     * Action sent when a push is received by GCM.
+     * Action sent when a push is received.
      */
-    static final String ACTION_RECEIVE_GCM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_GCM_MESSAGE";
-
-    /**
-     * Action sent when a push is received by ADM.
-     */
-    static final String ACTION_RECEIVE_ADM_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_ADM_MESSAGE";
+    static final String ACTION_RECEIVE_MESSAGE = "com.urbanairship.push.ACTION_RECEIVE_MESSAGE";
 
     /**
      * Key to store the push canonical IDs for push deduping.
@@ -102,11 +97,8 @@ class PushJobHandler {
     @Job.JobResult
     protected int performJob(Job job) {
         switch (job.getAction()) {
-            case ACTION_RECEIVE_ADM_MESSAGE:
-                onAdmMessageReceived(job);
-                break;
-            case ACTION_RECEIVE_GCM_MESSAGE:
-                onGcmMessageReceived(job);
+            case ACTION_RECEIVE_MESSAGE:
+                onMessageReceived(job);
                 break;
         }
 
@@ -114,62 +106,38 @@ class PushJobHandler {
     }
 
     /**
-     * Handles incoming GCM messages.
+     * Handles incoming messages.
      *
      * @param job The received job.
      */
-    private void onGcmMessageReceived(@NonNull Job job) {
-        if (airship.getPlatformType() != UAirship.ANDROID_PLATFORM) {
-            Logger.error("Received intent from invalid transport acting as GCM.");
+    private void onMessageReceived(@NonNull Job job) {
+        Bundle extras = job.getExtras();
+        Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
+        String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
+
+        if (pushBundle == null || providerClass == null) {
             return;
         }
 
-        if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("PushJobHandler - Received intent from GCM without registering.");
+        PushProvider provider = airship.getPushManager().getPushProvider();
+
+        if (provider == null || !provider.getClass().toString().equals(providerClass)) {
+            Logger.error("Received message callback from unexpected provider " +  providerClass + ". Ignoring.");
             return;
         }
 
-        String sender = job.getExtras().getString("from");
-        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
-            Logger.info("Ignoring GCM message from sender: " + sender);
+        if (!provider.isAvailable(context)) {
+            Logger.error("Received message callback when provider is unavailable. Ignoring.");
             return;
         }
 
-        if (GcmConstants.GCM_DELETED_MESSAGES_VALUE.equals(job.getExtras().getString(GcmConstants.EXTRA_GCM_MESSAGE_TYPE))) {
-            Logger.info("GCM deleted " + job.getExtras().getString(GcmConstants.EXTRA_GCM_TOTAL_DELETED) + " pending messages.");
+        if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
+            Logger.error("Received message when push is disabled. Ignoring.");
             return;
         }
 
-        processMessage(new PushMessage(job.getExtras()));
-    }
-
-    /**
-     * Handles incoming ADM messages.
-     *
-     * @param job The received job.
-     */
-    private void onAdmMessageReceived(@NonNull Job job) {
-        if (airship.getPlatformType() != UAirship.AMAZON_PLATFORM) {
-            Logger.error("PushJobHandler - Received intent from invalid transport acting as ADM.");
-            return;
-        }
-
-        if (!airship.getPushManager().isPushAvailable()) {
-            Logger.error("PushJobHandler - Received intent from ADM without registering.");
-            return;
-        }
-
-        processMessage(new PushMessage(job.getExtras()));
-    }
-
-    /**
-     * Processes the received message.
-     *
-     * @param message The push message.
-     */
-    private void processMessage(@NonNull PushMessage message) {
-        if (!airship.getPushManager().isPushEnabled()) {
-            Logger.info("Received a push when push is disabled! Ignoring.");
+        PushMessage message = provider.processMessage(context, pushBundle);
+        if (message == null) {
             return;
         }
 

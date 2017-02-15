@@ -111,7 +111,6 @@ class QuietTimeInterval implements JsonSerializable {
         return new Date[] { startDate, endDate };
     }
 
-
     @Override
     public JsonValue toJsonValue() {
         Map<String, Integer> quietTimeInterval = new HashMap<>();

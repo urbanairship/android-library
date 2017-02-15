@@ -7,7 +7,9 @@ import android.support.annotation.NonNull;
 
 /**
  * Util methods for ADM.
+ * @deprecated Will be removed in 9.0.0.
  */
+@Deprecated
 public class AdmUtils {
 
     private static Boolean isAdmAvailable;

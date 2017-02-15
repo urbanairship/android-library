@@ -243,6 +243,7 @@ public class PushManager extends AirshipComponent {
     private final JobDispatcher jobDispatcher;
     private ChannelJobHandler channelJobHandler;
     private PushJobHandler pushJobHandler;
+    private final PushProvider pushProvider;
 
     private final Object tagLock = new Object();
 
@@ -254,17 +255,19 @@ public class PushManager extends AirshipComponent {
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
      * @param configOptions The airship config options.
+     * @param pushProvider The push provider.
      * @hide
      */
-    public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions) {
-      this(context, preferenceDataStore, configOptions, JobDispatcher.shared(context));
+    public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider pushProvider) {
+        this(context, preferenceDataStore, configOptions, pushProvider, JobDispatcher.shared(context));
     }
 
     @VisibleForTesting
-    PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, JobDispatcher dispatcher) {
+    PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider provider, JobDispatcher dispatcher) {
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
+        this.pushProvider = provider;
 
         DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
         factory.setColor(configOptions.notificationAccentColor);
@@ -316,7 +319,7 @@ public class PushManager extends AirshipComponent {
         switch (job.getAction()) {
             case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
-            case ChannelJobHandler.ACTION_ADM_REGISTRATION_FINISHED:
+            case ChannelJobHandler.ACTION_REGISTRATION_FINISHED:
             case ChannelJobHandler.ACTION_START_REGISTRATION:
             case ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
             case ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION:
@@ -325,8 +328,7 @@ public class PushManager extends AirshipComponent {
                 }
                 return channelJobHandler.performJob(job);
 
-            case PushJobHandler.ACTION_RECEIVE_ADM_MESSAGE:
-            case PushJobHandler.ACTION_RECEIVE_GCM_MESSAGE:
+            case PushJobHandler.ACTION_RECEIVE_MESSAGE:
                 if (pushJobHandler == null) {
                     pushJobHandler = new PushJobHandler(context, airship, preferenceDataStore);
                 }
@@ -1102,5 +1104,15 @@ public class PushManager extends AirshipComponent {
         }
 
         preferenceDataStore.put(REGISTRATION_TOKEN_MIGRATED_KEY, true);
+    }
+
+    /**
+     * Gets the push provider.
+     *
+     * @return The available push provider.
+     */
+    @Nullable
+    PushProvider getPushProvider() {
+        return pushProvider;
     }
 }

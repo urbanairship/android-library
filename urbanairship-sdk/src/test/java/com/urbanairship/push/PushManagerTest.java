@@ -74,7 +74,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options, mockDispatcher);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options, null, mockDispatcher);
 
         tagsToAdd.add("tag1");
         tagsToAdd.add("tag2");
@@ -726,7 +726,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(false)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, null);
         pushManager.init();
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
@@ -735,7 +735,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setDevelopmentAppSecret("appSecret")
                 .setChannelCreationDelayEnabled(true)
                 .build();
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, null);
         pushManager.init();
         assertTrue(pushManager.isChannelCreationDelayEnabled());
 
@@ -756,7 +756,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setChannelCreationDelayEnabled(true)
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, mockDispatcher);
+        pushManager = new PushManager(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, null, mockDispatcher);
         pushManager.init();
 
         assertTrue(pushManager.isChannelCreationDelayEnabled());
@@ -939,7 +939,7 @@ public class PushManagerTest extends BaseTestCase {
                 .setNotificationIcon(R.drawable.ua_ic_urbanairship_notification)
                 .build();
 
-        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options);
+        pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, options, null);
         factory = (DefaultNotificationFactory) pushManager.getNotificationFactory();
 
         assertEquals(R.drawable.ua_ic_urbanairship_notification, factory.getSmallIconId());

@@ -47,7 +47,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
                 .setInProduction(false)
                 .build();
 
-        setPlatform(UAirship.ANDROID_PLATFORM);
 
         UAirship.application = this;
         UAirship.isFlying = true;
@@ -57,13 +56,14 @@ public class TestApplication extends Application implements TestLifecycleApplica
         provider.onCreate();
 
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
+        UAirship.sharedAirship.platform = UAirship.ANDROID_PLATFORM;
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions);
+        UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider());
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
@@ -76,7 +76,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
     }
 
     public void setPlatform(int platform) {
-        preferenceDataStore.put("com.urbanairship.application.device.PLATFORM", platform);
+        UAirship.sharedAirship.platform = PlatformUtils.parsePlatform(platform);
     }
 
     public static TestApplication getApplication() {

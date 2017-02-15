@@ -17,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.urbanairship.actions.ActionRegistry;
-import com.urbanairship.amazon.AdmUtils;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
@@ -26,9 +25,11 @@ import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.push.PushProvider;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.ManifestUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -67,6 +68,11 @@ public class UAirship {
     private static final String PLATFORM_KEY = "com.urbanairship.application.device.PLATFORM";
 
     /**
+     * Push provider class preference key.
+     */
+    private static final String PROVIDER_CLASS_KEY = "com.urbanairship.application.device.PUSH_PROVIDER";
+
+    /**
      * Library version key
      */
     private static final String LIBRARY_VERSION_KEY = "com.urbanairship.application.device.LIBRARY_VERSION";
@@ -103,6 +109,9 @@ public class UAirship {
     MessageCenter messageCenter;
     NamedUser namedUser;
     Automation automation;
+
+    @Platform
+    int platform;
 
     /**
      * Constructs an instance of UAirship.
@@ -556,13 +565,20 @@ public class UAirship {
         this.preferenceDataStore = new PreferenceDataStore(application);
         this.preferenceDataStore.init();
 
+
+        PushProviders providers = PushProviders.load(application, airshipConfigOptions);
+
+        this.platform = determinePlatform(providers);
+        PushProvider pushProvider = determinePushProvider(platform, providers);
+
+
         // Airship components
         this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions, getPlatformType(), ActivityMonitor.shared(application));
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions);
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
         this.namedUser = new NamedUser(application, preferenceDataStore);
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -599,6 +615,7 @@ public class UAirship {
         // Teardown the preference data store last
         preferenceDataStore.tearDown();
     }
+
 
     /**
      * Returns the current configuration options.
@@ -714,52 +731,13 @@ public class UAirship {
     }
 
     /**
-     * Returns the platform type. The platform type is determined only once
-     * by the first statement that applies:
-     * <p/>
-     * <ol>
-     * <li>Amazon if ADM is available</li>
-     * <li>Android if Play Store is installed</li>
-     * <li>Amazon if Manufacturer is "AMAZON"</li>
-     * <li>Android</li>
-     * </ol>
+     * Returns the platform type.
      *
      * @return {@link #AMAZON_PLATFORM} for Amazon or {@link #ANDROID_PLATFORM}
      * for Android.
      */
     @Platform
     public int getPlatformType() {
-
-        @Platform int platform;
-
-        switch (preferenceDataStore.getInt(PLATFORM_KEY, -1)) {
-            case AMAZON_PLATFORM:
-                platform = AMAZON_PLATFORM;
-                break;
-
-            case ANDROID_PLATFORM:
-                platform = ANDROID_PLATFORM;
-                break;
-
-            default:
-                if (AdmUtils.isAdmAvailable()) {
-                    Logger.info("ADM available. Setting platform to Amazon.");
-                    platform = AMAZON_PLATFORM;
-                } else if (PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
-                    Logger.info("Google Play Store available. Setting platform to Android.");
-                    platform = ANDROID_PLATFORM;
-                } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
-                    Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
-                    platform = AMAZON_PLATFORM;
-                } else {
-                    Logger.info("Defaulting platform to Android.");
-                    platform = ANDROID_PLATFORM;
-                }
-
-                preferenceDataStore.put(PLATFORM_KEY, platform);
-                break;
-        }
-
         return platform;
     }
 
@@ -782,6 +760,7 @@ public class UAirship {
         return components;
     }
 
+
     /**
      * Callback interface used to notify app when UAirship is ready.
      */
@@ -794,4 +773,70 @@ public class UAirship {
          */
         void onAirshipReady(UAirship airship);
     }
+
+
+    /**
+     * Determines which push provider to use for the given platform.
+     *
+     * @param platform The providers platform.
+     * @param providers The available providers.
+     * @return The platform's best provider, or {@code null}.
+     */
+    @Nullable
+    private PushProvider determinePushProvider(@Platform int platform, PushProviders providers) {
+        // Existing provider class
+        String existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null);
+
+        // Try to use the same provider
+        if (!UAStringUtil.isEmpty(existingProviderClass)) {
+            PushProvider provider = providers.getProvider(platform, existingProviderClass);
+            if (provider != null) {
+                return provider;
+            }
+        }
+
+        // Find the best provider for the platform
+        PushProvider provider = providers.getBestProvider(platform);
+        if (provider != null) {
+            preferenceDataStore.put(PROVIDER_CLASS_KEY, provider.getClass().toString());
+        }
+
+        return provider;
+    }
+
+    /**
+     * Determines the platform on the device.
+     *
+     * @param providers The push providers.
+     * @return The device platform.
+     */
+    @Platform
+    private int determinePlatform(PushProviders providers) {
+        // Existing platform
+        int existingPlatform = preferenceDataStore.getInt(PLATFORM_KEY, -1);
+        if (PlatformUtils.isPlatformValid(existingPlatform)) {
+            return PlatformUtils.parsePlatform(existingPlatform);
+        }
+
+        int platform;
+
+        PushProvider bestProvider = providers.getBestProvider();
+        if (bestProvider != null) {
+            platform = PlatformUtils.parsePlatform(bestProvider.getPlatform());
+            Logger.info("Setting platform to " + PlatformUtils.asString(platform) + " for push provider: " + bestProvider);
+        } else if (PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
+            Logger.info("Google Play Store available. Setting platform to Android.");
+            platform = ANDROID_PLATFORM;
+        } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
+            Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
+            platform = AMAZON_PLATFORM;
+        } else {
+            Logger.info("Defaulting platform to Android.");
+            platform = ANDROID_PLATFORM;
+        }
+
+        preferenceDataStore.put(PLATFORM_KEY, platform);
+        return PlatformUtils.parsePlatform(platform);
+    }
+
 }
