@@ -2,7 +2,11 @@
 
 package com.urbanairship.messagecenter;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentTransaction;
 import android.view.MenuItem;
 
 import com.urbanairship.Autopilot;
@@ -31,31 +35,61 @@ public class MessageActivity extends ThemedActivity {
 
         setDisplayHomeAsUpEnabled(true);
 
-        String messageId = null;
 
-        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
-        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
-        if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
-            messageId = getIntent().getData().getSchemeSpecificPart();
-        }
+        RichPushMessage message = getMessage(getIntent());
 
-        RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
             finish();
             return;
         }
 
-        MessageFragment messageFragment = (MessageFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (messageFragment == null) {
-            messageFragment = MessageFragment.newInstance(messageId);
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(android.R.id.content, messageFragment, FRAGMENT_TAG)
-                    .commit();
+        loadMessage(message);
+    }
+
+    @Nullable
+    private RichPushMessage getMessage(Intent intent) {
+        if (intent == null || intent.getData() == null || intent.getAction() == null) {
+            return null;
         }
 
+        String messageId = null;
+
+        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
+        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
+        if (RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(intent.getAction())) {
+            messageId = intent.getData().getSchemeSpecificPart();
+        }
+
+        return UAirship.shared().getInbox().getMessage(messageId);
+    }
+
+    private void loadMessage(@NonNull RichPushMessage message) {
+
+        MessageFragment previousMessageFragment = (MessageFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
+        if (previousMessageFragment == null || !message.getMessageId().equals(previousMessageFragment.getMessageId())) {
+
+            FragmentTransaction transaction = getSupportFragmentManager()
+                    .beginTransaction();
+
+            if (previousMessageFragment != null) {
+                transaction.remove(previousMessageFragment);
+            }
+
+            transaction.add(android.R.id.content, MessageFragment.newInstance(message.getMessageId()), FRAGMENT_TAG)
+                       .commitNow();
+        }
 
         setTitle(message.getTitle());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        RichPushMessage message = getMessage(intent);
+        if (message != null) {
+            loadMessage(message);
+        }
     }
 
     @Override
