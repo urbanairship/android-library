@@ -70,22 +70,23 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
 
     @Override
     public NotificationCompat.Builder extend(NotificationCompat.Builder builder) {
-        NotificationCompat.Style style = createStyle();
-
-        if (style != null) {
-            builder.setStyle(style);
-        } else if (defaultStyle != null) {
+        if (!applyStyle(builder) && defaultStyle != null) {
             builder.setStyle(defaultStyle);
         }
 
         return builder;
     }
 
-    @Nullable
-    private NotificationCompat.Style createStyle() {
+    /**
+     * Applies the notification style.
+     *
+     * @param builder The notification builder.
+     * @return {@code true} if the style was applied, otherwise {@code false}.
+     */
+    private boolean applyStyle(@NonNull NotificationCompat.Builder builder) {
         String stylePayload = message.getStylePayload();
         if (stylePayload == null) {
-            return null;
+            return false;
         }
 
         JsonMap styleJson;
@@ -93,34 +94,37 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             styleJson = JsonValue.parseString(stylePayload).optMap();
         } catch (JsonException e) {
             Logger.error("Failed to parse notification style payload.", e);
-            return null;
+            return false;
         }
 
         String type = styleJson.opt(TYPE_KEY).getString("");
 
-        NotificationCompat.Style style = null;
         switch (type) {
             case BIG_TEXT_KEY:
-                style = createBigTextStyle(styleJson);
-                break;
-            case INBOX_KEY:
-                style = createInboxStyle(styleJson);
-                break;
-            case BIG_PICTURE_KEY:
-                style = createBigPictureStyle(styleJson);
-                break;
-        }
+                applyBigTextStyle(builder, styleJson);
+                return true;
 
-        return style;
+            case INBOX_KEY:
+                applyInboxStyle(builder, styleJson);
+                return true;
+
+            case BIG_PICTURE_KEY:
+                return applyBigPictureStyle(builder, styleJson);
+
+            default:
+                Logger.error("Unrecognized notification style type: " + type);
+                return false;
+        }
     }
 
     /**
-     * Creates the big text notification style.
+     * Applies the big text notification style.
      *
+     * @param builder The notification builder.
      * @param styleJson The JsonMap style.
-     * @return The big text style.
+     * @return {@code true} if the style was applied, otherwise {@code false}.
      */
-    private NotificationCompat.Style createBigTextStyle(@NonNull JsonMap styleJson) {
+    private boolean applyBigTextStyle(@NonNull NotificationCompat.Builder builder, @NonNull JsonMap styleJson) {
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
 
         String title = styleJson.opt(TITLE_KEY).getString();
@@ -139,16 +143,18 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             style.setSummaryText(summary);
         }
 
-        return style;
+        builder.setStyle(style);
+        return true;
     }
 
     /**
-     * Creates the big picture notification style.
+     * Applies the big picture notification style.
      *
+     * @param builder The notification builder.
      * @param styleJson The JsonMap style.
-     * @return The big picture style or null if it failed to be created.
+     * @return {@code true} if the style was applied, otherwise {@code false}.
      */
-    private NotificationCompat.BigPictureStyle createBigPictureStyle(@NonNull JsonMap styleJson) {
+    private boolean applyBigPictureStyle(@NonNull NotificationCompat.Builder builder, @NonNull JsonMap styleJson) {
         NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
 
         String title = styleJson.opt(TITLE_KEY).getString();
@@ -161,16 +167,25 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
                 bitmap = fetchBigImage(url);
             } catch (IOException e) {
                 Logger.error("Failed to create big picture style, unable to fetch image: " + e);
-                return null;
+                return false;
             }
             if (bitmap == null) {
                 Logger.error("Failed to create big picture style, unable to fetch image: " + url);
-                return null;
+                return false;
             }
+
+            // Set big picture image
             style.bigPicture(bitmap);
+
+            // Clear the large icon when the big picture is expanded
+            style.bigLargeIcon(null);
+
+            // Set the image as the large icon to show the image when collapsed
+            builder.setLargeIcon(bitmap);
+
         } catch (MalformedURLException e) {
             Logger.error("Malformed big picture URL.", e);
-            return null;
+            return false;
         }
 
         if (!UAStringUtil.isEmpty(title)) {
@@ -181,16 +196,17 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             style.setSummaryText(summary);
         }
 
-        return style;
+        builder.setStyle(style);
+        return true;
     }
 
     /**
-     * Creates the inbox notification style.
+     * Applies the inbox notification style.
      *
+     * @param builder The notification builder.
      * @param styleJson The JsonMap style.
-     * @return The inbox style.
      */
-    private NotificationCompat.InboxStyle createInboxStyle(@NonNull JsonMap styleJson) {
+    private void applyInboxStyle(@NonNull NotificationCompat.Builder builder, @NonNull JsonMap styleJson) {
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
 
         String title = styleJson.opt(TITLE_KEY).getString();
@@ -212,7 +228,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
             style.setSummaryText(summary);
         }
 
-        return style;
+        builder.setStyle(style);
     }
 
     /**
