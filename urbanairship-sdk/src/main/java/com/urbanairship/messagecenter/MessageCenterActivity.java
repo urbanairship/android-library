@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -14,6 +15,8 @@ import com.urbanairship.richpush.RichPushInbox;
  * Displays the Urban Airship Message Center using {@link MessageCenterFragment}.
  */
 public class MessageCenterActivity extends ThemedActivity {
+
+    private MessageCenterFragment messageCenterFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,31 +31,50 @@ public class MessageCenterActivity extends ThemedActivity {
 
         setDisplayHomeAsUpEnabled(true);
 
-        String messageId = null;
-
-        // Handle the "com.urbanairship.VIEW_RICH_PUSH_MESSAGE" intent action with the message
-        // ID encoded in the intent's data in the form of "message:<MESSAGE_ID>
-        if (getIntent() != null && getIntent().getData() != null && RichPushInbox.VIEW_MESSAGE_INTENT_ACTION.equals(getIntent().getAction())) {
-            messageId = getIntent().getData().getSchemeSpecificPart();
-        }
-
-        MessageCenterFragment fragment;
-
         if (savedInstanceState == null) {
-            fragment = MessageCenterFragment.newInstance(messageId);
+            messageCenterFragment = MessageCenterFragment.newInstance(getMessageId(getIntent()));
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, fragment, "MESSAGE_CENTER_FRAGMENT")
-                    .commit();
+                    .add(android.R.id.content, messageCenterFragment, "MESSAGE_CENTER_FRAGMENT")
+                    .commitNow();
         } else {
-            fragment = (MessageCenterFragment) getSupportFragmentManager().findFragmentByTag("MESSAGE_CENTER_FRAGMENT");
+            messageCenterFragment = (MessageCenterFragment) getSupportFragmentManager().findFragmentByTag("MESSAGE_CENTER_FRAGMENT");
         }
 
         // Apply the default message center predicate
-        fragment.setPredicate(UAirship.shared().getMessageCenter().getPredicate());
-
+        messageCenterFragment.setPredicate(UAirship.shared().getMessageCenter().getPredicate());
     }
 
+    /**
+     * Gets the message ID from an intent.
+     *
+     * @param intent The intent.
+     * @return The message ID if its available on the intent, otherwise {@code null}.
+     */
+    private String getMessageId(Intent intent) {
+        if (intent == null || intent.getData() == null || intent.getAction() == null) {
+            return null;
+        }
+
+        switch (intent.getAction()) {
+            case RichPushInbox.VIEW_INBOX_INTENT_ACTION:
+            case RichPushInbox.VIEW_MESSAGE_INTENT_ACTION:
+                return intent.getData().getSchemeSpecificPart();
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        String messageId = getMessageId(intent);
+        if (messageId != null) {
+            messageCenterFragment.setMessageID(messageId);
+        }
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
