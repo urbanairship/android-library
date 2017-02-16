@@ -3,6 +3,30 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.3.0 - February 16, 2017
+=================================
+New Features
+------------
+- Added accessor to get the app key in the Javascript native bridge.
+- Added support for onNewIntent for both MessageCenterActivity and MessageActivity.
+- Added support for intent action com.urbanairship.VIEW_RICH_PUSH_INBOX in the MessageCenterActivity.
+
+Bug Fixes
+---------
+- Fixed marking the app-compat library resources as hidden.
+- Fixed inbox style notifications to actually display inbox lines.
+
+Behavior Changes
+----------------
+- Big picture images will now override the largeIcon to the image to expose
+  a thumbnail of the image when the notification is collapsed.
+- Channel Capture tool is now disabled by default if the app is able
+  to receive background push. A new action has been added to enable the
+  tool for a limited duration.
+
+Deprecations
+------------
+- AdmUtils class and GcmConstants interface are now deprecated. They will be removed in 9.0.0.
 
 Version 8.2.5 - January 9, 2016
 ===============================
