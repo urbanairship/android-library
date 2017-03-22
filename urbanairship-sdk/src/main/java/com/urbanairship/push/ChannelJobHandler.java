@@ -231,6 +231,8 @@ class ChannelJobHandler {
                 Logger.error("Push registration failed, will retry. Error: " + e.getMessage());
                 return Job.JOB_RETRY;
             }
+        } else {
+            isPushRegistering = false;
         }
 
         if (!isPushRegistering) {
