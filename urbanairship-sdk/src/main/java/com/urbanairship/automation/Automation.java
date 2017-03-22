@@ -132,6 +132,8 @@ public class Automation extends AirshipComponent {
         activityMonitor.addListener(listener);
         analytics.addAnalyticsListener(analyticsListener);
         automationEnabled = preferenceDataStore.getBoolean(AUTOMATION_ENABLED_KEY, false);
+
+        Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
     }
 
     @Override

@@ -389,7 +389,6 @@ public class AutomationTest extends BaseTestCase {
                 .setLimit(5)
                 .build();
 
-
         when(automationDataManager.insertSchedules(Collections.singletonList(schedule))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
         String id  = automation.schedule(schedule).getId();
 
@@ -437,6 +436,43 @@ public class AutomationTest extends BaseTestCase {
         activityMonitor.stopActivity();
 
         Robolectric.flushForegroundThreadScheduler();
+
+        Thread.sleep(SLEEP_TIME);
+
+        verify(automationDataManager, atLeastOnce()).getTriggers(anyInt());
+        verify(automationDataManager, never()).getSchedules(anySet());
+
+        updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, 1.0), Collections.singletonList("1"));
+        verify(automationDataManager).updateLists(updatesMap);
+    }
+
+    @Test
+    public void testAppInitEvent() throws Exception {
+
+        Trigger trigger = Triggers.newAppInitTriggerBuilder()
+                                  .setGoal(3)
+                                  .build();
+
+
+        ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
+                                                        .addAction("test_action", JsonValue.wrap("action_value"))
+                                                        .addTrigger(trigger)
+                                                        .setGroup("group")
+                                                        .setLimit(5)
+                                                        .build();
+
+
+        when(automationDataManager.insertSchedules(Collections.singletonList(schedule))).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
+        String id  = automation.schedule(schedule).getId();
+
+        assertEquals("automation id", id);
+
+        TriggerEntry triggerEntry = new TriggerEntry(trigger.getType(), trigger.getGoal(), trigger.getPredicate(), "1", "automation id", 0.0);
+        when(automationDataManager.getTriggers(Trigger.LIFE_CYCLE_APP_INIT)).thenReturn(Collections.singletonList(triggerEntry));
+        when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0)));
+
+        automation.tearDown();
+        automation.init();
 
         Thread.sleep(SLEEP_TIME);
 

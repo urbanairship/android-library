@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class Trigger implements Parcelable {
 
-    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW })
+    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -69,6 +69,12 @@ public class Trigger implements Parcelable {
      */
     public static final int SCREEN_VIEW = 7;
 
+    /**
+     * Trigger type for app initialization events. App initialization events
+     * can be created with {@link Triggers#newAppInitTriggerBuilder()}.
+     */
+    public static final int LIFE_CYCLE_APP_INIT = 8;
+
     public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
         @Override
         public Trigger createFromParcel(Parcel in) {
@@ -102,6 +108,9 @@ public class Trigger implements Parcelable {
                 break;
             case LIFE_CYCLE_FOREGROUND:
                 type = LIFE_CYCLE_FOREGROUND;
+                break;
+            case LIFE_CYCLE_APP_INIT:
+                type = LIFE_CYCLE_APP_INIT;
                 break;
             case REGION_ENTER:
                 type = REGION_ENTER;
@@ -222,6 +231,10 @@ public class Trigger implements Parcelable {
 
             case "background":
                 type = LIFE_CYCLE_BACKGROUND;
+                break;
+
+            case "app_init":
+                type = LIFE_CYCLE_APP_INIT;
                 break;
 
             case "screen":

@@ -34,6 +34,15 @@ public class Triggers {
     }
 
     /**
+     * Creates a new app init trigger builder.
+     *
+     * @return The new app init trigger builder.
+     */
+    public static LifeCycleTriggerBuilder newAppInitTriggerBuilder() {
+        return new LifeCycleTriggerBuilder(Trigger.LIFE_CYCLE_APP_INIT);
+    }
+
+    /**
      * Creates a new enter region trigger builder.
      *
      * @return The new enter region trigger builder.
