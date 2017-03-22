@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.3.1 - March 22, 2017
+==============================
+Bug Fixes
+---------
+ - Fixed channel registration bug that prevented device tags from updating.
+
 Version 8.3.0 - February 16, 2017
 =================================
 New Features
