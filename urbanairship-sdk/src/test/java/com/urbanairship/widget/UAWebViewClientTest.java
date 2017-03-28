@@ -397,7 +397,7 @@ public class UAWebViewClientTest extends BaseTestCase {
     @Test
     public void testActionCallInvalidArguments() {
         // actionName = {invalid_json}}}
-        String url = "uairship://android-run-action-cb/actionName/%7Binvalid_json%7D%7D%7D/callbackId";
+        String url = "uairship://run-action-cb/actionName/%7Binvalid_json%7D%7D%7D/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verifyWebView("UAirship.finishAction(new Error(\"Unable to decode arguments payload\"), null, 'callbackId');");
@@ -425,7 +425,7 @@ public class UAWebViewClientTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
-        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verifyWebView("UAirship.finishAction(new Error(\"Action actionName not found\"), null, 'callbackId');");
@@ -453,7 +453,7 @@ public class UAWebViewClientTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
-        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verifyWebView("UAirship.finishAction(new Error(\"Action actionName rejected its arguments\"), null, 'callbackId');");
@@ -481,7 +481,7 @@ public class UAWebViewClientTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
-        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verifyWebView("UAirship.finishAction(new Error(\"error!\"), null, 'callbackId');");
@@ -509,7 +509,7 @@ public class UAWebViewClientTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
-        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         verifyWebView("UAirship.finishAction(null, \"action_result\", 'callbackId');");
@@ -545,7 +545,7 @@ public class UAWebViewClientTest extends BaseTestCase {
             }
         }).when(runRequest).run(Mockito.any(ActionCompletionCallback.class));
 
-        String url = "uairship://android-run-action-cb/actionName/true/callbackId";
+        String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue("Client should override any ua scheme urls", client.shouldOverrideUrlLoading(webView, url));
 
         // Verify our callback was called

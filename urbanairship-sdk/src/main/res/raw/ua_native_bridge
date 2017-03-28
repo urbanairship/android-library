@@ -34,7 +34,7 @@ if (typeof UAirship === 'undefined') {
       }
 
       var encodedArgument = encodeURIComponent(JSON.stringify(argument))
-      invoke('uairship://android-run-action-cb/' + actionName + '/' + encodedArgument + '/' + callbackKey)
+      invoke('uairship://run-action-cb/' + actionName + '/' + encodedArgument + '/' + callbackKey)
     }
 
     urbanAirship.finishAction = function(err, data, callbackKey) {

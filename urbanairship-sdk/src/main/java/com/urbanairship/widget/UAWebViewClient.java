@@ -109,12 +109,13 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Run actions command with a callback.
      */
-    private static final String RUN_ACTIONS_COMMAND_CALLBACK = "android-run-action-cb";
+    private static final String RUN_ACTIONS_COMMAND_CALLBACK = "run-action-cb";
 
     /**
      * Close command to handle close method in the Javascript Interface.
      */
     public static final String CLOSE_COMMAND = "close";
+
 
     private final Map<String, Credentials> authRequestCredentials = new HashMap<>();
     private ActionCompletionCallback actionCompletionCallback;
@@ -566,6 +567,7 @@ public class UAWebViewClient extends WebViewClient {
               .append(createGetter("getChannelId", UAirship.shared().getPushManager().getChannelId()))
               .append(createGetter("getAppKey", UAirship.shared().getAirshipConfigOptions().getAppKey()))
               .append(createGetter("getNamedUser", UAirship.shared().getNamedUser().getId()));
+
 
             if (TextUtils.isEmpty(nativeBridge)) {
                 try {
