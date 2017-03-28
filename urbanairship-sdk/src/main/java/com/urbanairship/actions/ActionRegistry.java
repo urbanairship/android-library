@@ -242,6 +242,10 @@ public final class ActionRegistry {
         registerAction(new ChannelCaptureAction(),
                 ChannelCaptureAction.DEFAULT_REGISTRY_NAME,
                 ChannelCaptureAction.DEFAULT_REGISTRY_SHORT_NAME);
+
+        registerAction(new EnableFeatureAction(),
+                EnableFeatureAction.DEFAULT_REGISTRY_NAME,
+                EnableFeatureAction.DEFAULT_REGISTRY_SHORT_NAME);
     }
 
     /**
