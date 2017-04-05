@@ -169,7 +169,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         dataManager.insertSchedules(Collections.singletonList(futureSchedule));
         List<ActionScheduleInfo> schedules = createSchedules(20);
         dataManager.insertSchedules(schedules);
-        List<TriggerEntry> retrieved = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        List<TriggerEntry> retrieved = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(20, retrieved.size());
     }
 
@@ -237,13 +237,13 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(secondTrigger.getType(), schedules.get(1).getInfo().getTriggers().get(0).getType());
         assertEquals(0, schedules.get(0).getCount());
 
-        List<TriggerEntry> triggers = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        List<TriggerEntry> triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(1, triggers.size());
         assertEquals(firstTrigger.getGoal(), triggers.get(0).getGoal(), 0.0);
         assertEquals(firstTrigger.getPredicate(), triggers.get(0).getPredicate());
         assertEquals(firstTrigger.getType(), triggers.get(0).getType());
 
-        triggers = dataManager.getTriggers(Trigger.LIFE_CYCLE_BACKGROUND);
+        triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_BACKGROUND);
         assertEquals(1, triggers.size());
         assertEquals(secondTrigger.getGoal(), triggers.get(0).getGoal(), 0.0);
         assertEquals(secondTrigger.getPredicate(), triggers.get(0).getPredicate());
@@ -281,7 +281,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(trigger.getType(), scheduleTriggers.get(0).getType());
         assertEquals(0, schedules.get(0).getCount());
 
-        List<TriggerEntry> triggers = dataManager.getTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        List<TriggerEntry> triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(1, triggers.size());
         assertEquals(trigger.getGoal(), triggers.get(0).getGoal(), 0.0);
         assertEquals(trigger.getPredicate(), triggers.get(0).getPredicate());

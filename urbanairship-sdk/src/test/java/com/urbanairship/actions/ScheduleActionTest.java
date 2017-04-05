@@ -99,7 +99,7 @@ public class ScheduleActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() throws JsonException {
-        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(new ActionSchedule("automation id", null, 0));
+        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(new ActionSchedule("automation id", null, 0, false, -1L));
 
         ActionResult result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, scheduleJson));
         assertEquals("automation id", result.getValue().getString());

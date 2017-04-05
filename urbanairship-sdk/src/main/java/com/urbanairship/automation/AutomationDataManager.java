@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -50,6 +51,8 @@ class AutomationDataManager extends DataManager {
         static final String COLUMN_NAME_GROUP = "s_group";
         static final String COLUMN_NAME_START = "s_start";
         static final String COLUMN_NAME_END = "s_end";
+        static final String COLUMN_NAME_IS_PENDING_EXECUTION = "s_is_pending_execution";
+        static final String COLUMN_NAME_PENDING_EXECUTION_DATE = "s_pending_execution_date";
     }
 
     /**
@@ -65,6 +68,22 @@ class AutomationDataManager extends DataManager {
         static final String COLUMN_NAME_PROGRESS = "t_progress";
         static final String COLUMN_NAME_GOAL = "t_goal";
         static final String COLUMN_NAME_START = "t_start";
+        static final String COLUMN_NAME_DELAY_ID = "t_d_id";
+    }
+
+    /**
+     * ScheduleDelay table contract
+     */
+    private class ScheduleDelayTable implements BaseColumns {
+
+        public static final String TABLE_NAME = "schedule_delays";
+
+        static final String COLUMN_NAME_DELAY_ID = "d_id";
+        static final String COLUMN_NAME_SCHEDULE_ID = "d_s_id";
+        static final String COLUMN_NAME_SECONDS = "d_seconds";
+        static final String COLUMN_NAME_SCREEN = "d_screen";
+        static final String COLUMN_NAME_APP_STATE = "d_app_state";
+        static final String COLUMN_NAME_REGION_ID = "d_region_id";
     }
 
     /**
@@ -80,7 +99,7 @@ class AutomationDataManager extends DataManager {
     /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     /**
      * Appended to the end of schedules GET queries to group rows by schedule ID.
@@ -88,9 +107,16 @@ class AutomationDataManager extends DataManager {
     private static final String ORDER_SCHEDULES_STATEMENT = " ORDER BY " + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " ASC";
 
     /**
-     * Query for retrieving schedules with a JOIN.
+     * Query for retrieving schedules with associated delays.
      */
-    static final String GET_SCHEDULES_QUERY = "SELECT * FROM " + ActionSchedulesTable.TABLE_NAME + " a INNER JOIN " + TriggersTable.TABLE_NAME + " b ON a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + "=b." + TriggersTable.COLUMN_NAME_SCHEDULE_ID;
+    static final String GET_SCHEDULES_QUERY = "SELECT * FROM " + ActionSchedulesTable.TABLE_NAME + " a LEFT OUTER JOIN " + TriggersTable.TABLE_NAME + " b ON a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + "=b." + TriggersTable.COLUMN_NAME_SCHEDULE_ID
+            + " LEFT OUTER JOIN " + ScheduleDelayTable.TABLE_NAME + " c ON b." + TriggersTable.COLUMN_NAME_SCHEDULE_ID + "=c." + ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID;
+
+    /**
+     * Query for retrieving active triggers.
+     */
+    static final String GET_ACTIVE_TRIGGERS = "SELECT t.* FROM " + TriggersTable.TABLE_NAME + " t LEFT OUTER JOIN " + ActionSchedulesTable.TABLE_NAME + " a ON a." + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " = " + TriggersTable.COLUMN_NAME_SCHEDULE_ID + " WHERE t." +
+            "t_type = %s AND t." + TriggersTable.COLUMN_NAME_START + " < %s AND (t." + "t_d_id IS NULL OR a." + "s_is_pending_execution = 1)";
 
     /**
      * Partial query for deleting schedules by ID.
@@ -108,9 +134,27 @@ class AutomationDataManager extends DataManager {
     static final String TRIGGERS_TO_RESET_QUERY = "UPDATE " + TriggersTable.TABLE_NAME + " SET " + TriggersTable.COLUMN_NAME_PROGRESS + " = 0 WHERE " + TriggersTable._ID;
 
     /**
-     * Partial query for incrementing trigger progress by ID.
+     * Partial query for resetting trigger progress by schedule ID.
      */
-    static final String TRIGGERS_TO_INCREMENT_QUERY = "UPDATE " + TriggersTable.TABLE_NAME + " SET " + TriggersTable.COLUMN_NAME_PROGRESS + " = " + TriggersTable.COLUMN_NAME_PROGRESS + " + %s WHERE " + TriggersTable._ID;
+    static final String CANCELLATION_TRIGGERS_TO_RESET = "UPDATE " + TriggersTable.TABLE_NAME + " SET " + TriggersTable.COLUMN_NAME_PROGRESS + " = 0 WHERE " + TriggersTable.COLUMN_NAME_DELAY_ID + " IS NOT NULL" + " AND " + TriggersTable.COLUMN_NAME_SCHEDULE_ID;
+
+    /**
+     * Query for incrementing schedule based on cancellation or standard behavior.
+     */
+    static final String TRIGGERS_TO_INCREMENT_QUERY = "UPDATE " + TriggersTable.TABLE_NAME + " SET " + TriggersTable.COLUMN_NAME_PROGRESS + " = " + TriggersTable.COLUMN_NAME_PROGRESS +
+            " + %s WHERE " + TriggersTable.COLUMN_NAME_SCHEDULE_ID + " IN (SELECT " + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + " FROM " + ActionSchedulesTable.TABLE_NAME + " WHERE " + ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION + " = %s)" +
+            " AND " +  TriggersTable._ID;
+
+    /**
+     * Partial query for resetting a schedule delay trigger execution state.
+     */
+    static final String SCHEDULES_EXECUTION_STATE_UPDATE = "UPDATE " + ActionSchedulesTable.TABLE_NAME + " SET " + ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION + " = %s WHERE " + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID;
+
+    /**
+     * Partial query for resetting a schedule delay trigger execution state.
+     */
+    static final String SCHEDULES_EXECUTION_DATE_UPDATE = "UPDATE " + ActionSchedulesTable.TABLE_NAME + " SET " + ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE + " = %s WHERE " + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID;
+
 
     /**
      * Class constructor.
@@ -131,6 +175,7 @@ class AutomationDataManager extends DataManager {
         // Kills the table and existing data
         db.execSQL("DROP TABLE IF EXISTS " + TriggersTable.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ActionSchedulesTable.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ScheduleDelayTable.TABLE_NAME);
 
         // Recreates the database with a new version
         onCreate(db);
@@ -148,17 +193,32 @@ class AutomationDataManager extends DataManager {
                 + ActionSchedulesTable.COLUMN_NAME_END + " INTEGER,"
                 + ActionSchedulesTable.COLUMN_NAME_COUNT + " INTEGER,"
                 + ActionSchedulesTable.COLUMN_NAME_LIMIT + " INTEGER,"
-                + ActionSchedulesTable.COLUMN_NAME_GROUP + " TEXT"
+                + ActionSchedulesTable.COLUMN_NAME_GROUP + " TEXT,"
+                + ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION  + " INTEGER,"
+                + ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE"
+                + ");");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + ScheduleDelayTable.TABLE_NAME + " ("
+                + ScheduleDelayTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + ScheduleDelayTable.COLUMN_NAME_DELAY_ID + " TEXT UNIQUE,"
+                + ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID + " TEXT,"
+                + ScheduleDelayTable.COLUMN_NAME_APP_STATE + " INTEGER,"
+                + ScheduleDelayTable.COLUMN_NAME_REGION_ID + " TEXT,"
+                + ScheduleDelayTable.COLUMN_NAME_SCREEN + " TEXT,"
+                + ScheduleDelayTable.COLUMN_NAME_SECONDS + " DOUBLE,"
+                + "FOREIGN KEY(" + ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ActionSchedulesTable.TABLE_NAME + "(" + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
                 + ");");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TriggersTable.TABLE_NAME + " ("
                 + TriggersTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + TriggersTable.COLUMN_NAME_TYPE + " INTEGER,"
+                + TriggersTable.COLUMN_NAME_DELAY_ID + " TEXT,"
                 + TriggersTable.COLUMN_NAME_SCHEDULE_ID + " TEXT,"
                 + TriggersTable.COLUMN_NAME_PREDICATE + " TEXT,"
                 + TriggersTable.COLUMN_NAME_PROGRESS + " DOUBLE,"
                 + TriggersTable.COLUMN_NAME_GOAL + " DOUBLE,"
                 + TriggersTable.COLUMN_NAME_START + " INTEGER,"
+                + "FOREIGN KEY(" + TriggersTable.COLUMN_NAME_DELAY_ID + ") REFERENCES " + ScheduleDelayTable.TABLE_NAME + "(" + ScheduleDelayTable.COLUMN_NAME_DELAY_ID + ") ON DELETE CASCADE,"
                 + "FOREIGN KEY(" + TriggersTable.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ActionSchedulesTable.TABLE_NAME + "(" + ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
                 + ");");
 
@@ -174,6 +234,7 @@ class AutomationDataManager extends DataManager {
             bind(statement, 4, values.getAsDouble(TriggersTable.COLUMN_NAME_PROGRESS));
             bind(statement, 5, values.getAsDouble(TriggersTable.COLUMN_NAME_GOAL));
             bind(statement, 6, values.getAsLong(TriggersTable.COLUMN_NAME_START));
+            bind(statement, 7, values.getAsString(TriggersTable.COLUMN_NAME_DELAY_ID));
         } else if (ActionSchedulesTable.TABLE_NAME.equals(table)) {
             bind(statement, 1, values.getAsString(ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID));
             bind(statement, 2, values.getAsString(ActionSchedulesTable.COLUMN_NAME_ACTIONS));
@@ -182,6 +243,15 @@ class AutomationDataManager extends DataManager {
             bind(statement, 5, values.getAsInteger(ActionSchedulesTable.COLUMN_NAME_COUNT));
             bind(statement, 6, values.getAsInteger(ActionSchedulesTable.COLUMN_NAME_LIMIT));
             bind(statement, 7, values.getAsString(ActionSchedulesTable.COLUMN_NAME_GROUP));
+            bind(statement, 8, values.getAsInteger(ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION));
+            bind(statement, 9, values.getAsLong(ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE));
+        } else if (ScheduleDelayTable.TABLE_NAME.equals(table)) {
+            bind(statement, 1, values.getAsString(ScheduleDelayTable.COLUMN_NAME_DELAY_ID));
+            bind(statement, 2, values.getAsInteger(ScheduleDelayTable.COLUMN_NAME_APP_STATE));
+            bind(statement, 3, values.getAsString(ScheduleDelayTable.COLUMN_NAME_REGION_ID));
+            bind(statement, 4, values.getAsString(ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID));
+            bind(statement, 5, values.getAsString(ScheduleDelayTable.COLUMN_NAME_SCREEN));
+            bind(statement, 6, values.getAsLong(ScheduleDelayTable.COLUMN_NAME_SECONDS));
         }
     }
 
@@ -191,14 +261,22 @@ class AutomationDataManager extends DataManager {
             String sql = this.buildInsertStatement(table, TriggersTable.COLUMN_NAME_TYPE,
                     TriggersTable.COLUMN_NAME_SCHEDULE_ID, TriggersTable.COLUMN_NAME_PREDICATE,
                     TriggersTable.COLUMN_NAME_PROGRESS, TriggersTable.COLUMN_NAME_GOAL,
-                    TriggersTable.COLUMN_NAME_START);
+                    TriggersTable.COLUMN_NAME_START, TriggersTable.COLUMN_NAME_DELAY_ID);
 
             return db.compileStatement(sql);
         } else if (table.equals(ActionSchedulesTable.TABLE_NAME)) {
             String sql = this.buildInsertStatement(table, ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID,
                     ActionSchedulesTable.COLUMN_NAME_ACTIONS, ActionSchedulesTable.COLUMN_NAME_START,
                     ActionSchedulesTable.COLUMN_NAME_END, ActionSchedulesTable.COLUMN_NAME_COUNT,
-                    ActionSchedulesTable.COLUMN_NAME_LIMIT, ActionSchedulesTable.COLUMN_NAME_GROUP);
+                    ActionSchedulesTable.COLUMN_NAME_LIMIT, ActionSchedulesTable.COLUMN_NAME_GROUP,
+                    ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION, ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE);
+
+            return db.compileStatement(sql);
+        } else if (table.equals(ScheduleDelayTable.TABLE_NAME)) {
+            String sql = this.buildInsertStatement(table, ScheduleDelayTable.COLUMN_NAME_DELAY_ID,
+                    ScheduleDelayTable.COLUMN_NAME_APP_STATE, ScheduleDelayTable.COLUMN_NAME_REGION_ID,
+                    ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID, ScheduleDelayTable.COLUMN_NAME_SCREEN,
+                    ScheduleDelayTable.COLUMN_NAME_SECONDS);
 
             return db.compileStatement(sql);
         }
@@ -215,6 +293,7 @@ class AutomationDataManager extends DataManager {
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TriggersTable.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ActionSchedulesTable.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ScheduleDelayTable.TABLE_NAME);
         onCreate(db);
     }
 
@@ -318,6 +397,17 @@ class AutomationDataManager extends DataManager {
     }
 
     /**
+     * Gets a delayed schedule for a given ID.
+     *
+     * @return The {@link ActionSchedule} instance.
+     */
+    List<ActionSchedule> getDelayedSchedules() {
+        String query = GET_SCHEDULES_QUERY + " AND c." + ScheduleDelayTable.COLUMN_NAME_DELAY_ID + " IS NOT NULL";
+        Cursor c = rawQuery(query, null);
+        return generateSchedules(c);
+    }
+
+    /**
      * Bulk inserts schedules.
      *
      * @param schedules The list of {@link ActionScheduleInfo} instances.
@@ -327,22 +417,34 @@ class AutomationDataManager extends DataManager {
         Map<String, ActionSchedule> added = new HashMap<>();
         Set<ContentValues> schedulesToAdd = new HashSet<>();
         Set<ContentValues> triggersToAdd = new HashSet<>();
+        Set<ContentValues> delaysToAdd = new HashSet<>();
 
         for (ActionScheduleInfo actionScheduleInfo : schedules) {
-            String id = UUID.randomUUID().toString();
-            schedulesToAdd.add(getScheduleInfoContentValues(actionScheduleInfo, id));
+            String scheduleId = UUID.randomUUID().toString();
+            schedulesToAdd.add(getScheduleInfoContentValues(actionScheduleInfo, scheduleId));
+
+            if (actionScheduleInfo.getDelay() != null) {
+                String delayId = UUID.randomUUID().toString();
+                ContentValues value = getScheduleDelayContentValues(actionScheduleInfo.getDelay(), scheduleId, delayId);
+                delaysToAdd.add(value);
+                for (Trigger trigger : actionScheduleInfo.getDelay().getCancellationTriggers()) {
+                    ContentValues triggerValue = getTriggerContentValues(trigger, scheduleId, delayId, actionScheduleInfo.getStart());
+                    triggersToAdd.add(triggerValue);
+                }
+            }
 
             for (Trigger trigger : actionScheduleInfo.getTriggers()) {
-                ContentValues value = getTriggerContentValues(trigger, id, actionScheduleInfo.getStart());
+                ContentValues value = getTriggerContentValues(trigger, scheduleId, null, actionScheduleInfo.getStart());
                 triggersToAdd.add(value);
             }
 
-            ActionSchedule schedule = new ActionSchedule(id, actionScheduleInfo, 0);
+            ActionSchedule schedule = new ActionSchedule(scheduleId, actionScheduleInfo, 0, false, -1);
             added.put(schedule.getId(), schedule);
         }
 
         Map<String, ContentValues[]> toAdd = new LinkedHashMap<>();
         toAdd.put(ActionSchedulesTable.TABLE_NAME, schedulesToAdd.toArray(new ContentValues[schedulesToAdd.size()]));
+        toAdd.put(ScheduleDelayTable.TABLE_NAME, delaysToAdd.toArray(new ContentValues[delaysToAdd.size()]));
         toAdd.put(TriggersTable.TABLE_NAME, triggersToAdd.toArray(new ContentValues[triggersToAdd.size()]));
 
         List<ActionSchedule> inserted = new ArrayList<>();
@@ -390,9 +492,10 @@ class AutomationDataManager extends DataManager {
      * @param type The trigger type.
      * @return THe list of {@link TriggerEntry} instances.
      */
-    List<TriggerEntry> getTriggers(int type) {
+    List<TriggerEntry> getActiveTriggers(int type) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = query(TriggersTable.TABLE_NAME, null, TriggersTable.COLUMN_NAME_TYPE + " =? AND " + TriggersTable.COLUMN_NAME_START + " < ?", new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()) }, null, null);
+        String query = String.format(GET_ACTIVE_TRIGGERS, type, System.currentTimeMillis());
+        Cursor cursor = rawQuery(query, null);
 
         if (cursor == null) {
             return triggers;
@@ -400,6 +503,7 @@ class AutomationDataManager extends DataManager {
 
         // create triggers
         cursor.moveToFirst();
+
         while (!cursor.isAfterLast()) {
             TriggerEntry triggerEntry = generateTrigger(cursor);
             if (triggerEntry != null) {
@@ -523,17 +627,21 @@ class AutomationDataManager extends DataManager {
         // Initialize the tracked schedule ID, count, and info builder.
         String lastId = "";
         int lastCount = 0;
+        boolean isPendingExecution = false;
+        long pendingExecutionDate = -1;
         ActionScheduleInfo.Builder builder = null;
 
         while (!cursor.isAfterLast()) {
             // Retrieved the current row's schedule ID and count.
             String id = cursor.getString(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID));
             int count = cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_COUNT));
+            isPendingExecution = cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION)) == 1;
+            pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE));
 
             // If a new schedule ID, build and add the previous builder and begin a new one.
             if (!lastId.equals(id)) {
                 if (builder != null) {
-                    schedules.add(new ActionSchedule(lastId, builder.build(), lastCount));
+                    schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, false, -1));
                 }
 
                 // Set the new ID, count, and builder to track.
@@ -559,6 +667,14 @@ class AutomationDataManager extends DataManager {
                 }
             }
 
+            // If the row contains schedule delays, parse and add them to the builder.
+            if (cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_APP_STATE) != -1) {
+                ScheduleDelayEntry scheduleDelay = generateScheduleDelay(cursor);
+                if (scheduleDelay != null && builder != null) {
+                    builder.setDelay(scheduleDelay);
+                }
+            }
+
             // If the row contains triggers, parse and add them to the builder.
             if (cursor.getColumnIndex(TriggersTable.COLUMN_NAME_TYPE) != -1) {
                 TriggerEntry triggerEntry = generateTrigger(cursor);
@@ -572,7 +688,7 @@ class AutomationDataManager extends DataManager {
 
         // For the final grouping of triggers, build and add the schedule.
         if (builder != null) {
-            schedules.add(new ActionSchedule(lastId, builder.build(), lastCount));
+            schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, isPendingExecution, pendingExecutionDate));
         }
 
         cursor.close();
@@ -596,13 +712,38 @@ class AutomationDataManager extends DataManager {
             JsonPredicate predicate = predicateJson.optMap().isEmpty() ? null : JsonPredicate.parse(predicateJson);
             String id = cursor.getString(cursor.getColumnIndex(TriggersTable._ID));
             String scheduleId = cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_SCHEDULE_ID));
+            String delayId = cursor.getString(cursor.getColumnIndex(TriggersTable.COLUMN_NAME_DELAY_ID));
 
             //noinspection WrongConstant
-            return new TriggerEntry(type, goal, predicate, id, scheduleId, count);
+            return new TriggerEntry(type, goal, predicate, id, scheduleId, delayId, count);
         } catch (JsonException e) {
             Logger.error("AutomationDataManager - failed to generate trigger from cursor.");
             return null;
         }
+    }
+
+    /**
+     * Generates a schedule delay from a cursor.
+     *
+     * @param cursor The {@link Cursor} instance.
+     * @return The {@link ScheduleDelayEntry} instance.
+     */
+    private ScheduleDelayEntry generateScheduleDelay(Cursor cursor) {
+        String id = cursor.getString(cursor.getColumnIndex(ScheduleDelayTable._ID));
+        String scheduleId = cursor.getString(cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID));
+
+        @ScheduleDelay.AppState int appState = cursor.getInt(cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_APP_STATE));
+        String regionId = cursor.getString(cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_REGION_ID));
+        String screen = cursor.getString(cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_SCREEN));
+        long seconds = cursor.getLong(cursor.getColumnIndex(ScheduleDelayTable.COLUMN_NAME_SECONDS));
+
+        ScheduleDelay.Builder builder = ScheduleDelay.newBuilder()
+                .setAppState(appState)
+                .setRegionId(regionId)
+                .setScreen(screen)
+                .setSeconds(seconds);
+
+        return new ScheduleDelayEntry(builder, id, scheduleId);
     }
 
     /**
@@ -621,6 +762,8 @@ class AutomationDataManager extends DataManager {
         contentValues.put(ActionSchedulesTable.COLUMN_NAME_COUNT, 0);
         contentValues.put(ActionSchedulesTable.COLUMN_NAME_START, actionScheduleInfo.getStart());
         contentValues.put(ActionSchedulesTable.COLUMN_NAME_END, actionScheduleInfo.getEnd());
+        contentValues.put(ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION, 0);
+        contentValues.put(ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE, -1);
 
         return contentValues;
     }
@@ -629,18 +772,40 @@ class AutomationDataManager extends DataManager {
      * Gets the {@link ContentValues} for a trigger.
      *
      * @param trigger The {@link Trigger} instance.
-     * @param id The schedule ID.
+     * @param scheduleId The schedule ID.
+     * @param delayId The delay ID.
      * @param start The schedule start time in MS.
      * @return The {@link ContentValues} instance.
      */
-    private ContentValues getTriggerContentValues(Trigger trigger, String id, long start) {
+    private ContentValues getTriggerContentValues(Trigger trigger, String scheduleId, @Nullable String delayId, long start) {
         ContentValues value = new ContentValues();
         value.put(TriggersTable.COLUMN_NAME_TYPE, trigger.getType());
-        value.put(TriggersTable.COLUMN_NAME_SCHEDULE_ID, id);
+        value.put(TriggersTable.COLUMN_NAME_SCHEDULE_ID, scheduleId);
         value.put(TriggersTable.COLUMN_NAME_PREDICATE, trigger.getPredicate() == null ? null : trigger.getPredicate().toJsonValue().toString());
         value.put(TriggersTable.COLUMN_NAME_GOAL, trigger.getGoal());
         value.put(TriggersTable.COLUMN_NAME_PROGRESS, 0.0);
         value.put(TriggersTable.COLUMN_NAME_START, start);
+        value.put(TriggersTable.COLUMN_NAME_DELAY_ID, delayId);
+
+        return value;
+    }
+
+    /**
+     * Gets the {@link ContentValues} for a schedule delay
+     *
+     * @param delay The {@link ScheduleDelay} instance.
+     * @param scheduleId The associated schedule scheduleId.
+     * @return The {@link ContentValues} instance.
+     */
+    private ContentValues getScheduleDelayContentValues(ScheduleDelay delay, String scheduleId, String delayId) {
+        ContentValues value = new ContentValues();
+
+        value.put(ScheduleDelayTable.COLUMN_NAME_DELAY_ID, delayId);
+        value.put(ScheduleDelayTable.COLUMN_NAME_SCHEDULE_ID, scheduleId);
+        value.put(ScheduleDelayTable.COLUMN_NAME_APP_STATE, delay.getAppState());
+        value.put(ScheduleDelayTable.COLUMN_NAME_REGION_ID, delay.getRegionId());
+        value.put(ScheduleDelayTable.COLUMN_NAME_SCREEN, delay.getScreen());
+        value.put(ScheduleDelayTable.COLUMN_NAME_SECONDS, delay.getSeconds());
 
         return value;
     }
