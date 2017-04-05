@@ -1,4 +1,4 @@
-/* Copyright 2016 Urban Airship and Contributors */
+/* Copyright 2017 Urban Airship and Contributors */
 
 /**
  * Contains classes for interacting with the Urban Airship In-App Messaging View.

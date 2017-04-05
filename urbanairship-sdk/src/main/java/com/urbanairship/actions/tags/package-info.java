@@ -1,4 +1,4 @@
-/* Copyright 2016 Urban Airship and Contributors */
+/* Copyright 2017 Urban Airship and Contributors */
 
 /**
  * Predefined actions to modify the set of tags on the device.
