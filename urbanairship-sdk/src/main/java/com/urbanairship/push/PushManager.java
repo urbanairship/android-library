@@ -455,23 +455,8 @@ public class PushManager extends AirshipComponent {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-
-        // only update server w/ registration call if
-        // at least one of the values has changed
-        boolean updateServer = false;
-
-        if (!UAStringUtil.equals(alias, getAlias())) {
-            setAlias(alias);
-            updateServer = true;
-        }
-
-        if (!storeTags(tags)) {
-            updateServer = true;
-        }
-
-        if (updateServer) {
-            updateRegistration();
-        }
+        setAlias(alias);
+        setTags(tags);
     }
 
     /**
@@ -582,34 +567,13 @@ public class PushManager extends AirshipComponent {
             throw new IllegalArgumentException("Tags must be non-null.");
         }
 
-        if (storeTags(tags)) {
-            updateRegistration();
-        }
-    }
-
-    /**
-     * Stores tags in the preference data store.
-     *
-     * @param tags Tags to store.
-     * @return {code true} if tags changed, otherwise {@code false}.
-     */
-    private boolean storeTags(@NonNull Set<String> tags) {
         synchronized (tagLock) {
             Set<String> normalizedTags = TagUtils.normalizeTags(tags);
-            if (!normalizedTags.equals(getTags())) {
-                if (normalizedTags.isEmpty()) {
-                    preferenceDataStore.remove(TAGS_KEY);
-                } else {
-                    preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
-                }
-
-                return true;
-            }
-
-            return false;
+            preferenceDataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags));
         }
-    }
 
+        updateRegistration();
+    }
 
     /**
      * Returns the current alias for this application's channel.
@@ -885,9 +849,7 @@ public class PushManager extends AirshipComponent {
                     tags.addAll(tagsToAdd);
                     tags.removeAll(tagsToRemove);
 
-                    if (storeTags(tags)) {
-                        updateRegistration();
-                    }
+                    setTags(tags);
                 }
             }
         };
