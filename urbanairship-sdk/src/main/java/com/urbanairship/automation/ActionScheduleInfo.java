@@ -45,7 +45,6 @@ public class ActionScheduleInfo implements Parcelable {
     private final String group;
     private final long start;
     private final long end;
-    private final ScheduleDelay delay;
 
     private ActionScheduleInfo(Builder builder) {
         this.triggers = builder.triggers;
@@ -54,7 +53,6 @@ public class ActionScheduleInfo implements Parcelable {
         this.group = builder.group;
         this.start = builder.start;
         this.end = builder.end;
-        this.delay = builder.delay;
     }
 
     protected ActionScheduleInfo(Parcel in) {
@@ -67,8 +65,6 @@ public class ActionScheduleInfo implements Parcelable {
         this.actions = JsonValue.wrapOpt(in.readParcelable(JsonValue.class.getClassLoader()))
                                 .optMap()
                                 .getMap();
-
-        this.delay = in.readParcelable(ScheduleDelay.class.getClassLoader());
     }
 
     @Override
@@ -79,7 +75,6 @@ public class ActionScheduleInfo implements Parcelable {
         dest.writeLong(start);
         dest.writeLong(end);
         dest.writeParcelable(JsonValue.wrapOpt(actions), flags);
-        dest.writeParcelable(JsonValue.wrapOpt(delay), flags);
     }
 
     @Override
@@ -151,15 +146,6 @@ public class ActionScheduleInfo implements Parcelable {
     }
 
     /**
-     * Gets the schedule's delay.
-     *
-     * @return A ScheduleDelay instance.
-     */
-    public ScheduleDelay getDelay() {
-        return delay;
-    }
-
-    /**
      * Parses an ActionScheduleInfo from a JsonValue.
      * </p>
      * The expected JsonValue is a map containing:
@@ -196,10 +182,6 @@ public class ActionScheduleInfo implements Parcelable {
             builder.addTrigger(Trigger.parseJson(triggerJson));
         }
 
-        if (jsonMap.containsKey("delay")) {
-            builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt("delay")));
-        }
-
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -217,7 +199,6 @@ public class ActionScheduleInfo implements Parcelable {
         private long start = -1;
         private long end = -1;
         private int limit = 1;
-        private ScheduleDelay delay = null;
 
         /**
          * Adds a trigger.
@@ -294,17 +275,6 @@ public class ActionScheduleInfo implements Parcelable {
          */
         public Builder setEnd(long end) {
             this.end = end;
-            return this;
-        }
-
-        /**
-         * Set a schedule delay.
-         *
-         * @param delay A ScheduleDelay object.
-         * @return The Builder instance.
-         */
-        public Builder setDelay(ScheduleDelay delay) {
-            this.delay = delay;
             return this;
         }
 
