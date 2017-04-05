@@ -13,6 +13,7 @@ class TriggerEntry extends Trigger {
 
     private final String id;
     private final String scheduleId;
+    private final String delayId;
     private final double progress;
 
     // TriggerEntry should never be used as a Parceable, this is here to please the linter.
@@ -29,10 +30,11 @@ class TriggerEntry extends Trigger {
     };
 
 
-    TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, double progress) {
+    TriggerEntry(@TriggerType  int type, double goal, JsonPredicate predicate, String id, String scheduleId, String delayId, double progress) {
         super(type, goal, predicate);
         this.id = id;
         this.scheduleId = scheduleId;
+        this.delayId = delayId;
         this.progress = progress;
     }
 
@@ -62,4 +64,11 @@ class TriggerEntry extends Trigger {
     String getScheduleId() {
         return scheduleId;
     }
+
+    /**
+     * Gets the trigger's associated delay ID.
+     *
+     * @return The associated delay ID.
+     */
+    String getDelayId() { return delayId; }
 }
