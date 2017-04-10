@@ -12,6 +12,8 @@ import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
+import java.lang.reflect.Field;
+
 /**
  * This class holds the set of options necessary to properly initialize
  * {@link com.urbanairship.UAirship}.
@@ -322,7 +324,7 @@ public class AirshipConfigOptions {
         private String gcmSender;
         private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT };
         private String[] whitelist = null;
-        private boolean inProduction = false;
+        private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = 15 * 60 * 1000;
         private boolean clearNamedUser = false;
@@ -383,7 +385,7 @@ public class AirshipConfigOptions {
         public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
                 ConfigParser configParser = new PropertiesConfigParser(context, propertiesFile);
-                applyConfig(configParser);
+                applyConfigParser(context, configParser);
             } catch (Exception e) {
                 Logger.error("AirshipConfigOptions - Unable to apply config.", e);
             }
@@ -418,7 +420,7 @@ public class AirshipConfigOptions {
         public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
             try {
                 XmlConfigParser configParser = new XmlConfigParser(context, xmlResourceId);
-                applyConfig(configParser);
+                applyConfigParser(context, configParser);
                 configParser.close();
             } catch (Exception e) {
                 Logger.error("AirshipConfigOptions - Unable to apply config.", e);
@@ -432,7 +434,7 @@ public class AirshipConfigOptions {
          *
          * @param configParser The config parser.
          */
-        private void applyConfig(ConfigParser configParser) {
+        private void applyConfigParser(Context context, ConfigParser configParser) {
             for (int i = 0; i < configParser.getCount(); i++) {
                 try {
                     switch (configParser.getName(i)) {
@@ -526,6 +528,11 @@ public class AirshipConfigOptions {
                 } catch (Exception e) {
                     Logger.error("Unable to set config field '" + configParser.getName(i) + "' due to invalid configuration value.", e);
                 }
+            }
+
+            // Determine build mode if not specified in config file.
+            if (inProduction == null) {
+                detectProvisioningMode(context);
             }
         }
 
@@ -679,6 +686,25 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Automatically determine the provisioning mode of the application.
+         *
+         * @param context The application context.
+         * @return The config options builder.
+         */
+        public Builder detectProvisioningMode(Context context) {
+            try {
+                Class<?> clazz = Class.forName(context.getPackageName() + ".BuildConfig");
+                Field field = clazz.getField("DEBUG");
+                inProduction =  !(boolean)field.get(null);
+            } catch (Exception e) {
+                Logger.warn("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
+                inProduction = false;
+            }
+            return this;
+        }
+
+
+        /**
          * Set the flag indicating whether the application will use analytics.
          *
          * @param analyticsEnabled The flag indicating whether the application will use analytics.
@@ -791,6 +817,10 @@ public class AirshipConfigOptions {
          * @return The built config options.
          */
         public AirshipConfigOptions build() {
+            if (inProduction == null) {
+                inProduction = false;
+            }
+
             String modeString = inProduction ? "production" : "development";
 
             String appKey = inProduction ? productionAppKey : developmentAppKey;
