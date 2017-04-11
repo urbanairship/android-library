@@ -152,7 +152,8 @@ public class TagGroupsEditor {
             return;
         }
 
-        Job job = Job.newBuilder(action)
+        Job job = Job.newBuilder()
+                     .setAction(action)
                      .setAirshipComponent(component)
                      .putExtra(EXTRA_TAG_GROUP_MUTATIONS, JsonValue.wrapOpt(collapsedMutations).toString())
                      .build();

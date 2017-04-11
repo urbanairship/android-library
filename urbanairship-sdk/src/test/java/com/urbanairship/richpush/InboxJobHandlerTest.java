@@ -74,7 +74,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
                 requests.add(request);
 
                 if (responses.containsKey(url.toString())) {
-                    request.response =responses.get(url.toString());
+                    request.response = responses.get(url.toString());
                 }
 
                 return request;
@@ -91,7 +91,7 @@ public class InboxJobHandlerTest extends BaseTestCase {
                 TestApplication.getApplication().preferenceDataStore,
                 requestFactory, mock(RichPushResolver.class));
     }
-    
+
 
     /**
      * Test when user has not been created returns an error code.
@@ -101,9 +101,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Clear any user or password
         user.setUser(null, null);
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
-                .build();
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
+                     .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
@@ -129,7 +130,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Null response
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/", null);
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -164,7 +166,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
                 new Response.Builder(HttpURLConnection.HTTP_NOT_MODIFIED).create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -206,7 +209,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"messages\": []}")
                         .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -258,7 +262,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                                 "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}")
                         .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -298,9 +303,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/fakeUserId/messages/",
                 new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR)
                         .setResponseBody("{ failed }")
-                .create());
+                        .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -336,7 +342,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseBody("{ failed }")
                         .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -366,12 +373,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         responses.put("https://device-api.urbanairship.com/api/user/",
                 new Response.Builder(HttpURLConnection.HTTP_CREATED)
-                .setResponseMessage("Created")
-                .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
-                .create());
+                        .setResponseMessage("Created")
+                        .setResponseBody("{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }")
+                        .create());
 
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -409,7 +417,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .create());
 
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -445,7 +454,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .create());
 
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -467,7 +477,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/",
                 new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -499,7 +510,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
                         .setResponseBody("{ \"ok\" }")
                         .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -531,11 +543,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Set a successful response
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
                 new Response.Builder(HttpURLConnection.HTTP_OK)
-                .setResponseMessage("OK")
-                .setResponseBody("{ \"ok\" }")
-                .create());
+                        .setResponseMessage("OK")
+                        .setResponseBody("{ \"ok\" }")
+                        .create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -564,7 +577,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         // Return a null channel
         when(mockPushManager.getChannelId()).thenReturn(null);
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
@@ -587,7 +601,8 @@ public class InboxJobHandlerTest extends BaseTestCase {
         responses.put("https://device-api.urbanairship.com/api/user/someUserId/",
                 new Response.Builder(HttpURLConnection.HTTP_INTERNAL_ERROR).create());
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 

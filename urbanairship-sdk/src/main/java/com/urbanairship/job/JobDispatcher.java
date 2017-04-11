@@ -2,33 +2,33 @@
 
 package com.urbanairship.job;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.google.PlayServicesUtils;
 
-import java.util.concurrent.TimeUnit;
 
 /**
- * Dispatches jobs. Jobs can be either dispatched to be performed right away, or with a delay. When
- * a job is dispatched with a delay it will be scheduled using the AlarmManager. A job will start
- * the {@link AirshipService} where the component defined by the job will receive the dispatched job
- * in the {@link com.urbanairship.AirshipComponent#onPerformJob(UAirship, Job)}.
+ * Dispatches jobs. When a job is dispatched with a delay or specifies that it requires network activity,
+ * it will be scheduled using either the AlarmManager or GcmNetworkManager. When a job is finally performed,
+ * it will start the {@link AirshipService}. The {@link AirshipService} will call {@link com.urbanairship.AirshipComponent#onPerformJob(UAirship, Job)}
+ * for the component the job specifies.
  *
  * @hide
  */
 public class JobDispatcher {
 
+    static final String EXTRA_JOB_DISPATCHED = "EXTRA_JOB_DISPATCHED";
+
     private final Context context;
     private static JobDispatcher instance;
+    private Scheduler scheduler;
 
     /**
      * Gets the shared instance.
@@ -36,7 +36,7 @@ public class JobDispatcher {
      * @param context The application context.
      * @return The JobDispatcher.
      */
-    public static JobDispatcher shared(Context context) {
+    public static JobDispatcher shared(@NonNull Context context) {
         if (instance == null) {
             synchronized (JobDispatcher.class) {
                 if (instance == null) {
@@ -49,18 +49,14 @@ public class JobDispatcher {
     }
 
     @VisibleForTesting
-    JobDispatcher(Context context) {
+    JobDispatcher(@NonNull Context context) {
         this.context = context.getApplicationContext();
     }
 
-    /**
-     * Dispatches a job to be performed immediately.
-     *
-     * @param job The job.
-     */
-    public void dispatch(@NonNull Job job) {
-        cancel(job.getAction());
-        context.startService(createJobIntent(job, 0));
+    @VisibleForTesting
+    JobDispatcher(@NonNull Context context, @NonNull Scheduler scheduler) {
+        this.context = context.getApplicationContext();
+        this.scheduler = scheduler;
     }
 
     /**
@@ -71,68 +67,81 @@ public class JobDispatcher {
      * @param job The job.
      */
     public void wakefulDispatch(@NonNull Job job) {
-        cancel(job.getAction());
-        WakefulBroadcastReceiver.startWakefulService(context, createJobIntent(job, 0));
-    }
-
-    /**
-     * Dispatches a job to be performed at a later date.
-     *
-     * @param job The job.
-     * @param delay The delay.
-     * @param delayUnit The delay time unit.
-     */
-    public void dispatch(@NonNull Job job, long delay, TimeUnit delayUnit) {
-        long delayMillis = delayUnit.toMillis(delay);
-        if (delayMillis <= 0) {
-            dispatch(job);
+        if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
+            Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires rescheduling.");
+            getScheduler().reschedule(context, job);
             return;
         }
 
-        Intent intent = createJobIntent(job, delayMillis);
+        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
 
-        // Schedule the intent
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        try {
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delayMillis, pendingIntent);
-        } catch (SecurityException e) {
-            Logger.error("JobDispatcher - Failed to schedule intent " + intent.getAction(), e);
+        if (getScheduler().requiresScheduling(context, job)) {
+            Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires scheduling.");
+            getScheduler().schedule(context, job);
+            return;
         }
+
+        if (job.getTag() != null) {
+            cancel(job.getTag());
+        }
+
+
+        WakefulBroadcastReceiver.startWakefulService(context, AirshipService.createIntent(context, job));
     }
 
     /**
-     * Cancels a job based on the job's action.
-     *
-     * @param action The job's action.
-     */
-    public void cancel(String action) {
-        Intent intent = new Intent(context, AirshipService.class)
-                .setAction(action);
-
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_NO_CREATE);
-        if (pendingIntent != null) {
-            AlarmManager alarmManager = (AlarmManager) context
-                    .getSystemService(Context.ALARM_SERVICE);
-
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-        }
-    }
-
-    /**
-     * Creates an {@link AirshipService} intent.
+     * Dispatches a job to be performed immediately.
      *
      * @param job The job.
-     * @param delay The job's delay.
-     * @return An intent for the {@link AirshipService}.
      */
-    private Intent createJobIntent(Job job, long delay) {
-        return new Intent(context, AirshipService.class)
-                .setAction(job.getAction())
-                .putExtra(AirshipService.EXTRA_AIRSHIP_COMPONENT, job.getAirshipComponentName())
-                .putExtra(AirshipService.EXTRA_JOB_EXTRAS, job.getExtras())
-                .putExtra(AirshipService.EXTRA_DELAY, delay);
+    public void dispatch(@NonNull Job job) {
+        if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
+            getScheduler().reschedule(context, job);
+            return;
+        }
+
+        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
+
+        if (getScheduler().requiresScheduling(context, job)) {
+            getScheduler().schedule(context, job);
+            return;
+        }
+
+        if (job.getTag() != null) {
+            cancel(job.getTag());
+        }
+
+        context.startService(AirshipService.createIntent(context, job));
+    }
+
+    /**
+     * Cancels a job based on the job's tag.
+     *
+     * @param tag The job's tag.
+     */
+    public void cancel(@NonNull String tag) {
+        getScheduler().cancel(context, tag);
+    }
+
+    /**
+     * Returns the scheduler.
+     *
+     * @return The scheduler.
+     */
+    private Scheduler getScheduler() {
+        if (scheduler == null) {
+
+            try {
+                if (PlayServicesUtils.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS && PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
+                    scheduler = new GcmScheduler();
+                } else {
+                    scheduler = new AlarmScheduler();
+                }
+            } catch (IllegalStateException e) {
+                scheduler = new AlarmScheduler();
+            }
+        }
+
+        return scheduler;
     }
 }

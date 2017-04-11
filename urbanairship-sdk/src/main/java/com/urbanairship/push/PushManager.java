@@ -262,6 +262,9 @@ public class PushManager extends AirshipComponent {
         this(context, preferenceDataStore, configOptions, pushProvider, JobDispatcher.shared(context));
     }
 
+    /**
+     * @hide
+     */
     @VisibleForTesting
     PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider provider, JobDispatcher dispatcher) {
         this.context = context;
@@ -301,7 +304,8 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_START_REGISTRATION)
+        Job job = Job.newBuilder()
+                     .setAction(ChannelJobHandler.ACTION_START_REGISTRATION)
                      .setAirshipComponent(PushManager.class)
                      .build();
 
@@ -313,6 +317,9 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    /**
+     * @hide
+     */
     @Job.JobResult
     protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
 
@@ -513,7 +520,10 @@ public class PushManager extends AirshipComponent {
      * Update registration.
      */
     public void updateRegistration() {
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+        Job job = Job.newBuilder()
+                     .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                     .setTag(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                     .setNetworkAccessRequired(true)
                      .setAirshipComponent(PushManager.class)
                      .build();
 
@@ -936,7 +946,10 @@ public class PushManager extends AirshipComponent {
      * Dispatches a job to update the tag groups.
      */
     void startUpdateTagsService() {
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+        Job job = Job.newBuilder()
+                     .setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setNetworkAccessRequired(true)
                      .setAirshipComponent(PushManager.class)
                      .build();
 

@@ -34,6 +34,8 @@ public abstract class AirshipComponent {
      * @param airship The airship instance.
      * @param job The scheduled job.
      * @return The result of the job.
+     *
+     * @hide
      */
     @WorkerThread
     protected @Job.JobResult int onPerformJob(@NonNull UAirship airship, Job job) {

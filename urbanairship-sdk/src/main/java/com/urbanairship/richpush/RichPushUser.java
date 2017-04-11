@@ -105,7 +105,8 @@ public class RichPushUser {
 
         Logger.debug("RichPushUser - Updating user.");
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .setAirshipComponent(RichPushInbox.class)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)

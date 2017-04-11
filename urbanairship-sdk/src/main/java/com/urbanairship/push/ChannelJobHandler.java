@@ -63,7 +63,6 @@ class ChannelJobHandler {
      */
     static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
 
-
     /**
      * Data store key for the last successfully registered channel payload.
      */
@@ -190,15 +189,21 @@ class ChannelJobHandler {
             isPushRegistering = true;
 
             // Update the push registration
-            Job job = Job.newBuilder(ACTION_UPDATE_PUSH_REGISTRATION)
+            Job job = Job.newBuilder()
+                         .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+                         .setTag(ACTION_UPDATE_PUSH_REGISTRATION)
+                         .setNetworkAccessRequired(true)
                          .setAirshipComponent(PushManager.class)
                          .build();
 
             jobDispatcher.dispatch(job);
         } else {
             // Update the channel registration
-            Job job = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+            Job job = Job.newBuilder()
+                         .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                         .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setAirshipComponent(PushManager.class)
+                         .setNetworkAccessRequired(true)
                          .build();
 
             jobDispatcher.dispatch(job);
@@ -237,8 +242,11 @@ class ChannelJobHandler {
 
         if (!isPushRegistering) {
             // Update the channel registration
-            Job job = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+            Job job = Job.newBuilder()
+                         .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                         .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setAirshipComponent(PushManager.class)
+                         .setNetworkAccessRequired(true)
                          .build();
 
             jobDispatcher.dispatch(job);
@@ -281,7 +289,10 @@ class ChannelJobHandler {
         isPushRegistering = false;
 
         // Update the channel registration
-        Job channelUpdateJob = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+        Job channelUpdateJob = Job.newBuilder()
+                                  .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                  .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                  .setNetworkAccessRequired(true)
                                   .setAirshipComponent(PushManager.class)
                                   .build();
 
@@ -355,7 +366,10 @@ class ChannelJobHandler {
             pushManager.setChannel(null, null);
 
             // Update registration
-            Job channelUpdateJob = Job.newBuilder(ACTION_UPDATE_CHANNEL_REGISTRATION)
+            Job channelUpdateJob = Job.newBuilder()
+                                      .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                      .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                      .setNetworkAccessRequired(true)
                                       .setAirshipComponent(PushManager.class)
                                       .build();
 
@@ -591,7 +605,10 @@ class ChannelJobHandler {
             }
 
             if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+                Job updateJob = Job.newBuilder()
+                                   .setAction(ACTION_UPDATE_TAG_GROUPS)
+                                   .setTag(ACTION_UPDATE_TAG_GROUPS)
+                                   .setNetworkAccessRequired(true)
                                    .setAirshipComponent(PushManager.class)
                                    .build();
 
@@ -625,7 +642,9 @@ class ChannelJobHandler {
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
         if (pushManager.getChannelId() != null) {
-            Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+            Job updateJob = Job.newBuilder()
+                               .setAction(ACTION_UPDATE_TAG_GROUPS)
+                               .setNetworkAccessRequired(true)
                                .setAirshipComponent(PushManager.class)
                                .build();
 

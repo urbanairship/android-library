@@ -380,11 +380,15 @@ class AnalyticsJobHandler {
 
         Logger.verbose("AnalyticsJobHandler - Scheduling event uploads in " + milliseconds + "ms.");
 
-        Job job = Job.newBuilder(ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(ACTION_SEND)
+                     .setTag(ACTION_SEND)
+                     .setNetworkAccessRequired(true)
                      .setAirshipComponent(Analytics.class)
+                     .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
                      .build();
 
-        dispatcher.dispatch(job, milliseconds, TimeUnit.MILLISECONDS);
+        dispatcher.dispatch(job);
 
         preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
         isScheduled = true;

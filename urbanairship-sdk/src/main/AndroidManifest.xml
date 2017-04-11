@@ -37,6 +37,7 @@
         <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
         <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
+
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"
             android:exported="false"
@@ -63,9 +64,16 @@
         </activity>
 
         <service android:name="com.urbanairship.AirshipService" />
-
         <service android:name="com.urbanairship.actions.ActionService" />
         <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
+
+        <service android:name="com.urbanairship.job.AirshipGcmTaskService"
+                 android:exported="true"
+                 android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">
+            <intent-filter>
+                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
+            </intent-filter>
+        </service>
 
         <service
             android:name="com.urbanairship.push.UAInstanceIDListenerService"

@@ -135,6 +135,9 @@ public class RichPushInbox extends AirshipComponent {
                 new RichPushResolver(context), Executors.newSingleThreadExecutor(), activityMonitor);
     }
 
+    /**
+     * @hide
+     */
     @VisibleForTesting
     RichPushInbox(Context context, PreferenceDataStore dataStore, final JobDispatcher jobDispatcher,
                   RichPushUser user, RichPushResolver resolver, Executor executor, ActivityMonitor activityMonitor) {
@@ -152,7 +155,8 @@ public class RichPushInbox extends AirshipComponent {
 
             @Override
             public void onBackground(long time) {
-                Job job = Job.newBuilder(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                Job job = Job.newBuilder()
+                             .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
                              .setAirshipComponent(RichPushInbox.class)
                              .build();
 
@@ -185,6 +189,9 @@ public class RichPushInbox extends AirshipComponent {
         activityMonitor.addListener(listener);
     }
 
+    /**
+     * @hide
+     */
     @Override
     @Job.JobResult
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
@@ -375,7 +382,8 @@ public class RichPushInbox extends AirshipComponent {
 
         Logger.debug("RichPushInbox - Updating messages");
 
-        Job job = Job.newBuilder(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+        Job job = Job.newBuilder()
+                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                      .setAirshipComponent(RichPushInbox.class)
                      .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();

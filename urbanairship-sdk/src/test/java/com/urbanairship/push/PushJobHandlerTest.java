@@ -378,7 +378,8 @@ public class PushJobHandlerTest extends BaseTestCase {
         bundle.putBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE, pushBundle);
         bundle.putString(PushProviderBridge.EXTRA_PROVIDER_CLASS, providerClass);
 
-        return Job.newBuilder(PushJobHandler.ACTION_RECEIVE_MESSAGE)
+        return Job.newBuilder()
+                  .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
                   .setExtras(bundle)
                   .build();
     }

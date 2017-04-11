@@ -2,6 +2,7 @@
 
 /**
  * Urban Airship Job Api.
+ * @hide
  */
 package com.urbanairship.job;
 

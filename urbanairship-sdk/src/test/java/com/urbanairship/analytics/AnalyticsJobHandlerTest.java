@@ -20,12 +20,9 @@ import org.mockito.stubbing.Answer;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -77,7 +74,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
     public void testAddEventAfterNextSendTime() {
         when(mockAnalytics.isEnabled()).thenReturn(true);
 
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_ADD)
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
@@ -96,9 +94,9 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND) && job.getInitialDelay() == 10000L;
             }
-        }), eq(10000L), eq(TimeUnit.MILLISECONDS));
+        }));
     }
 
     /**
@@ -115,7 +113,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Set the minBatchInterval to 20 seconds
         dataStore.put(AnalyticsJobHandler.MIN_BATCH_INTERVAL_KEY, 20000);
 
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_ADD)
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
@@ -133,7 +132,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                 Job job = (Job) argument;
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
-        }), anyLong(), eq(TimeUnit.MILLISECONDS));
+        }));
     }
 
     /**
@@ -143,7 +142,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
     public void testAddEventAnalyticsDisabled() {
         when(mockAnalytics.isEnabled()).thenReturn(false);
 
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_ADD)
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
@@ -162,7 +162,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventEmptyData() {
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_ADD)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
@@ -207,7 +208,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
@@ -230,7 +232,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                 Job job = (Job) argument;
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
-        }), anyLong(), eq(TimeUnit.MILLISECONDS));
+        }));
     }
 
     /**
@@ -259,7 +261,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(response);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
@@ -290,7 +293,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         when(mockDataManager.getEvents(1)).thenReturn(events);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
@@ -315,7 +319,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         when(mockDataManager.getEvents(1)).thenReturn(events);
 
         // Start the upload process
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
@@ -343,7 +348,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Return a null response
         when(mockClient.sendEvents(UAirship.shared(), events.values())).thenReturn(null);
 
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_SEND)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_SEND)
                      .build();
 
         assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
@@ -364,7 +370,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Set last send time to year 3005 so we don't upload immediately
         dataStore.put(AnalyticsJobHandler.LAST_SEND_KEY, 32661446400000L);
 
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_ADD)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_ADD)
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, "some-type")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, "event id")
                      .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, "100")
@@ -380,9 +387,9 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
             @Override
             public boolean matches(Object argument) {
                 Job job = (Job) argument;
-                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
+                return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND) && job.getInitialDelay() == 0;
             }
-        }), eq(0l), eq(TimeUnit.MILLISECONDS));
+        }));
     }
 
     /**
@@ -390,7 +397,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeleteAll() {
-        Job job = Job.newBuilder(AnalyticsJobHandler.ACTION_DELETE_ALL)
+        Job job = Job.newBuilder()
+                     .setAction(AnalyticsJobHandler.ACTION_DELETE_ALL)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));

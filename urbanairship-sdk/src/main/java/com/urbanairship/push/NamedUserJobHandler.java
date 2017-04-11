@@ -217,7 +217,10 @@ class NamedUserJobHandler {
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
 
-        Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+        Job updateJob = Job.newBuilder()
+                           .setAction(ACTION_UPDATE_TAG_GROUPS)
+                           .setTag(ACTION_UPDATE_TAG_GROUPS)
+                           .setNetworkAccessRequired(true)
                            .setAirshipComponent(NamedUser.class)
                            .build();
 
@@ -269,7 +272,10 @@ class NamedUserJobHandler {
 
 
             if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder(ACTION_UPDATE_TAG_GROUPS)
+                Job updateJob = Job.newBuilder()
+                                   .setAction(ACTION_UPDATE_TAG_GROUPS)
+                                   .setTag(ACTION_UPDATE_TAG_GROUPS)
+                                   .setNetworkAccessRequired(true)
                                    .setAirshipComponent(PushManager.class)
                                    .build();
 

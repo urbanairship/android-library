@@ -95,7 +95,10 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder()
+                     .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                     .build();
+
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should exist in preferences", fakeChannelId, pushManager.getChannelId());
@@ -131,7 +134,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
@@ -155,7 +158,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
@@ -189,9 +192,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-        ;
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -220,7 +222,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify channel creation failed
@@ -253,9 +255,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.updateChannelWithPayload(channelLocation, payload)).thenReturn(response);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
 
         // Verify channel update succeeded
         assertNotSame("Last registration time should be updated", dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0), lastRegistrationTime);
@@ -274,7 +275,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify update was called
@@ -303,7 +304,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -325,7 +326,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -353,7 +354,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -365,7 +366,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify update tag groups called
@@ -387,14 +388,14 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Perform the update
-        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify update tag groups not called when channel ID doesn't exist
@@ -414,7 +415,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -426,7 +427,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify update tag groups is called
@@ -448,7 +449,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         dataStore.remove(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         // Perform the update
-        Job job = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify it didn't cause a client update

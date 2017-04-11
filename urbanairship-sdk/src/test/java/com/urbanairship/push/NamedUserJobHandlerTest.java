@@ -92,7 +92,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+            Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
             Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
             // Verify the update was performed
@@ -120,7 +120,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify the update was performed
@@ -144,7 +144,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify the update was performed
@@ -172,7 +172,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
             when(response.getStatus()).thenReturn(statusCode);
 
             // Perform the update
-            Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+            Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
             Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
             // Verify the update was performed
@@ -200,7 +200,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify the update was performed
@@ -224,7 +224,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify the update was performed
@@ -243,7 +243,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserID");
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify associate not called when channel ID doesn't exist
@@ -262,7 +262,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn(null);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify associate not called when channel ID doesn't exist
@@ -283,7 +283,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -305,7 +305,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -333,7 +333,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -345,7 +345,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
@@ -367,14 +367,14 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Perform the update
-        job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
@@ -394,7 +394,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -406,7 +406,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
@@ -428,7 +428,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         dataStore.remove(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify it didn't cause a client update
@@ -448,7 +448,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
                      .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
                      .build();
 
@@ -460,7 +460,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify updateNamedUserTags called
@@ -481,7 +481,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         dataStore.put(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, "");
 
         // Perform the update
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS).build();
+        Job job = Job.newBuilder().setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify pending tag groups are empty

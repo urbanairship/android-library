@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.ResultReceiver;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
@@ -20,8 +22,6 @@ import com.urbanairship.util.UAStringUtil;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 
 /**
  * Urban Airship Service.
@@ -30,34 +30,32 @@ import java.util.concurrent.TimeUnit;
  */
 public class AirshipService extends Service {
 
-    /**
-     * The default starting back off time for retries in milliseconds
-     */
-    protected static final long DEFAULT_STARTING_BACK_OFF_TIME_MS = 10000; // 10 seconds.
+    protected static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
 
     /**
-     * The default max back off time for retries in milliseconds.
+     * Action to run a job.
      */
-    protected static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 mins.
+    public static final String ACTION_RUN_JOB = "RUN_JOB";
 
     /**
-     * Time to wait for UAirship when processing messages.
+     * Job bundle extra. See {@link Job#toBundle()}.
      */
-    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds
+    public static final String EXTRA_JOB_BUNDLE = "EXTRA_JOB_BUNDLE";
 
-    public static final String EXTRA_AIRSHIP_COMPONENT = "EXTRA_AIRSHIP_COMPONENT";
-    public static final String EXTRA_JOB_EXTRAS = "EXTRA_JOB_EXTRAS";
-    public static final String EXTRA_DELAY = "EXTRA_DELAY";
+    /**
+     * Optional result receiver extra.
+     */
+    public static final String EXTRA_RESULT_RECEIVER = "EXTRA_RESULT_RECEIVER";
 
     private static final int MSG_INTENT_RECEIVED = 1;
     private static final int MSG_INTENT_JOB_FINISHED = 2;
+
+    private static final HashMap<String, Executor> executors = new HashMap<>();
 
     private Looper looper;
     private IncomingHandler handler;
     private int lastStartId = 0;
     private int runningJobs;
-
-    private static HashMap<String, Executor> executors = new HashMap<>();
 
     private final class IncomingHandler extends Handler {
         IncomingHandler(Looper looper) {
@@ -121,12 +119,14 @@ public class AirshipService extends Service {
         msg.arg1 = startId;
         msg.obj = intent;
 
-        if (intent == null || intent.getAction() == null) {
-            handler.sendMessage(msg);
+        if (intent == null || !ACTION_RUN_JOB.equals(intent.getAction()) || intent.getBundleExtra(EXTRA_JOB_BUNDLE) == null) {
+            sendJobResult(intent, msg, Job.JOB_FINISHED);
             return;
         }
 
-        Logger.debug("AirshipService - Starting tasks for intent: " + intent.getAction() + " taskId: " + startId);
+        final Job job = Job.fromBundle(intent.getBundleExtra(EXTRA_JOB_BUNDLE));
+
+        Logger.verbose("AirshipService - Starting job: " + job + " taskId: " + startId);
 
         final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
         if (airship == null) {
@@ -135,10 +135,7 @@ public class AirshipService extends Service {
             return;
         }
 
-        final String componentName = intent.getStringExtra(EXTRA_AIRSHIP_COMPONENT);
-        final Bundle extras = intent.getBundleExtra(EXTRA_JOB_EXTRAS);
-        final long delay = intent.getLongExtra(EXTRA_DELAY, 0);
-        final AirshipComponent component = findAirshipComponent(airship, componentName);
+        final AirshipComponent component = findAirshipComponent(airship, job.getAirshipComponentName());
 
         if (component == null) {
             Logger.error("AirshipService - Unavailable to find airship components for job with action: " + intent.getAction());
@@ -146,15 +143,10 @@ public class AirshipService extends Service {
             return;
         }
 
-        final Job job = Job.newBuilder(intent.getAction())
-                           .setAirshipComponent(component.getClass())
-                           .setExtras(extras)
-                           .build();
-
         Executor executor = executors.get(component.getClass().getName());
         if (executor == null) {
             executor = Executors.newSingleThreadExecutor();
-            executors.put(componentName, executor);
+            executors.put(job.getAirshipComponentName(), executor);
         }
 
         runningJobs++;
@@ -162,22 +154,35 @@ public class AirshipService extends Service {
             @Override
             public void run() {
                 int result = component.onPerformJob(airship, job);
+                Logger.verbose("AirshipService - Job finished: " + job + " with result: " + result);
+
                 if (result == Job.JOB_RETRY) {
-
-                    long backOff = delay;
-                    if (backOff <= 0) {
-                        backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
-                    } else {
-                        backOff = Math.min(delay * 2, DEFAULT_MAX_BACK_OFF_TIME_MS);
-                    }
-
-                    JobDispatcher.shared(getApplicationContext())
-                                 .dispatch(job, backOff, TimeUnit.MILLISECONDS);
-
-                    handler.sendMessage(msg);
+                    JobDispatcher.shared(getApplicationContext()).dispatch(job);
                 }
+
+                sendJobResult(intent, msg, result);
             }
         });
+    }
+
+    /**
+     * Helper method to send the results of {@link #onHandleIntent(Intent, int)}
+     *
+     * @param intent The airship intent.
+     * @param msg The internal message.
+     * @param result The job result.
+     */
+    private void sendJobResult(Intent intent, Message msg, @Job.JobResult int result) {
+        handler.sendMessage(msg);
+
+        if (intent == null) {
+            return;
+        }
+
+        ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_RESULT_RECEIVER);
+        if (resultReceiver != null) {
+            resultReceiver.send(result, new Bundle());
+        }
     }
 
     /**
@@ -204,13 +209,26 @@ public class AirshipService extends Service {
     }
 
     /**
+     * Creates a service intent for the {@link Job}.
+     *
+     * @param context The application context.
+     * @param job The {@link Job} to run.
+     * @return A service intent.
+     */
+    public static Intent createIntent(Context context, Job job) {
+        return new Intent(context, AirshipService.class)
+                .setAction(AirshipService.ACTION_RUN_JOB)
+                .putExtra(AirshipService.EXTRA_JOB_BUNDLE, job.toBundle());
+    }
+
+    /**
      * Finds the {@link AirshipComponent}s for a given job.
      *
-     * @param airship The UAirship instance.
      * @param componentClassName The component's class name.
+     * @param airship The airship instance.
      * @return The airship component.
      */
-    AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
+    private AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
         if (UAStringUtil.isEmpty(componentClassName)) {
             return null;
         }

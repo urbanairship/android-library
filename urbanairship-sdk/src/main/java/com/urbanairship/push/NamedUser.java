@@ -55,6 +55,9 @@ public class NamedUser extends AirshipComponent {
         this(context, preferenceDataStore, JobDispatcher.shared(context));
     }
 
+    /**
+     * @hide
+     */
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, JobDispatcher dispatcher) {
         this.context = context.getApplicationContext();
@@ -73,6 +76,9 @@ public class NamedUser extends AirshipComponent {
         }
     }
 
+    /**
+     * @hide
+     */
     @Override
     protected int onPerformJob(@NonNull UAirship airship, Job job) {
         if (namedUserJobHandler == null) {
@@ -179,9 +185,12 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to update the named user.
      */
     void dispatchNamedUserUpdateJob() {
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
-                .setAirshipComponent(NamedUser.class)
-                .build();
+        Job job = Job.newBuilder()
+                     .setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                     .setTag(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                     .setNetworkAccessRequired(true)
+                     .setAirshipComponent(NamedUser.class)
+                     .build();
 
         jobDispatcher.dispatch(job);
     }
@@ -190,7 +199,8 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to clear pending named user tags.
      */
     void dispatchClearTagsJob() {
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
+        Job job = Job.newBuilder()
+                     .setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
                      .setAirshipComponent(NamedUser.class)
                      .build();
 
@@ -201,7 +211,10 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to update the named user tag groups.
      */
     void dispatchUpdateTagGroupsJob() {
-        Job job = Job.newBuilder(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+        Job job = Job.newBuilder()
+                     .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                     .setNetworkAccessRequired(true)
                      .setAirshipComponent(NamedUser.class)
                      .build();
 

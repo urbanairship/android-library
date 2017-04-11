@@ -31,7 +31,10 @@ public abstract class PushProviderBridge {
         Bundle extras = new Bundle();
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
-        Job messageJob = Job.newBuilder(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+        Job messageJob = Job.newBuilder()
+                            .setAction(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                            .setTag(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                            .setNetworkAccessRequired(true)
                             .setAirshipComponent(PushManager.class)
                             .setExtras(extras)
                             .build();
@@ -51,7 +54,8 @@ public abstract class PushProviderBridge {
         extras.putString(EXTRA_REGISTRATION_ID, registrationId);
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
-        Job messageJob = Job.newBuilder(ChannelJobHandler.ACTION_REGISTRATION_FINISHED)
+        Job messageJob = Job.newBuilder()
+                            .setAction(ChannelJobHandler.ACTION_REGISTRATION_FINISHED)
                             .setAirshipComponent(PushManager.class)
                             .setExtras(extras)
                             .build();
@@ -71,7 +75,8 @@ public abstract class PushProviderBridge {
         extras.putBundle(EXTRA_PUSH_BUNDLE, pushBundle);
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
-        Job messageJob = Job.newBuilder(PushJobHandler.ACTION_RECEIVE_MESSAGE)
+        Job messageJob = Job.newBuilder()
+                            .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
                             .setAirshipComponent(PushManager.class)
                             .setExtras(extras)
                             .build();
