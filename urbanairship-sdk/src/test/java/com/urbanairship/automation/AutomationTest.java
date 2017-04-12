@@ -694,8 +694,9 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, false, -1L)));
         when(automationDataManager.getDelayedSchedules()).thenReturn(Collections.<ActionSchedule>emptyList())
-                .thenReturn(Collections.<ActionSchedule>emptyList())
-                .thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, true, 1234L)));
+                                                         .thenReturn(Collections.<ActionSchedule>emptyList())
+                                                         .thenReturn(Collections.<ActionSchedule>emptyList())
+                                                         .thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, true, 1234L)));
         when(automationDataManager.getSchedule(anyString())).thenReturn(new ActionSchedule("automation id", schedule, 0, true, 1234L));
 
         activityMonitor.startActivity();
@@ -749,6 +750,7 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, false, -1L)));
         when(automationDataManager.getDelayedSchedules()).thenReturn(Collections.<ActionSchedule>emptyList())
                                                          .thenReturn(Collections.<ActionSchedule>emptyList())
+                                                         .thenReturn(Collections.<ActionSchedule>emptyList())
                                                          .thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, true, 1234L)));
         when(automationDataManager.getSchedule(anyString())).thenReturn(new ActionSchedule("automation id", schedule, 0, true, 1234L));
 
@@ -801,6 +803,7 @@ public class AutomationTest extends BaseTestCase {
         when(automationDataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND)).thenReturn(Collections.singletonList(triggerEntry));
         when(automationDataManager.getSchedules(anySet())).thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, false, -1L)));
         when(automationDataManager.getDelayedSchedules()).thenReturn(Collections.<ActionSchedule>emptyList())
+                                                         .thenReturn(Collections.<ActionSchedule>emptyList())
                                                          .thenReturn(Collections.<ActionSchedule>emptyList())
                                                          .thenReturn(Collections.singletonList(new ActionSchedule("automation id", schedule, 0, true, 1234L)));
         when(automationDataManager.getSchedule(anyString())).thenReturn(new ActionSchedule("automation id", schedule, 0, true, 1234L));

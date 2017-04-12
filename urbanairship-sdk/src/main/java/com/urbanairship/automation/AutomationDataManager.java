@@ -627,27 +627,29 @@ class AutomationDataManager extends DataManager {
         // Initialize the tracked schedule ID, count, and info builder.
         String lastId = "";
         int lastCount = 0;
-        boolean isPendingExecution = false;
-        long pendingExecutionDate = -1;
+        boolean lastIsPendingExecution = false;
+        long lastPendingExecutionDate = -1;
         ActionScheduleInfo.Builder builder = null;
 
         while (!cursor.isAfterLast()) {
-            // Retrieved the current row's schedule ID and count.
+            // Retrieved the current row's schedule ID, count, and execution status.
             String id = cursor.getString(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_SCHEDULE_ID));
             int count = cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_COUNT));
-            isPendingExecution = cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION)) == 1;
-            pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE));
+            boolean isPendingExecution = cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_IS_PENDING_EXECUTION)) == 1;
+            long pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_PENDING_EXECUTION_DATE));
 
             // If a new schedule ID, build and add the previous builder and begin a new one.
             if (!lastId.equals(id)) {
                 if (builder != null) {
-                    schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, false, -1));
+                    schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, lastIsPendingExecution, lastPendingExecutionDate));
                 }
 
                 // Set the new ID, count, and builder to track.
                 builder = ActionScheduleInfo.newBuilder();
                 lastId = id;
                 lastCount = count;
+                lastIsPendingExecution = isPendingExecution;
+                lastPendingExecutionDate = pendingExecutionDate;
 
                 // Add the relevant schedule info to the new builder.
                 builder.setLimit(cursor.getInt(cursor.getColumnIndex(ActionSchedulesTable.COLUMN_NAME_LIMIT)))
@@ -688,7 +690,7 @@ class AutomationDataManager extends DataManager {
 
         // For the final grouping of triggers, build and add the schedule.
         if (builder != null) {
-            schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, isPendingExecution, pendingExecutionDate));
+            schedules.add(new ActionSchedule(lastId, builder.build(), lastCount, lastIsPendingExecution, lastPendingExecutionDate));
         }
 
         cursor.close();

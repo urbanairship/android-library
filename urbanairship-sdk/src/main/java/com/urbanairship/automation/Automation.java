@@ -70,7 +70,6 @@ public class Automation extends AirshipComponent {
 
     private static String screen;
     private static String regionId;
-    private static boolean isForeground = false;
 
     /**
      * Automation schedules limit.
@@ -99,14 +98,12 @@ public class Automation extends AirshipComponent {
         this.listener = new ActivityMonitor.Listener() {
             @Override
             public void onForeground(long time) {
-                isForeground = true;
                 Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
                 onScheduleConditionsChanged();
             }
 
             @Override
             public void onBackground(long time) {
-                isForeground = false;
                 Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_BACKGROUND, 1.00);
                 onScheduleConditionsChanged();
             }
@@ -160,6 +157,7 @@ public class Automation extends AirshipComponent {
 
         Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
         rescheduleDelays();
+        onScheduleConditionsChanged();
     }
 
     @Override
@@ -491,7 +489,7 @@ public class Automation extends AirshipComponent {
             @Override
             public void run() {
 
-                List < ActionSchedule > actionSchedules = dataManager.getDelayedSchedules();
+                List<ActionSchedule> actionSchedules = dataManager.getDelayedSchedules();
                 if (actionSchedules.isEmpty()) {
                     return;
                 }
@@ -515,7 +513,7 @@ public class Automation extends AirshipComponent {
 
                 // Update schedule database
                 Map<String, List<String>> queryMap = new HashMap<>();
-                addSchedulesToSet(queryMap, toReschedule);
+                addPendingExecutionSchedules(queryMap, toReschedule);
                 if (!queryMap.isEmpty()) {
                     dataManager.updateLists(queryMap);
                 }
@@ -912,11 +910,10 @@ public class Automation extends AirshipComponent {
 
         Logger.debug("Automation - Deleting " + schedulesToDelete.size() + " schedules.");
         Logger.debug("Automation - Incrementing " + schedulesToIncrement.size() + " schedules.");
-        Logger.debug("Automation - Resetting " + cancellationTriggersToReset.size() + " cancellation triggers.");
         Logger.debug("Automation - Resetting execution state on " + schedulesToResetExecutionState.size() + " schedules.");
 
         if (!schedulesToInitiateTimers.isEmpty()) {
-            addSchedulesToSet(updatesMap, schedulesToInitiateTimers);
+            addPendingExecutionSchedules(updatesMap, schedulesToInitiateTimers);
         }
 
         dataManager.updateLists(updatesMap);
@@ -971,14 +968,14 @@ public class Automation extends AirshipComponent {
 
         switch (delay.getAppState()) {
             case ScheduleDelay.APP_STATE_FOREGROUND:
-                if (!isForeground) {
+                if (!activityMonitor.isAppForegrounded()) {
                     return false;
                 }
 
                 break;
 
             case ScheduleDelay.APP_STATE_BACKGROUND:
-                if (isForeground) {
+                if (activityMonitor.isAppForegrounded()) {
                     return false;
                 }
 
@@ -1010,12 +1007,14 @@ public class Automation extends AirshipComponent {
         }
     }
 
-    void addSchedulesToSet(Map<String, List<String>> queryMap, Map<Long, List<String>> schedulesToSet) {
-        if (!schedulesToSet.isEmpty()) {
-            for (Map.Entry<Long, List<String>> entry : schedulesToSet.entrySet()) {
-                queryMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "1"), entry.getValue());
+    void addPendingExecutionSchedules(Map<String, List<String>> queryMap, Map<Long, List<String>> pendingExecutionSchedules) {
+        if (!pendingExecutionSchedules.isEmpty()) {
+            List<String> stateUpdates = new ArrayList<>();
+            for (Map.Entry<Long, List<String>> entry : pendingExecutionSchedules.entrySet()) {
+                stateUpdates.addAll(entry.getValue());
                 queryMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_DATE_UPDATE, entry.getKey()), entry.getValue());
             }
+            queryMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "1"), stateUpdates);
         }
     }
 
