@@ -6,7 +6,7 @@ Urban Airship SDK for Android.
 
 - [Getting started guide](http://docs.urbanairship.com/platform/android/)
 - [Javadocs](https://docs.urbanairship.com/android-lib/reference/packages.html)
-- [Migration guide](http://docs.urbanairship.com/guides/android-migration/)
+- [Migration Guides](documentation/migration)
 
 ## Contributing Code
 
