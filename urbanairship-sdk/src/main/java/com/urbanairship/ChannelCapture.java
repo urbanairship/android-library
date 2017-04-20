@@ -2,7 +2,6 @@
 
 package com.urbanairship;
 
-import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -10,21 +9,13 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 
-import com.urbanairship.actions.ClipboardAction;
-import com.urbanairship.actions.ToastAction;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,29 +31,15 @@ public class ChannelCapture extends AirshipComponent {
 
     static final String CHANNEL_CAPTURE_ENABLED_KEY = "com.urbanairship.CHANNEL_CAPTURE_ENABLED";
 
-    /**
-     * Broadcast action when the clipboard notification is tapped.
-     */
-    static final String ACTION_CHANNEL_CAPTURE = "com.urbanairship.ACTION_CHANNEL_CAPTURE";
+    static final String CHANNEL = "channel";
+    static final String URL = "url";
 
-    /**
-     * Notification ID extra.
-     */
-    static final String EXTRA_NOTIFICATION_ID = "com.urbanairship.EXTRA_NOTIFICATION_ID";
-
-    /**
-     * Action payload extra.
-     */
-    static final String EXTRA_ACTIONS = "com.urbanairship.EXTRA_ACTIONS";
-
-    private final static int NOTIFICATION_ID = 3000;
     private final static String CHANNEL_PLACEHOLDER = "CHANNEL";
     private final static String GO_URL = "https://go.urbanairship.com/";
 
     private final Context context;
     private final AirshipConfigOptions configOptions;
     private final PushManager pushManager;
-    private final NotificationManagerCompat notificationManager;
     private ClipboardManager clipboardManager;
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
@@ -78,18 +55,11 @@ public class ChannelCapture extends AirshipComponent {
      * @param pushManager The push manager instance.
      * @param activityMonitor The activity monitor instance.
      */
-    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
-                   PreferenceDataStore preferenceDataStore, ActivityMonitor activityMonitor) {
-        this(context, configOptions, pushManager, NotificationManagerCompat.from(context), preferenceDataStore, activityMonitor);
-    }
-
-    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager,
-                   NotificationManagerCompat notificationManager, PreferenceDataStore preferenceDataStore,
+    ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, PreferenceDataStore preferenceDataStore,
                    ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
-        this.notificationManager = notificationManager;
         this.listener = new ActivityMonitor.Listener() {
             @Override
             public void onForeground(long time) {
@@ -142,28 +112,32 @@ public class ChannelCapture extends AirshipComponent {
     }
 
     /**
-     * Checks the clipboard for the token and posts the notification if
-     * the token is available.
+     * Checks the clipboard for the token and starts the activity if the token is
+     * available.
      */
     private void checkClipboard() {
-        if (!this.configOptions.channelCaptureEnabled) {
-            return;
-        }
-
-        if (UAirship.shared().getPushManager().isPushEnabled()
-                && this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
-            this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
-            return;
-        }
-
         String channel = pushManager.getChannelId();
-        if (UAStringUtil.isEmpty(channel)) {
-            return;
-        }
 
-        // Clipboard is null on a few VodaPhone devices
-        if (clipboardManager == null) {
-            return;
+        // Only perform checks if notifications are enabled for the app.
+        if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            if (!this.configOptions.channelCaptureEnabled) {
+                return;
+            }
+
+            if (UAirship.shared().getPushManager().isPushEnabled()
+                    && this.preferenceDataStore.getLong(CHANNEL_CAPTURE_ENABLED_KEY, 0) < System.currentTimeMillis()) {
+                this.preferenceDataStore.put(CHANNEL_CAPTURE_ENABLED_KEY, 0);
+                return;
+            }
+
+            if (UAStringUtil.isEmpty(channel)) {
+                return;
+            }
+
+            // Clipboard is null on a few VodaPhone devices
+            if (clipboardManager == null) {
+                return;
+            }
         }
 
         String clipboardText = null;
@@ -210,7 +184,20 @@ public class ChannelCapture extends AirshipComponent {
             Logger.debug("Unable to clear clipboard: " + e.getMessage());
         }
 
-        displayNotification(channel, url);
+        startChannelCaptureActivity(channel, url);
+    }
+
+    /**
+     * Create the intent that launches the {@link ChannelCaptureActivity}
+     *
+     * @param channel The channel string.
+     * @param url The channel url.
+     */
+    private void startChannelCaptureActivity(String channel, String url) {
+        Intent intent = new Intent(context, ChannelCaptureActivity.class);
+        intent.putExtra(CHANNEL, channel);
+        intent.putExtra(URL, url);
+        context.startActivity(intent);
     }
 
     /**
@@ -238,42 +225,6 @@ public class ChannelCapture extends AirshipComponent {
     }
 
     /**
-     * Displays a notification with the channel ID.
-     *
-     * @param channel The channel ID.
-     * @param url The test channel URL.
-     */
-    private void displayNotification(String channel, String url) {
-        PendingIntent copyClipboardPendingIntent = createCopyChannelPendingIntent(channel);
-        PendingIntent openUrlPendingIntent = url == null ? null : createOpenUrlPendingIntent(url);
-
-        String appName = context.getPackageManager().getApplicationLabel(context.getApplicationInfo()).toString();
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                .setAutoCancel(true)
-                .setLocalOnly(true)
-                .setContentTitle(appName)
-                .setContentText(channel)
-                .setSmallIcon(R.drawable.ua_ic_urbanairship_notification)
-                .setColor(ContextCompat.getColor(context, R.color.urban_airship_blue))
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setTicker(context.getString(R.string.ua_channel_notification_ticker))
-                .setContentIntent(openUrlPendingIntent == null ? copyClipboardPendingIntent : openUrlPendingIntent)
-                .addAction(new NotificationCompat.Action(R.drawable.ua_ic_notification_button_copy,
-                        context.getString(R.string.ua_notification_button_copy),
-                        copyClipboardPendingIntent));
-
-        if (openUrlPendingIntent != null) {
-            builder.addAction(new NotificationCompat.Action(R.drawable.ua_ic_notification_button_open_browser,
-                    context.getString(R.string.ua_notification_button_save),
-                    openUrlPendingIntent));
-        }
-
-        // Post the notification
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
-    }
-
-    /**
      * Generates the expected clipboard token.
      *
      * @return The generated clipboard token.
@@ -291,50 +242,5 @@ public class ChannelCapture extends AirshipComponent {
         }
 
         return code.toString();
-    }
-
-    /**
-     * Creates the copy channel notification action's pending intent.
-     *
-     * @param channel The channel to copy to the clipboard.
-     * @return A pending intent.
-     */
-    @NonNull
-    private PendingIntent createCopyChannelPendingIntent(@NonNull String channel) {
-        Map<String, String> actionValue = new HashMap<>();
-        actionValue.put("text", channel);
-        actionValue.put("label", "Urban Airship Channel");
-
-        Map<String, Object> actionPayload = new HashMap<>();
-        actionPayload.put(ClipboardAction.DEFAULT_REGISTRY_NAME, actionValue);
-        actionPayload.put(ToastAction.DEFAULT_REGISTRY_NAME, context.getString(R.string.ua_channel_copy_toast));
-
-        Intent intent = new Intent(context, CoreReceiver.class)
-                .setAction(ACTION_CHANNEL_CAPTURE)
-                .addCategory(UUID.randomUUID().toString())
-                .putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID)
-                .putExtra(EXTRA_ACTIONS, JsonValue.wrapOpt(actionPayload).toString());
-
-        return PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, 0);
-    }
-
-    /**
-     * Creates the open url notification action's pending intent.
-     *
-     * @param url The url to open.
-     * @return A pending intent.
-     */
-    @NonNull
-    private PendingIntent createOpenUrlPendingIntent(@NonNull String url) {
-        Map<String, Object> actionPayload = new HashMap<>();
-        actionPayload.put("open_external_url_action", url);
-
-        Intent intent = new Intent(context, CoreActivity.class)
-                .setAction(ACTION_CHANNEL_CAPTURE)
-                .addCategory(UUID.randomUUID().toString())
-                .putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID)
-                .putExtra(EXTRA_ACTIONS, JsonValue.wrapOpt(actionPayload).toString());
-
-        return PendingIntent.getActivity(context, NOTIFICATION_ID, intent, 0);
     }
 }

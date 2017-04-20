@@ -62,6 +62,9 @@
             </intent-filter>
 
         </activity>
+        <activity
+            android:name="com.urbanairship.ChannelCaptureActivity"/>
+
 
         <service android:name="com.urbanairship.AirshipService" />
         <service android:name="com.urbanairship.actions.ActionService" />

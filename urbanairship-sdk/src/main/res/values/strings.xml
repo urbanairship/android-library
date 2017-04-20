@@ -35,6 +35,7 @@
     <!-- Channel Capture -->
     <string name="ua_channel_notification_ticker">Urban Airship Channel</string>
     <string name="ua_channel_copy_toast">Channel copied to clipboard!</string>
+    <string name="ua_channel_open_url">Open</string>
 
     <!-- Message Center -->
     <string name="ua_message_center_title">Message Center</string>

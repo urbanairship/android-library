@@ -55,30 +55,6 @@ public class CoreReceiver extends BroadcastReceiver {
                 break;
             case PushManager.ACTION_NOTIFICATION_OPENED:
                 onNotificationOpened(context, intent);
-                break;
-            case ChannelCapture.ACTION_CHANNEL_CAPTURE:
-                onChannelCapture(context, intent);
-        }
-    }
-
-    /**
-     * Handles the channel capture action.
-     *
-     * @param context The application context.
-     * @param intent The notification intent.
-     */
-    private void onChannelCapture(Context context, Intent intent) {
-        if (intent.hasExtra(ChannelCapture.EXTRA_NOTIFICATION_ID)) {
-            int notificationId = intent.getIntExtra(ChannelCapture.EXTRA_NOTIFICATION_ID, -1);
-            NotificationManagerCompat.from(context).cancel(notificationId);
-        }
-
-        String actionPayload = intent.getStringExtra(ChannelCapture.EXTRA_ACTIONS);
-        if (!UAStringUtil.isEmpty(actionPayload)) {
-            // Run UA actions for the notification action
-            Logger.debug("Running actions for notification action: " + actionPayload);
-
-            ActionService.runActions(context, actionPayload, Action.SITUATION_MANUAL_INVOCATION, null);
         }
     }
 

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_gravity="center"
+    android:paddingTop="32dp"
+    android:orientation="vertical"
+    android:layout_width="280dp"
+    android:layout_height="fill_parent">
+
+    <TextView
+        android:id="@+id/channel_capture_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        android:text="@string/ua_channel_notification_ticker"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+    <TextView
+        android:id="@+id/channel_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:lines="1" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp">
+
+        <Button
+            android:id="@+id/share_button"
+            android:layout_weight=".33"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/ua_notification_button_share"
+            style="?android:attr/borderlessButtonStyle"/>
+
+        <Button
+            android:id="@+id/copy_button"
+            android:layout_weight=".33"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/ua_notification_button_copy"
+            style="?android:attr/borderlessButtonStyle"/>
+
+        <!-- TODO potentially provide translations -->
+        <Button
+            android:id="@+id/open_button"
+            android:layout_weight=".33"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Open"
+            android:enabled="false"
+            style="?android:attr/borderlessButtonStyle"/>
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/channel_information_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        android:text="Additional Information"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+    <ListView
+        android:id="@+id/channel_information"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+</LinearLayout>
+

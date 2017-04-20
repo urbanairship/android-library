@@ -50,36 +50,6 @@ public class CoreReceiverTest extends BaseTestCase {
     }
 
     /**
-     * Test channel capture intent action
-     */
-    @Test
-    public void testOnChannelCapture() {
-        // Create the intent
-        Intent intent = new Intent()
-                .setAction(ChannelCapture.ACTION_CHANNEL_CAPTURE)
-                .putExtra(ChannelCapture.EXTRA_NOTIFICATION_ID, 100)
-                .putExtra(ChannelCapture.EXTRA_ACTIONS, "{\"actions\": \"payload\"}");
-
-        // Process the intent
-        receiver.onReceive(context, intent);
-
-        // Verify the notification was dismissed
-        verify(notificationManager).cancel(null, 100);
-
-        // Verify the service was ran
-        verify(context).startService(argThat(new ArgumentMatcher<Intent>() {
-            @Override
-            public boolean matches(Object argument) {
-                Intent intent = (Intent) argument;
-
-                return ActionService.ACTION_RUN_ACTIONS.equals(intent.getAction()) &&
-                        ActionValue.wrap("payload").equals(intent.getBundleExtra(ActionService.EXTRA_ACTIONS_BUNDLE).getParcelable("actions")) &&
-                        Action.SITUATION_MANUAL_INVOCATION == intent.getIntExtra(ActionService.EXTRA_SITUATION, -1);
-            }
-        }));
-    }
-
-    /**
      * Test open notification proxy intent action.
      */
     @Test
