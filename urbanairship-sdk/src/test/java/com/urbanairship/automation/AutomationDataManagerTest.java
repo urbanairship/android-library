@@ -14,10 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,78 +30,68 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
     @After
     public void takeDown() {
-        dataManager.deleteSchedules();
+        dataManager.deleteAllSchedules();
     }
 
     @Test
     public void testDeleteSchedule() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
+        List<ScheduleEntry> schedules = createSchedules(20);
 
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules();
+        dataManager.saveSchedules(schedules);
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries();
         assertEquals(20, retrieved.size());
 
-        dataManager.deleteSchedule(dataManager.getSchedules("group 5").get(0).getId());
-        retrieved = dataManager.getSchedules();
-        assertEquals(19, retrieved.size());
-    }
-
-    @Test
-    public void testDeleteSchedulesByTag() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
-
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules();
-        assertEquals(20, retrieved.size());
-
-        dataManager.deleteSchedules("group 5");
-        retrieved = dataManager.getSchedules();
+        dataManager.deleteSchedule(dataManager.getScheduleEntries("group 5").get(0).scheduleId);
+        retrieved = dataManager.getScheduleEntries();
         assertEquals(19, retrieved.size());
     }
 
     @Test
     public void testDeleteSchedules() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules();
+        List<ScheduleEntry> schedules = createSchedules(20);
+        dataManager.saveSchedules(schedules);
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries();
         assertEquals(20, retrieved.size());
 
-        dataManager.deleteSchedules();
-        retrieved = dataManager.getSchedules();
+        dataManager.deleteAllSchedules();
+        retrieved = dataManager.getScheduleEntries();
         assertEquals(0, retrieved.size());
     }
 
     @Test
     public void testDeleteSchedulesByList() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
+        List<ScheduleEntry> schedules = createSchedules(20);
 
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules();
+        dataManager.saveSchedules(schedules);
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries();
         assertEquals(20, retrieved.size());
 
-        dataManager.bulkDeleteSchedules(Arrays.asList(dataManager.getSchedules("group 6").get(0).getId(), dataManager.getSchedules("group 7").get(0).getId(), dataManager.getSchedules("group 5").get(0).getId()));
-        retrieved = dataManager.getSchedules();
+        dataManager.deleteSchedules(Arrays.asList(
+                dataManager.getScheduleEntries("group 6").get(0).scheduleId,
+                dataManager.getScheduleEntries("group 7").get(0).scheduleId,
+                dataManager.getScheduleEntries("group 5").get(0).scheduleId));
+        retrieved = dataManager.getScheduleEntries();
         assertEquals(17, retrieved.size());
     }
 
     @Test
     public void testGetSchedule() {
-        ActionScheduleInfo actionScheduleInfo = createSchedules(1).get(0);
-        Trigger trigger = actionScheduleInfo.getTriggers().get(0);
-        dataManager.insertSchedules(Collections.singletonList(actionScheduleInfo));
+        ScheduleEntry scheduleEntry = createSchedules(1).get(0);
+        TriggerEntry triggerEntry = scheduleEntry.triggers.get(0);
+        dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
 
-        ActionSchedule retrieved = dataManager.getSchedule(dataManager.getSchedules("group 0").get(0).getId());
-        assertEquals(actionScheduleInfo.getGroup(), retrieved.getInfo().getGroup());
-        assertEquals(actionScheduleInfo.getActions(), retrieved.getInfo().getActions());
-        assertEquals(actionScheduleInfo.getEnd(), retrieved.getInfo().getEnd());
-        assertEquals(actionScheduleInfo.getStart(), retrieved.getInfo().getStart());
-        assertEquals(actionScheduleInfo.getLimit(), retrieved.getInfo().getLimit());
+        ScheduleEntry retrieved = dataManager.getScheduleEntries(Collections.singleton(dataManager.getScheduleEntries("group 0").get(0).scheduleId)).get(0);
+        assertEquals(scheduleEntry.group, retrieved.group);
+        assertEquals(scheduleEntry.actionsPayload, retrieved.actionsPayload);
+        assertEquals(scheduleEntry.end, retrieved.end);
+        assertEquals(scheduleEntry.start, retrieved.start);
+        assertEquals(scheduleEntry.limit, retrieved.limit);
 
-        List<Trigger> scheduleTriggers = retrieved.getInfo().getTriggers();
-        Collections.sort(scheduleTriggers, new Comparator<Trigger>() {
+        List<TriggerEntry> scheduleTriggers = retrieved.triggers;
+        Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
             @Override
-            public int compare(Trigger lhs, Trigger rhs) {
-                if (lhs.getType() == Trigger.LIFE_CYCLE_FOREGROUND) {
+            public int compare(TriggerEntry lhs, TriggerEntry rhs) {
+                if (lhs.type == Trigger.LIFE_CYCLE_FOREGROUND) {
                     return -1;
                 } else {
                     return 1;
@@ -111,15 +99,15 @@ public class AutomationDataManagerTest extends BaseTestCase {
             }
         });
 
-        assertEquals(trigger.getGoal(), scheduleTriggers.get(0).getGoal(), 0.0);
-        assertEquals(trigger.getPredicate(), scheduleTriggers.get(0).getPredicate());
-        assertEquals(trigger.getType(), scheduleTriggers.get(0).getType());
+        assertEquals(triggerEntry.goal, scheduleTriggers.get(0).goal, 0.0);
+        assertEquals(triggerEntry.jsonPredicate, scheduleTriggers.get(0).jsonPredicate);
+        assertEquals(triggerEntry.type, scheduleTriggers.get(0).type);
         assertEquals(0, retrieved.getCount());
     }
 
     @Test
     public void testGetSchedulesWithTag() {
-        List<ActionScheduleInfo> schedules = new ArrayList<>();
+        List<ScheduleEntry> schedules = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             Trigger trigger = Triggers.newForegroundTriggerBuilder()
                                      .setGoal(10)
@@ -133,26 +121,30 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .addAction("test_action", JsonValue.wrap("action_value"))
                                                             .addTrigger(trigger)
                                                             .build();
-            schedules.add(schedule);
+
+            ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_entry_" + i, schedule));
+            schedules.add(scheduleEntry);
         }
 
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules("group");
+        dataManager.saveSchedules(schedules);
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries("group");
         assertEquals(20, retrieved.size());
     }
 
     @Test
     public void testGetSchedules() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.insertSchedules(schedules);
-        List<ActionSchedule> retrieved = dataManager.getSchedules();
+        List<ScheduleEntry> schedules = createSchedules(20);
+        dataManager.saveSchedules(schedules);
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries();
         assertEquals(20, retrieved.size());
     }
 
     @Test
     public void testGetSchedulesWithList() {
-        dataManager.insertSchedules(createSchedules(2));
-        List<ActionSchedule> retrieved = dataManager.getSchedules(new HashSet<>(Arrays.asList(dataManager.getSchedules().get(0).getId(), dataManager.getSchedules().get(1).getId())));
+        dataManager.saveSchedules(createSchedules(2));
+        List<ScheduleEntry> retrieved = dataManager.getScheduleEntries(new HashSet<>(Arrays.asList(
+                dataManager.getScheduleEntries().get(0).scheduleId,
+                dataManager.getScheduleEntries().get(1).scheduleId)));
         assertEquals(2, retrieved.size());
     }
 
@@ -166,21 +158,23 @@ public class AutomationDataManagerTest extends BaseTestCase {
                 .setGroup("group")
                 .setStart(System.currentTimeMillis() + 1000000)
                 .build();
-        dataManager.insertSchedules(Collections.singletonList(futureSchedule));
-        List<ActionScheduleInfo> schedules = createSchedules(20);
-        dataManager.insertSchedules(schedules);
-        List<TriggerEntry> retrieved = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_entry", futureSchedule));
+
+        dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+        List<ScheduleEntry> schedules = createSchedules(20);
+        dataManager.saveSchedules(schedules);
+        List<TriggerEntry> retrieved = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(20, retrieved.size());
     }
 
     @Test
-    public void testBulkInsertSchedules() {
+    public void testBulkInsertSchedules() throws Exception {
         Trigger firstTrigger = Triggers.newForegroundTriggerBuilder()
                                       .setGoal(10)
                                       .build();
 
         ActionScheduleInfo firstActionScheduleInfo = ActionScheduleInfo.newBuilder()
-                                                                       .setGroup("first")
+                                                                       .setGroup("group 0")
                                                                        .setStart(System.currentTimeMillis())
                                                                        .setEnd(System.currentTimeMillis() + 100000)
                                                                        .setLimit(100)
@@ -193,7 +187,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                        .build();
 
         ActionScheduleInfo secondActionScheduleInfo = ActionScheduleInfo.newBuilder()
-                                                                        .setGroup("second")
+                                                                        .setGroup("group 1")
                                                                         .setStart(System.currentTimeMillis())
                                                                         .setEnd(System.currentTimeMillis() + 100000)
                                                                         .setLimit(100)
@@ -201,12 +195,16 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                         .addTrigger(secondTrigger)
                                                                         .build();
 
-        dataManager.insertSchedules(Arrays.asList(firstActionScheduleInfo, secondActionScheduleInfo));
-        List<ActionSchedule> schedules = dataManager.getSchedules();
-        Collections.sort(schedules, new Comparator<ActionSchedule>() {
+        ScheduleEntry firstScheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_1", firstActionScheduleInfo));
+        ScheduleEntry secondScheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_2", secondActionScheduleInfo));
+        List<ScheduleEntry> scheduleEntries = Arrays.asList(firstScheduleEntry, secondScheduleEntry);
+        dataManager.saveSchedules(scheduleEntries);
+
+        List<ScheduleEntry> schedules = dataManager.getScheduleEntries();
+        Collections.sort(schedules, new Comparator<ScheduleEntry>() {
             @Override
-            public int compare(ActionSchedule lhs, ActionSchedule rhs) {
-                if (lhs.getInfo().getGroup().equals("first")) {
+            public int compare(ScheduleEntry lhs, ScheduleEntry rhs) {
+                if (lhs.group.equals("first")) {
                     return -1;
                 } else {
                     return 1;
@@ -215,60 +213,60 @@ public class AutomationDataManagerTest extends BaseTestCase {
         });
 
         assertEquals(2, schedules.size());
-        assertEquals(firstActionScheduleInfo.getGroup(), schedules.get(0).getInfo().getGroup());
-        assertEquals(firstActionScheduleInfo.getActions(), schedules.get(0).getInfo().getActions());
-        assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).getInfo().getEnd());
-        assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).getInfo().getStart());
-        assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).getInfo().getLimit());
+        assertEquals(firstActionScheduleInfo.getGroup(), schedules.get(0).group);
+        assertEquals(JsonValue.wrap(firstActionScheduleInfo.getActions()).toString(), schedules.get(0).actionsPayload);
+        assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).end);
+        assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).start);
+        assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).limit);
 
-        assertEquals(firstTrigger.getGoal(), schedules.get(0).getInfo().getTriggers().get(0).getGoal(), 0.0);
-        assertEquals(firstTrigger.getPredicate(), schedules.get(0).getInfo().getTriggers().get(0).getPredicate());
-        assertEquals(firstTrigger.getType(), schedules.get(0).getInfo().getTriggers().get(0).getType());
+        assertEquals(firstTrigger.getGoal(), schedules.get(0).triggers.get(0).goal, 0.0);
+        assertEquals(firstTrigger.getPredicate(), schedules.get(0).triggers.get(0).jsonPredicate);
+        assertEquals(firstTrigger.getType(), schedules.get(0).triggers.get(0).type);
         assertEquals(0, schedules.get(0).getCount());
 
-        assertEquals(secondActionScheduleInfo.getGroup(), schedules.get(1).getInfo().getGroup());
-        assertEquals(secondActionScheduleInfo.getActions(), schedules.get(1).getInfo().getActions());
-        assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).getInfo().getEnd());
-        assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).getInfo().getStart());
-        assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).getInfo().getLimit());
+        assertEquals(secondActionScheduleInfo.getGroup(), schedules.get(1).group);
+        assertEquals(JsonValue.wrap(secondActionScheduleInfo.getActions()).toString(), schedules.get(1).actionsPayload);
+        assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).end);
+        assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).start);
+        assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).limit);
 
-        assertEquals(secondTrigger.getGoal(), schedules.get(1).getInfo().getTriggers().get(0).getGoal(), 0.0);
-        assertEquals(secondTrigger.getPredicate(), schedules.get(1).getInfo().getTriggers().get(0).getPredicate());
-        assertEquals(secondTrigger.getType(), schedules.get(1).getInfo().getTriggers().get(0).getType());
+        assertEquals(secondTrigger.getGoal(), schedules.get(1).triggers.get(0).goal, 0.0);
+        assertEquals(secondTrigger.getPredicate(), schedules.get(1).triggers.get(0).jsonPredicate);
+        assertEquals(secondTrigger.getType(), schedules.get(1).triggers.get(0).type);
         assertEquals(0, schedules.get(0).getCount());
 
-        List<TriggerEntry> triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        List<TriggerEntry> triggers = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(1, triggers.size());
-        assertEquals(firstTrigger.getGoal(), triggers.get(0).getGoal(), 0.0);
-        assertEquals(firstTrigger.getPredicate(), triggers.get(0).getPredicate());
-        assertEquals(firstTrigger.getType(), triggers.get(0).getType());
+        assertEquals(firstTrigger.getGoal(), triggers.get(0).goal, 0.0);
+        assertEquals(firstTrigger.getPredicate(), triggers.get(0).jsonPredicate);
+        assertEquals(firstTrigger.getType(), triggers.get(0).type);
 
-        triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_BACKGROUND);
+        triggers = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_BACKGROUND);
         assertEquals(1, triggers.size());
-        assertEquals(secondTrigger.getGoal(), triggers.get(0).getGoal(), 0.0);
-        assertEquals(secondTrigger.getPredicate(), triggers.get(0).getPredicate());
-        assertEquals(secondTrigger.getType(), triggers.get(0).getType());
+        assertEquals(secondTrigger.getGoal(), triggers.get(0).goal, 0.0);
+        assertEquals(secondTrigger.getPredicate(), triggers.get(0).jsonPredicate);
+        assertEquals(secondTrigger.getType(), triggers.get(0).type);
     }
 
     @Test
     public void testInsertSchedule() {
-        ActionScheduleInfo actionScheduleInfo = createSchedules(1).get(0);
-        Trigger trigger = actionScheduleInfo.getTriggers().get(0);
-        dataManager.insertSchedules(Collections.singletonList(actionScheduleInfo));
+        ScheduleEntry actionScheduleInfo = createSchedules(1).get(0);
+        TriggerEntry trigger = actionScheduleInfo.triggers.get(0);
+        dataManager.saveSchedules(Collections.singletonList(actionScheduleInfo));
 
-        List<ActionSchedule> schedules = dataManager.getSchedules();
+        List<ScheduleEntry> schedules = dataManager.getScheduleEntries();
         assertEquals(1, schedules.size());
-        assertEquals(actionScheduleInfo.getGroup(), schedules.get(0).getInfo().getGroup());
-        assertEquals(actionScheduleInfo.getActions(), schedules.get(0).getInfo().getActions());
-        assertEquals(actionScheduleInfo.getEnd(), schedules.get(0).getInfo().getEnd());
-        assertEquals(actionScheduleInfo.getStart(), schedules.get(0).getInfo().getStart());
-        assertEquals(actionScheduleInfo.getLimit(), schedules.get(0).getInfo().getLimit());
+        assertEquals(actionScheduleInfo.group, schedules.get(0).group);
+        assertEquals(actionScheduleInfo.actionsPayload, schedules.get(0).actionsPayload);
+        assertEquals(actionScheduleInfo.end, schedules.get(0).end);
+        assertEquals(actionScheduleInfo.start, schedules.get(0).start);
+        assertEquals(actionScheduleInfo.limit, schedules.get(0).limit);
 
-        List<Trigger> scheduleTriggers = schedules.get(0).getInfo().getTriggers();
-        Collections.sort(scheduleTriggers, new Comparator<Trigger>() {
+        List<TriggerEntry> scheduleTriggers = schedules.get(0).triggers;
+        Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
             @Override
-            public int compare(Trigger lhs, Trigger rhs) {
-                if (lhs.getType() == Trigger.LIFE_CYCLE_FOREGROUND) {
+            public int compare(TriggerEntry lhs, TriggerEntry rhs) {
+                if (lhs.type == Trigger.LIFE_CYCLE_FOREGROUND) {
                     return -1;
                 } else {
                     return 1;
@@ -276,44 +274,20 @@ public class AutomationDataManagerTest extends BaseTestCase {
             }
         });
 
-        assertEquals(trigger.getGoal(), scheduleTriggers.get(0).getGoal(), 0.0);
-        assertEquals(trigger.getPredicate(), scheduleTriggers.get(0).getPredicate());
-        assertEquals(trigger.getType(), scheduleTriggers.get(0).getType());
+        assertEquals(trigger.goal, scheduleTriggers.get(0).goal, 0.0);
+        assertEquals(trigger.jsonPredicate, scheduleTriggers.get(0).jsonPredicate);
+        assertEquals(trigger.type, scheduleTriggers.get(0).type);
         assertEquals(0, schedules.get(0).getCount());
 
-        List<TriggerEntry> triggers = dataManager.getActiveTriggers(Trigger.LIFE_CYCLE_FOREGROUND);
+        List<TriggerEntry> triggers = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND);
         assertEquals(1, triggers.size());
-        assertEquals(trigger.getGoal(), triggers.get(0).getGoal(), 0.0);
-        assertEquals(trigger.getPredicate(), triggers.get(0).getPredicate());
-        assertEquals(trigger.getType(), triggers.get(0).getType());
+        assertEquals(trigger.goal, triggers.get(0).goal, 0.0);
+        assertEquals(trigger.jsonPredicate, triggers.get(0).jsonPredicate);
+        assertEquals(trigger.type, triggers.get(0).type);
     }
 
-    @Test
-    public void testUpdateLists() {
-        List<ActionScheduleInfo> schedules = createSchedules(20);
-
-        List<ActionSchedule> inserted = dataManager.insertSchedules(schedules);
-        List<String> ids = new ArrayList<>();
-        for (ActionSchedule schedule : inserted) {
-            ids.add(schedule.getId());
-        }
-
-        Map<String, List<String>> updateMap = new HashMap<>();
-        updateMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, ids);
-        dataManager.updateLists(updateMap);
-
-        for (ActionSchedule actionSchedule : dataManager.getSchedules()) {
-            assertEquals(1, actionSchedule.getCount());
-        }
-
-        updateMap.clear();
-        updateMap.put(AutomationDataManager.SCHEDULES_TO_DELETE_QUERY, ids);
-        dataManager.updateLists(updateMap);
-        assertEquals(0, dataManager.getSchedules().size());
-    }
-
-    private List<ActionScheduleInfo> createSchedules(int amount) {
-        List<ActionScheduleInfo> schedules = new ArrayList<>();
+    private List<ScheduleEntry> createSchedules(int amount) {
+        List<ScheduleEntry> scheduleEntries = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
             Trigger foreground = Triggers.newForegroundTriggerBuilder()
                                       .setGoal(10)
@@ -332,10 +306,12 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .addTrigger(foreground)
                                                             .addTrigger(background)
                                                             .build();
-            schedules.add(schedule);
+
+            ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_" + i, schedule));
+            scheduleEntries.add(scheduleEntry);
         }
 
-        return schedules;
+        return scheduleEntries;
     }
     
 }

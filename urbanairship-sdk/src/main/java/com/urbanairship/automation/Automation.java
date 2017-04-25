@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -32,7 +33,6 @@ import com.urbanairship.location.RegionEvent;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +40,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is the primary interface to the Urban Airship On Device Automation API. If accessed outside
@@ -57,8 +59,7 @@ public class Automation extends AirshipComponent {
     private final Analytics analytics;
     private final ActivityMonitor activityMonitor;
 
-
-    private final Handler backgroundHandler;
+    private Handler backgroundHandler;
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -68,8 +69,8 @@ public class Automation extends AirshipComponent {
     private boolean automationEnabled = false;
     private List<ScheduleRunnable<Void>> delayedRunnables = new ArrayList<>();
 
-    private static String screen;
-    private static String regionId;
+    private String screen;
+    private String regionId;
 
     /**
      * Automation schedules limit.
@@ -77,7 +78,7 @@ public class Automation extends AirshipComponent {
     public static final long SCHEDULES_LIMIT = 1000;
 
     /**
-     * Default constructor.==
+     * Default constructor.
      *
      * @param context The application context.
      * @param configOptions The airship config options.
@@ -92,6 +93,7 @@ public class Automation extends AirshipComponent {
 
     Automation(@NonNull Analytics analytics, @NonNull AutomationDataManager dataManager,
                @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
+
         this.analytics = analytics;
         this.dataManager = dataManager;
         this.preferenceDataStore = preferenceDataStore;
@@ -108,10 +110,9 @@ public class Automation extends AirshipComponent {
                 onScheduleConditionsChanged();
             }
         };
+
         this.activityMonitor = activityMonitor;
         this.backgroundThread = new HandlerThread("delayed");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
     }
 
     @Override
@@ -119,6 +120,9 @@ public class Automation extends AirshipComponent {
         if (!UAirship.isMainProcess()) {
             return;
         }
+
+        this.backgroundThread.start();
+        this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
 
         if (analyticsListener == null) {
             analyticsListener = new AnalyticsListener() {
@@ -155,8 +159,10 @@ public class Automation extends AirshipComponent {
         analytics.addAnalyticsListener(analyticsListener);
         automationEnabled = preferenceDataStore.getBoolean(AUTOMATION_ENABLED_KEY, false);
 
-        Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
         rescheduleDelays();
+
+        onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
+
         onScheduleConditionsChanged();
     }
 
@@ -187,27 +193,52 @@ public class Automation extends AirshipComponent {
             return null;
         }
 
-        if (dataManager.getScheduleCount() >= SCHEDULES_LIMIT) {
-            Logger.error("AutomationDataManager - unable to insert schedule due to exceeded schedule limit.");
-            return null;
+        List<ActionSchedule> scheduleList = schedule(Collections.singletonList(scheduleInfo));
+        if (scheduleList != null && !scheduleList.isEmpty()) {
+            return scheduleList.get(0);
         }
 
-        List<ActionSchedule> insertSchedules = dataManager.insertSchedules(Collections.singletonList(scheduleInfo));
+        return null;
+    }
 
-        if (insertSchedules.isEmpty()) {
-            return null;
+    /**
+     * Schedules a list of {@link ActionScheduleInfo} instances.
+     *
+     * @param scheduleInfos The list of {@link ActionScheduleInfo} instances.
+     * @return The list of scheduled {@link ActionSchedule} instances, each containing the relevant
+     * {@link ActionScheduleInfo} and generated schedule ID. May return {@link Collections#emptyList()}
+     * if the scheduling failed or the schedule count is greater than or equal
+     * to {@link #SCHEDULES_LIMIT}.
+     */
+    @WorkerThread
+    public List<ActionSchedule> schedule(List<ActionScheduleInfo> scheduleInfos) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
+            return Collections.emptyList();
         }
 
-        ActionSchedule insertedSchedule = insertSchedules.get(0);
+        if (dataManager.getScheduleCount() + scheduleInfos.size() > SCHEDULES_LIMIT) {
+            Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = new ArrayList<>();
+        List<ActionSchedule> schedules = new ArrayList<>();
+
+        for (ActionScheduleInfo info : scheduleInfos) {
+            ActionSchedule schedule = new ActionSchedule(UUID.randomUUID().toString(), info);
+            schedules.add(schedule);
+            entries.add(new ScheduleEntry(schedule));
+        }
 
         if (!automationEnabled) {
             automationEnabled = true;
             preferenceDataStore.put(AUTOMATION_ENABLED_KEY, true);
         }
 
-        Logger.debug("Automation - action schedule inserted: " + insertedSchedule);
+        dataManager.saveSchedules(entries);
 
-        return insertedSchedule;
+        return schedules;
     }
 
     /**
@@ -237,39 +268,6 @@ public class Automation extends AirshipComponent {
         });
     }
 
-    /**
-     * Schedules a list of {@link ActionScheduleInfo} instances.
-     *
-     * @param scheduleInfos The list of {@link ActionScheduleInfo} instances.
-     * @return The list of scheduled {@link ActionSchedule} instances, each containing the relevant
-     * {@link ActionScheduleInfo} and generated schedule ID. May return {@link Collections#emptyList()}
-     * if the scheduling failed or the schedule count is greater than or equal
-     * to {@link #SCHEDULES_LIMIT}.
-     */
-    @WorkerThread
-    public List<ActionSchedule> schedule(List<ActionScheduleInfo> scheduleInfos) {
-        if (!UAirship.isMainProcess()) {
-            Logger.warn("Automation - Cannot access the Automation API outside of the main process, canceling operation.");
-            return Collections.emptyList();
-        }
-
-        if (dataManager.getScheduleCount() + scheduleInfos.size() >= SCHEDULES_LIMIT) {
-            Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
-            return Collections.emptyList();
-        }
-
-        List<ActionSchedule> actionSchedules = dataManager.insertSchedules(scheduleInfos);
-        if (!actionSchedules.isEmpty()) {
-            if (!automationEnabled) {
-                automationEnabled = true;
-                preferenceDataStore.put(AUTOMATION_ENABLED_KEY, true);
-            }
-
-            Logger.debug("Automation - action schedule inserted: " + actionSchedules);
-        }
-
-        return actionSchedules;
-    }
 
     /**
      * Schedules a list of {@link ActionScheduleInfo} instances asynchronously.
@@ -346,7 +344,7 @@ public class Automation extends AirshipComponent {
             return;
         }
 
-        dataManager.bulkDeleteSchedules(ids);
+        dataManager.deleteSchedules(ids);
         cancelScheduleDelays(ids);
     }
 
@@ -381,7 +379,7 @@ public class Automation extends AirshipComponent {
             return;
         }
 
-        dataManager.deleteSchedules(group);
+        dataManager.deleteGroup(group);
         cancelGroupDelays(group);
     }
 
@@ -414,7 +412,7 @@ public class Automation extends AirshipComponent {
             return;
         }
 
-        dataManager.deleteSchedules();
+        dataManager.deleteAllSchedules();
         cancelAllDelays();
     }
 
@@ -436,107 +434,6 @@ public class Automation extends AirshipComponent {
     }
 
     /**
-     * Cancel delay schedule handler by a group.
-     *
-     * @param group A schedule identifier.
-     */
-    @WorkerThread
-    private void cancelGroupDelays(String group) {
-        synchronized (delayedRunnables) {
-            for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
-                if (group.equals(runnable.group)) {
-                    backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
-                    delayedRunnables.remove(runnable);
-                }
-            }
-        }
-    }
-
-    /**
-     * Cancel delayed schedules by schedule identifiers.
-     *
-     * @param scheduleIds A set of identifiers to cancel.
-     */
-    @WorkerThread
-    private void cancelScheduleDelays(Collection<String> scheduleIds) {
-        synchronized (delayedRunnables) {
-            for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
-                if (scheduleIds.contains(runnable.scheduleId)) {
-                    backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
-                    delayedRunnables.remove(runnable);
-                }
-            }
-        }
-    }
-
-    private void cancelAllDelays() {
-        synchronized (delayedRunnables) {
-            for (ScheduleRunnable runnable : delayedRunnables) {
-                backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
-            }
-
-            delayedRunnables.clear();
-        }
-    }
-
-    /**
-     * Reschedule timers for any schedule that is pending execution and has a future delayed
-     * execution date.
-     */
-    @WorkerThread
-    private void rescheduleDelays() {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-
-                List<ActionSchedule> actionSchedules = dataManager.getDelayedSchedules();
-                if (actionSchedules.isEmpty()) {
-                    return;
-                }
-
-                Map<Long, List<String>> toReschedule = new HashMap<>();
-                Map<ActionSchedule, Long> timerList = new HashMap<>();
-                List<ActionSchedule> toExecute = new ArrayList<>();
-
-                for (ActionSchedule schedule : actionSchedules) {
-                    if (schedule.getIsPendingExecution()) {
-                        if ((schedule.getPendingExecutionDate() - System.currentTimeMillis()) > (schedule.getInfo().getDelay().getSeconds() * 1000)) {
-                            updateListMap(toReschedule, System.currentTimeMillis() + 1000 * schedule.getInfo().getDelay().getSeconds(), schedule.getId());
-                            timerList.put(schedule, null);
-                        } else if (schedule.getPendingExecutionDate() > System.currentTimeMillis()) {
-                            timerList.put(schedule, schedule.getPendingExecutionDate() - System.currentTimeMillis());
-                        } else {
-                            toExecute.add(schedule);
-                        }
-                    }
-                }
-
-                // Update schedule database
-                Map<String, List<String>> queryMap = new HashMap<>();
-                addPendingExecutionSchedules(queryMap, toReschedule);
-                if (!queryMap.isEmpty()) {
-                    dataManager.updateLists(queryMap);
-                }
-
-                // Handle schedules that need to be executed
-                if (!toExecute.isEmpty()) {
-                    handleTriggeredSchedules(toExecute);
-                }
-
-                // Set timers
-                for (Map.Entry<ActionSchedule, Long> entry : timerList.entrySet()) {
-                    if (entry.getValue() != null) {
-                        startDelayTimer(entry.getKey(), entry.getValue());
-                    } else {
-                        startDelayTimer(entry.getKey());
-                    }
-                }
-            }
-        });
-    }
-
-
-    /**
      * Gets a schedule for a given schedule ID.
      *
      * @param id The schedule ID.
@@ -550,7 +447,15 @@ public class Automation extends AirshipComponent {
             return null;
         }
 
-        return dataManager.getSchedule(id);
+        Set<String> hashSet = new HashSet<>();
+        hashSet.add(id);
+
+        List<ActionSchedule> schedules = getSchedules(hashSet);
+        if (!schedules.isEmpty()) {
+            return schedules.get(0);
+        }
+
+        return null;
     }
 
     /**
@@ -591,7 +496,13 @@ public class Automation extends AirshipComponent {
             return Collections.emptyList();
         }
 
-        return dataManager.getSchedules();
+        List<ScheduleEntry> entries = dataManager.getScheduleEntries();
+        List<ActionSchedule> schedules = new ArrayList<>(entries.size());
+        for (ScheduleEntry entry : entries) {
+            schedules.add(entry.toSchedule());
+        }
+
+        return schedules;
     }
 
 
@@ -605,7 +516,13 @@ public class Automation extends AirshipComponent {
             return Collections.emptyList();
         }
 
-        return dataManager.getSchedules(scheduleIds);
+        List<ScheduleEntry> entries = dataManager.getScheduleEntries();
+        List<ActionSchedule> schedules = new ArrayList<>(entries.size());
+        for (ScheduleEntry entry : entries) {
+            schedules.add(entry.toSchedule());
+        }
+
+        return schedules;
     }
 
     /**
@@ -646,7 +563,13 @@ public class Automation extends AirshipComponent {
             return Collections.emptyList();
         }
 
-        return dataManager.getSchedules(group);
+        List<ScheduleEntry> entries = dataManager.getScheduleEntries(group);
+        List<ActionSchedule> schedules = new ArrayList<>(entries.size());
+        for (ScheduleEntry entry : entries) {
+            schedules.add(entry.toSchedule());
+        }
+
+        return schedules;
     }
 
     /**
@@ -676,24 +599,108 @@ public class Automation extends AirshipComponent {
     }
 
     /**
+     * Cancel delay schedule handler by a group.
+     *
+     * @param group A schedule identifier.
+     */
+    @WorkerThread
+    private void cancelGroupDelays(String group) {
+        synchronized (delayedRunnables) {
+            for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
+                if (group.equals(runnable.group)) {
+                    backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
+                    delayedRunnables.remove(runnable);
+                }
+            }
+        }
+    }
+
+    /**
+     * Cancel delayed schedule runnables.
+     *
+     * @param scheduleIds A set of identifiers to cancel.
+     */
+    @WorkerThread
+    private void cancelScheduleDelays(Collection<String> scheduleIds) {
+        synchronized (delayedRunnables) {
+            for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
+                if (scheduleIds.contains(runnable.scheduleId)) {
+                    backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
+                    delayedRunnables.remove(runnable);
+                }
+            }
+        }
+    }
+
+    /**
+     * Cancels all delayed schedule runnables.
+     */
+    private void cancelAllDelays() {
+        synchronized (delayedRunnables) {
+            for (ScheduleRunnable runnable : delayedRunnables) {
+                backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
+            }
+
+            delayedRunnables.clear();
+        }
+    }
+
+    /**
+     * Reschedule all delay schedule runnables.
+     */
+    @WorkerThread
+    private void rescheduleDelays() {
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                List<ScheduleEntry> scheduleEntries = dataManager.getPendingExecutionSchedules();
+                if (scheduleEntries.isEmpty()) {
+                    return;
+                }
+
+                List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
+
+                for (ScheduleEntry scheduleEntry : schedulesToUpdate) {
+                    // No delay, mark it to be executed
+                    if (scheduleEntry.seconds == 0) {
+                        continue;
+                    }
+
+                    long delay = TimeUnit.SECONDS.toMillis(scheduleEntry.seconds);
+                    long remainingDelay = scheduleEntry.getPendingExecutionDate() - System.currentTimeMillis();
+
+                    if (remainingDelay <= 0) {
+                        continue;
+                    }
+
+                    // If remaining delay is greater than the original delay, reset the delay.
+                    if (remainingDelay > delay) {
+                        scheduleEntry.setPendingExecutionDate(System.currentTimeMillis() + delay);
+                        schedulesToUpdate.add(scheduleEntry);
+                        remainingDelay = delay;
+                    }
+
+                    startDelayTimer(scheduleEntry, remainingDelay);
+                }
+            }
+        });
+    }
+
+    /**
      * Called when one of the schedule conditions changes.
      */
     private void onScheduleConditionsChanged() {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                List<ActionSchedule> schedules = dataManager.getDelayedSchedules();
-                List<ActionSchedule> schedulesToCheck = new ArrayList<>();
-
-                for (ActionSchedule actionSchedule : schedules) {
-                    if (actionSchedule.getIsPendingExecution()  && (actionSchedule.getPendingExecutionDate() == -1 || actionSchedule.getPendingExecutionDate() <= System.currentTimeMillis())) {
-                        schedulesToCheck.add(actionSchedule);
-                    }
+                List<ScheduleEntry> scheduleEntries = dataManager.getPendingExecutionSchedules();
+                if (scheduleEntries.isEmpty()) {
+                    return;
                 }
 
-                if (!schedulesToCheck.isEmpty()) {
-                    handleTriggeredSchedules(schedulesToCheck);
-                }
+
+                handleTriggeredSchedules(scheduleEntries);
             }
         });
     }
@@ -717,140 +724,125 @@ public class Automation extends AirshipComponent {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                List<TriggerEntry> triggerEntries = dataManager.getActiveTriggers(type);
+                List<TriggerEntry> triggerEntries = dataManager.getActiveTriggerEntries(type);
                 if (triggerEntries.isEmpty()) {
                     return;
                 }
 
-                List<String> cancellationTriggersToIncrement = new ArrayList<>();
-                List<String> standardTriggersToIncrement = new ArrayList<>();
-                List<String> triggersToReset = new ArrayList<>();
-                List<String> schedulesToResetExecutionState = new ArrayList<>();
-
-                // Schedule ID to triggers map
-                Map<String, String> standardTriggerMap = new HashMap<>();
-                Map<String, String> cancellationTriggerMap = new HashMap<>();
-
                 Set<String> triggeredSchedules = new HashSet<>();
+                Set<String> cancelledSchedules = new HashSet<>();
+
+                Map<String, List<TriggerEntry>> triggersToUpdate = new HashMap<>();
 
                 for (TriggerEntry trigger : triggerEntries) {
-                    if ((json != null && (trigger.getPredicate() != null && !trigger.getPredicate().apply(json)))) {
+                    if ((json != null && (trigger.jsonPredicate != null && !trigger.jsonPredicate.apply(json)))) {
                         continue;
                     }
 
-                    double progress = trigger.getProgress() + value;
-
-                    if (progress >= trigger.getGoal()) {
-                        triggersToReset.add(trigger.getId());
-
-                        if (trigger.getDelayId() != null) {
-                            schedulesToResetExecutionState.add(trigger.getScheduleId());
-                        } else {
-                            triggeredSchedules.add(trigger.getScheduleId());
-                        }
-                    } else {
-                        if (trigger.getDelayId() != null) {
-                            cancellationTriggersToIncrement.add(trigger.getId());
-                        } else {
-                            standardTriggersToIncrement.add(trigger.getId());
-                        }
+                    if (!triggersToUpdate.containsKey(trigger.scheduleId)) {
+                        triggersToUpdate.put(trigger.scheduleId, new ArrayList<TriggerEntry>());
                     }
 
-                    // Add to maps
-                    if (trigger.getDelayId() != null) {
-                        cancellationTriggerMap.put(trigger.getScheduleId(), trigger.getId());
-                    } else {
-                        standardTriggerMap.put(trigger.getScheduleId(), trigger.getId());
+                    triggersToUpdate.get(trigger.scheduleId).add(trigger);
+
+                    trigger.setProgress(trigger.getProgress() + value);
+
+                    if (trigger.getProgress() >= trigger.goal) {
+                        trigger.setProgress(0);
+
+                        if (trigger.isCancellation) {
+                            cancelledSchedules.add(trigger.scheduleId);
+                            cancelScheduleDelays(Collections.singletonList(trigger.scheduleId));
+                        } else {
+                            triggeredSchedules.add(trigger.scheduleId);
+                        }
                     }
                 }
 
-                Set<String> deletedSchedules = new HashSet<>();
+                if (!cancelledSchedules.isEmpty()) {
+                    triggeredSchedules.removeAll(cancelledSchedules);
+                    List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(cancelledSchedules);
+                    for (ScheduleEntry entry : scheduleEntries) {
+                        entry.setPendingExecutionDate(-1);
+                        entry.setIsPendingExecution(false);
+                    }
+
+                    dataManager.saveSchedules(scheduleEntries);
+                }
+
                 if (!triggeredSchedules.isEmpty()) {
-                    List<ActionSchedule> scheduleEntries = getSchedules(triggeredSchedules);
-                    deletedSchedules = handleTriggeredSchedules(scheduleEntries);
-                }
+                    List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(triggeredSchedules);
 
-                // Don't need to waste DB time updating triggers if they'll be deleted in a schedule
-                // delete propagation.
-                List<String> triggersToDelete = new ArrayList<>();
-                for (String id : deletedSchedules) {
-                    triggersToDelete.add(standardTriggerMap.get(id));
-                    if (cancellationTriggerMap.containsKey(id)) {
-                        triggersToDelete.add(cancellationTriggerMap.get(id));
+                    for (String deletedSchedule : handleTriggeredSchedules(scheduleEntries)) {
+                        triggersToUpdate.remove(deletedSchedule);
                     }
                 }
 
-                standardTriggersToIncrement.removeAll(triggersToDelete);
-                cancellationTriggersToIncrement.removeAll(triggersToDelete);
-                triggersToReset.removeAll(triggersToDelete);
+                List<TriggerEntry> updatedTriggers = new ArrayList<>();
+                for (Map.Entry<String, List<TriggerEntry>> entry : triggersToUpdate.entrySet()) {
+                    updatedTriggers.addAll(entry.getValue());
+                }
 
-                HashMap<String, List<String>> updatesMap = new HashMap<>();
-                updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, value, "0"), standardTriggersToIncrement);
-                updatesMap.put(String.format(AutomationDataManager.TRIGGERS_TO_INCREMENT_QUERY, value, "1"), cancellationTriggersToIncrement);
-                updatesMap.put(AutomationDataManager.TRIGGERS_TO_RESET_QUERY, triggersToReset);
-
-                // Handle resetting schedule state.
-                updatesMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_DATE_UPDATE, "-1"), new ArrayList<>(schedulesToResetExecutionState));
-                updatesMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "0"), new ArrayList<>(schedulesToResetExecutionState));
-
-                dataManager.updateLists(updatesMap);
-
-                Logger.debug("Automation - Retrieved " + triggerEntries.size() + " triggers and " + triggeredSchedules.size() + " schedules for event type " + type);
-                Logger.debug("Automation - Incrementing values for " + cancellationTriggersToIncrement.size() + " cancellation triggers for event type " + type);
-                Logger.debug("Automation - Resetting values for " + triggersToReset.size() + " triggers for event type " + type);
-                Logger.debug("Automation - Resetting execution state for " + schedulesToResetExecutionState.size() + " schedules.");
-
-                cancelScheduleDelays(schedulesToResetExecutionState);
+                dataManager.saveTriggers(updatedTriggers);
             }
         });
     }
 
+    /**
+     * Processes a list of triggered schedule entries.
+     *
+     * @param scheduleEntries A list of triggered schedule entries.
+     * @return A set of deleted schedule IDs.
+     */
     @WorkerThread
-    private Set<String> handleTriggeredSchedules(List<ActionSchedule> actionSchedules) {
-        if (actionSchedules.isEmpty()) {
+    private Set<String> handleTriggeredSchedules(List<ScheduleEntry> scheduleEntries) {
+        if (scheduleEntries.isEmpty()) {
             return new HashSet<>();
         }
 
-        Set<String> schedulesToIncrement = new HashSet<>();
-        Set<String> schedulesToDelete = new HashSet<>();
-        Set<String> schedulesToResetExecutionState = new HashSet<>();
-        Set<String> cancellationTriggersToReset = new HashSet<>();
-        Set<String> schedulesPendingExecution = new HashSet<>();
-        Map<Long, List<String>> schedulesToInitiateTimers = new HashMap<>();
+        HashSet<String> schedulesToDelete = new HashSet<>();
+        HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
 
-        for (final ActionSchedule schedule : actionSchedules) {
+        for (final ScheduleEntry scheduleEntry : scheduleEntries) {
             // Delete expired schedules.
-            if (schedule.getInfo().getEnd() > 0 && schedule.getInfo().getEnd() < System.currentTimeMillis()) {
-                schedulesToDelete.add(schedule.getId());
+            if (scheduleEntry.end > 0 && scheduleEntry.end < System.currentTimeMillis()) {
+                schedulesToDelete.add(scheduleEntry.scheduleId);
                 continue;
             }
 
             // Ignore already triggered schedules
-            if (schedule.getIsPendingExecution() && schedule.getPendingExecutionDate() > System.currentTimeMillis()) {
+            if (scheduleEntry.isPendingExecution() && scheduleEntry.getPendingExecutionDate() > System.currentTimeMillis()) {
                 continue;
             }
 
             // Handle schedules with delays
-            if (schedule.getInfo().getDelay() != null && !schedule.getIsPendingExecution() && schedule.getInfo().getDelay().getSeconds() > 0) {
-                updateListMap(schedulesToInitiateTimers, System.currentTimeMillis() + 1000*schedule.getInfo().getDelay().getSeconds(), schedule.getId());
+            if (!scheduleEntry.isPendingExecution() && scheduleEntry.seconds > 0) {
 
-                // Reset cancellation triggers
-                cancellationTriggersToReset.add(schedule.getId());
+                for (TriggerEntry triggerEntry : scheduleEntry.triggers) {
+                    if (triggerEntry.isCancellation) {
+                        triggerEntry.setProgress(0);
+                    }
+                }
 
-                startDelayTimer(schedule);
+                scheduleEntry.setIsPendingExecution(true);
+                scheduleEntry.setPendingExecutionDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
+                startDelayTimer(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
+                schedulesToUpdate.add(scheduleEntry);
                 continue;
             }
 
             final CountDownLatch latch = new CountDownLatch(1);
 
-            ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(schedule.getId(), schedule.getInfo().getGroup()) {
+            ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(scheduleEntry.scheduleId, scheduleEntry.group) {
+
                 @Override
-                protected Boolean execute() {
+                public void run() {
+                    result = isScheduleConditionsSatisfied(scheduleEntry);
+                    latch.countDown();
 
-                    boolean isSatisfied = isScheduleConditionsSatisfied(schedule);
+                    if (result) {
 
-                    boolean actionRan = false;
-                    if (isSatisfied) {
+                        ActionSchedule schedule = scheduleEntry.toSchedule();
                         Bundle metadata = new Bundle();
                         metadata.putParcelable(ActionArguments.ACTION_SCHEDULE_METADATA, schedule);
 
@@ -861,17 +853,8 @@ public class Automation extends AirshipComponent {
                                             .setMetadata(metadata)
                                             .run();
                         }
-
-                        actionRan = true;
                     }
 
-                    return actionRan;
-                }
-
-                @Override
-                public void run() {
-                    super.run();
-                    latch.countDown();
                 }
             };
 
@@ -880,93 +863,80 @@ public class Automation extends AirshipComponent {
             try {
                 latch.await();
             } catch (InterruptedException ex) {
-                Logger.error("Failed to execute schedule.", ex);
+                Logger.error("Failed to execute schedule. ", ex);
             }
 
-            if (runnable.getResult()) {
-                schedulesToResetExecutionState.add(schedule.getId());
-                if (schedule.getCount() + 1 >= schedule.getInfo().getLimit()) {
-                    schedulesToResetExecutionState.remove(schedule.getId());
-                    schedulesToDelete.add(schedule.getId());
+            if (runnable.result) {
+                scheduleEntry.setIsPendingExecution(false);
+                scheduleEntry.setPendingExecutionDate(-1);
+                scheduleEntry.setCount(scheduleEntry.getCount() + 1);
+
+                if (scheduleEntry.getCount() >= scheduleEntry.limit) {
+                    schedulesToDelete.add(scheduleEntry.scheduleId);
                 } else {
-                    schedulesToIncrement.add(schedule.getId());
+                    schedulesToUpdate.add(scheduleEntry);
                 }
-            } else if (!schedule.getIsPendingExecution()) {
-                cancellationTriggersToReset.add(schedule.getId());
-                schedulesPendingExecution.add(schedule.getId());
+            } else if (!scheduleEntry.isPendingExecution()) {
+                for (TriggerEntry triggerEntry : scheduleEntry.triggers) {
+                    if (triggerEntry.isCancellation) {
+                        triggerEntry.setProgress(0);
+                    }
+                }
+                scheduleEntry.setIsPendingExecution(true);
+                schedulesToUpdate.add(scheduleEntry);
             }
-
         }
 
-        HashMap<String, List<String>> updatesMap = new HashMap<>();
-        updatesMap.put(AutomationDataManager.SCHEDULES_TO_DELETE_QUERY, new ArrayList<>(schedulesToDelete));
-        updatesMap.put(AutomationDataManager.SCHEDULES_TO_INCREMENT_QUERY, new ArrayList<>(schedulesToIncrement));
-        updatesMap.put(AutomationDataManager.CANCELLATION_TRIGGERS_TO_RESET, new ArrayList<>(cancellationTriggersToReset));
-
-        // Update execution state
-        updatesMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_DATE_UPDATE, "-1"), new ArrayList<>(schedulesToResetExecutionState));
-        updatesMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "0"), new ArrayList<>(schedulesToResetExecutionState));
-        updatesMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "1"), new ArrayList<>(schedulesPendingExecution));
-
-        Logger.debug("Automation - Deleting " + schedulesToDelete.size() + " schedules.");
-        Logger.debug("Automation - Incrementing " + schedulesToIncrement.size() + " schedules.");
-        Logger.debug("Automation - Resetting execution state on " + schedulesToResetExecutionState.size() + " schedules.");
-
-        if (!schedulesToInitiateTimers.isEmpty()) {
-            addPendingExecutionSchedules(updatesMap, schedulesToInitiateTimers);
-        }
-
-        dataManager.updateLists(updatesMap);
+        dataManager.saveSchedules(schedulesToUpdate);
+        dataManager.deleteSchedules(schedulesToDelete);
         return schedulesToDelete;
     }
 
-    private void startDelayTimer(ActionSchedule actionSchedule) {
-        long delay = actionSchedule.getInfo().getDelay().getSeconds();
-        if (delay <= 0) {
-            delay = 1;
-        }
-
-        startDelayTimer(actionSchedule, delay * 1000);
-    }
-
-    private void startDelayTimer(ActionSchedule actionSchedule, long time) {
-        ScheduleRunnable runnable = new ScheduleRunnable(actionSchedule.getId(), actionSchedule.getInfo().getGroup()) {
+    /**
+     * Starts a delay timer for a schedule entry.
+     *
+     * @param scheduleEntry The schedule entry.
+     * @param delay The delay in milliseconds.
+     */
+    private void startDelayTimer(ScheduleEntry scheduleEntry, long delay) {
+        ScheduleRunnable runnable = new ScheduleRunnable(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
-            protected Void execute() {
+            public void run() {
                 // Update before execution
-                ActionSchedule schedule = getSchedule(getScheduleId());
-                if (schedule != null) {
-                    handleTriggeredSchedules(Collections.singletonList(schedule));
-                }
-                return null;
+                Set<String> hashSet = new HashSet<>();
+                hashSet.add(scheduleId);
+                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(hashSet);
+
+                handleTriggeredSchedules(scheduleEntries);
             }
         };
 
-        this.backgroundHandler.postAtTime(runnable, actionSchedule.getId(), time + SystemClock.uptimeMillis());
+        this.backgroundHandler.postAtTime(runnable, scheduleEntry.scheduleId, SystemClock.uptimeMillis() + delay);
         this.delayedRunnables.add(runnable);
     }
 
-    @WorkerThread
-    private boolean isScheduleConditionsSatisfied(ActionSchedule schedule) {
-        ScheduleDelay delay = schedule.getInfo().getDelay();
+    /**
+     * Checks if the schedule entry's conditions are met.
+     *
+     * @param scheduleEntry The schedule entry.
+     * @return {@code true} if the conditions are met, otherwise {@code false}.
+     */
+    @MainThread
+    private boolean isScheduleConditionsSatisfied(ScheduleEntry scheduleEntry) {
 
-        if (delay == null) {
-            return true;
-        }
-
-        if (schedule.getPendingExecutionDate() > System.currentTimeMillis()) {
+        if (scheduleEntry.getPendingExecutionDate() > System.currentTimeMillis()) {
             return false;
         }
 
-        if (delay.getScreen() != null && !delay.getScreen().equals(screen)) {
+        if (scheduleEntry.screen != null && !scheduleEntry.screen.equals(screen)) {
             return false;
         }
 
-        if (delay.getRegionId() != null && !delay.getRegionId().equals(regionId)) {
+        if (scheduleEntry.regionId != null && !scheduleEntry.regionId.equals(regionId)) {
             return false;
         }
 
-        switch (delay.getAppState()) {
+        switch (scheduleEntry.appState) {
             case ScheduleDelay.APP_STATE_FOREGROUND:
                 if (!activityMonitor.isAppForegrounded()) {
                     return false;
@@ -979,6 +949,9 @@ public class Automation extends AirshipComponent {
                     return false;
                 }
 
+                break;
+
+            case ScheduleDelay.APP_STATE_ANY:
                 break;
         }
 
@@ -1006,50 +979,16 @@ public class Automation extends AirshipComponent {
             });
         }
     }
-
-    void addPendingExecutionSchedules(Map<String, List<String>> queryMap, Map<Long, List<String>> pendingExecutionSchedules) {
-        if (!pendingExecutionSchedules.isEmpty()) {
-            List<String> stateUpdates = new ArrayList<>();
-            for (Map.Entry<Long, List<String>> entry : pendingExecutionSchedules.entrySet()) {
-                stateUpdates.addAll(entry.getValue());
-                queryMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_DATE_UPDATE, entry.getKey()), entry.getValue());
-            }
-            queryMap.put(String.format(AutomationDataManager.SCHEDULES_EXECUTION_STATE_UPDATE, "1"), stateUpdates);
-        }
-    }
-
-    void updateListMap(Map<Long, List<String>> listMap, Long time, String scheduleId) {
-        if (listMap.containsKey(time)) {
-            listMap.get(time).add(scheduleId);
-        } else {
-            ArrayList<String> initialList = new ArrayList<>(Arrays.asList(scheduleId));
-            listMap.put(time, initialList);
-        }
-    }
-
+    
     private abstract class ScheduleRunnable<T> implements Runnable {
-        private String scheduleId;
-        private String group;
-        private T result;
+        final String scheduleId;
+        final String group;
+        T result;
 
         ScheduleRunnable(String scheduleId, String group) {
             this.scheduleId = scheduleId;
             this.group = group;
         }
 
-        @Override
-        public void run() {
-            result = execute();
-        }
-
-        protected abstract T execute();
-
-        public T getResult() {
-            return result;
-        }
-
-        public String getScheduleId() {
-            return scheduleId;
-        }
     }
 }

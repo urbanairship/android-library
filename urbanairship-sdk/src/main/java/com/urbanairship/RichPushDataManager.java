@@ -43,33 +43,6 @@ class RichPushDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
-        bind(statement, 1, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_ID));
-        bind(statement, 2, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_URL));
-        bind(statement, 3, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL));
-        bind(statement, 4, values.getAsString(RichPushTable.COLUMN_NAME_MESSAGE_READ_URL));
-        bind(statement, 5, values.getAsString(RichPushTable.COLUMN_NAME_TITLE));
-        bind(statement, 6, values.getAsString(RichPushTable.COLUMN_NAME_EXTRA));
-        bind(statement, 7, values.getAsBoolean(RichPushTable.COLUMN_NAME_UNREAD), true);
-        bind(statement, 8, values.getAsBoolean(RichPushTable.COLUMN_NAME_UNREAD_ORIG), true);
-        bind(statement, 9, values.getAsBoolean(RichPushTable.COLUMN_NAME_DELETED), false);
-        bind(statement, 10, values.getAsString(RichPushTable.COLUMN_NAME_TIMESTAMP));
-        bind(statement, 11, values.getAsString(RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT));
-        bind(statement, 12, values.getAsString(RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP));
-    }
-
-    @Override
-    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
-        String sql = this.buildInsertStatement(table, RichPushTable.COLUMN_NAME_MESSAGE_ID,
-                RichPushTable.COLUMN_NAME_MESSAGE_URL, RichPushTable.COLUMN_NAME_MESSAGE_BODY_URL, RichPushTable.COLUMN_NAME_MESSAGE_READ_URL,
-                RichPushTable.COLUMN_NAME_TITLE, RichPushTable.COLUMN_NAME_EXTRA, RichPushTable.COLUMN_NAME_UNREAD,
-                RichPushTable.COLUMN_NAME_UNREAD_ORIG, RichPushTable.COLUMN_NAME_DELETED, RichPushTable.COLUMN_NAME_TIMESTAMP,
-                RichPushTable.COLUMN_NAME_RAW_MESSAGE_OBJECT, RichPushTable.COLUMN_NAME_EXPIRATION_TIMESTAMP);
-
-        return db.compileStatement(sql);
-    }
-
-    @Override
     protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         switch (oldVersion) {
             case 1:

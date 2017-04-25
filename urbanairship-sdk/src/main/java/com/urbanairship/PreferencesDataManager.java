@@ -1,9 +1,7 @@
 package com.urbanairship;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.util.DataManager;
@@ -29,18 +27,6 @@ class PreferencesDataManager extends DataManager {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_KEY + " TEXT PRIMARY KEY, "
                 + COLUMN_NAME_VALUE + " TEXT);");
-    }
-
-    @Override
-    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
-        bind(statement, 1, values.getAsString(COLUMN_NAME_KEY));
-        bind(statement, 2, values.getAsString(COLUMN_NAME_VALUE));
-    }
-
-    @Override
-    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
-        String sql = this.buildInsertStatement(table, COLUMN_NAME_KEY, COLUMN_NAME_VALUE);
-        return db.compileStatement(sql);
     }
 
     @Override

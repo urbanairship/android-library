@@ -100,32 +100,11 @@ class EventDataManager extends DataManager {
     }
 
     @Override
-    protected void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
-        bind(statement, 1, values.getAsString(Events.COLUMN_NAME_TYPE));
-        bind(statement, 2, values.getAsString(Events.COLUMN_NAME_EVENT_ID));
-        bind(statement, 3, values.getAsString(Events.COLUMN_NAME_DATA));
-        bind(statement, 4, values.getAsInteger(Events.COLUMN_NAME_TIME));
-        bind(statement, 5, values.getAsString(Events.COLUMN_NAME_SESSION_ID));
-        bind(statement, 6, values.getAsInteger(Events.COLUMN_NAME_EVENT_SIZE));
-    }
-
-    @Override
-    protected SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db) {
-        String sql = this.buildInsertStatement(table, Events.COLUMN_NAME_TYPE,
-                Events.COLUMN_NAME_EVENT_ID, Events.COLUMN_NAME_DATA, Events.COLUMN_NAME_TIME,
-                Events.COLUMN_NAME_SESSION_ID, Events.COLUMN_NAME_EVENT_SIZE);
-
-        return db.compileStatement(sql);
-    }
-
-    @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + Events.TABLE_NAME);
         onCreate(db);
     }
-
-
 
     /**
      * Gets a map of event data

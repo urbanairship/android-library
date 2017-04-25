@@ -220,7 +220,7 @@ public class ScheduleDelay implements Parcelable {
     public static class Builder {
         private long seconds;
         private String screen = null;
-        private int appState;
+        private int appState = APP_STATE_ANY;
         private String regionId = null;
         private List<Trigger> cancellationTriggers = new ArrayList<>();
 

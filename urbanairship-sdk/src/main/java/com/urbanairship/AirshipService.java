@@ -94,7 +94,7 @@ public class AirshipService extends Service {
         msg.arg1 = startId;
         msg.obj = intent;
 
-        Logger.debug("AirshipService - Received intent: " + intent);
+        Logger.verbose("AirshipService - Received intent: " + intent);
         handler.sendMessage(msg);
 
         return START_NOT_STICKY;

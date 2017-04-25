@@ -10,7 +10,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -20,9 +19,8 @@ import com.urbanairship.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An abstract class to manage a SQLiteDatabase.
@@ -100,24 +98,6 @@ public abstract class DataManager {
     protected abstract void onCreate(@NonNull SQLiteDatabase db);
 
     /**
-     * Binds values to the statement. Used for bulk insert.
-     *
-     * @param table The table name to operate on.
-     * @param statement The statement to bind values to
-     * @param values The values to bind
-     */
-    protected abstract void bindValuesToSqliteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values);
-
-    /**
-     * Get the insert statement
-     *
-     * @param table The table to insert into
-     * @param db The database to insert values into
-     * @return A constructed SQLiteStatement
-     */
-    protected abstract SQLiteStatement getInsertStatement(@NonNull String table, @NonNull SQLiteDatabase db);
-
-    /**
      * Opens a writable database
      *
      * @return a writable SQLiteDatabase
@@ -184,123 +164,6 @@ public abstract class DataManager {
     }
 
     /**
-     * Helper to build an insert sql statement
-     *
-     * @param table Table to insert into
-     * @param columns Columns of values to insert
-     * @return A SQL insert statement
-     */
-    @NonNull
-    protected String buildInsertStatement(@NonNull String table, @NonNull String... columns) {
-        StringBuilder sb = new StringBuilder(128);
-        sb.append("INSERT INTO ");
-        sb.append(table);
-        sb.append(" (");
-
-        StringBuilder sbv = new StringBuilder(128);
-        sbv.append("VALUES (");
-
-        for (int i = 0; i < columns.length; i++) {
-            sb.append("'");
-            sb.append(columns[i]);
-            sb.append("'");
-
-            sbv.append("?");
-
-            sb.append(i == (columns.length - 1) ? ") " : ", ");
-            sbv.append(i == (columns.length - 1) ? ");" : ", ");
-        }
-
-        sb.append(sbv);
-        return sb.toString();
-    }
-
-
-    /**
-     * Helper to bind an int to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, int value) {
-        statement.bindLong(index, value);
-    }
-
-    /**
-     * Helper to bind a double to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, double value) {
-        statement.bindDouble(index, value);
-    }
-
-    /**
-     * Helper to bind an boolean to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, Boolean value) {
-        if (value == null) {
-            statement.bindNull(index);
-        } else {
-            statement.bindLong(index, value ? 1 : 0);
-        }
-    }
-
-    /**
-     * Helper to bind a boolean to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     * @param defaultValue The value to use if value is null
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, Boolean value, Boolean defaultValue) {
-        if (value == null) {
-            bind(statement, index, defaultValue);
-        } else {
-            bind(statement, index, value);
-        }
-    }
-
-    /**
-     * Helper to bind an string to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, String value) {
-        if (value == null) {
-            statement.bindNull(index);
-        } else {
-            statement.bindString(index, value);
-        }
-    }
-
-    /**
-     * Helper to bind a string to a SQLiteStatement
-     *
-     * @param statement The SQLiteStatement to bind to
-     * @param index Index of the value to bind
-     * @param value The value to bind
-     * @param defaultValue The value to use if value is null
-     */
-    protected void bind(@NonNull SQLiteStatement statement, int index, String value, String defaultValue) {
-        if (value == null) {
-            bind(statement, index, defaultValue);
-        } else {
-            bind(statement, index, value);
-        }
-    }
-
-    /**
      * Deletes items from the database
      *
      * @param table Table to delete the value from
@@ -346,74 +209,18 @@ public abstract class DataManager {
         }
 
         db.beginTransaction();
-        SQLiteStatement statement = getInsertStatement(table, db);
-
-        try {
-            for (ContentValues value : values) {
-                if (tryExecuteStatement(table, statement, value)) {
-                    inserted.add(value);
-                }
+        for (ContentValues value : values) {
+            try {
+                db.replaceOrThrow(table, null, value);
+            } catch (Exception ex) {
+                Logger.error("Unable to insert into database", ex);
+                db.endTransaction();
+                return Collections.emptyList();
             }
-
-            if (!inserted.isEmpty()) {
-                db.setTransactionSuccessful();
-            }
-
-            return inserted;
-        } catch (Exception ex) {
-            Logger.error("Unable to insert into database", ex);
-        } finally {
-            db.endTransaction();
         }
 
-        return inserted;
-    }
-
-    /**
-     * Inserts several items into different database tables
-     *
-     * @param values A map of table names to arrays of values to insert into the database
-     * @return A map of table names to their respective lists of the values inserted into the database
-     */
-    public Map<String, List<ContentValues>> bulkInsert(@NonNull Map<String, ContentValues[]> values) {
-        SQLiteDatabase db = getWritableDatabase();
-        Map<String, List<ContentValues>> inserted = new HashMap<>();
-
-        if (db == null) {
-            return inserted;
-        }
-
-        db.beginTransaction();
-        try {
-            for (Map.Entry<String, ContentValues[]> entry : values.entrySet()) {
-                List<ContentValues> list = new ArrayList<>();
-                SQLiteStatement statement = getInsertStatement(entry.getKey(), db);
-
-                if (entry.getValue().length == 0) {
-                    continue;
-                }
-
-                for (ContentValues value : entry.getValue()) {
-                    if (!tryExecuteStatement(entry.getKey(), statement, value)) {
-                        Logger.warn("Unable to insert into database table " + entry.getKey() + " - aborting inserts.");
-                        inserted.clear();
-                        return inserted;
-                    }
-
-                    list.add(value);
-                }
-
-                inserted.put(entry.getKey(), list);
-            }
-        } catch (Exception ex) {
-            Logger.error("Unable to insert into database", ex);
-        } finally{
-            if (!inserted.isEmpty()) {
-                db.setTransactionSuccessful();
-            }
-
-            db.endTransaction();
-        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
 
         return inserted;
     }
@@ -537,32 +344,6 @@ public abstract class DataManager {
     }
 
     /**
-     * Tries to execute a SQLiteStatement. If fails, it will try again till MAX_ATTEMPTS is reached.
-     * <p/>
-     * Each try, it will clear the bindings of the statement, apply the values and try to execute the
-     * statement.
-     *
-     * @param table The table to operate on
-     * @param statement Statement to execute
-     * @param values ContentValues to bind to the statement
-     * @return <code>true</code> if successful, otherwise <code>false</code>
-     */
-    private boolean tryExecuteStatement(@NonNull String table, @NonNull SQLiteStatement statement, @NonNull ContentValues values) {
-        for (int i = 0; i < MAX_ATTEMPTS; i++) {
-            try {
-                statement.clearBindings();
-                bindValuesToSqliteStatement(table, statement, values);
-                statement.execute();
-                return true;
-            } catch (Exception ex) {
-                Logger.error("Unable to insert into database", ex);
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Tries to move the database to a prefixed name. On API 21+, it will also move the database
      * to the no backup directory.
      *
@@ -628,4 +409,3 @@ public abstract class DataManager {
         return target.getAbsolutePath();
     }
 }
-

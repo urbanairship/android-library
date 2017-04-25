@@ -73,7 +73,6 @@ public class ScheduleActionTest extends BaseTestCase {
                               .put("group", "campaign")
                               .put("limit", 10)
                               .build();
-
     }
 
     /**
@@ -99,7 +98,8 @@ public class ScheduleActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() throws JsonException {
-        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(new ActionSchedule("automation id", null, 0, false, -1L));
+        ActionScheduleInfo scheduleInfo = ActionScheduleInfo.parseJson(JsonValue.wrap(scheduleJson));
+        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(new ActionSchedule("automation id", scheduleInfo));
 
         ActionResult result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, scheduleJson));
         assertEquals("automation id", result.getValue().getString());
