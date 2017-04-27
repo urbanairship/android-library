@@ -267,15 +267,15 @@ public class UAWebView extends WebView {
     private void onPreLoad() {
         currentMessage = null;
 
-        if (getWebViewClient() == null) {
+        if (getWebViewClientCompat() == null) {
             Logger.info("No web view client set, setting a default " +
                     "UAWebViewClient for landing page view.");
             setWebViewClient(new UAWebViewClient());
         }
 
         // Clear the last set auth request
-        if (currentClientAuthRequestUrl != null && getWebViewClient() != null && getWebViewClient() instanceof UAWebViewClient) {
-            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClient();
+        if (currentClientAuthRequestUrl != null && getWebViewClientCompat() != null && getWebViewClientCompat() instanceof UAWebViewClient) {
+            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClientCompat();
             webViewClient.removeAuthRequestCredentials(currentClientAuthRequestUrl);
             currentClientAuthRequestUrl = null;
         }
@@ -286,7 +286,7 @@ public class UAWebView extends WebView {
      *
      * @return The web view client.
      */
-    WebViewClient getWebViewClient() {
+    WebViewClient getWebViewClientCompat() {
         return webViewClient;
     }
 
@@ -319,8 +319,8 @@ public class UAWebView extends WebView {
 
         currentClientAuthRequestUrl = url;
 
-        if (getWebViewClient() != null && getWebViewClient() instanceof UAWebViewClient) {
-            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClient();
+        if (getWebViewClientCompat() != null && getWebViewClientCompat() instanceof UAWebViewClient) {
+            UAWebViewClient webViewClient = (UAWebViewClient) getWebViewClientCompat();
 
             String host = Uri.parse(url).getHost();
             webViewClient.addAuthRequestCredentials(host, username, password);

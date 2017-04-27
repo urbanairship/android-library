@@ -23,7 +23,7 @@ import com.urbanairship.util.ViewUtils;
 /**
  * Message Center item view.
  */
-class MessageItemView extends FrameLayout {
+public class MessageItemView extends FrameLayout {
 
     private static final int[] STATE_HIGHLIGHTED = { R.attr.ua_state_highlighted };
 

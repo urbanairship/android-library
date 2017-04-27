@@ -10,7 +10,11 @@ repositories {
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "25.0.2"
+
+    lintOptions {
+        disable 'MissingTranslation', 'AppCompatResource'
+    }
 
     defaultConfig {
         applicationId "com.urbanairship.sample"
@@ -28,23 +32,23 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:25.0.1'
-    compile 'com.android.support:design:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
 
     // Recommended for in-app messages
-    compile 'com.android.support:cardview-v7:25.0.1'
+    compile 'com.android.support:cardview-v7:25.3.1'
 
     // Allows Urban Airship location services to use Fused Location
-    compile 'com.google.android.gms:play-services-location:9.8.0'
+    compile 'com.google.android.gms:play-services-location:10.2.1'
 
     // Use the Urban Airship SDK project.
     compile project(':urbanairship-sdk')
 
     // Normally apps will use the AAR artifact from jcenter:
-    // compile 'com.urbanairship.android:urbanairship-sdk:8.1.+'
+    // compile 'com.urbanairship.android:urbanairship-sdk:8.3.+'
 
     // Testing-only dependencies
-    androidTestCompile 'com.android.support:support-annotations:25.0.1'
+    androidTestCompile 'com.android.support:support-annotations:25.3.1'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
     // Hamcrest library for testing
