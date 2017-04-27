@@ -19,10 +19,6 @@ import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.HashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
  * Urban Airship Service.
  *
@@ -49,8 +45,6 @@ public class AirshipService extends Service {
 
     private static final int MSG_INTENT_RECEIVED = 1;
     private static final int MSG_INTENT_JOB_FINISHED = 2;
-
-    private static final HashMap<String, Executor> executors = new HashMap<>();
 
     private Looper looper;
     private IncomingHandler handler;
@@ -143,14 +137,8 @@ public class AirshipService extends Service {
             return;
         }
 
-        Executor executor = executors.get(component.getClass().getName());
-        if (executor == null) {
-            executor = Executors.newSingleThreadExecutor();
-            executors.put(job.getAirshipComponentName(), executor);
-        }
-
         runningJobs++;
-        executor.execute(new Runnable() {
+        component.getJobExecutor(job).execute(new Runnable() {
             @Override
             public void run() {
                 int result = component.onPerformJob(airship, job);

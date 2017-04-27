@@ -75,8 +75,6 @@ class NamedUserJobHandler {
     private final PreferenceDataStore dataStore;
     private final JobDispatcher jobDispatcher;
 
-
-
     /**
      * Default constructor.
      *
@@ -251,35 +249,25 @@ class NamedUserJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Response response = client.updateTagGroups(namedUserId, mutations.get(0));
+        while (!mutations.isEmpty()) {
+            Response response = client.updateTagGroups(namedUserId, mutations.get(0));
 
-        // 5xx or no response
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("NamedUserJobHandler - Failed to update tag groups, will retry later.");
-            return Job.JOB_RETRY;
-        }
-
-        int status = response.getStatus();
-        Logger.info("NamedUserJobHandler - Update tag groups finished with status: " + status);
-        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-            mutations.remove(0);
-
-            if (mutations.isEmpty()) {
-                dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
-            } else {
-                dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
+            // 5xx or no response
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+                Logger.info("NamedUserJobHandler - Failed to update tag groups, will retry later.");
+                return Job.JOB_RETRY;
             }
 
+            int status = response.getStatus();
+            Logger.info("NamedUserJobHandler - Update tag groups finished with status: " + status);
+            if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
+                mutations.remove(0);
 
-            if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder()
-                                   .setAction(ACTION_UPDATE_TAG_GROUPS)
-                                   .setTag(ACTION_UPDATE_TAG_GROUPS)
-                                   .setNetworkAccessRequired(true)
-                                   .setAirshipComponent(PushManager.class)
-                                   .build();
-
-                jobDispatcher.dispatch(updateJob);
+                if (mutations.isEmpty()) {
+                    dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
+                } else {
+                    dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
+                }
             }
         }
 

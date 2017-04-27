@@ -22,9 +22,6 @@ import java.net.URL;
 abstract class BaseApiClient {
 
     private static final String AUDIENCE_KEY = "audience";
-    private static final String ADD_KEY = "add";
-    private static final String REMOVE_KEY = "remove";
-    private static final String SET_KEY = "set";
 
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;

@@ -585,36 +585,30 @@ class ChannelJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Response response = channelClient.updateTagGroups(channelId, mutations.get(0));
+        while (!mutations.isEmpty()) {
+            Response response = channelClient.updateTagGroups(channelId, mutations.get(0));
 
-        // 5xx or no response
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
-            return Job.JOB_RETRY;
-        }
-
-        int status = response.getStatus();
-        Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
-        if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-            mutations.remove(0);
-
-            if (mutations.isEmpty()) {
-                dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
-            } else {
-                dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
+            // 5xx or no response
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+                Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
+                return Job.JOB_RETRY;
             }
 
-            if (!mutations.isEmpty()) {
-                Job updateJob = Job.newBuilder()
-                                   .setAction(ACTION_UPDATE_TAG_GROUPS)
-                                   .setTag(ACTION_UPDATE_TAG_GROUPS)
-                                   .setNetworkAccessRequired(true)
-                                   .setAirshipComponent(PushManager.class)
-                                   .build();
+            int status = response.getStatus();
 
-                jobDispatcher.dispatch(updateJob);
+            Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
+            if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
+                mutations.remove(0);
+
+                if (mutations.isEmpty()) {
+                    dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
+                } else {
+                    dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
+                }
             }
         }
+
+
 
         return Job.JOB_FINISHED;
     }

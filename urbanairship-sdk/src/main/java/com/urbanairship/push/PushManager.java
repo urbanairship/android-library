@@ -12,12 +12,12 @@ import android.util.Log;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -194,6 +196,7 @@ public class PushManager extends AirshipComponent {
      */
     private final String DEFAULT_TAG_GROUP = "device";
 
+    private final Executor PUSH_JOB_EXECUTOR = Executors.newSingleThreadExecutor();
 
     static final String KEY_PREFIX = "com.urbanairship.push";
     static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
@@ -320,9 +323,20 @@ public class PushManager extends AirshipComponent {
     /**
      * @hide
      */
+    @NonNull
+    @Override
+    public Executor getJobExecutor(Job job) {
+        if (PushJobHandler.ACTION_RECEIVE_MESSAGE.equals(job.getAction())) {
+            return PUSH_JOB_EXECUTOR;
+        }
+        return super.getJobExecutor(job);
+    }
+
+    /**
+     * @hide
+     */
     @Job.JobResult
     protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
-
         switch (job.getAction()) {
             case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
