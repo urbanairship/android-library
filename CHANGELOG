@@ -3,6 +3,24 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.4.0 - May 2, 2017
+===========================
+New Features
+------------
+- Added support for delayed automation action schedules. The execution of an
+automated schedule can now be delayed by up to 30 seconds or made contingent
+upon some condition.
+- Added support for GcmNetworkManager.
+- Added EnableFeatureAction that can enable background location, location, or user
+notifications.
+- Added an automation trigger for app init events.
+
+Behavior Changes
+----------------
+- Updated the channel capture tool to function when push is not enabled.
+- Decreased the automation schedule limit from 1000 to 100.
+
+
 Version 8.3.2 - April 5, 2017
 ==============================
 Bug Fixes

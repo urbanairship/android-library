@@ -75,7 +75,7 @@ public class Automation extends AirshipComponent {
     /**
      * Automation schedules limit.
      */
-    public static final long SCHEDULES_LIMIT = 1000;
+    public static final long SCHEDULES_LIMIT = 100;
 
     /**
      * Default constructor.
