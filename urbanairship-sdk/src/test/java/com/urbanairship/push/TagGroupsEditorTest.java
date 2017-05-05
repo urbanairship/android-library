@@ -75,9 +75,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
-
+            public boolean matches(Job job) {
                 if (!job.getAction().equals("my action")) {
                     return false;
                 }

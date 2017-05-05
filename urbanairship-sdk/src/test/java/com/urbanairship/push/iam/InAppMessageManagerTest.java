@@ -130,15 +130,11 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(transaction).setCustomAnimations(android.R.animator.fade_in, 0);
         verify(transaction).add(eq(android.R.id.custom), argThat(new ArgumentMatcher<InAppMessageFragment>() {
             @Override
-            public boolean matches(Object o) {
-                if (o instanceof InAppMessageFragment) {
-                    InAppMessageFragment fragment = (InAppMessageFragment) o;
-                    fragment.onCreate(null);
+            public boolean matches(InAppMessageFragment fragment) {
+                fragment.onCreate(null);
 
-                    return fragment.getDismissAnimation() == android.R.animator.fade_out &&
-                            fragment.getMessage().equals(message);
-                }
-                return false;
+                return fragment.getDismissAnimation() == android.R.animator.fade_out &&
+                        fragment.getMessage().equals(message);
             }
         }), eq("com.urbanairship.in_app_fragment"));
 
@@ -174,12 +170,11 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Verify the right event was added
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Object o) {
-                if (!(o instanceof ResolutionEvent)) {
+            public boolean matches(Event event) {
+                if (!(event instanceof ResolutionEvent)) {
                     return false;
                 }
 
-                ResolutionEvent event = (ResolutionEvent) o;
                 try {
                     EventTestUtils.validateEventValue(event, "id", expired.getId());
                     EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");
@@ -308,12 +303,11 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Object o) {
-                if (!(o instanceof ResolutionEvent)) {
+            public boolean matches(Event event) {
+                if (!(event instanceof ResolutionEvent)) {
                     return false;
                 }
 
-                ResolutionEvent event = (ResolutionEvent) o;
                 try {
                     EventTestUtils.validateEventValue(event, "id", message.getId());
                     EventTestUtils.validateNestedEventValue(event, "resolution", "type", "replaced");
@@ -349,8 +343,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         verify(mockAnalytics, never()).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Object o) {
-                return o instanceof ResolutionEvent;
+            public boolean matches(Event event) {
+                return event instanceof ResolutionEvent;
             }
         }));
     }
@@ -376,12 +370,11 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Verify the right event was added
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Object o) {
-                if (!(o instanceof ResolutionEvent)) {
+            public boolean matches(Event event) {
+                if (!(event instanceof ResolutionEvent)) {
                     return false;
                 }
 
-                ResolutionEvent event = (ResolutionEvent) o;
                 try {
                     EventTestUtils.validateEventValue(event, "id", expired.getId());
                     EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");

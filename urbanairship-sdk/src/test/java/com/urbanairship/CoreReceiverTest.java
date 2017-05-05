@@ -73,9 +73,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Verify the ordered broadcast is sent to notify the apps intent receiver
         verify(context).sendOrderedBroadcast(argThat(new ArgumentMatcher<Intent>() {
             @Override
-            public boolean matches(Object argument) {
-                Intent other = (Intent) argument;
-
+            public boolean matches(Intent other) {
                 return PushManager.ACTION_NOTIFICATION_OPENED.equals(other.getAction()) &&
                         areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&
@@ -146,9 +144,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Verify the ordered broadcast is sent to notify the apps intent receiver
         verify(context).sendOrderedBroadcast(argThat(new ArgumentMatcher<Intent>() {
             @Override
-            public boolean matches(Object argument) {
-                Intent other = (Intent) argument;
-
+            public boolean matches(Intent other) {
                 return PushManager.ACTION_NOTIFICATION_OPENED.equals(other.getAction()) &&
                         areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&
@@ -210,9 +206,7 @@ public class CoreReceiverTest extends BaseTestCase {
         // Verify the ordered broadcast is sent to notify the apps intent receiver
         verify(context).sendOrderedBroadcast(argThat(new ArgumentMatcher<Intent>() {
             @Override
-            public boolean matches(Object argument) {
-                Intent other = (Intent) argument;
-
+            public boolean matches(Intent other) {
                 return PushManager.ACTION_NOTIFICATION_DISMISSED.equals(other.getAction()) &&
                         areEqual(intent.getExtras(), other.getExtras()) &&
                         UAirship.getPackageName().equals(other.getPackage()) &&

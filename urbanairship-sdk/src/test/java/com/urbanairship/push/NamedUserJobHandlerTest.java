@@ -314,8 +314,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Verify a new job to update tag group registration is dispatched
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));

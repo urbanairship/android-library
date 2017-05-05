@@ -22,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowToast;
@@ -35,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
@@ -85,7 +87,7 @@ public class AutomationTest extends BaseTestCase {
     @Test
     public void testCustomEventMatch() throws Exception {
         automation.schedule(customEventActionSchedule).getId();
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         Trigger trigger = new Trigger(customEventTrigger.getType(), customEventTrigger.getGoal(), customEventTrigger.getPredicate());
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
@@ -135,7 +137,7 @@ public class AutomationTest extends BaseTestCase {
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
 
         automation.schedule(actionScheduleInfo);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", actionScheduleInfo));
         when(automationDataManager.getActiveTriggerEntries(Trigger.CUSTOM_EVENT_VALUE)).thenReturn(Collections.singletonList(triggerEntry));
@@ -179,7 +181,7 @@ public class AutomationTest extends BaseTestCase {
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
 
         automation.schedule(actionScheduleInfo);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
 
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", actionScheduleInfo));
@@ -204,7 +206,7 @@ public class AutomationTest extends BaseTestCase {
     @Test
     public void testCustomEventNoMatch() throws Exception {
         automation.schedule(customEventActionSchedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(customEventTrigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", customEventActionSchedule));
@@ -218,14 +220,14 @@ public class AutomationTest extends BaseTestCase {
         runLooperTasks();
 
         verify(automationDataManager).getActiveTriggerEntries(Trigger.CUSTOM_EVENT_COUNT);
-        verify(automationDataManager, never()).getScheduleEntries(anySet());
+        verify(automationDataManager, never()).getScheduleEntries(ArgumentMatchers.<String>anySet());
         verify(automationDataManager).saveTriggers(Collections.<TriggerEntry>emptyList());
     }
 
     @Test
     public void testCustomEventScheduleFulfillment() throws Exception {
         automation.schedule(customEventActionSchedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         Trigger customEventTrigger = Triggers.newCustomEventTriggerBuilder()
              .setCountGoal(1)
@@ -253,7 +255,7 @@ public class AutomationTest extends BaseTestCase {
     @Test
     public void testCustomEventScheduleLimitReached() throws Exception {
         automation.schedule(customEventActionSchedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         Trigger customEventTrigger = Triggers.newCustomEventTriggerBuilder()
                                              .setCountGoal(1)
@@ -280,7 +282,7 @@ public class AutomationTest extends BaseTestCase {
     @Test
     public void testCustomEventNoTriggers() throws Exception {
         automation.schedule(customEventActionSchedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         when(automationDataManager.getActiveTriggerEntries(Trigger.CUSTOM_EVENT_COUNT)).thenReturn(Collections.EMPTY_LIST);
 
@@ -291,7 +293,7 @@ public class AutomationTest extends BaseTestCase {
         runLooperTasks();
 
         verify(automationDataManager).getActiveTriggerEntries(Trigger.CUSTOM_EVENT_COUNT);
-        verify(automationDataManager, never()).saveTriggers(anySet());
+        verify(automationDataManager, never()).saveTriggers(ArgumentMatchers.<TriggerEntry>anyCollection());
     }
 
     @Test
@@ -309,7 +311,7 @@ public class AutomationTest extends BaseTestCase {
                 .build();
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry enterEntry = new TriggerEntry(enter, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.REGION_ENTER)).thenReturn(Collections.singletonList(enterEntry));
@@ -339,7 +341,7 @@ public class AutomationTest extends BaseTestCase {
                                                         .build();
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.REGION_EXIT)).thenReturn(Collections.singletonList(triggerEntry));
@@ -373,7 +375,7 @@ public class AutomationTest extends BaseTestCase {
                 .build();
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND)).thenReturn(Collections.singletonList(triggerEntry));
@@ -401,7 +403,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_BACKGROUND)).thenReturn(Collections.singletonList(triggerEntry));
@@ -432,7 +434,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_APP_INIT)).thenReturn(Collections.singletonList(triggerEntry));
@@ -464,7 +466,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         when(automationDataManager.getActiveTriggerEntries(Trigger.SCREEN_VIEW)).thenReturn(Collections.singletonList(triggerEntry));
@@ -494,7 +496,7 @@ public class AutomationTest extends BaseTestCase {
                                                         .build();
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));
@@ -576,7 +578,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));
@@ -623,7 +625,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));
@@ -674,7 +676,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));
@@ -724,7 +726,7 @@ public class AutomationTest extends BaseTestCase {
                                                         .build();
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));
@@ -777,7 +779,7 @@ public class AutomationTest extends BaseTestCase {
 
 
         automation.schedule(schedule);
-        verify(automationDataManager).saveSchedules(anySet());
+        verify(automationDataManager).saveSchedules(ArgumentMatchers.<ScheduleEntry>anyCollection());
 
         TriggerEntry triggerEntry = new TriggerEntry(trigger, "schedule id", false);
         ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule id", schedule));

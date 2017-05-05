@@ -288,8 +288,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Verify a new job to update the channel is dispatched
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
@@ -335,8 +334,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Verify a new job to update tag group registration is dispatched
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));

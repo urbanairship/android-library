@@ -261,8 +261,7 @@ public class LocationServiceTest extends BaseTestCase {
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
             @Override
-            public boolean matches(Object argument) {
-                Message message = (Message) argument;
+            public boolean matches(Message message) {
                 return message.what == LocationService.MSG_SINGLE_REQUEST_RESULT &&
                         message.arg1 == 101 &&
                         message.obj.equals(location);
@@ -291,8 +290,7 @@ public class LocationServiceTest extends BaseTestCase {
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
             @Override
-            public boolean matches(Object argument) {
-                Message message = (Message) argument;
+            public boolean matches(Message message) {
                 return message.what == LocationService.MSG_SINGLE_REQUEST_RESULT &&
                         message.arg1 == 101 &&
                         message.obj == null;
@@ -317,8 +315,7 @@ public class LocationServiceTest extends BaseTestCase {
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
             @Override
-            public boolean matches(Object argument) {
-                Message message = (Message) argument;
+            public boolean matches(Message message) {
                 return message.what == LocationService.MSG_SINGLE_REQUEST_RESULT &&
                         message.arg1 == 101 &&
                         message.obj == null;
@@ -394,8 +391,7 @@ public class LocationServiceTest extends BaseTestCase {
         // Verify the messenger was notified of the result
         verify(mockMessenger).send(argThat(new ArgumentMatcher<Message>() {
             @Override
-            public boolean matches(Object argument) {
-                Message message = (Message) argument;
+            public boolean matches(Message message) {
                 return message.what == LocationService.MSG_NEW_LOCATION_UPDATE &&
                         message.obj.equals(location);
             }
@@ -412,8 +408,7 @@ public class LocationServiceTest extends BaseTestCase {
         // Verify the messenger was notified only from the previous location
         verify(mockMessenger, times(1)).send(argThat(new ArgumentMatcher<Message>() {
             @Override
-            public boolean matches(Object argument) {
-                Message message = (Message) argument;
+            public boolean matches(Message message) {
                 return message.what == LocationService.MSG_NEW_LOCATION_UPDATE &&
                         message.obj.equals(location);
             }

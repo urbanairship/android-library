@@ -111,9 +111,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify that a job to add a background event is dispatched
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
-
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         AppBackgroundEvent.TYPE.equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
@@ -153,9 +151,7 @@ public class AnalyticsTest extends BaseTestCase {
 
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
-
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         "event-id".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_ID)) &&
                         "event-data".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_DATA)) &&
@@ -233,8 +229,7 @@ public class AnalyticsTest extends BaseTestCase {
 
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_DELETE_ALL);
             }
         }));
@@ -252,8 +247,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify we started created an add event job
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         "associate_identifiers".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
@@ -280,8 +274,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify we started created an add event job
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         "screen_tracking".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
@@ -301,8 +294,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify we started created an add event job
         verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         "screen_tracking".equals(job.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
@@ -349,8 +341,7 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify a job was dispatched fot update the advertising ID
         verify(mockJobDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID);
             }
         }));

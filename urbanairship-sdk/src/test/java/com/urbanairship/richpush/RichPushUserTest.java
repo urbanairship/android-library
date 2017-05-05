@@ -148,8 +148,7 @@ public class RichPushUserTest extends BaseTestCase {
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
             }
         }));
@@ -167,8 +166,7 @@ public class RichPushUserTest extends BaseTestCase {
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }
@@ -200,8 +198,7 @@ public class RichPushUserTest extends BaseTestCase {
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }

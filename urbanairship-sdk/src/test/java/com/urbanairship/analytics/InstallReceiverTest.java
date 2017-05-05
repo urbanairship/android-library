@@ -44,12 +44,11 @@ public class InstallReceiverTest extends BaseTestCase {
 
         verify(mockAnalytics).addEvent(argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Object argument) {
-                if (!(argument instanceof InstallAttributionEvent)) {
+            public boolean matches(Event event) {
+                if (!(event instanceof InstallAttributionEvent)) {
                     return false;
                 }
 
-                InstallAttributionEvent event = (InstallAttributionEvent) argument;
                 return "some value".equals(event.getEventData().opt("google_play_referrer").getString());
             }
         }));

@@ -92,8 +92,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND) && job.getInitialDelay() == 10000L;
             }
         }));
@@ -128,8 +127,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }));
@@ -228,8 +226,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND);
             }
         }));
@@ -385,8 +382,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(Object argument) {
-                Job job = (Job) argument;
+            public boolean matches(Job job) {
                 return job.getAction().equals(AnalyticsJobHandler.ACTION_SEND) && job.getInitialDelay() == 0;
             }
         }));

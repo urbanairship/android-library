@@ -277,8 +277,8 @@ public class UAWebViewClientTest extends BaseTestCase {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             verify(webView).loadUrl(Mockito.argThat(new ArgumentMatcher<String>() {
                 @Override
-                public boolean matches(Object argument) {
-                    return ((String) argument).startsWith("javascript:");
+                public boolean matches(String argument) {
+                    return argument.startsWith("javascript:");
                 }
             }));
         } else {
@@ -348,8 +348,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
             @Override
-            public boolean matches(Object o) {
-                KeyEvent event = (KeyEvent) o;
+            public boolean matches(KeyEvent event) {
                 return KeyEvent.ACTION_DOWN == event.getAction() &&
                         KeyEvent.KEYCODE_BACK == event.getKeyCode();
             }
@@ -357,8 +356,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
             @Override
-            public boolean matches(Object o) {
-                KeyEvent event = (KeyEvent) o;
+            public boolean matches(KeyEvent event) {
                 return KeyEvent.ACTION_UP == event.getAction() &&
                         KeyEvent.KEYCODE_BACK == event.getKeyCode();
             }
@@ -374,8 +372,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
             @Override
-            public boolean matches(Object o) {
-                KeyEvent event = (KeyEvent) o;
+            public boolean matches(KeyEvent event) {
                 return KeyEvent.ACTION_DOWN == event.getAction() &&
                         KeyEvent.KEYCODE_BACK == event.getKeyCode();
             }
@@ -383,8 +380,7 @@ public class UAWebViewClientTest extends BaseTestCase {
 
         verify(rootView).dispatchKeyEvent(argThat(new ArgumentMatcher<KeyEvent>() {
             @Override
-            public boolean matches(Object o) {
-                KeyEvent event = (KeyEvent) o;
+            public boolean matches(KeyEvent event) {
                 return KeyEvent.ACTION_UP == event.getAction() &&
                         KeyEvent.KEYCODE_BACK == event.getKeyCode();
             }

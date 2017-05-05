@@ -168,8 +168,7 @@ public class ActionServiceTest extends BaseTestCase {
         verify(runRequest).run(Mockito.any(ActionCompletionCallback.class));
         verify(runRequest).setMetadata(argThat(new ArgumentMatcher<Bundle>() {
             @Override
-            public boolean matches(Object o) {
-                Bundle bundle = (Bundle) o;
+            public boolean matches(Bundle bundle) {
                 return bundle.getString("oh").equals("hi");
             }
         }));
