@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.4.1 - May 10, 2017
+============================
+Bug Fixes
+---------
+ - Fixed bug that caused some ADM devices to crash during registration.
+
 Version 8.4.0 - May 2, 2017
 ===========================
 New Features
