@@ -4,6 +4,7 @@ package com.urbanairship.push.adm;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.amazon.device.messaging.ADM;
 import com.urbanairship.Logger;
@@ -41,6 +42,7 @@ class AdmWrapper {
      * @param context The application context.
      * @return The registration ID or null if ADM has not registered yet.
      */
+    @Nullable
     public static String getRegistrationId(Context context) {
         return new ADM(context).getRegistrationId();
     }

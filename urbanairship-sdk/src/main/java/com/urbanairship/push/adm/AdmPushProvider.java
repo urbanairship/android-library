@@ -31,7 +31,7 @@ public class AdmPushProvider implements PushProvider {
 
     @Override
     public boolean shouldUpdateRegistration(@NonNull Context context, @NonNull String registrationId) {
-        return !AdmWrapper.getRegistrationId(context).equals(registrationId);
+        return !registrationId.equals(AdmWrapper.getRegistrationId(context));
     }
 
     @Override
