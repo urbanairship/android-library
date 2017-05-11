@@ -4,6 +4,9 @@ package com.urbanairship.actions.tags;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.push.TagGroupsEditor;
 
 import java.util.Map;
@@ -76,4 +79,9 @@ public class AddTagsAction extends BaseTagsAction {
         tagGroupsEditor.apply();
     }
 
+    static class AddTagsPredicate implements ActionRegistry.Predicate {
+        public boolean apply(ActionArguments arguments) {
+            return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
+        }
+    }
 }

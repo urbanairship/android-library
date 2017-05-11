@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ActionEntry class="com.urbanairship.actions.AddCustomEventAction"
+        predicate="com.urbanairship.actions.AddCustomEventAction$AddCustomEventActionPredicate"
+        name="add_custom_event_action" />
+
+    <ActionEntry class="com.urbanairship.actions.tags.AddTagsAction"
+        predicate="com.urbanairship.actions.tags.AddTagsAction$AddTagsPredicate"
+        name="add_tags_action"
+        altName="^+t" />
+
+    <ActionEntry class="com.urbanairship.actions.CancelSchedulesAction"
+        name="cancel_scheduled_actions"
+        altName="^csa" />
+
+    <ActionEntry class="com.urbanairship.actions.ChannelCaptureAction"
+        name="channel_capture_action"
+        altName="^cc" />
+
+    <ActionEntry class="com.urbanairship.actions.ClipboardAction"
+        name="clipboard_action"
+        altName="^c" />
+
+    <ActionEntry class="com.urbanairship.actions.DeepLinkAction"
+        name="deep_link_action"
+        altName="^d" />
+
+    <ActionEntry class="com.urbanairship.actions.EnableFeatureAction"
+        name="enable_feature"
+        altName="^ef" />
+
+    <ActionEntry class="com.urbanairship.actions.FetchDeviceInfoAction"
+        predicate="com.urbanairship.actions.FetchDeviceInfoAction$FetchDeviceInfoPredicate"
+        name="fetch_device_info"
+        altName="^fdi" />
+
+    <ActionEntry class="com.urbanairship.actions.LandingPageAction"
+        predicate="com.urbanairship.actions.LandingPageAction$LandingPagePredicate"
+        name="landing_page_action"
+        altName="^p" />
+
+    <ActionEntry class="com.urbanairship.actions.OpenExternalUrlAction"
+        name="open_external_url_action"
+        altName="^u" />
+
+    <ActionEntry class="com.urbanairship.actions.OpenRichPushInboxAction"
+        name="open_mc_action"
+        altName="^mc" />
+
+    <ActionEntry class="com.urbanairship.actions.OverlayRichPushMessageAction"
+        name="open_mc_overlay_action"
+        altName="^mco" />
+
+    <ActionEntry class="com.urbanairship.actions.tags.RemoveTagsAction"
+        predicate="com.urbanairship.actions.tags.RemoveTagsAction$RemoveTagsPredicate"
+        name="remove_tags_action"
+        altName="^-t" />
+
+    <ActionEntry class="com.urbanairship.actions.ScheduleAction"
+        name="schedule_actions"
+        altName="^sa" />
+
+    <ActionEntry class="com.urbanairship.actions.ShareAction"
+        name="share_action"
+        altName="^s" />
+
+    <ActionEntry class="com.urbanairship.actions.ToastAction"
+        name="toast_action" />
+
+    <ActionEntry class="com.urbanairship.actions.WalletAction"
+        name="wallet_action"
+        altName="^w" />
+</resources>

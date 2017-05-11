@@ -4,6 +4,9 @@ package com.urbanairship.actions.tags;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.Action;
+import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.push.TagGroupsEditor;
 
 import java.util.Map;
@@ -75,5 +78,12 @@ public class RemoveTagsAction extends BaseTagsAction {
         }
 
         tagGroupsEditor.apply();
+    }
+
+    static class RemoveTagsPredicate implements ActionRegistry.Predicate {
+        @Override
+        public boolean apply(ActionArguments arguments) {
+            return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
+        }
     }
 }

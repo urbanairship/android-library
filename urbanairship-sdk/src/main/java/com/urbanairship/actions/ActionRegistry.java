@@ -2,14 +2,20 @@
 
 package com.urbanairship.actions;
 
+import android.content.Context;
+import android.content.res.XmlResourceParser;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
+import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.actions.tags.AddTagsAction;
-import com.urbanairship.actions.tags.RemoveTagsAction;
 import com.urbanairship.util.UAStringUtil;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,15 +30,20 @@ import java.util.Set;
  */
 public final class ActionRegistry {
 
-    private final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
-
     private final Map<String, Entry> actionMap = new HashMap<>();
+
+
+    private static final String ACTION_ENTRY_TAG = "ActionEntry";
+
+    private static final String CLASS_ATTRIBUTE = "class";
+    private static final String NAME_ATTRIBUTE = "name";
+    private static final String ALT_NAME_ATTRIBUTE = "altName";
+    private static final String PREDICATE_ATTRIBUTE = "predicate";
 
     /**
      * ActionArgument predicate
      */
     public interface Predicate {
-
         /**
          * Applies the predicate to the action arguments.
          *
@@ -57,13 +68,65 @@ public final class ActionRegistry {
     public Entry registerAction(@NonNull Action action, @NonNull String... names) {
         //noinspection ConstantConditions
         if (action == null) {
-            throw new IllegalArgumentException("Unable to an register a null action");
+            throw new IllegalArgumentException("Unable to register a null action");
         }
 
         //noinspection ConstantConditions
         if (names == null || names.length == 0) {
-            throw new IllegalArgumentException("Unable to an action without a name.");
+            throw new IllegalArgumentException("Unable to register an action without a name.");
         }
+
+        return registerEntry(new Entry(action, names));
+    }
+
+    /**
+     * Lazily registers an action.
+     *
+     * @param c The class to register
+     * @param names The names the action will be registered under
+     * @return The entry, or null if the action was unable to be registered
+     * @throws IllegalArgumentException If the class is null, if names is null or if any of the provided names is empty.
+     */
+    public Entry registerAction(@NonNull Class<? extends Action> c, @NonNull String... names) {
+        //noinspection ConstantConditions
+        if (c == null) {
+            throw new IllegalArgumentException("Unable to an register a null action class.");
+        }
+
+
+        //noinspection ConstantConditions
+        if (names == null || names.length == 0) {
+            throw new IllegalArgumentException("Unable to register an action without a name.");
+        }
+
+        return registerEntry(new Entry(c, names));
+    }
+
+    /**
+     * Lazily registers an action.
+     *
+     * @param c The class to register
+     * @param names The names the action will be registered under
+     * @return The entry, or null if the action was unable to be registered
+     * @throws IllegalArgumentException If the class is null, if names is null or if any of the provided names is empty.
+     */
+    public Entry registerAction(@NonNull Class<? extends Action> c, Predicate predicate, @NonNull String... names) {
+        //noinspection ConstantConditions
+        if (c == null) {
+            throw new IllegalArgumentException("Unable to register a null action class.");
+        }
+
+
+        //noinspection ConstantConditions
+        if (names == null || names.length == 0) {
+            throw new IllegalArgumentException("Unable to register an action without a name.");
+        }
+
+        return registerEntry(new Entry(c, names));
+    }
+
+    private Entry registerEntry(Entry entry) {
+        List<String> names = entry.getNames();
 
         // Validate all the names
         for (String name : names) {
@@ -73,8 +136,6 @@ public final class ActionRegistry {
         }
 
         synchronized (actionMap) {
-
-            Entry entry = new Entry(action, names);
 
             for (String name : names) {
 
@@ -146,106 +207,74 @@ public final class ActionRegistry {
     }
 
     /**
-     * Registers default actions
+     * Registers default actions using a resource file.
+     *
+     * @param context The application context.
      */
-    public void registerDefaultActions() {
-        registerAction(new ShareAction(),
-                ShareAction.DEFAULT_REGISTRY_NAME,
-                ShareAction.DEFAULT_REGISTRY_SHORT_NAME);
+    public void registerDefaultActions(Context context) {
+        XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
 
-        registerAction(new OpenExternalUrlAction(),
-                OpenExternalUrlAction.DEFAULT_REGISTRY_NAME,
-                OpenExternalUrlAction.DEFAULT_REGISTRY_SHORT_NAME);
+        try {
+            while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                int tagType = parser.getEventType();
+                String tagName = parser.getName();
 
-        registerAction(new DeepLinkAction(),
-                DeepLinkAction.DEFAULT_REGISTRY_NAME,
-                DeepLinkAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new WalletAction(),
-                WalletAction.DEFAULT_REGISTRY_NAME,
-                WalletAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        Entry landingPageEntry = registerAction(new LandingPageAction(),
-                LandingPageAction.DEFAULT_REGISTRY_NAME,
-                LandingPageAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        landingPageEntry.setPredicate(new Predicate() {
-            @Override
-            public boolean apply(ActionArguments arguments) {
-                if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
-                    long lastOpenTime = UAirship.shared().getApplicationMetrics().getLastOpenTimeMillis();
-                    return System.currentTimeMillis() - lastOpenTime <= LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS;
+                if (!(tagType == XmlPullParser.START_TAG && ACTION_ENTRY_TAG.equals(tagName))) {
+                    continue;
                 }
-                return true;
+
+                String className = parser.getAttributeValue(null, CLASS_ATTRIBUTE);
+                if (UAStringUtil.isEmpty(className)) {
+                    Logger.error(ACTION_ENTRY_TAG + " must specify class attribute.");
+                    continue;
+                }
+                
+                Class<? extends Action> c;
+                try {
+                    c = Class.forName(className).asSubclass(Action.class);
+                } catch (ClassNotFoundException e) {
+                    Logger.error("Action class " + className + " not found. Skipping action registration.");
+                    continue;
+                }
+
+                // Handle primary and secondary names.
+                String actionName = parser.getAttributeValue(null, NAME_ATTRIBUTE);
+                if (actionName == null) {
+                    Logger.error(ACTION_ENTRY_TAG + " must specify name attribute.");
+                    continue;
+                }
+                String altActionName = parser.getAttributeValue(null, ALT_NAME_ATTRIBUTE);
+                String[] names = UAStringUtil.isEmpty(altActionName) ? new String[] { actionName } : new String[] { actionName, altActionName };
+                Entry entry = registerAction(c, names);
+
+                // Handle optional predicate class.
+                String predicateClassName = parser.getAttributeValue(null, PREDICATE_ATTRIBUTE);
+                if (predicateClassName == null) {
+                    continue;
+                }
+
+                Predicate predicate;
+                try {
+                    predicate = Class.forName(predicateClassName).asSubclass(Predicate.class).newInstance();
+                    entry.setPredicate(predicate);
+                } catch (Exception e) {
+                    Logger.error("Predicate class " + predicateClassName + " not found. Skipping predicate.");
+                }
             }
-        });
+        } catch (XmlPullParserException | IOException e) {
+            Logger.error("Failed to parse ActionEntry:" + e.getMessage());
+        }
 
-        Predicate rejectPushReceivedPredicate = new Predicate() {
-            @Override
-            public boolean apply(ActionArguments arguments) {
-                return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
-            }
-        };
+    }
 
-        Entry addTagsEntry = registerAction(new AddTagsAction(),
-                AddTagsAction.DEFAULT_REGISTRY_NAME,
-                AddTagsAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        addTagsEntry.setPredicate(rejectPushReceivedPredicate);
-
-        Entry removeTagsEntry = registerAction(new RemoveTagsAction(),
-                RemoveTagsAction.DEFAULT_REGISTRY_NAME,
-                RemoveTagsAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        removeTagsEntry.setPredicate(rejectPushReceivedPredicate);
-
-        Entry addCustomEventEntry = registerAction(new AddCustomEventAction(),
-                AddCustomEventAction.DEFAULT_REGISTRY_NAME);
-
-        addCustomEventEntry.setPredicate(rejectPushReceivedPredicate);
-
-        registerAction(new OpenRichPushInboxAction(),
-                OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
-                OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new OverlayRichPushMessageAction(),
-                OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
-                OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new ClipboardAction(),
-                ClipboardAction.DEFAULT_REGISTRY_NAME,
-                ClipboardAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new ToastAction(),
-                ToastAction.DEFAULT_REGISTRY_NAME);
-
-        registerAction(new CancelSchedulesAction(),
-                CancelSchedulesAction.DEFAULT_REGISTRY_NAME,
-                CancelSchedulesAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new ScheduleAction(),
-                ScheduleAction.DEFAULT_REGISTRY_NAME,
-                ScheduleAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        Entry fetchDeviceInfoEntry = registerAction(new FetchDeviceInfoAction(),
-                FetchDeviceInfoAction.DEFAULT_REGISTRY_NAME,
-                FetchDeviceInfoAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        fetchDeviceInfoEntry.setPredicate(new Predicate() {
-            @Override
-            public boolean apply(ActionArguments arguments) {
-                return arguments.getSituation() == Action.SITUATION_WEB_VIEW_INVOCATION ||
-                        arguments.getSituation() == Action.SITUATION_MANUAL_INVOCATION;
-            }
-        });
-
-        registerAction(new ChannelCaptureAction(),
-                ChannelCaptureAction.DEFAULT_REGISTRY_NAME,
-                ChannelCaptureAction.DEFAULT_REGISTRY_SHORT_NAME);
-
-        registerAction(new EnableFeatureAction(),
-                EnableFeatureAction.DEFAULT_REGISTRY_NAME,
-                EnableFeatureAction.DEFAULT_REGISTRY_SHORT_NAME);
+    /**
+     * Registers default actions.
+     *
+     * @deprecated Will be removed in 9.0.0.
+     */
+    @Deprecated
+    public void registerDefaultActions() {
+        registerDefaultActions(UAirship.getApplicationContext());
     }
 
     /**
@@ -254,6 +283,7 @@ public final class ActionRegistry {
     public final static class Entry {
         private final List<String> names;
         private Action defaultAction;
+        private Class defaultActionClass;
         private Predicate predicate;
 
         private final SparseArray<Action> situationOverrides = new SparseArray<>();
@@ -270,6 +300,17 @@ public final class ActionRegistry {
         }
 
         /**
+         * Entry constructor
+         *
+         * @param c The entry's action
+         * @param names The names of the entry
+         */
+        private Entry(Class c, String[] names) {
+            this.defaultActionClass = c;
+            this.names = new ArrayList<>(Arrays.asList(names));
+        }
+
+        /**
          * Returns an action for a given situation.
          *
          * @param situation Situation for the entry
@@ -281,8 +322,16 @@ public final class ActionRegistry {
             Action action = situationOverrides.get(situation);
             if (action != null) {
                 return action;
+            } else if (defaultAction != null) {
+                return defaultAction;
+            } else {
+                try {
+                    defaultAction = (Action) defaultActionClass.newInstance();
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Unable to instantiate action class.");
+                }
+                return defaultAction;
             }
-            return defaultAction;
         }
 
         /**
@@ -308,9 +357,17 @@ public final class ActionRegistry {
          *
          * @return The default action
          */
-        @NonNull
         public Action getDefaultAction() {
-            return defaultAction;
+            if (defaultAction != null) {
+                return defaultAction;
+            } else {
+                try {
+                    defaultAction = (Action) defaultActionClass.newInstance();
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Unable to instantiate action class.");
+                }
+                return defaultAction;
+            }
         }
 
         /**
@@ -378,11 +435,10 @@ public final class ActionRegistry {
             }
         }
 
+
         @Override
         public String toString() {
             return "Action Entry: " + names;
         }
     }
-
-
 }

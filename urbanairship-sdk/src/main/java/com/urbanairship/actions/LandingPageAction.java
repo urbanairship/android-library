@@ -53,6 +53,8 @@ import java.net.URLEncoder;
  */
 public class LandingPageAction extends Action {
 
+    public final static long LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS = 7 * 86400000; // 1 week
+
     /**
      * Default registry name
      */
@@ -259,5 +261,16 @@ public class LandingPageAction extends Action {
     @Override
     public boolean shouldRunOnMainThread() {
         return true;
+    }
+
+    static class LandingPagePredicate implements ActionRegistry.Predicate {
+        @Override
+        public boolean apply(ActionArguments arguments) {
+            if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {
+                long lastOpenTime = UAirship.shared().getApplicationMetrics().getLastOpenTimeMillis();
+                return System.currentTimeMillis() - lastOpenTime <= LANDING_PAGE_CACHE_OPEN_TIME_LIMIT_MS;
+            }
+            return true;
+        }
     }
 }

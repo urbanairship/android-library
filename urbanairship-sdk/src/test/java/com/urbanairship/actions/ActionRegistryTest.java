@@ -60,6 +60,30 @@ public class ActionRegistryTest extends BaseTestCase {
 
     }
 
+    @Test
+    public void testDefaultActionsFromResource() {
+        registry.registerDefaultActions(TestApplication.getApplication().getApplicationContext());
+        assertEquals("Default entries changed", 17, registry.getEntries().size());
+
+        validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
+        validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
+        validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
+        validateEntry(registry.getEntry("^-t"), "^-t", "remove_tags_action");
+        validateEntry(registry.getEntry("^u"), "^u", "open_external_url_action");
+        validateEntry(registry.getEntry("add_custom_event_action"), "add_custom_event_action");
+        validateEntry(registry.getEntry("^s"), "^s", "share_action");
+        validateEntry(registry.getEntry("^mc"), "^mc", "open_mc_action");
+        validateEntry(registry.getEntry("^c"), "^c", "clipboard_action");
+        validateEntry(registry.getEntry("^mco"), "^mco", "open_mc_overlay_action");
+        validateEntry(registry.getEntry("toast_action"), "toast_action");
+        validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
+        validateEntry(registry.getEntry("^csa"), "^csa", "cancel_scheduled_actions");
+        validateEntry(registry.getEntry("^sa"), "^sa", "schedule_actions");
+        validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
+        validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
+        validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
+    }
+
     /**
      * Test the landing page default predicate rejects Action.SITUATION_PUSH_RECEIVED
      * if the app has not been opened in the last week.
@@ -200,7 +224,15 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testRegisterNullAction() {
-        registry.registerAction(null, "hi");
+        registry.registerAction((Action)null, "hi");
+    }
+
+    /**
+     * Test registering a null action class.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testRegisterNullActionClass() {
+        registry.registerAction((Class<? extends Action>) null, "hi");
     }
 
     /**

@@ -583,7 +583,7 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
-        this.actionRegistry.registerDefaultActions();
+        this.actionRegistry.registerDefaultActions(getApplicationContext());
         this.messageCenter = new MessageCenter();
         this.automation = new Automation(application, airshipConfigOptions, analytics, preferenceDataStore, ActivityMonitor.shared(application));
 
