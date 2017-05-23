@@ -638,6 +638,7 @@ class ChannelJobHandler {
         if (pushManager.getChannelId() != null) {
             Job updateJob = Job.newBuilder()
                                .setAction(ACTION_UPDATE_TAG_GROUPS)
+                               .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
                                .setNetworkAccessRequired(true)
                                .setAirshipComponent(PushManager.class)
                                .build();

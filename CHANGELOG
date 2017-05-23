@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.4.2 - May 23, 2017
+============================
+Bug Fixes
+---------
+ - Fixed crash when rescheduling tag group updates with GcmNetworkManager.
+
 Version 8.4.1 - May 10, 2017
 ============================
 Bug Fixes
