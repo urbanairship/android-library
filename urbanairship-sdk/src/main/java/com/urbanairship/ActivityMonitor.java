@@ -19,7 +19,7 @@ import java.util.List;
 public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
 
     // Brief delay, to give the app a chance to perform screen rotation cleanup
-    private static final long BACKGROUND_DELAY_MS = 500;
+    private static final long BACKGROUND_DELAY_MS = 200;
 
     private static ActivityMonitor singleton;
 
@@ -28,6 +28,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
     private final Runnable backgroundRunnable;
 
     private int startedActivities = 0;
+    private long backgroundTime;
     private boolean isForeground;
 
     public ActivityMonitor() {
@@ -36,9 +37,8 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
             @Override
             public void run() {
                 isForeground = false;
-                long time = System.currentTimeMillis();
                 for (Listener listener : new ArrayList<>(listeners)) {
-                    listener.onBackground(time);
+                    listener.onBackground(backgroundTime);
                 }
             }
         };
@@ -131,6 +131,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
         }
 
         if (startedActivities == 0 && isForeground) {
+            backgroundTime = System.currentTimeMillis() + BACKGROUND_DELAY_MS;
             handler.postDelayed(backgroundRunnable, BACKGROUND_DELAY_MS);
         }
     }

@@ -12,6 +12,7 @@ import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.Task;
 import com.urbanairship.Logger;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -73,7 +74,7 @@ class GcmScheduler implements Scheduler {
         OneoffTask.Builder builder = new OneoffTask.Builder()
                 .setService(AirshipGcmTaskService.class)
                 .setExtras(job.toBundle())
-                .setTag(job.getTag())
+                .setTag(job.getTag() == null ? UUID.randomUUID().toString() : job.getTag())
                 .setUpdateCurrent(true)
                 .setExecutionWindow(secondsDelay, secondsDelay + WINDOW_EXECUTION_SECONDS);
 
