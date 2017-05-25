@@ -78,10 +78,6 @@
 	    <com.urbanairship.preference.UserIdPreference
 	        android:persistent="false"
 	        android:title="@string/user_id_preference_title" />
-	        
-	    <com.urbanairship.sample.preference.SetAliasPreference
-	        android:persistent="false"
-	        android:title="@string/set_alias_preference_title" />
 
         <com.urbanairship.sample.preference.SetNamedUserPreference
             android:persistent="false"

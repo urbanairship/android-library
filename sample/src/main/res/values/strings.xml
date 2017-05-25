@@ -23,7 +23,6 @@
     <string name="advanced_preference_category_title">Advanced</string>
     <string name="channel_id_preference_title">Channel ID</string>
     <string name="user_id_preference_title">User ID</string>
-    <string name="set_alias_preference_title">Set Alias</string>
     <string name="set_named_user_preference_title">Set Named User</string>
     <string name="add_tags_preference_title">Add Tags</string>
     <string name="duplicate_tag_warning">Tag already exists</string>

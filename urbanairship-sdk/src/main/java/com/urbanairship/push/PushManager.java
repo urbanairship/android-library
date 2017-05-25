@@ -469,7 +469,10 @@ public class PushManager extends AirshipComponent {
      * @param tags The desired set of tags, must be non-null
      * @see #setAlias(String)
      * @see #setTags(Set)
+     *
+     * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
      */
+    @Deprecated
     public void setAliasAndTags(@Nullable String alias, @NonNull Set<String> tags) {
         //noinspection ConstantConditions
         if (tags == null) {
@@ -556,7 +559,9 @@ public class PushManager extends AirshipComponent {
      * for more information on the use of aliases.
      *
      * @param alias The alias, <code>null</code> to remove
+     * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
      */
+    @Deprecated
     public void setAlias(@Nullable String alias) {
         if (alias != null) {
             alias = alias.trim();
