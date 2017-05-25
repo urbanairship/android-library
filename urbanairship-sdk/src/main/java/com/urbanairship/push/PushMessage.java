@@ -232,6 +232,17 @@ public class PushMessage implements Parcelable {
     }
 
     /**
+     * Gets an extra from the push bundle.
+     *
+     * @param key The extra key.
+     * @param defaultValue Default value if the value does not exist.
+     * @return The extra or the default value if the extra does not exist.
+     */
+    public String getExtra(String key, String defaultValue) {
+        return pushBundle.getString(key, defaultValue);
+    }
+
+    /**
      * Gets the message's canonical push ID
      *
      * @return The canonical push ID
