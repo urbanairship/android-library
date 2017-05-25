@@ -26,7 +26,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class PassRequestTest extends BaseTestCase{
+public class PassRequestTest extends BaseTestCase {
 
     private class TestPassRequest extends TestRequest {
         private final String expectedJson;
@@ -47,13 +47,23 @@ public class PassRequestTest extends BaseTestCase{
     }
 
     @Test
-    public void testDefaultUrl() throws MalformedURLException {
+    public void testDeprecatedUrl() throws MalformedURLException {
         PassRequest request = PassRequest.newBuilder()
-                .setApiKey("test_api_key")
-                .setTemplateId("test_template_id")
-                .build();
+                                         .setApiKey("test_api_key")
+                                         .setTemplateId("test_template_id")
+                                         .build();
 
         assertEquals("https://wallet-api.urbanairship.com/v1/pass/test_template_id?api_key=test_api_key", request.getPassUrl().toString());
+    }
+
+    @Test
+    public void testDefaultUrl() throws MalformedURLException {
+        PassRequest request = PassRequest.newBuilder()
+                                         .setAuth("test_user_name", "test_api_key")
+                                         .setTemplateId("test_template_id")
+                                         .build();
+
+        assertEquals("https://wallet-api.urbanairship.com/v1/pass/test_template_id", request.getPassUrl().toString());
     }
 
     @Test
@@ -106,20 +116,20 @@ public class PassRequestTest extends BaseTestCase{
         when(requestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
 
         Field field = Field.newBuilder()
-                .setName("Text")
-                .setValue("Text Value")
-                .setLabel("Text Label")
-                .build();
+                           .setName("Text")
+                           .setValue("Text Value")
+                           .setLabel("Text Label")
+                           .build();
 
         PassRequest.Builder passRequestBuilder = PassRequest.newBuilder()
-                .setApiKey("test_api_key")
-                .setTemplateId("test_template_id")
-                .setExpirationDate("2014-08-20T9:41-08:00", null)
-                .setBarcodeAltText("abc1234567890", "label")
-                .setBarcodeValue("abc1234567890", "label")
-                .setTag("Text Tag")
-                .setExternalId("id123")
-                .addField(field);
+                                                            .setAuth("test_user_name", "test_api_key")
+                                                            .setTemplateId("test_template_id")
+                                                            .setExpirationDate("2014-08-20T9:41-08:00", null)
+                                                            .setBarcodeAltText("abc1234567890", "label")
+                                                            .setBarcodeValue("abc1234567890", "label")
+                                                            .setTag("Text Tag")
+                                                            .setExternalId("id123")
+                                                            .addField(field);
 
         Executor executor = new Executor() {
             @Override
@@ -158,8 +168,8 @@ public class PassRequestTest extends BaseTestCase{
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
         when(requestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
         PassRequest.Builder passRequestBuilder = PassRequest.newBuilder()
-                .setApiKey("test_api_key")
-                .setTemplateId("test_template_id");
+                                                            .setAuth("test_user_name", "test_api_key")
+                                                            .setTemplateId("test_template_id");
 
         Executor executor = new Executor() {
             @Override
@@ -209,8 +219,8 @@ public class PassRequestTest extends BaseTestCase{
         RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
 
         PassRequest.Builder passRequestBuilder = PassRequest.newBuilder()
-                .setApiKey("test_api_key")
-                .setTemplateId("test_template_id");
+                                                            .setAuth("test_user_name", "test_api_key")
+                                                            .setTemplateId("test_template_id");
 
         Executor executor = new Executor() {
             @Override

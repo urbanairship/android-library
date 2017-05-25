@@ -35,7 +35,9 @@ import java.util.concurrent.Executors;
 public class PassRequest {
 
     private static final Executor DEFAULT_REQUEST_EXECUTOR = Executors.newSingleThreadExecutor();
-    private static final String PATH_FORMAT = "v1/pass/%s?api_key=%s";
+    private static final String DEPRECATED_PATH_FORMAT = "v1/pass/%s?api_key=%s";
+    private static final String PATH_FORMAT = "v1/pass/%s";
+
     private static final String API_REVISION_HEADER_NAME = "Api-Revision";
     private static final String API_REVISION = "1.2";
     private static final String FIELDS_KEY = "fields";
@@ -45,6 +47,7 @@ public class PassRequest {
     private static final String TAG_KEY = "tag";
     private static final String EXTERNAL_ID_KEY = "externalId";
 
+    private final String userName;
     private final String apiKey;
     private final String templateId;
     private final Collection<Field> fields;
@@ -65,6 +68,7 @@ public class PassRequest {
      */
     PassRequest(Builder builder, RequestFactory requestFactory, Executor requestExecutor) {
         this.apiKey = builder.apiKey;
+        this.userName = builder.userName;
         this.templateId = builder.templateId;
         this.fields = builder.fields;
         this.headers = builder.headers;
@@ -147,16 +151,20 @@ public class PassRequest {
                 }
 
                 JsonMap body = JsonMap.newBuilder()
-                        .putOpt(HEADERS_KEY, headersJson)
-                        .put(FIELDS_KEY, fieldsJson.build())
-                        .putOpt(TAG_KEY, tag)
-                        .put(PUBLIC_URL_KEY, JsonMap.newBuilder().put(PUBLIC_URL_TYPE_KEY, "multiple").build())
-                        .putOpt(EXTERNAL_ID_KEY, externalId)
-                        .build();
+                                      .putOpt(HEADERS_KEY, headersJson)
+                                      .put(FIELDS_KEY, fieldsJson.build())
+                                      .putOpt(TAG_KEY, tag)
+                                      .put(PUBLIC_URL_KEY, JsonMap.newBuilder().put(PUBLIC_URL_TYPE_KEY, "multiple").build())
+                                      .putOpt(EXTERNAL_ID_KEY, externalId)
+                                      .build();
 
                 Request httpRequest = requestFactory.createRequest("POST", url)
-                        .setHeader(API_REVISION_HEADER_NAME, API_REVISION)
-                        .setRequestBody(body.toString(), "application/json");
+                                                    .setHeader(API_REVISION_HEADER_NAME, API_REVISION)
+                                                    .setRequestBody(body.toString(), "application/json");
+
+                if (userName != null) {
+                    httpRequest.setCredentials(userName, apiKey);
+                }
 
                 Logger.debug("PassRequest - Requesting pass " + url + " with payload: " + body);
                 Response response = httpRequest.execute();
@@ -201,13 +209,19 @@ public class PassRequest {
      * @throws MalformedURLException
      */
     URL getPassUrl() throws MalformedURLException {
-        Uri uri = Uri.withAppendedPath(Uri.parse(UAirship.shared().getAirshipConfigOptions().walletUrl), String.format(Locale.US, PATH_FORMAT, templateId, apiKey));
+        Uri uri;
+        if (userName == null) {
+            uri = Uri.withAppendedPath(Uri.parse(UAirship.shared().getAirshipConfigOptions().walletUrl), String.format(Locale.US, DEPRECATED_PATH_FORMAT, templateId, apiKey));
+        } else {
+            uri = Uri.withAppendedPath(Uri.parse(UAirship.shared().getAirshipConfigOptions().walletUrl), String.format(Locale.US, PATH_FORMAT, templateId));
+        }
+
         return new URL(uri.toString());
     }
 
     @Override
     public String toString() {
-        return "PassRequest{ apiKey: " + apiKey + ", templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", externalId: " + externalId + ", headers: " + headers + " }";
+        return "PassRequest{ templateId: " + templateId + ", fields: " + fields + ", tag: " + tag + ", externalId: " + externalId + ", headers: " + headers + " }";
     }
 
     /**
@@ -220,15 +234,31 @@ public class PassRequest {
         private List<Field> headers = new ArrayList<>();
         private String tag;
         private String externalId;
+        public String userName;
 
         /**
          * Sets the API key.
          *
          * @param apiKey The API key.
          * @return Builder object.
+         * @deprecated Use {@link #setAuth(String, String)}  instead.
          */
+        @Deprecated
         public Builder setApiKey(@NonNull String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        /**
+         * Sets the request auth.
+         *
+         * @param userName The request user name.
+         * @param token The request token.
+         * @return Builder object.
+         */
+        public Builder setAuth(@NonNull String userName, @NonNull String token) {
+            this.apiKey = token;
+            this.userName = userName;
             return this;
         }
 
@@ -263,10 +293,10 @@ public class PassRequest {
          */
         public Builder setExpirationDate(String value, String label) {
             Field field = Field.newBuilder()
-                    .setName("expirationDate")
-                    .setValue(value)
-                    .setLabel(label)
-                    .build();
+                               .setName("expirationDate")
+                               .setValue(value)
+                               .setLabel(label)
+                               .build();
 
             headers.add(field);
             return this;
@@ -281,10 +311,10 @@ public class PassRequest {
          */
         public Builder setBarcodeValue(String value, String label) {
             Field field = Field.newBuilder()
-                    .setName("barcode_value")
-                    .setValue(value)
-                    .setLabel(label)
-                    .build();
+                               .setName("barcode_value")
+                               .setValue(value)
+                               .setLabel(label)
+                               .build();
 
             headers.add(field);
             return this;
@@ -299,10 +329,10 @@ public class PassRequest {
          */
         public Builder setBarcodeAltText(String value, String label) {
             Field field = Field.newBuilder()
-                    .setName("barcodeAltText")
-                    .setValue(value)
-                    .setLabel(label)
-                    .build();
+                               .setName("barcodeAltText")
+                               .setValue(value)
+                               .setLabel(label)
+                               .build();
 
             headers.add(field);
             return this;
