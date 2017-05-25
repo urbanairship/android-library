@@ -57,7 +57,7 @@ public class NotificationFactory {
     /**
      * Set the optional constant notification ID.
      * <p>
-     * Only value's greater than 0 will be used by default. Any negative value will
+     * Only values greater than 0 will be used by default. Any negative value will
      * be considered invalid and the constant notification ID will be ignored.
      * <p>
      * By default, the constant notification ID will be used if the push message does not contain a tag.
