@@ -67,6 +67,7 @@ public class PushJobHandlerTest extends BaseTestCase {
         pushBundle.putString(PushMessage.EXTRA_ALERT, "Test Push Alert!");
         pushBundle.putString(PushMessage.EXTRA_PUSH_ID, "testPushID");
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "testSendID");
+        pushBundle.putString(PushMessage.EXTRA_NOTIFICATION_TAG, "testNotificationTag");
 
 
         pushManager = mock(PushManager.class);
@@ -123,7 +124,7 @@ public class PushJobHandlerTest extends BaseTestCase {
         Job job = createReceiveMessageJob();
         jobHandler.performJob(job);
 
-        verify(notificationManager).notify(TEST_NOTIFICATION_ID, notification);
+        verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notification);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);

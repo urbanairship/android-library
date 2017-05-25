@@ -191,6 +191,11 @@ public class PushMessage implements Parcelable {
     public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
     /**
+     * The extra key for the tag to be used when posting a notification.
+     */
+    public static final String EXTRA_NOTIFICATION_TAG = "com.urbanairship.notification_tag";
+
+    /**
      * Default sound name.
      */
     private static final String DEFAULT_SOUND_NAME = "default";
@@ -478,7 +483,7 @@ public class PushMessage implements Parcelable {
      * @return The sound of the notification.
      */
     @Nullable
-    public Uri getSound(@NonNull  Context context) {
+    public Uri getSound(@NonNull Context context) {
         if (sound == null && pushBundle.getString(EXTRA_SOUND) != null) {
             String notificationSoundName = pushBundle.getString(EXTRA_SOUND);
 
@@ -568,6 +573,16 @@ public class PushMessage implements Parcelable {
         return null;
     }
 
+    /**
+     * Returns the notification tag that should be used when posting the notification.
+     *
+     * @return Either the notification tag or {@code null} if the tag is not available.
+     */
+    @Nullable
+    public String getNotificationTag() {
+        return pushBundle.getString(EXTRA_NOTIFICATION_TAG);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -593,6 +608,7 @@ public class PushMessage implements Parcelable {
 
     /**
      * Gets the push message from the intent if available.
+     *
      * @param intent The intent.
      * @return The intent's PushMessage or null if the intent does not contain a PushMessage.
      * @hide

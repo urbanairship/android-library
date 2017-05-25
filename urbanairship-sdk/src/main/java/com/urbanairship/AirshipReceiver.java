@@ -297,6 +297,16 @@ public class AirshipReceiver extends BroadcastReceiver {
         public int getNotificationId() {
             return notificationId;
         }
+
+        /**
+         * Returns the notification tag.
+         *
+         * @return The notification tag.
+         */
+        @Nullable
+        public String getNotificationTag() {
+            return message.getNotificationTag();
+        }
     }
 
     /**

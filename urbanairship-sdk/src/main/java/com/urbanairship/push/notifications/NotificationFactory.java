@@ -36,6 +36,11 @@ public class NotificationFactory {
     private int accentColor = NotificationCompat.COLOR_DEFAULT;
     private int notificationDefaults = NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE;
 
+    /**
+     * Default Notification ID when the {@link PushMessage} defines a notification tag.
+     */
+    public static final int TAG_NOTIFICATION_ID = 100;
+
     private final Context context;
 
     /**
@@ -51,6 +56,12 @@ public class NotificationFactory {
 
     /**
      * Set the optional constant notification ID.
+     * <p>
+     * Only value's greater than 0 will be used by default. Any negative value will
+     * be considered invalid and the constant notification ID will be ignored.
+     * <p>
+     * By default, the constant notification ID will be used if the push message does not contain a tag.
+     * In that case, {@link #TAG_NOTIFICATION_ID} will be used instead.
      *
      * @param id The integer ID as an int.
      */
@@ -307,15 +318,23 @@ public class NotificationFactory {
      * This method could return a constant (to always replace the existing ID)
      * or a payload/message specific ID (to replace in cases where there are duplicates, for example)
      * or a random/sequential (to always add a new notification).
+     * <p>
+     * The default behavior returns {@link #TAG_NOTIFICATION_ID} if the push message contains a tag
+     * (see {@link PushMessage#getNotificationTag()}). Otherwise it will either return {@link #getConstantNotificationId()}
+     * if the constant notification id > 0, or it will return a random ID generated from {@link NotificationIdGenerator#nextID()}.
      *
      * @param pushMessage The push message.
      * @return An integer ID for the next notification.
      */
     public int getNextId(@NonNull PushMessage pushMessage) {
+        if (pushMessage.getNotificationTag() != null) {
+            return TAG_NOTIFICATION_ID;
+        }
+
         if (constantNotificationId > 0) {
             return constantNotificationId;
-        } else {
-            return NotificationIdGenerator.nextID();
         }
+
+        return NotificationIdGenerator.nextID();
     }
 }

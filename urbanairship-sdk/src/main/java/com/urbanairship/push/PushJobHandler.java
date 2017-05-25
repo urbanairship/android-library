@@ -249,9 +249,8 @@ class PushJobHandler {
         notification.contentIntent = PendingIntent.getBroadcast(context, 0, contentIntent, 0);
         notification.deleteIntent = PendingIntent.getBroadcast(context, 0, deleteIntent, 0);
 
-        Logger.info("Posting notification " + notification + " with ID " + notificationId);
-        notificationManager.notify(notificationId, notification);
-
+        Logger.info("Posting notification: " + notification + " id: " + notificationId + " tag: " + message.getNotificationTag());
+        notificationManager.notify(message.getNotificationTag(), notificationId, notification);
         return notificationId;
     }
 
