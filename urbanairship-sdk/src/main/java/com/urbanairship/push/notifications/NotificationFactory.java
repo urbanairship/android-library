@@ -251,9 +251,9 @@ public class NotificationFactory {
                 .setContentTitle(getTitle(message))
                 .setContentText(message.getAlert())
                 .setAutoCancel(true)
-                .setSmallIcon(getSmallIconId())
-                .setColor(getColor())
                 .setLocalOnly(message.isLocalOnly())
+                .setColor(message.getIconColor(getColor()))
+                .setSmallIcon(message.getIcon(context, getSmallIconId()))
                 .setPriority(message.getPriority())
                 .setCategory(message.getCategory())
                 .setVisibility(message.getVisibility());

@@ -2,10 +2,13 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -103,6 +106,16 @@ public class PushMessage implements Parcelable {
      * The extra key indicates if the notification should only be displayed on the device.
      */
     public static final String EXTRA_LOCAL_ONLY = "com.urbanairship.local_only";
+
+    /**
+     * The extra key indicates the icon color.
+     */
+    public static final String EXTRA_ICON_COLOR = "com.urbanairship.icon_color";
+
+    /**
+     * The extra key indicates the name of an icon to use from an app's drawable resources.
+     */
+    public static final String EXTRA_ICON = "com.urbanairship.icon";
 
     /**
      * The extra key for the priority of the notification. Acceptable values range from PRIORITY_MIN
@@ -480,6 +493,44 @@ public class PushMessage implements Parcelable {
         }
 
         return sound;
+    }
+
+    /**
+     * Gets the notification icon color.
+     *
+     * @return The color of the icon.
+     */
+    public int getIconColor(int defaultColor) {
+        String colorString = pushBundle.getString(EXTRA_ICON_COLOR);
+        if (colorString != null) {
+            try {
+                return Color.parseColor(colorString);
+            } catch (IllegalArgumentException e) {
+                Logger.warn("Unrecognized icon color string: " + colorString + ". Using default color: " + defaultColor);
+            }
+        }
+
+        return defaultColor;
+    }
+
+    /**
+     * Gets the notification icon image.
+     *
+     * @return The integer resource of the icon image.
+     */
+    @DrawableRes
+    public int getIcon(Context context, int defaultIcon) {
+        String resourceString = pushBundle.getString(EXTRA_ICON);
+        if (resourceString != null) {
+            int iconId = context.getResources().getIdentifier(resourceString, "drawable", context.getPackageName());
+            if (iconId != 0) {
+                return iconId;
+            } else {
+                Logger.warn("PushMessage - unable to find icon drawable with name: " + resourceString + ". Using default icon: " + defaultIcon);
+            }
+        }
+
+        return defaultIcon;
     }
 
     /**

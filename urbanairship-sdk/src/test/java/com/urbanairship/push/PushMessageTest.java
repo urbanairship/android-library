@@ -5,6 +5,7 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -595,6 +596,35 @@ public class PushMessageTest extends BaseTestCase {
         PushMessage pushMessage = new PushMessage(extras);
 
         Assert.assertNull("The sound should be null.", pushMessage.getSound(context));
+    }
+
+    /**
+     * Test get the notification icon.
+     */
+    public void testGetIcon() {
+        Context context = Mockito.spy(UAirship.getApplicationContext());
+        Resources resources = Mockito.mock(Resources.class);
+        Mockito.when(resources.getIdentifier(Mockito.eq("icon"), Mockito.anyString(), Mockito.anyString())).thenReturn(5);
+        Mockito.when(context.getResources()).thenReturn(resources);
+
+        Bundle extras = new Bundle();
+
+        extras.putString(PushMessage.EXTRA_ICON, "icon");
+        PushMessage pushMessage = new PushMessage(extras);
+
+        assertEquals("The notification icon resource should match", 5, pushMessage.getIcon(context, 1));
+    }
+
+    /**
+     * Test get notification icon color.
+     */
+    @Test
+    public void testGetIconColor() {
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_ICON_COLOR, "red");
+
+        PushMessage pushMessage = new PushMessage(extras);
+        assertEquals("The notification icon color should match.", -65536, pushMessage.getIconColor(0));
     }
 
     /**
