@@ -3,6 +3,23 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.5.0 - May 31, 2017
+============================
+New Features
+------------
+- Added a getExtra method to the PushMessage class.
+- Added support for setting notification tags from the push API.
+- Added support for overriding the icon color/image from the push API.
+
+Behavior Changes
+----------------
+- Updated the ActionRegistry to lazy-load actions from a resource file.
+- Updated pass requests to use basic access authentication.
+
+Deprecations
+------------
+- Alias is now deprecated. It will be removed in SDK 10.0.0.
+
 Version 8.4.3 - May 24, 2017
 ============================
 Bug Fixes
