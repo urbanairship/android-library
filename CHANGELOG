@@ -3,6 +3,12 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.5.1 - June 1, 2017
+============================
+Bug Fixes
+---------
+- Fixed a rare crash that is caused by GcmNetworkManager throwing an IllegalArgumentException (https://issuetracker.google.com/issues/37113668).
+
 Version 8.5.0 - May 31, 2017
 ============================
 New Features
