@@ -52,7 +52,7 @@ class AlarmScheduler implements Scheduler {
     }
 
     @Override
-    public void schedule(@NonNull Context context, @NonNull Job job) {
+    public void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
         long delay = job.getInitialDelay();
         scheduleIntent(context, job, delay);
     }
@@ -63,7 +63,7 @@ class AlarmScheduler implements Scheduler {
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull Job job) {
+    public void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
         long backOff = job.getSchedulerExtras().getLong(EXTRA_BACKOFF_DELAY, 0);
         if (backOff <= 0) {
             backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
@@ -81,8 +81,10 @@ class AlarmScheduler implements Scheduler {
      * @param context The application context.
      * @param job The job to schedule.
      * @param delay The alarm delay in milliseconds.
+     *
+     * @throws SchedulerException if the schedule fails.
      */
-    private void scheduleIntent(@NonNull Context context, @NonNull Job job, long delay) {
+    private void scheduleIntent(@NonNull Context context, @NonNull Job job, long delay) throws SchedulerException {
         Intent intent = AirshipService.createIntent(context, job)
                                       .addCategory(UAStringUtil.isEmpty(job.getTag()) ? UUID.randomUUID().toString() : job.getTag());
 
@@ -93,8 +95,14 @@ class AlarmScheduler implements Scheduler {
         try {
             Logger.verbose("AlarmScheduler - Scheduling job: " + job + " with delay: " + delay);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
-        } catch (SecurityException e) {
+        } catch (RuntimeException e) {
+
+            // Some Samsung will throw a security exception if more than 500 alarms are being used. This usually
+            // happens if the app or another library scheduling alarms with FLAG_CANCEL_CURRENT instead of
+            // FLAG_UPDATE_CURRENT
+
             Logger.error("AlarmScheduler - Failed to schedule intent " + intent.getAction(), e);
+            throw new SchedulerException("AlarmScheduler - Failed to schedule intent " + intent.getAction(), e);
         }
     }
 }

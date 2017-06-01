@@ -47,7 +47,7 @@ public class AlarmSchedulerTest extends BaseTestCase {
     }
 
     @Test
-    public void testSchedule() {
+    public void testSchedule() throws SchedulerException {
         Job job = Job.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
 
         scheduler.schedule(context, job);
@@ -55,7 +55,7 @@ public class AlarmSchedulerTest extends BaseTestCase {
     }
 
     @Test
-    public void testScheduleWithTag() {
+    public void testScheduleWithTag() throws SchedulerException {
         Job job = Job.newBuilder()
                      .setInitialDelay(1, TimeUnit.MILLISECONDS)
                      .setTag("tag")
@@ -66,7 +66,7 @@ public class AlarmSchedulerTest extends BaseTestCase {
     }
 
     @Test
-    public void testReschedule() {
+    public void testReschedule() throws SchedulerException {
         Job job = Job.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
 
         // Check 10 retries. The delay should double each time

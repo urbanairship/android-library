@@ -15,16 +15,18 @@ interface Scheduler {
      *
      * @param context The application context.
      * @param tag The job tag to cancel.
+     * @throws SchedulerException if the scheduler fails to cancel.
      */
-    void cancel(@NonNull Context context, @NonNull String tag);
+    void cancel(@NonNull Context context, @NonNull String tag) throws SchedulerException;
 
     /**
      * Schedules a job.
      *
      * @param context The application context.
      * @param job The job to schedule.
+     * @throws SchedulerException if the scheduler fails to schedule the job.
      */
-    void schedule(@NonNull Context context, @NonNull Job job);
+    void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException;
 
     /**
      * Checks if the job requires scheduling.
@@ -39,6 +41,7 @@ interface Scheduler {
      *
      * @param context The application context.
      * @param job The job.
+     * @throws SchedulerException if the scheduler fails to schedule the job.
      */
-    void reschedule(@NonNull Context context, @NonNull Job job);
+    void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException;
 }

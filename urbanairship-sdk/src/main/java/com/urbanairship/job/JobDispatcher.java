@@ -29,6 +29,7 @@ public class JobDispatcher {
     private final Context context;
     private static JobDispatcher instance;
     private Scheduler scheduler;
+    private boolean isGcmScheduler = false;
 
     /**
      * Gets the shared instance.
@@ -69,7 +70,7 @@ public class JobDispatcher {
     public void wakefulDispatch(@NonNull Job job) {
         if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
             Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires rescheduling.");
-            getScheduler().reschedule(context, job);
+            dispatch(job);
             return;
         }
 
@@ -77,14 +78,13 @@ public class JobDispatcher {
 
         if (getScheduler().requiresScheduling(context, job)) {
             Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires scheduling.");
-            getScheduler().schedule(context, job);
+            dispatch(job);
             return;
         }
 
         if (job.getTag() != null) {
             cancel(job.getTag());
         }
-
 
         WakefulBroadcastReceiver.startWakefulService(context, AirshipService.createIntent(context, job));
     }
@@ -95,22 +95,46 @@ public class JobDispatcher {
      * @param job The job.
      */
     public void dispatch(@NonNull Job job) {
+        try {
+            dispatchHelper(job);
+        } catch (SchedulerException e) {
+            Logger.error("Scheduler failed to schedule job", e);
+
+            if (isGcmScheduler) {
+                Logger.info("Falling back to Alarm Scheduler.");
+                scheduler = new AlarmScheduler();
+                isGcmScheduler = false;
+                dispatch(job);
+            }
+        }
+    }
+
+    /**
+     * Helper method to dispatch jobs.
+     *
+     * @param job The job.
+     */
+    private void dispatchHelper(Job job) throws SchedulerException {
+        // If it was already dispatched reschedule the job
         if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
             getScheduler().reschedule(context, job);
             return;
         }
 
-        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
-
+        // If it requires scheduling due to delay or network connectivity schedule the job
         if (getScheduler().requiresScheduling(context, job)) {
             getScheduler().schedule(context, job);
+            job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
             return;
         }
 
+        // Cancel any jobs with the same tag
         if (job.getTag() != null) {
             cancel(job.getTag());
         }
 
+        // Otherwise start the service directly
+        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
         context.startService(AirshipService.createIntent(context, job));
     }
 
@@ -120,7 +144,18 @@ public class JobDispatcher {
      * @param tag The job's tag.
      */
     public void cancel(@NonNull String tag) {
-        getScheduler().cancel(context, tag);
+        try {
+            getScheduler().cancel(context, tag);
+        } catch (SchedulerException e) {
+            Logger.error("Scheduler failed to cancel job with tag: " + tag, e);
+
+            if (isGcmScheduler) {
+                Logger.info("Falling back to Alarm Scheduler.");
+                scheduler = new AlarmScheduler();
+                isGcmScheduler = false;
+                cancel(tag);
+            }
+        }
     }
 
     /**
@@ -134,6 +169,7 @@ public class JobDispatcher {
             try {
                 if (PlayServicesUtils.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS && PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable()) {
                     scheduler = new GcmScheduler();
+                    isGcmScheduler = true;
                 } else {
                     scheduler = new AlarmScheduler();
                 }

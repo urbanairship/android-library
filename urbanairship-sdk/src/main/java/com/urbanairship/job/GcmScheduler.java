@@ -46,7 +46,7 @@ class GcmScheduler implements Scheduler {
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull Job job) {
+    public void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
         if (!job.getSchedulerExtras().getBoolean(EXTRA_GCM_TASK, false)) {
             // Retry is handled by GcmNetworkManager
             return;
@@ -55,8 +55,9 @@ class GcmScheduler implements Scheduler {
         scheduleJob(context, job, INITIAL_RETRY_SECONDS);
     }
 
+
     @Override
-    public void schedule(@NonNull Context context, @NonNull Job job) {
+    public void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
         long windowStart = TimeUnit.MILLISECONDS.toSeconds(job.getInitialDelay());
         scheduleJob(context, job, windowStart);
     }
@@ -67,8 +68,10 @@ class GcmScheduler implements Scheduler {
      * @param context The application context.
      * @param job The job.
      * @param secondsDelay Minimum amount of time in seconds to delay the job.
+     *
+     * @throws SchedulerException if the schedule fails.
      */
-    private void scheduleJob(@NonNull Context context, @NonNull Job job, long secondsDelay) {
+    private void scheduleJob(@NonNull Context context, @NonNull Job job, long secondsDelay) throws SchedulerException {
         job.getSchedulerExtras().putBoolean(EXTRA_GCM_TASK, true);
 
         OneoffTask.Builder builder = new OneoffTask.Builder()
@@ -82,9 +85,15 @@ class GcmScheduler implements Scheduler {
             builder.setRequiredNetwork(Task.NETWORK_STATE_CONNECTED);
         }
 
-        OneoffTask task = builder.build();
+        try {
+            OneoffTask task = builder.build();
 
-        Logger.verbose("GcmScheduler: Scheduling task: " + task + " for job: " + job);
-        GcmNetworkManager.getInstance(context).schedule(task);
+            Logger.verbose("GcmScheduler: Scheduling task: " + task + " for job: " + job);
+            GcmNetworkManager.getInstance(context).schedule(task);
+        } catch (RuntimeException e) {
+            // https://issuetracker.google.com/issues/37113668
+            throw new SchedulerException("GcmScheduler failed to schedule job.", e);
+        }
+
     }
 }

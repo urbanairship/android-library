@@ -61,7 +61,7 @@ public class JobDispatcherTest extends BaseTestCase {
     }
 
     @Test
-    public void testWakefulDispatch() {
+    public void testWakefulDispatch() throws SchedulerException {
         dispatcher.wakefulDispatch(job);
 
         Intent intent = ShadowApplication.getInstance().getNextStartedService();
@@ -78,7 +78,7 @@ public class JobDispatcherTest extends BaseTestCase {
     }
 
     @Test
-    public void testReschedule() {
+    public void testReschedule() throws SchedulerException {
         dispatcher.dispatch(job);
 
         // Second dispatch will call reschedule
@@ -92,14 +92,14 @@ public class JobDispatcherTest extends BaseTestCase {
     }
 
     @Test
-    public void testScheduleJob() {
+    public void testScheduleJob() throws SchedulerException {
         when(mockScheduler.requiresScheduling(any(Context.class), eq(job))).thenReturn(true);
         dispatcher.dispatch(job);
         verify(mockScheduler).schedule(any(Context.class), eq(job));
     }
 
     @Test
-    public void testCancel() {
+    public void testCancel() throws SchedulerException {
         dispatcher.cancel("tag");
         verify(mockScheduler).cancel(any(Context.class), eq("tag"));
     }
