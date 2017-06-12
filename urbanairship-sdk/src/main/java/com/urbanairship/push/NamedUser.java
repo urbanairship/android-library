@@ -5,7 +5,9 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
@@ -80,7 +82,10 @@ public class NamedUser extends AirshipComponent {
      * @hide
      */
     @Override
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @WorkerThread
+    @Job.JobResult
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (namedUserJobHandler == null) {
             namedUserJobHandler = new NamedUserJobHandler(context, airship, preferenceDataStore);
         }

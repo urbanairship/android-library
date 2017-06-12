@@ -7,6 +7,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.ActivityMonitor;
@@ -130,7 +131,8 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     @Override
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (analyticsJobHandler == null) {
             analyticsJobHandler = new AnalyticsJobHandler(context, airship, preferenceDataStore);
         }

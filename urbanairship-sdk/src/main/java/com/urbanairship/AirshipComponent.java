@@ -27,7 +27,7 @@ public abstract class AirshipComponent {
      *
      * @hide
      */
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void init() {}
 
     /**
@@ -36,7 +36,7 @@ public abstract class AirshipComponent {
      *
      * @hide
      */
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void tearDown() {}
 
     /**
@@ -47,7 +47,7 @@ public abstract class AirshipComponent {
      * @hide
      */
     @NonNull
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public Executor getJobExecutor(Job job) {
         return jobExecutor;
     }
@@ -62,7 +62,8 @@ public abstract class AirshipComponent {
      */
     @WorkerThread
     @Job.JobResult
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         return Job.JOB_FINISHED;
     }
 

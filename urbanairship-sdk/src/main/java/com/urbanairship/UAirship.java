@@ -14,6 +14,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.util.Log;
 
 import com.urbanairship.actions.ActionRegistry;
@@ -741,7 +742,14 @@ public class UAirship {
         return platform;
     }
 
-    List<AirshipComponent> getComponents() {
+    /**
+     * Returns a list of all the top level airship components.
+     *
+     * @return The list of all the top level airship components.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public List<AirshipComponent> getComponents() {
         if (components == null) {
             // Initialize the rest of the AirshipComponents
             components = new ArrayList<>();

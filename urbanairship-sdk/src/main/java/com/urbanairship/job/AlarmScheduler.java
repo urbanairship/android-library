@@ -11,9 +11,6 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
-import com.urbanairship.util.UAStringUtil;
-
-import java.util.UUID;
 
 /**
  * Alarm based job scheduler. Only supports {@link Job#getInitialDelay()}.
@@ -54,6 +51,9 @@ class AlarmScheduler implements Scheduler {
     @Override
     public void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
         long delay = job.getInitialDelay();
+        if (delay <= 0) {
+            delay = DEFAULT_STARTING_BACK_OFF_TIME_MS;
+        }
         scheduleIntent(context, job, delay);
     }
 
@@ -86,7 +86,7 @@ class AlarmScheduler implements Scheduler {
      */
     private void scheduleIntent(@NonNull Context context, @NonNull Job job, long delay) throws SchedulerException {
         Intent intent = AirshipService.createIntent(context, job)
-                                      .addCategory(UAStringUtil.isEmpty(job.getTag()) ? UUID.randomUUID().toString() : job.getTag());
+                                      .addCategory(job.getTag());
 
         // Schedule the intent
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

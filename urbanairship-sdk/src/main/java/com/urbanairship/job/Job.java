@@ -12,6 +12,7 @@ import com.urbanairship.AirshipComponent;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
@@ -67,7 +68,7 @@ public class Job {
         this.action = builder.action == null ? "" : builder.action;
         this.airshipComponentName = builder.airshipComponentName;
         this.extras = builder.extras == null ? new Bundle() : new Bundle(builder.extras);
-        this.tag = builder.tag;
+        this.tag = builder.tag == null ? UUID.randomUUID().toString() : builder.tag;
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired;
         this.initialDelay = builder.initialDelay;
         this.schedulerExtras = builder.schedulerExtras == null ? new Bundle() : new Bundle(builder.schedulerExtras);

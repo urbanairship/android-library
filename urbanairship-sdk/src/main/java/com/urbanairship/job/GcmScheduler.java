@@ -12,7 +12,6 @@ import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.Task;
 import com.urbanairship.Logger;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,7 +46,7 @@ class GcmScheduler implements Scheduler {
 
     @Override
     public void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
-        if (!job.getSchedulerExtras().getBoolean(EXTRA_GCM_TASK, false)) {
+        if (job.getSchedulerExtras().getBoolean(EXTRA_GCM_TASK, false)) {
             // Retry is handled by GcmNetworkManager
             return;
         }
@@ -77,7 +76,7 @@ class GcmScheduler implements Scheduler {
         OneoffTask.Builder builder = new OneoffTask.Builder()
                 .setService(AirshipGcmTaskService.class)
                 .setExtras(job.toBundle())
-                .setTag(job.getTag() == null ? UUID.randomUUID().toString() : job.getTag())
+                .setTag(job.getTag())
                 .setUpdateCurrent(true)
                 .setExecutionWindow(secondsDelay, secondsDelay + WINDOW_EXECUTION_SECONDS);
 

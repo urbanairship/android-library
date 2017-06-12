@@ -6,7 +6,9 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
@@ -325,8 +327,10 @@ public class PushManager extends AirshipComponent {
     /**
      * @hide
      */
+    @WorkerThread
     @Job.JobResult
-    protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
         switch (job.getAction()) {
             case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:

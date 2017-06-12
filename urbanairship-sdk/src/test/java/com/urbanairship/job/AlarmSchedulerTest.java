@@ -91,12 +91,7 @@ public class AlarmSchedulerTest extends BaseTestCase {
         assertEquals(new ComponentName(context, AirshipService.class), intent.getComponent());
         assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
         assertBundlesEquals(job.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
-
-        if (job.getTag() != null) {
-            assertEquals("tag", intent.getCategories().iterator().next());
-        } else {
-            assertEquals(1, intent.getCategories().size());
-        }
+        assertEquals(job.getTag(), intent.getCategories().iterator().next());
 
         long expectedTriggerTime = SystemClock.elapsedRealtime() + delay;
         // Verify the alarm is within 100 milliseconds
