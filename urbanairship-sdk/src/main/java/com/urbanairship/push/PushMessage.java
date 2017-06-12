@@ -2,7 +2,6 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -194,6 +193,11 @@ public class PushMessage implements Parcelable {
      * The extra key for the tag to be used when posting a notification.
      */
     public static final String EXTRA_NOTIFICATION_TAG = "com.urbanairship.notification_tag";
+
+    /**
+     * The extra key for the channel to be used when posting a notification.
+     */
+    public static final String EXTRA_NOTIFICATION_CHANNEL = "com.urbanairship.notification_channel";
 
     /**
      * Default sound name.
@@ -582,6 +586,17 @@ public class PushMessage implements Parcelable {
     public String getNotificationTag() {
         return pushBundle.getString(EXTRA_NOTIFICATION_TAG);
     }
+
+    /**
+     * Returns the notification channel that should be used when posting the notification.
+     *
+     * @return Either the notification channel or {@code null} if the channel is not available.
+     */
+    @Nullable
+    public String getNotificationChannel() {
+        return pushBundle.getString(EXTRA_NOTIFICATION_CHANNEL);
+    }
+
 
     @Override
     public boolean equals(Object o) {

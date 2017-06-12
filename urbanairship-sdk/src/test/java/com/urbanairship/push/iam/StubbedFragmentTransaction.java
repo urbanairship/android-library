@@ -69,6 +69,11 @@ public class StubbedFragmentTransaction extends FragmentTransaction {
     }
 
     @Override
+    public FragmentTransaction setPrimaryNavigationFragment(Fragment fragment) {
+        return this;
+    }
+
+    @Override
     public boolean isEmpty() {
         return false;
     }
@@ -140,6 +145,16 @@ public class StubbedFragmentTransaction extends FragmentTransaction {
     @NonNull
     @Override
     public FragmentTransaction setBreadCrumbShortTitle(CharSequence text) {
+        return this;
+    }
+
+    @Override
+    public FragmentTransaction setReorderingAllowed(boolean b) {
+        return this;
+    }
+
+    @Override
+    public FragmentTransaction runOnCommit(Runnable runnable) {
         return this;
     }
 
