@@ -51,13 +51,24 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             return;
         }
 
+        final boolean isOrderedBroadcast = isOrderedBroadcast();
+        final PendingResult result;
+
+
         switch (intent.getAction()) {
             case ACTION_GCM_RECEIVE:
-                PushProviderBridge.receivedPush(context, GcmPushProvider.class, intent.getExtras());
+                result = goAsync();
+                PushProviderBridge.receivedPush(context, GcmPushProvider.class, intent.getExtras(), new PushProviderBridge.Callback() {
+                    @Override
+                    public void onFinish() {
+                        if (isOrderedBroadcast) {
+                            result.setResultCode(Activity.RESULT_OK);
+                        }
 
-                if (this.isOrderedBroadcast()) {
-                    this.setResultCode(Activity.RESULT_OK);
-                }
+                        result.finish();
+                    }
+                });
+
 
                 break;
 
@@ -67,7 +78,16 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 break;
 
             case ACTION_GCM_REGISTRATION:
-                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class);
+                result = goAsync();
+                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class, new PushProviderBridge.Callback() {
+                    @Override
+                    public void onFinish() {
+                        if (isOrderedBroadcast) {
+                            result.setResultCode(Activity.RESULT_OK);
+                        }
+                        result.finish();
+                    }
+                });
 
                 break;
         }
@@ -98,12 +118,11 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         // Send the intent to the InstanceIdService or the GcmIntentService
         try {
-
             ComponentName componentName = startWakefulService(context, intent);
             if (isOrderedBroadcast()) {
                 setResultCode(componentName == null ? 404 : Activity.RESULT_OK);
             }
-        } catch (SecurityException e) {
+        } catch (IllegalStateException | SecurityException e) {
             Logger.error("GcmPushReceiver - Error while delivering the message to the serviceIntent", e);
             if (this.isOrderedBroadcast()) {
                 this.setResultCode(401);

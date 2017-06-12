@@ -7,15 +7,26 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 
+import java.util.UUID;
+
 /**
  * {@link PushProvider} callback methods.
+ *
  * @hide
  */
 public abstract class PushProviderBridge {
+
+    /**
+     * Callback when the push provider methods finish.
+     */
+    public interface Callback {
+        void onFinish();
+    }
 
     final static String EXTRA_REGISTRATION_ID = "com.urbanairship.EXTRA_REGISTRATION_ID";
     final static String EXTRA_PROVIDER_CLASS = "com.urbanairship.EXTRA_PROVIDER_CLASS";
@@ -26,8 +37,9 @@ public abstract class PushProviderBridge {
      *
      * @param context The application context.
      * @param provider The provider's class.
+     * @param callback Callback when registration finishes updating.
      */
-    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull Class<? extends PushProvider> provider) {
+    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, final Callback callback) {
         Bundle extras = new Bundle();
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
@@ -39,7 +51,20 @@ public abstract class PushProviderBridge {
                             .setExtras(extras)
                             .build();
 
-        JobDispatcher.shared(context).wakefulDispatch(messageJob);
+        if (JobDispatcher.shared(context).wakefulDispatch(messageJob)) {
+            if (callback != null) {
+                callback.onFinish();
+            }
+        } else {
+            JobDispatcher.shared(context).runJob(messageJob, new JobDispatcher.Callback() {
+                @Override
+                public void onFinish(Job job, @Job.JobResult int result) {
+                    if (callback != null) {
+                        callback.onFinish();
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -48,8 +73,9 @@ public abstract class PushProviderBridge {
      * @param context The application context.
      * @param provider The provider's class.
      * @param registrationId The registration Id.
+     * @param callback Callback when the registration finishes.
      */
-    public static void registrationFinished(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @Nullable String registrationId) {
+    public static void registrationFinished(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @Nullable String registrationId, final Callback callback) {
         Bundle extras = new Bundle();
         extras.putString(EXTRA_REGISTRATION_ID, registrationId);
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
@@ -60,7 +86,20 @@ public abstract class PushProviderBridge {
                             .setExtras(extras)
                             .build();
 
-        JobDispatcher.shared(context).wakefulDispatch(messageJob);
+        if (JobDispatcher.shared(context).wakefulDispatch(messageJob)) {
+            if (callback != null) {
+                callback.onFinish();
+            }
+        } else {
+            JobDispatcher.shared(context).runJob(messageJob, new JobDispatcher.Callback() {
+                @Override
+                public void onFinish(Job job, @Job.JobResult int result) {
+                    if (callback != null) {
+                        callback.onFinish();
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -69,18 +108,34 @@ public abstract class PushProviderBridge {
      * @param context The application context.
      * @param provider The provider's class.
      * @param pushBundle The push message bundle.
+     * @param callback Callback when the push finishing processing.
      */
-    public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull Bundle pushBundle) {
+    @WorkerThread
+    public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull Bundle pushBundle, final Callback callback) {
         Bundle extras = new Bundle();
         extras.putBundle(EXTRA_PUSH_BUNDLE, pushBundle);
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
         Job messageJob = Job.newBuilder()
                             .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
+                            .setTag(UUID.randomUUID().toString())
                             .setAirshipComponent(PushManager.class)
                             .setExtras(extras)
                             .build();
 
-        JobDispatcher.shared(context).wakefulDispatch(messageJob);
+        if (JobDispatcher.shared(context).wakefulDispatch(messageJob)) {
+            if (callback != null) {
+                callback.onFinish();
+            }
+        } else {
+            JobDispatcher.shared(context).runJob(messageJob, new JobDispatcher.Callback() {
+                @Override
+                public void onFinish(Job job, @Job.JobResult int result) {
+                    if (callback != null) {
+                        callback.onFinish();
+                    }
+                }
+            });
+        }
     }
 }
