@@ -2,6 +2,7 @@
 
 package com.urbanairship.job;
 
+import android.Manifest;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -11,6 +12,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.Task;
 import com.urbanairship.Logger;
+import com.urbanairship.util.ManifestUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -79,6 +81,10 @@ class GcmScheduler implements Scheduler {
                 .setTag(jobInfo.getTag())
                 .setUpdateCurrent(true)
                 .setExecutionWindow(secondsDelay, secondsDelay + WINDOW_EXECUTION_SECONDS);
+
+        if (jobInfo.isPersistent() && ManifestUtils.isPermissionGranted(Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
+            builder.setPersisted(true);
+        }
 
         if (jobInfo.isNetworkAccessRequired()) {
             builder.setRequiredNetwork(Task.NETWORK_STATE_CONNECTED);
