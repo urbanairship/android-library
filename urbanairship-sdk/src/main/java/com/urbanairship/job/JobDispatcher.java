@@ -3,33 +3,58 @@
 package com.urbanairship.job;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.util.UAStringUtil;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
  * Dispatches jobs. When a job is dispatched with a delay or specifies that it requires network activity,
  * it will be scheduled using either the AlarmManager or GcmNetworkManager. When a job is finally performed,
- * it will start the {@link AirshipService}. The {@link AirshipService} will call {@link com.urbanairship.AirshipComponent#onPerformJob(UAirship, Job)}
+ * it will call {@link com.urbanairship.AirshipComponent#onPerformJob(UAirship, Job)}
  * for the component the job specifies.
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobDispatcher {
 
-    static final String EXTRA_JOB_DISPATCHED = "EXTRA_JOB_DISPATCHED";
+
+    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
 
     private final Context context;
     private static JobDispatcher instance;
     private Scheduler scheduler;
     private boolean isGcmScheduler = false;
+
+    Executor executor = Executors.newSingleThreadExecutor();
+
+    /**
+     * Callback when a job is finished.
+     */
+    public interface Callback {
+
+        /**
+         * Called when a job is finished.
+         *
+         * @param job The job.
+         * @param result The jobInfo's result.
+         */
+        void onFinish(Job job, @Job.JobResult int result);
+    }
 
     /**
      * Gets the shared instance.
@@ -61,82 +86,88 @@ public class JobDispatcher {
     }
 
     /**
-     * Dispatches a job to be performed immediately with a wakelock. The wakelock will
-     * automatically be released once the job finishes. The job will not have a wakelock on
+     * Dispatches a jobInfo to be performed immediately with a wakelock. The wakelock will
+     * automatically be released once the jobInfo finishes. The jobInfo will not have a wakelock on
      * retries.
      *
-     * @param job The job.
+     * @param jobInfo The jobInfo.
+     * @return {@code true} if the jobInfo was able to be dispatched with a wakelock, otherwise {@code false}.
      */
-    public void wakefulDispatch(@NonNull Job job) {
-        if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
-            Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires rescheduling.");
-            dispatch(job);
-            return;
+    public boolean wakefulDispatch(@NonNull JobInfo jobInfo) {
+        if (getScheduler().requiresScheduling(context, jobInfo)) {
+            Logger.error("JobDispatcher - Unable to wakefulDispatch with a jobInfo that requires scheduling.");
+            return false;
         }
 
-        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
-
-        if (getScheduler().requiresScheduling(context, job)) {
-            Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires scheduling.");
-            dispatch(job);
-            return;
+        Intent intent = AirshipService.createIntent(context, jobInfo);
+        try {
+            WakefulBroadcastReceiver.startWakefulService(context, intent);
+            if (jobInfo.getTag() != null) {
+                cancel(jobInfo.getTag());
+            }
+            return true;
+        } catch (IllegalStateException e) {
+            WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            return false;
         }
-
-        if (job.getTag() != null) {
-            cancel(job.getTag());
-        }
-
-        WakefulBroadcastReceiver.startWakefulService(context, AirshipService.createIntent(context, job));
     }
 
+
     /**
-     * Dispatches a job to be performed immediately.
+     * Dispatches a jobInfo to be performed immediately.
      *
-     * @param job The job.
+     * @param jobInfo The jobInfo.
      */
-    public void dispatch(@NonNull Job job) {
+    public void dispatch(@NonNull JobInfo jobInfo) {
         try {
-            dispatchHelper(job);
+            // Cancel any jobs with the same tag
+            if (jobInfo.getTag() != null) {
+                cancel(jobInfo.getTag());
+            }
+
+            if (getScheduler().requiresScheduling(context, jobInfo)) {
+                getScheduler().schedule(context, jobInfo);
+                return;
+            }
+
+            // Otherwise start the service directly
+            try {
+                context.startService(AirshipService.createIntent(context, jobInfo));
+            } catch (IllegalStateException ex) {
+                getScheduler().schedule(context, jobInfo);
+            }
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to schedule job", e);
+            Logger.error("Scheduler failed to schedule jobInfo", e);
 
             if (isGcmScheduler) {
                 Logger.info("Falling back to Alarm Scheduler.");
                 scheduler = new AlarmScheduler();
                 isGcmScheduler = false;
-                dispatch(job);
+                dispatch(jobInfo);
             }
         }
     }
 
     /**
-     * Helper method to dispatch jobs.
+     * Helper method to reschedule jobs.
      *
-     * @param job The job.
+     * @param jobInfo The jobInfo.
      */
-    private void dispatchHelper(Job job) throws SchedulerException {
-        // If it was already dispatched reschedule the job
-        if (job.getSchedulerExtras().getBoolean(EXTRA_JOB_DISPATCHED, false)) {
-            getScheduler().reschedule(context, job);
-            return;
-        }
+    private void reschedule(JobInfo jobInfo) {
+        try {
+           getScheduler().reschedule(context, jobInfo);
+        } catch (SchedulerException e) {
+            Logger.error("Scheduler failed to schedule jobInfo", e);
 
-        // If it requires scheduling due to delay or network connectivity schedule the job
-        if (getScheduler().requiresScheduling(context, job)) {
-            getScheduler().schedule(context, job);
-            job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
-            return;
+            if (isGcmScheduler) {
+                Logger.info("Falling back to Alarm Scheduler.");
+                scheduler = new AlarmScheduler();
+                isGcmScheduler = false;
+                reschedule(jobInfo);
+            }
         }
-
-        // Cancel any jobs with the same tag
-        if (job.getTag() != null) {
-            cancel(job.getTag());
-        }
-
-        // Otherwise start the service directly
-        job.getSchedulerExtras().putBoolean(EXTRA_JOB_DISPATCHED, true);
-        context.startService(AirshipService.createIntent(context, job));
     }
+
 
     /**
      * Cancels a job based on the job's tag.
@@ -179,5 +210,69 @@ public class JobDispatcher {
         }
 
         return scheduler;
+    }
+
+
+    /**
+     * Runs a jobInfo.
+     *
+     * @param job The job to run.
+     * @param callback Callback when the jobInfo is finished.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void runJob(@NonNull final Job job, @NonNull final Callback callback) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+                if (airship == null) {
+                    Logger.error("JobDispatcher - UAirship not ready. Rescheduling job: " + job);
+                    callback.onFinish(job, Job.JOB_RETRY);
+                    return;
+                }
+
+                final AirshipComponent component = findAirshipComponent(airship, job.getJobInfo().getAirshipComponentName());
+                if (component == null) {
+                    Logger.error("JobDispatcher - Unavailable to find airship components for job: " + job);
+                    callback.onFinish(job, Job.JOB_FINISHED);
+                    return;
+                }
+
+                component.getJobExecutor(job).execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        int result = component.onPerformJob(airship, job);
+                        Logger.verbose("JobDispatcher - Job finished: " + job + " with result: " + result);
+
+                        if (result == Job.JOB_RETRY) {
+                            reschedule(job.getJobInfo());
+                        }
+
+                        callback.onFinish(job, result);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Finds the {@link AirshipComponent}s for a given job.
+     *
+     * @param componentClassName The component's class name.
+     * @param airship The airship instance.
+     * @return The airship component.
+     */
+    private AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
+        if (UAStringUtil.isEmpty(componentClassName)) {
+            return null;
+        }
+
+        for (final AirshipComponent component : airship.getComponents()) {
+            if (component.getClass().getName().equals(componentClassName)) {
+                return component;
+            }
+        }
+
+        return null;
     }
 }

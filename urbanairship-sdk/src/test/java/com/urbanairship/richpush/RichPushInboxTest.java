@@ -8,7 +8,7 @@ import com.urbanairship.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Cancelable;
 import com.urbanairship.TestApplication;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 
 import junit.framework.Assert;
@@ -206,10 +206,10 @@ public class RichPushInboxTest extends BaseTestCase {
     public void testFetchMessages() {
         inbox.fetchMessages();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
             }
         }));
     }
@@ -228,10 +228,10 @@ public class RichPushInboxTest extends BaseTestCase {
         inbox.fetchMessages();
 
         // Verify only 1 job was dispatched to refresh the messages
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
             }
         }));
     }
@@ -250,10 +250,10 @@ public class RichPushInboxTest extends BaseTestCase {
         inbox.fetchMessages(callback);
 
         // Verify we dispatched only 1 job
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
             }
         }));
     }
@@ -268,10 +268,10 @@ public class RichPushInboxTest extends BaseTestCase {
 
         inbox.fetchMessages(callback);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
                     return false;
                 }
 
@@ -293,10 +293,10 @@ public class RichPushInboxTest extends BaseTestCase {
 
         inbox.fetchMessages(callback);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
                     return false;
                 }
 
@@ -319,10 +319,10 @@ public class RichPushInboxTest extends BaseTestCase {
         Cancelable cancelable = inbox.fetchMessages(callback);
         cancelable.cancel();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)) {
                     return false;
                 }
 

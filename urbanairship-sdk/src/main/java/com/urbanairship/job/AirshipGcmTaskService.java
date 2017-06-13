@@ -2,12 +2,6 @@
 
 package com.urbanairship.job;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.ResultReceiver;
-
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.TaskParams;
 import com.urbanairship.AirshipService;
@@ -23,65 +17,60 @@ import java.util.concurrent.CountDownLatch;
  */
 public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskService {
 
-
     @Override
     public int onRunTask(TaskParams taskParams) {
-
         if (!PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
-            Logger.error("Google play services is unavailable. Ignoring job requests.");
+            Logger.error("AirshipGcmTaskService: Google play services is unavailable. Ignoring jobInfo requests.");
+            return GcmNetworkManager.RESULT_FAILURE;
+        }
+
+        JobInfo jobInfo = JobInfo.fromBundle(taskParams.getExtras());
+
+        if (jobInfo == null) {
+            Logger.error("AirshipGcmTaskService: Failed to parse jobInfo.");
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        JobResultReceiver resultReceiver = new JobResultReceiver(new Handler(Looper.getMainLooper())) {
+        JobCallback callback = new JobCallback() {
             @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                super.onReceiveResult(resultCode, resultData);
+            public void onFinish(Job job, @Job.JobResult int result) {
+                super.onFinish(job, result);
                 latch.countDown();
             }
         };
 
-        Job job = Job.fromBundle(taskParams.getExtras());
+        Job job = new Job(jobInfo, true);
 
-        Logger.verbose("AirshipGcmTaskService - Starting AirshipService for job: " + job);
-
-        Intent intent = AirshipService.createIntent(getApplicationContext(), job)
-                                      .putExtra(AirshipService.EXTRA_RESULT_RECEIVER, resultReceiver);
-
-        startService(intent);
+        JobDispatcher.shared(getApplicationContext()).runJob(job, callback);
 
         try {
-            Logger.verbose("AirshipGcmTaskService - Waiting for job: " + job + " to complete.");
+            Logger.verbose("AirshipGcmTaskService - Waiting for jobInfo: " + jobInfo + " to complete.");
             latch.await();
         } catch (InterruptedException e) {
             Logger.error("Failed to wait for task: " + taskParams);
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
-        if (resultReceiver.resultCode == Job.JOB_RETRY) {
-            Logger.verbose("AirshipGcmTaskService - Rescheduling job " + job);
+        if (callback.resultCode == Job.JOB_RETRY) {
+            Logger.verbose("AirshipGcmTaskService - Rescheduling jobInfo " + jobInfo);
             return GcmNetworkManager.RESULT_RESCHEDULE;
         } else {
-            Logger.verbose("AirshipGcmTaskService - Job finished: " + job);
+            Logger.verbose("AirshipGcmTaskService - JobInfo finished: " + jobInfo);
             return GcmNetworkManager.RESULT_SUCCESS;
         }
     }
 
     /**
-     * ResultReceiver that captures the result as a field.
+     * JobDispatcher.Callback that captures the result as a field.
      */
-    private static class JobResultReceiver extends ResultReceiver {
+    private static class JobCallback implements JobDispatcher.Callback {
         int resultCode;
 
-        JobResultReceiver(Handler handler) {
-            super(handler);
-        }
-
         @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-            super.onReceiveResult(resultCode, resultData);
-            this.resultCode = resultCode;
+        public void onFinish(Job job, @Job.JobResult int result) {
+            this.resultCode = result;
         }
     }
 }

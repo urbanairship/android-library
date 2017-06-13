@@ -5,7 +5,9 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
@@ -13,6 +15,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.UUID;
@@ -80,7 +83,10 @@ public class NamedUser extends AirshipComponent {
      * @hide
      */
     @Override
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @WorkerThread
+    @Job.JobResult
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (namedUserJobHandler == null) {
             namedUserJobHandler = new NamedUserJobHandler(context, airship, preferenceDataStore);
         }
@@ -185,39 +191,39 @@ public class NamedUser extends AirshipComponent {
      * Dispatches a job to update the named user.
      */
     void dispatchNamedUserUpdateJob() {
-        Job job = Job.newBuilder()
-                     .setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
-                     .setTag(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
-                     .setNetworkAccessRequired(true)
-                     .setAirshipComponent(NamedUser.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                                 .setTag(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(NamedUser.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 
     /**
      * Dispatches a job to clear pending named user tags.
      */
     void dispatchClearTagsJob() {
-        Job job = Job.newBuilder()
-                     .setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
-                     .setAirshipComponent(NamedUser.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
+                                 .setAirshipComponent(NamedUser.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 
     /**
      * Dispatches a job to update the named user tag groups.
      */
     void dispatchUpdateTagGroupsJob() {
-        Job job = Job.newBuilder()
-                     .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                     .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                     .setNetworkAccessRequired(true)
-                     .setAirshipComponent(NamedUser.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(NamedUser.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 }

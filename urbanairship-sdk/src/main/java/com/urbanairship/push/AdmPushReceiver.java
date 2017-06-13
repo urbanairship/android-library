@@ -29,24 +29,47 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
         Logger.verbose("AdmPushReceiver - Received intent: " + intent.getAction());
 
+        final boolean isOrderedBroadcast = isOrderedBroadcast();
+        final PendingResult result;
+
         switch (intent.getAction()) {
             case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
-                PushProviderBridge.receivedPush(context, AdmPushProvider.class, intent.getExtras());
+
+                result = goAsync();
+                PushProviderBridge.receivedPush(context, AdmPushProvider.class, intent.getExtras(), new PushProviderBridge.Callback() {
+                    @Override
+                    public void onFinish() {
+                        if (isOrderedBroadcast) {
+                            result.setResultCode(Activity.RESULT_OK);
+                        }
+                        result.finish();
+                    }
+                });
                 break;
 
             case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
+                result = goAsync();
 
                 if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
                     Logger.error("ADM error occurred: " + intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
                 }
 
                 String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
-                PushProviderBridge.registrationFinished(context, AdmPushProvider.class, registrationID);
+                PushProviderBridge.registrationFinished(context, AdmPushProvider.class, registrationID, new PushProviderBridge.Callback() {
+                    @Override
+                    public void onFinish() {
+                        if (isOrderedBroadcast) {
+                            result.setResultCode(Activity.RESULT_OK);
+                        }
+                        result.finish();;
+                    }
+                });
                 break;
-        }
 
-        if (isOrderedBroadcast()) {
-            setResultCode(Activity.RESULT_OK);
+            default:
+                if (isOrderedBroadcast) {
+                    setResultCode(Activity.RESULT_OK);
+                }
         }
     }
 }

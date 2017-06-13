@@ -27,7 +27,7 @@ public abstract class AirshipComponent {
      *
      * @hide
      */
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void init() {}
 
     /**
@@ -36,7 +36,7 @@ public abstract class AirshipComponent {
      *
      * @hide
      */
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void tearDown() {}
 
     /**
@@ -47,7 +47,7 @@ public abstract class AirshipComponent {
      * @hide
      */
     @NonNull
-    @RestrictTo(RestrictTo.Scope.GROUP_ID)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public Executor getJobExecutor(Job job) {
         return jobExecutor;
     }
@@ -56,13 +56,14 @@ public abstract class AirshipComponent {
      * Called when a scheduled {@link Job} is ready to perform.
      *
      * @param airship The airship instance.
-     * @param job The scheduled job.
-     * @return The result of the job.
+     * @param job The job.
+     * @return The result of the jobInfo.
      * @hide
      */
     @WorkerThread
     @Job.JobResult
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         return Job.JOB_FINISHED;
     }
 

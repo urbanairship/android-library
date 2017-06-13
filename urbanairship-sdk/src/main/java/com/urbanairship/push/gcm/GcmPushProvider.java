@@ -45,7 +45,7 @@ public class GcmPushProvider implements PushProvider {
     @Override
     public void startRegistration(@NonNull Context context) throws IOException, SecurityException {
         String token = getRegistrationToken(context);
-        registrationFinished(context, getClass(), token);
+        registrationFinished(context, getClass(), token, null);
     }
 
     @Override

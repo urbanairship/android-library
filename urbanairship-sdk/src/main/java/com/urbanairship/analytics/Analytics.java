@@ -7,6 +7,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.ActivityMonitor;
@@ -18,6 +19,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
@@ -130,7 +132,9 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     @Override
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Job.JobResult
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (analyticsJobHandler == null) {
             analyticsJobHandler = new AnalyticsJobHandler(context, airship, preferenceDataStore);
         }
@@ -171,18 +175,18 @@ public class Analytics extends AirshipComponent {
         }
 
         Logger.verbose("Analytics - Adding event: " + event.getType());
-        Job addEventJob = Job.newBuilder()
-                             .setAction(AnalyticsJobHandler.ACTION_ADD)
-                             .setAirshipComponent(Analytics.class)
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
-                             .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
-                             .build();
+        JobInfo addEventJobInfo = JobInfo.newBuilder()
+                                         .setAction(AnalyticsJobHandler.ACTION_ADD)
+                                         .setAirshipComponent(Analytics.class)
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
+                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
+                                         .build();
 
-        jobDispatcher.dispatch(addEventJob);
+        jobDispatcher.dispatch(addEventJobInfo);
 
         applyListeners(event);
     }
@@ -294,10 +298,10 @@ public class Analytics extends AirshipComponent {
 
         // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
         if (isAutoTrackAdvertisingIdEnabled()) {
-            jobDispatcher.dispatch(Job.newBuilder()
-                                      .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
-                                      .setAirshipComponent(Analytics.class)
-                                      .build());
+            jobDispatcher.dispatch(JobInfo.newBuilder()
+                                          .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                          .setAirshipComponent(Analytics.class)
+                                          .build());
         }
 
         addEvent(new AppForegroundEvent(timeMS));
@@ -341,10 +345,10 @@ public class Analytics extends AirshipComponent {
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
-            jobDispatcher.dispatch(Job.newBuilder()
-                                      .setAction(AnalyticsJobHandler.ACTION_DELETE_ALL)
-                                      .setAirshipComponent(Analytics.class)
-                                      .build());
+            jobDispatcher.dispatch(JobInfo.newBuilder()
+                                          .setAction(AnalyticsJobHandler.ACTION_DELETE_ALL)
+                                          .setAirshipComponent(Analytics.class)
+                                          .build());
         }
 
         preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
@@ -377,10 +381,10 @@ public class Analytics extends AirshipComponent {
         preferenceDataStore.put(ADVERTISING_ID_AUTO_TRACKING_KEY, enabled);
 
         if (enabled) {
-            jobDispatcher.dispatch(Job.newBuilder()
-                                      .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
-                                      .setAirshipComponent(Analytics.class)
-                                      .build());
+            jobDispatcher.dispatch(JobInfo.newBuilder()
+                                          .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                          .setAirshipComponent(Analytics.class)
+                                          .build());
         }
     }
 
@@ -482,12 +486,12 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        jobDispatcher.dispatch(Job.newBuilder()
-                                  .setAction(AnalyticsJobHandler.ACTION_SEND)
-                                  .setTag(AnalyticsJobHandler.ACTION_SEND)
-                                  .setNetworkAccessRequired(true)
-                                  .setAirshipComponent(Analytics.class)
-                                  .build());
+        jobDispatcher.dispatch(JobInfo.newBuilder()
+                                      .setAction(AnalyticsJobHandler.ACTION_SEND)
+                                      .setTag(AnalyticsJobHandler.ACTION_SEND)
+                                      .setNetworkAccessRequired(true)
+                                      .setAirshipComponent(Analytics.class)
+                                      .build());
     }
 
     /**

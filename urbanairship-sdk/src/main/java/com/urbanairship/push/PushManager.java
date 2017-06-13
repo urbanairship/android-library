@@ -6,7 +6,9 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
@@ -18,6 +20,7 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -297,12 +300,12 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-        Job job = Job.newBuilder()
-                     .setAction(ChannelJobHandler.ACTION_START_REGISTRATION)
-                     .setAirshipComponent(PushManager.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ChannelJobHandler.ACTION_START_REGISTRATION)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
 
         // If we have a channel already check for pending tags
         if (getChannelId() != null) {
@@ -316,7 +319,7 @@ public class PushManager extends AirshipComponent {
     @NonNull
     @Override
     public Executor getJobExecutor(Job job) {
-        if (PushJobHandler.ACTION_RECEIVE_MESSAGE.equals(job.getAction())) {
+        if (PushJobHandler.ACTION_RECEIVE_MESSAGE.equals(job.getJobInfo().getAction())) {
             return PUSH_JOB_EXECUTOR;
         }
         return super.getJobExecutor(job);
@@ -325,9 +328,11 @@ public class PushManager extends AirshipComponent {
     /**
      * @hide
      */
+    @WorkerThread
     @Job.JobResult
-    protected int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
-        switch (job.getAction()) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
+        switch (job.getJobInfo().getAction()) {
             case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
             case ChannelJobHandler.ACTION_REGISTRATION_FINISHED:
@@ -527,14 +532,14 @@ public class PushManager extends AirshipComponent {
      * Update registration.
      */
     public void updateRegistration() {
-        Job job = Job.newBuilder()
-                     .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
-                     .setTag(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
-                     .setNetworkAccessRequired(true)
-                     .setAirshipComponent(PushManager.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setTag(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 
     /**
@@ -955,14 +960,14 @@ public class PushManager extends AirshipComponent {
      * Dispatches a job to update the tag groups.
      */
     void startUpdateTagsService() {
-        Job job = Job.newBuilder()
-                     .setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                     .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                     .setNetworkAccessRequired(true)
-                     .setAirshipComponent(PushManager.class)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 
     /**

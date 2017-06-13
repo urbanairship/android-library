@@ -6,6 +6,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -19,7 +20,9 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionService;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.Job;
 import com.urbanairship.json.JsonException;
@@ -32,6 +35,7 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +100,7 @@ class PushJobHandler {
      */
     @Job.JobResult
     protected int performJob(Job job) {
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_RECEIVE_MESSAGE:
                 onMessageReceived(job);
                 break;
@@ -111,7 +115,7 @@ class PushJobHandler {
      * @param job The received job.
      */
     private void onMessageReceived(@NonNull Job job) {
-        Bundle extras = job.getExtras();
+        Bundle extras = job.getJobInfo().getExtras();
         Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
         String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
 
@@ -162,7 +166,20 @@ class PushJobHandler {
         // Run any actions for the push
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-        ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
+
+        // Try to run actions in the service first
+        try {
+            ActionService.runActions(UAirship.getApplicationContext(), message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
+        } catch (IllegalStateException e) {
+            for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
+
+                ActionRunRequest.createRequest(action.getKey())
+                                .setMetadata(metadata)
+                                .setValue(action.getValue())
+                                .setSituation(Action.SITUATION_PUSH_RECEIVED)
+                                .run();
+            }
+        }
 
         // Store any pending in-app messages
         InAppMessage inAppMessage = message.getInAppMessage();
@@ -213,16 +230,18 @@ class PushJobHandler {
             return null;
         }
 
-        if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
-            // Remove both the vibrate and the DEFAULT_VIBRATE flag
-            notification.vibrate = null;
-            notification.defaults &= ~Notification.DEFAULT_VIBRATE;
-        }
+        if (Build.VERSION.SDK_INT < 26) {
+            if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
+                // Remove both the vibrate and the DEFAULT_VIBRATE flag
+                notification.vibrate = null;
+                notification.defaults &= ~Notification.DEFAULT_VIBRATE;
+            }
 
-        if (!airship.getPushManager().isSoundEnabled() || airship.getPushManager().isInQuietTime()) {
-            // Remove both the sound and the DEFAULT_SOUND flag
-            notification.sound = null;
-            notification.defaults &= ~Notification.DEFAULT_SOUND;
+            if (!airship.getPushManager().isSoundEnabled() || airship.getPushManager().isInQuietTime()) {
+                // Remove both the sound and the DEFAULT_SOUND flag
+                notification.sound = null;
+                notification.defaults &= ~Notification.DEFAULT_SOUND;
+            }
         }
 
         Intent contentIntent = new Intent(context, CoreReceiver.class)
