@@ -4,6 +4,9 @@ package com.urbanairship;
 
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A generic pending result.
  *
@@ -28,6 +31,8 @@ public class PendingResult<T> implements Cancelable {
     @Nullable
     private T result;
 
+    private List<Cancelable> cancelables = new ArrayList<>();
+
 
     public PendingResult(@Nullable ResultCallback<T> callback) {
         this.callback = callback;
@@ -45,6 +50,11 @@ public class PendingResult<T> implements Cancelable {
 
             onCancel();
             isCanceled = true;
+            callback = null;
+            for (Cancelable cancelable : cancelables) {
+                cancelable.cancel();
+            }
+            cancelables.clear();
         }
     }
 
@@ -69,7 +79,10 @@ public class PendingResult<T> implements Cancelable {
             this.result = result;
             if (callback != null) {
                 callback.onResult(result);
+                callback = null;
             }
+
+            cancelables.clear();
         }
     }
 
@@ -84,6 +97,25 @@ public class PendingResult<T> implements Cancelable {
     public boolean isDone() {
         synchronized (this) {
             return isCanceled || result != null;
+        }
+    }
+
+    /**
+     * Adds a {@link CancelableOperation} that will be called when
+     * the pending result is canceled. If the pending result is already canceled the operation
+     * will immediately be canceled.
+     *
+     * @param cancelable
+     */
+    public void addCancelable(Cancelable cancelable) {
+        synchronized (this) {
+            if (isCanceled()) {
+                cancelable.cancel();
+            }
+
+            if (!isDone()) {
+                cancelables.add(cancelable);
+            }
         }
     }
 }

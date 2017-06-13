@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.util.UAStringUtil;
@@ -88,6 +89,7 @@ class StandardLocationAdapter implements LocationAdapter {
     public void disconnect(@NonNull Context context) {
     }
 
+
     @Override
     public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -98,9 +100,10 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    @NonNull
-    public PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
-        return new SingleLocationRequest(context, locationCallback, options);
+    public void requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, PendingResult<Location> pendingResult) {
+        CancelableOperation cancelableOperation = new SingleLocationRequest(context, pendingResult, options);
+        pendingResult.addCancelable(cancelableOperation);
+        cancelableOperation.run();
     }
 
     /**
@@ -163,11 +166,12 @@ class StandardLocationAdapter implements LocationAdapter {
      * Class that encapsulated the actual request to the standard Android
      * location.
      */
-    private class SingleLocationRequest extends PendingResult<Location> {
+    private class SingleLocationRequest extends CancelableOperation {
 
         private final Criteria criteria;
         private final LocationRequestOptions options;
         private String currentProvider = null;
+        private Context context;
 
         private final AndroidLocationListener currentProviderListener;
         private final AndroidLocationListener providerEnabledListeners;
@@ -177,11 +181,12 @@ class StandardLocationAdapter implements LocationAdapter {
          * SingleLocationRequest constructor.
          *
          * @param context The application context.
-         * @param locationCallback The location callback.
+         * @param pendingResult The pending result.
          * @param options The locationRequestOptions.
          */
-        SingleLocationRequest(@NonNull final Context context, @NonNull LocationCallback locationCallback, @NonNull final LocationRequestOptions options) {
-            super(locationCallback);
+        SingleLocationRequest(@NonNull final Context context, final @NonNull PendingResult<Location> pendingResult, @NonNull final LocationRequestOptions options) {
+            super();
+            this.context = context.getApplicationContext();
             this.options = options;
             this.criteria = createCriteria(options);
             this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -190,13 +195,13 @@ class StandardLocationAdapter implements LocationAdapter {
                 @Override
                 public void onLocationChanged(Location location) {
                     stopUpdates();
-                    setResult(location);
+                    pendingResult.setResult(location);
                 }
 
                 @Override
                 public void onProviderDisabled(String provider) {
                     Logger.verbose("StandardLocationAdapter - Provider disabled: " + provider);
-                    synchronized (this) {
+                    synchronized (SingleLocationRequest.this) {
                         if (!isDone()) {
                             listenForLocationChanges(context);
                         }
@@ -208,7 +213,7 @@ class StandardLocationAdapter implements LocationAdapter {
                 @Override
                 public void onProviderEnabled(String provider) {
                     Logger.verbose("StandardLocationAdapter - Provider enabled: " + provider);
-                    synchronized (this) {
+                    synchronized (SingleLocationRequest.this) {
                         if (!isDone()) {
                             String bestProvider = getBestProvider(context, criteria, options);
                             if (bestProvider != null && !bestProvider.equals(currentProvider)) {
@@ -218,7 +223,10 @@ class StandardLocationAdapter implements LocationAdapter {
                     }
                 }
             };
+        }
 
+        @Override
+        protected void onRun() {
             if (options.getPriority() != LocationRequestOptions.PRIORITY_NO_POWER) {
                 listenForProvidersEnabled();
             }

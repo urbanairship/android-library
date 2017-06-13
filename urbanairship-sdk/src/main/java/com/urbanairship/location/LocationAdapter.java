@@ -20,12 +20,12 @@ public interface LocationAdapter {
      * Requests a single location update.
      *
      * @param context The application context.
-     * @param locationCallback The location callback.
      * @param options The location request options.
+     * @param pendingResult The pending location result.
      * @return PendingLocationResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options);
+    void requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, PendingResult<Location> pendingResult);
 
     /**
      * Cancels location updates.

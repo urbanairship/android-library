@@ -60,10 +60,10 @@ class UALocationProvider {
         this.adapters.addAll(Arrays.asList(adapters));
     }
 
-
     /**
      * Cancels all location requests for the connected adapter's pending intent.
      */
+    @WorkerThread
     void cancelRequests() {
         Logger.verbose("UALocationProvider - Canceling location requests.");
         connect();
@@ -89,6 +89,7 @@ class UALocationProvider {
      * @param options The request options.
      * @throws IllegalStateException if the provider is not connected.
      */
+    @WorkerThread
     void requestLocationUpdates(@NonNull LocationRequestOptions options) {
         connect();
 
@@ -109,28 +110,24 @@ class UALocationProvider {
     /**
      * Requests a single location update.
      *
-     * @param locationCallback The location callback.
+     * @param pendingResult The pending result.
      * @param options The request options.
      * @return A pending location result.
-     * @throws IllegalStateException if the provider is not connected.
      */
-    @Nullable
-    PendingResult<Location> requestSingleLocation(@NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+    @WorkerThread
+    void requestSingleLocation(final PendingResult<Location> pendingResult, @NonNull LocationRequestOptions options) {
         connect();
-
 
         if (connectedAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
-            return null;
         }
 
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
 
         try {
-            return connectedAdapter.requestSingleLocation(context, locationCallback, options);
+            connectedAdapter.requestSingleLocation(context, options, pendingResult);
         } catch (Exception ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
-            return null;
         }
     }
 
@@ -181,7 +178,7 @@ class UALocationProvider {
     /**
      * Disconnects the provider and cancel any location requests.
      */
-    void onDestroy() {
+    void disconnect() {
         if (!isConnected) {
             return;
         }
@@ -201,6 +198,7 @@ class UALocationProvider {
      *
      * @param options Current location request options.
      */
+    @WorkerThread
     void onSystemLocationProvidersChanged(@NonNull LocationRequestOptions options) {
         Logger.verbose("UALocationProvider - Available location providers changed.");
 
@@ -217,6 +215,7 @@ class UALocationProvider {
      *
      * @return {@code true} if updates are being requested, otherwise {@code false}.
      */
+    @WorkerThread
     boolean areUpdatesRequested() {
         connect();
 

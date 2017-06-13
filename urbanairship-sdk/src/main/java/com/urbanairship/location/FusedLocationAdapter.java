@@ -9,8 +9,9 @@ import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
@@ -19,6 +20,7 @@ import java.util.concurrent.Semaphore;
 
 /**
  * Location adapter for Google's fused location provider.
+ *
  * @hide
  */
 class FusedLocationAdapter implements LocationAdapter {
@@ -27,12 +29,14 @@ class FusedLocationAdapter implements LocationAdapter {
     private GoogleApiClient client;
 
     @Override
-    public PendingResult<Location> requestSingleLocation(@NonNull Context context, @NonNull LocationCallback locationCallback, @NonNull LocationRequestOptions options) {
+    public void requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, final PendingResult<Location> pendingResult) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
-            return null;
         }
-        return new SingleLocationRequest(locationCallback, options);
+
+        CancelableOperation cancelableOperation = new SingleLocationRequest(pendingResult, options);
+        pendingResult.addCancelable(cancelableOperation);
+        cancelableOperation.run();
     }
 
     @Override
@@ -49,7 +53,6 @@ class FusedLocationAdapter implements LocationAdapter {
 
     @Override
     public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
-
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
             return;
@@ -171,7 +174,7 @@ class FusedLocationAdapter implements LocationAdapter {
      * Class that encapsulated the actual request to the play service's fused
      * location provider.
      */
-    private class SingleLocationRequest extends PendingResult<Location> {
+    private class SingleLocationRequest extends CancelableOperation {
 
         private final LocationRequest locationRequest;
         private final com.google.android.gms.location.LocationListener fusedLocationListener;
@@ -179,31 +182,33 @@ class FusedLocationAdapter implements LocationAdapter {
         /**
          * FusedLocationRequest constructor.
          *
-         * @param locationCallback The location callback.
+         * @param pendingResult The pending result.
          * @param options LocationRequestOptions options.
          */
-        SingleLocationRequest(LocationCallback locationCallback, LocationRequestOptions options) {
-            super(locationCallback);
-            this.locationRequest = createLocationRequest(options);
-            locationRequest.setNumUpdates(1);
-
+        SingleLocationRequest(final PendingResult<Location> pendingResult, LocationRequestOptions options) {
+            super(Looper.getMainLooper());
             this.fusedLocationListener = new com.google.android.gms.location.LocationListener() {
                 @Override
                 public void onLocationChanged(Location location) {
-                    setResult(location);
+                    pendingResult.setResult(location);
                 }
             };
 
-            Logger.verbose("FusedLocationAdapter - Starting single location request.");
-
-            //noinspection MissingPermission
-            LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, fusedLocationListener, Looper.myLooper());
+            this.locationRequest = createLocationRequest(options)
+                    .setNumUpdates(1);
         }
 
         @Override
         protected void onCancel() {
             Logger.verbose("FusedLocationAdapter - Canceling single location request.");
             LocationServices.FusedLocationApi.removeLocationUpdates(client, fusedLocationListener);
+        }
+
+        @Override
+        protected void onRun() {
+            Logger.verbose("FusedLocationAdapter - Starting single location request.");
+            //noinspection MissingPermission
+            LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, fusedLocationListener, Looper.getMainLooper());
         }
     }
 }
