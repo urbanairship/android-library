@@ -13,7 +13,7 @@ import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 
 /**
- * Alarm based job scheduler. Only supports {@link Job#getInitialDelay()}.
+ * Alarm based job scheduler. Only supports {@link JobInfo#getInitialDelay()}.
  */
 class AlarmScheduler implements Scheduler {
 
@@ -49,51 +49,51 @@ class AlarmScheduler implements Scheduler {
     }
 
     @Override
-    public void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
-        long delay = job.getInitialDelay();
+    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+        long delay = jobInfo.getInitialDelay();
         if (delay <= 0) {
             delay = DEFAULT_STARTING_BACK_OFF_TIME_MS;
         }
-        scheduleIntent(context, job, delay);
+        scheduleIntent(context, jobInfo, delay);
     }
 
     @Override
-    public boolean requiresScheduling(@NonNull Context context, @NonNull Job job) {
-        return job.getInitialDelay() > 0;
+    public boolean requiresScheduling(@NonNull Context context, @NonNull JobInfo jobInfo) {
+        return jobInfo.getInitialDelay() > 0;
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
-        long backOff = job.getSchedulerExtras().getLong(EXTRA_BACKOFF_DELAY, 0);
+    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+        long backOff = jobInfo.getSchedulerExtras().getLong(EXTRA_BACKOFF_DELAY, 0);
         if (backOff <= 0) {
             backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
         } else {
             backOff = Math.min(backOff * 2, DEFAULT_MAX_BACK_OFF_TIME_MS);
         }
 
-        job.getSchedulerExtras().putLong(EXTRA_BACKOFF_DELAY, backOff);
-        scheduleIntent(context, job, backOff);
+        jobInfo.getSchedulerExtras().putLong(EXTRA_BACKOFF_DELAY, backOff);
+        scheduleIntent(context, jobInfo, backOff);
     }
 
     /**
      * Helper method to schedule alarms.
      *
      * @param context The application context.
-     * @param job The job to schedule.
+     * @param jobInfo The jobInfo to schedule.
      * @param delay The alarm delay in milliseconds.
      *
      * @throws SchedulerException if the schedule fails.
      */
-    private void scheduleIntent(@NonNull Context context, @NonNull Job job, long delay) throws SchedulerException {
-        Intent intent = AirshipService.createIntent(context, job)
-                                      .addCategory(job.getTag());
+    private void scheduleIntent(@NonNull Context context, @NonNull JobInfo jobInfo, long delay) throws SchedulerException {
+        Intent intent = AirshipService.createIntent(context, jobInfo)
+                                      .addCategory(jobInfo.getTag());
 
         // Schedule the intent
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         try {
-            Logger.verbose("AlarmScheduler - Scheduling job: " + job + " with delay: " + delay);
+            Logger.verbose("AlarmScheduler - Scheduling jobInfo: " + jobInfo + " with delay: " + delay);
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delay, pendingIntent);
         } catch (RuntimeException e) {
 

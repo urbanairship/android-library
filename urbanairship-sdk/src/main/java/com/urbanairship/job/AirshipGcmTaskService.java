@@ -17,18 +17,17 @@ import java.util.concurrent.CountDownLatch;
  */
 public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskService {
 
-
     @Override
     public int onRunTask(TaskParams taskParams) {
         if (!PlayServicesUtils.isGooglePlayStoreAvailable(getApplicationContext())) {
-            Logger.error("AirshipGcmTaskService: Google play services is unavailable. Ignoring job requests.");
+            Logger.error("AirshipGcmTaskService: Google play services is unavailable. Ignoring jobInfo requests.");
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
-        Job job = Job.fromBundle(taskParams.getExtras());
+        JobInfo jobInfo = JobInfo.fromBundle(taskParams.getExtras());
 
-        if (job == null) {
-            Logger.error("AirshipGcmTaskService: Failed to parse job.");
+        if (jobInfo == null) {
+            Logger.error("AirshipGcmTaskService: Failed to parse jobInfo.");
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
@@ -42,10 +41,12 @@ public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskSer
             }
         };
 
+        Job job = new Job(jobInfo, true);
+
         JobDispatcher.shared(getApplicationContext()).runJob(job, callback);
 
         try {
-            Logger.verbose("AirshipGcmTaskService - Waiting for job: " + job + " to complete.");
+            Logger.verbose("AirshipGcmTaskService - Waiting for jobInfo: " + jobInfo + " to complete.");
             latch.await();
         } catch (InterruptedException e) {
             Logger.error("Failed to wait for task: " + taskParams);
@@ -53,10 +54,10 @@ public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskSer
         }
 
         if (callback.resultCode == Job.JOB_RETRY) {
-            Logger.verbose("AirshipGcmTaskService - Rescheduling job " + job);
+            Logger.verbose("AirshipGcmTaskService - Rescheduling jobInfo " + jobInfo);
             return GcmNetworkManager.RESULT_RESCHEDULE;
         } else {
-            Logger.verbose("AirshipGcmTaskService - Job finished: " + job);
+            Logger.verbose("AirshipGcmTaskService - JobInfo finished: " + jobInfo);
             return GcmNetworkManager.RESULT_SUCCESS;
         }
     }

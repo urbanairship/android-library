@@ -16,6 +16,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
@@ -136,9 +137,9 @@ class AnalyticsJobHandler {
     public
     @Job.JobResult
     int performJob(Job job) {
-        Logger.verbose("AnalyticsJobHandler - Received job with action: " + job.getAction());
+        Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: " + job.getJobInfo().getAction());
 
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_DELETE_ALL:
                 return onDeleteEvents();
 
@@ -152,7 +153,7 @@ class AnalyticsJobHandler {
                 return onUpdateAdvertisingId();
 
             default:
-                Logger.warn("AnalyticsJobHandler - Unrecognized job with action: " + job.getAction());
+                Logger.warn("AnalyticsJobHandler - Unrecognized jobInfo with action: " + job.getJobInfo().getAction());
                 return Job.JOB_FINISHED;
         }
     }
@@ -227,7 +228,7 @@ class AnalyticsJobHandler {
      *
      * @param job A job containing the event's content values to be added
      * to the database.
-     * @return The job result.
+     * @return The jobInfo result.
      */
     @Job.JobResult
     private int onAddEvent(Job job) {
@@ -235,7 +236,7 @@ class AnalyticsJobHandler {
             return Job.JOB_FINISHED;
         }
 
-        Bundle extras = job.getExtras();
+        Bundle extras = job.getJobInfo().getExtras();
         String eventType = extras.getString(EXTRA_EVENT_TYPE);
         String eventId = extras.getString(EXTRA_EVENT_ID);
         String eventData = extras.getString(EXTRA_EVENT_DATA);
@@ -374,21 +375,21 @@ class AnalyticsJobHandler {
                 return;
             }
 
-            // Cancel the current job
+            // Cancel the current jobInfo
             dispatcher.cancel(ACTION_SEND);
         }
 
         Logger.verbose("AnalyticsJobHandler - Scheduling event uploads in " + milliseconds + "ms.");
 
-        Job job = Job.newBuilder()
-                     .setAction(ACTION_SEND)
-                     .setTag(ACTION_SEND)
-                     .setNetworkAccessRequired(true)
-                     .setAirshipComponent(Analytics.class)
-                     .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_SEND)
+                                 .setTag(ACTION_SEND)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(Analytics.class)
+                                 .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
+                                 .build();
 
-        dispatcher.dispatch(job);
+        dispatcher.dispatch(jobInfo);
 
         preferenceDataStore.put(SCHEDULED_SEND_TIME, sendTime);
         isScheduled = true;

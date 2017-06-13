@@ -21,6 +21,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
 import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
@@ -156,12 +157,12 @@ public class RichPushInbox extends AirshipComponent {
 
             @Override
             public void onBackground(long time) {
-                Job job = Job.newBuilder()
-                             .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                             .setAirshipComponent(RichPushInbox.class)
-                             .build();
+                JobInfo jobInfo = JobInfo.newBuilder()
+                                         .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                                         .setAirshipComponent(RichPushInbox.class)
+                                         .build();
 
-                jobDispatcher.dispatch(job);
+                jobDispatcher.dispatch(jobInfo);
             }
         };
         this.activityMonitor = activityMonitor;
@@ -339,12 +340,12 @@ public class RichPushInbox extends AirshipComponent {
             pendingFetchCallbacks.add(cancelableOperation);
 
             if (!isFetchingMessages) {
-                Job job = Job.newBuilder()
-                             .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                             .setAirshipComponent(RichPushInbox.class)
-                             .build();
+                JobInfo jobInfo = JobInfo.newBuilder()
+                                         .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                                         .setAirshipComponent(RichPushInbox.class)
+                                         .build();
 
-                jobDispatcher.dispatch(job);
+                jobDispatcher.dispatch(jobInfo);
             }
 
             isFetchingMessages = true;

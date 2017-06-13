@@ -41,7 +41,7 @@ public class AdmPushProvider implements PushProvider {
         if (admId == null) {
             AdmWrapper.startRegistration(context);
         } else {
-            PushProviderBridge.registrationFinished(context, AdmPushProvider.class, admId);
+            PushProviderBridge.registrationFinished(context, AdmPushProvider.class, admId, null);
         }
     }
 

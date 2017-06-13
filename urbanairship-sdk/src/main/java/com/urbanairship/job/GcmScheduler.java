@@ -28,12 +28,12 @@ class GcmScheduler implements Scheduler {
     }
 
     @Override
-    public boolean requiresScheduling(@NonNull Context context, @NonNull Job job) {
-        if (job.getInitialDelay() > 0) {
+    public boolean requiresScheduling(@NonNull Context context, @NonNull JobInfo jobInfo) {
+        if (jobInfo.getInitialDelay() > 0) {
             return true;
         }
 
-        if (job.isNetworkAccessRequired()) {
+        if (jobInfo.isNetworkAccessRequired()) {
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
             if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
@@ -45,53 +45,53 @@ class GcmScheduler implements Scheduler {
     }
 
     @Override
-    public void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
-        if (job.getSchedulerExtras().getBoolean(EXTRA_GCM_TASK, false)) {
+    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+        if (jobInfo.getSchedulerExtras().getBoolean(EXTRA_GCM_TASK, false)) {
             // Retry is handled by GcmNetworkManager
             return;
         }
 
-        scheduleJob(context, job, INITIAL_RETRY_SECONDS);
+        scheduleJob(context, jobInfo, INITIAL_RETRY_SECONDS);
     }
 
 
     @Override
-    public void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException {
-        long windowStart = TimeUnit.MILLISECONDS.toSeconds(job.getInitialDelay());
-        scheduleJob(context, job, windowStart);
+    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+        long windowStart = TimeUnit.MILLISECONDS.toSeconds(jobInfo.getInitialDelay());
+        scheduleJob(context, jobInfo, windowStart);
     }
 
     /**
-     * Helper method to schedule a job with GcmNetworkManager.
+     * Helper method to schedule a jobInfo with GcmNetworkManager.
      *
      * @param context The application context.
-     * @param job The job.
-     * @param secondsDelay Minimum amount of time in seconds to delay the job.
+     * @param jobInfo The jobInfo.
+     * @param secondsDelay Minimum amount of time in seconds to delay the jobInfo.
      *
      * @throws SchedulerException if the schedule fails.
      */
-    private void scheduleJob(@NonNull Context context, @NonNull Job job, long secondsDelay) throws SchedulerException {
-        job.getSchedulerExtras().putBoolean(EXTRA_GCM_TASK, true);
+    private void scheduleJob(@NonNull Context context, @NonNull JobInfo jobInfo, long secondsDelay) throws SchedulerException {
+        jobInfo.getSchedulerExtras().putBoolean(EXTRA_GCM_TASK, true);
 
         OneoffTask.Builder builder = new OneoffTask.Builder()
                 .setService(AirshipGcmTaskService.class)
-                .setExtras(job.toBundle())
-                .setTag(job.getTag())
+                .setExtras(jobInfo.toBundle())
+                .setTag(jobInfo.getTag())
                 .setUpdateCurrent(true)
                 .setExecutionWindow(secondsDelay, secondsDelay + WINDOW_EXECUTION_SECONDS);
 
-        if (job.isNetworkAccessRequired()) {
+        if (jobInfo.isNetworkAccessRequired()) {
             builder.setRequiredNetwork(Task.NETWORK_STATE_CONNECTED);
         }
 
         try {
             OneoffTask task = builder.build();
 
-            Logger.verbose("GcmScheduler: Scheduling task: " + task + " for job: " + job);
+            Logger.verbose("GcmScheduler: Scheduling task: " + task + " for jobInfo: " + jobInfo);
             GcmNetworkManager.getInstance(context).schedule(task);
         } catch (RuntimeException e) {
             // https://issuetracker.google.com/issues/37113668
-            throw new SchedulerException("GcmScheduler failed to schedule job.", e);
+            throw new SchedulerException("GcmScheduler failed to schedule jobInfo.", e);
         }
 
     }

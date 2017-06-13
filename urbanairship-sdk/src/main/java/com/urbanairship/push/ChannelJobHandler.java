@@ -15,6 +15,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -145,7 +146,7 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     protected int performJob(Job job) {
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_START_REGISTRATION:
                 return onStartRegistration();
 
@@ -189,24 +190,24 @@ class ChannelJobHandler {
             isPushRegistering = true;
 
             // Update the push registration
-            Job job = Job.newBuilder()
+            JobInfo jobInfo = JobInfo.newBuilder()
                          .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
                          .setTag(ACTION_UPDATE_PUSH_REGISTRATION)
                          .setNetworkAccessRequired(true)
                          .setAirshipComponent(PushManager.class)
                          .build();
 
-            jobDispatcher.dispatch(job);
+            jobDispatcher.dispatch(jobInfo);
         } else {
             // Update the channel registration
-            Job job = Job.newBuilder()
+            JobInfo jobInfo = JobInfo.newBuilder()
                          .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setAirshipComponent(PushManager.class)
                          .setNetworkAccessRequired(true)
                          .build();
 
-            jobDispatcher.dispatch(job);
+            jobDispatcher.dispatch(jobInfo);
         }
 
         return Job.JOB_FINISHED;
@@ -242,14 +243,14 @@ class ChannelJobHandler {
 
         if (!isPushRegistering) {
             // Update the channel registration
-            Job job = Job.newBuilder()
+            JobInfo jobInfo = JobInfo.newBuilder()
                          .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
                          .setAirshipComponent(PushManager.class)
                          .setNetworkAccessRequired(true)
                          .build();
 
-            jobDispatcher.dispatch(job);
+            jobDispatcher.dispatch(jobInfo);
         }
 
         return Job.JOB_FINISHED;
@@ -263,7 +264,7 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onRegistrationFinished(@NonNull Job job) {
-        Bundle extras = job.getExtras();
+        Bundle extras = job.getJobInfo().getExtras();
         String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
 
         PushProvider provider = pushManager.getPushProvider();
@@ -289,14 +290,14 @@ class ChannelJobHandler {
         isPushRegistering = false;
 
         // Update the channel registration
-        Job channelUpdateJob = Job.newBuilder()
-                                  .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                  .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                  .setNetworkAccessRequired(true)
-                                  .setAirshipComponent(PushManager.class)
-                                  .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(PushManager.class)
+                                 .build();
 
-        jobDispatcher.dispatch(channelUpdateJob);
+        jobDispatcher.dispatch(jobInfo);
 
         return Job.JOB_FINISHED;
     }
@@ -366,14 +367,14 @@ class ChannelJobHandler {
             pushManager.setChannel(null, null);
 
             // Update registration
-            Job channelUpdateJob = Job.newBuilder()
-                                      .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                      .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                      .setNetworkAccessRequired(true)
-                                      .setAirshipComponent(PushManager.class)
-                                      .build();
+            JobInfo jobInfo = JobInfo.newBuilder()
+                                     .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                     .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                     .setNetworkAccessRequired(true)
+                                     .setAirshipComponent(PushManager.class)
+                                     .build();
 
-            jobDispatcher.dispatch(channelUpdateJob);
+            jobDispatcher.dispatch(jobInfo);
 
             return Job.JOB_FINISHED;
         }
@@ -581,7 +582,7 @@ class ChannelJobHandler {
         List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
 
         if (mutations.isEmpty()) {
-            Logger.verbose( "ChannelJobHandler - No pending tag group updates. Skipping update.");
+            Logger.verbose("ChannelJobHandler - No pending tag group updates. Skipping update.");
             return Job.JOB_FINISHED;
         }
 
@@ -609,7 +610,6 @@ class ChannelJobHandler {
         }
 
 
-
         return Job.JOB_FINISHED;
     }
 
@@ -625,7 +625,7 @@ class ChannelJobHandler {
 
         List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
         try {
-            JsonValue jsonValue = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
+            JsonValue jsonValue = JsonValue.parseString(job.getJobInfo().getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
             mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
         } catch (JsonException e) {
             Logger.error("Failed to parse tag group change:", e);
@@ -636,14 +636,14 @@ class ChannelJobHandler {
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
         if (pushManager.getChannelId() != null) {
-            Job updateJob = Job.newBuilder()
+            JobInfo jobInfo = JobInfo.newBuilder()
                                .setAction(ACTION_UPDATE_TAG_GROUPS)
                                .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
                                .setNetworkAccessRequired(true)
                                .setAirshipComponent(PushManager.class)
                                .build();
 
-            jobDispatcher.dispatch(updateJob);
+            jobDispatcher.dispatch(jobInfo);
         }
 
         return Job.JOB_FINISHED;
