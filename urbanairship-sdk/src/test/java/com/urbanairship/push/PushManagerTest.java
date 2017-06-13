@@ -12,7 +12,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -92,10 +92,10 @@ public class PushManagerTest extends BaseTestCase {
     public void testInit() {
        pushManager.init();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_START_REGISTRATION);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_START_REGISTRATION);
             }
         }));
 
@@ -677,11 +677,11 @@ public class PushManagerTest extends BaseTestCase {
                    .removeTags("tagGroup", tagsToRemove)
                    .apply();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
-                        job.getAirshipComponentName().equals(PushManager.class.getName());
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
+                        jobInfo.getAirshipComponentName().equals(PushManager.class.getName());
             }
         }));
     }
@@ -704,10 +704,10 @@ public class PushManagerTest extends BaseTestCase {
         preferenceDataStore.put(PushManager.PUSH_ENABLED_SETTINGS_MIGRATED_KEY, true);
         pushManager.init();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -764,10 +764,10 @@ public class PushManagerTest extends BaseTestCase {
         assertFalse(pushManager.isChannelCreationDelayEnabled());
 
         // Update should be called
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }
@@ -874,10 +874,10 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(tags.contains("existing_tag"));
 
         // A registration update should be triggered
-        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
 
@@ -908,10 +908,10 @@ public class PushManagerTest extends BaseTestCase {
         assertTrue(tags.contains("hi"));
 
 
-        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }

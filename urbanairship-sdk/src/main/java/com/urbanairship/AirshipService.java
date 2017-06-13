@@ -15,6 +15,7 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 
 /**
  * Urban Airship Service.
@@ -29,7 +30,7 @@ public class AirshipService extends Service {
     public static final String ACTION_RUN_JOB = "RUN_JOB";
 
     /**
-     * Job bundle extra. See {@link Job#toBundle()}.
+     * JobInfo bundle extra. See {@link JobInfo#toBundle()}.
      */
     public static final String EXTRA_JOB_BUNDLE = "EXTRA_JOB_BUNDLE";
 
@@ -109,7 +110,8 @@ public class AirshipService extends Service {
             return;
         }
 
-        final Job job = Job.fromBundle(intent.getBundleExtra(EXTRA_JOB_BUNDLE));
+        final JobInfo jobInfo = JobInfo.fromBundle(intent.getBundleExtra(EXTRA_JOB_BUNDLE));
+        Job job = new Job(jobInfo, true);
 
         Logger.verbose("AirshipService - Starting job: " + job + " taskId: " + startId);
         runningJobs++;
@@ -146,16 +148,16 @@ public class AirshipService extends Service {
     }
 
     /**
-     * Creates a service intent for the {@link Job}.
+     * Creates a service intent for the {@link JobInfo}.
      *
      * @param context The application context.
-     * @param job The {@link Job} to run.
+     * @param jobInfo The {@link JobInfo} to run.
      * @return A service intent.
      */
-    public static Intent createIntent(Context context, Job job) {
+    public static Intent createIntent(Context context, JobInfo jobInfo) {
         return new Intent(context, AirshipService.class)
                 .setAction(AirshipService.ACTION_RUN_JOB)
-                .putExtra(AirshipService.EXTRA_JOB_BUNDLE, job.toBundle());
+                .putExtra(AirshipService.EXTRA_JOB_BUNDLE, jobInfo.toBundle());
     }
 
 }

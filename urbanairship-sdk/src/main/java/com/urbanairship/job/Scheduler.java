@@ -20,28 +20,28 @@ interface Scheduler {
     void cancel(@NonNull Context context, @NonNull String tag) throws SchedulerException;
 
     /**
-     * Schedules a job.
+     * Schedules a jobInfo.
      *
      * @param context The application context.
-     * @param job The job to schedule.
-     * @throws SchedulerException if the scheduler fails to schedule the job.
+     * @param jobInfo The jobInfo to schedule.
+     * @throws SchedulerException if the scheduler fails to schedule the jobInfo.
      */
-    void schedule(@NonNull Context context, @NonNull Job job) throws SchedulerException;
+    void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException;
 
     /**
-     * Checks if the job requires scheduling.
+     * Checks if the jobInfo requires scheduling.
      *
-     * @param job The job.
-     * @return {@code true} if the job should be scheduled, otherwise {@code false}.
+     * @param jobInfo The jobInfo.
+     * @return {@code true} if the jobInfo should be scheduled, otherwise {@code false}.
      */
-    boolean requiresScheduling(@NonNull Context context, @NonNull Job job);
+    boolean requiresScheduling(@NonNull Context context, @NonNull JobInfo jobInfo);
 
     /**
-     * Called when the job needs to be rescheduled.
+     * Called when the jobInfo needs to be rescheduled.
      *
      * @param context The application context.
-     * @param job The job.
-     * @throws SchedulerException if the scheduler fails to schedule the job.
+     * @param jobInfo The jobInfo.
+     * @throws SchedulerException if the scheduler fails to schedule the jobInfo.
      */
-    void reschedule(@NonNull Context context, @NonNull Job job) throws SchedulerException;
+    void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException;
 }

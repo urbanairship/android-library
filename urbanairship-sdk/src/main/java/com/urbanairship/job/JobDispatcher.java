@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
  *
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobDispatcher {
 
 
@@ -50,11 +51,10 @@ public class JobDispatcher {
          * Called when a job is finished.
          *
          * @param job The job.
-         * @param result The job's result.
+         * @param result The jobInfo's result.
          */
         void onFinish(Job job, @Job.JobResult int result);
     }
-
 
     /**
      * Gets the shared instance.
@@ -86,24 +86,24 @@ public class JobDispatcher {
     }
 
     /**
-     * Dispatches a job to be performed immediately with a wakelock. The wakelock will
-     * automatically be released once the job finishes. The job will not have a wakelock on
+     * Dispatches a jobInfo to be performed immediately with a wakelock. The wakelock will
+     * automatically be released once the jobInfo finishes. The jobInfo will not have a wakelock on
      * retries.
      *
-     * @param job The job.
-     * @return {@code true} if the job was able to be dispatched with a wakelock, otherwise {@code false}.
+     * @param jobInfo The jobInfo.
+     * @return {@code true} if the jobInfo was able to be dispatched with a wakelock, otherwise {@code false}.
      */
-    public boolean wakefulDispatch(@NonNull Job job) {
-        if (getScheduler().requiresScheduling(context, job)) {
-            Logger.error("JobDispatcher - Unable to wakefulDispatch with a job that requires scheduling.");
+    public boolean wakefulDispatch(@NonNull JobInfo jobInfo) {
+        if (getScheduler().requiresScheduling(context, jobInfo)) {
+            Logger.error("JobDispatcher - Unable to wakefulDispatch with a jobInfo that requires scheduling.");
             return false;
         }
 
-        Intent intent = AirshipService.createIntent(context, job);
+        Intent intent = AirshipService.createIntent(context, jobInfo);
         try {
             WakefulBroadcastReceiver.startWakefulService(context, intent);
-            if (job.getTag() != null) {
-                cancel(job.getTag());
+            if (jobInfo.getTag() != null) {
+                cancel(jobInfo.getTag());
             }
             return true;
         } catch (IllegalStateException e) {
@@ -114,36 +114,36 @@ public class JobDispatcher {
 
 
     /**
-     * Dispatches a job to be performed immediately.
+     * Dispatches a jobInfo to be performed immediately.
      *
-     * @param job The job.
+     * @param jobInfo The jobInfo.
      */
-    public void dispatch(@NonNull Job job) {
+    public void dispatch(@NonNull JobInfo jobInfo) {
         try {
             // Cancel any jobs with the same tag
-            if (job.getTag() != null) {
-                cancel(job.getTag());
+            if (jobInfo.getTag() != null) {
+                cancel(jobInfo.getTag());
             }
 
-            if (getScheduler().requiresScheduling(context, job)) {
-                getScheduler().schedule(context, job);
+            if (getScheduler().requiresScheduling(context, jobInfo)) {
+                getScheduler().schedule(context, jobInfo);
                 return;
             }
 
             // Otherwise start the service directly
             try {
-                context.startService(AirshipService.createIntent(context, job));
+                context.startService(AirshipService.createIntent(context, jobInfo));
             } catch (IllegalStateException ex) {
-                getScheduler().schedule(context, job);
+                getScheduler().schedule(context, jobInfo);
             }
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to schedule job", e);
+            Logger.error("Scheduler failed to schedule jobInfo", e);
 
             if (isGcmScheduler) {
                 Logger.info("Falling back to Alarm Scheduler.");
                 scheduler = new AlarmScheduler();
                 isGcmScheduler = false;
-                dispatch(job);
+                dispatch(jobInfo);
             }
         }
     }
@@ -151,19 +151,19 @@ public class JobDispatcher {
     /**
      * Helper method to reschedule jobs.
      *
-     * @param job The job.
+     * @param jobInfo The jobInfo.
      */
-    private void reschedule(Job job) {
+    private void reschedule(JobInfo jobInfo) {
         try {
-           getScheduler().reschedule(context, job);
+           getScheduler().reschedule(context, jobInfo);
         } catch (SchedulerException e) {
-            Logger.error("Scheduler failed to schedule job", e);
+            Logger.error("Scheduler failed to schedule jobInfo", e);
 
             if (isGcmScheduler) {
                 Logger.info("Falling back to Alarm Scheduler.");
                 scheduler = new AlarmScheduler();
                 isGcmScheduler = false;
-                reschedule(job);
+                reschedule(jobInfo);
             }
         }
     }
@@ -214,10 +214,10 @@ public class JobDispatcher {
 
 
     /**
-     * Runs a job.
+     * Runs a jobInfo.
      *
      * @param job The job to run.
-     * @param callback Callback when the job is finished.
+     * @param callback Callback when the jobInfo is finished.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void runJob(@NonNull final Job job, @NonNull final Callback callback) {
@@ -231,7 +231,7 @@ public class JobDispatcher {
                     return;
                 }
 
-                final AirshipComponent component = findAirshipComponent(airship, job.getAirshipComponentName());
+                final AirshipComponent component = findAirshipComponent(airship, job.getJobInfo().getAirshipComponentName());
                 if (component == null) {
                     Logger.error("JobDispatcher - Unavailable to find airship components for job: " + job);
                     callback.onFinish(job, Job.JOB_FINISHED);
@@ -245,7 +245,7 @@ public class JobDispatcher {
                         Logger.verbose("JobDispatcher - Job finished: " + job + " with result: " + result);
 
                         if (result == Job.JOB_RETRY) {
-                            reschedule(job);
+                            reschedule(job.getJobInfo());
                         }
 
                         callback.onFinish(job, result);

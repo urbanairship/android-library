@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 public class JobDispatcherTest extends BaseTestCase {
 
-    private Job job;
+    private JobInfo jobInfo;
     private JobDispatcher dispatcher;
     private ComponentName airshipServiceComponentName;
     private Scheduler mockScheduler;
@@ -37,12 +37,12 @@ public class JobDispatcherTest extends BaseTestCase {
     public void setup() {
         mockScheduler = mock(Scheduler.class);
 
-        job = Job.newBuilder()
-                 .setAction("test_action")
-                 .setTag("tag")
-                 .setAirshipComponent(PushManager.class)
-                 .putExtra("custom key", "custom value")
-                 .build();
+        jobInfo = JobInfo.newBuilder()
+                         .setAction("test_action")
+                         .setTag("tag")
+                         .setAirshipComponent(PushManager.class)
+                         .putExtra("custom key", "custom value")
+                         .build();
 
         dispatcher = new JobDispatcher(TestApplication.getApplication(), mockScheduler);
         dispatcher.executor = new Executor() {
@@ -57,37 +57,37 @@ public class JobDispatcherTest extends BaseTestCase {
 
     @Test
     public void testDispatch() {
-        when(mockScheduler.requiresScheduling(any(Context.class), eq(job))).thenReturn(false);
+        when(mockScheduler.requiresScheduling(any(Context.class), eq(jobInfo))).thenReturn(false);
 
-        dispatcher.dispatch(job);
+        dispatcher.dispatch(jobInfo);
 
         Intent intent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals(airshipServiceComponentName, intent.getComponent());
         assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
-        assertBundlesEquals(job.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
+        assertBundlesEquals(jobInfo.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
     }
 
     @Test
     public void testWakefulDispatch() throws SchedulerException {
-        dispatcher.wakefulDispatch(job);
+        dispatcher.wakefulDispatch(jobInfo);
 
         Intent intent = ShadowApplication.getInstance().getNextStartedService();
         assertEquals(airshipServiceComponentName, intent.getComponent());
         assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
-        assertBundlesEquals(job.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
+        assertBundlesEquals(jobInfo.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
 
         // Verify it has a wakelock ID set by WakefulBroadcastReceiver.startWakefulService(Context, Intent)
         assertTrue(intent.getExtras().containsKey("android.support.content.wakelockid"));
 
-        // Should cancel the job's tag
+        // Should cancel the jobInfo's tag
         verify(mockScheduler).cancel(any(Context.class), eq("tag"));
     }
 
     @Test
     public void testScheduleJob() throws SchedulerException {
-        when(mockScheduler.requiresScheduling(any(Context.class), eq(job))).thenReturn(true);
-        dispatcher.dispatch(job);
-        verify(mockScheduler).schedule(any(Context.class), eq(job));
+        when(mockScheduler.requiresScheduling(any(Context.class), eq(jobInfo))).thenReturn(true);
+        dispatcher.dispatch(jobInfo);
+        verify(mockScheduler).schedule(any(Context.class), eq(jobInfo));
     }
 
     @Test

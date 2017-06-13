@@ -11,6 +11,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -103,7 +104,7 @@ class NamedUserJobHandler {
      */
     @Job.JobResult
     protected int performJob(Job job) {
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_UPDATE_NAMED_USER:
                 return onUpdateNamedUser();
 
@@ -204,7 +205,7 @@ class NamedUserJobHandler {
 
         List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
         try {
-            JsonValue jsonValue = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
+            JsonValue jsonValue = JsonValue.parseString(job.getJobInfo().getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
             mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
         } catch (JsonException e) {
             Logger.error("Failed to parse tag group change:", e);
@@ -215,14 +216,14 @@ class NamedUserJobHandler {
         dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
 
 
-        Job updateJob = Job.newBuilder()
+        JobInfo jobInfo = JobInfo.newBuilder()
                            .setAction(ACTION_UPDATE_TAG_GROUPS)
                            .setTag(ACTION_UPDATE_TAG_GROUPS)
                            .setNetworkAccessRequired(true)
                            .setAirshipComponent(NamedUser.class)
                            .build();
 
-        jobDispatcher.dispatch(updateJob);
+        jobDispatcher.dispatch(jobInfo);
 
         return Job.JOB_FINISHED;
     }
