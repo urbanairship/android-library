@@ -5,19 +5,18 @@ package com.urbanairship.richpush;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Cancelable;
-import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
+import com.urbanairship.CancelableOperation;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
@@ -119,9 +118,11 @@ public class RichPushInbox extends AirshipComponent {
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
 
-    private int fetchCount = 0;
+    private boolean isFetchingMessages = false;
     private InboxJobHandler inboxJobHandler;
 
+
+    private final List<PendingFetchMessagesCallback> pendingFetchCallbacks = new ArrayList<>();
 
     /**
      * Default constructor.
@@ -193,8 +194,10 @@ public class RichPushInbox extends AirshipComponent {
      * @hide
      */
     @Override
+    @WorkerThread
     @Job.JobResult
-    protected int onPerformJob(@NonNull UAirship airship, Job job) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, airship, dataStore);
         }
@@ -297,7 +300,7 @@ public class RichPushInbox extends AirshipComponent {
      * {@link Listener#onInboxUpdated()} will be called.
      */
     public void fetchMessages() {
-        fetchMessages(false, null, null);
+        fetchMessages(null, null);
     }
 
     /**
@@ -313,7 +316,7 @@ public class RichPushInbox extends AirshipComponent {
      * @return A cancelable object that can be used to cancel the callback.
      */
     public Cancelable fetchMessages(@NonNull final FetchMessagesCallback callback) {
-        return fetchMessages(true, callback, null);
+        return fetchMessages(callback, null);
     }
 
     /**
@@ -329,68 +332,38 @@ public class RichPushInbox extends AirshipComponent {
      * @param looper The looper to post the callback on.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public Cancelable fetchMessages(@NonNull final FetchMessagesCallback callback, @NonNull Looper looper) {
-        return fetchMessages(true, callback, looper);
+    public Cancelable fetchMessages(final FetchMessagesCallback callback, Looper looper) {
+        PendingFetchMessagesCallback cancelableOperation = new PendingFetchMessagesCallback(callback, looper);
+
+        synchronized (pendingFetchCallbacks) {
+            pendingFetchCallbacks.add(cancelableOperation);
+
+            if (!isFetchingMessages) {
+                Job job = Job.newBuilder()
+                             .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                             .setAirshipComponent(RichPushInbox.class)
+                             .build();
+
+                jobDispatcher.dispatch(job);
+            }
+
+            isFetchingMessages = true;
+        }
+
+        return cancelableOperation;
     }
 
-    /**
-     * Fetches the latest inbox changes from Urban Airship.
-     * <p/>
-     * Normally this method is not called directly as the message list is automatically fetched when
-     * the application foregrounds or when a notification with an associated message is received.
-     * <p/>
-     * If the fetch request completes and results in a change to the messages,
-     * {@link Listener#onInboxUpdated()} will be called.
-     *
-     * @param force {@code true} to force a sync request even if a request is already in progress.
-     * @param callback Callback to be notified when the request finishes refreshing.
-     * @param looper The looper to post the callback on.
-     * the messages. If force is {@code false}, the callback will not be called if a sync request
-     * is already in progress.
-     * @return A cancelable object that can be used to cancel the callback.
-     */
-    private Cancelable fetchMessages(final boolean force, @Nullable final FetchMessagesCallback callback, @Nullable Looper looper) {
 
-        final PendingResult<Boolean> pendingResult = new PendingResult<>(new PendingResult.ResultCallback<Boolean>() {
-            @Override
-            public void onResult(@Nullable Boolean result) {
-                if (callback != null) {
-                    callback.onFinished(result != null && result);
-                }
+    void onUpdateMessagesFinished(boolean result) {
+        synchronized (pendingFetchCallbacks) {
+            for (PendingFetchMessagesCallback callback : pendingFetchCallbacks) {
+                callback.result = result;
+                callback.run();
             }
-        });
 
-        if (fetchCount > 0 && !force) {
-            Logger.debug("Skipping refresh messages, messages are already refreshing. Callback will not be triggered.");
-            pendingResult.cancel();
-            return pendingResult;
+            isFetchingMessages = false;
+            pendingFetchCallbacks.clear();
         }
-
-        fetchCount++;
-
-        if (looper == null) {
-            looper = Looper.myLooper() == null ? Looper.getMainLooper() : Looper.myLooper();
-        }
-
-        ResultReceiver resultReceiver = new ResultReceiver(new Handler(looper)) {
-            @Override
-            public void onReceiveResult(int resultCode, Bundle resultData) {
-                fetchCount--;
-                pendingResult.setResult(resultCode == InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS);
-            }
-        };
-
-        Logger.debug("RichPushInbox - Updating messages");
-
-        Job job = Job.newBuilder()
-                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .setAirshipComponent(RichPushInbox.class)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
-                     .build();
-
-        jobDispatcher.dispatch(job);
-
-        return pendingResult;
     }
 
     /**
@@ -749,4 +722,24 @@ public class RichPushInbox extends AirshipComponent {
             }
         }
     }
+
+
+    static class PendingFetchMessagesCallback extends CancelableOperation {
+
+        private FetchMessagesCallback callback;
+        boolean result;
+
+        public PendingFetchMessagesCallback(FetchMessagesCallback callback, Looper looper) {
+            super(looper);
+            this.callback = callback;
+        }
+
+        @Override
+        protected void onRun() {
+            if (callback != null) {
+                callback.onFinished(result);
+            }
+        }
+    }
+
 }

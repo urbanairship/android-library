@@ -3,8 +3,6 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
@@ -52,24 +50,10 @@ class InboxJobHandler {
     static final String ACTION_RICH_PUSH_USER_UPDATE = "com.urbanairship.richpush.USER_UPDATE";
 
     /**
-     * Extra key for a result receiver passed in with the intent.
-     */
-    static final String EXTRA_RICH_PUSH_RESULT_RECEIVER = "com.urbanairship.richpush.RESULT_RECEIVER";
-
-    /**
      * Extra key to indicate if the rich push user needs to be updated forcefully.
      */
     static final String EXTRA_FORCEFULLY = "com.urbanairship.richpush.EXTRA_FORCEFULLY";
 
-    /**
-     * Status code indicating an update complete successfully.
-     */
-    static final int STATUS_RICH_PUSH_UPDATE_SUCCESS = 0;
-
-    /**
-     * Status code indicating an update did not complete successfully.
-     */
-    static final int STATUS_RICH_PUSH_UPDATE_ERROR = 1;
 
     static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
 
@@ -146,11 +130,10 @@ class InboxJobHandler {
     private void onUpdateMessages(Job job) {
         if (!RichPushUser.isCreated()) {
             Logger.debug("InboxJobHandler - User has not been created, canceling messages update");
-            respond(job, false);
+            airship.getInbox().onUpdateMessagesFinished(false);
         } else {
             boolean success = this.updateMessages();
-            respond(job, success);
-
+            airship.getInbox().onUpdateMessagesFinished(success);
             this.syncReadMessageState();
             this.syncDeletedMessageState();
         }
@@ -186,7 +169,7 @@ class InboxJobHandler {
             success = this.updateUser();
         }
 
-        respond(job, success);
+        airship.getInbox().getUser().onUserUpdated(success);
     }
 
     /**
@@ -534,22 +517,6 @@ class InboxJobHandler {
         }
     }
 
-    /**
-     * Helper method to respond to result receiver.
-     *
-     * @param job The airship job.
-     * @param status If the intent was successful or not.
-     */
-    private void respond(Job job, boolean status) {
-        ResultReceiver receiver = job.getExtras().getParcelable(EXTRA_RICH_PUSH_RESULT_RECEIVER);
-        if (receiver != null) {
-            if (status) {
-                receiver.send(STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
-            } else {
-                receiver.send(STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
-            }
-        }
-    }
 
     /**
      * Gets the URL for inbox/user api calls

@@ -3,8 +3,6 @@
 package com.urbanairship.richpush;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.ResultReceiver;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.BaseTestCase;
@@ -239,7 +237,7 @@ public class RichPushInboxTest extends BaseTestCase {
     }
 
     /**
-     * Test fetching messages with a callback forcefully fetches the list.
+     * Test multiple fetch requests only performs a single request if the first one has yet to finish.
      */
     @Test
     public void testRefreshMessageResponse() {
@@ -251,8 +249,8 @@ public class RichPushInboxTest extends BaseTestCase {
         // Force another update
         inbox.fetchMessages(callback);
 
-        // Verify we dispatched 2 jobs
-        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        // Verify we dispatched only 1 job
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
             public boolean matches(Job job) {
                 return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
@@ -277,16 +275,11 @@ public class RichPushInboxTest extends BaseTestCase {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-                if (receiver == null) {
-                    return false;
-                }
-
-                // Send result to the receiver
-                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
                 return true;
             }
         }));
+
+        inbox.onUpdateMessagesFinished(true);
 
         verify(callback).onFinished(true);
     }
@@ -307,16 +300,11 @@ public class RichPushInboxTest extends BaseTestCase {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-                if (receiver == null) {
-                    return false;
-                }
-
-                // Send result to the receiver
-                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
                 return true;
             }
         }));
+
+        inbox.onUpdateMessagesFinished(false);
 
         verify(callback).onFinished(false);
     }
@@ -338,16 +326,11 @@ public class RichPushInboxTest extends BaseTestCase {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-                if (receiver == null) {
-                    return false;
-                }
-
-                // Send result to the receiver
-                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
                 return true;
             }
         }));
+
+        inbox.onUpdateMessagesFinished(false);
 
         verifyZeroInteractions(callback);
     }

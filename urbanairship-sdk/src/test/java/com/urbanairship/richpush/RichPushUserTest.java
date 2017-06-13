@@ -2,9 +2,6 @@
 
 package com.urbanairship.richpush;
 
-import android.os.Bundle;
-import android.os.ResultReceiver;
-
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
@@ -171,20 +168,14 @@ public class RichPushUserTest extends BaseTestCase {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-                if (receiver == null) {
-                    return false;
-                }
-
-                // Send result to the receiver
-                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS, new Bundle());
                 return true;
             }
         }));
 
+        user.onUserUpdated(true);
+
         // Verify the listener received a success callback
-        assertTrue("Listener should be notified of user update success.",
-                listener.lastUpdateUserResult);
+        assertTrue("Listener should be notified of user update success.", listener.lastUpdateUserResult);
     }
 
     /**
@@ -203,16 +194,11 @@ public class RichPushUserTest extends BaseTestCase {
                     return false;
                 }
 
-                ResultReceiver receiver = job.getExtras().getParcelable(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER);
-                if (receiver == null) {
-                    return false;
-                }
-
-                // Send result to the receiver
-                receiver.send(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, new Bundle());
                 return true;
             }
         }));
+
+        user.onUserUpdated(false);
 
         // Verify the listener received a success callback
         assertFalse("Listener should be notified of user update failed.",

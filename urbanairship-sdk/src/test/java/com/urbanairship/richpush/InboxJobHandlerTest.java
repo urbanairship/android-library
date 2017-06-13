@@ -2,9 +2,6 @@
 
 package com.urbanairship.richpush;
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
@@ -31,7 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,22 +45,23 @@ public class InboxJobHandlerTest extends BaseTestCase {
     private List<TestRequest> requests;
     private Map<String, Response> responses;
 
-    private TestResultReceiver resultReceiver;
     private PushManager mockPushManager;
 
     private RichPushUser user;
     private PreferenceDataStore dataStore;
+    private TestUserListener userListener;
 
     @Before
     public void setup() {
+        userListener = new TestUserListener();
         user = UAirship.shared().getInbox().getUser();
+        user.addListener(userListener);
 
         inbox = mock(RichPushInbox.class);
         when(inbox.getUser()).thenReturn(user);
         TestApplication.getApplication().setInbox(inbox);
 
         dataStore = TestApplication.getApplication().preferenceDataStore;
-        resultReceiver = new TestResultReceiver();
         requests = new ArrayList<>();
         responses = new HashMap();
 
@@ -103,14 +103,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(false);
 
         // Verify no requests were made
         assertEquals(0, requests.size());
@@ -132,14 +130,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(false);
 
         // Verify the request
         TestRequest testRequest = requests.get(0);
@@ -168,14 +164,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(true);
 
         // Verify the request
         TestRequest testRequest = requests.get(0);
@@ -211,14 +205,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(true);
 
         // Verify the request method and url
         TestRequest testRequest = requests.get(0);
@@ -264,15 +256,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify result receiver
-        assertEquals("Should return a success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(true);
 
         // Verify the request method and url
         TestRequest testRequest = requests.get(0);
@@ -307,15 +297,13 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(false);
 
         // Verify the request method and url
         TestRequest testRequest = requests.get(0);
@@ -344,14 +332,12 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
 
         // Verify result receiver
-        assertEquals("Should return an error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        verify(inbox).onUpdateMessagesFinished(false);
 
         // Verify the request method and url
         TestRequest testRequest = requests.get(0);
@@ -380,19 +366,14 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
+        assertTrue(userListener.lastUpdateUserResult);
 
         // Verify user name and user token was set
         assertEquals("someUserId", user.getId());
         assertEquals("someUserToken", user.getPassword());
-
-        // Verify result receiver
-        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
 
         // Verify the request
         assertEquals(requests.size(), 1);
@@ -419,18 +400,14 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        assertTrue(userListener.lastUpdateUserResult);
 
         // Verify user name and user token was set
         assertEquals("someUserId", user.getId());
         assertEquals("someUserToken", user.getPassword());
-
-        // Verify result receiver
-        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
 
         // Verify the request
         assertEquals(requests.size(), 1);
@@ -456,10 +433,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        assertFalse(userListener.lastUpdateUserResult);
 
         // Verify we did not create the user
         assertNull(user.getId());
@@ -479,17 +456,14 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        assertFalse(userListener.lastUpdateUserResult);
 
         // Verify we did not create the user
         assertNull(user.getId());
         assertNull(user.getPassword());
-
-        // Verify result receiver
-        assertEquals(InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR, resultReceiver.lastResultCode);
     }
 
     /**
@@ -512,14 +486,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify result receiver
-        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        assertTrue(userListener.lastUpdateUserResult);
 
         // Verify the request
         assertEquals(requests.size(), 1);
@@ -549,14 +519,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify result receiver
-        assertEquals("Should return success code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS,
-                resultReceiver.lastResultCode);
+        assertTrue(userListener.lastUpdateUserResult);
 
         // Verify the request
         assertEquals(requests.size(), 1);
@@ -579,14 +545,10 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify result receiver
-        assertEquals("Should return error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        assertFalse(userListener.lastUpdateUserResult);
     }
 
     /**
@@ -603,29 +565,21 @@ public class InboxJobHandlerTest extends BaseTestCase {
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .build();
 
         assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
-
-        // Verify result receiver
-        assertEquals("Should return error code", InboxJobHandler.STATUS_RICH_PUSH_UPDATE_ERROR,
-                resultReceiver.lastResultCode);
+        assertFalse(userListener.lastUpdateUserResult);
     }
 
-    class TestResultReceiver extends ResultReceiver {
-
-        public Bundle lastResultData;
-        public int lastResultCode;
-
-        public TestResultReceiver() {
-            super(new Handler());
-        }
+    /**
+     * Listener that captures the last update user result
+     */
+    private class TestUserListener implements RichPushUser.Listener {
+        Boolean lastUpdateUserResult = null;
 
         @Override
-        public void onReceiveResult(int resultCode, Bundle resultData) {
-            this.lastResultCode = resultCode;
-            this.lastResultData = resultData;
+        public void onUserUpdated(boolean success) {
+            lastUpdateUserResult = success;
         }
     }
 

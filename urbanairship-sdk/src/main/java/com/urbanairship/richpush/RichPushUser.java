@@ -2,17 +2,13 @@
 
 package com.urbanairship.richpush;
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.job.Job;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -84,31 +80,26 @@ public class RichPushUser {
         }
     }
 
+    void onUserUpdated(boolean success) {
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onUserUpdated(success);
+            }
+        }
+    }
+
     /**
      * Updates the user on the device with what's on the server.
      *
      * @param forcefully A boolean indicating if the rich push user needs to be updated.
      */
     public void update(boolean forcefully) {
-        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                boolean success = resultCode == InboxJobHandler.STATUS_RICH_PUSH_UPDATE_SUCCESS;
-
-                synchronized (listeners) {
-                    for (Listener listener : new ArrayList<>(listeners)) {
-                        listener.onUserUpdated(success);
-                    }
-                }
-            }
-        };
 
         Logger.debug("RichPushUser - Updating user.");
 
         Job job = Job.newBuilder()
                      .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                      .setAirshipComponent(RichPushInbox.class)
-                     .putExtra(InboxJobHandler.EXTRA_RICH_PUSH_RESULT_RECEIVER, resultReceiver)
                      .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
                      .build();
 
