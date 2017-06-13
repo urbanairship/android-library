@@ -5,7 +5,7 @@ package com.urbanairship.richpush;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 
 import org.json.JSONException;
@@ -143,10 +143,10 @@ public class RichPushUserTest extends BaseTestCase {
 
         user.update(false);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE);
             }
         }));
 
@@ -161,10 +161,10 @@ public class RichPushUserTest extends BaseTestCase {
         // Update the user
         user.update(true);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }
 
@@ -187,10 +187,10 @@ public class RichPushUserTest extends BaseTestCase {
         // Update the user
         user.update(true);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)) {
                     return false;
                 }
 

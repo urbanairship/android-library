@@ -3,7 +3,7 @@
 package com.urbanairship.push;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -73,10 +73,10 @@ public class TagGroupsEditorTest extends BaseTestCase {
         editor.setTags(tagGroup, null);
         editor.apply();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getAction().equals("my action")) {
+            public boolean matches(JobInfo jobInfo) {
+                if (!jobInfo.getAction().equals("my action")) {
                     return false;
                 }
 
@@ -84,7 +84,7 @@ public class TagGroupsEditorTest extends BaseTestCase {
 
                 JsonValue actual;
                 try {
-                    actual = JsonValue.parseString(job.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
+                    actual = JsonValue.parseString(jobInfo.getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
                 } catch (JsonException e) {
                     return false;
                 }

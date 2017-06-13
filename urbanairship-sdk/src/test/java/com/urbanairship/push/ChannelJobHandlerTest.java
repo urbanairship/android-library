@@ -10,6 +10,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushInbox;
@@ -95,11 +96,11 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder()
-                     .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .build();
 
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         assertEquals("Channel ID should exist in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should exist in preferences", fakeChannelLocation,
@@ -134,8 +135,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -158,8 +159,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         assertEquals("Channel ID should match in preferences", fakeChannelId, pushManager.getChannelId());
         assertEquals("Channel location should match in preferences", fakeChannelLocation,
@@ -192,8 +193,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -222,8 +223,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
@@ -255,8 +256,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         // Return the response
         when(client.updateChannelWithPayload(channelLocation, payload)).thenReturn(response);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify channel update succeeded
         assertNotSame("Last registration time should be updated", dataStore.getLong("com.urbanairship.push.LAST_REGISTRATION_TIME", 0), lastRegistrationTime);
@@ -275,8 +276,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(conflictResponse.getStatus()).thenReturn(HttpURLConnection.HTTP_CONFLICT);
         when(client.updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class))).thenReturn(conflictResponse);
 
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify update was called
         Mockito.verify(client).updateChannelWithPayload(Mockito.eq(new URL(fakeChannelLocation)), Mockito.any(ChannelRegistrationPayload.class));
@@ -285,11 +286,11 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         assertNull("Channel ID should be null", pushManager.getChannelId());
         assertNull("Channel location should be null", pushManager.getChannelLocation());
 
-        // Verify a new job to update the channel is dispatched
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        // Verify a new jobInfo to update the channel is dispatched
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }
@@ -303,11 +304,11 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                                 .build();
 
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify pending tags are saved
         assertEquals(mutations, dataStore.getJsonValue(ChannelJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY));
@@ -325,17 +326,17 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                                 .build();
 
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
-        // Verify a new job to update tag group registration is dispatched
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        // Verify a new jobInfo to update tag group registration is dispatched
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -352,11 +353,11 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                                 .build();
 
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
@@ -364,8 +365,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify update tag groups called
         Mockito.verify(client).updateTagGroups(fakeChannelId, mutation);
@@ -386,15 +387,15 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                                 .build();
 
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Perform the update
-        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify update tag groups not called when channel ID doesn't exist
         verifyZeroInteractions(client);
@@ -413,11 +414,11 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
         // Apply tag groups
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                     .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
+                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
+                                 .build();
 
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
@@ -425,8 +426,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(job));
+        jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify update tag groups is called
         Mockito.verify(client).updateTagGroups(fakeChannelId, mutation);
@@ -447,8 +448,8 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         dataStore.remove(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY);
 
         // Perform the update
-        Job job = Job.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(job));
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(client);

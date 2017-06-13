@@ -56,8 +56,8 @@ public abstract class AirshipComponent {
      * Called when a scheduled {@link Job} is ready to perform.
      *
      * @param airship The airship instance.
-     * @param job The scheduled job.
-     * @return The result of the job.
+     * @param job The job.
+     * @return The result of the jobInfo.
      * @hide
      */
     @WorkerThread

@@ -7,7 +7,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 
 import org.junit.Before;
@@ -67,17 +67,17 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(fakeNamedUserId);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -105,17 +105,17 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.setId(null);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -132,17 +132,17 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.init();
 
-        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
-        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -169,10 +169,10 @@ public class NamedUserTest extends BaseTestCase {
 
         namedUser.forceUpdate();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
 
@@ -209,10 +209,10 @@ public class NamedUserTest extends BaseTestCase {
                  .removeTag("tagGroup", "tag5")
                  .apply();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
             }
         }));
     }
@@ -233,10 +233,10 @@ public class NamedUserTest extends BaseTestCase {
     public void testStartUpdateService() {
         namedUser.dispatchNamedUserUpdateJob();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER);
             }
         }));
     }
@@ -248,10 +248,10 @@ public class NamedUserTest extends BaseTestCase {
     public void testStartUpdateTagsService() {
         namedUser.dispatchUpdateTagGroupsJob();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -263,10 +263,10 @@ public class NamedUserTest extends BaseTestCase {
     public void testStartClearPendingTagsService() {
         namedUser.dispatchClearTagsJob();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
             }
         }));
     }

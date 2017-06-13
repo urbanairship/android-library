@@ -7,7 +7,7 @@ import android.support.annotation.NonNull;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.util.UAStringUtil;
 
@@ -97,13 +97,13 @@ public class RichPushUser {
 
         Logger.debug("RichPushUser - Updating user.");
 
-        Job job = Job.newBuilder()
-                     .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                     .setAirshipComponent(RichPushInbox.class)
-                     .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                                 .setAirshipComponent(RichPushInbox.class)
+                                 .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 
     /**

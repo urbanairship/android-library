@@ -100,7 +100,7 @@ class PushJobHandler {
      */
     @Job.JobResult
     protected int performJob(Job job) {
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_RECEIVE_MESSAGE:
                 onMessageReceived(job);
                 break;
@@ -115,7 +115,7 @@ class PushJobHandler {
      * @param job The received job.
      */
     private void onMessageReceived(@NonNull Job job) {
-        Bundle extras = job.getExtras();
+        Bundle extras = job.getJobInfo().getExtras();
         Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
         String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
 

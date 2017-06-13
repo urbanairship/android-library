@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
@@ -152,12 +152,12 @@ public class TagGroupsEditor {
             return;
         }
 
-        Job job = Job.newBuilder()
-                     .setAction(action)
-                     .setAirshipComponent(component)
-                     .putExtra(EXTRA_TAG_GROUP_MUTATIONS, JsonValue.wrapOpt(collapsedMutations).toString())
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(action)
+                                 .setAirshipComponent(component)
+                                 .putExtra(EXTRA_TAG_GROUP_MUTATIONS, JsonValue.wrapOpt(collapsedMutations).toString())
+                                 .build();
 
-        jobDispatcher.dispatch(job);
+        jobDispatcher.dispatch(jobInfo);
     }
 }

@@ -39,46 +39,46 @@ public class AlarmSchedulerTest extends BaseTestCase {
 
     @Test
     public void testRequiresScheduling() {
-        Job jobWithDelay = Job.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
-        assertTrue(scheduler.requiresScheduling(context, jobWithDelay));
+        JobInfo jobInfoWithDelay = JobInfo.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
+        assertTrue(scheduler.requiresScheduling(context, jobInfoWithDelay));
 
-        Job job = Job.newBuilder().build();
-        assertFalse(scheduler.requiresScheduling(context, job));
+        JobInfo jobInfo = JobInfo.newBuilder().build();
+        assertFalse(scheduler.requiresScheduling(context, jobInfo));
     }
 
     @Test
     public void testSchedule() throws SchedulerException {
-        Job job = Job.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
 
-        scheduler.schedule(context, job);
-        verifyScheduledJob(job, 1);
+        scheduler.schedule(context, jobInfo);
+        verifyScheduledJob(jobInfo, 1);
     }
 
     @Test
     public void testScheduleWithTag() throws SchedulerException {
-        Job job = Job.newBuilder()
-                     .setInitialDelay(1, TimeUnit.MILLISECONDS)
-                     .setTag("tag")
-                     .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setInitialDelay(1, TimeUnit.MILLISECONDS)
+                                 .setTag("tag")
+                                 .build();
 
-        scheduler.schedule(context, job);
-        verifyScheduledJob(job, 1);
+        scheduler.schedule(context, jobInfo);
+        verifyScheduledJob(jobInfo, 1);
     }
 
     @Test
     public void testReschedule() throws SchedulerException {
-        Job job = Job.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setInitialDelay(1, TimeUnit.MILLISECONDS).build();
 
         // Check 10 retries. The delay should double each time
         long delay = 10000;
         for (int i = 0; i < 10; i++) {
-            scheduler.reschedule(context, job);
-            verifyScheduledJob(job, delay);
+            scheduler.reschedule(context, jobInfo);
+            verifyScheduledJob(jobInfo, delay);
             delay = delay * 2;
         }
     }
 
-    private void verifyScheduledJob(Job job, long delay) {
+    private void verifyScheduledJob(JobInfo jobInfo, long delay) {
         AlarmManager alarmManager = (AlarmManager) RuntimeEnvironment.application.getSystemService(Context.ALARM_SERVICE);
         ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
         ShadowAlarmManager.ScheduledAlarm alarm = shadowAlarmManager.getNextScheduledAlarm();
@@ -90,8 +90,8 @@ public class AlarmSchedulerTest extends BaseTestCase {
         Intent intent = shadowPendingIntent.getSavedIntent();
         assertEquals(new ComponentName(context, AirshipService.class), intent.getComponent());
         assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
-        assertBundlesEquals(job.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
-        assertEquals(job.getTag(), intent.getCategories().iterator().next());
+        assertBundlesEquals(jobInfo.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
+        assertEquals(jobInfo.getTag(), intent.getCategories().iterator().next());
 
         long expectedTriggerTime = SystemClock.elapsedRealtime() + delay;
         // Verify the alarm is within 100 milliseconds

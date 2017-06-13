@@ -18,6 +18,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -268,7 +269,7 @@ public class PushJobHandlerTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
 
-        Job job = createReceiveMessageJob();
+        Job job= createReceiveMessageJob();
         jobHandler.performJob(job);
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
@@ -379,10 +380,12 @@ public class PushJobHandlerTest extends BaseTestCase {
         bundle.putBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE, pushBundle);
         bundle.putString(PushProviderBridge.EXTRA_PROVIDER_CLASS, providerClass);
 
-        return Job.newBuilder()
-                  .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
-                  .setExtras(bundle)
-                  .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
+                                 .setExtras(bundle)
+                                 .build();
+
+        return new Job(jobInfo, true);
     }
 
 }

@@ -105,7 +105,7 @@ class InboxJobHandler {
      * @return The job result.
      */
     @Job.JobResult int performJob(Job job) {
-        switch (job.getAction()) {
+        switch (job.getJobInfo().getAction()) {
             case ACTION_RICH_PUSH_USER_UPDATE:
                 onUpdateUser(job);
                 break;
@@ -153,7 +153,7 @@ class InboxJobHandler {
      * @param job The airship job.
      */
     private void onUpdateUser(Job job) {
-        if (!job.getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
+        if (!job.getJobInfo().getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
             long lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0);
             long now = System.currentTimeMillis();
             if (!(lastUpdateTime > now || (lastUpdateTime + USER_UPDATE_INTERVAL_MS) < now)) {
