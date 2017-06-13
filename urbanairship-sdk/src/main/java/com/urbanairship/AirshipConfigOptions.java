@@ -211,6 +211,11 @@ public class AirshipConfigOptions {
     @ColorInt
     public final int notificationAccentColor;
 
+    /**
+     * The default notification channel.
+     */
+    public final String notificationChannel;
+
     private AirshipConfigOptions(Builder builder) {
         this.productionAppKey = builder.productionAppKey;
         this.productionAppSecret = builder.productionAppSecret;
@@ -234,6 +239,7 @@ public class AirshipConfigOptions {
         this.notificationIcon = builder.notificationIcon;
         this.notificationAccentColor = builder.notificationAccentColor;
         this.walletUrl = builder.walletUrl;
+        this.notificationChannel = builder.notificationChannel;
     }
 
     /**
@@ -313,6 +319,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_NOTIFICATION_ICON = "notificationIcon";
         private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
         private static final String FIELD_WALLET_URL = "walletUrl";
+        private static final String FIELD_NOTIFICATION_CHANNEL = "notificationChannel";
+
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -336,6 +344,7 @@ public class AirshipConfigOptions {
         private int notificationIcon;
         private int notificationAccentColor;
         private String walletUrl = "https://wallet-api.urbanairship.com";
+        private String notificationChannel;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -521,8 +530,13 @@ public class AirshipConfigOptions {
                         case FIELD_NOTIFICATION_ACCENT_COLOR:
                             this.setNotificationAccentColor(configParser.getColor(i));
                             break;
+
                         case FIELD_WALLET_URL:
                             this.setWalletUrl(configParser.getString(i));
+                            break;
+
+                        case FIELD_NOTIFICATION_CHANNEL:
+                            this.setNotificationChannel(configParser.getString(i));
                             break;
                     }
                 } catch (Exception e) {
@@ -534,6 +548,19 @@ public class AirshipConfigOptions {
             if (inProduction == null) {
                 detectProvisioningMode(context);
             }
+        }
+
+        /**
+         * Sets the default notification channel.
+         * <p/>
+         * See {@link com.urbanairship.push.notifications.NotificationFactory#setNotificationChannel(String)}.
+         *
+         * @param channel The notification channel.
+         * @return The config options builder.
+         */
+        public Builder setNotificationChannel(String channel) {
+            this.notificationChannel = channel;
+            return this;
         }
 
         /**

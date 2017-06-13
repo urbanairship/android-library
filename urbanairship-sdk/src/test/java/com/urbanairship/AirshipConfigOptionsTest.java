@@ -64,6 +64,8 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(R.drawable.ua_ic_urbanairship_notification, aco.notificationIcon);
         assertEquals(Color.parseColor("#ff0000"), aco.notificationAccentColor);
         assertEquals("https://test.wallet.url.com/", aco.walletUrl);
+        assertEquals("test_channel", aco.notificationChannel);
+
     }
 
     /**

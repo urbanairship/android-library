@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
@@ -172,5 +173,26 @@ public class DefaultNotificationFactoryTest extends BaseTestCase {
         factory.createNotification(pushMessage, 1);
 
         assertNull("Notification factory sound should not be overwritten.", factory.getSound());
+    }
+
+    /**
+     * Test the DefaultNotificationFactory factory method.
+     */
+    @Test
+    public void testNewFactory() {
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .setNotificationIcon(10)
+                .setNotificationAccentColor(20)
+                .setNotificationChannel("test_channel")
+                .build();
+
+        DefaultNotificationFactory factory = DefaultNotificationFactory.newFactory(context, configOptions);
+        assertEquals(10, factory.getSmallIconId());
+        assertEquals(20, factory.getColor());
+        assertEquals("test_channel", factory.getNotificationChannel());
     }
 }

@@ -274,24 +274,14 @@ public class PushManager extends AirshipComponent {
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
         this.pushProvider = provider;
-
-        DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
-        factory.setColor(configOptions.notificationAccentColor);
-        if (configOptions.notificationIcon != 0) {
-            factory.setSmallIconId(configOptions.notificationIcon);
-        }
-
-        this.notificationFactory = factory;
-
+        this.notificationFactory = DefaultNotificationFactory.newFactory(context, configOptions);
         this.configOptions = configOptions;
-
-        actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
-        }
-
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
+
+        this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
+        }
     }
 
     @Override

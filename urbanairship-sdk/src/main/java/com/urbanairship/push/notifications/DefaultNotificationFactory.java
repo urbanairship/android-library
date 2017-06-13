@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
@@ -29,6 +30,25 @@ public class DefaultNotificationFactory extends NotificationFactory {
         super(context);
     }
 
+    /**
+     * Creates the default notification factory with settings applied from AirshipConfig options.
+     * @param context The application context.
+     * @param options The airship config options.
+     * @return The default notification factory.
+     */
+    public static DefaultNotificationFactory newFactory(@NonNull Context context, @NonNull AirshipConfigOptions options) {
+        DefaultNotificationFactory factory = new DefaultNotificationFactory(context);
+
+        if (options.notificationIcon != 0) {
+            factory.setSmallIconId(options.notificationIcon);
+        }
+
+        factory.setColor(options.notificationAccentColor);
+        factory.setNotificationChannel(options.notificationChannel);
+
+        return factory;
+    }
+
     @Nullable
     @Override
     public final Notification createNotification(@NonNull PushMessage message, int notificationId) {
@@ -37,7 +57,11 @@ public class DefaultNotificationFactory extends NotificationFactory {
         }
 
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, new NotificationCompat.BigTextStyle().bigText(message.getAlert()));
-        return extendBuilder(builder, message, notificationId).build();
+
+        Notification notification = extendBuilder(builder, message, notificationId).build();
+        notification = applyNotificationChannel(message, notification);
+
+        return notification;
     }
 
     /**

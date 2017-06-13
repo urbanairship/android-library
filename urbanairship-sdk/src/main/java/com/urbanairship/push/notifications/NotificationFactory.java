@@ -3,17 +3,23 @@
 package com.urbanairship.push.notifications;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
 import com.urbanairship.AirshipReceiver;
+import com.urbanairship.Logger;
+import com.urbanairship.R;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.NotificationIdGenerator;
 import com.urbanairship.util.UAStringUtil;
@@ -27,6 +33,8 @@ import com.urbanairship.util.UAStringUtil;
  * layouts, see {@link CustomLayoutNotificationFactory}.
  */
 public class NotificationFactory {
+
+    public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
 
     private int titleId;
     private int smallIconId;
@@ -42,6 +50,7 @@ public class NotificationFactory {
     public static final int TAG_NOTIFICATION_ID = 100;
 
     private final Context context;
+    private String notificationChannel;
 
     /**
      * Default constructor.
@@ -195,6 +204,24 @@ public class NotificationFactory {
     }
 
     /**
+     * Sets the default notification channel.
+     *
+     * @param channel THe default notification channel.
+     */
+    public void setNotificationChannel(String channel) {
+        this.notificationChannel = channel;
+    }
+
+    /**
+     * Gets the default notification channel.
+     *
+     * @return The default notification channel.
+     */
+    public String getNotificationChannel() {
+        return this.notificationChannel;
+    }
+
+    /**
      * Gets the default title for the notification. If the {@link #getTitleId()} is 0,
      * the application label will be used, if greater than 0 the string will be fetched
      * from the resources, and if negative an empty String
@@ -246,7 +273,9 @@ public class NotificationFactory {
         }
 
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null);
-        return builder.build();
+        Notification notification = applyNotificationChannel(message, builder.build());
+
+        return notification;
     }
 
     /**
@@ -337,4 +366,66 @@ public class NotificationFactory {
 
         return NotificationIdGenerator.nextID();
     }
+
+
+    /**
+     * Gets the active notification channel for the push message. If neither {@link PushMessage#getNotificationChannel()} or {@link #getNotificationChannel()} result
+     * in an active channel, {@link #DEFAULT_NOTIFICATION_CHANNEL} will be used.
+     *
+     * @param message The push message.
+     * @return The active notification channel from the message, factory, or the default channel.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    String getActiveNotificationChannel(PushMessage message) {
+        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (message.getNotificationChannel() != null) {
+            String channel = message.getNotificationChannel();
+            if (notificationManager.getNotificationChannel(channel) != null) {
+                return channel;
+            }
+
+            Logger.error("Message notification channel " + message.getNotificationChannel() + " does not exist. Unable to apply channel on notification.");
+        }
+
+        if (getNotificationChannel() != null) {
+            String channel = getNotificationChannel();
+            if (notificationManager.getNotificationChannel(channel) != null) {
+                return channel;
+            }
+
+            Logger.error("Factory notification channel " + getNotificationChannel() + " does not exist. Unable to apply channel on notification.");
+        }
+
+        // Fallback to Default Channel
+        NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL,
+                context.getString(R.string.ua_default_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT);
+
+        channel.setDescription(context.getString(R.string.ua_default_channel_description));
+
+        notificationManager.createNotificationChannel(channel);
+
+        return DEFAULT_NOTIFICATION_CHANNEL;
+    }
+
+    /**
+     * Applies notification channel.
+     *
+     * @param message The push message.
+     * @param notification The notification.
+     * @return The notification with a notification channel applied.
+     * @hide
+     */
+    Notification applyNotificationChannel(PushMessage message, Notification notification) {
+        // TODO: Remove this once support library 26.0 comes out
+        if (Build.VERSION.SDK_INT >= 26) {
+            return Notification.Builder.recoverBuilder(getContext(), notification)
+                                               .setChannelId(getActiveNotificationChannel(message))
+                                               .build();
+        }
+
+        return notification;
+    }
+
 }
