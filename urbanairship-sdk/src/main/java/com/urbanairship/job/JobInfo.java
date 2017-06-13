@@ -29,6 +29,7 @@ public class JobInfo {
     private static final String EXTRA_IS_NETWORK_ACCESS_REQUIRED = "EXTRA_IS_NETWORK_ACCESS_REQUIRED";
     private static final String EXTRA_JOB_TAG = "EXTRA_JOB_TAG";
     private static final String EXTRA_SCHEDULER_EXTRAS = "EXTRA_SCHEDULER_EXTRAS";
+    private static final String EXTRA_PERSISTENT = "EXTRA_PERSISTENT";
 
     @Override
     public String toString() {
@@ -38,10 +39,9 @@ public class JobInfo {
                 ", tag='" + tag + '\'' +
                 ", isNetworkAccessRequired=" + isNetworkAccessRequired +
                 ", initialDelay=" + initialDelay +
+                ", persistent=" + persistent +
                 '}';
     }
-
-
 
     private final Bundle extras;
     private final String action;
@@ -50,6 +50,7 @@ public class JobInfo {
     private final boolean isNetworkAccessRequired;
     private final long initialDelay;
     private final Bundle schedulerExtras;
+    private final boolean persistent;
 
     private JobInfo(@NonNull Builder builder) {
         this.action = builder.action == null ? "" : builder.action;
@@ -59,6 +60,7 @@ public class JobInfo {
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired;
         this.initialDelay = builder.initialDelay;
         this.schedulerExtras = builder.schedulerExtras == null ? new Bundle() : new Bundle(builder.schedulerExtras);
+        this.persistent = builder.persistent;
     }
 
     /**
@@ -142,6 +144,7 @@ public class JobInfo {
         bundle.putString(EXTRA_JOB_TAG, tag);
         bundle.putBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED, isNetworkAccessRequired);
         bundle.putLong(EXTRA_INITIAL_DELAY, initialDelay);
+        bundle.putBoolean(EXTRA_PERSISTENT, persistent);
         return bundle;
     }
 
@@ -164,6 +167,7 @@ public class JobInfo {
                 .setAirshipComponent(bundle.getString(EXTRA_AIRSHIP_COMPONENT))
                 .setSchedulerExtras(bundle.getBundle(EXTRA_SCHEDULER_EXTRAS))
                 .setNetworkAccessRequired(bundle.getBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED))
+                .setPersistent(bundle.getBoolean(EXTRA_PERSISTENT))
                 .build();
     }
 
@@ -175,6 +179,10 @@ public class JobInfo {
     @NonNull
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    public boolean isPersistent() {
+        return persistent;
     }
 
 
@@ -191,6 +199,7 @@ public class JobInfo {
         private boolean isNetworkAccessRequired;
         private long initialDelay;
         public Bundle schedulerExtras;
+        private boolean persistent;
 
         private Builder() {
         }
@@ -250,6 +259,17 @@ public class JobInfo {
          */
         public Builder setInitialDelay(long delay, @NonNull TimeUnit unit) {
             this.initialDelay = unit.toMillis(delay);
+            return this;
+        }
+
+        /**
+         * Set whether or not to persist this job across device reboots.
+         *
+         * @param persistent {@code true} If the job should persist across reboots.
+         * @return The job builder.
+         */
+        public Builder setPersistent(boolean persistent) {
+            this.persistent = persistent;
             return this;
         }
 

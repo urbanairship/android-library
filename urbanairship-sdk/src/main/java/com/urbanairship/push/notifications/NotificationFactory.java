@@ -298,20 +298,24 @@ public class NotificationFactory {
                 .setCategory(message.getCategory())
                 .setVisibility(message.getVisibility());
 
-        int defaults = getNotificationDefaultOptions();
-        if (message.getSound(getContext()) != null) {
-            builder.setSound(message.getSound(getContext()));
 
-            // Remove the Notification.DEFAULT_SOUND flag
-            defaults &= ~Notification.DEFAULT_SOUND;
-        } else if (getSound() != null) {
-            builder.setSound(getSound());
+        if (Build.VERSION.SDK_INT < 26) {
+            int defaults = getNotificationDefaultOptions();
 
-            // Remove the Notification.DEFAULT_SOUND flag
-            defaults &= ~Notification.DEFAULT_SOUND;
+            if (message.getSound(getContext()) != null) {
+                builder.setSound(message.getSound(getContext()));
+
+                // Remove the Notification.DEFAULT_SOUND flag
+                defaults &= ~Notification.DEFAULT_SOUND;
+            } else if (getSound() != null) {
+                builder.setSound(getSound());
+
+                // Remove the Notification.DEFAULT_SOUND flag
+                defaults &= ~Notification.DEFAULT_SOUND;
+            }
+            builder.setDefaults(defaults);
         }
 
-        builder.setDefaults(defaults);
 
         if (getLargeIcon() > 0) {
             builder.setLargeIcon(BitmapFactory.decodeResource(getContext().getResources(), getLargeIcon()));
@@ -426,6 +430,22 @@ public class NotificationFactory {
         }
 
         return notification;
+    }
+
+    /**
+     * Checks if the push message requires a long running task. If {@code true}, the push message
+     * will be scheduled to process at a later time when the app has more background time. If {@code false},
+     * the app has approximately 10 seconds to post the notification in {@link #createNotification(PushMessage, int)}
+     * and {@link #getNextId(PushMessage)}.
+     * <p>
+     * Apps that return {@code false} are highly encouraged to add {@code RECEIVE_BOOT_COMPLETED} so
+     * the push message will persist between device reboots.
+     *
+     * @param message The push message.
+     * @return {@code true}
+     */
+    public boolean requiresLongRunningTask(PushMessage message) {
+        return false;
     }
 
 }

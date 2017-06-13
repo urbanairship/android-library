@@ -2,13 +2,13 @@
 
 package com.urbanairship.push;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -30,15 +30,13 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
-import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Job handler for incoming push messages.
@@ -102,8 +100,7 @@ class PushJobHandler {
     protected int performJob(Job job) {
         switch (job.getJobInfo().getAction()) {
             case ACTION_RECEIVE_MESSAGE:
-                onMessageReceived(job);
-                break;
+                return onMessageReceived(job);
         }
 
         return Job.JOB_FINISHED;
@@ -114,40 +111,52 @@ class PushJobHandler {
      *
      * @param job The received job.
      */
-    private void onMessageReceived(@NonNull Job job) {
+    private @Job.JobResult int onMessageReceived(@NonNull Job job) {
         Bundle extras = job.getJobInfo().getExtras();
         Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
         String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
 
         if (pushBundle == null || providerClass == null) {
-            return;
+            return Job.JOB_FINISHED;
         }
 
         PushProvider provider = airship.getPushManager().getPushProvider();
 
         if (provider == null || !provider.getClass().toString().equals(providerClass)) {
             Logger.error("Received message callback from unexpected provider " +  providerClass + ". Ignoring.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (!provider.isAvailable(context)) {
             Logger.error("Received message callback when provider is unavailable. Ignoring.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
             Logger.error("Received message when push is disabled. Ignoring.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         PushMessage message = provider.processMessage(context, pushBundle);
         if (message == null) {
-            return;
+            return Job.JOB_FINISHED;
+        }
+
+        NotificationFactory factory = airship.getPushManager().getNotificationFactory();
+
+        if (factory != null && !job.isLongRunning() && factory.requiresLongRunningTask(message)) {
+            Logger.info("Push requires a long running task. Scheduled for a later time: " + message);
+
+            if (!ManifestUtils.isPermissionGranted(Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
+                Logger.error("Notification factory requested long running task but the application does not define RECEIVE_BOOT_COMPLETED in the manifest. Notification will be lost if the device reboots before the notification is processed.");
+            }
+
+            return Job.JOB_RETRY;
         }
 
         if (!isUniqueCanonicalId(message.getCanonicalPushId())) {
             Logger.info("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
-            return;
+            return Job.JOB_FINISHED;
         }
 
         airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
@@ -155,12 +164,12 @@ class PushJobHandler {
 
         if (message.isExpired()) {
             Logger.debug("Received expired push message, ignoring.");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         if (message.isPing()) {
             Logger.verbose("PushJobHandler - Received UA Ping");
-            return;
+            return Job.JOB_FINISHED;
         }
 
         // Run any actions for the push
@@ -188,9 +197,9 @@ class PushJobHandler {
             airship.getInAppMessageManager().setPendingMessage(inAppMessage);
         }
 
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId())) {
+        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
             Logger.debug("PushJobHandler - Received a Rich Push.");
-            refreshRichPushMessages();
+            airship.getInbox().fetchMessages();
         }
 
         Integer notificationId = null;
@@ -201,6 +210,8 @@ class PushJobHandler {
         }
 
         sendPushReceivedBroadcast(message, notificationId);
+
+        return Job.JOB_FINISHED;
     }
 
     /**
@@ -291,25 +302,6 @@ class PushJobHandler {
         }
 
         context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
-    }
-
-    /**
-     * Helper method that blocks while the rich push messages are refreshing
-     */
-    private void refreshRichPushMessages() {
-        final Semaphore semaphore = new Semaphore(0);
-        airship.getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
-            @Override
-            public void onFinished(boolean success) {
-                semaphore.release();
-            }
-        }, Looper.getMainLooper());
-
-        try {
-            semaphore.tryAcquire(RICH_PUSH_REFRESH_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Logger.warn("Interrupted while waiting for rich push messages to refresh");
-        }
     }
 
     /**

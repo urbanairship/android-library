@@ -4,6 +4,7 @@ package com.urbanairship.push;
 
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -94,7 +95,9 @@ public abstract class PushProviderBridge {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
                                  .setTag(UUID.randomUUID().toString())
+                                 .setNetworkAccessRequired(Build.VERSION.SDK_INT >= 26) // Used for retries
                                  .setAirshipComponent(PushManager.class)
+                                 .setPersistent(true)
                                  .setExtras(extras)
                                  .build();
 
@@ -109,20 +112,22 @@ public abstract class PushProviderBridge {
      * @param callback The job callback.
      */
     private static void handleJobInfo(Context context, JobInfo jobInfo, final Callback callback) {
-        if (JobDispatcher.shared(context).wakefulDispatch(jobInfo)) {
+        if (Build.VERSION.SDK_INT < 26 && JobDispatcher.shared(context).wakefulDispatch(jobInfo)) {
             if (callback != null) {
                 callback.onFinish();
             }
-        } else {
-            Job job = new Job(jobInfo, false);
-            JobDispatcher.shared(context).runJob(job, new JobDispatcher.Callback() {
-                @Override
-                public void onFinish(Job job, @Job.JobResult int result) {
-                    if (callback != null) {
-                        callback.onFinish();
-                    }
-                }
-            });
+
+            return;
         }
+
+        Job job = new Job(jobInfo, false);
+        JobDispatcher.shared(context).runJob(job, new JobDispatcher.Callback() {
+            @Override
+            public void onFinish(Job job, @Job.JobResult int result) {
+                if (callback != null) {
+                    callback.onFinish();
+                }
+            }
+        });
     }
 }
