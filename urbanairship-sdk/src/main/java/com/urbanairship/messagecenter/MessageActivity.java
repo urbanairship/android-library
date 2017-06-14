@@ -4,7 +4,6 @@ package com.urbanairship.messagecenter;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.view.MenuItem;
@@ -22,6 +21,17 @@ public class MessageActivity extends ThemedActivity {
 
     private static final String FRAGMENT_TAG = "MessageFragment";
 
+    private String messageId;
+
+    private RichPushInbox.Listener updateMessageListener = new RichPushInbox.Listener() {
+        @Override
+        public void onInboxUpdated() {
+            if (messageId != null) {
+                updateTitle(messageId);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,19 +45,29 @@ public class MessageActivity extends ThemedActivity {
 
         setDisplayHomeAsUpEnabled(true);
 
+        if (savedInstanceState == null) {
+            messageId = parseMessageId(getIntent());
+        } else {
+            messageId = savedInstanceState.getString("messageId");
+        }
 
-        RichPushMessage message = getMessage(getIntent());
 
-        if (message == null) {
+        if (messageId == null) {
             finish();
             return;
         }
 
-        loadMessage(message);
+        loadMessage();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("messageId", messageId);
     }
 
     @Nullable
-    private RichPushMessage getMessage(Intent intent) {
+    private String parseMessageId(Intent intent) {
         if (intent == null || intent.getData() == null || intent.getAction() == null) {
             return null;
         }
@@ -60,13 +80,19 @@ public class MessageActivity extends ThemedActivity {
             messageId = intent.getData().getSchemeSpecificPart();
         }
 
-        return UAirship.shared().getInbox().getMessage(messageId);
+        return messageId;
     }
 
-    private void loadMessage(@NonNull RichPushMessage message) {
+    /**
+     * Loads the message.
+     */
+    private void loadMessage() {
+        if (messageId == null) {
+            return;
+        }
 
         MessageFragment previousMessageFragment = (MessageFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (previousMessageFragment == null || !message.getMessageId().equals(previousMessageFragment.getMessageId())) {
+        if (previousMessageFragment == null || !messageId.equals(previousMessageFragment.getMessageId())) {
 
             FragmentTransaction transaction = getSupportFragmentManager()
                     .beginTransaction();
@@ -75,20 +101,48 @@ public class MessageActivity extends ThemedActivity {
                 transaction.remove(previousMessageFragment);
             }
 
-            transaction.add(android.R.id.content, MessageFragment.newInstance(message.getMessageId()), FRAGMENT_TAG)
+            transaction.add(android.R.id.content, MessageFragment.newInstance(messageId), FRAGMENT_TAG)
                        .commitNow();
         }
 
-        setTitle(message.getTitle());
+        updateTitle(messageId);
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        UAirship.shared().getInbox().addListener(updateMessageListener);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        UAirship.shared().getInbox().removeListener(updateMessageListener);
+    }
+
+    /**
+     * Updates the title from the given message Id.
+     *
+     * @param messageId The message Id.
+     */
+    private void updateTitle(String messageId) {
+        RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
+        if (message == null) {
+            setTitle(null);
+        } else {
+            setTitle(message.getTitle());
+        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        RichPushMessage message = getMessage(intent);
-        if (message != null) {
-            loadMessage(message);
+        String newMessageId = parseMessageId(intent);
+        if (newMessageId != null) {
+            messageId = newMessageId;
+            loadMessage();
         }
     }
 

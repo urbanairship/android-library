@@ -49,7 +49,7 @@ public class MessageCenterFragment extends Fragment {
     private boolean isViewConfigured;
 
     private String currentMessageId;
-    private int currentMessagePosition;
+    private int currentMessagePosition = -1;
     private String pendingMessageId;
 
     private final RichPushInbox.Listener inboxListener = new RichPushInbox.Listener() {
@@ -155,7 +155,7 @@ public class MessageCenterFragment extends Fragment {
 
             // Color the linear layout divider if we are running on JELLY_BEAN or newer
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                LinearLayout layoutContainer = (LinearLayout) view.findViewById(R.id.container);
+                LinearLayout layoutContainer = view.findViewById(R.id.container);
                 TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
                 int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, -1);
                 if (color != -1) {
@@ -164,6 +164,10 @@ public class MessageCenterFragment extends Fragment {
                 }
 
                 attributes.recycle();
+            }
+
+            if (messageListFragment != null && currentMessageId != null) {
+                messageListFragment.setCurrentMessage(currentMessageId);
             }
         } else {
             isTwoPane = false;
@@ -273,12 +277,12 @@ public class MessageCenterFragment extends Fragment {
     protected void showMessage(String messageId) {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
         if (message == null) {
-            currentMessageId = null;
             currentMessagePosition = -1;
         } else {
-            currentMessageId = messageId;
             currentMessagePosition = getMessages().indexOf(message);
         }
+
+        this.currentMessageId = messageId;
 
         if (messageListFragment == null) {
             return;
@@ -298,7 +302,7 @@ public class MessageCenterFragment extends Fragment {
 
             messageListFragment.setCurrentMessage(messageId);
 
-        } else if (message != null) {
+        } else if (messageId != null) {
             Intent intent = new Intent()
                     .setPackage(getContext().getPackageName())
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -320,7 +324,7 @@ public class MessageCenterFragment extends Fragment {
         RichPushMessage message = UAirship.shared().getInbox().getMessage(currentMessageId);
         List<RichPushMessage> messages = getMessages();
 
-        if (currentMessageId != null && !messages.contains(message)) {
+        if (isTwoPane && currentMessagePosition != -1 && !messages.contains(message)) {
             if (messages.size() == 0) {
                 currentMessageId = null;
                 currentMessagePosition = -1;
@@ -328,17 +332,10 @@ public class MessageCenterFragment extends Fragment {
                 currentMessagePosition = Math.min(messages.size() - 1, currentMessagePosition);
                 currentMessageId = messages.get(currentMessagePosition).getMessageId();
             }
-        }
 
-        if (messageListFragment == null) {
-            return;
-        }
-
-        if (isTwoPane) {
-            messageListFragment.setCurrentMessage(currentMessageId);
-            showMessage(currentMessageId);
-        } else {
-            messageListFragment.setCurrentMessage(null);
+            if (isTwoPane) {
+                showMessage(currentMessageId);
+            }
         }
     }
 

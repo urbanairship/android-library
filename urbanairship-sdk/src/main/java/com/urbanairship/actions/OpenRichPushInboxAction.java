@@ -2,8 +2,6 @@
 
 package com.urbanairship.actions;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
@@ -68,21 +66,16 @@ public class OpenRichPushInboxAction extends Action {
                 messageId = pushMessage.getRichPushMessageId();
             } else if (arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA)) {
                 messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
+            } else {
+                messageId = null;
             }
         }
 
-        final RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
-
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (message != null) {
-                    UAirship.shared().getInbox().startMessageActivity(message.getMessageId());
-                } else {
-                    UAirship.shared().getInbox().startInboxActivity();
-                }
-            }
-        });
+        if (messageId != null) {
+            UAirship.shared().getInbox().startMessageActivity(messageId);
+        } else {
+            UAirship.shared().getInbox().startInboxActivity();
+        }
 
         return ActionResult.newEmptyResult();
     }
@@ -91,4 +84,5 @@ public class OpenRichPushInboxAction extends Action {
     public boolean shouldRunOnMainThread() {
         return true;
     }
+
 }

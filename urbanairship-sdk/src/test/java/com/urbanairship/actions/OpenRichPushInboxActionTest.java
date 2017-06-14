@@ -8,7 +8,6 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,13 +15,12 @@ import org.junit.Test;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 
 public class OpenRichPushInboxActionTest extends BaseTestCase {
 
-    OpenRichPushInboxAction action;
-    RichPushInbox mockInbox;
+    private OpenRichPushInboxAction action;
+    private RichPushInbox mockInbox;
 
     @Before
     public void setup() {
@@ -71,28 +69,12 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
         verify(mockInbox).startInboxActivity();
     }
 
-    /**
-     * Test action perform when the message is unavailable starts an activity to view the inbox.
-     */
-    @Test
-    public void testPerformMessageUnavailable() {
-        when(mockInbox.getMessage("message_id")).thenReturn(null);
-
-        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
-
-        verify(mockInbox).startInboxActivity();
-    }
 
     /**
      * Test action perform when the message is available it starts an activity to view the message.
      */
     @Test
-    public void testPerformMessageAvailable() {
-        RichPushMessage message = mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("message_id");
-
-        when(mockInbox.getMessage("message_id")).thenReturn(message);
-
+    public void testPerform() {
         action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"));
 
         verify(mockInbox).startMessageActivity("message_id");
@@ -103,10 +85,6 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMessageIdPlaceHolderPushMetadata() {
-        RichPushMessage message = mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("the_message_id");
-        when(mockInbox.getMessage("the_message_id")).thenReturn(message);
-
         Bundle pushBundle = new Bundle();
         pushBundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "the_message_id");
         Bundle metadata = new Bundle();
@@ -122,10 +100,6 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
      */
     @Test
     public void testPerformMessageIdPlaceHolderRichPushMessageMetadata() {
-        RichPushMessage message = mock(RichPushMessage.class);
-        when(message.getMessageId()).thenReturn("the_message_id");
-        when(mockInbox.getMessage("the_message_id")).thenReturn(message);
-
         Bundle metadata = new Bundle();
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id");
 

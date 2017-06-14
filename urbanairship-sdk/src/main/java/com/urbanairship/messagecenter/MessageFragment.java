@@ -14,9 +14,11 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
@@ -33,6 +35,7 @@ public class MessageFragment extends Fragment {
     private View errorPage;
 
     private Integer error = null;
+    private Cancelable fetchMessageRequest;
 
     /**
      * Creates a new MessageFragment
@@ -48,17 +51,6 @@ public class MessageFragment extends Fragment {
         return message;
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        String messageId = getMessageId();
-        message = UAirship.shared().getInbox().getMessage(messageId);
-
-        if (message == null) {
-            Logger.info("Couldn't retrieve message for ID: " + messageId);
-        }
-    }
 
     /**
      * Subclasses can override to replace with their own layout.  If doing so, the
@@ -124,7 +116,7 @@ public class MessageFragment extends Fragment {
 
                 if (error != null) {
                     showErrorPage();
-                } else {
+                } else if (message != null) {
                     message.markRead();
                     showMessage();
                 }
@@ -170,11 +162,7 @@ public class MessageFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (message != null) {
-            showProgress();
-            Logger.info("Loading message: " + message.getMessageId());
-            webView.loadRichPushMessage(message);
-        }
+        loadMessage();
     }
 
     @Override
@@ -187,6 +175,15 @@ public class MessageFragment extends Fragment {
     public void onPause() {
         super.onPause();
         webView.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (fetchMessageRequest != null) {
+            fetchMessageRequest.cancel();
+            fetchMessageRequest = null;
+        }
     }
 
     @Override
@@ -203,10 +200,7 @@ public class MessageFragment extends Fragment {
         if (webView == null) {
             return;
         }
-
-        showProgress();
-        error = null;
-        webView.loadRichPushMessage(message);
+        loadMessage();
     }
 
     /**
@@ -283,8 +277,34 @@ public class MessageFragment extends Fragment {
      *
      * @return The {@link RichPushMessage} ID.
      */
-
     public String getMessageId() {
         return getArguments().getString(MESSAGE_ID_KEY);
+    }
+
+    private void loadMessage() {
+        showProgress();
+        error = null;
+
+        message = UAirship.shared().getInbox().getMessage(getMessageId());
+
+        if (message == null) {
+            Logger.info("MessageFragment - Fetching messages.");
+            fetchMessageRequest = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+                @Override
+                public void onFinished(boolean success) {
+                    message = UAirship.shared().getInbox().getMessage(getMessageId());
+
+                    if (message == null) {
+                        showErrorPage();
+                    } else {
+                        Logger.info("Loading message: " + message.getMessageId());
+                        webView.loadRichPushMessage(message);
+                    }
+                }
+            });
+        } else {
+            Logger.info("Loading message: " + message.getMessageId());
+            webView.loadRichPushMessage(message);
+        }
     }
 }

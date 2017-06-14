@@ -27,6 +27,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
 import com.urbanairship.Autopilot;
+import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
@@ -96,6 +97,7 @@ public class LandingPageActivity extends Activity {
     private int width;
     private int height;
     private boolean aspectLock;
+    private Cancelable fetchMessagesCallback;
 
     @SuppressLint("NewApi")
     @Override
@@ -261,7 +263,13 @@ public class LandingPageActivity extends Activity {
 
         // Cancel any delayed landing pages
         handler.removeCallbacksAndMessages(uri);
+
+        if (fetchMessagesCallback != null) {
+            fetchMessagesCallback.cancel();
+            fetchMessagesCallback = null;
+        }
     }
+
 
     /**
      * Fades a view in while fading another view out.
@@ -358,7 +366,7 @@ public class LandingPageActivity extends Activity {
                     float parentAspect = (float) parentWidth / parentHeight;
 
                     if (parentAspect > landingPageAspect) {
-                        normalizedWidth =  (int) ((float) width * parentHeight / height);
+                        normalizedWidth = (int) ((float) width * parentHeight / height);
                     } else {
                         normalizedHeight = (int) ((float) height * parentWidth / width);
                     }
@@ -422,7 +430,7 @@ public class LandingPageActivity extends Activity {
         error = null;
 
         if (uri.getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
-            String messageId = uri.getSchemeSpecificPart();
+            final String messageId = uri.getSchemeSpecificPart();
             RichPushMessage message = UAirship.shared()
                                               .getInbox()
                                               .getMessage(messageId);
@@ -430,8 +438,19 @@ public class LandingPageActivity extends Activity {
                 webView.loadRichPushMessage(message);
                 message.markRead();
             } else {
-                Logger.error("Message " + messageId + " not found.");
-                finish();
+                fetchMessagesCallback = UAirship.shared().getInbox().fetchMessages(new RichPushInbox.FetchMessagesCallback() {
+                    @Override
+                    public void onFinished(boolean success) {
+                        if (success && UAirship.shared().getInbox().getMessage(messageId) == null) {
+                            Logger.error("Message " + messageId + " not found.");
+                            finish();
+                        }
+
+                        loadLandingPage();
+                    }
+                });
+
+
             }
         } else {
             webView.loadUrl(uri.toString());

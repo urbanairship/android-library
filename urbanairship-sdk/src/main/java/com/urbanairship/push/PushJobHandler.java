@@ -142,6 +142,11 @@ class PushJobHandler {
             return Job.JOB_FINISHED;
         }
 
+        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
+            Logger.debug("PushJobHandler - Received a Rich Push.");
+            airship.getInbox().fetchMessages();
+        }
+
         NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory != null && !job.isLongRunning() && factory.requiresLongRunningTask(message)) {
@@ -197,10 +202,6 @@ class PushJobHandler {
             airship.getInAppMessageManager().setPendingMessage(inAppMessage);
         }
 
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
-            Logger.debug("PushJobHandler - Received a Rich Push.");
-            airship.getInbox().fetchMessages();
-        }
 
         Integer notificationId = null;
         if (!(airship.getPushManager().getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled())) {

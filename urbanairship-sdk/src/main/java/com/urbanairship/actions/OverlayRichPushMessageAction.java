@@ -5,15 +5,12 @@ package com.urbanairship.actions;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
-import com.urbanairship.richpush.RichPushMessage;
 
 /**
  * Displays an inbox message in a landing page.
@@ -72,7 +69,6 @@ public class OverlayRichPushMessageAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-
         String messageId = arguments.getValue().getString();
 
         if (messageId.equalsIgnoreCase(MESSAGE_ID_PLACEHOLDER)) {
@@ -81,31 +77,29 @@ public class OverlayRichPushMessageAction extends Action {
                 messageId = pushMessage.getRichPushMessageId();
             } else if (arguments.getMetadata().containsKey(ActionArguments.RICH_PUSH_ID_METADATA)) {
                 messageId = arguments.getMetadata().getString(ActionArguments.RICH_PUSH_ID_METADATA);
+            } else {
+                messageId = null;
             }
         }
 
-        final RichPushMessage message = UAirship.shared().getInbox().getMessage(messageId);
-        if (message == null) {
-            return ActionResult.newErrorResult(new Exception("Unable to find message with ID " + messageId));
+        if (messageId == null) {
+            return ActionResult.newErrorResult(new Exception("Missing message ID."));
         }
 
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION)
-                        .setPackage(UAirship.getPackageName())
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, message.getMessageId(), null));
+        Intent intent = new Intent(LandingPageAction.SHOW_LANDING_PAGE_INTENT_ACTION)
+                .setPackage(UAirship.getPackageName())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setData(Uri.fromParts(RichPushInbox.MESSAGE_DATA_SCHEME, messageId, null));
 
-                try {
-                    UAirship.getApplicationContext().startActivity(intent);
-                } catch (ActivityNotFoundException ex) {
-                    Logger.error("Unable to view the inbox message in a landing page. The landing page activity " +
-                            "is either missing in the manifest or does not include the message scheme in its " +
-                            "intent filter.");
-                }
-            }
-        });
+        try {
+            UAirship.getApplicationContext().startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Logger.error("Unable to view the inbox message in a landing page. The landing page activity " +
+                    "is either missing in the manifest or does not include the message scheme in its " +
+                    "intent filter.");
+
+            return ActionResult.newErrorResult(ex);
+        }
 
         return ActionResult.newEmptyResult();
     }
@@ -114,4 +108,5 @@ public class OverlayRichPushMessageAction extends Action {
     public boolean shouldRunOnMainThread() {
         return true;
     }
+
 }
