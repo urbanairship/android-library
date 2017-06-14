@@ -16,8 +16,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -72,7 +70,7 @@ public class UALocationProviderTest extends BaseTestCase {
         provider.areUpdatesRequested();
 
         // Call onDestroy()
-        provider.onDestroy();
+        provider.disconnect();
 
         // Verify we only disconnected from the connected provider (mockAdapterTwo)
         verify(mockAdapterOne, times(0)).disconnect(context);
@@ -122,39 +120,27 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationRequest() {
-        PendingResult<Location> request = new PendingResult<Location>(locationCallback) {
-            @Override
-            protected void onCancel() {
-            }
-        };
+        when(mockAdapterTwo.connect(context)).thenReturn(true);
 
-        when(mockAdapterOne.connect(context)).thenReturn(true);
-        when(mockAdapterOne.requestSingleLocation(context, locationCallback, options)).thenReturn(request);
+        PendingResult<Location> pendingResult = new PendingResult<>(locationCallback);
 
-        assertEquals("Should return the adapters pending result.", provider.requestSingleLocation(locationCallback, options), request);
+        provider.requestSingleLocation(pendingResult, options);
+
+        verify(mockAdapterTwo).requestSingleLocation(eq(context), eq(options), eq(pendingResult));
+        verify(mockAdapterOne, times(0)).requestSingleLocation(eq(context), eq(options), eq(pendingResult));
     }
 
 
     /**
-     * Test single request returns null if none of the adapters were connectible.
-     */
-    @Test
-    public void testSingleLocationRequestNoAdapter() {
-        when(mockAdapterOne.connect(context)).thenReturn(false);
-
-        assertNull("Should return null if no connected adapter", provider.requestSingleLocation(locationCallback, options));
-    }
-
-
-    /**
-     * Test single request returns null if the adapter throws a security exception.
+     * Test single request does not exception out when the adapter throws security exceptions.
      */
     @Test
     public void testSingleLocationNoPermissions() {
-        when(mockAdapterOne.connect(context)).thenReturn(true);
-        when(mockAdapterOne.requestSingleLocation(context, locationCallback, options)).thenThrow(new SecurityException("Nope"));
 
-        assertNull("Should return null if the adapter throws a security exception.", provider.requestSingleLocation(locationCallback, options));
+        PendingResult<Location> pendingResult = new PendingResult<>(locationCallback);
+
+        when(mockAdapterOne.connect(context)).thenReturn(true);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestSingleLocation(context, options, pendingResult);
     }
 
     /**

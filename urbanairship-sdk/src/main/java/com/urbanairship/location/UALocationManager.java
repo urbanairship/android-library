@@ -2,23 +2,17 @@
 
 package com.urbanairship.location;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
+import android.os.HandlerThread;
 import android.os.Looper;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.ContextCompat;
-import android.util.SparseArray;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
@@ -27,10 +21,13 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.json.JsonException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.urbanairship.location.LocationService.ACTION_LOCATION_UPDATE;
 
 /**
  * High level interface for interacting with location.
@@ -42,41 +39,17 @@ public class UALocationManager extends AirshipComponent {
     private static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
     private static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
 
-    private final Messenger messenger;
     private final Context context;
-    private Messenger serviceMessenger;
-
-    private boolean isBound;
-    private boolean isSubscribed;
-
-    private int nextSingleLocationRequestId = 1;
-    private final SparseArray<SingleLocationRequest> singleLocationRequests = new SparseArray<>();
+    private final UALocationProvider locationProvider;
     private final ActivityMonitor.Listener listener;
     private final PreferenceDataStore preferenceDataStore;
     private final ActivityMonitor activityMonitor;
-
-    /**
-     * List of location listeners.
-     */
     private final List<LocationListener> locationListeners = new ArrayList<>();
 
-    /**
-     * Handles connections to the location service.
-     */
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
+    @VisibleForTesting
+    final HandlerThread backgroundThread;
+    private Handler backgroundHandler;
 
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            Logger.verbose("Location service connected.");
-            UALocationManager.this.onServiceConnected(service);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            Logger.verbose("Location service disconnected.");
-            UALocationManager.this.onServiceDisconnected();
-        }
-    };
 
     /**
      * When preferences are changed on the current process or other processes,
@@ -109,7 +82,6 @@ public class UALocationManager extends AirshipComponent {
     public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
-        this.messenger = new Messenger(new IncomingHandler(Looper.getMainLooper()));
         this.listener = new ActivityMonitor.Listener() {
             @Override
             public void onForeground(long time) {
@@ -122,10 +94,17 @@ public class UALocationManager extends AirshipComponent {
             }
         };
         this.activityMonitor = activityMonitor;
+
+        Intent updateIntent = new Intent(context, LocationService.class).setAction(ACTION_LOCATION_UPDATE);
+        this.locationProvider = new UALocationProvider(context, updateIntent);
+        this.backgroundThread = new HandlerThread("location");
     }
 
     @Override
     protected void init() {
+        this.backgroundThread.start();
+        this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
+
         preferenceDataStore.addListener(preferenceChangeListener);
         activityMonitor.addListener(listener);
         updateServiceConnection();
@@ -134,8 +113,9 @@ public class UALocationManager extends AirshipComponent {
     @Override
     protected void tearDown() {
         activityMonitor.removeListener(listener);
+        backgroundThread.quit();
+        locationProvider.disconnect();
     }
-
 
     /**
      * Checks if continuous location updates is enabled or not.
@@ -221,37 +201,6 @@ public class UALocationManager extends AirshipComponent {
         return options;
     }
 
-    /**
-     * Sets the last update's location request options.
-     *
-     * @param lastUpdateOptions The last update's location request options.
-     */
-    void setLastUpdateOptions(@Nullable LocationRequestOptions lastUpdateOptions) {
-        preferenceDataStore.put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, lastUpdateOptions);
-    }
-
-    /**
-     * Gets the last update's location request options.  If no options have been set, it will default to null.
-     *
-     * @return The last update's location request options.
-     * */
-    @Nullable
-    LocationRequestOptions getLastUpdateOptions() {
-        String jsonString = preferenceDataStore.getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
-        LocationRequestOptions lastUpdateOptions = null;
-
-        if (jsonString != null) {
-            try {
-                lastUpdateOptions = LocationRequestOptions.parseJson(jsonString);
-            } catch (JsonException e) {
-                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
-            } catch (IllegalArgumentException e) {
-                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
-            }
-        }
-
-        return lastUpdateOptions;
-    }
 
     /**
      * Adds a listener for locations updates.  The listener will only be notified
@@ -260,9 +209,13 @@ public class UALocationManager extends AirshipComponent {
      * @param listener A location listener.
      */
     public void addLocationListener(@NonNull LocationListener listener) {
+        if (!UAirship.isMainProcess()) {
+            Logger.error("Continuous location update are only available on the main process.");
+            return;
+        }
+
         synchronized (locationListeners) {
             locationListeners.add(listener);
-            updateServiceConnection();
         }
     }
 
@@ -274,7 +227,6 @@ public class UALocationManager extends AirshipComponent {
     public void removeLocationListener(@NonNull LocationListener listener) {
         synchronized (locationListeners) {
             locationListeners.remove(listener);
-            updateServiceConnection();
         }
     }
 
@@ -311,15 +263,9 @@ public class UALocationManager extends AirshipComponent {
      * Cancelable request if the request is unable to be made due to insufficient permissions.
      * @param requestOptions The location request options.
      * @return A cancelable object that can be used to cancel the request.
-     * @throws IllegalArgumentException if the requestOptions is null.
      */
     @NonNull
-    public Cancelable requestSingleLocation(@Nullable LocationCallback locationCallback, @NonNull LocationRequestOptions requestOptions) {
-        //noinspection ConstantConditions
-        if (requestOptions == null) {
-            throw new IllegalArgumentException("Location request options cannot be null or invalid");
-        }
-
+    public Cancelable requestSingleLocation(@Nullable final LocationCallback locationCallback, @NonNull final LocationRequestOptions requestOptions) {
         if (!isLocationPermitted()) {
             return new Cancelable() {
                 @Override
@@ -337,22 +283,33 @@ public class UALocationManager extends AirshipComponent {
             };
         }
 
-        SingleLocationRequest request;
-        synchronized (singleLocationRequests) {
-            int id = nextSingleLocationRequestId++;
-            request = new SingleLocationRequest(locationCallback, id, requestOptions);
-            singleLocationRequests.put(id, request);
-        }
+        final PendingResult<Location> pendingResult = new PendingResult<>(new LocationCallback() {
+            @Override
+            public void onResult(final Location location) {
+                Logger.info("Received single location update: " + location);
 
-        synchronized (this) {
-            if (!isBound) {
-                bindService();
-            } else {
-                request.sendLocationRequest();
+
+                if (locationCallback != null) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            locationCallback.onResult(location);
+                        }
+                    });
+                }
+
+                UAirship.shared().getAnalytics().recordLocation(location, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
             }
-        }
+        });
 
-        return request;
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                locationProvider.requestSingleLocation(pendingResult, requestOptions);
+            }
+        });
+
+        return pendingResult;
     }
 
     /**
@@ -360,230 +317,63 @@ public class UALocationManager extends AirshipComponent {
      * the location service.
      */
     private void updateServiceConnection() {
-        if (!isLocationPermitted()) {
+        if (!UAirship.isMainProcess()) {
             return;
         }
 
-        if (isContinuousLocationUpdatesAllowed()) {
-            synchronized (locationListeners) {
-                if (!locationListeners.isEmpty()) {
-                    if (isBound) {
-                        subscribeUpdates();
-                    } else {
-                        // Once bound we will call updateServiceConnection again.
-                        bindService();
-                        return;
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (isContinuousLocationUpdatesAllowed()) {
+                    LocationRequestOptions options = getLocationRequestOptions();
+                    LocationRequestOptions lastLocationOptions = getLastUpdateOptions();
+
+                    if (!options.equals(lastLocationOptions) || !locationProvider.areUpdatesRequested()) {
+                        Logger.info("Requesting location updates");
+
+                        locationProvider.requestLocationUpdates(options);
+                        setLastUpdateOptions(options);
+                    }
+                } else {
+                    if (locationProvider.areUpdatesRequested()) {
+                        Logger.info("Stopping location updates.");
+                        locationProvider.cancelRequests();
                     }
                 }
             }
-        } else {
-            unsubscribeUpdates();
-            synchronized (singleLocationRequests) {
-                // unbind service
-                if (singleLocationRequests.size() == 0) {
-                    unbindService();
-                }
-            }
-        }
-
-        Intent intent = new Intent(context, LocationService.class)
-                .setAction(LocationService.ACTION_CHECK_LOCATION_UPDATES);
-
-        if (context.startService(intent) == null) {
-            Logger.error("Unable to start location service. Check that the location service is added to the manifest.");
-        }
+        });
     }
 
     /**
-     * Starts and binds the location service.
-     */
-    private synchronized void bindService() {
-        if (!isBound) {
-            Logger.verbose("UALocationManager - Binding to location service.");
-
-            Intent intent = new Intent(context, LocationService.class);
-            if (context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)) {
-                isBound = true;
-            } else {
-                Logger.error("Unable to bind to location service. Check that the location service is added to the manifest.");
-            }
-        }
-    }
-
-    /**
-     * Subscribes to the location service for updates.
-     */
-    private synchronized void subscribeUpdates() {
-        if (!isSubscribed && sendMessage(LocationService.MSG_SUBSCRIBE_UPDATES, 0, null)) {
-            Logger.info("Subscribing to continuous location updates.");
-            isSubscribed = true;
-        }
-    }
-
-    /**
-     * Unsubscribes to the location service for updates.
-     */
-    private synchronized void unsubscribeUpdates() {
-        if (isSubscribed) {
-            Logger.info("Unsubscribing from continuous location updates.");
-            sendMessage(LocationService.MSG_UNSUBSCRIBE_UPDATES, 0, null);
-            isSubscribed = false;
-        }
-    }
-
-    /**
-     * Unbinds the location service.
-     * <p/>
-     * Does not request the location service to stop, the location service will
-     * stop itself on its own.
-     */
-    private synchronized void unbindService() {
-        if (isBound) {
-            Logger.verbose("UALocationManager - Unbinding to location service.");
-
-            context.unbindService(serviceConnection);
-            isBound = false;
-        }
-    }
-
-    private synchronized void onServiceConnected(IBinder service) {
-        serviceMessenger = new Messenger(service);
-
-        // Send any location requests that we have in flight.
-        synchronized (singleLocationRequests) {
-            for (int i = 0; i < singleLocationRequests.size(); i++) {
-                singleLocationRequests.valueAt(i).sendLocationRequest();
-            }
-        }
-        updateServiceConnection();
-    }
-
-    private synchronized void onServiceDisconnected() {
-        serviceMessenger = null;
-        isSubscribed = false;
-    }
-
-    /**
-     * Helper method that constructs and sends a message to the location
-     * service.  The message will be populated with the supplied what and data
-     * parameters and automatically set the replyto field to the UALocationManager's
-     * messenger.
+     * Sets the last update's location request options.
      *
-     * @param what The message's what field.
-     * @param arg1 The message's arg1 field.
-     * @param data The message's data field.
+     * @param lastUpdateOptions The last update's location request options.
      */
-    private boolean sendMessage(int what, int arg1, @Nullable Bundle data) {
-        if (serviceMessenger == null) {
-            return false;
-        }
-
-        Message message = Message.obtain(null, what, arg1, 0);
-        if (data != null) {
-            message.setData(data);
-        }
-
-        message.replyTo = messenger;
-
-        try {
-            serviceMessenger.send(message);
-            return true;
-        } catch (RemoteException e) {
-            Logger.debug("UALocationManager - Remote exception when sending message to location service");
-        }
-        return false;
+    void setLastUpdateOptions(@Nullable LocationRequestOptions lastUpdateOptions) {
+        preferenceDataStore.put(LAST_REQUESTED_LOCATION_OPTIONS_KEY, lastUpdateOptions);
     }
 
     /**
-     * Handler of incoming messages from service.
-     */
-    private static class IncomingHandler extends Handler {
+     * Gets the last update's location request options.  If no options have been set, it will default to null.
+     *
+     * @return The last update's location request options.
+     * */
+    @Nullable
+    LocationRequestOptions getLastUpdateOptions() {
+        String jsonString = preferenceDataStore.getString(LAST_REQUESTED_LOCATION_OPTIONS_KEY, null);
+        LocationRequestOptions lastUpdateOptions = null;
 
-        IncomingHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            UALocationManager manager = UAirship.shared().getLocationManager();
-
-            switch (msg.what) {
-                case LocationService.MSG_NEW_LOCATION_UPDATE:
-                    Location location = (Location) msg.obj;
-                    if (location != null) {
-
-                        // Notify the listeners of the new location
-                        synchronized (manager.locationListeners) {
-                            for (LocationListener listener : manager.locationListeners) {
-                                listener.onLocationChanged(location);
-                            }
-                        }
-                    }
-                    break;
-                case LocationService.MSG_SINGLE_REQUEST_RESULT:
-                    location = (Location) msg.obj;
-                    int requestId = msg.arg1;
-
-                    // Send any location requests that we have in flight.
-                    synchronized (manager.singleLocationRequests) {
-                        PendingResult<Location> request = manager.singleLocationRequests.get(requestId);
-                        if (request != null) {
-                            request.setResult(location);
-                            manager.singleLocationRequests.remove(requestId);
-                            manager.updateServiceConnection();
-                        }
-                    }
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
-    /**
-     * A request for a single location.
-     */
-    private class SingleLocationRequest extends PendingResult<Location> {
-
-        private final LocationRequestOptions options;
-        private final int requestId;
-
-        /**
-         * SingleLocationRequest constructor.
-         *
-         * @param callback The location callback.
-         * @param requestId The request id.
-         * @param options The location request options.
-         */
-        SingleLocationRequest(LocationCallback callback, int requestId, LocationRequestOptions options) {
-            super(callback);
-            this.requestId = requestId;
-            this.options = options;
-        }
-
-        @Override
-        protected void onCancel() {
-            if (!isDone()) {
-                sendMessage(LocationService.MSG_CANCEL_SINGLE_LOCATION_REQUEST, requestId, null);
-            }
-
-            synchronized (singleLocationRequests) {
-                singleLocationRequests.remove(requestId);
+        if (jsonString != null) {
+            try {
+                lastUpdateOptions = LocationRequestOptions.parseJson(jsonString);
+            } catch (JsonException e) {
+                Logger.error("UALocationManager - Failed parsing LocationRequestOptions from JSON: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                Logger.error("UALocationManager - Invalid LocationRequestOptions from JSON: " + e.getMessage());
             }
         }
 
-        /**
-         * Sends the single location request
-         */
-        synchronized void sendLocationRequest() {
-            if (isDone()) {
-                return;
-            }
-
-            Bundle data = new Bundle();
-            data.putParcelable(LocationService.EXTRA_LOCATION_REQUEST_OPTIONS, options);
-            sendMessage(LocationService.MSG_REQUEST_SINGLE_LOCATION, requestId, data);
-        }
+        return lastUpdateOptions;
     }
 
     /**
@@ -611,5 +401,42 @@ public class UALocationManager extends AirshipComponent {
             Logger.error("UALocationManager - Unable to retrieve location permissions: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Called by {@link LocationService} when a new continuous location update is available.
+     *
+     * @param location The location update.
+     */
+    void onLocationUpdate(@NonNull final Location location) {
+        if (!isContinuousLocationUpdatesAllowed()) {
+            return;
+        }
+
+        Logger.info("Received location update: " + location);
+
+        // Notify the listeners of the new location
+        synchronized (locationListeners) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    for (LocationListener listener : new ArrayList<>(locationListeners)) {
+                        listener.onLocationChanged(location);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Called by {@link LocationService} when a location provider changes.
+     */
+    void onSystemLocationProvidersChanged() {
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                locationProvider.onSystemLocationProvidersChanged(getLocationRequestOptions());
+            }
+        });
     }
 }

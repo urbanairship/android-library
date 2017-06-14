@@ -19,6 +19,14 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
 
     /**
      * CancelableOperation constructor.
+     */
+    public CancelableOperation() {
+        this(null);
+    }
+
+    /**
+     * CancelableOperation constructor.
+     *
      * @param looper A Looper object whose message queue will be used for the callback,
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
