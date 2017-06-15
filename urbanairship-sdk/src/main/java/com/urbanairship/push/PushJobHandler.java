@@ -58,11 +58,6 @@ class PushJobHandler {
      */
     private static final int MAX_CANONICAL_IDS = 10;
 
-    /**
-     * Amount of time in milliseconds to wait for {@link com.urbanairship.richpush.RichPushInbox} to refresh.
-     */
-    private static final int RICH_PUSH_REFRESH_WAIT_TIME_MS = 60000; // 1 minute
-
     private final NotificationManagerCompat notificationManager;
     private final UAirship airship;
     private final PreferenceDataStore dataStore;

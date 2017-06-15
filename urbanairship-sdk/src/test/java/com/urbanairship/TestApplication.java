@@ -4,7 +4,7 @@ package com.urbanairship;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.content.ContentProvider;
+import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
@@ -17,9 +17,9 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
 
+import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.TestLifecycleApplication;
-import org.robolectric.shadows.ShadowContentResolver;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
@@ -52,8 +52,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.isFlying = true;
         UAirship.isTakingOff = true;
 
-        ContentProvider provider = new UrbanAirshipProvider();
-        provider.onCreate();
 
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
         UAirship.sharedAirship.platform = UAirship.ANDROID_PLATFORM;
@@ -72,7 +70,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
         UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
 
-        ShadowContentResolver.registerProvider(UrbanAirshipProvider.getAuthorityString(this), provider);
+        ProviderInfo info = new ProviderInfo();
+        info.authority = UrbanAirshipProvider.getAuthorityString(this);
+        Robolectric.buildContentProvider(UrbanAirshipProvider.class).create(info);
     }
 
     public void setPlatform(int platform) {

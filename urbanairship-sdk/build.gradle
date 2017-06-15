@@ -50,8 +50,8 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:2.7.22'
-    testCompile 'org.robolectric:robolectric:3.2.2'
-    testCompile 'org.robolectric:shadows-support-v4:3.2.2'
+    testCompile 'org.robolectric:robolectric:3.3.2'
+    testCompile 'org.robolectric:shadows-support-v4:3.3.2'
     testCompile 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
     doclava("com.google.doclava:doclava:1.0.6")
 }

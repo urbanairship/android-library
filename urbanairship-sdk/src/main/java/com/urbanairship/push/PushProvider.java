@@ -36,7 +36,7 @@ public interface PushProvider {
     boolean shouldUpdateRegistration(@NonNull Context context, @NonNull String registrationId);
 
     /**
-     * Starts registration process. After registration is finished, call {@link PushProviderBridge#registrationFinished(Context, Class, String)}.
+     * Starts registration process. After registration is finished, call {@link PushProviderBridge#registrationFinished(Context, Class, String, PushProviderBridge.Callback)} (Context, Class, String)}.
      *
      * @param context The application context.
      * @throws IOException If the registration fails from an IOException. IOExceptions will trigger a retry with backoff.

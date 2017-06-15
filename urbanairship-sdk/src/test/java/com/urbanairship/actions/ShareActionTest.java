@@ -13,22 +13,23 @@ import com.urbanairship.BaseTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.res.builder.RobolectricPackageManager;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.robolectric.Shadows.shadowOf;
 
 public class ShareActionTest extends BaseTestCase {
 
     private ShareAction action;
-    private RobolectricPackageManager packageManager;
+    private ShadowPackageManager packageManager;
 
     @Before
     public void setup() {
         action = new ShareAction();
-        packageManager = (RobolectricPackageManager) RuntimeEnvironment.application.getPackageManager();
+        packageManager = shadowOf(RuntimeEnvironment.application.getPackageManager());
     }
 
     /**
