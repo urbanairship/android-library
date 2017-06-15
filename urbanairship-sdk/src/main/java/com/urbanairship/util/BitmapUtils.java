@@ -27,8 +27,10 @@ public class BitmapUtils {
     private final static int NETWORK_TIMEOUT_MS = 2000;
     private final static int BUFFER_SIZE = 1024;
 
+
     /**
      * Create a scaled bitmap.
+     *
      * @param context The application context.
      * @param url The URL image.
      * @param reqWidth The requested width of the image.
@@ -110,6 +112,7 @@ public class BitmapUtils {
 
     /**
      * Downloads a file to disk.
+     *
      * @param url The URL image.
      * @param file The file path where the image will be downloaded.
      * @return <code>true</code> if file was downloaded, <code>false</code> otherwise.
@@ -120,9 +123,10 @@ public class BitmapUtils {
 
         InputStream inputStream = null;
         FileOutputStream outputStream = null;
+        URLConnection conn = null;
 
         try {
-            URLConnection conn = url.openConnection();
+            conn = url.openConnection();
             conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
             conn.setUseCaches(true);
             inputStream = conn.getInputStream();
@@ -154,6 +158,10 @@ public class BitmapUtils {
 
             if (inputStream != null) {
                 inputStream.close();
+            }
+
+            if (conn != null && conn instanceof HttpURLConnection) {
+                ((HttpURLConnection) conn).disconnect();
             }
         }
 

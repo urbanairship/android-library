@@ -20,14 +20,21 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.BitmapUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Notification builder extender to add the public notification defined by a {@link PushMessage}.
  */
 public class StyleNotificationExtender implements NotificationCompat.Extender {
+
+    private final static long BIG_PICTURE_TIMEOUT_SECONDS = 10;
 
     private final static int BIG_IMAGE_HEIGHT_DP = 240;
     private final static double BIG_IMAGE_SCREEN_WIDTH_PERCENT = .75;
@@ -160,33 +167,31 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         String title = styleJson.opt(TITLE_KEY).getString();
         String summary = styleJson.opt(SUMMARY_KEY).getString();
 
+        URL url;
+
         try {
-            URL url = new URL(styleJson.opt(BIG_PICTURE_KEY).getString(""));
-            Bitmap bitmap;
-            try {
-                bitmap = fetchBigImage(url);
-            } catch (IOException e) {
-                Logger.error("Failed to create big picture style, unable to fetch image: " + e);
-                return false;
-            }
-            if (bitmap == null) {
-                Logger.error("Failed to create big picture style, unable to fetch image: " + url);
-                return false;
-            }
-
-            // Set big picture image
-            style.bigPicture(bitmap);
-
-            // Clear the large icon when the big picture is expanded
-            style.bigLargeIcon(null);
-
-            // Set the image as the large icon to show the image when collapsed
-            builder.setLargeIcon(bitmap);
-
+            url = new URL(styleJson.opt(BIG_PICTURE_KEY).getString(""));
         } catch (MalformedURLException e) {
             Logger.error("Malformed big picture URL.", e);
             return false;
         }
+
+
+        Bitmap bitmap = fetchBigImage(url);
+
+        if (bitmap == null) {
+            return false;
+        }
+
+        // Set big picture image
+        style.bigPicture(bitmap);
+
+        // Clear the large icon when the big picture is expanded
+        style.bigLargeIcon(null);
+
+        // Set the image as the large icon to show the image when collapsed
+        builder.setLargeIcon(bitmap);
+
 
         if (!UAStringUtil.isEmpty(title)) {
             style.setBigContentTitle(title);
@@ -237,13 +242,9 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
      *
      * @param url The image URL.
      * @return The bitmap, or null if it failed to be fetched.
-     * @throws IOException
      */
     @Nullable
-    private Bitmap fetchBigImage(@Nullable URL url) throws IOException {
-        if (url == null) {
-            return null;
-        }
+    private Bitmap fetchBigImage(@NonNull final URL url) {
 
         Logger.info("Fetching notification image at URL: " + url);
         WindowManager window = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -251,11 +252,29 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         window.getDefaultDisplay().getMetrics(dm);
 
         // Since notifications do not take up the entire screen, request 3/4 the longest device dimension
-        int reqWidth = (int) (Math.max(dm.widthPixels, dm.heightPixels) * BIG_IMAGE_SCREEN_WIDTH_PERCENT);
+        final int reqWidth = (int) (Math.max(dm.widthPixels, dm.heightPixels) * BIG_IMAGE_SCREEN_WIDTH_PERCENT);
 
         // Big images have a max height of 240dp
-        int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
+        final int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
 
-        return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
+        Future<Bitmap> future = Executors.newSingleThreadExecutor().submit(new Callable<Bitmap>() {
+            @Override
+            public Bitmap call() throws Exception {
+                return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
+            }
+        });
+
+        try {
+            return future.get(BIG_PICTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException e) {
+            Logger.error("Failed to create big picture style, unable to fetch image: " + e);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            Logger.error("Big picture took longer than " + BIG_PICTURE_TIMEOUT_SECONDS + " seconds to fetch.");
+        }
+
+        return null;
+
+
     }
 }
