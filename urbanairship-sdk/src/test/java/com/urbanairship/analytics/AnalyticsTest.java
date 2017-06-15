@@ -4,14 +4,14 @@ package com.urbanairship.analytics;
 
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +29,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ResourceType")
 public class AnalyticsTest extends BaseTestCase {
@@ -36,7 +37,6 @@ public class AnalyticsTest extends BaseTestCase {
     Analytics analytics;
     LocalBroadcastManager localBroadcastManager;
     JobDispatcher mockJobDispatcher;
-    ActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
@@ -109,9 +109,10 @@ public class AnalyticsTest extends BaseTestCase {
         assertNull("App background should clear the conversion send id", analytics.getConversionSendId());
 
         // Verify that a job to add a background event is dispatched
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
+            public boolean matches(Job job) {
+                JobInfo jobInfo = job.getJobInfo();
                 return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         AppBackgroundEvent.TYPE.equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
@@ -139,19 +140,20 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddEvent() {
         Event event = Mockito.mock(Event.class);
-        Mockito.when(event.getEventId()).thenReturn("event-id");
-        Mockito.when(event.getType()).thenReturn("event-type");
-        Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
-        Mockito.when(event.getTime()).thenReturn("1000");
-        Mockito.when(event.isValid()).thenReturn(true);
-        Mockito.when(event.getPriority()).thenReturn(Event.LOW_PRIORITY);
+        when(event.getEventId()).thenReturn("event-id");
+        when(event.getType()).thenReturn("event-type");
+        when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
+        when(event.getTime()).thenReturn("1000");
+        when(event.isValid()).thenReturn(true);
+        when(event.getPriority()).thenReturn(Event.LOW_PRIORITY);
 
 
         analytics.addEvent(event);
 
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
+            public boolean matches(Job job) {
+                JobInfo jobInfo = job.getJobInfo();
                 return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
                         "event-id".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_ID)) &&
                         "event-data".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_DATA)) &&
@@ -207,14 +209,14 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddInvalidEvent() {
         Event event = Mockito.mock(Event.class);
-        Mockito.when(event.getEventId()).thenReturn("event-id");
-        Mockito.when(event.getType()).thenReturn("event-type");
-        Mockito.when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
-        Mockito.when(event.getEventId()).thenReturn("event-id");
-        Mockito.when(event.getTime()).thenReturn("1000");
-        Mockito.when(event.getPriority()).thenReturn(Event.HIGH_PRIORITY);
+        when(event.getEventId()).thenReturn("event-id");
+        when(event.getType()).thenReturn("event-type");
+        when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
+        when(event.getEventId()).thenReturn("event-id");
+        when(event.getTime()).thenReturn("1000");
+        when(event.getPriority()).thenReturn(Event.HIGH_PRIORITY);
 
-        Mockito.when(event.isValid()).thenReturn(false);
+        when(event.isValid()).thenReturn(false);
 
         analytics.addEvent(event);
         verifyZeroInteractions(mockJobDispatcher);
@@ -245,11 +247,11 @@ public class AnalyticsTest extends BaseTestCase {
                  .apply();
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "associate_identifiers".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
+            public boolean matches(Job job) {
+                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "associate_identifiers".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
 
@@ -272,11 +274,11 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onBackground(0);
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
+            public boolean matches(Job job) {
+                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
     }
@@ -292,11 +294,11 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.trackScreen("test_screen_2");
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
+            public boolean matches(Job job) {
+                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
+                        "screen_tracking".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
             }
         }));
     }

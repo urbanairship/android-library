@@ -12,8 +12,9 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
-import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
@@ -62,6 +63,7 @@ public class PushManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         mockDispatcher = mock(JobDispatcher.class);
+
         mockAnalytics = mock(Analytics.class);
         Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
         TestApplication.getApplication().setAnalytics(mockAnalytics);
@@ -677,11 +679,11 @@ public class PushManagerTest extends BaseTestCase {
                    .removeTags("tagGroup", tagsToRemove)
                    .apply();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
             @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
-                        jobInfo.getAirshipComponentName().equals(PushManager.class.getName());
+            public boolean matches(Job job) {
+                return job.getJobInfo().getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
+                        job.getJobInfo().getAirshipComponentName().equals(PushManager.class.getName());
             }
         }));
     }

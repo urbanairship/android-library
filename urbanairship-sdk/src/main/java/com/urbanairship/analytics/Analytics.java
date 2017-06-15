@@ -76,13 +76,13 @@ public class Analytics extends AirshipComponent {
 
     /**
      * The Analytics constructor.
+     *
      * @param context The application context.
      * @param preferenceDataStore The preference data store.
      * @param options The airship config options.
      * @param platform The device platform.
      * @param jobDispatcher The job dispatcher.
      * @param activityMonitor The activity monitor.
-     *
      * @hide
      */
     @VisibleForTesting
@@ -106,7 +106,7 @@ public class Analytics extends AirshipComponent {
         listener = new ActivityMonitor.Listener() {
             @Override
             public void onForeground(final long time) {
-               Analytics.this.onForeground(time);
+                Analytics.this.onForeground(time);
             }
 
             @Override
@@ -175,18 +175,22 @@ public class Analytics extends AirshipComponent {
         }
 
         Logger.verbose("Analytics - Adding event: " + event.getType());
-        JobInfo addEventJobInfo = JobInfo.newBuilder()
-                                         .setAction(AnalyticsJobHandler.ACTION_ADD)
-                                         .setAirshipComponent(Analytics.class)
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
-                                         .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
-                                         .build();
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(AnalyticsJobHandler.ACTION_ADD)
+                                 .setAirshipComponent(Analytics.class)
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
+                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
+                                 .build();
 
-        jobDispatcher.dispatch(addEventJobInfo);
+        if (UAirship.isMainProcess()) {
+            jobDispatcher.runJob(new Job(jobInfo, false));
+        } else {
+            jobDispatcher.dispatch(jobInfo);
+        }
 
         applyListeners(event);
     }

@@ -5,6 +5,7 @@ package com.urbanairship.job;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -33,7 +34,7 @@ import java.util.concurrent.Executors;
 public class JobDispatcher {
 
 
-    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
+    private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
 
     private final Context context;
     private static JobDispatcher instance;
@@ -51,7 +52,7 @@ public class JobDispatcher {
          * Called when a job is finished.
          *
          * @param job The job.
-         * @param result The jobInfo's result.
+         * @param result The job's result.
          */
         void onFinish(Job job, @Job.JobResult int result);
     }
@@ -155,7 +156,7 @@ public class JobDispatcher {
      */
     private void reschedule(JobInfo jobInfo) {
         try {
-           getScheduler().reschedule(context, jobInfo);
+            getScheduler().reschedule(context, jobInfo);
         } catch (SchedulerException e) {
             Logger.error("Scheduler failed to schedule jobInfo", e);
 
@@ -212,29 +213,43 @@ public class JobDispatcher {
         return scheduler;
     }
 
-
     /**
-     * Runs a jobInfo.
+     * Runs a job.
      *
      * @param job The job to run.
-     * @param callback Callback when the jobInfo is finished.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void runJob(@NonNull final Job job, @NonNull final Callback callback) {
+    public void runJob(@NonNull final Job job) {
+        runJob(job, null);
+    }
+
+    /**
+     * Runs a job.
+     *
+     * @param job The job to run.
+     * @param callback Callback when the job is finished.
+     */
+    public void runJob(@NonNull final Job job, @Nullable final Callback callback) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
                 if (airship == null) {
                     Logger.error("JobDispatcher - UAirship not ready. Rescheduling job: " + job);
-                    callback.onFinish(job, Job.JOB_RETRY);
+                    if (callback != null) {
+                        callback.onFinish(job, Job.JOB_RETRY);
+                    }
+
+                    reschedule(job.getJobInfo());
+
                     return;
                 }
 
                 final AirshipComponent component = findAirshipComponent(airship, job.getJobInfo().getAirshipComponentName());
                 if (component == null) {
                     Logger.error("JobDispatcher - Unavailable to find airship components for job: " + job);
-                    callback.onFinish(job, Job.JOB_FINISHED);
+                    if (callback != null) {
+                        callback.onFinish(job, Job.JOB_FINISHED);
+                    }
                     return;
                 }
 
@@ -248,7 +263,9 @@ public class JobDispatcher {
                             reschedule(job.getJobInfo());
                         }
 
-                        callback.onFinish(job, result);
+                        if (callback != null) {
+                            callback.onFinish(job, result);
+                        }
                     }
                 });
             }

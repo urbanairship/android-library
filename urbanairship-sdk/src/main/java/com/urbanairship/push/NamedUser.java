@@ -210,7 +210,11 @@ public class NamedUser extends AirshipComponent {
                                  .setAirshipComponent(NamedUser.class)
                                  .build();
 
-        jobDispatcher.dispatch(jobInfo);
+        if (UAirship.isMainProcess()) {
+            jobDispatcher.runJob(new Job(jobInfo, false));
+        } else {
+            jobDispatcher.dispatch(jobInfo);
+        }
     }
 
     /**
