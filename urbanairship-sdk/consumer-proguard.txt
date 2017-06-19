@@ -8,3 +8,7 @@
 
 ## Autopilot
 -keep public class * extends com.urbanairship.Autopilot
+
+## Actions
+-keep public class * extends com.urbanairship.actions.Action
+-keep public class * implements com.urbanairship.actions.ActionRegistry$Predicate

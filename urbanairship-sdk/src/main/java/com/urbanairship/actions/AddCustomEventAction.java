@@ -133,9 +133,15 @@ public class AddCustomEventAction extends Action {
         return false;
     }
 
-    static class AddCustomEventActionPredicate implements ActionRegistry.Predicate {
+    /**
+     * Default {@link AddCustomEventAction} predicate.
+     */
+    public static class AddCustomEventActionPredicate implements ActionRegistry.Predicate {
+
+        @Override
         public boolean apply(ActionArguments arguments) {
             return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
         }
+
     }
 }

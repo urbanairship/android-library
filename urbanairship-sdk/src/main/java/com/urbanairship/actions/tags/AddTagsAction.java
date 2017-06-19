@@ -79,9 +79,15 @@ public class AddTagsAction extends BaseTagsAction {
         tagGroupsEditor.apply();
     }
 
-    static class AddTagsPredicate implements ActionRegistry.Predicate {
+    /**
+     * Default {@link AddTagsAction} predicate.
+     */
+    public static class AddTagsPredicate implements ActionRegistry.Predicate {
+
+        @Override
         public boolean apply(ActionArguments arguments) {
             return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
         }
+
     }
 }

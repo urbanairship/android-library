@@ -263,7 +263,10 @@ public class LandingPageAction extends Action {
         return true;
     }
 
-    static class LandingPagePredicate implements ActionRegistry.Predicate {
+    /**
+     * Default {@link LandingPageAction} predicate.
+     */
+    public static class LandingPagePredicate implements ActionRegistry.Predicate {
         @Override
         public boolean apply(ActionArguments arguments) {
             if (Action.SITUATION_PUSH_RECEIVED == arguments.getSituation()) {

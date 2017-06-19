@@ -80,10 +80,15 @@ public class RemoveTagsAction extends BaseTagsAction {
         tagGroupsEditor.apply();
     }
 
-    static class RemoveTagsPredicate implements ActionRegistry.Predicate {
+    /**
+     * Default {@link RemoveTagsPredicate} predicate.
+     */
+    public static class RemoveTagsPredicate implements ActionRegistry.Predicate {
+
         @Override
         public boolean apply(ActionArguments arguments) {
             return Action.SITUATION_PUSH_RECEIVED != arguments.getSituation();
         }
+
     }
 }

@@ -85,11 +85,16 @@ public class FetchDeviceInfoAction extends Action {
         return ActionResult.newResult(new ActionValue(properties.build().toJsonValue()));
     }
 
-    static class FetchDeviceInfoPredicate implements ActionRegistry.Predicate {
+    /**
+     * Default {@link FetchDeviceInfoAction} predicate.
+     */
+    public static class FetchDeviceInfoPredicate implements ActionRegistry.Predicate {
+
         @Override
         public boolean apply(ActionArguments arguments) {
             return arguments.getSituation() == Action.SITUATION_WEB_VIEW_INVOCATION ||
                     arguments.getSituation() == Action.SITUATION_MANUAL_INVOCATION;
         }
+
     }
 }
