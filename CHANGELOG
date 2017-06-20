@@ -3,6 +3,34 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.6.0 - June 20, 2017
+=============================
+New Features
+------------
+- Android O compatibility.
+- Added support for setting the default notification channel in Airship Config options.
+- Added support for setting the notification channel per push from the push API.
+- Added a default notification channel. Currently the default channel's name and description is only
+  available in english. Other localizations will be provided in an SDK update.
+
+Behavior Changes
+----------------
+- Android O devices will only have 10 seconds to process a push notification. Custom notification factories
+  that require more time can implement `public boolean requiresLongRunningTask(PushMessage message)` to have
+  the SDK schedule a job to process the notification when the application has more than 10 seconds.
+- Listening for location updates no longer keeps the LocationService alive in the background and is
+  only supported on the main process.
+- Push messages that are associated with a message center message will no longer wait for the inbox
+  to be refreshed. Custom message center implementations should be updated to handle the message
+  not being available when the user tries to deep link to the message.
+- Fetching images for a big picture notification style will timeout after 10 seconds. If the image times out,
+  the notification will be posted without the big picture style.
+
+Bug Fixes
+---------
+- Added proguard rules to prevent default Urban Airship actions from being stripped out.
+- Fixed tag actions predicates from being applied.
+
 Version 8.5.1 - June 1, 2017
 ============================
 Bug Fixes

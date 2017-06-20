@@ -15,7 +15,8 @@ Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement
 
 ## Requirements
 - minSdkVersion 15+
-- compileSdkVersion 25
+- compileSdkVersion 26
+- Google Play Services 11.0.0+
 
 ## Quickstart
 
@@ -26,13 +27,14 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:8.2.+'
+     compile 'com.urbanairship.android:urbanairship-sdk:8.6.+'
+     compile 'com.google.android.gms:play-services-gcm:11.0.1'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:25.0.1'
+     compile 'com.android.support:cardview-v7:25.3.1'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:9.8.0'
+     compile 'com.google.android.gms:play-services-location:11.0.1'
    }
 ```
 
@@ -60,6 +62,9 @@ Create a new `airshipconfig.properties` file with your application’s settings:
    # Notification customization
    notificationIcon = ic_notification
    notificationAccentColor = #ff0000
+
+   # Optional - Set the default channel
+   notificationChannel = "customChannel"
 ```
 
 Set the Autopilot meta-data in the AndroidManifest.xml file:

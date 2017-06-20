@@ -401,6 +401,7 @@ public class NotificationFactory {
             Logger.error("Factory notification channel " + getNotificationChannel() + " does not exist. Unable to apply channel on notification.");
         }
 
+
         // Fallback to Default Channel
         NotificationChannel channel = new NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL,
                 context.getString(R.string.ua_default_channel_name),
@@ -424,9 +425,11 @@ public class NotificationFactory {
     Notification applyNotificationChannel(PushMessage message, Notification notification) {
         // TODO: Remove this once support library 26.0 comes out
         if (Build.VERSION.SDK_INT >= 26) {
-            return Notification.Builder.recoverBuilder(getContext(), notification)
-                                               .setChannelId(getActiveNotificationChannel(message))
-                                               .build();
+            if (notification.getChannelId() == null) {
+                return Notification.Builder.recoverBuilder(getContext(), notification)
+                                           .setChannelId(getActiveNotificationChannel(message))
+                                           .build();
+            }
         }
 
         return notification;
@@ -442,7 +445,7 @@ public class NotificationFactory {
      * the push message will persist between device reboots.
      *
      * @param message The push message.
-     * @return {@code true}
+     * @return {@code true} to require long running task, otherwise {@code false}.
      */
     public boolean requiresLongRunningTask(PushMessage message) {
         return false;
