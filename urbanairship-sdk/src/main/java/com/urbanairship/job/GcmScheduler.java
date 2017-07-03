@@ -25,8 +25,13 @@ class GcmScheduler implements Scheduler {
     private static final long INITIAL_RETRY_SECONDS = 10; // 10 seconds.
     private static final String EXTRA_GCM_TASK = "EXTRA_GCM_TASK";
 
-    public void cancel(@NonNull Context context, @NonNull String tag) {
-        GcmNetworkManager.getInstance(context).cancelTask(tag, AirshipGcmTaskService.class);
+    @Override
+    public void cancel(@NonNull Context context, @NonNull String tag) throws SchedulerException {
+        try {
+            GcmNetworkManager.getInstance(context).cancelTask(tag, AirshipGcmTaskService.class);
+        } catch (RuntimeException e) {
+            throw new SchedulerException("GcmScheduler failed to cancel job.", e);
+        }
     }
 
     @Override
