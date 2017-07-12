@@ -3,32 +3,26 @@
 package com.urbanairship.push;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.Mockito;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 public class TagGroupsEditorTest extends BaseTestCase {
 
     private final String tagGroup = "someTagGroup";
-    private TagGroupsEditor editor;
-    private JobDispatcher mockDispatcher;
+    private TestTagGroupsEditor editor;
 
     @Before
     public void setUp() {
-        mockDispatcher = Mockito.mock(JobDispatcher.class);
-        editor = new TagGroupsEditor("my action", PushManager.class, mockDispatcher);
+        editor = new TestTagGroupsEditor();
     }
 
     /**
@@ -36,12 +30,12 @@ public class TagGroupsEditorTest extends BaseTestCase {
      */
     @Test
     public void testEmptyTagGroup() {
-        editor.addTag("", "tag1");
-        editor.setTag("", "tag2");
-        editor.removeTag("", "tag3");
-        editor.apply();
+        editor.addTag("", "tag1")
+              .setTag("", "tag2")
+              .removeTag("", "tag3")
+              .apply();
 
-        verifyZeroInteractions(mockDispatcher);
+        assertTrue(editor.collapsedMutations.isEmpty());
     }
 
     /**
@@ -54,43 +48,59 @@ public class TagGroupsEditorTest extends BaseTestCase {
         testTags.add("  ");
         testTags.add("  ");
 
-        editor.addTags(tagGroup, testTags);
-        editor.addTags(tagGroup, new HashSet<String>());
+        editor.addTags(tagGroup, testTags)
+              .addTags(tagGroup, new HashSet<String>())
+              .removeTags(tagGroup, testTags)
+              .removeTags(tagGroup, new HashSet<String>())
+              .apply();
 
-        editor.removeTags(tagGroup, testTags);
-        editor.removeTags(tagGroup, new HashSet<String>());
-
-        editor.apply();
-
-        verifyZeroInteractions(mockDispatcher);
+        assertTrue(editor.collapsedMutations.isEmpty());
     }
 
     /**
      * Test setting null or empty set is allowed for set operations.
      */
     @Test
-    public void testSetEmptyTags() throws JsonException {
-        editor.setTags(tagGroup, null);
-        editor.apply();
+    public void testSetEmptyTags() {
+        editor.setTags(tagGroup, null)
+              .apply();
 
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
+
+        assertEquals(1, editor.collapsedMutations.size());
+
+        TagGroupsMutation expected = TagGroupsMutation.newSetTagsMutation(tagGroup, new HashSet<String>());
+        assertEquals(expected, editor.collapsedMutations.get(0));
+    }
+
+    @Test
+    public void testAllowTagGroupChanges() {
+        editor = new TestTagGroupsEditor() {
             @Override
-            public boolean matches(Job job) {
-                if (!job.getJobInfo().getAction().equals("my action")) {
+            protected boolean allowTagGroupChange(String tagGroup) {
+                if (tagGroup.equals("ignore")) {
                     return false;
                 }
-
-                TagGroupsMutation expected = TagGroupsMutation.newSetTagsMutation(tagGroup, new HashSet<String>());
-
-                JsonValue actual;
-                try {
-                    actual = JsonValue.parseString(job.getJobInfo().getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
-                } catch (JsonException e) {
-                    return false;
-                }
-
-                return actual.optList().size() == 1 && actual.optList().get(0).equals(expected.toJsonValue());
+                return true;
             }
-        }));
+        };
+
+        editor.addTag("ignore", "hi")
+              .removeTag(tagGroup, "cool")
+              .apply();
+
+        assertEquals(1, editor.collapsedMutations.size());
+
+        TagGroupsMutation expected = TagGroupsMutation.newRemoveTagsMutation(tagGroup, new HashSet<>(Arrays.asList("cool")));
+        assertEquals(expected, editor.collapsedMutations.get(0));
+    }
+
+    private static class TestTagGroupsEditor extends TagGroupsEditor {
+
+        List<TagGroupsMutation> collapsedMutations;
+
+        @Override
+        protected void onApply(List<TagGroupsMutation> collapsedMutations) {
+            this.collapsedMutations = collapsedMutations;
+        }
     }
 }

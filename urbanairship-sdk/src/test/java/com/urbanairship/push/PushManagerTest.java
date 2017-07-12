@@ -12,7 +12,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
@@ -674,16 +673,18 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testStartUpdateChannelTagService() {
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
         pushManager.editTagGroups()
                    .addTags("tagGroup", tagsToAdd)
                    .removeTags("tagGroup", tagsToRemove)
                    .apply();
 
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES) &&
-                        job.getJobInfo().getAirshipComponentName().equals(PushManager.class.getName());
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS) &&
+                        jobInfo.getAirshipComponentName().equals(PushManager.class.getName());
             }
         }));
     }

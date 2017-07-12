@@ -4,6 +4,7 @@ package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -21,7 +22,8 @@ import java.util.Set;
 /**
  * Defines a tag group mutations.
  */
-class TagGroupsMutation implements JsonSerializable {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class TagGroupsMutation implements JsonSerializable {
 
     private static final String ADD_KEY = "add";
     private static final String REMOVE_KEY = "remove";
@@ -323,15 +325,7 @@ class TagGroupsMutation implements JsonSerializable {
 
         TagGroupsMutation mutation = (TagGroupsMutation) o;
 
-        if (addTags != null ? !addTags.equals(mutation.addTags) : mutation.addTags != null) {
-            return false;
-        }
-
-        if (removeTags != null ? !removeTags.equals(mutation.removeTags) : mutation.removeTags != null) {
-            return false;
-        }
-
-        return setTags != null ? setTags.equals(mutation.setTags) : mutation.setTags == null;
+        return mutation.toJsonValue().equals(mutation.toJsonValue());
 
     }
 

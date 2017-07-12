@@ -2,12 +2,12 @@
 
 package com.urbanairship.push;
 
+import com.google.common.collect.Lists;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -20,10 +20,12 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.URL;
+import java.util.HashSet;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -63,17 +65,16 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDValid() {
+        // Make sure we have a pending tag group change
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        namedUser.getTagGroupStore().push(mutation);
+
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         namedUser.setId(fakeNamedUserId);
 
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
-            }
-        }));
+        assertTrue(namedUser.getTagGroupStore().getMutations().isEmpty());
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -84,6 +85,7 @@ public class NamedUserTest extends BaseTestCase {
 
         assertEquals("Named user ID should be set", fakeNamedUserId, namedUser.getId());
     }
+
 
     /**
      * Test set invalid ID.
@@ -101,17 +103,17 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDNull() {
+        // Make sure we have a pending tag group change
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+        namedUser.getTagGroupStore().push(mutation);
+
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
 
         namedUser.setId(null);
 
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
-            }
-        }));
+        // Pending tag group changes should be cleared
+        assertTrue(namedUser.getTagGroupStore().getMutations().isEmpty());
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -210,10 +212,11 @@ public class NamedUserTest extends BaseTestCase {
                  .removeTag("tagGroup", "tag5")
                  .apply();
 
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES);
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -257,18 +260,4 @@ public class NamedUserTest extends BaseTestCase {
         }));
     }
 
-    /**
-     * Test dispatchClearTagsJob dispatches a job to clear the pending tags.
-     */
-    @Test
-    public void testStartClearPendingTagsService() {
-        namedUser.dispatchClearTagsJob();
-
-        verify(mockDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS);
-            }
-        }));
-    }
 }
