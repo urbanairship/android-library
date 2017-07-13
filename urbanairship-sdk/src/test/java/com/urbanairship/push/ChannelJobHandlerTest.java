@@ -224,7 +224,7 @@ public class ChannelJobHandlerTest extends BaseTestCase {
         when(client.createChannelWithPayload(payload)).thenReturn(response);
 
         JobInfo jobInfo = JobInfo.newBuilder().setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());

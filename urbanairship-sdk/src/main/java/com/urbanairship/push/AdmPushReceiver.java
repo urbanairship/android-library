@@ -47,25 +47,6 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
                 });
                 break;
 
-            case ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT:
-                result = goAsync();
-
-                if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
-                    Logger.error("ADM error occurred: " + intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
-                }
-
-                String registrationID = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
-                PushProviderBridge.registrationFinished(context, AdmPushProvider.class, registrationID, new PushProviderBridge.Callback() {
-                    @Override
-                    public void onFinish() {
-                        if (isOrderedBroadcast) {
-                            result.setResultCode(Activity.RESULT_OK);
-                        }
-                        result.finish();;
-                    }
-                });
-                break;
-
             default:
                 if (isOrderedBroadcast) {
                     setResultCode(Activity.RESULT_OK);

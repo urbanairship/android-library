@@ -4,7 +4,6 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -43,11 +42,6 @@ class ChannelJobHandler {
      * Action to perform update request for pending tag group changes.
      */
     static final String ACTION_UPDATE_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_TAG_GROUPS";
-
-    /**
-     * Action to start channel and push registration.
-     */
-    static final String ACTION_START_REGISTRATION = "com.urbanairship.push.ACTION_START_REGISTRATION";
 
     /**
      * Action notifying the service that registration has finished.
@@ -104,8 +98,6 @@ class ChannelJobHandler {
      */
     private static final long CHANNEL_REREGISTRATION_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
 
-    private static boolean isPushRegistering = false;
-    private static boolean isRegistrationStarted = false;
     private final UAirship airship;
     private final PushManager pushManager;
     private final ChannelApiClient channelClient;
@@ -147,14 +139,9 @@ class ChannelJobHandler {
     @Job.JobResult
     protected int performJob(Job job) {
         switch (job.getJobInfo().getAction()) {
-            case ACTION_START_REGISTRATION:
-                return onStartRegistration();
 
             case ACTION_UPDATE_PUSH_REGISTRATION:
                 return onUpdatePushRegistration();
-
-            case ACTION_REGISTRATION_FINISHED:
-                return onRegistrationFinished(job);
 
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
                 return onUpdateChannelRegistration();
@@ -169,49 +156,6 @@ class ChannelJobHandler {
         return Job.JOB_FINISHED;
     }
 
-    /**
-     * Starts the registration process. Will either start the push registration flow or channel registration
-     * depending on if push registration is needed.
-     *
-     * @return The job result.
-     */
-    @Job.JobResult
-    private int onStartRegistration() {
-        if (isRegistrationStarted) {
-            // Happens anytime we have multiple processes
-            return Job.JOB_FINISHED;
-        }
-
-        isRegistrationStarted = true;
-
-        PushProvider provider = pushManager.getPushProvider();
-
-        if (provider != null && provider.isAvailable(context)) {
-            isPushRegistering = true;
-
-            // Update the push registration
-            JobInfo jobInfo = JobInfo.newBuilder()
-                         .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-                         .setTag(ACTION_UPDATE_PUSH_REGISTRATION)
-                         .setNetworkAccessRequired(true)
-                         .setAirshipComponent(PushManager.class)
-                         .build();
-
-            jobDispatcher.dispatch(jobInfo);
-        } else {
-            // Update the channel registration
-            JobInfo jobInfo = JobInfo.newBuilder()
-                         .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                         .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                         .setAirshipComponent(PushManager.class)
-                         .setNetworkAccessRequired(true)
-                         .build();
-
-            jobDispatcher.dispatch(jobInfo);
-        }
-
-        return Job.JOB_FINISHED;
-    }
 
     /**
      * Updates the push registration.
@@ -220,84 +164,27 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdatePushRegistration() {
-        isPushRegistering = true;
-
         PushProvider provider = pushManager.getPushProvider();
         String currentToken = pushManager.getRegistrationToken();
 
         if (provider == null || !provider.isAvailable(context)) {
             Logger.error("Registration failed. Push provider unavailable: " + provider);
-            isPushRegistering = false;
-        } else if (UAStringUtil.isEmpty(currentToken) || provider.shouldUpdateRegistration(context, currentToken)) {
-            pushManager.setRegistrationToken(null);
-
-            try {
-                provider.startRegistration(context);
-            } catch (IOException | SecurityException e) {
-                Logger.error("Push registration failed, will retry. Error: " + e.getMessage());
-                return Job.JOB_RETRY;
-            }
-        } else {
-            isPushRegistering = false;
-        }
-
-        if (!isPushRegistering) {
-            // Update the channel registration
-            JobInfo jobInfo = JobInfo.newBuilder()
-                         .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                         .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                         .setAirshipComponent(PushManager.class)
-                         .setNetworkAccessRequired(true)
-                         .build();
-
-            jobDispatcher.dispatch(jobInfo);
-        }
-
-        return Job.JOB_FINISHED;
-    }
-
-    /**
-     * Called when registration is finished.
-     *
-     * @param job The registration job.
-     * @return The job result.
-     */
-    @Job.JobResult
-    private int onRegistrationFinished(@NonNull Job job) {
-        Bundle extras = job.getJobInfo().getExtras();
-        String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
-
-        PushProvider provider = pushManager.getPushProvider();
-
-        if (provider == null || !provider.getClass().toString().equals(providerClass)) {
-            Logger.error("Received registration finished callback from unexpected push provider: " + providerClass);
             return Job.JOB_FINISHED;
         }
 
-        if (!provider.isAvailable(context)) {
-            Logger.error("Received registration finished callback when provider is unavailable. Ignoring.");
-            return Job.JOB_FINISHED;
+        String token;
+        try {
+            token = provider.getRegistrationToken(context);
+        } catch (IOException e) {
+            Logger.error("Push registration failed: " +  e.getMessage());
+            return Job.JOB_RETRY;
         }
 
-        String registrationID = extras.getString(PushProviderBridge.EXTRA_REGISTRATION_ID);
-        if (registrationID != null) {
-            Logger.info("Push registration successful. Registration ID: " + registrationID);
-            pushManager.setRegistrationToken(registrationID);
-        } else {
-            Logger.error("Push registration failed for provider: " + provider);
+        if (!UAStringUtil.equals(token, currentToken)) {
+            Logger.info("ChannelJobHandler - Push registration updated.");
+            pushManager.setRegistrationToken(token);
+            pushManager.updateRegistration();
         }
-
-        isPushRegistering = false;
-
-        // Update the channel registration
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                 .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(PushManager.class)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
 
         return Job.JOB_FINISHED;
     }
@@ -309,11 +196,6 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdateChannelRegistration() {
-        if (isPushRegistering) {
-            Logger.verbose("ChannelJobHandler - Push registration in progress, skipping registration update.");
-            return Job.JOB_FINISHED;
-        }
-
         Logger.verbose("ChannelJobHandler - Performing channel registration.");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
@@ -358,6 +240,11 @@ class ChannelJobHandler {
             // Set the last registration payload and time then notify registration succeeded
             setLastRegistrationPayload(payload);
             sendRegistrationFinishedBroadcast(true, false);
+
+            if (shouldUpdateRegistration(payload)) {
+                pushManager.updateRegistration();
+            }
+
             return Job.JOB_FINISHED;
         }
 
@@ -439,7 +326,10 @@ class ChannelJobHandler {
 
                 // If setId was called before channel creation, update named user
                 namedUser.dispatchNamedUserUpdateJob();
-                pushManager.updateRegistration();
+
+                if (shouldUpdateRegistration(payload)) {
+                    pushManager.updateRegistration();
+                }
 
                 pushManager.startUpdateTagsService();
                 airship.getInbox().getUser().update(true);
@@ -451,6 +341,7 @@ class ChannelJobHandler {
                 Logger.error("Failed to register with channel ID: " + channelId +
                         " channel location: " + channelLocation);
                 sendRegistrationFinishedBroadcast(false, true);
+                return Job.JOB_RETRY;
             }
 
             return Job.JOB_FINISHED;

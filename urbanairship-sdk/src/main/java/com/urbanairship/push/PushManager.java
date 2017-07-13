@@ -300,16 +300,25 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_START_REGISTRATION)
+
+        if (UAirship.isMainProcess()) {
+            if (getRegistrationToken() == null) {
+                JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setTag(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
                                  .build();
 
-        jobDispatcher.dispatch(jobInfo);
+                jobDispatcher.dispatch(jobInfo);
+            } else {
+                updateRegistration();
+            }
 
-        // If we have a channel already check for pending tags
-        if (getChannelId() != null) {
-            startUpdateTagsService();
+            // If we have a channel already check for pending tags
+            if (getChannelId() != null) {
+                startUpdateTagsService();
+            }
         }
     }
 
@@ -336,7 +345,6 @@ public class PushManager extends AirshipComponent {
             case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
             case ChannelJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES:
             case ChannelJobHandler.ACTION_REGISTRATION_FINISHED:
-            case ChannelJobHandler.ACTION_START_REGISTRATION:
             case ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
             case ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION:
                 if (channelJobHandler == null) {
@@ -464,7 +472,6 @@ public class PushManager extends AirshipComponent {
      * @param tags The desired set of tags, must be non-null
      * @see #setAlias(String)
      * @see #setTags(Set)
-     *
      * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
      */
     @Deprecated
