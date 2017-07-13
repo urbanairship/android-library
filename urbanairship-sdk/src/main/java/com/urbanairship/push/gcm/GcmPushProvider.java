@@ -19,8 +19,6 @@ import com.urbanairship.push.PushProvider;
 
 import java.io.IOException;
 
-import static com.urbanairship.push.PushProviderBridge.registrationFinished;
-
 /**
  * Gcm push provider.
  *
@@ -34,18 +32,11 @@ public class GcmPushProvider implements PushProvider {
     }
 
     @Override
-    public boolean shouldUpdateRegistration(@NonNull Context context, @NonNull String registrationId) {
-        try {
-            return !registrationId.equals(getRegistrationToken(context));
-        } catch (IOException e) {
-            return true;
-        }
-    }
+    public String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException {
+        String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
 
-    @Override
-    public void startRegistration(@NonNull Context context) throws IOException, SecurityException {
-        String token = getRegistrationToken(context);
-        registrationFinished(context, getClass(), token, null);
+        InstanceID instanceID = InstanceID.getInstance(context);
+        return instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
     }
 
     @Override
@@ -89,20 +80,6 @@ public class GcmPushProvider implements PushProvider {
     }
 
 
-    /**
-     * Helper method that gets the instance ID registration token.
-     *
-     * @param context The application context.
-     * @return The instance ID token or {@link null}.
-     * @throws IOException
-     */
-    @Nullable
-    private String getRegistrationToken(@NonNull  Context context) throws IOException {
-        String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
-
-        InstanceID instanceID = InstanceID.getInstance(context);
-        return instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-    }
 
     @Override
     public String toString() {

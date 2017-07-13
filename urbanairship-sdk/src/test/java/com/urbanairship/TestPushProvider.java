@@ -14,18 +14,17 @@ import java.io.IOException;
 
 public class TestPushProvider implements PushProvider {
 
+    public String registrationToken;
+
     @Override
     public int getPlatform() {
         return UAirship.ANDROID_PLATFORM;
     }
 
-    @Override
-    public boolean shouldUpdateRegistration(@NonNull Context context, @NonNull String registrationId) {
-        return true;
-    }
 
     @Override
-    public void startRegistration(@NonNull Context context) throws IOException, SecurityException {
+    public String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException {
+        return registrationToken;
     }
 
     @Override

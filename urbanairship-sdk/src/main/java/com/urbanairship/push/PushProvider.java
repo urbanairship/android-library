@@ -27,22 +27,14 @@ public interface PushProvider {
     int getPlatform();
 
     /**
-     * Checks if the registration Id is up to date. If true, the registration process will be skipped.
+     * Gets the push registration token.
      *
      * @param context The application context.
-     * @param registrationId The current registration Id.
-     * @return {@code true} if the registration Id is up to date, otherwise {@code false}.
-     */
-    boolean shouldUpdateRegistration(@NonNull Context context, @NonNull String registrationId);
-
-    /**
-     * Starts registration process. After registration is finished, call {@link PushProviderBridge#registrationFinished(Context, Class, String, PushProviderBridge.Callback)} (Context, Class, String)}.
-     *
-     * @param context The application context.
+     * @return The registration ID.
      * @throws IOException If the registration fails from an IOException. IOExceptions will trigger a retry with backoff.
      * @throws SecurityException If the registration fails from a SecurityException. SecurityException will trigger a retry with backoff.
      */
-    void startRegistration(@NonNull Context context) throws IOException, SecurityException;
+    String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException;
 
     /**
      * If the underlying push provider is currently available.

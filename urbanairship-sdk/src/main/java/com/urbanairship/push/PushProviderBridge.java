@@ -7,7 +7,6 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.job.Job;
@@ -30,7 +29,6 @@ public abstract class PushProviderBridge {
         void onFinish();
     }
 
-    final static String EXTRA_REGISTRATION_ID = "com.urbanairship.EXTRA_REGISTRATION_ID";
     final static String EXTRA_PROVIDER_CLASS = "com.urbanairship.EXTRA_PROVIDER_CLASS";
     final static String EXTRA_PUSH_BUNDLE = "com.urbanairship.EXTRA_PUSH_BUNDLE";
 
@@ -53,29 +51,7 @@ public abstract class PushProviderBridge {
                                  .setExtras(extras)
                                  .build();
 
-        handleJobInfo(context, jobInfo, callback);
-    }
-
-    /**
-     * Utility method to notify the Urban Airship SDK that registration is finished.
-     *
-     * @param context The application context.
-     * @param provider The provider's class.
-     * @param registrationId The registration Id.
-     * @param callback Callback when the registration finishes.
-     */
-    public static void registrationFinished(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @Nullable String registrationId, final Callback callback) {
-        Bundle extras = new Bundle();
-        extras.putString(EXTRA_REGISTRATION_ID, registrationId);
-        extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
-
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_REGISTRATION_FINISHED)
-                                 .setAirshipComponent(PushManager.class)
-                                 .setExtras(extras)
-                                 .build();
-
-        handleJobInfo(context, jobInfo, callback);
+        JobDispatcher.shared(context).dispatch(jobInfo);
     }
 
     /**

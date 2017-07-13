@@ -88,7 +88,7 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test init only starts dispatches a job to start registration.
+     * Test init starts push registration if the registration token is not available.
      */
     @Test
     public void testInit() {
@@ -97,7 +97,25 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_START_REGISTRATION);
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION);
+            }
+        }));
+
+        verifyNoMoreInteractions(mockDispatcher);
+    }
+
+    /**
+     * Test init starts push registration if the registration token is available.
+     */
+    @Test
+    public void testInitPushRegistered() {
+        pushManager.setRegistrationToken("some token");
+        pushManager.init();
+
+        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
 
