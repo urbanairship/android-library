@@ -109,7 +109,7 @@ public class LocationEvent extends Event {
 
     @Override
     @Priority
-    protected int getPriority() {
+    public int getPriority() {
         return LOW_PRIORITY;
     }
 

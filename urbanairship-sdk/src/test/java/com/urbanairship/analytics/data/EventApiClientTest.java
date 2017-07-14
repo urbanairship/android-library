@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.data;
 
 import android.os.Build;
 

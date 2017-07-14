@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.IntDef;
+import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 
 import com.urbanairship.UAirship;
@@ -51,22 +52,22 @@ public abstract class Event {
 
     @IntDef({LOW_PRIORITY, NORMAL_PRIORITY, HIGH_PRIORITY})
     @Retention(RetentionPolicy.SOURCE)
-    protected @interface Priority {}
+    public @interface Priority {}
 
     /**
      * Low priority event.
      */
-    protected static final int LOW_PRIORITY = 0;
+    public static final int LOW_PRIORITY = 0;
 
     /**
      * Normal priority event.
      */
-    protected static final int NORMAL_PRIORITY = 1;
+    public static final int NORMAL_PRIORITY = 1;
 
     /**
      * High priority event.
      */
-    protected static final int HIGH_PRIORITY = 2;
+    public static final int HIGH_PRIORITY = 2;
 
 
     /**
@@ -108,8 +109,10 @@ public abstract class Event {
      * Creates the full event payload.
      *
      * @return The event data as a String, or null if an error occurred.
+     * @hide
      */
-    String createEventPayload(String sessionId) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public String createEventPayload(String sessionId) {
         JsonMap.Builder object = JsonMap.newBuilder();
         JsonMap data = getEventData();
 
@@ -280,7 +283,7 @@ public abstract class Event {
      * @return The event's send priority.
      */
     @Priority
-    protected  int getPriority() {
+    public int getPriority() {
         return NORMAL_PRIORITY;
     }
 }

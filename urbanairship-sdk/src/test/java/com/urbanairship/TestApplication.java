@@ -8,7 +8,11 @@ import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.data.EventApiClient;
+import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
@@ -56,7 +60,25 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship = new UAirship(airshipConfigOptions);
         UAirship.sharedAirship.platform = UAirship.ANDROID_PLATFORM;
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
-        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, airshipConfigOptions, UAirship.ANDROID_PLATFORM, ActivityMonitor.shared(getApplicationContext()));
+
+
+        UAirship.sharedAirship.analytics = new Analytics.Builder(this)
+                .setActivityMonitor(ActivityMonitor.shared(this))
+                .setConfigOptions(airshipConfigOptions)
+                .setJobDispatcher(JobDispatcher.shared(this))
+                .setPlatform(UAirship.ANDROID_PLATFORM)
+                .setPreferenceDataStore(preferenceDataStore)
+                .setEventManager(new EventManager.Builder()
+                        .setEventResolver(new EventResolver(this))
+                        .setActivityMonitor(ActivityMonitor.shared(this))
+                        .setJobDispatcher(JobDispatcher.shared(this))
+                        .setPreferenceDataStore(preferenceDataStore)
+                        .setApiClient(new EventApiClient(this))
+                        .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
+                        .setJobAction(Analytics.ACTION_SEND)
+                        .build())
+                .build();
+
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));

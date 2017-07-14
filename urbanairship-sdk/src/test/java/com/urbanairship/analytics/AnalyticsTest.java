@@ -2,14 +2,14 @@
 
 package com.urbanairship.analytics;
 
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.Job;
+import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
@@ -18,42 +18,55 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
+import java.util.concurrent.Executor;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ResourceType")
 public class AnalyticsTest extends BaseTestCase {
 
-    Analytics analytics;
-    LocalBroadcastManager localBroadcastManager;
-    JobDispatcher mockJobDispatcher;
+    private Analytics analytics;
+    private JobDispatcher mockJobDispatcher;
+    private EventManager mockEventManager;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void setup() {
-        mockJobDispatcher = Mockito.mock(JobDispatcher.class);
+        this.mockJobDispatcher = Mockito.mock(JobDispatcher.class);
+        this.mockEventManager = Mockito.mock(EventManager.class);
+        this.activityMonitor = new TestActivityMonitor();
 
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .build();
 
-        this.analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                airshipConfigOptions, UAirship.ANDROID_PLATFORM, mockJobDispatcher, new TestActivityMonitor());
+        this.analytics = new Analytics.Builder(TestApplication.getApplication())
+                .setActivityMonitor(new TestActivityMonitor())
+                .setConfigOptions(airshipConfigOptions)
+                .setJobDispatcher(mockJobDispatcher)
+                .setPlatform(UAirship.ANDROID_PLATFORM)
+                .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
+                .setEventManager(mockEventManager)
+                .setExecutor(new Executor() {
+                    @Override
+                    public void execute(@NonNull Runnable runnable) {
+                        runnable.run();
+                    }
+                })
+                .build();
 
         analytics.init();
-
-        localBroadcastManager = LocalBroadcastManager.getInstance(TestApplication.getApplication());
-        TestApplication.getApplication().setAnalytics(analytics);
     }
 
     /**
@@ -84,10 +97,6 @@ public class AnalyticsTest extends BaseTestCase {
         // Verify that we generate a new session id
         assertNotNull(analytics.getSessionId());
         assertNotSame("A new session id should be generated on foreground", analytics.getSessionId(), sessionId);
-
-
-        // Verify isAppInForeground is true
-        assertTrue(analytics.isAppInForeground());
     }
 
     /**
@@ -98,9 +107,6 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testOnBackground() {
         // Start analytics in the foreground
-        analytics.onForeground(0);
-        assertTrue(analytics.isAppInForeground());
-
         analytics.setConversionSendId("some-id");
 
         analytics.onBackground(0);
@@ -109,17 +115,7 @@ public class AnalyticsTest extends BaseTestCase {
         assertNull("App background should clear the conversion send id", analytics.getConversionSendId());
 
         // Verify that a job to add a background event is dispatched
-        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                JobInfo jobInfo = job.getJobInfo();
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        AppBackgroundEvent.TYPE.equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
-            }
-        }));
-
-        // Verify isAppInForeground is false
-        assertFalse(analytics.isAppInForeground());
+        verify(mockEventManager).addEvent(Mockito.any(AppBackgroundEvent.class), Mockito.anyString());
     }
 
     /**
@@ -139,30 +135,11 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testAddEvent() {
-        Event event = Mockito.mock(Event.class);
-        when(event.getEventId()).thenReturn("event-id");
-        when(event.getType()).thenReturn("event-type");
-        when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
-        when(event.getTime()).thenReturn("1000");
-        when(event.isValid()).thenReturn(true);
-        when(event.getPriority()).thenReturn(Event.LOW_PRIORITY);
-
+        CustomEvent event = new CustomEvent.Builder("cool").create();
 
         analytics.addEvent(event);
 
-        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                JobInfo jobInfo = job.getJobInfo();
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "event-id".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_ID)) &&
-                        "event-data".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_DATA)) &&
-                        "event-type".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE)) &&
-                        "1000".equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP)) &&
-                        analytics.getSessionId().equals(jobInfo.getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID)) &&
-                        0 == jobInfo.getExtras().getInt(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY);
-            }
-        }));
+        verify(mockEventManager).addEvent(event, analytics.getSessionId());
     }
 
     /**
@@ -176,10 +153,17 @@ public class AnalyticsTest extends BaseTestCase {
                 .setAnalyticsEnabled(false)
                 .build();
 
-        analytics = new Analytics(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, options, UAirship.ANDROID_PLATFORM, new TestActivityMonitor());
+        this.analytics = new Analytics.Builder(TestApplication.getApplication())
+                .setActivityMonitor(new TestActivityMonitor())
+                .setConfigOptions(options)
+                .setJobDispatcher(mockJobDispatcher)
+                .setPlatform(UAirship.ANDROID_PLATFORM)
+                .setPreferenceDataStore(TestApplication.getApplication().preferenceDataStore)
+                .setEventManager(mockEventManager)
+                .build();
 
         analytics.addEvent(new AppForegroundEvent(100));
-        verifyZeroInteractions(mockJobDispatcher);
+        verifyZeroInteractions(mockEventManager);
     }
 
     /**
@@ -188,10 +172,8 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddEventDisabledAnalytics() {
         analytics.setEnabled(false);
-        verify(mockJobDispatcher).dispatch(any(JobInfo.class));
-        verifyNoMoreInteractions(mockJobDispatcher);
-
         analytics.addEvent(new AppForegroundEvent(100));
+        verify(mockEventManager, never()).addEvent(Mockito.any(AppForegroundEvent.class), Mockito.anyString());
     }
 
     /**
@@ -200,7 +182,7 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testAddNullEvent() {
         analytics.addEvent(null);
-        verifyZeroInteractions(mockJobDispatcher);
+        verifyZeroInteractions(mockEventManager);
     }
 
     /**
@@ -228,13 +210,7 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testDisableAnalytics() {
         analytics.setEnabled(false);
-
-        verify(mockJobDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_DELETE_ALL);
-            }
-        }));
+        verify(mockEventManager).deleteEvents();
     }
 
     /**
@@ -247,13 +223,7 @@ public class AnalyticsTest extends BaseTestCase {
                  .apply();
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
-            @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "associate_identifiers".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
-            }
-        }));
+        verify(mockEventManager).addEvent(Mockito.any(AssociateIdentifiersEvent.class), Mockito.anyString());
 
         // Verify identifiers are stored
         AssociatedIdentifiers storedIds = analytics.getAssociatedIdentifiers();
@@ -274,13 +244,12 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onBackground(0);
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
+            public boolean matches(Event argument) {
+                return argument.getEventData().opt("screen").getString("").equals("test_screen");
             }
-        }));
+        }), Mockito.anyString());
     }
 
     /**
@@ -294,13 +263,12 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.trackScreen("test_screen_2");
 
         // Verify we started created an add event job
-        verify(mockJobDispatcher).runJob(Mockito.argThat(new ArgumentMatcher<Job>() {
+        verify(mockEventManager).addEvent(Mockito.argThat(new ArgumentMatcher<Event>() {
             @Override
-            public boolean matches(Job job) {
-                return job.getJobInfo().getAction().equals(AnalyticsJobHandler.ACTION_ADD) &&
-                        "screen_tracking".equals(job.getJobInfo().getExtras().getString(AnalyticsJobHandler.EXTRA_EVENT_TYPE));
+            public boolean matches(Event argument) {
+                return argument.getEventData().opt("screen").getString("").equals("test_screen_1");
             }
-        }));
+        }), Mockito.anyString());
     }
 
     /**
@@ -334,17 +302,13 @@ public class AnalyticsTest extends BaseTestCase {
         assertTrue(analytics.isAutoTrackAdvertisingIdEnabled());
 
         // Start analytics in the background.
-        analytics.onBackground(0);
-        assertFalse(analytics.isAppInForeground());
-
         analytics.onForeground(0);
-        assertTrue(analytics.isAppInForeground());
 
         // Verify a job was dispatched fot update the advertising ID
         verify(mockJobDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID);
+                return jobInfo.getAction().equals(Analytics.ACTION_UPDATE_ADVERTISING_ID);
             }
         }));
     }

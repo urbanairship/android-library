@@ -339,7 +339,7 @@ public class RegionEvent extends Event implements JsonSerializable {
 
     @Override
     @Priority
-    protected int getPriority() {
+    public int getPriority() {
         return HIGH_PRIORITY;
     }
 }

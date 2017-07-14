@@ -8,7 +8,6 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
@@ -16,6 +15,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
@@ -23,87 +23,89 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.location.LocationRequestOptions;
 import com.urbanairship.location.RegionEvent;
+import com.urbanairship.util.Checks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is the primary interface to the UrbanAirship Analytics API.
  */
 public class Analytics extends AirshipComponent {
 
+    /**
+     * Job action to send an event.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String ACTION_SEND = "ACTION_SEND";
+
+    /**
+     * Job action to update the ad ID on foreground.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String ACTION_UPDATE_ADVERTISING_ID = "ACTION_UPDATE_ADVERTISING_ID";
+
+
+    /**
+     * Minimum amount of delay when {@link #uploadEvents()} is called.
+     */
+    public static final long SCHEDULE_SEND_DELAY_SECONDS = 10;
+
     private static final String KEY_PREFIX = "com.urbanairship.analytics";
     private static final String ANALYTICS_ENABLED_KEY = KEY_PREFIX + ".ANALYTICS_ENABLED";
     private static final String ASSOCIATED_IDENTIFIERS_KEY = KEY_PREFIX + ".ASSOCIATED_IDENTIFIERS";
     private static final String ADVERTISING_ID_AUTO_TRACKING_KEY = KEY_PREFIX + ".ADVERTISING_ID_TRACKING";
 
-    private static ActivityMonitor.Listener listener;
-
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
     private final JobDispatcher jobDispatcher;
     private final ActivityMonitor activityMonitor;
-
+    private final EventManager eventManager;
+    private final ActivityMonitor.Listener listener;
     private final int platform;
-    private boolean inBackground;
-
     private final AirshipConfigOptions configOptions;
+    private final Executor executor;
     private final List<AnalyticsListener> analyticsListeners = new ArrayList<>();
-    private String sessionId;
-    private String conversionSendId;
-    private String conversionMetadata;
-
-    private String currentScreen;
-    private String previousScreen;
-    private long screenStartTime;
-
     private final Object associatedIdentifiersLock = new Object();
 
     private AnalyticsJobHandler analyticsJobHandler;
 
-    /**
-     * The Analytics constructor, used by {@link com.urbanairship.UAirship}.  You should not instantiate this class directly.
-     *
-     * @hide
-     */
-    public Analytics(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                     @NonNull AirshipConfigOptions options, int platform, @NonNull ActivityMonitor activityMonitor) {
-        this(context, preferenceDataStore, options, platform, JobDispatcher.shared(context), activityMonitor);
-    }
+    // Session state
+    private String sessionId;
+    private String conversionSendId;
+    private String conversionMetadata;
+
+    // Screen state
+    private String currentScreen;
+    private String previousScreen;
+    private long screenStartTime;
 
     /**
      * The Analytics constructor.
      *
-     * @param context The application context.
-     * @param preferenceDataStore The preference data store.
-     * @param options The airship config options.
-     * @param platform The device platform.
-     * @param jobDispatcher The job dispatcher.
-     * @param activityMonitor The activity monitor.
-     * @hide
+     * @param builder The builder instance.
      */
-    @VisibleForTesting
-    Analytics(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore,
-              @NonNull AirshipConfigOptions options, int platform, @NonNull JobDispatcher jobDispatcher,
-              @NonNull ActivityMonitor activityMonitor) {
+    private Analytics(Builder builder) {
+        this.context = builder.context.getApplicationContext();
+        this.preferenceDataStore = builder.preferenceDataStore;
+        this.configOptions = builder.configOptions;
+        this.platform = builder.platform;
+        this.jobDispatcher = builder.jobDispatcher;
+        this.activityMonitor = builder.activityMonitor;
+        this.eventManager = builder.eventManager;
+        this.executor = builder.executor == null ? Executors.newSingleThreadExecutor() : builder.executor;
 
-        this.context = context.getApplicationContext();
-        this.preferenceDataStore = preferenceDataStore;
-        this.inBackground = true; //application is starting
-        this.configOptions = options;
-        this.platform = platform;
-        this.jobDispatcher = jobDispatcher;
-        this.activityMonitor = activityMonitor;
-    }
-
-    @Override
-    protected void init() {
-        startNewSession();
-
-        listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.Listener() {
             @Override
             public void onForeground(final long time) {
                 Analytics.this.onForeground(time);
@@ -114,6 +116,11 @@ public class Analytics extends AirshipComponent {
                 Analytics.this.onBackground(time);
             }
         };
+    }
+
+    @Override
+    protected void init() {
+        startNewSession();
 
         activityMonitor.addListener(listener);
 
@@ -125,7 +132,6 @@ public class Analytics extends AirshipComponent {
     @Override
     protected void tearDown() {
         activityMonitor.removeListener(listener);
-        listener = null;
     }
 
     /**
@@ -136,7 +142,7 @@ public class Analytics extends AirshipComponent {
     @Job.JobResult
     public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (analyticsJobHandler == null) {
-            analyticsJobHandler = new AnalyticsJobHandler(context, airship, preferenceDataStore);
+            analyticsJobHandler = new AnalyticsJobHandler(context, airship, eventManager);
         }
 
         return analyticsJobHandler.performJob(job);
@@ -149,7 +155,7 @@ public class Analytics extends AirshipComponent {
      * <code>false</code>.
      */
     public boolean isAppInForeground() {
-        return !inBackground;
+        return activityMonitor.isAppForegrounded();
     }
 
     /**
@@ -169,28 +175,14 @@ public class Analytics extends AirshipComponent {
             return;
         }
 
-        String eventPayload = event.createEventPayload(sessionId);
-        if (eventPayload == null) {
-            Logger.error("Analytics - Failed to add event " + event.getType());
-        }
-
         Logger.verbose("Analytics - Adding event: " + event.getType());
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(AnalyticsJobHandler.ACTION_ADD)
-                                 .setAirshipComponent(Analytics.class)
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TYPE, event.getType())
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_ID, event.getEventId())
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_DATA, eventPayload)
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_TIME_STAMP, event.getTime())
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_SESSION_ID, sessionId)
-                                 .putExtra(AnalyticsJobHandler.EXTRA_EVENT_PRIORITY, event.getPriority())
-                                 .build();
 
-        if (UAirship.isMainProcess()) {
-            jobDispatcher.runJob(new Job(jobInfo, false));
-        } else {
-            jobDispatcher.dispatch(jobInfo);
-        }
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                eventManager.addEvent(event, sessionId);
+            }
+        });
 
         applyListeners(event);
     }
@@ -293,8 +285,6 @@ public class Analytics extends AirshipComponent {
         // Start a new environment when the app enters the foreground
         startNewSession();
 
-        inBackground = false;
-
         // If the app backgrounded, there should be no current screen
         if (currentScreen == null) {
             trackScreen(previousScreen);
@@ -303,7 +293,7 @@ public class Analytics extends AirshipComponent {
         // If advertising ID tracking is enabled, dispatch a job to update the advertising ID.
         if (isAutoTrackAdvertisingIdEnabled()) {
             jobDispatcher.dispatch(JobInfo.newBuilder()
-                                          .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                          .setAction(ACTION_UPDATE_ADVERTISING_ID)
                                           .setAirshipComponent(Analytics.class)
                                           .build());
         }
@@ -317,13 +307,10 @@ public class Analytics extends AirshipComponent {
      * @param timeMS Time of backgrounding.
      */
     void onBackground(long timeMS) {
-        inBackground = true;
-
         // Stop tracking screen
         trackScreen(null);
 
         addEvent(new AppBackgroundEvent(timeMS));
-
         setConversionSendId(null);
         setConversionMetadata(null);
     }
@@ -349,10 +336,15 @@ public class Analytics extends AirshipComponent {
 
         // When we disable analytics delete all the events
         if (previousValue && !enabled) {
-            jobDispatcher.dispatch(JobInfo.newBuilder()
-                                          .setAction(AnalyticsJobHandler.ACTION_DELETE_ALL)
-                                          .setAirshipComponent(Analytics.class)
-                                          .build());
+
+            Logger.info("Deleting all analytic events.");
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    eventManager.deleteEvents();
+                }
+            });
         }
 
         preferenceDataStore.put(ANALYTICS_ENABLED_KEY, enabled);
@@ -386,7 +378,7 @@ public class Analytics extends AirshipComponent {
 
         if (enabled) {
             jobDispatcher.dispatch(JobInfo.newBuilder()
-                                          .setAction(AnalyticsJobHandler.ACTION_UPDATE_ADVERTISING_ID)
+                                          .setAction(ACTION_UPDATE_ADVERTISING_ID)
                                           .setAirshipComponent(Analytics.class)
                                           .build());
         }
@@ -490,12 +482,7 @@ public class Analytics extends AirshipComponent {
      * battery life. Normally apps should not call this method directly.
      */
     public void uploadEvents() {
-        jobDispatcher.dispatch(JobInfo.newBuilder()
-                                      .setAction(AnalyticsJobHandler.ACTION_SEND)
-                                      .setTag(AnalyticsJobHandler.ACTION_SEND)
-                                      .setNetworkAccessRequired(true)
-                                      .setAirshipComponent(Analytics.class)
-                                      .build());
+        eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS);
     }
 
     /**
@@ -541,6 +528,123 @@ public class Analytics extends AirshipComponent {
                 default:
                     break;
             }
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static class Builder {
+
+        private PreferenceDataStore preferenceDataStore;
+        private Context context;
+        private JobDispatcher jobDispatcher;
+        private ActivityMonitor activityMonitor;
+        private EventManager eventManager;
+        private int platform;
+        private AirshipConfigOptions configOptions;
+        private Executor executor;
+
+
+        /**
+         * Builder constructor.
+         *
+         * @param context The application context.
+         */
+        public Builder(@NonNull Context context) {
+            this.context = context.getApplicationContext();
+        }
+
+        /**
+         * Sets the {@link PreferenceDataStore}.
+         *
+         * @param preferenceDataStore The {@link PreferenceDataStore}.
+         * @return The builder instance.
+         */
+        public Builder setPreferenceDataStore(@NonNull PreferenceDataStore preferenceDataStore) {
+            this.preferenceDataStore = preferenceDataStore;
+            return this;
+        }
+
+        /**
+         * Sets the {@link JobDispatcher}.
+         *
+         * @param jobDispatcher The {@link JobDispatcher}.
+         * @return The builder instance.
+         */
+        public Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
+            this.jobDispatcher = jobDispatcher;
+            return this;
+        }
+
+        /**
+         * Sets the {@link ActivityMonitor}.
+         *
+         * @param activityMonitor The {@link ActivityMonitor}.
+         * @return The builder instance.
+         */
+        public Builder setActivityMonitor(@NonNull ActivityMonitor activityMonitor) {
+            this.activityMonitor = activityMonitor;
+            return this;
+        }
+
+        /**
+         * Sets the {@link EventManager}.
+         *
+         * @param eventManager The {@link EventManager}.
+         * @return The builder instance.
+         */
+        public Builder setEventManager(@NonNull EventManager eventManager) {
+            this.eventManager = eventManager;
+            return this;
+        }
+
+        /**
+         * Sets the device platform.
+         *
+         * @param platform The device's platform.
+         * @return The builder instance.
+         */
+        public Builder setPlatform(@UAirship.Platform int platform) {
+            this.platform = platform;
+            return this;
+        }
+
+        /**
+         * Sets the {@link AirshipConfigOptions}.
+         *
+         * @param configOptions The {@link AirshipConfigOptions}.
+         * @return The builder instance.
+         */
+        public Builder setConfigOptions(@NonNull AirshipConfigOptions configOptions) {
+            this.configOptions = configOptions;
+            return this;
+        }
+
+        /**
+         * Sets the analytics executor.
+         *
+         * @param executor The analytics executor.
+         * @return The builder instance.
+         */
+        public Builder setExecutor(@NonNull Executor executor) {
+            this.executor = executor;
+            return this;
+        }
+
+        /**
+         * Builds the analytics instance.
+         *
+         * @return The analytics instance.
+         */
+        public Analytics build() {
+            Checks.checkNotNull(context, "Missing context.");
+            Checks.checkNotNull(jobDispatcher, "Missing job dispatcher.");
+            Checks.checkNotNull(activityMonitor, "Missing activity monitor.");
+            Checks.checkNotNull(eventManager, "Missing event manager.");
+            Checks.checkNotNull(configOptions, "Missing config options.");
+            return new Analytics(this);
         }
     }
 }

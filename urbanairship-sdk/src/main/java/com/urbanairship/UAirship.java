@@ -19,8 +19,12 @@ import android.util.Log;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.data.EventApiClient;
+import com.urbanairship.analytics.data.EventManager;
+import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
@@ -574,7 +578,23 @@ public class UAirship {
 
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, airshipConfigOptions, getPlatformType(), ActivityMonitor.shared(application));
+        this.analytics = new Analytics.Builder(application)
+                .setActivityMonitor(ActivityMonitor.shared(application))
+                .setConfigOptions(airshipConfigOptions)
+                .setJobDispatcher(JobDispatcher.shared(application))
+                .setPlatform(getPlatformType())
+                .setPreferenceDataStore(preferenceDataStore)
+                .setEventManager(new EventManager.Builder()
+                        .setEventResolver(new EventResolver(application))
+                        .setActivityMonitor(ActivityMonitor.shared(application))
+                        .setJobDispatcher(JobDispatcher.shared(application))
+                        .setPreferenceDataStore(preferenceDataStore)
+                        .setApiClient(new EventApiClient(application))
+                        .setBackgroundReportingIntervalMS(airshipConfigOptions.backgroundReportingIntervalMS)
+                        .setJobAction(Analytics.ACTION_SEND)
+                        .build())
+                .build();
+
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));

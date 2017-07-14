@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.analytics.data.EventsStorage;
 import com.urbanairship.util.DataManager;
 
 import java.util.List;
@@ -21,6 +22,8 @@ import java.util.List;
  * @hide
  */
 public final class UrbanAirshipProvider extends ContentProvider {
+
+    public static final String QUERY_PARAMETER_LIMIT = "limit";
 
     /**
      * Mime type suffixes for getType.
@@ -32,7 +35,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
     static final String RICH_PUSH_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "richpush";
     static final String PREFERENCES_CONTENT_TYPE = MULTIPLE_SUFFIX + "preference";
     static final String PREFERENCES_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "preference";
-
+    static final String EVENTS_CONTENT_TYPE = MULTIPLE_SUFFIX + "events";
+    static final String EVENTS_CONTENT_ITEM_TYPE = SINGLE_SUFFIX + "events";
     /**
      * Used to match passed in Uris to databases.
      */
@@ -50,9 +54,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
     private static final int PREFERENCES_URI_TYPE = 2;
     private static final int PREFERENCE_URI_TYPE = 3;
 
+    private static final int EVENTS_URI_TYPE = 4;
+    private static final int EVENT_URI_TYPE = 5;
 
     private DatabaseModel richPushDataModel;
     private DatabaseModel preferencesDataModel;
+    private DatabaseModel eventsDataModel;
 
 
     private static String authorityString;
@@ -74,6 +81,15 @@ public final class UrbanAirshipProvider extends ContentProvider {
      */
     public static Uri getPreferencesContentUri(Context context) {
         return Uri.parse("content://" + getAuthorityString(context) + "/preferences");
+    }
+
+    /**
+     * Creates the events URI.
+     *
+     * @return The events URI.
+     */
+    public static Uri getEventsContentUri(Context context) {
+        return Uri.parse("content://" + getAuthorityString(context) + "/events");
     }
 
     /**
@@ -101,6 +117,8 @@ public final class UrbanAirshipProvider extends ContentProvider {
         matcher.addURI(getAuthorityString(getContext()), "richpush/*", RICHPUSH_MESSAGE_URI_TYPE);
         matcher.addURI(getAuthorityString(getContext()), "preferences", PREFERENCES_URI_TYPE);
         matcher.addURI(getAuthorityString(getContext()), "preferences/*", PREFERENCE_URI_TYPE);
+        matcher.addURI(getAuthorityString(getContext()), "events", EVENT_URI_TYPE);
+        matcher.addURI(getAuthorityString(getContext()), "events/*", EVENT_URI_TYPE);
 
         Autopilot.automaticTakeOff((Application) getContext().getApplicationContext(), true);
 
@@ -131,6 +149,11 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 return PREFERENCES_CONTENT_TYPE;
             case PREFERENCE_URI_TYPE:
                 return PREFERENCES_CONTENT_ITEM_TYPE;
+            case EVENT_URI_TYPE:
+                return EVENTS_CONTENT_TYPE;
+            case EVENTS_URI_TYPE:
+                return EVENTS_CONTENT_ITEM_TYPE;
+
         }
         throw new IllegalArgumentException("Invalid Uri: " + uri);
     }
@@ -173,7 +196,14 @@ public final class UrbanAirshipProvider extends ContentProvider {
             return null;
         }
 
-        Cursor cursor = model.dataManager.query(model.table, projection, selection, selectionArgs, sortOrder);
+        Cursor cursor;
+
+        String limit = uri.getQueryParameter(QUERY_PARAMETER_LIMIT);
+        if (limit != null) {
+            cursor = model.dataManager.query(model.table, projection, selection, selectionArgs, sortOrder, "0, " + limit);
+        } else {
+            cursor = model.dataManager.query(model.table, projection, selection, selectionArgs, sortOrder);
+        }
 
         if (cursor != null) {
             cursor.setNotificationUri(this.getContext().getContentResolver(), uri);
@@ -202,6 +232,11 @@ public final class UrbanAirshipProvider extends ContentProvider {
         if (preferencesDataModel != null) {
             preferencesDataModel.dataManager.close();
             preferencesDataModel = null;
+        }
+
+        if (eventsDataModel != null) {
+            eventsDataModel.dataManager.close();
+            eventsDataModel = null;
         }
     }
 
@@ -242,6 +277,14 @@ public final class UrbanAirshipProvider extends ContentProvider {
                 }
 
                 return preferencesDataModel;
+
+            case EVENT_URI_TYPE:
+            case EVENTS_URI_TYPE:
+                if (eventsDataModel == null) {
+                    eventsDataModel = DatabaseModel.createEventsDataModel(getContext(), appKey);
+                }
+
+                return eventsDataModel;
         }
 
 
@@ -292,6 +335,12 @@ public final class UrbanAirshipProvider extends ContentProvider {
         static DatabaseModel createPreferencesModel(@NonNull Context context, String appKey) {
             DataManager model = new PreferencesDataManager(context, appKey);
             return new DatabaseModel(model, PreferencesDataManager.TABLE_NAME, PreferencesDataManager.COLUMN_NAME_KEY);
+        }
+
+
+        static DatabaseModel createEventsDataModel(Context context, String appKey) {
+            DataManager model = new EventsStorage(context, appKey);
+            return new DatabaseModel(model, EventsStorage.Events.TABLE_NAME, EventsStorage.Events._ID);
         }
     }
 }

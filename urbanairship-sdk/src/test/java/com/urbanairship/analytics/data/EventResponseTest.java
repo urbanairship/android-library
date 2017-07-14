@@ -1,8 +1,9 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.analytics.data.EventResponse;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;

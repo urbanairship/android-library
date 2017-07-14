@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.data;
 
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAMathUtil;

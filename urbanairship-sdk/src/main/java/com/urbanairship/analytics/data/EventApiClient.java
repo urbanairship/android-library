@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.analytics;
+package com.urbanairship.analytics.data;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -20,7 +20,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.ManifestUtils;
-import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
 
 import java.net.MalformedURLException;
@@ -34,7 +33,7 @@ import java.util.TimeZone;
 /**
  * A client that handles uploading analytic events
  */
-class EventApiClient {
+public class EventApiClient {
 
     static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
     static final String NOT_ALLOWED = "NOT_ALLOWED";
@@ -48,7 +47,7 @@ class EventApiClient {
      *
      * @param context The application context.
      */
-    EventApiClient(@NonNull Context context) {
+    public EventApiClient(@NonNull Context context) {
         this(context, new RequestFactory());
     }
 
@@ -71,14 +70,9 @@ class EventApiClient {
      * @param events Specified events
      * @return eventResponse or null if an error occurred
      */
-    EventResponse sendEvents(@NonNull  UAirship airship, @NonNull Collection<String> events) {
+    EventResponse sendEvents(UAirship airship, @NonNull Collection<String> events) {
         if (events.size() == 0) {
-            Logger.verbose("EventApiClient - No events to send.");
-            return null;
-        }
-
-        if (!Network.isConnected()) {
-            Logger.verbose("EventApiClient - No network connectivity available. Unable to send events.");
+            Logger.verbose("EventApiClient - No analytics events to send.");
             return null;
         }
 
@@ -165,12 +159,12 @@ class EventApiClient {
             request.setHeader("X-UA-Push-Address", channelID);
         }
 
-        Logger.debug("EventApiClient - Sending analytic events. Request:  " + request + " Events: " + events);
+        Logger.debug("EventApiClient - Sending analytics events. Request:  " + request + " Events: " + events);
 
         Response response = request.execute();
 
 
-        Logger.debug("EventApiClient - Analytic event send response: " + response);
+        Logger.debug("EventApiClient - Analytics event response: " + response);
 
 
         return response == null ? null : new EventResponse(response);
