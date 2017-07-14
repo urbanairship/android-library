@@ -9,15 +9,12 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonValue;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -25,15 +22,12 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 
 import java.net.HttpURLConnection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -48,11 +42,9 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
     private NamedUserJobHandler jobHandler;
 
     private String changeToken;
-    private JobDispatcher mockDispatcher;
 
     @Before
     public void setup() {
-        mockDispatcher = mock(JobDispatcher.class);
         namedUserClient = Mockito.mock(NamedUserApiClient.class);
         namedUser = Mockito.mock(NamedUser.class);
         pushManager = Mockito.mock(PushManager.class);
@@ -70,7 +62,10 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
             }
         });
 
-        jobHandler = new NamedUserJobHandler(UAirship.shared(), dataStore, mockDispatcher, namedUserClient);
+        TagGroupMutationStore tagGroupStore = new TagGroupMutationStore(dataStore, "test");
+        when(namedUser.getTagGroupStore()).thenReturn(tagGroupStore);
+
+        jobHandler = new NamedUserJobHandler(UAirship.shared(), dataStore, namedUserClient);
 
         Shadows.shadowOf(RuntimeEnvironment.application).clearStartedServices();
     }
@@ -273,53 +268,6 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         assertNotEquals(changeToken, dataStore.getString(NamedUserJobHandler.LAST_UPDATED_TOKEN_KEY, null));
     }
 
-    /**
-     * Test apply tag group changes updates the pending tag groups.
-     */
-    @Test
-    public void testApplyTagGroupChanges() throws JsonException {
-        when(namedUser.getId()).thenReturn("namedUserId");
-
-        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
-
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
-
-        // Verify pending tags are saved
-        assertEquals(mutations, dataStore.getJsonValue(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY));
-    }
-
-    /**
-     * Test apply tag group changes schedules a tag group update request.
-     */
-    @Test
-    public void testApplyTagGroupChangesSchedulesUpload() throws JsonException {
-        // Return a named user ID
-        when(namedUser.getId()).thenReturn("namedUserId");
-
-        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
-
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
-
-        // Verify a new jobInfo to update tag group registration is dispatched
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS);
-            }
-        }));
-    }
 
     /**
      * Test update named user tags succeeds if the status is 200 and clears pending tags.
@@ -330,14 +278,10 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
+        TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
 
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
@@ -345,14 +289,14 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(200);
 
         // Perform the update
-        jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
+        assertTrue(tagGroupStore.getMutations().isEmpty());
     }
 
     /**
@@ -364,17 +308,13 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn(null);
 
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
+        TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
 
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
 
         // Perform the update
-        jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
@@ -390,15 +330,11 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Provide pending changes
+        TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
@@ -406,14 +342,15 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(500);
 
         // Perform the update
-        jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
 
         // Verify pending tags persist
-        assertNotNull(dataStore.getString(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
+        assertEquals(1, tagGroupStore.getMutations().size());
+        assertEquals(mutation, tagGroupStore.getMutations().get(0));
     }
 
     /**
@@ -425,7 +362,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Clear pending changes
-        dataStore.remove(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY);
+        namedUser.getTagGroupStore().clear();
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
@@ -444,15 +381,11 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(namedUser.getId()).thenReturn("namedUserId");
 
         // Provide pending changes
+        TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        JsonValue mutations = JsonValue.wrapOpt(Collections.singletonList(mutation));
 
-        // Apply tag groups
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES)
-                                 .putExtra(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS, mutations.toString())
-                                 .build();
-
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
 
         // Set up a 400 response
         Response response = Mockito.mock(Response.class);
@@ -460,33 +393,14 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         when(response.getStatus()).thenReturn(400);
 
         // Perform the update
-        jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
         Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
 
         // Verify pending tag groups are empty
-        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
+        assertTrue(tagGroupStore.getMutations().isEmpty());
     }
 
-    /**
-     * Test clear pending named user tags.
-     */
-    @Test
-    public void testClearPendingNamedUserTags() throws JsonException {
-        // Set non-empty pending tags
-        dataStore.put(NamedUserJobHandler.PENDING_ADD_TAG_GROUPS_KEY, "");
-        dataStore.put(NamedUserJobHandler.PENDING_REMOVE_TAG_GROUPS_KEY, "");
-        dataStore.put(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, "");
-
-        // Perform the update
-        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
-
-        // Verify pending tag groups are empty
-        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_ADD_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_REMOVE_TAG_GROUPS_KEY, null));
-        assertNull(dataStore.getString(NamedUserJobHandler.PENDING_TAG_GROUP_MUTATIONS_KEY, null));
-    }
 }

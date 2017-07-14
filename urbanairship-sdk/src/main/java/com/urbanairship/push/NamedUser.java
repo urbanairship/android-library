@@ -18,6 +18,7 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,6 +39,21 @@ public class NamedUser extends AirshipComponent {
     private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
+     * Key for storing the pending named user add tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_ADD_TAG_GROUPS_KEY";
+
+    /**
+     * Key for storing the pending named user remove tags changes in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
+
+    /**
+     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
+     */
+    static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
+
+    /**
      * The maximum length of the named user ID string.
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
@@ -47,6 +63,7 @@ public class NamedUser extends AirshipComponent {
     private final Object lock = new Object();
     private final JobDispatcher jobDispatcher;
     private NamedUserJobHandler namedUserJobHandler;
+    private final TagGroupMutationStore tagGroupStore;
 
     /**
      * Creates a NamedUser.
@@ -66,10 +83,13 @@ public class NamedUser extends AirshipComponent {
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
+        this.tagGroupStore = new TagGroupMutationStore(preferenceDataStore, PENDING_TAG_GROUP_MUTATIONS_KEY);
     }
 
     @Override
     protected void init() {
+        tagGroupStore.migrateTagGroups(PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY);
+
         // Start named user update
         dispatchNamedUserUpdateJob();
 
@@ -88,7 +108,7 @@ public class NamedUser extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, Job job) {
         if (namedUserJobHandler == null) {
-            namedUserJobHandler = new NamedUserJobHandler(context, airship, preferenceDataStore);
+            namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore);
         }
 
         return namedUserJobHandler.performJob(job);
@@ -143,7 +163,7 @@ public class NamedUser extends AirshipComponent {
                 updateChangeToken();
 
                 // When named user ID change, clear pending named user tags.
-                dispatchClearTagsJob();
+                tagGroupStore.clear();
 
                 dispatchNamedUserUpdateJob();
             } else {
@@ -158,7 +178,25 @@ public class NamedUser extends AirshipComponent {
      * @return The TagGroupsEditor.
      */
     public TagGroupsEditor editTagGroups() {
-        return new TagGroupsEditor(NamedUserJobHandler.ACTION_APPLY_TAG_GROUP_CHANGES, NamedUser.class, jobDispatcher);
+        return new TagGroupsEditor() {
+            @Override
+            protected void onApply(List<TagGroupsMutation> collapsedMutations) {
+                if (collapsedMutations.isEmpty()) {
+                    return;
+                }
+
+                tagGroupStore.add(collapsedMutations);
+
+                JobInfo jobInfo = JobInfo.newBuilder()
+                                         .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                         .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                         .setNetworkAccessRequired(true)
+                                         .setAirshipComponent(NamedUser.class)
+                                         .build();
+
+                jobDispatcher.dispatch(jobInfo);
+            }
+        };
     }
 
     /**
@@ -201,21 +239,7 @@ public class NamedUser extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-    /**
-     * Dispatches a job to clear pending named user tags.
-     */
-    void dispatchClearTagsJob() {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(NamedUserJobHandler.ACTION_CLEAR_PENDING_NAMED_USER_TAGS)
-                                 .setAirshipComponent(NamedUser.class)
-                                 .build();
 
-        if (UAirship.isMainProcess()) {
-            jobDispatcher.runJob(new Job(jobInfo, false));
-        } else {
-            jobDispatcher.dispatch(jobInfo);
-        }
-    }
 
     /**
      * Dispatches a job to update the named user tag groups.
@@ -229,5 +253,14 @@ public class NamedUser extends AirshipComponent {
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
+    }
+
+    /**
+     * Gets the pending tag group store.
+     *
+     * @return The pending tag group store.
+     */
+    TagGroupMutationStore getTagGroupStore() {
+        return tagGroupStore;
     }
 }

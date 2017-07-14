@@ -24,19 +24,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
-
-import static com.urbanairship.push.TagUtils.migrateTagGroups;
 
 /**
  * Job handler for channel registration
  */
 class ChannelJobHandler {
-
-    /**
-     * Action to update pending channel tag groups.
-     */
-    static final String ACTION_APPLY_TAG_GROUP_CHANGES = "com.urbanairship.push.ACTION_APPLY_TAG_GROUP_CHANGES";
 
     /**
      * Action to perform update request for pending tag group changes.
@@ -67,21 +59,6 @@ class ChannelJobHandler {
      * Data store key for the time in milliseconds of last successfully channel registration.
      */
     private static final String LAST_REGISTRATION_TIME_KEY = "com.urbanairship.push.LAST_REGISTRATION_TIME";
-
-    /**
-     * Key for storing the pending channel add tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
-
-    /**
-     * Key for storing the pending channel remove tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
-
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
 
     /**
      * Response body key for the channel ID.
@@ -145,9 +122,6 @@ class ChannelJobHandler {
 
             case ACTION_UPDATE_CHANNEL_REGISTRATION:
                 return onUpdateChannelRegistration();
-
-            case ACTION_APPLY_TAG_GROUP_CHANGES:
-                return onApplyTagGroupChanges(job);
 
             case ACTION_UPDATE_TAG_GROUPS:
                 return onUpdateTagGroup();
@@ -462,79 +436,25 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdateTagGroup() {
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
-
         String channelId = pushManager.getChannelId();
         if (channelId == null) {
             Logger.verbose("Failed to update channel tags due to null channel ID.");
             return Job.JOB_FINISHED;
         }
 
-        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
-
-        if (mutations.isEmpty()) {
-            Logger.verbose("ChannelJobHandler - No pending tag group updates. Skipping update.");
-            return Job.JOB_FINISHED;
-        }
-
-        while (!mutations.isEmpty()) {
-            Response response = channelClient.updateTagGroups(channelId, mutations.get(0));
+        TagGroupsMutation mutation;
+        while ((mutation = pushManager.getTagGroupStore().pop()) != null) {
+            Response response = channelClient.updateTagGroups(channelId, mutation);
 
             // 5xx or no response
             if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
                 Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
+                pushManager.getTagGroupStore().push(mutation);
                 return Job.JOB_RETRY;
             }
 
             int status = response.getStatus();
-
             Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
-            if (UAHttpStatusUtil.inSuccessRange(status) || status == HttpURLConnection.HTTP_FORBIDDEN || status == HttpURLConnection.HTTP_BAD_REQUEST) {
-                mutations.remove(0);
-
-                if (mutations.isEmpty()) {
-                    dataStore.remove(PENDING_TAG_GROUP_MUTATIONS_KEY);
-                } else {
-                    dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
-                }
-            }
-        }
-
-
-        return Job.JOB_FINISHED;
-    }
-
-    /**
-     * Handles any pending tag group changes.
-     *
-     * @param job The airship job.
-     * @return The job result.
-     */
-    @Job.JobResult
-    private int onApplyTagGroupChanges(Job job) {
-        migrateTagGroups(dataStore, PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY, PENDING_TAG_GROUP_MUTATIONS_KEY);
-
-        List<TagGroupsMutation> mutations = TagGroupsMutation.fromJsonList(dataStore.getJsonValue(PENDING_TAG_GROUP_MUTATIONS_KEY).optList());
-        try {
-            JsonValue jsonValue = JsonValue.parseString(job.getJobInfo().getExtras().getString(TagGroupsEditor.EXTRA_TAG_GROUP_MUTATIONS));
-            mutations.addAll(TagGroupsMutation.fromJsonList(jsonValue.optList()));
-        } catch (JsonException e) {
-            Logger.error("Failed to parse tag group change:", e);
-            return Job.JOB_FINISHED;
-        }
-
-        mutations = TagGroupsMutation.collapseMutations(mutations);
-        dataStore.put(PENDING_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(mutations));
-
-        if (pushManager.getChannelId() != null) {
-            JobInfo jobInfo = JobInfo.newBuilder()
-                               .setAction(ACTION_UPDATE_TAG_GROUPS)
-                               .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                               .setNetworkAccessRequired(true)
-                               .setAirshipComponent(PushManager.class)
-                               .build();
-
-            jobDispatcher.dispatch(jobInfo);
         }
 
         return Job.JOB_FINISHED;

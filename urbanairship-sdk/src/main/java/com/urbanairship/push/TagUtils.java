@@ -5,13 +5,10 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.json.JsonValue;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,33 +79,5 @@ class TagUtils {
         }
 
         return tagGroups;
-    }
-
-    /**
-     * Converts the old tag group store to tag mutations.
-     *
-     * @param dataStore The data store.
-     * @param pendingAddTagsKey The old pending add tags key.
-     * @param pendingRemoveTagsKey The old pending remove tags key.
-     * @param tagsMutationKey The new mutation key.
-     */
-    static void migrateTagGroups(PreferenceDataStore dataStore, String pendingAddTagsKey, String pendingRemoveTagsKey, String tagsMutationKey) {
-        JsonValue pendingAddTags = dataStore.getJsonValue(pendingAddTagsKey);
-        JsonValue pendingRemoveTags = dataStore.getJsonValue(pendingRemoveTagsKey);
-
-        if (pendingAddTags.isNull() && pendingRemoveTags.isNull()) {
-            return;
-        }
-
-        Map<String, Set<String>> addTags = TagUtils.convertToTagsMap(pendingAddTags);
-        Map<String, Set<String>> removeTags = TagUtils.convertToTagsMap(pendingRemoveTags);
-
-        TagGroupsMutation mutation = TagGroupsMutation.newAddRemoveMutation(addTags, removeTags);
-        List<TagGroupsMutation> mutations = Collections.singletonList(mutation);
-
-        dataStore.put(tagsMutationKey, JsonValue.wrapOpt(mutations));
-
-        dataStore.remove(pendingAddTagsKey);
-        dataStore.remove(pendingRemoveTagsKey);
     }
 }

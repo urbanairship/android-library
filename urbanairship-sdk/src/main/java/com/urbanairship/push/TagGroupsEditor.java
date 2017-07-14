@@ -3,14 +3,9 @@
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
-import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -24,20 +19,12 @@ import java.util.Set;
  */
 public class TagGroupsEditor {
 
-    /**
-     * Extra containing tag group mutations
-     */
-    static final String EXTRA_TAG_GROUP_MUTATIONS = "EXTRA_TAG_GROUP_MUTATIONS";
 
-    private final String action;
     private final List<TagGroupsMutation> mutations = new ArrayList<>();
-    private final JobDispatcher jobDispatcher;
-    private final Class<? extends AirshipComponent> component;
 
-    public TagGroupsEditor(String action, Class<? extends AirshipComponent> component, JobDispatcher jobDispatcher) {
-        this.action = action;
-        this.jobDispatcher = jobDispatcher;
-        this.component = component;
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public TagGroupsEditor() {
+
     }
 
     /**
@@ -62,6 +49,10 @@ public class TagGroupsEditor {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
             Logger.warn("The tag group ID string cannot be null.");
+            return this;
+        }
+
+        if (!allowTagGroupChange(tagGroup)) {
             return this;
         }
 
@@ -100,6 +91,10 @@ public class TagGroupsEditor {
             return this;
         }
 
+        if (!allowTagGroupChange(tagGroup)) {
+            return this;
+        }
+
         if (tags == null) {
             tags = new HashSet<>();
         } else {
@@ -135,6 +130,10 @@ public class TagGroupsEditor {
             return this;
         }
 
+        if (!allowTagGroupChange(tagGroup)) {
+            return this;
+        }
+
         tags = TagUtils.normalizeTags(tags);
         if (tags.isEmpty()) {
             Logger.warn("The tags cannot be empty");
@@ -150,20 +149,13 @@ public class TagGroupsEditor {
      */
     public void apply() {
         List<TagGroupsMutation> collapsedMutations = TagGroupsMutation.collapseMutations(mutations);
-        if (mutations.isEmpty()) {
-            return;
-        }
-
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(action)
-                                 .setAirshipComponent(component)
-                                 .putExtra(EXTRA_TAG_GROUP_MUTATIONS, JsonValue.wrapOpt(collapsedMutations).toString())
-                                 .build();
-
-        if (UAirship.isMainProcess()) {
-            jobDispatcher.runJob(new Job(jobInfo, false));
-        } else {
-            jobDispatcher.dispatch(jobInfo);
-        }
+        onApply(collapsedMutations);
     }
+
+    protected boolean allowTagGroupChange(String tagGroup) {
+        return true;
+    }
+
+    protected void onApply(List<TagGroupsMutation> collapsedMutations) {};
+
 }

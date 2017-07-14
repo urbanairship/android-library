@@ -10,7 +10,6 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionTestUtils;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.NamedUser;
@@ -71,13 +70,14 @@ public class AddTagsActionTest extends BaseTestCase {
         final Map<String, Set<String>> added = new HashMap<>();
         PushManager pushManager = mock(PushManager.class);
         NamedUser namedUser = mock(NamedUser.class);
-        TagGroupsEditor tagGroupsEditor = new TagGroupsEditor("action", PushManager.class, mock(JobDispatcher.class)) {
+        TagGroupsEditor tagGroupsEditor = new TagGroupsEditor() {
             @Override
             public TagGroupsEditor addTags(@NonNull String group, @NonNull Set<String> tags) {
                 added.put(group, tags);
                 return this;
             }
         };
+
         when(pushManager.editTagGroups()).thenReturn(tagGroupsEditor);
         when(namedUser.editTagGroups()).thenReturn(tagGroupsEditor);
 
