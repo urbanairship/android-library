@@ -19,7 +19,6 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
@@ -159,6 +158,7 @@ public class RichPushInbox extends AirshipComponent {
             public void onBackground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                                         .setId(JobInfo.RICH_PUSH_SYNC_MESSAGE_STATE)
                                          .setAirshipComponent(RichPushInbox.class)
                                          .build();
 
@@ -196,14 +196,14 @@ public class RichPushInbox extends AirshipComponent {
      */
     @Override
     @WorkerThread
-    @Job.JobResult
+    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, Job job) {
+    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
         if (inboxJobHandler == null) {
             inboxJobHandler = new InboxJobHandler(context, airship, dataStore);
         }
 
-        return inboxJobHandler.performJob(job);
+        return inboxJobHandler.performJob(jobInfo);
     }
 
     @Override
@@ -342,6 +342,7 @@ public class RichPushInbox extends AirshipComponent {
             if (!isFetchingMessages) {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                                         .setId(JobInfo.RICH_PUSH_UPDATE_MESSAGES)
                                          .setAirshipComponent(RichPushInbox.class)
                                          .build();
 

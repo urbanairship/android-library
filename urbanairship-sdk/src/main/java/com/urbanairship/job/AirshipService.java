@@ -1,10 +1,11 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.job;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -13,9 +14,7 @@ import android.os.Message;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
+import com.urbanairship.Logger;
 
 /**
  * Urban Airship Service.
@@ -32,7 +31,8 @@ public class AirshipService extends Service {
     /**
      * JobInfo bundle extra. See {@link JobInfo#toBundle()}.
      */
-    public static final String EXTRA_JOB_BUNDLE = "EXTRA_JOB_BUNDLE";
+    static final String EXTRA_JOB_INFO_BUNDLE = "EXTRA_JOB_INFO_BUNDLE";
+    static final String EXTRA_RESCHEDULE_EXTRAS = "EXTRA_RESCHEDULE_EXTRAS";
 
     private static final int MSG_INTENT_RECEIVED = 1;
     private static final int MSG_INTENT_JOB_FINISHED = 2;
@@ -105,23 +105,34 @@ public class AirshipService extends Service {
         msg.arg1 = startId;
         msg.obj = intent;
 
-        if (intent == null || !ACTION_RUN_JOB.equals(intent.getAction()) || intent.getBundleExtra(EXTRA_JOB_BUNDLE) == null) {
+        if (intent == null || !ACTION_RUN_JOB.equals(intent.getAction()) || intent.getBundleExtra(EXTRA_JOB_INFO_BUNDLE) == null) {
             handler.sendMessage(msg);
             return;
         }
 
-        final JobInfo jobInfo = JobInfo.fromBundle(intent.getBundleExtra(EXTRA_JOB_BUNDLE));
-        Job job = new Job(jobInfo, true);
+        final JobInfo jobInfo = JobInfo.fromBundle(intent.getBundleExtra(EXTRA_JOB_INFO_BUNDLE));
+        if (jobInfo == null) {
+            handler.sendMessage(msg);
+            return;
+        }
 
-        Logger.verbose("AirshipService - Starting job: " + job + " taskId: " + startId);
         runningJobs++;
 
-        JobDispatcher.shared(getApplicationContext()).runJob(job, new JobDispatcher.Callback() {
-            @Override
-            public void onFinish(Job job, @Job.JobResult int result) {
-                handler.sendMessage(msg);
-            }
-        });
+        Job job = new Job.Builder(jobInfo)
+                .setCallback(new Job.Callback() {
+                    @Override
+                    public void onFinish(Job job, @JobInfo.JobResult int result) {
+                        handler.sendMessage(msg);
+                        if (result == JobInfo.JOB_RETRY) {
+                            JobDispatcher.shared(getApplicationContext()).reschedule(jobInfo, intent.getBundleExtra(EXTRA_RESCHEDULE_EXTRAS));
+                        }
+                    }
+                })
+                .build();
+
+        Logger.verbose("AirshipService - Running job: " + jobInfo);
+        Job.EXECUTOR.execute(job);
+
     }
 
     /**
@@ -152,12 +163,22 @@ public class AirshipService extends Service {
      *
      * @param context The application context.
      * @param jobInfo The {@link JobInfo} to run.
+     * @param rescheduleExtras Extras to pass to {@link JobDispatcher#reschedule(JobInfo, Bundle)} if the job needs to be retried.
      * @return A service intent.
      */
-    public static Intent createIntent(Context context, JobInfo jobInfo) {
-        return new Intent(context, AirshipService.class)
-                .setAction(AirshipService.ACTION_RUN_JOB)
-                .putExtra(AirshipService.EXTRA_JOB_BUNDLE, jobInfo.toBundle());
+    public static Intent createIntent(Context context, JobInfo jobInfo, Bundle rescheduleExtras) {
+        Intent intent = new Intent(context, AirshipService.class)
+                .setAction(AirshipService.ACTION_RUN_JOB);
+
+        if (jobInfo != null) {
+            intent.putExtra(AirshipService.EXTRA_JOB_INFO_BUNDLE, jobInfo.toBundle());
+        }
+
+        if (rescheduleExtras != null) {
+            intent.putExtra(AirshipService.EXTRA_RESCHEDULE_EXTRAS, rescheduleExtras);
+        }
+
+        return intent;
     }
 
 }

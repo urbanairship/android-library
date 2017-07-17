@@ -8,7 +8,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 
@@ -89,7 +88,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
             // Perform the update
             JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-            Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+            Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
             // Verify the update was performed
             verify(namedUserClient).associate("namedUserID", "channelID");
@@ -117,7 +116,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify the update was performed
         verify(namedUserClient).associate("namedUserID", "channelID");
@@ -141,7 +140,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
 
         // Verify the update was performed
         verify(namedUserClient).associate("namedUserID", "channelID");
@@ -169,7 +168,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
             // Perform the update
             JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-            Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+            Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
             // Verify the update was performed
             verify(namedUserClient).disassociate("channelID");
@@ -197,7 +196,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify the update was performed
         verify(namedUserClient).disassociate("channelID");
@@ -221,7 +220,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
 
         // Verify the update was performed
         verify(namedUserClient).disassociate("channelID");
@@ -240,7 +239,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -259,7 +258,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify associate not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -290,7 +289,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
@@ -315,7 +314,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify updateNamedUserTags not called when channel ID doesn't exist
         verifyZeroInteractions(namedUserClient);
@@ -343,7 +342,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
@@ -366,7 +365,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify it didn't cause a client update
         verifyZeroInteractions(namedUserClient);
@@ -394,7 +393,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
-        Assert.assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        Assert.assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify updateNamedUserTags called
         Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);

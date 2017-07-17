@@ -23,6 +23,7 @@ import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.util.Checks;
@@ -33,7 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
-import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH_BUNDLE;
+import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
 
 
 /**
@@ -109,17 +110,15 @@ class IncomingPushRunnable implements Runnable {
                 Logger.error("Notification factory requested long running task but the application does not define RECEIVE_BOOT_COMPLETED in the manifest. Notification will be lost if the device reboots before the notification is processed.");
             }
 
-            Bundle extras = new Bundle();
-            extras.putBundle(EXTRA_PUSH_BUNDLE, message.getPushBundle());
-            extras.putString(EXTRA_PROVIDER_CLASS, providerClass);
-
             JobInfo jobInfo = JobInfo.newBuilder()
                                      .setAction(PushManagerJobHandler.ACTION_PROCESS_PUSH)
-                                     .setTag(UUID.randomUUID().toString())
-                                     .setNetworkAccessRequired(true)
+                                     .generateUniqueId(context)
                                      .setAirshipComponent(PushManager.class)
                                      .setPersistent(true)
-                                     .setExtras(extras)
+                                     .setExtras(JsonMap.newBuilder()
+                                               .putOpt(EXTRA_PUSH, message)
+                                               .put(EXTRA_PROVIDER_CLASS, providerClass)
+                                               .build())
                                      .build();
 
             JobDispatcher.shared(context).dispatch(jobInfo);

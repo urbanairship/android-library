@@ -104,24 +104,6 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
-     * Test init starts push registration if the registration token is available.
-     */
-    @Test
-    public void testInitPushRegistered() {
-        pushManager.setRegistrationToken("some token");
-        pushManager.init();
-
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
-            }
-        }));
-
-        verifyNoMoreInteractions(mockDispatcher);
-    }
-
-    /**
      * Test enabling push.
      */
     @Test

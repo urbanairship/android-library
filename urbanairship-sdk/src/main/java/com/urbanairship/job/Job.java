@@ -1,71 +1,155 @@
 package com.urbanairship.job;
 
-import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.WorkerThread;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import com.urbanairship.AirshipComponent;
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
+import com.urbanairship.util.UAStringUtil;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
  * Contains information for a job run.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class Job {
+class Job implements Runnable {
 
+    static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
-    @IntDef({ JOB_FINISHED, JOB_RETRY })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface JobResult {}
-
-    /**
-     * JobInfo is finished.
-     */
-    public static final int JOB_FINISHED = 0;
+    private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
 
     /**
-     * JobInfo needs to be retried at a later date.
+     * Callback when a job is finished.
      */
-    public static final int JOB_RETRY = 1;
+    public interface Callback {
 
+        /**
+         * Called when a job is finished.
+         *
+         * @param job The job.
+         * @param result The job's result.
+         */
+        void onFinish(Job job, @JobInfo.JobResult int result);
+    }
 
-    private final boolean isLongRunning;
     private final JobInfo jobInfo;
+    private final Callback callback;
+
 
     /**
-     * The default job constructor.
+     * Default constructor.
      *
-     * @param jobInfo The job info.
-     * @param isLongRunning {@code true} if the job is long running, otherwise {@code false}.
+     * @param builder The job builder.
      */
-    public Job(JobInfo jobInfo, boolean isLongRunning) {
-        this.jobInfo = jobInfo;
-        this.isLongRunning = isLongRunning;
+    private Job(Builder builder) {
+        this.jobInfo = builder.jobInfo;
+        this.callback = builder.callback;
     }
 
+    /**
+     * Runs the job.
+     */
     @Override
-    public String toString() {
-        return "Job{" +
-                "isLongRunning=" + isLongRunning +
-                ", jobInfo=" + jobInfo +
-                '}';
+    @WorkerThread
+    public void run() {
+        final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+        if (airship == null) {
+            Logger.error("JobDispatcher - UAirship not ready. Rescheduling job: " + jobInfo);
+            if (callback != null) {
+                callback.onFinish(this, JobInfo.JOB_RETRY);
+            }
+            return;
+        }
+
+        final AirshipComponent component = findAirshipComponent(airship, jobInfo.getAirshipComponentName());
+        if (component == null) {
+            Logger.error("JobDispatcher - Unavailable to find airship components for jobInfo: " + jobInfo);
+            if (callback != null) {
+                callback.onFinish(this, JobInfo.JOB_FINISHED);
+            }
+            return;
+        }
+
+        component.getJobExecutor(jobInfo).execute(new Runnable() {
+            @Override
+            public void run() {
+                int result = component.onPerformJob(airship, jobInfo);
+                Logger.verbose("Job - Finished: " + jobInfo + " with result: " + result);
+
+                if (callback != null) {
+                    callback.onFinish(Job.this, result);
+                }
+            }
+        });
     }
 
     /**
-     * Gets the job info.
+     * Finds the {@link AirshipComponent}s for a given job.
      *
-     * @return The job info.
+     * @param componentClassName The component's class name.
+     * @param airship The airship instance.
+     * @return The airship component.
      */
-    public JobInfo getJobInfo() {
-        return jobInfo;
+    private AirshipComponent findAirshipComponent(UAirship airship, String componentClassName) {
+        if (UAStringUtil.isEmpty(componentClassName)) {
+            return null;
+        }
+
+        for (final AirshipComponent component : airship.getComponents()) {
+            if (component.getClass().getName().equals(componentClassName)) {
+                return component;
+            }
+        }
+
+        return null;
     }
 
+
     /**
-     * If the job is long running or not. If its not long running, it has less than 10 seconds to run.
-     *
-     * @return {@code true} if the job is long running, otherwise {@code false}.
+     * Builds the job
      */
-    public boolean isLongRunning() {
-        return isLongRunning;
+    public static class Builder {
+
+        private JobInfo jobInfo;
+        private Callback callback;
+
+        /**
+         * Default constructor.
+         *
+         * @param jobInfo The job info.
+         */
+        Builder(JobInfo jobInfo) {
+            this.jobInfo = jobInfo;
+        }
+
+        /**
+         * Sets a callback when the job is finished.
+         *
+         * @param callback A callback.
+         * @return The builder instance.
+         */
+        Builder setCallback(@NonNull Callback callback) {
+            this.callback = callback;
+            return this;
+        }
+
+        /**
+         * Builds the job.
+         *
+         * @return The job.
+         */
+        Job build() {
+            return new Job(this);
+        }
+
     }
+
+
 }

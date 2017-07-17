@@ -66,7 +66,7 @@
             android:name="com.urbanairship.ChannelCaptureActivity"/>
 
 
-        <service android:name="com.urbanairship.AirshipService" />
+        <service android:name="com.urbanairship.job.AirshipService" />
         <service android:name="com.urbanairship.actions.ActionService" />
         <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
         <service android:name="com.urbanairship.push.PushService" />
@@ -78,6 +78,9 @@
                 <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
             </intent-filter>
         </service>
+
+        <service android:name="com.urbanairship.job.AndroidJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
             android:name="com.urbanairship.push.UAInstanceIDListenerService"

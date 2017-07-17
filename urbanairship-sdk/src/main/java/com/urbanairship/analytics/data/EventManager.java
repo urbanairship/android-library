@@ -107,7 +107,7 @@ public class EventManager {
         Logger.verbose("EventManager - Scheduling upload in " + milliseconds + "ms.");
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(jobAction)
-                                 .setTag(jobAction)
+                                 .setId(JobInfo.ANALYTICS_EVENT_UPLOAD)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(Analytics.class)
                                  .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)

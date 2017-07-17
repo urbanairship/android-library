@@ -3,7 +3,9 @@
 package com.urbanairship.job;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Scheduler interface used by {@link JobDispatcher}.
@@ -14,34 +16,30 @@ interface Scheduler {
      * Cancels a scheduled job.
      *
      * @param context The application context.
-     * @param tag The job tag to cancel.
+     * @param scheduleId The jobInfo's mapped ID.
      * @throws SchedulerException if the scheduler fails to cancel.
      */
-    void cancel(@NonNull Context context, @NonNull String tag) throws SchedulerException;
+    void cancel(@NonNull Context context, @NonNull int scheduleId) throws SchedulerException;
 
     /**
      * Schedules a jobInfo.
      *
      * @param context The application context.
      * @param jobInfo The jobInfo to schedule.
+     * @param scheduleId The jobInfo's mapped ID.
      * @throws SchedulerException if the scheduler fails to schedule the jobInfo.
      */
-    void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException;
+    void schedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId) throws SchedulerException;
+
 
     /**
-     * Checks if the jobInfo requires scheduling.
-     *
-     * @param jobInfo The jobInfo.
-     * @return {@code true} if the jobInfo should be scheduled, otherwise {@code false}.
-     */
-    boolean requiresScheduling(@NonNull Context context, @NonNull JobInfo jobInfo);
-
-    /**
-     * Called when the jobInfo needs to be rescheduled.
+     * Called when the job needs to be rescheduled.
      *
      * @param context The application context.
      * @param jobInfo The jobInfo.
-     * @throws SchedulerException if the scheduler fails to schedule the jobInfo.
+     * @param extras Scheduler extras.
+     * @param scheduleId The jobInfo's mapped ID.
+     * @throws SchedulerException if the scheduler fails to reschedule the job.
      */
-    void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException;
+    void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, @Nullable Bundle extras) throws SchedulerException;
 }

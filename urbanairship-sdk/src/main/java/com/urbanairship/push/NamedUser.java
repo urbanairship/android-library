@@ -13,7 +13,6 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.UAStringUtil;
@@ -104,14 +103,14 @@ public class NamedUser extends AirshipComponent {
      */
     @Override
     @WorkerThread
-    @Job.JobResult
+    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, Job job) {
+    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
         if (namedUserJobHandler == null) {
             namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore);
         }
 
-        return namedUserJobHandler.performJob(job);
+        return namedUserJobHandler.performJob(jobInfo);
     }
 
     /**
@@ -181,20 +180,10 @@ public class NamedUser extends AirshipComponent {
         return new TagGroupsEditor() {
             @Override
             protected void onApply(List<TagGroupsMutation> collapsedMutations) {
-                if (collapsedMutations.isEmpty()) {
-                    return;
+                if (!collapsedMutations.isEmpty()) {
+                    tagGroupStore.add(collapsedMutations);
+                    dispatchUpdateTagGroupsJob();
                 }
-
-                tagGroupStore.add(collapsedMutations);
-
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                         .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                         .setNetworkAccessRequired(true)
-                                         .setAirshipComponent(NamedUser.class)
-                                         .build();
-
-                jobDispatcher.dispatch(jobInfo);
             }
         };
     }
@@ -231,7 +220,7 @@ public class NamedUser extends AirshipComponent {
     void dispatchNamedUserUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
-                                 .setTag(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER)
+                                 .setId(JobInfo.NAMED_USER_UPDATE_ID)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(NamedUser.class)
                                  .build();
@@ -247,7 +236,7 @@ public class NamedUser extends AirshipComponent {
     void dispatchUpdateTagGroupsJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                 .setTag(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setId(JobInfo.NAMED_USER_UPDATE_TAG_GROUPS)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(NamedUser.class)
                                  .build();

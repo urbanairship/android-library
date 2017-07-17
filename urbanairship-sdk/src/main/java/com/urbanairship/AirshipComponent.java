@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -42,13 +42,13 @@ public abstract class AirshipComponent {
     /**
      * Gets the executor for the given job.
      *
-     * @param job The job.
-     * @return An executor that will be used to call {@link #onPerformJob(UAirship, Job)}.
+     * @param jobInfo The jobInfo.
+     * @return An executor that will be used to call {@link #onPerformJob(UAirship, JobInfo)}.
      * @hide
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Executor getJobExecutor(Job job) {
+    public Executor getJobExecutor(JobInfo jobInfo) {
         return jobExecutor;
     }
 
@@ -56,15 +56,15 @@ public abstract class AirshipComponent {
      * Called when a scheduled {@link Job} is ready to perform.
      *
      * @param airship The airship instance.
-     * @param job The job.
+     * @param jobInfo The JobInfo.
      * @return The result of the jobInfo.
      * @hide
      */
     @WorkerThread
-    @Job.JobResult
+    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, Job job) {
-        return Job.JOB_FINISHED;
+    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
+        return JobInfo.JOB_FINISHED;
     }
 
 }

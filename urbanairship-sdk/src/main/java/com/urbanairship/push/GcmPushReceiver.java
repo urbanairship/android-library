@@ -81,7 +81,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 break;
 
             case ACTION_GCM_REGISTRATION:
-                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class);
+                PushProviderBridge.requestRegistrationUpdate(context);
 
                 if (isOrderedBroadcast) {
                     setResultCode(Activity.RESULT_OK);

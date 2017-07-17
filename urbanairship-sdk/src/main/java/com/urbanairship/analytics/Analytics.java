@@ -17,7 +17,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -139,13 +138,13 @@ public class Analytics extends AirshipComponent {
      */
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Job.JobResult
-    public int onPerformJob(@NonNull UAirship airship, Job job) {
+    @JobInfo.JobResult
+    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfob) {
         if (analyticsJobHandler == null) {
             analyticsJobHandler = new AnalyticsJobHandler(context, airship, eventManager);
         }
 
-        return analyticsJobHandler.performJob(job);
+        return analyticsJobHandler.performJob(jobInfob);
     }
 
     /**
@@ -294,6 +293,7 @@ public class Analytics extends AirshipComponent {
         if (isAutoTrackAdvertisingIdEnabled()) {
             jobDispatcher.dispatch(JobInfo.newBuilder()
                                           .setAction(ACTION_UPDATE_ADVERTISING_ID)
+                                          .setId(JobInfo.ANALYTICS_UPDATE_ADVERTISING_ID)
                                           .setAirshipComponent(Analytics.class)
                                           .build());
         }
@@ -379,6 +379,7 @@ public class Analytics extends AirshipComponent {
         if (enabled) {
             jobDispatcher.dispatch(JobInfo.newBuilder()
                                           .setAction(ACTION_UPDATE_ADVERTISING_ID)
+                                          .setId(JobInfo.ANALYTICS_UPDATE_ADVERTISING_ID)
                                           .setAirshipComponent(Analytics.class)
                                           .build());
         }

@@ -6,7 +6,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -23,25 +22,20 @@ import com.urbanairship.job.JobInfo;
  */
 public abstract class PushProviderBridge {
 
-    final static String EXTRA_PROVIDER_CLASS = "com.urbanairship.EXTRA_PROVIDER_CLASS";
-    final static String EXTRA_PUSH_BUNDLE = "com.urbanairship.EXTRA_PUSH_BUNDLE";
+    final static String EXTRA_PROVIDER_CLASS = "EXTRA_PROVIDER_CLASS";
+    final static String EXTRA_PUSH = "EXTRA_PUSH";
 
     /**
      * Triggers a registration update.
      *
      * @param context The application context.
-     * @param provider The provider's class.
      */
-    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull Class<? extends PushProvider> provider) {
-        Bundle extras = new Bundle();
-        extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
-
+    public static void requestRegistrationUpdate(@NonNull Context context) {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setTag(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
-                                 .setExtras(extras)
                                  .build();
 
         JobDispatcher.shared(context).dispatch(jobInfo);
@@ -71,7 +65,7 @@ public abstract class PushProviderBridge {
         } else {
             Intent intent = new Intent(context, PushService.class)
                     .setAction(PushService.ACTION_PROCESS_PUSH)
-                    .putExtra(EXTRA_PUSH_BUNDLE, pushMessage.getPushBundle())
+                    .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                     .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
 
             WakefulBroadcastReceiver.startWakefulService(context, intent);

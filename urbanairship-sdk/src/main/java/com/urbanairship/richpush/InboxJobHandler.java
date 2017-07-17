@@ -11,7 +11,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -37,22 +37,22 @@ class InboxJobHandler {
     /**
      * Starts the service in order to update just the {@link RichPushMessage}'s messages.
      */
-    static final String ACTION_RICH_PUSH_MESSAGES_UPDATE = "com.urbanairship.richpush.MESSAGES_UPDATE";
+    static final String ACTION_RICH_PUSH_MESSAGES_UPDATE = "ACTION_RICH_PUSH_MESSAGES_UPDATE";
 
     /**
      * Starts the service to sync message state.
      */
-    static final String ACTION_SYNC_MESSAGE_STATE = "com.urbanairship.richpush.SYNC_MESSAGE_STATE";
+    static final String ACTION_SYNC_MESSAGE_STATE = "ACTION_SYNC_MESSAGE_STATE";
 
     /**
      * Starts the service in order to update just the {@link RichPushUser} itself.
      */
-    static final String ACTION_RICH_PUSH_USER_UPDATE = "com.urbanairship.richpush.USER_UPDATE";
+    static final String ACTION_RICH_PUSH_USER_UPDATE = "ACTION_RICH_PUSH_USER_UPDATE";
 
     /**
      * Extra key to indicate if the rich push user needs to be updated forcefully.
      */
-    static final String EXTRA_FORCEFULLY = "com.urbanairship.richpush.EXTRA_FORCEFULLY";
+    static final String EXTRA_FORCEFULLY = "EXTRA_FORCEFULLY";
 
 
     static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
@@ -99,19 +99,20 @@ class InboxJobHandler {
     }
 
     /**
-     * Called to handle jobs from {@link RichPushInbox#onPerformJob(UAirship, Job)}.
+     * Called to handle jobs from {@link RichPushInbox#onPerformJob(UAirship, JobInfo)}.
      *
-     * @param job The airship job.
+     * @param jobInfo The airship jobInfo.
      * @return The job result.
      */
-    @Job.JobResult int performJob(Job job) {
-        switch (job.getJobInfo().getAction()) {
+    @JobInfo.JobResult
+    int performJob(JobInfo jobInfo) {
+        switch (jobInfo.getAction()) {
             case ACTION_RICH_PUSH_USER_UPDATE:
-                onUpdateUser(job);
+                onUpdateUser(jobInfo.getExtras().opt(EXTRA_FORCEFULLY).getBoolean(false));
                 break;
 
             case ACTION_RICH_PUSH_MESSAGES_UPDATE:
-                onUpdateMessages(job);
+                onUpdateMessages();
                 break;
 
             case ACTION_SYNC_MESSAGE_STATE:
@@ -119,15 +120,13 @@ class InboxJobHandler {
                 break;
         }
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
-     * Handles {@link #ACTION_RICH_PUSH_MESSAGES_UPDATE} intent.
-     *
-     * @param job The airship job.
+     * Updates the message list.
      */
-    private void onUpdateMessages(Job job) {
+    private void onUpdateMessages() {
         if (!RichPushUser.isCreated()) {
             Logger.debug("InboxJobHandler - User has not been created, canceling messages update");
             airship.getInbox().onUpdateMessagesFinished(false);
@@ -140,7 +139,7 @@ class InboxJobHandler {
     }
 
     /**
-     * Handles {@link #ACTION_SYNC_MESSAGE_STATE} intent.
+     * Sync message sate.
      */
     private void onSyncMessages() {
         this.syncReadMessageState();
@@ -148,12 +147,12 @@ class InboxJobHandler {
     }
 
     /**
-     * Handles {@link #ACTION_RICH_PUSH_USER_UPDATE} intent.
+     * Updates the rich push user.
      *
-     * @param job The airship job.
+     * @param forcefully If the user should be updated even if its been recently updated.
      */
-    private void onUpdateUser(Job job) {
-        if (!job.getJobInfo().getExtras().getBoolean(EXTRA_FORCEFULLY, false)) {
+    private void onUpdateUser(boolean forcefully) {
+        if (!forcefully) {
             long lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0);
             long now = System.currentTimeMillis();
             if (!(lastUpdateTime > now || (lastUpdateTime + USER_UPDATE_INTERVAL_MS) < now)) {

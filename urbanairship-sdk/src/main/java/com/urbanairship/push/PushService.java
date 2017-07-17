@@ -28,14 +28,22 @@ public class PushService extends Service {
 
         if (intent != null && ACTION_PROCESS_PUSH.equals(intent.getAction()) && intent.getExtras() != null) {
             Bundle extras = intent.getExtras();
-            Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
+
+            PushMessage message = PushMessage.fromIntent(intent);
             String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
+
+            if (message == null || providerClass == null) {
+                if (pushes <= 0) {
+                    stopSelf(lastStartId);
+                }
+                return START_NOT_STICKY;
+            }
 
             this.pushes++;
 
             IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getApplicationContext())
                     .setLongRunning(true)
-                    .setMessage(new PushMessage(pushBundle))
+                    .setMessage(message)
                     .setProviderClass(providerClass)
                     .setOnFinish(new CancelableOperation(Looper.getMainLooper()) {
                         @Override

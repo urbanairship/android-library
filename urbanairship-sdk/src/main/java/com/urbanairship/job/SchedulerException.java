@@ -17,4 +17,13 @@ class SchedulerException extends Exception {
     SchedulerException(String message, Exception e) {
         super(message, e);
     }
+
+    /**
+     * Creates a scheduler exception for the given message.
+     *
+     * @param message The exception message.
+     */
+    SchedulerException(String message) {
+        super(message);
+    }
 }

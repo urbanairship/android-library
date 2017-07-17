@@ -6,10 +6,11 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 
 /**
@@ -30,15 +31,13 @@ class AlarmScheduler implements Scheduler {
     /**
      * Extra to track back off in seconds.
      */
-    private static final String EXTRA_BACKOFF_DELAY = "EXTRA_BACKOFF_DELAY";
+    static final String EXTRA_BACKOFF_DELAY = "EXTRA_BACKOFF_DELAY";
 
     @Override
-    public void cancel(@NonNull Context context, @NonNull String tag) {
-        Intent intent = new Intent(context, AirshipService.class)
-                .setAction(AirshipService.ACTION_RUN_JOB)
-                .addCategory(tag);
+    public void cancel(@NonNull Context context, @NonNull int scheduleId) {
+        Intent intent = AirshipService.createIntent(context, null, null);
 
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_NO_CREATE);
+        PendingIntent pendingIntent = PendingIntent.getService(context, scheduleId, intent, PendingIntent.FLAG_NO_CREATE);
         if (pendingIntent != null) {
             AlarmManager alarmManager = (AlarmManager) context
                     .getSystemService(Context.ALARM_SERVICE);
@@ -49,30 +48,24 @@ class AlarmScheduler implements Scheduler {
     }
 
     @Override
-    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo, int id) throws SchedulerException {
         long delay = jobInfo.getInitialDelay();
         if (delay <= 0) {
             delay = DEFAULT_STARTING_BACK_OFF_TIME_MS;
         }
-        scheduleIntent(context, jobInfo, delay);
+        scheduleIntent(context, jobInfo, id, delay);
     }
 
     @Override
-    public boolean requiresScheduling(@NonNull Context context, @NonNull JobInfo jobInfo) {
-        return jobInfo.getInitialDelay() > 0;
-    }
-
-    @Override
-    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
-        long backOff = jobInfo.getSchedulerExtras().getLong(EXTRA_BACKOFF_DELAY, 0);
+    public void reschedule(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, @Nullable  Bundle extras) throws SchedulerException {
+        long backOff = extras != null ? extras.getLong(EXTRA_BACKOFF_DELAY, 0) : 0;
         if (backOff <= 0) {
             backOff = DEFAULT_STARTING_BACK_OFF_TIME_MS;
         } else {
             backOff = Math.min(backOff * 2, DEFAULT_MAX_BACK_OFF_TIME_MS);
         }
 
-        jobInfo.getSchedulerExtras().putLong(EXTRA_BACKOFF_DELAY, backOff);
-        scheduleIntent(context, jobInfo, backOff);
+        scheduleIntent(context, jobInfo, scheduleId, backOff);
     }
 
     /**
@@ -80,17 +73,19 @@ class AlarmScheduler implements Scheduler {
      *
      * @param context The application context.
      * @param jobInfo The jobInfo to schedule.
+     * @param scheduleId The scheduler ID.
      * @param delay The alarm delay in milliseconds.
      *
      * @throws SchedulerException if the schedule fails.
      */
-    private void scheduleIntent(@NonNull Context context, @NonNull JobInfo jobInfo, long delay) throws SchedulerException {
-        Intent intent = AirshipService.createIntent(context, jobInfo)
-                                      .addCategory(jobInfo.getTag());
+    private void scheduleIntent(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long delay) throws SchedulerException {
+        Bundle extras = new Bundle();
+        extras.putLong(EXTRA_BACKOFF_DELAY, delay);
 
+        Intent intent = AirshipService.createIntent(context, jobInfo, extras);
         // Schedule the intent
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getService(context, scheduleId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         try {
             Logger.verbose("AlarmScheduler - Scheduling jobInfo: " + jobInfo + " with delay: " + delay);

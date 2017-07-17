@@ -4,7 +4,6 @@ package com.urbanairship.job;
 
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.TaskParams;
-import com.urbanairship.AirshipService;
 import com.urbanairship.Logger;
 import com.urbanairship.google.PlayServicesUtils;
 
@@ -35,15 +34,19 @@ public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskSer
 
         JobCallback callback = new JobCallback() {
             @Override
-            public void onFinish(Job job, @Job.JobResult int result) {
+            public void onFinish(Job job, @JobInfo.JobResult int result) {
                 super.onFinish(job, result);
                 latch.countDown();
             }
         };
 
-        Job job = new Job(jobInfo, true);
+        Job job = new Job.Builder(jobInfo)
+                .setCallback(callback)
+                .build();
 
-        JobDispatcher.shared(getApplicationContext()).runJob(job, callback);
+        Logger.verbose("AirshipGcmTaskService - Running job: " + jobInfo);
+
+        Job.EXECUTOR.execute(job);
 
         try {
             Logger.verbose("AirshipGcmTaskService - Waiting for jobInfo: " + jobInfo + " to complete.");
@@ -53,7 +56,7 @@ public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskSer
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
-        if (callback.resultCode == Job.JOB_RETRY) {
+        if (callback.resultCode == JobInfo.JOB_RETRY) {
             Logger.verbose("AirshipGcmTaskService - Rescheduling jobInfo " + jobInfo);
             return GcmNetworkManager.RESULT_RESCHEDULE;
         } else {
@@ -65,11 +68,11 @@ public class AirshipGcmTaskService extends com.google.android.gms.gcm.GcmTaskSer
     /**
      * JobDispatcher.Callback that captures the result as a field.
      */
-    private static class JobCallback implements JobDispatcher.Callback {
+    private static class JobCallback implements Job.Callback {
         int resultCode;
 
         @Override
-        public void onFinish(Job job, @Job.JobResult int result) {
+        public void onFinish(Job job, @JobInfo.JobResult int result) {
             this.resultCode = result;
         }
     }

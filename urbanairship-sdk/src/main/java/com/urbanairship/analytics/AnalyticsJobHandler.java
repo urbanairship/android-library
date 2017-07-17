@@ -12,13 +12,13 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.job.Job;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.IOException;
 
 /**
- * Handles intents for {@link Analytics#onPerformJob(UAirship, Job)}.
+ * Handles intents for {@link Analytics#onPerformJob(UAirship, JobInfo)}.
  */
 class AnalyticsJobHandler {
 
@@ -34,12 +34,12 @@ class AnalyticsJobHandler {
         this.eventManager = eventManager;
     }
 
-    public
-    @Job.JobResult
-    int performJob(Job job) {
-        Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: " + job.getJobInfo().getAction());
 
-        switch (job.getJobInfo().getAction()) {
+    @JobInfo.JobResult
+    public int performJob(JobInfo jobInfo) {
+        Logger.verbose("AnalyticsJobHandler - Received jobInfo with action: " + jobInfo.getAction());
+
+        switch (jobInfo.getAction()) {
             case Analytics.ACTION_SEND:
                 return onUploadEvents();
 
@@ -47,27 +47,27 @@ class AnalyticsJobHandler {
                 return onUpdateAdvertisingId();
 
             default:
-                Logger.warn("AnalyticsJobHandler - Unrecognized jobInfo with action: " + job.getJobInfo().getAction());
-                return Job.JOB_FINISHED;
+                Logger.warn("AnalyticsJobHandler - Unrecognized jobInfo with action: " + jobInfo.getAction());
+                return JobInfo.JOB_FINISHED;
         }
     }
 
-    @Job.JobResult
+    @JobInfo.JobResult
     private int onUploadEvents() {
         if (!airship.getAnalytics().isEnabled()) {
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         if (airship.getPushManager().getChannelId() == null) {
             Logger.debug("AnalyticsJobHandler - No channel ID, skipping analytics send.");
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         if (eventManager.uploadEvents(airship)) {
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
-        return Job.JOB_RETRY;
+        return JobInfo.JOB_RETRY;
     }
 
     /**
@@ -75,7 +75,7 @@ class AnalyticsJobHandler {
      *
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int onUpdateAdvertisingId() {
         AssociatedIdentifiers associatedIdentifiers = airship.getAnalytics().getAssociatedIdentifiers();
 
@@ -104,7 +104,7 @@ class AnalyticsJobHandler {
                     limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                 } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
                     Logger.error("AnalyticsJobHandler - Failed to retrieve and update advertising ID.", e);
-                    return Job.JOB_RETRY;
+                    return JobInfo.JOB_RETRY;
                 }
 
                 break;
@@ -118,7 +118,7 @@ class AnalyticsJobHandler {
                    .apply();
         }
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
 
     }
 }

@@ -2,16 +2,27 @@
 
 package com.urbanairship.job;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Parcelable;
+import android.os.PersistableBundle;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.Logger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.Checks;
 
-import java.util.UUID;
+import java.lang.annotation.Retention;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 
 /**
@@ -22,45 +33,82 @@ import java.util.concurrent.TimeUnit;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobInfo {
 
+
+    @IntDef({ ANALYTICS_EVENT_UPLOAD, ANALYTICS_UPDATE_ADVERTISING_ID, NAMED_USER_UPDATE_ID,
+              NAMED_USER_UPDATE_TAG_GROUPS, CHANNEL_UPDATE_PUSH_TOKEN, CHANNEL_UPDATE_REGISTRATION,
+              CHANNEL_UPDATE_TAG_GROUPS, RICH_PUSH_UPDATE_USER, RICH_PUSH_UPDATE_MESSAGES,
+              RICH_PUSH_SYNC_MESSAGE_STATE })
+    @Retention(SOURCE)
+    public @interface JobId {}
+
+    public static final int ANALYTICS_EVENT_UPLOAD = 0;
+    public static final int ANALYTICS_UPDATE_ADVERTISING_ID = 1;
+
+    public static final int NAMED_USER_UPDATE_ID = 2;
+    public static final int NAMED_USER_UPDATE_TAG_GROUPS = 3;
+
+    public static final int CHANNEL_UPDATE_PUSH_TOKEN = 4;
+    public static final int CHANNEL_UPDATE_REGISTRATION = 5;
+    public static final int CHANNEL_UPDATE_TAG_GROUPS = 6;
+
+    public static final int RICH_PUSH_UPDATE_USER = 7;
+    public static final int RICH_PUSH_UPDATE_MESSAGES = 8;
+    public static final int RICH_PUSH_SYNC_MESSAGE_STATE = 9;
+
     private static final String EXTRA_AIRSHIP_COMPONENT = "EXTRA_AIRSHIP_COMPONENT";
     private static final String EXTRA_JOB_EXTRAS = "EXTRA_JOB_EXTRAS";
     private static final String EXTRA_INITIAL_DELAY = "EXTRA_INITIAL_DELAY";
     private static final String EXTRA_JOB_ACTION = "EXTRA_JOB_ACTION";
+    private static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";
     private static final String EXTRA_IS_NETWORK_ACCESS_REQUIRED = "EXTRA_IS_NETWORK_ACCESS_REQUIRED";
-    private static final String EXTRA_JOB_TAG = "EXTRA_JOB_TAG";
-    private static final String EXTRA_SCHEDULER_EXTRAS = "EXTRA_SCHEDULER_EXTRAS";
     private static final String EXTRA_PERSISTENT = "EXTRA_PERSISTENT";
 
-    @Override
-    public String toString() {
-        return "JobInfo{" +
-                "action='" + action + '\'' +
-                ", airshipComponentName='" + airshipComponentName + '\'' +
-                ", tag='" + tag + '\'' +
-                ", isNetworkAccessRequired=" + isNetworkAccessRequired +
-                ", initialDelay=" + initialDelay +
-                ", persistent=" + persistent +
-                '}';
-    }
+    // ID generation
+    private static final String SHARED_PREFERENCES_FILE = "com.urbanairship.job.ids";
+    private static final String NEXT_GENERATED_ID_KEY = "next_generated_id";
+    private static final int GENERATED_RANGE = 50;
+    private static final int GENERATED_ID_OFFSET = 49;
 
-    private final Bundle extras;
+    private static SharedPreferences sharedPreferences;
+    private static final Object preferenceLock = new Object();
+
+    private final JsonMap extras;
     private final String action;
     private final String airshipComponentName;
-    private final String tag;
     private final boolean isNetworkAccessRequired;
     private final long initialDelay;
-    private final Bundle schedulerExtras;
     private final boolean persistent;
+    private final int id;
 
+
+    @IntDef({ JOB_FINISHED, JOB_RETRY })
+    @Retention(SOURCE)
+    public @interface JobResult {}
+
+
+    /**
+     * JobInfo is finished.
+     */
+    public static final int JOB_FINISHED = 0;
+
+    /**
+     * JobInfo needs to be retried at a later date.
+     */
+    public static final int JOB_RETRY = 1;
+
+    /**
+     * Default constructor.
+     *
+     * @param builder A builder instance.
+     */
     private JobInfo(@NonNull Builder builder) {
         this.action = builder.action == null ? "" : builder.action;
         this.airshipComponentName = builder.airshipComponentName;
-        this.extras = builder.extras == null ? new Bundle() : new Bundle(builder.extras);
-        this.tag = builder.tag == null ? UUID.randomUUID().toString() : builder.tag;
+        this.extras = builder.extras != null ? builder.extras : JsonMap.EMPTY_MAP;
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired;
         this.initialDelay = builder.initialDelay;
-        this.schedulerExtras = builder.schedulerExtras == null ? new Bundle() : new Bundle(builder.schedulerExtras);
         this.persistent = builder.persistent;
+        this.id = builder.jobId;
     }
 
     /**
@@ -74,13 +122,12 @@ public class JobInfo {
     }
 
     /**
-     * The job's tag.
+     * The job's ID.
      *
-     * @return The job's tag.
+     * @return The job's ID.
      */
-    @Nullable
-    public String getTag() {
-        return tag;
+    public int getId() {
+        return id;
     }
 
     /**
@@ -107,17 +154,8 @@ public class JobInfo {
      * @return The job's extras.
      */
     @NonNull
-    public Bundle getExtras() {
+    public JsonMap getExtras() {
         return extras;
-    }
-
-    /**
-     * The job's scheduler extras.
-     *
-     * @return The job's scheduler extras.
-     */
-    Bundle getSchedulerExtras() {
-        return schedulerExtras;
     }
 
     /**
@@ -131,6 +169,15 @@ public class JobInfo {
     }
 
     /**
+     * If the Job should persists across reboots or not.
+     *
+     * @return {@code true} to persist across reboots, otherwise {@code false}.
+     */
+    public boolean isPersistent() {
+        return persistent;
+    }
+
+    /**
      * Creates a bundle containing the job info.
      *
      * @return A bundle representing the job.
@@ -139,9 +186,8 @@ public class JobInfo {
         Bundle bundle = new Bundle();
         bundle.putString(EXTRA_AIRSHIP_COMPONENT, airshipComponentName);
         bundle.putString(EXTRA_JOB_ACTION, action);
-        bundle.putBundle(EXTRA_JOB_EXTRAS, extras);
-        bundle.putBundle(EXTRA_SCHEDULER_EXTRAS, schedulerExtras);
-        bundle.putString(EXTRA_JOB_TAG, tag);
+        bundle.putInt(EXTRA_JOB_ID, id);
+        bundle.putString(EXTRA_JOB_EXTRAS, extras.toString());
         bundle.putBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED, isNetworkAccessRequired);
         bundle.putLong(EXTRA_INITIAL_DELAY, initialDelay);
         bundle.putBoolean(EXTRA_PERSISTENT, persistent);
@@ -149,26 +195,99 @@ public class JobInfo {
     }
 
     /**
-     * Creates a new job from a job bundle.
+     * Creates a persistable bundle containing the job info.
+     *
+     * @return A persistable bundle representing the job.
+     */
+    public PersistableBundle toPersistableBundle() {
+        PersistableBundle bundle = new PersistableBundle();
+        bundle.putString(EXTRA_AIRSHIP_COMPONENT, airshipComponentName);
+        bundle.putString(EXTRA_JOB_ACTION, action);
+        bundle.putInt(EXTRA_JOB_ID, id);
+        bundle.putString(EXTRA_JOB_EXTRAS, extras.toString());
+        bundle.putBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED, isNetworkAccessRequired);
+        bundle.putLong(EXTRA_INITIAL_DELAY, initialDelay);
+        bundle.putBoolean(EXTRA_PERSISTENT, persistent);
+        return bundle;
+    }
+
+    /**
+     * Creates a jobInfo from a bundle.
      *
      * @param bundle The job bundle.
      * @return JobInfo builder.
      */
+    @Nullable
     public static JobInfo fromBundle(Bundle bundle) {
         if (bundle == null) {
             return new Builder().build();
         }
 
-        return new Builder()
-                .setAction(bundle.getString(EXTRA_JOB_ACTION))
-                .setTag(bundle.getString(EXTRA_JOB_TAG))
-                .setInitialDelay(bundle.getLong(EXTRA_INITIAL_DELAY, 0), TimeUnit.MILLISECONDS)
-                .setExtras(bundle.getBundle(EXTRA_JOB_EXTRAS))
-                .setAirshipComponent(bundle.getString(EXTRA_AIRSHIP_COMPONENT))
-                .setSchedulerExtras(bundle.getBundle(EXTRA_SCHEDULER_EXTRAS))
-                .setNetworkAccessRequired(bundle.getBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED))
-                .setPersistent(bundle.getBoolean(EXTRA_PERSISTENT))
-                .build();
+        try {
+            JobInfo.Builder builder = new Builder()
+                    .setAction(bundle.getString(EXTRA_JOB_ACTION))
+                    .setInitialDelay(bundle.getLong(EXTRA_INITIAL_DELAY, 0), TimeUnit.MILLISECONDS)
+                    .setExtras(JsonValue.parseString(bundle.getString(EXTRA_JOB_EXTRAS)).optMap())
+                    .setAirshipComponent(bundle.getString(EXTRA_AIRSHIP_COMPONENT))
+                    .setNetworkAccessRequired(bundle.getBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED))
+                    .setPersistent(bundle.getBoolean(EXTRA_PERSISTENT));
+
+            //noinspection WrongConstant
+            builder.setId(bundle.getInt(EXTRA_JOB_ID, 0));
+
+            return builder.build();
+
+        } catch (IllegalArgumentException | JsonException e) {
+            Logger.error("Failed to parse job from bundle.", e);
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a jobInfo from a persistable bundle.
+     *
+     * @param persistableBundle The job bundle.
+     * @return JobInfo builder.
+     */
+    @Nullable
+    static JobInfo fromPersistableBundle(PersistableBundle persistableBundle) {
+        if (persistableBundle == null) {
+            return new Builder().build();
+        }
+
+        try {
+            JobInfo.Builder builder = new Builder()
+                    .setAction(persistableBundle.getString(EXTRA_JOB_ACTION))
+                    .setInitialDelay(persistableBundle.getLong(EXTRA_INITIAL_DELAY, 0), TimeUnit.MILLISECONDS)
+                    .setExtras(JsonValue.parseString(persistableBundle.getString(EXTRA_JOB_EXTRAS)).optMap())
+                    .setAirshipComponent(persistableBundle.getString(EXTRA_AIRSHIP_COMPONENT))
+                    .setNetworkAccessRequired(persistableBundle.getBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED))
+                    .setPersistent(persistableBundle.getBoolean(EXTRA_PERSISTENT));
+
+            //noinspection WrongConstant
+            builder.setId(persistableBundle.getInt(EXTRA_JOB_ID, 0));
+
+            return builder.build();
+        } catch (IllegalArgumentException | JsonException e) {
+            Logger.error("Failed to parse job from bundle.", e);
+        }
+
+        return null;
+    }
+
+
+    @Override
+    public String toString() {
+        return "JobInfo{" +
+                "action=" + action +
+                ", id=" + id +
+                ", extras='" + extras + '\'' +
+                ", airshipComponentName='" + airshipComponentName + '\'' +
+                ", isNetworkAccessRequired=" + isNetworkAccessRequired +
+                ", initialDelay=" + initialDelay +
+                ", persistent=" + persistent +
+                '}';
     }
 
     /**
@@ -181,25 +300,19 @@ public class JobInfo {
         return new Builder();
     }
 
-    public boolean isPersistent() {
-        return persistent;
-    }
-
-
     /**
      * JobInfo builder.
      */
     public static class Builder {
 
-        private Bundle extras;
         private String action;
         private String airshipComponentName;
-        private String tag;
 
         private boolean isNetworkAccessRequired;
         private long initialDelay;
-        public Bundle schedulerExtras;
         private boolean persistent;
+        private JsonMap extras;
+        private int jobId = -1;
 
         private Builder() {
         }
@@ -215,16 +328,38 @@ public class JobInfo {
             return this;
         }
 
-
         /**
-         * Sets the job's tag. Tags are used to cancel and prevent multiple jobs fo the same type from
-         * being scheduled.
+         * Sets the job's ID.
          *
-         * @param tag The job's tag.
+         * @param id The job's ID.
          * @return The job builder.
          */
-        public Builder setTag(String tag) {
-            this.tag = tag;
+        public Builder setId(@JobId int id) {
+            this.jobId = id;
+            return this;
+        }
+
+        /**
+         * Generates a unique ID for the job.
+         *
+         * @param context The application context.
+         * @return The job builder.
+         */
+        @WorkerThread
+        public Builder generateUniqueId(Context context) {
+            synchronized (preferenceLock) {
+                if (sharedPreferences == null) {
+                    sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
+                }
+
+                int id = sharedPreferences.getInt(NEXT_GENERATED_ID_KEY, 0);
+
+                sharedPreferences.edit()
+                                 .putInt(NEXT_GENERATED_ID_KEY, (id + 1) % GENERATED_RANGE)
+                                 .apply();
+
+                this.jobId = id + GENERATED_ID_OFFSET;
+            }
             return this;
         }
 
@@ -285,104 +420,13 @@ public class JobInfo {
         }
 
         /**
-         * Sets the scheduler extras for the job.
-         *
-         * @param extras Bundle of extras.
-         * @return The job builder.
-         */
-        Builder setSchedulerExtras(Bundle extras) {
-            this.schedulerExtras = extras;
-            return this;
-        }
-
-        /**
          * Sets the extras for the job.
          *
          * @param extras Bundle of extras.
          * @return The job builder.
          */
-        public Builder setExtras(Bundle extras) {
+        public Builder setExtras(JsonMap extras) {
             this.extras = extras;
-            return this;
-        }
-
-        /**
-         * Puts an extra in the job's bundle.
-         *
-         * @param key The extra's key.
-         * @param value The extra's value.
-         * @return The job builder.
-         */
-        public Builder putExtra(String key, String value) {
-            if (this.extras == null) {
-                this.extras = new Bundle();
-            }
-
-            this.extras.putString(key, value);
-            return this;
-        }
-
-        /**
-         * Puts an extra in the job's bundle.
-         *
-         * @param key The extra's key.
-         * @param value The extra's value.
-         * @return The job builder.
-         */
-        public Builder putExtra(String key, int value) {
-            if (this.extras == null) {
-                this.extras = new Bundle();
-            }
-
-            this.extras.putInt(key, value);
-            return this;
-        }
-
-        /**
-         * Puts an extra in the job's bundle.
-         *
-         * @param key The extra's key.
-         * @param value The extra's value.
-         * @return The job builder.
-         */
-        public Builder putExtra(String key, Bundle value) {
-            if (this.extras == null) {
-                this.extras = new Bundle();
-            }
-
-            this.extras.putBundle(key, value);
-            return this;
-        }
-
-        /**
-         * Puts an extra in the job's bundle.
-         *
-         * @param key The extra's key.
-         * @param value The extra's value.
-         * @return The job builder.
-         */
-        public Builder putExtra(String key, Parcelable value) {
-            if (this.extras == null) {
-                this.extras = new Bundle();
-            }
-
-            this.extras.putParcelable(key, value);
-            return this;
-        }
-
-        /**
-         * Puts an extra in the job's bundle.
-         *
-         * @param key The extra's key.
-         * @param value The extra's value.
-         * @return The job builder.
-         */
-        public Builder putExtra(String key, Boolean value) {
-            if (this.extras == null) {
-                this.extras = new Bundle();
-            }
-
-            this.extras.putBoolean(key, value);
             return this;
         }
 
@@ -392,6 +436,7 @@ public class JobInfo {
          * @return The job.
          */
         public JobInfo build() {
+            Checks.checkNotNull(action, "Missing action.");
             return new JobInfo(this);
         }
     }

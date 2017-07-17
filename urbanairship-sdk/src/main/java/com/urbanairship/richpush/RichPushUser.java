@@ -9,6 +9,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -99,8 +100,11 @@ public class RichPushUser {
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+                                 .setId(JobInfo.RICH_PUSH_UPDATE_USER)
                                  .setAirshipComponent(RichPushInbox.class)
-                                 .putExtra(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
+                                 .setExtras(JsonMap.newBuilder()
+                                                   .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
+                                                   .build())
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);

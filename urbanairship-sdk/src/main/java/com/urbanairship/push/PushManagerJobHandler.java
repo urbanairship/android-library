@@ -4,7 +4,6 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -13,8 +12,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -36,22 +33,22 @@ class PushManagerJobHandler {
     /**
      * Action to perform update request for pending tag group changes.
      */
-    static final String ACTION_UPDATE_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_TAG_GROUPS";
+    static final String ACTION_UPDATE_TAG_GROUPS = "ACTION_UPDATE_TAG_GROUPS";
 
     /**
      * Action to handle a scheduled push notification.
      */
-    static final String ACTION_PROCESS_PUSH = "com.urbanairship.push.ACTION_PROCESS_PUSH";
+    static final String ACTION_PROCESS_PUSH = "ACTION_PROCESS_PUSH";
 
     /**
      * Action to update channel registration.
      */
-    static final String ACTION_UPDATE_PUSH_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_PUSH_REGISTRATION";
+    static final String ACTION_UPDATE_PUSH_REGISTRATION = "ACTION_UPDATE_PUSH_REGISTRATION";
 
     /**
      * Action to update channel registration.
      */
-    static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "com.urbanairship.push.ACTION_UPDATE_CHANNEL_REGISTRATION";
+    static final String ACTION_UPDATE_CHANNEL_REGISTRATION = "ACTION_UPDATE_CHANNEL_REGISTRATION";
 
     /**
      * Data store key for the last successfully registered channel payload.
@@ -84,7 +81,6 @@ class PushManagerJobHandler {
     private final NamedUser namedUser;
     private final Context context;
     private final PreferenceDataStore dataStore;
-    private final JobDispatcher jobDispatcher;
 
 
     /**
@@ -95,30 +91,29 @@ class PushManagerJobHandler {
      * @param dataStore The preference data store.
      */
     PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, JobDispatcher.shared(context), new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+        this(context, airship, dataStore, new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
     PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                          JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
+                          ChannelApiClient channelClient) {
         this.context = context;
         this.dataStore = dataStore;
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
-        this.jobDispatcher = jobDispatcher;
     }
 
     /**
-     * Called to handle jobs from {@link PushManager#onPerformJob(UAirship, Job)}.
+     * Called to handle jobs from {@link PushManager#onPerformJob(UAirship, JobInfo)}.
      *
-     * @param job The airship job.
+     * @param jobInfo The airship jobInfo.
      * @return The job result.
      */
-    @Job.JobResult
-    protected int performJob(Job job) {
-        switch (job.getJobInfo().getAction()) {
+    @JobInfo.JobResult
+    protected int performJob(JobInfo jobInfo) {
+        switch (jobInfo.getAction()) {
 
             case ACTION_UPDATE_PUSH_REGISTRATION:
                 return onUpdatePushRegistration();
@@ -130,33 +125,32 @@ class PushManagerJobHandler {
                 return onUpdateTagGroup();
 
             case ACTION_PROCESS_PUSH:
-                return onProcessPush(job);
+                return onProcessPush(jobInfo);
         }
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 
-    @Job.JobResult
-    private int onProcessPush(Job job) {
+    @JobInfo.JobResult
+    private int onProcessPush(JobInfo jobInfo) {
 
-        Bundle extras = job.getJobInfo().getExtras();
-        Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
-        String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
+        PushMessage message = PushMessage.fromJsonValue(jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PUSH));
+        String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
 
-        if (pushBundle == null || providerClass == null) {
-            return Job.JOB_FINISHED;
+        if (message == null || providerClass == null) {
+            return JobInfo.JOB_FINISHED;
         }
 
         IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getApplicationContext())
                 .setLongRunning(true)
-                .setMessage(new PushMessage(pushBundle))
+                .setMessage(message)
                 .setProviderClass(providerClass)
                 .build();
 
         pushRunnable.run();
 
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 
 
@@ -165,14 +159,14 @@ class PushManagerJobHandler {
      *
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int onUpdatePushRegistration() {
         PushProvider provider = pushManager.getPushProvider();
         String currentToken = pushManager.getRegistrationToken();
 
         if (provider == null || !provider.isAvailable(context)) {
             Logger.error("Registration failed. Push provider unavailable: " + provider);
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         String token;
@@ -180,16 +174,16 @@ class PushManagerJobHandler {
             token = provider.getRegistrationToken(context);
         } catch (IOException e) {
             Logger.error("Push registration failed: " +  e.getMessage());
-            return Job.JOB_RETRY;
+            return JobInfo.JOB_RETRY;
         }
 
         if (!UAStringUtil.equals(token, currentToken)) {
             Logger.info("PushManagerJobHandler - Push registration updated.");
             pushManager.setRegistrationToken(token);
-            pushManager.updateRegistration();
         }
 
-        return Job.JOB_FINISHED;
+        pushManager.updateRegistration();
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -197,7 +191,7 @@ class PushManagerJobHandler {
      *
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int onUpdateChannelRegistration() {
         Logger.verbose("PushManagerJobHandler - Performing channel registration.");
 
@@ -219,11 +213,11 @@ class PushManagerJobHandler {
      * @param payload The ChannelRegistrationPayload payload.
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int updateChannel(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("PushManagerJobHandler - Channel already up to date.");
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         Response response = channelClient.updateChannelWithPayload(channelLocation, payload);
@@ -233,7 +227,7 @@ class PushManagerJobHandler {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, false);
-            return Job.JOB_RETRY;
+            return JobInfo.JOB_RETRY;
         }
 
         // 2xx (API should only return 200 or 201)
@@ -248,31 +242,20 @@ class PushManagerJobHandler {
                 pushManager.updateRegistration();
             }
 
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         // 409
         if (response.getStatus() == HttpURLConnection.HTTP_CONFLICT) {
             // Delete channel and register again.
             pushManager.setChannel(null, null);
-
-            // Update registration
-            JobInfo jobInfo = JobInfo.newBuilder()
-                                     .setAction(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                     .setTag(ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                     .setNetworkAccessRequired(true)
-                                     .setAirshipComponent(PushManager.class)
-                                     .build();
-
-            jobDispatcher.dispatch(jobInfo);
-
-            return Job.JOB_FINISHED;
+            return createChannel(payload);
         }
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
         sendRegistrationFinishedBroadcast(false, false);
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -281,12 +264,12 @@ class PushManagerJobHandler {
      * @param payload The ChannelRegistrationPayload payload.
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int createChannel(@NonNull ChannelRegistrationPayload payload) {
 
         if (pushManager.isChannelCreationDelayEnabled()) {
             Logger.info("Channel registration is currently disabled.");
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         Response response = channelClient.createChannelWithPayload(payload);
@@ -296,7 +279,7 @@ class PushManagerJobHandler {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, true);
-            return Job.JOB_RETRY;
+            return JobInfo.JOB_RETRY;
 
         }
 
@@ -334,7 +317,7 @@ class PushManagerJobHandler {
                     pushManager.updateRegistration();
                 }
 
-                pushManager.startUpdateTagsService();
+                pushManager.dispatchUpdateTagGroupsJob();
                 airship.getInbox().getUser().update(true);
 
                 // Send analytics event
@@ -344,17 +327,17 @@ class PushManagerJobHandler {
                 Logger.error("Failed to register with channel ID: " + channelId +
                         " channel location: " + channelLocation);
                 sendRegistrationFinishedBroadcast(false, true);
-                return Job.JOB_RETRY;
+                return JobInfo.JOB_RETRY;
             }
 
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         // Unexpected status code
         Logger.error("Channel registration failed with status: " + response.getStatus());
         sendRegistrationFinishedBroadcast(false, true);
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 
     /**
@@ -463,12 +446,12 @@ class PushManagerJobHandler {
      *
      * @return The job result.
      */
-    @Job.JobResult
+    @JobInfo.JobResult
     private int onUpdateTagGroup() {
         String channelId = pushManager.getChannelId();
         if (channelId == null) {
             Logger.verbose("Failed to update channel tags due to null channel ID.");
-            return Job.JOB_FINISHED;
+            return JobInfo.JOB_FINISHED;
         }
 
         TagGroupsMutation mutation;
@@ -479,13 +462,13 @@ class PushManagerJobHandler {
             if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
                 Logger.info("PushManagerJobHandler - Failed to update tag groups, will retry later.");
                 pushManager.getTagGroupStore().push(mutation);
-                return Job.JOB_RETRY;
+                return JobInfo.JOB_RETRY;
             }
 
             int status = response.getStatus();
             Logger.info("PushManagerJobHandler - Update tag groups finished with status: " + status);
         }
 
-        return Job.JOB_FINISHED;
+        return JobInfo.JOB_FINISHED;
     }
 }

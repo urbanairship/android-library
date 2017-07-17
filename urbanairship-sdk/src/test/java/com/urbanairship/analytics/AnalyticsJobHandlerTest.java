@@ -6,7 +6,6 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.data.EventManager;
-import com.urbanairship.job.Job;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.PushManager;
 
@@ -61,8 +60,8 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(Analytics.ACTION_SEND)
                                  .build();
-
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        
+        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
         Mockito.verify(mockEventManager).uploadEvents(UAirship.shared());
     }
 
@@ -81,7 +80,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                                  .setAction(Analytics.ACTION_SEND)
                                  .build();
 
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         // Verify uploadEvents is not called
         Mockito.verify(mockEventManager, never()).uploadEvents(UAirship.shared());
@@ -99,7 +98,7 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                                  .setAction(Analytics.ACTION_SEND)
                                  .build();
 
-        assertEquals(Job.JOB_FINISHED, jobHandler.performJob(new Job(jobInfo, true)));
+        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
 
         Mockito.verify(mockEventManager, never()).uploadEvents(UAirship.shared());
     }
@@ -117,6 +116,6 @@ public class AnalyticsJobHandlerTest extends BaseTestCase {
                                  .setAction(Analytics.ACTION_SEND)
                                  .build();
 
-        assertEquals(Job.JOB_RETRY, jobHandler.performJob(new Job(jobInfo, true)));
+        assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
     }
 }
