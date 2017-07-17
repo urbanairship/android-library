@@ -96,7 +96,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION);
             }
         }));
 
@@ -114,7 +114,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
 
@@ -701,7 +701,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS) &&
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS) &&
                         jobInfo.getAirshipComponentName().equals(PushManager.class.getName());
             }
         }));
@@ -728,7 +728,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS);
             }
         }));
     }
@@ -788,7 +788,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }
@@ -898,7 +898,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
 
@@ -932,7 +932,7 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION);
             }
         }));
     }

@@ -3,12 +3,10 @@
 package com.urbanairship.job;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.AirshipComponent;
@@ -85,35 +83,6 @@ public class JobDispatcher {
         this.context = context.getApplicationContext();
         this.scheduler = scheduler;
     }
-
-    /**
-     * Dispatches a jobInfo to be performed immediately with a wakelock. The wakelock will
-     * automatically be released once the jobInfo finishes. The jobInfo will not have a wakelock on
-     * retries.
-     *
-     * @param jobInfo The jobInfo.
-     * @return {@code true} if the jobInfo was able to be dispatched with a wakelock, otherwise {@code false}.
-     */
-    public boolean wakefulDispatch(@NonNull JobInfo jobInfo) {
-        if (getScheduler().requiresScheduling(context, jobInfo)) {
-            Logger.error("JobDispatcher - Unable to wakefulDispatch with a jobInfo that requires scheduling.");
-            return false;
-        }
-
-        Intent intent = AirshipService.createIntent(context, jobInfo);
-        try {
-            WakefulBroadcastReceiver.startWakefulService(context, intent);
-            if (jobInfo.getTag() != null) {
-                cancel(jobInfo.getTag());
-            }
-            return true;
-        } catch (IllegalStateException e) {
-            WakefulBroadcastReceiver.completeWakefulIntent(intent);
-            return false;
-        }
-    }
-
-
     /**
      * Dispatches a jobInfo to be performed immediately.
      *

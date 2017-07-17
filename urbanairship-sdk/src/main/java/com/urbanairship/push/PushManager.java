@@ -21,12 +21,15 @@ import com.urbanairship.UAirship;
 import com.urbanairship.job.Job;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -196,11 +199,21 @@ public class PushManager extends AirshipComponent {
     private final String UA_NOTIFICATION_BUTTON_GROUP_PREFIX = "ua_";
 
     /**
+     * Key to store the push canonical IDs for push deduping.
+     */
+    private static final String LAST_CANONICAL_IDS_KEY = "com.urbanairship.push.LAST_CANONICAL_IDS";
+
+    /**
+     * Max amount of canonical IDs to store.
+     */
+    private static final int MAX_CANONICAL_IDS = 10;
+
+    /**
      * The default tag group.
      */
     private final String DEFAULT_TAG_GROUP = "device";
 
-    private final Executor PUSH_JOB_EXECUTOR = Executors.newSingleThreadExecutor();
+    static final Executor PUSH_EXECUTOR = Executors.newCachedThreadPool();
 
     static final String KEY_PREFIX = "com.urbanairship.push";
     static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";
@@ -265,8 +278,7 @@ public class PushManager extends AirshipComponent {
     private final NotificationManagerCompat notificationManagerCompat;
 
     private final JobDispatcher jobDispatcher;
-    private ChannelJobHandler channelJobHandler;
-    private PushJobHandler pushJobHandler;
+    private PushManagerJobHandler jobHandler;
     private final PushProvider pushProvider;
     private TagGroupMutationStore tagGroupStore;
 
@@ -329,8 +341,8 @@ public class PushManager extends AirshipComponent {
         if (UAirship.isMainProcess()) {
             if (getRegistrationToken() == null) {
                 JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setTag(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setTag(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
                                  .build();
@@ -347,15 +359,19 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+
+
     /**
      * @hide
      */
     @NonNull
     @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public Executor getJobExecutor(Job job) {
-        if (PushJobHandler.ACTION_RECEIVE_MESSAGE.equals(job.getJobInfo().getAction())) {
-            return PUSH_JOB_EXECUTOR;
+        if (job.getJobInfo().getAction().equals(PushManagerJobHandler.ACTION_PROCESS_PUSH)) {
+            return PUSH_EXECUTOR;
         }
+
         return super.getJobExecutor(job);
     }
 
@@ -366,24 +382,11 @@ public class PushManager extends AirshipComponent {
     @Job.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull Job job) {
-        switch (job.getJobInfo().getAction()) {
-            case ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS:
-            case ChannelJobHandler.ACTION_REGISTRATION_FINISHED:
-            case ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION:
-            case ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION:
-                if (channelJobHandler == null) {
-                    channelJobHandler = new ChannelJobHandler(context, airship, preferenceDataStore);
-                }
-                return channelJobHandler.performJob(job);
-
-            case PushJobHandler.ACTION_RECEIVE_MESSAGE:
-                if (pushJobHandler == null) {
-                    pushJobHandler = new PushJobHandler(context, airship, preferenceDataStore);
-                }
-                return pushJobHandler.performJob(job);
+        if (jobHandler == null) {
+            jobHandler = new PushManagerJobHandler(context, airship, preferenceDataStore);
         }
 
-        return Job.JOB_FINISHED;
+        return jobHandler.performJob(job);
     }
 
     /**
@@ -496,6 +499,7 @@ public class PushManager extends AirshipComponent {
      * @param tags The desired set of tags, must be non-null
      * @see #setAlias(String)
      * @see #setTags(Set)
+     *
      * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
      */
     @Deprecated
@@ -564,8 +568,8 @@ public class PushManager extends AirshipComponent {
      */
     public void updateRegistration() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
-                                 .setTag(ChannelJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
+                                 .setTag(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
                                  .build();
@@ -870,8 +874,8 @@ public class PushManager extends AirshipComponent {
 
                 if (getChannelId() != null) {
                     JobInfo jobInfo = JobInfo.newBuilder()
-                                             .setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                             .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                             .setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                             .setTag(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS)
                                              .setNetworkAccessRequired(true)
                                              .setAirshipComponent(PushManager.class)
                                              .build();
@@ -984,8 +988,8 @@ public class PushManager extends AirshipComponent {
      */
     void startUpdateTagsService() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
-                                 .setTag(ChannelJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS)
+                                 .setTag(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
                                  .build();
@@ -1135,5 +1139,46 @@ public class PushManager extends AirshipComponent {
      */
     TagGroupMutationStore getTagGroupStore() {
         return tagGroupStore;
+    }
+
+    /**
+     * Check to see if we've seen this ID before. If we have,
+     * return false. If not, add the ID to our history and return true.
+     *
+     * @param canonicalId The canonical push ID for an incoming notification.
+     * @return <code>false</code> if the ID exists in the history, otherwise <code>true</code>.
+     */
+    boolean isUniqueCanonicalId(@Nullable String canonicalId) {
+        if (UAStringUtil.isEmpty(canonicalId)) {
+            return true;
+        }
+
+        JsonList jsonList = null;
+        try {
+            jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
+        } catch (JsonException e) {
+            Logger.debug("PushJobHandler - Unable to parse canonical Ids.", e);
+        }
+
+        List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
+
+        // Wrap the canonicalId
+        JsonValue id = JsonValue.wrap(canonicalId);
+
+        // Check if the list contains the canonicalId
+        if (canonicalIds.contains(id)) {
+            return false;
+        }
+
+        // Add it
+        canonicalIds.add(id);
+        if (canonicalIds.size() > MAX_CANONICAL_IDS) {
+            canonicalIds = canonicalIds.subList(canonicalIds.size() - MAX_CANONICAL_IDS, canonicalIds.size());
+        }
+
+        // Store the new list
+        preferenceDataStore.put(LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString());
+
+        return true;
     }
 }

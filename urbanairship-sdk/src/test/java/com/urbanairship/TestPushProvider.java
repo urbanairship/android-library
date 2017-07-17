@@ -3,9 +3,7 @@
 package com.urbanairship;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
@@ -37,9 +35,8 @@ public class TestPushProvider implements PushProvider {
         return true;
     }
 
-    @Nullable
     @Override
-    public PushMessage processMessage(@NonNull Context context, @NonNull Bundle pushBundle) {
-        return new PushMessage(pushBundle);
+    public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
+        return true;
     }
 }

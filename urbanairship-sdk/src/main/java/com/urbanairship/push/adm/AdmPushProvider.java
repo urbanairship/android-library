@@ -95,8 +95,8 @@ public class AdmPushProvider implements PushProvider {
 
     @Nullable
     @Override
-    public PushMessage processMessage(@NonNull Context context, @NonNull Bundle pushBundle) {
-        return new PushMessage(pushBundle);
+    public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
+        return true;
     }
 
     @Override

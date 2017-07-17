@@ -17,6 +17,7 @@ import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.util.UAMathUtil;
@@ -33,7 +34,7 @@ import java.util.Map;
  * A push message, usually created from handling a message intent from either GCM,
  * or another push notification service
  */
-public class PushMessage implements Parcelable {
+public class PushMessage implements Parcelable, JsonSerializable {
 
     /**
      * The rich push extra that contains the rich push message ID.
@@ -210,7 +211,9 @@ public class PushMessage implements Parcelable {
             OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
             OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
-    private final Bundle pushBundle;
+    private Bundle pushBundle;
+    private final Map<String, String> data;
+
     private Uri sound = null;
 
     /**
@@ -220,6 +223,24 @@ public class PushMessage implements Parcelable {
      */
     public PushMessage(Bundle pushBundle) {
         this.pushBundle = pushBundle;
+
+        this.data = new HashMap<>();
+        for (String key : pushBundle.keySet()) {
+            Object value = pushBundle.get(key);
+
+            if (value != null) {
+                data.put(key, String.valueOf(value));
+            }
+        }
+    }
+
+    /**
+     * Create a new PushMessage
+     *
+     * @param data The push data.
+     */
+    public PushMessage(Map<String, String> data) {
+        this.data = new HashMap<>(data);
     }
 
     /**
@@ -228,7 +249,7 @@ public class PushMessage implements Parcelable {
      * @return <code>true</code> if the message is expired, otherwise <code>false</code>
      */
     boolean isExpired() {
-        String expirationStr = pushBundle.getString(EXTRA_EXPIRATION);
+        String expirationStr = data.get(EXTRA_EXPIRATION);
         if (!UAStringUtil.isEmpty(expirationStr)) {
             Logger.debug("Notification expiration time is \"" + expirationStr + "\"");
             try {
@@ -250,7 +271,7 @@ public class PushMessage implements Parcelable {
      * application is active, otherwise <code>false</code>
      */
     boolean isPing() {
-        return pushBundle.get(EXTRA_PING) != null;
+        return data.containsKey(EXTRA_PING);
     }
 
     /**
@@ -261,7 +282,11 @@ public class PushMessage implements Parcelable {
      * @return The extra or the default value if the extra does not exist.
      */
     public String getExtra(String key, String defaultValue) {
-        return pushBundle.getString(key, defaultValue);
+        if (data.get(key) != null) {
+            return data.get(key);
+        }
+
+        return defaultValue;
     }
 
     /**
@@ -271,7 +296,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getCanonicalPushId() {
-        return pushBundle.getString(EXTRA_PUSH_ID);
+        return data.get(EXTRA_PUSH_ID);
     }
 
     /**
@@ -281,7 +306,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getRichPushMessageId() {
-        return pushBundle.getString(EXTRA_RICH_PUSH_ID);
+        return data.get(EXTRA_RICH_PUSH_ID);
     }
 
     /**
@@ -291,7 +316,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getAlert() {
-        return pushBundle.getString(EXTRA_ALERT);
+        return data.get(EXTRA_ALERT);
     }
 
     /**
@@ -301,7 +326,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getSendId() {
-        return pushBundle.getString(EXTRA_SEND_ID);
+        return  data.get(EXTRA_SEND_ID);
     }
 
     /**
@@ -311,7 +336,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getMetadata() {
-        return pushBundle.getString(EXTRA_METADATA);
+        return  data.get(EXTRA_METADATA);
     }
 
     /**
@@ -321,7 +346,14 @@ public class PushMessage implements Parcelable {
      */
     @NonNull
     public Bundle getPushBundle() {
-        return new Bundle(pushBundle);
+        if (pushBundle == null) {
+            pushBundle = new Bundle();
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                pushBundle.putString(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return pushBundle;
     }
 
     /**
@@ -331,7 +363,7 @@ public class PushMessage implements Parcelable {
      */
     @NonNull
     public Map<String, ActionValue> getActions() {
-        String actionsPayload = pushBundle.getString(EXTRA_ACTIONS);
+        String actionsPayload = data.get(EXTRA_ACTIONS);
         Map<String, ActionValue> actions = new HashMap<>();
 
         try {
@@ -362,7 +394,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getInteractiveActionsPayload() {
-        return pushBundle.getString(EXTRA_INTERACTIVE_ACTIONS);
+        return data.get(EXTRA_INTERACTIVE_ACTIONS);
     }
 
     /**
@@ -372,7 +404,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getInteractiveNotificationType() {
-        return pushBundle.getString(EXTRA_INTERACTIVE_TYPE);
+        return data.get(EXTRA_INTERACTIVE_TYPE);
     }
 
     /**
@@ -382,7 +414,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getTitle() {
-        return pushBundle.getString(EXTRA_TITLE);
+        return data.get(EXTRA_TITLE);
     }
 
     /**
@@ -392,7 +424,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getSummary() {
-        return pushBundle.getString(EXTRA_SUMMARY);
+        return data.get(EXTRA_SUMMARY);
     }
 
     /**
@@ -402,7 +434,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getWearablePayload() {
-        return pushBundle.getString(EXTRA_WEARABLE);
+        return data.get(EXTRA_WEARABLE);
     }
 
     /**
@@ -412,7 +444,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getStylePayload() {
-        return pushBundle.getString(EXTRA_STYLE);
+        return data.get(EXTRA_STYLE);
     }
 
     /**
@@ -424,7 +456,7 @@ public class PushMessage implements Parcelable {
      * Defaults to false.
      */
     public boolean isLocalOnly() {
-        String value = pushBundle.getString(EXTRA_LOCAL_ONLY);
+        String value = data.get(EXTRA_LOCAL_ONLY);
         return Boolean.parseBoolean(value);
     }
 
@@ -437,7 +469,7 @@ public class PushMessage implements Parcelable {
      */
     public int getPriority() {
         try {
-            String value = pushBundle.getString(EXTRA_PRIORITY);
+            String value = data.get(EXTRA_PRIORITY);
             return UAMathUtil.constrain(Integer.parseInt(value), MIN_PRIORITY, MAX_PRIORITY);
         } catch (NumberFormatException e) {
             return 0;
@@ -453,7 +485,7 @@ public class PushMessage implements Parcelable {
      */
     public int getVisibility() {
         try {
-            String value = pushBundle.getString(EXTRA_VISIBILITY);
+            String value = data.get(EXTRA_VISIBILITY);
             return UAMathUtil.constrain(Integer.parseInt(value), MIN_VISIBILITY, MAX_VISIBILITY);
         } catch (NumberFormatException e) {
             return VISIBILITY_PUBLIC;
@@ -467,7 +499,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getPublicNotificationPayload() {
-        return pushBundle.getString(EXTRA_PUBLIC_NOTIFICATION);
+        return data.get(EXTRA_PUBLIC_NOTIFICATION);
     }
 
     /**
@@ -477,7 +509,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getCategory() {
-        return pushBundle.getString(EXTRA_CATEGORY);
+        return data.get(EXTRA_CATEGORY);
     }
 
     /**
@@ -488,8 +520,8 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public Uri getSound(@NonNull Context context) {
-        if (sound == null && pushBundle.getString(EXTRA_SOUND) != null) {
-            String notificationSoundName = pushBundle.getString(EXTRA_SOUND);
+        if (sound == null && data.get(EXTRA_SOUND) != null) {
+            String notificationSoundName = data.get(EXTRA_SOUND);
 
             int id = context.getResources().getIdentifier(notificationSoundName, "raw", context.getPackageName());
             if (id != 0) {
@@ -510,7 +542,7 @@ public class PushMessage implements Parcelable {
      * @return The color of the icon.
      */
     public int getIconColor(int defaultColor) {
-        String colorString = pushBundle.getString(EXTRA_ICON_COLOR);
+        String colorString = data.get(EXTRA_ICON_COLOR);
         if (colorString != null) {
             try {
                 return Color.parseColor(colorString);
@@ -529,7 +561,7 @@ public class PushMessage implements Parcelable {
      */
     @DrawableRes
     public int getIcon(Context context, int defaultIcon) {
-        String resourceString = pushBundle.getString(EXTRA_ICON);
+        String resourceString = data.get(EXTRA_ICON);
         if (resourceString != null) {
             int iconId = context.getResources().getIdentifier(resourceString, "drawable", context.getPackageName());
             if (iconId != 0) {
@@ -549,9 +581,9 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public InAppMessage getInAppMessage() {
-        if (pushBundle.containsKey(EXTRA_IN_APP_MESSAGE)) {
+        if (data.containsKey(EXTRA_IN_APP_MESSAGE)) {
             try {
-                InAppMessage rawMessage = InAppMessage.parseJson(pushBundle.getString(EXTRA_IN_APP_MESSAGE));
+                InAppMessage rawMessage = InAppMessage.parseJson(data.get(EXTRA_IN_APP_MESSAGE));
                 if (rawMessage == null) {
                     return null;
                 }
@@ -584,7 +616,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getNotificationTag() {
-        return pushBundle.getString(EXTRA_NOTIFICATION_TAG);
+        return data.get(EXTRA_NOTIFICATION_TAG);
     }
 
     /**
@@ -594,7 +626,7 @@ public class PushMessage implements Parcelable {
      */
     @Nullable
     public String getNotificationChannel() {
-        return pushBundle.getString(EXTRA_NOTIFICATION_CHANNEL);
+        return data.get(EXTRA_NOTIFICATION_CHANNEL);
     }
 
 
@@ -609,16 +641,12 @@ public class PushMessage implements Parcelable {
 
         PushMessage that = (PushMessage) o;
 
-        if (pushBundle != null ? !pushBundle.equals(that.pushBundle) : that.pushBundle != null) {
-            return false;
-        }
-
-        return true;
+        return this.data.equals(that.data);
     }
 
     @Override
     public int hashCode() {
-        return pushBundle != null ? pushBundle.hashCode() : 0;
+        return this.data.hashCode();
     }
 
     /**
@@ -644,7 +672,7 @@ public class PushMessage implements Parcelable {
 
     @Override
     public String toString() {
-        return pushBundle.toString();
+        return data.toString();
     }
 
     @Override
@@ -654,7 +682,7 @@ public class PushMessage implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeBundle(pushBundle);
+        dest.writeBundle(getPushBundle());
     }
 
     /**
@@ -672,4 +700,23 @@ public class PushMessage implements Parcelable {
             return new PushMessage[size];
         }
     };
+
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonValue.wrapOpt(data);
+    }
+
+
+    public static PushMessage fromJsonValue(JsonValue jsonValue) {
+        Map<String, String> data = new HashMap<>();
+        for (Map.Entry<String, JsonValue> entry : jsonValue.optMap().entrySet()) {
+            if (entry.getValue().isString()) {
+                data.put(entry.getKey(), entry.getValue().getString());
+            } else {
+                data.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+
+        return new PushMessage(data);
+    }
 }

@@ -19,7 +19,6 @@ import org.robolectric.shadows.ShadowApplication;
 import java.util.concurrent.Executor;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -65,22 +64,6 @@ public class JobDispatcherTest extends BaseTestCase {
         assertEquals(airshipServiceComponentName, intent.getComponent());
         assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
         assertBundlesEquals(jobInfo.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
-    }
-
-    @Test
-    public void testWakefulDispatch() throws SchedulerException {
-        dispatcher.wakefulDispatch(jobInfo);
-
-        Intent intent = ShadowApplication.getInstance().getNextStartedService();
-        assertEquals(airshipServiceComponentName, intent.getComponent());
-        assertEquals(AirshipService.ACTION_RUN_JOB, intent.getAction());
-        assertBundlesEquals(jobInfo.toBundle(), intent.getBundleExtra(AirshipService.EXTRA_JOB_BUNDLE));
-
-        // Verify it has a wakelock ID set by WakefulBroadcastReceiver.startWakefulService(Context, Intent)
-        assertTrue(intent.getExtras().containsKey("android.support.content.wakelockid"));
-
-        // Should cancel the jobInfo's tag
-        verify(mockScheduler).cancel(any(Context.class), eq("tag"));
     }
 
     @Test

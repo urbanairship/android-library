@@ -3,9 +3,7 @@
 package com.urbanairship.push;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.UAirship;
 
@@ -53,13 +51,12 @@ public interface PushProvider {
     boolean isSupported(@NonNull Context context);
 
     /**
-     * Called to process a raw push bundle to {@link PushMessage}. Return {@code null} to ignore
-     * the push.
+     * Checks if the push message should be handled by the Urban Airship SDK.
      *
      * @param context The application context.
-     * @param pushBundle The raw push bundle.
-     * @return {@link PushMessage} or {@code null} to ignore the push.
+     * @param airship The airship instance.
+     * @param message The push message.
+     * @return {@code true} to allow the UA SDK to process the message, or {@code false} to ignore it.
      */
-    @Nullable
-    PushMessage processMessage(@NonNull Context context, @NonNull Bundle pushBundle);
+    boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message);
 }

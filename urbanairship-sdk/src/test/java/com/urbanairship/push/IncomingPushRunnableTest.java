@@ -17,8 +17,6 @@ import com.urbanairship.TestPushProvider;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
-import com.urbanairship.job.Job;
-import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 
@@ -46,7 +44,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 
-public class PushJobHandlerTest extends BaseTestCase {
+public class IncomingPushRunnableTest extends BaseTestCase {
 
     public static final int TEST_NOTIFICATION_ID = 123;
 
@@ -59,7 +57,7 @@ public class PushJobHandlerTest extends BaseTestCase {
     private Notification notification;
     private NotificationFactory notificationFactory;
 
-    private PushJobHandler jobHandler;
+    private IncomingPushRunnable pushRunnable;
     private TestPushProvider testPushProvider;
 
     @Before
@@ -110,20 +108,24 @@ public class PushJobHandlerTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
 
-        jobHandler = new PushJobHandler(TestApplication.getApplication(), UAirship.shared(),
-                TestApplication.getApplication().preferenceDataStore, notificationManager);
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(new PushMessage(pushBundle))
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .build();
     }
 
     /**
-     * Test deliver push notification.
+     * Test displaying a notification from a push message.
      */
     @Test
-    public void testDeliverPush() {
+    public void testDisplayNotification() {
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notification);
         verify(analytics).addEvent(any(PushArrivedEvent.class));
@@ -138,30 +140,36 @@ public class PushJobHandlerTest extends BaseTestCase {
     }
 
     /**
-     * Test receiving a push from a different provider does nothing.
+     * Test receiving a push from an invalid provider.
      */
     @Test
-    public void testDeliverPushInvalidProvider() {
+    public void testInvalidPushProvider() {
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        Job job = createReceiveMessageJob("wrong class");
-        jobHandler.performJob(job);
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass("wrong  class")
+                .setMessage(new PushMessage(pushBundle))
+                .setLongRunning(true)
+                .setNotificationManager(notificationManager)
+                .build();
 
+        pushRunnable.run();
 
         verifyZeroInteractions(notificationManager);
     }
 
     /**
-     * Test deliver background notification.
+     * Test user notifications disabled still notifies user of a background notification.
      */
     @Test
-    public void testDeliverPushUserPushDisabled() {
+    public void testUserNotificationsDisabled() {
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(false);
+        when(pushManager.isOptIn()).thenReturn(false);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         List<Intent> intents = shadowApplication.getBroadcastIntents();
@@ -173,23 +181,21 @@ public class PushJobHandlerTest extends BaseTestCase {
     }
 
     /**
-     * Test deliver background notification.
+     * Test handling a background push.
      */
     @Test
-    public void testDeliverBackgroundPush() {
-        pushBundle.remove(PushMessage.EXTRA_ALERT);
-
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+    public void testBackgroundPush() {
         notification = null;
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         ShadowApplication shadowApplication = Shadows.shadowOf(RuntimeEnvironment.application);
         List<Intent> intents = shadowApplication.getBroadcastIntents();
         Intent i = intents.get(intents.size() - 1);
-        Bundle extras = i.getExtras();
+
         PushMessage push = PushMessage.fromIntent(i);
         assertEquals("Intent action should be push received", i.getAction(), PushManager.ACTION_PUSH_RECEIVED);
         assertEquals("Push ID should equal pushMessage ID", "testPushID", push.getCanonicalPushId());
@@ -197,10 +203,14 @@ public class PushJobHandlerTest extends BaseTestCase {
     }
 
     /**
-     * Test handling an exception
+     * Test handling an exceptions from the notification factory.
      */
     @Test
-    public void testDeliverPushException() {
+    public void testNotificationFactoryException() {
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
         // Set a notification factory that throws an exception
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
             @Override
@@ -214,11 +224,7 @@ public class PushJobHandlerTest extends BaseTestCase {
             }
         };
 
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
-
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         verify(notificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
     }
@@ -228,6 +234,10 @@ public class PushJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testNotificationContentIntent() {
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
@@ -236,11 +246,7 @@ public class PushJobHandlerTest extends BaseTestCase {
                 .setContentIntent(pendingIntent)
                 .build();
 
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
-
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.contentIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -252,12 +258,15 @@ public class PushJobHandlerTest extends BaseTestCase {
         assertSame("The notification content intent matches.", pendingIntent, intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT));
     }
 
-
     /**
      * Test notification delete intent
      */
     @Test
     public void testNotificationDeleteIntent() {
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(RuntimeEnvironment.application, 1, new Intent(), 0);
         notification = new NotificationCompat.Builder(RuntimeEnvironment.application)
                 .setContentTitle("Test NotificationBuilder Title")
@@ -266,11 +275,7 @@ public class PushJobHandlerTest extends BaseTestCase {
                 .setDeleteIntent(pendingIntent)
                 .build();
 
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
-
-        Job job= createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notification.deleteIntent);
         assertTrue("The pending intent is broadcast intent.", shadowPendingIntent.isBroadcastIntent());
@@ -288,9 +293,9 @@ public class PushJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushSoundDisabled() {
-        // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         // Disable sound
         when(pushManager.isSoundEnabled()).thenReturn(false);
@@ -298,8 +303,7 @@ public class PushJobHandlerTest extends BaseTestCase {
         notification.sound = Uri.parse("some://sound");
         notification.defaults = NotificationCompat.DEFAULT_ALL;
 
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include DEFAULT_SOUND.",
@@ -312,9 +316,9 @@ public class PushJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushVibrateDisabled() {
-        // Enable push
         when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         // Disable vibrate
         when(pushManager.isVibrateEnabled()).thenReturn(false);
@@ -322,9 +326,7 @@ public class PushJobHandlerTest extends BaseTestCase {
         notification.defaults = NotificationCompat.DEFAULT_ALL;
         notification.vibrate = new long[] { 0L, 1L, 200L };
 
-
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         assertNull("The notification sound should be null.", notification.vibrate);
         assertEquals("The notification defaults should not include DEFAULT_VIBRATE.",
@@ -336,6 +338,10 @@ public class PushJobHandlerTest extends BaseTestCase {
      */
     @Test
     public void testDeliverPushInAppMessage() {
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
         pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, new InAppMessage.Builder()
                 .setAlert("oh hi")
                 .setExpiry(1000l)
@@ -343,49 +349,37 @@ public class PushJobHandlerTest extends BaseTestCase {
                 .toJsonValue()
                 .toString());
 
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(new PushMessage(pushBundle))
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .build();
 
-        // Enable push
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.getUserNotificationsEnabled()).thenReturn(true);
-
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         assertEquals(new PushMessage(pushBundle).getInAppMessage(), UAirship.shared().getInAppMessageManager().getPendingMessage());
     }
 
     /**
-     * Test the notification defaults: in quiet time.
+     * Test the notification defaults in quiet time.
      */
     @Test
     public void testInQuietTime() {
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
         when(pushManager.isVibrateEnabled()).thenReturn(true);
         when(pushManager.isSoundEnabled()).thenReturn(true);
         when(pushManager.isInQuietTime()).thenReturn(true);
 
-        Job job = createReceiveMessageJob();
-        jobHandler.performJob(job);
+        pushRunnable.run();
 
         assertNull("The notification sound should be null.", notification.sound);
         assertEquals("The notification defaults should not include vibrate or sound.", 0, notification.defaults);
     }
 
 
-    private Job createReceiveMessageJob() {
-        return createReceiveMessageJob(TestPushProvider.class.toString());
-    }
-
-    private Job createReceiveMessageJob(String providerClass) {
-        Bundle bundle = new Bundle();
-        bundle.putBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE, pushBundle);
-        bundle.putString(PushProviderBridge.EXTRA_PROVIDER_CLASS, providerClass);
-
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
-                                 .setExtras(bundle)
-                                 .build();
-
-        return new Job(jobInfo, true);
-    }
 
 }

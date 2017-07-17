@@ -36,9 +36,9 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
             case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
 
                 result = goAsync();
-                PushProviderBridge.receivedPush(context, AdmPushProvider.class, intent.getExtras(), new PushProviderBridge.Callback() {
+                PushProviderBridge.receivedPush(context, AdmPushProvider.class, new PushMessage(intent.getExtras()), new Runnable() {
                     @Override
-                    public void onFinish() {
+                    public void run() {
                         if (isOrderedBroadcast) {
                             result.setResultCode(Activity.RESULT_OK);
                         }

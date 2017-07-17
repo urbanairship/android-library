@@ -4,16 +4,17 @@ package com.urbanairship.push;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
-import com.urbanairship.job.Job;
+import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
-import java.util.UUID;
 
 /**
  * {@link PushProvider} callback methods.
@@ -21,13 +22,6 @@ import java.util.UUID;
  * @hide
  */
 public abstract class PushProviderBridge {
-
-    /**
-     * Callback when the push provider methods finish.
-     */
-    public interface Callback {
-        void onFinish();
-    }
 
     final static String EXTRA_PROVIDER_CLASS = "com.urbanairship.EXTRA_PROVIDER_CLASS";
     final static String EXTRA_PUSH_BUNDLE = "com.urbanairship.EXTRA_PUSH_BUNDLE";
@@ -37,15 +31,14 @@ public abstract class PushProviderBridge {
      *
      * @param context The application context.
      * @param provider The provider's class.
-     * @param callback Callback when registration finishes updating.
      */
-    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, final Callback callback) {
+    public static void requestRegistrationUpdate(@NonNull Context context, @NonNull Class<? extends PushProvider> provider) {
         Bundle extras = new Bundle();
         extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
 
         JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
-                                 .setTag(ChannelJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                 .setTag(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(PushManager.class)
                                  .setExtras(extras)
@@ -59,51 +52,30 @@ public abstract class PushProviderBridge {
      *
      * @param context The application context.
      * @param provider The provider's class.
-     * @param pushBundle The push message bundle.
-     * @param callback Callback when the push finishing processing.
+     * @param pushMessage The push message.
+     * @param callback A runnable to be called when the push is finished processing.
      */
     @WorkerThread
-    public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull Bundle pushBundle, final Callback callback) {
-        Bundle extras = new Bundle();
-        extras.putBundle(EXTRA_PUSH_BUNDLE, pushBundle);
-        extras.putString(EXTRA_PROVIDER_CLASS, provider.toString());
+    public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage, @NonNull final Runnable callback) {
+        Logger.info("Received push: "  + pushMessage);
 
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(PushJobHandler.ACTION_RECEIVE_MESSAGE)
-                                 .setTag(UUID.randomUUID().toString())
-                                 .setNetworkAccessRequired(Build.VERSION.SDK_INT >= 26) // Used for retries
-                                 .setAirshipComponent(PushManager.class)
-                                 .setPersistent(true)
-                                 .setExtras(extras)
-                                 .build();
+        if (Build.VERSION.SDK_INT >= 26) {
+            IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(context)
+                    .setLongRunning(false)
+                    .setMessage(pushMessage)
+                    .setProviderClass(provider.toString())
+                    .setOnFinish(callback)
+                    .build();
 
-        handleJobInfo(context, jobInfo, callback);
-    }
+            PushManager.PUSH_EXECUTOR.execute(pushRunnable);
+        } else {
+            Intent intent = new Intent(context, PushService.class)
+                    .setAction(PushService.ACTION_PROCESS_PUSH)
+                    .putExtra(EXTRA_PUSH_BUNDLE, pushMessage.getPushBundle())
+                    .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
 
-    /**
-     * Helper method to either dispatch the job info or run it directly.
-     *
-     * @param context The application context.
-     * @param jobInfo The job info.
-     * @param callback The job callback.
-     */
-    private static void handleJobInfo(Context context, JobInfo jobInfo, final Callback callback) {
-        if (Build.VERSION.SDK_INT < 26 && JobDispatcher.shared(context).wakefulDispatch(jobInfo)) {
-            if (callback != null) {
-                callback.onFinish();
-            }
-
-            return;
+            WakefulBroadcastReceiver.startWakefulService(context, intent);
+            callback.run();
         }
-
-        Job job = new Job(jobInfo, false);
-        JobDispatcher.shared(context).runJob(job, new JobDispatcher.Callback() {
-            @Override
-            public void onFinish(Job job, @Job.JobResult int result) {
-                if (callback != null) {
-                    callback.onFinish();
-                }
-            }
-        });
     }
 }

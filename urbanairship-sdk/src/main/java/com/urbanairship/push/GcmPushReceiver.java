@@ -58,13 +58,12 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
         switch (intent.getAction()) {
             case ACTION_GCM_RECEIVE:
                 result = goAsync();
-                PushProviderBridge.receivedPush(context, GcmPushProvider.class, intent.getExtras(), new PushProviderBridge.Callback() {
+                PushProviderBridge.receivedPush(context, GcmPushProvider.class, new PushMessage(intent.getExtras()), new Runnable() {
                     @Override
-                    public void onFinish() {
+                    public void run() {
                         if (isOrderedBroadcast) {
                             result.setResultCode(Activity.RESULT_OK);
                         }
-
                         result.finish();
                     }
                 });
@@ -75,19 +74,18 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             case ACTION_INSTANCE_ID:
                 startInstanceIdService(context, intent);
 
+                if (isOrderedBroadcast) {
+                    setResultCode(Activity.RESULT_OK);
+                }
+
                 break;
 
             case ACTION_GCM_REGISTRATION:
-                result = goAsync();
-                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class, new PushProviderBridge.Callback() {
-                    @Override
-                    public void onFinish() {
-                        if (isOrderedBroadcast) {
-                            result.setResultCode(Activity.RESULT_OK);
-                        }
-                        result.finish();
-                    }
-                });
+                PushProviderBridge.requestRegistrationUpdate(context, GcmPushProvider.class);
+
+                if (isOrderedBroadcast) {
+                    setResultCode(Activity.RESULT_OK);
+                }
 
                 break;
         }

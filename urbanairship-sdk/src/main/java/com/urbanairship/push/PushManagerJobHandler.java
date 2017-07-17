@@ -4,6 +4,7 @@ package com.urbanairship.push;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -25,10 +26,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import static com.urbanairship.UAirship.getApplicationContext;
+
 /**
  * Job handler for channel registration
  */
-class ChannelJobHandler {
+class PushManagerJobHandler {
 
     /**
      * Action to perform update request for pending tag group changes.
@@ -36,9 +39,9 @@ class ChannelJobHandler {
     static final String ACTION_UPDATE_TAG_GROUPS = "com.urbanairship.push.ACTION_UPDATE_TAG_GROUPS";
 
     /**
-     * Action notifying the service that registration has finished.
+     * Action to handle a scheduled push notification.
      */
-    static final String ACTION_REGISTRATION_FINISHED = "com.urbanairship.push.ACTION_REGISTRATION_FINISHED";
+    static final String ACTION_PROCESS_PUSH = "com.urbanairship.push.ACTION_PROCESS_PUSH";
 
     /**
      * Action to update channel registration.
@@ -91,13 +94,13 @@ class ChannelJobHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    ChannelJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
+    PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
         this(context, airship, dataStore, JobDispatcher.shared(context), new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    ChannelJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                      JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
+    PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
+                          JobDispatcher jobDispatcher, ChannelApiClient channelClient) {
         this.context = context;
         this.dataStore = dataStore;
         this.channelClient = channelClient;
@@ -125,7 +128,33 @@ class ChannelJobHandler {
 
             case ACTION_UPDATE_TAG_GROUPS:
                 return onUpdateTagGroup();
+
+            case ACTION_PROCESS_PUSH:
+                return onProcessPush(job);
         }
+
+        return Job.JOB_FINISHED;
+    }
+
+    @Job.JobResult
+    private int onProcessPush(Job job) {
+
+        Bundle extras = job.getJobInfo().getExtras();
+        Bundle pushBundle = extras.getBundle(PushProviderBridge.EXTRA_PUSH_BUNDLE);
+        String providerClass = extras.getString(PushProviderBridge.EXTRA_PROVIDER_CLASS);
+
+        if (pushBundle == null || providerClass == null) {
+            return Job.JOB_FINISHED;
+        }
+
+        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getApplicationContext())
+                .setLongRunning(true)
+                .setMessage(new PushMessage(pushBundle))
+                .setProviderClass(providerClass)
+                .build();
+
+        pushRunnable.run();
+
 
         return Job.JOB_FINISHED;
     }
@@ -155,7 +184,7 @@ class ChannelJobHandler {
         }
 
         if (!UAStringUtil.equals(token, currentToken)) {
-            Logger.info("ChannelJobHandler - Push registration updated.");
+            Logger.info("PushManagerJobHandler - Push registration updated.");
             pushManager.setRegistrationToken(token);
             pushManager.updateRegistration();
         }
@@ -170,7 +199,7 @@ class ChannelJobHandler {
      */
     @Job.JobResult
     private int onUpdateChannelRegistration() {
-        Logger.verbose("ChannelJobHandler - Performing channel registration.");
+        Logger.verbose("PushManagerJobHandler - Performing channel registration.");
 
         ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
         String channelId = pushManager.getChannelId();
@@ -193,7 +222,7 @@ class ChannelJobHandler {
     @Job.JobResult
     private int updateChannel(@NonNull URL channelLocation, @NonNull ChannelRegistrationPayload payload) {
         if (!shouldUpdateRegistration(payload)) {
-            Logger.verbose("ChannelJobHandler - Channel already up to date.");
+            Logger.verbose("PushManagerJobHandler - Channel already up to date.");
             return Job.JOB_FINISHED;
         }
 
@@ -384,7 +413,7 @@ class ChannelJobHandler {
         try {
             return ChannelRegistrationPayload.parseJson(payloadJSON);
         } catch (JsonException e) {
-            Logger.error("ChannelJobHandler - Failed to parse payload from JSON.", e);
+            Logger.error("PushManagerJobHandler - Failed to parse payload from JSON.", e);
             return null;
         }
     }
@@ -448,13 +477,13 @@ class ChannelJobHandler {
 
             // 5xx or no response
             if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-                Logger.info("ChannelJobHandler - Failed to update tag groups, will retry later.");
+                Logger.info("PushManagerJobHandler - Failed to update tag groups, will retry later.");
                 pushManager.getTagGroupStore().push(mutation);
                 return Job.JOB_RETRY;
             }
 
             int status = response.getStatus();
-            Logger.info("ChannelJobHandler - Update tag groups finished with status: " + status);
+            Logger.info("PushManagerJobHandler - Update tag groups finished with status: " + status);
         }
 
         return Job.JOB_FINISHED;

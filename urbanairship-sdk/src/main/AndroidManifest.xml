@@ -69,6 +69,7 @@
         <service android:name="com.urbanairship.AirshipService" />
         <service android:name="com.urbanairship.actions.ActionService" />
         <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
+        <service android:name="com.urbanairship.push.PushService" />
 
         <service android:name="com.urbanairship.job.AirshipGcmTaskService"
                  android:exported="true"
