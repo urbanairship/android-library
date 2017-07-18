@@ -3,14 +3,38 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.7.0 - July 18, 2017
+=============================
+
+New Features
+------------
+- Added a fallback job scheduler using the Android Jobs API for Lollipop+ devices when the GcmNetworkManager
+  is unavailable. By default, Urban Airship will schedule jobs with Ids between 3000000 - 3000099.
+  The start ID can be changed from 3000000 by adding metadata to the AndroidManifest.xml with
+  a new start ID under the key `com.urbanairship.job.JOB_ID_START`. The new scheduler can also be prioritized
+  over the GcmNetworkManger scheduler by adding metadata `com.urbanairship.job.PREFER_ANDROID_JOB_SCHEDULER`
+  with the value `true`.
+- Added ability to disable the GcmNetworkManger scheduler by adding the metadata `com.urbanairship.job.DISABLE_GCM_SCHEDULER`
+  with the value `false` to the AndroidManifest.xml.
+
+
+Bug Fixes
+---------
+- Fixed warning logs about starting services while the device is in the background on Android O.
+- Fixed trying to use the alarm manager to schedule jobs as a fallback on Android O when the GcmNetworkManager is unavailable.
+- Added workaround for invalid GCM tokens - https://github.com/googlesamples/google-services/issues/231
+- Fixed cursors not being closed in the on device automation.
+
 Version 8.6.1 - July 3, 2017
 ============================
+
 Bug Fixes
 ---------
 - Fixed another GcmNetworkManager crash due to an IllegalArgumentException (https://issuetracker.google.com/issues/37113668).
 
 Version 8.6.0 - June 20, 2017
 =============================
+
 New Features
 ------------
 - Android O compatibility.
@@ -39,12 +63,14 @@ Bug Fixes
 
 Version 8.5.1 - June 1, 2017
 ============================
+
 Bug Fixes
 ---------
 - Fixed a rare crash that is caused by GcmNetworkManager throwing an IllegalArgumentException (https://issuetracker.google.com/issues/37113668).
 
 Version 8.5.0 - May 31, 2017
 ============================
+
 New Features
 ------------
 - Added a getExtra method to the PushMessage class.
@@ -62,24 +88,28 @@ Deprecations
 
 Version 8.4.3 - May 24, 2017
 ============================
+
 Bug Fixes
 ---------
 - Fixed potential time in app reporting bug caused by app suspension.
 
 Version 8.4.2 - May 23, 2017
 ============================
+
 Bug Fixes
 ---------
  - Fixed crash when rescheduling tag group updates with GcmNetworkManager.
 
 Version 8.4.1 - May 10, 2017
 ============================
+
 Bug Fixes
 ---------
  - Fixed bug that caused some ADM devices to crash during registration.
 
 Version 8.4.0 - May 2, 2017
 ===========================
+
 New Features
 ------------
 - Added support for delayed automation action schedules. The execution of an
@@ -98,18 +128,21 @@ Behavior Changes
 
 Version 8.3.2 - April 5, 2017
 ==============================
+
 Bug Fixes
 ---------
  - Fixed a bug that occurs when setting tags on devices migrating from old SDKs.
 
 Version 8.3.1 - March 22, 2017
 ==============================
+
 Bug Fixes
 ---------
  - Fixed channel registration bug that prevented device tags from updating.
 
 Version 8.3.0 - February 16, 2017
 =================================
+
 New Features
 ------------
 - Added accessor to get the app key in the Javascript native bridge.
@@ -450,7 +483,10 @@ Version 6.0.0 - March 31, 2015
  - Support listening for UAWebViewClient action runs by allowing an optional ActionCompletionCallback.
  - Updated AutoPilot to now call takeOff instead of a general "execute" method.
  - Exposed the PushMessage directly instead of the Push bundle when broadcasting push events.
- - Actions framework:
+ - Fixed Urban Airship Javascript bridge when the associated RichPushMessage contains invalid characters in its title.
+
+ Actions framework
+ -----------------
    - Added new ActionValue class that limits the type of values ActionArguments and ActionResults
      can contain.
    - ActionArgument's metadata now returns a bundle of metadata.
@@ -459,7 +495,6 @@ Version 6.0.0 - March 31, 2015
    - Replaced ActionRunner with a new ActionRunRequest class that provides a fluent API for running actions.
    - Replaced the RichPushMessage with its ID in the ActionArguments metadata when triggering actions
      from a web view with an associated RichPushMessage.
- - Fixed Urban Airship Javascript bridge when the associated RichPushMessage contains invalid characters in its title.
 
 Version 5.1.6 - March 5, 2015
 =============================
