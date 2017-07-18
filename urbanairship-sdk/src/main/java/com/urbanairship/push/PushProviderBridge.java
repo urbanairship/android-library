@@ -22,6 +22,7 @@ import com.urbanairship.job.JobInfo;
  */
 public abstract class PushProviderBridge {
 
+
     final static String EXTRA_PROVIDER_CLASS = "EXTRA_PROVIDER_CLASS";
     final static String EXTRA_PUSH = "EXTRA_PUSH";
 

@@ -4,7 +4,6 @@ package com.urbanairship.push.gcm;
 
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -18,6 +17,8 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Gcm push provider.
@@ -26,17 +27,33 @@ import java.io.IOException;
  */
 public class GcmPushProvider implements PushProvider {
 
+    private static final List<String> INVALID_TOKENS = Arrays.asList("MESSENGER", "AP", "null");
     @Override
     public int getPlatform() {
         return UAirship.ANDROID_PLATFORM;
     }
 
     @Override
-    public String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException {
+    public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
+        if (senderId == null) {
+            return null;
+        }
 
         InstanceID instanceID = InstanceID.getInstance(context);
-        return instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        String token;
+        try {
+            token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            // Check for invalid tokens: https://github.com/googlesamples/google-services/issues/231
+            if (token != null && (INVALID_TOKENS.contains(token) || UAirship.getPackageName().equals(token))) {
+                instanceID.deleteToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+                throw new RegistrationException("GCM registration returned an invalid token.", true);
+            }
+
+        } catch (IOException e) {
+            throw new RegistrationException("GCM registration failed.", true, e);
+        }
+        return token;
     }
 
     @Override
@@ -78,8 +95,6 @@ public class GcmPushProvider implements PushProvider {
 
         return true;
     }
-
-
 
     @Override
     public String toString() {

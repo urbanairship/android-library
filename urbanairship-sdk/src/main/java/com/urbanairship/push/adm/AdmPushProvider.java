@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -18,8 +17,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
-
-import java.io.IOException;
 
 /**
  * Adm push provider.
@@ -33,15 +30,13 @@ public class AdmPushProvider implements PushProvider {
 
     private static Boolean isAdmDependencyAvailable;
 
-
     @Override
     public int getPlatform() {
         return UAirship.AMAZON_PLATFORM;
     }
 
-
     @Override
-    public String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException {
+    public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         String admId = AdmWrapper.getRegistrationId(context);
 
         if (admId != null) {
@@ -62,10 +57,16 @@ public class AdmPushProvider implements PushProvider {
                 registerReceiver.wait(REGISTRATION_TIMEOUT_MS);
             } catch (InterruptedException e) {
                 Logger.error("Interrupted while waiting for adm registration", e);
+                throw new RegistrationException("Failed to register with ADM.", true, e);
             }
         }
 
         context.unregisterReceiver(registerReceiver);
+
+        if (registerReceiver.error != null) {
+            throw new RegistrationException(registerReceiver.error, false);
+        }
+
         return registerReceiver.registrationToken;
     }
 
@@ -107,12 +108,14 @@ public class AdmPushProvider implements PushProvider {
     private static class RegistrationReceiver extends BroadcastReceiver {
 
         private String registrationToken;
+        private String error;
 
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null && intent.getExtras() != null && ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT.equals(intent.getAction())) {
                 if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
                     Logger.error("ADM error occurred: " + intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
+                    this.error = intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR);
                 } else {
                     this.registrationToken = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);
                 }

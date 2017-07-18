@@ -8,8 +8,6 @@ import android.support.annotation.NonNull;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 
-import java.io.IOException;
-
 public class TestPushProvider implements PushProvider {
 
     public String registrationToken;
@@ -21,7 +19,7 @@ public class TestPushProvider implements PushProvider {
 
 
     @Override
-    public String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException {
+    public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
         return registrationToken;
     }
 

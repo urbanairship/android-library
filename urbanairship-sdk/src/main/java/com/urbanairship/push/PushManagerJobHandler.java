@@ -18,7 +18,6 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -172,9 +171,13 @@ class PushManagerJobHandler {
         String token;
         try {
             token = provider.getRegistrationToken(context);
-        } catch (IOException e) {
-            Logger.error("Push registration failed: " +  e.getMessage());
-            return JobInfo.JOB_RETRY;
+        } catch (PushProvider.RegistrationException e) {
+            Logger.error("Push registration failed.", e);
+            if (e.isRecoverable()) {
+                return JobInfo.JOB_RETRY;
+            } else {
+                return JobInfo.JOB_FINISHED;
+            }
         }
 
         if (!UAStringUtil.equals(token, currentToken)) {

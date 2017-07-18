@@ -7,14 +7,52 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.UAirship;
 
-import java.io.IOException;
-
 /**
  * Defines a push provider.
  *
  * @hide
  */
 public interface PushProvider {
+
+    /**
+     * Registration exceptions
+     */
+    class RegistrationException extends Exception {
+
+        private final boolean isRecoverable;
+
+        /**
+         * Creates a new registration exception.
+         *
+         * @param message The exception message.
+         * @param isRecoverable If the exception is recoverable (should retry registration).
+         * @param cause The cause of the exception.
+         */
+        public RegistrationException(String message, boolean isRecoverable, Throwable cause) {
+            super(message, cause);
+            this.isRecoverable = isRecoverable;
+        }
+
+        /**
+         * Creates a new registration exception.
+         *
+         * @param message The exception message.
+         * @param isRecoverable If the exception is recoverable (should retry registration).
+         */
+        public RegistrationException(String message, boolean isRecoverable) {
+            super(message);
+            this.isRecoverable = isRecoverable;
+        }
+
+        /**
+         * If the exception is recoverable or not.
+         *
+         * @return {@code true} if the exception is recoverable, otherwise {@code false}.
+         */
+        public boolean isRecoverable() {
+            return isRecoverable;
+        }
+    }
 
     /**
      * Returns the platform type. Value must be either {@link UAirship#AMAZON_PLATFORM} or {@link UAirship#ANDROID_PLATFORM}.
@@ -29,10 +67,9 @@ public interface PushProvider {
      *
      * @param context The application context.
      * @return The registration ID.
-     * @throws IOException If the registration fails from an IOException. IOExceptions will trigger a retry with backoff.
-     * @throws SecurityException If the registration fails from a SecurityException. SecurityException will trigger a retry with backoff.
+     * @throws RegistrationException If the registration fails.
      */
-    String getRegistrationToken(@NonNull Context context) throws IOException, SecurityException;
+    String getRegistrationToken(@NonNull Context context) throws RegistrationException;
 
     /**
      * If the underlying push provider is currently available.
