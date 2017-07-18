@@ -442,8 +442,14 @@ class AutomationDataManager extends DataManager {
      */
     List<ScheduleEntry> getScheduleEntries(String group) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_GROUP + "=?" + ORDER_SCHEDULES_STATEMENT;
-        Cursor c = rawQuery(query, new String[] { String.valueOf(group) });
-        return generateSchedules(c);
+        Cursor cursor = rawQuery(query, new String[] { String.valueOf(group) });
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = generateSchedules(cursor);
+        cursor.close();
+        return entries;
     }
 
     /**
@@ -453,8 +459,14 @@ class AutomationDataManager extends DataManager {
      */
     List<ScheduleEntry> getScheduleEntries() {
         String query = GET_SCHEDULES_QUERY + ORDER_SCHEDULES_STATEMENT;
-        Cursor c = rawQuery(query, null);
-        return generateSchedules(c);
+        Cursor cursor = rawQuery(query, null);
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = generateSchedules(cursor);
+        cursor.close();
+        return entries;
     }
 
     /**
@@ -470,8 +482,14 @@ class AutomationDataManager extends DataManager {
             @Override
             public void perform(List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
-                Cursor c = rawQuery(query, subset.toArray(new String[subset.size()]));
-                schedules.addAll(generateSchedules(c));
+
+
+                Cursor cursor = rawQuery(query, subset.toArray(new String[subset.size()]));
+                if (cursor != null) {
+                    schedules.addAll(generateSchedules(cursor));
+                    cursor.close();
+                }
+
             }
         });
 
@@ -485,8 +503,15 @@ class AutomationDataManager extends DataManager {
      */
     List<ScheduleEntry> getPendingExecutionSchedules() {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + " = 1";
-        Cursor c = rawQuery(query, null);
-        return generateSchedules(c);
+        Cursor cursor = rawQuery(query, null);
+
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = generateSchedules(cursor);
+        cursor.close();
+        return entries;
     }
 
     /**
@@ -569,11 +594,7 @@ class AutomationDataManager extends DataManager {
      * @return A list of schedule entries.
      */
     @NonNull
-    private List<ScheduleEntry> generateSchedules(Cursor cursor) {
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
+    private List<ScheduleEntry> generateSchedules(@NonNull Cursor cursor) {
         cursor.moveToFirst();
 
         List<ScheduleEntry> entries = new ArrayList<>();
