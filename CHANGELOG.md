@@ -6,7 +6,7 @@ Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.htm
 Version 8.8.0 - July 25, 2017
 =============================
 
-Minor release relevant for users with requiring high priority delivery support for Android O.
+Minor release relevant for users requiring high priority delivery support for Android O.
 
 New Features
 ------------
