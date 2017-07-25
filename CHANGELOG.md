@@ -3,6 +3,20 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.8.0 - July 25, 2017
+=============================
+
+Minor release relevant for users with requiring high priority delivery support for Android O.
+
+New Features
+------------
+- Exposed the in-app message display timer on the InAppMessageFragment.
+- Added high priority delivery support for Android O.
+
+Bug Fixes
+---------
+- Added null checks to prevent a very rare potential null pointer exception when an intent is received without extras in the AdmPushReceiver.
+
 Version 8.7.0 - July 18, 2017
 =============================
 
