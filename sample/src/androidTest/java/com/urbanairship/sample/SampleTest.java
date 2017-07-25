@@ -9,15 +9,18 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.rule.ActivityTestRule;
+import android.support.test.espresso.Espresso;
+import android.support.test.espresso.assertion.ViewAssertions;
+import android.support.test.espresso.contrib.NavigationViewActions;
+import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
 import android.support.v4.app.NotificationManagerCompat;
+import android.view.Gravity;
 
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.UAirship;
+import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.sample.utils.ActionsPayload;
 import com.urbanairship.sample.utils.InAppMessagePayload;
 import com.urbanairship.sample.utils.PushPayload;
@@ -39,9 +42,28 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static android.support.test.espresso.Espresso.onData;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.swipeDown;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.DrawerActions.open;
+import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
+import static android.support.test.espresso.intent.Intents.intended;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static android.support.test.espresso.matcher.ViewMatchers.hasChildCount;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.support.test.espresso.web.assertion.WebViewAssertions.webMatches;
+import static android.support.test.espresso.web.sugar.Web.onWebView;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test basic pushes, message center and in-app messages using UIAutomator.
@@ -52,28 +74,25 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class SampleTest {
 
-    static final String TEST_ALIAS_STRING = UUID.randomUUID().toString();
     static final String TEST_NAMED_USER_STRING = UUID.randomUUID().toString();
     static final String TEST_TAG_STRING = UUID.randomUUID().toString();
 
     private String channelId;
-    private UiDevice device;
     private PushSender pushSender;
     private TestAirshipReceiver airshipReceiver;
+
     @Rule
-    public ActivityTestRule<MainActivity> activityRule = new ActivityTestRule<>(MainActivity.class);
+    public IntentsTestRule<MainActivity> activityRule = new IntentsTestRule<>(MainActivity.class);
 
     @Before
     public void setup() throws InterruptedException {
         Bundle arguments = InstrumentationRegistry.getArguments();
+
         // Get the app key and master secret
         String appKey = arguments.getString("appKey");
         String masterSecret = arguments.getString("masterSecret");
 
         pushSender = new PushSender(masterSecret, appKey);
-
-        // Initialize UiDevice instance
-        device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         airshipReceiver = new TestAirshipReceiver();
         airshipReceiver.register();
@@ -96,6 +115,7 @@ public class SampleTest {
 
         UAirship.shared().getInAppMessageManager().setAutoDisplayDelay(0);
         UAirship.shared().getInAppMessageManager().setDisplayAsapEnabled(true);
+        UAirship.shared().getInAppMessageManager().setPendingMessage(null);
 
         channelId = UAirship.shared().getPushManager().getChannelId();
 
@@ -105,36 +125,24 @@ public class SampleTest {
 
     @After
     public void cleanup() {
-        device.pressHome();
         airshipReceiver.unregister();
     }
 
     /**
-     * Test setting alias, named user, tag and pushes to them, including broadcast and channel pushes.
+     * Test setting named user, tag and pushes to them, including broadcast and channel pushes.
      */
     @Test
     public void testPush() throws Exception {
         UAirship.shared().getNamedUser().setId(TEST_NAMED_USER_STRING);
         UAirship.shared().getPushManager().editTags().addTag(TEST_TAG_STRING).apply();
-        UAirship.shared().getPushManager().setAlias(TEST_ALIAS_STRING);
 
-        // Wait for registration to finish
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        // Wait for registration updates
+        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
         PushPayload channelPayload = PushPayload.newChannelPushBuilder(channelId)
                                                 .setAlert(UUID.randomUUID().toString())
                                                 .build();
         pushSender.send(channelPayload);
-
-        PushPayload broadcastPayload = PushPayload.newBroadcastPushBuilder()
-                                                  .setAlert(UUID.randomUUID().toString())
-                                                  .build();
-        pushSender.send(broadcastPayload);
-
-        PushPayload aliasPayload = PushPayload.newAliasPushBuilder(TEST_ALIAS_STRING)
-                                              .setAlert(UUID.randomUUID().toString())
-                                              .build();
-        pushSender.send(aliasPayload);
 
         PushPayload tagPayload = PushPayload.newTagPushBuilder(TEST_TAG_STRING)
                                             .setAlert(UUID.randomUUID().toString())
@@ -148,12 +156,10 @@ public class SampleTest {
 
         Map<String, String> expectedAlerts = new HashMap<>();
         expectedAlerts.put(channelPayload.getAlert(), "channel");
-        expectedAlerts.put(broadcastPayload.getAlert(), "broadcast");
-        expectedAlerts.put(aliasPayload.getAlert(), "alias");
         expectedAlerts.put(tagPayload.getAlert(), "tag");
         expectedAlerts.put(namedUserPayload.getAlert(), "named user");
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             String postedAlert = airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS);
             if (postedAlert == null) {
                 break;
@@ -171,85 +177,94 @@ public class SampleTest {
      */
     @Test
     public void testMessageCenter() throws Exception {
-
         for (int i = 0; i < 2; i++) {
             RichPushPayload richPushPayload = RichPushPayload.newBuilder()
-                                                             .setTitle(UUID.randomUUID().toString())
-                                                             .setHtmlContent("Hello")
+                                                             .setTitle("message " + i)
+                                                             .setHtmlContent("<body id=\"title\">message " + i + "</body>")
                                                              .build();
 
             PushPayload payload = PushPayload.newChannelPushBuilder(channelId)
-                                             .setAlert(UUID.randomUUID().toString())
+                                             .setAlert("message " + i)
                                              .setRichPushMessage(richPushPayload)
                                              .build();
             pushSender.send(payload);
-            UiObject userAlert = device.findObject(new UiSelector().textContains(payload.getAlert()));
-            userAlert.waitForExists(5000);
         }
 
-        UAirship.shared().getInbox().fetchMessages();
+        for (int i = 0; i < 2; i++) {
+            String postedAlert = airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS);
+            if (postedAlert == null && !postedAlert.startsWith("message")) {
+                fail("Unable to receive rich push message.");
+                return;
+            }
+        }
 
-        // Navigate to MC
-        UiObject openNavigationDrawer = device.findObject(new UiSelector().description("Open navigation drawer"));
-        openNavigationDrawer.click();
+        // Open Navigation drawer
+        onView(withId(R.id.drawer_layout))
+                .check(matches(isClosed(Gravity.LEFT)))
+                .perform(open());
 
-        UiObject messageCenter = device.findObject(new UiSelector().text("Message Center"));
-        messageCenter.click();
+        // Click Message Center
+        onView(withId(R.id.nav_view))
+                .perform(NavigationViewActions.navigateTo(R.id.nav_message_center));
 
-        // Verify messages exist in message center by swiping down to refresh the inbox
-        UiObject inbox = device.findObject(new UiSelector().className("android.widget.ListView"));
-        inbox.waitForExists(5000);
-        inbox.swipeDown(50);
+        // Refresh the list
+        onView(withId(R.id.message_list_container))
+                .perform(swipeDown());
 
-        int originalMessageCount = inbox.getChildCount();
-        assertEquals("Expect 2 messages.", 2, originalMessageCount);
+        // Check that we have 2 messages
+        onView(withId(android.R.id.list))
+                .check(ViewAssertions.matches(hasChildCount(2)));
 
-        UiObject topMessage = inbox.getChild(new UiSelector().className("android.widget.FrameLayout").index(0));
-        topMessage.waitForExists(5000);
-        assertTrue(topMessage.exists());
+        // Open the first message
+        onData(instanceOf(RichPushMessage.class))
+                .atPosition(0)
+                .perform(click());
 
-        // open message to make sure it is read
-        topMessage.click();
+        // Verify the content
+        onWebView()
+                .withElement(findElement(Locator.ID, "title"))
+                .check(webMatches(getText(), containsString(UAirship.shared().getInbox().getMessages().get(0).getTitle())));
 
-        // navigate back to inbox
-        UiObject navigateUp = device.findObject(new UiSelector().description("Navigate up"));
-        navigateUp.click();
+        // Navigate back
+        Espresso.pressBack();
 
-        UiObject messageCheckBox = device.findObject(new UiSelector().resourceId("com.urbanairship.sample:id/checkbox"));
-        messageCheckBox.waitForExists(2000);
-        messageCheckBox.click();
+        // Verify 1 message is marked read
+        assertEquals(1, UAirship.shared().getInbox().getReadCount());
+        assertEquals(1, UAirship.shared().getInbox().getUnreadCount());
 
-        UiObject moreOptions = device.findObject(new UiSelector().description("More options"));
-        moreOptions.waitForExists(2000);
-        moreOptions.click();
+        // Select the second message
+        onData(instanceOf(RichPushMessage.class))
+                .atPosition(1)
+                .onChildView(withId(R.id.checkbox))
+                .perform(click());
 
-        // select all to mark read
-        UiObject selectAll = device.findObject(new UiSelector().text("Select All"));
-        selectAll.waitForExists(2000);
-        selectAll.click();
-        UiObject markReadAction = device.findObject(new UiSelector().description("Mark Read"));
-        markReadAction.waitForExists(2000);
-        markReadAction.click();
+        // Mark all as read
+        onView(withId(R.id.mark_read))
+                .perform(click());
 
-        // verify all messages read
+        // Verify all messages read
         assertEquals(UAirship.shared().getInbox().getUnreadCount(), 0);
 
-        messageCheckBox.click();
-        moreOptions = device.findObject(new UiSelector().description("More options"));
-        moreOptions.waitForExists(2000);
-        moreOptions.click();
+        // Select each message
+        onData(instanceOf(RichPushMessage.class))
+                .atPosition(0)
+                .onChildView(withId(R.id.checkbox))
+                .perform(click());
+        onData(instanceOf(RichPushMessage.class))
+                .atPosition(1)
+                .onChildView(withId(R.id.checkbox))
+                .perform(click());
 
-        // select all to delete the remaining messages
-        selectAll = device.findObject(new UiSelector().text("Select All"));
-        selectAll.waitForExists(2000);
-        selectAll.click();
-        UiObject deleteAction = device.findObject(new UiSelector().description("Delete"));
-        deleteAction.click();
+        // Delete all messages
+        onView(withId(R.id.delete))
+                .perform(click());
 
-        inbox = device.findObject(new UiSelector().className("android.widget.ListView"));
+        // Verify all the messages are deleted
+        assertEquals(0, UAirship.shared().getInbox().getCount());
 
-        // verify all messages are deleted
-        assertFalse(inbox.exists());
+        // Check that the list is empty
+        onView(withId(android.R.id.list))
+                .check(ViewAssertions.matches(hasChildCount(0)));
     }
 
     /**
@@ -260,9 +275,9 @@ public class SampleTest {
     @Test
     public void testInAppMessage() throws Exception {
 
-        // Open external url action for yes interactive button
+        // Add tag action for yes interactive button
         ActionsPayload yesActions = ActionsPayload.newBuilder()
-                                                  .setOpenUrl("https://aprojectforkindness.files.wordpress.com/2014/01/pay-it-forward-heart.jpeg")
+                                                  .addTag("YES_INTERACTIVE_BUTTON_TAG")
                                                   .build();
 
         // Add tag action for no interactive button
@@ -276,7 +291,7 @@ public class SampleTest {
                                                    .build();
 
         InAppMessagePayload inAppMessagePayload = InAppMessagePayload.newBuilder()
-                                                                     .setAlert("in-app landing page test")
+                                                                     .setAlert("in-app test")
                                                                      .setInteractiveType("ua_yes_no_foreground")
                                                                      .addButtonActions("yes", yesActions)
                                                                      .addButtonActions("no", noActions)
@@ -288,48 +303,34 @@ public class SampleTest {
                                              .setInAppMessage(inAppMessagePayload)
                                              .build();
 
+
         pushSender.send(pushPayload);
+        if (airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS) == null) {
+            fail("Unable to send in-app message.");
+        }
 
-        // click on in-app message
-        UiObject inAppMesg = device.findObject(new UiSelector().text(inAppMessagePayload.getAlert()));
-        inAppMesg.waitForExists(10000);
-        inAppMesg.click();
 
-        // verify landing page opens
-        UiObject landingPage = device.findObject(new UiSelector().className("android.webkit.WebView"));
-        landingPage.waitForExists(10000);
-        landingPage.swipeUp(100);
-        assertTrue(landingPage.exists());
+        // Click the in-app message
+        onView(withText(inAppMessagePayload.getAlert()))
+                .perform(click());
 
-        // close landing page.
-        UiObject closeButton = device.findObject(new UiSelector().resourceId("com.urbanairship.sample:id/close_button"));
-        closeButton.click();
+        // Verify the landing page opens
+        intended(hasAction("com.urbanairship.actions.SHOW_LANDING_PAGE_INTENT_ACTION"));
 
-        // test in-app message with interactive buttons
+        // Close the landing page
+        Espresso.pressBack();
+
+        // Test in-app message with interactive buttons
         pushSender.send(pushPayload);
+        if (airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS) == null) {
+            fail("Unable to send in-app message.");
+        }
 
-        // click YES button
-        UiObject yesButton = device.findObject(new UiSelector().textStartsWith("Yes"));
-        yesButton.waitForExists(10000);
-        yesButton.click();
+        // Click YES button
+        onView(withText("Yes"))
+                .perform(click());
 
-        // verify web page opens
-        UiObject page = device.findObject(new UiSelector().className("android.webkit.WebView"));
-        page.waitForExists(5000);
-        assertTrue(page.exists());
-
-        // Back to the app
-        device.pressBack();
-
-        // send in-app message
-        pushSender.send(pushPayload);
-
-        // click NO button
-        UiObject noButton = device.findObject(new UiSelector().textStartsWith("No"));
-        noButton.waitForExists(5000);
-        noButton.click();
-
-        assertTrue(UAirship.shared().getPushManager().getTags().contains("NO_INTERACTIVE_BUTTON_TAG"));
+        assertTrue(UAirship.shared().getPushManager().getTags().contains("YES_INTERACTIVE_BUTTON_TAG"));
     }
 
     public static class TestAirshipReceiver extends AirshipReceiver {
