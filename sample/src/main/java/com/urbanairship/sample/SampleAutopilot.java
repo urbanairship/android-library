@@ -46,7 +46,8 @@ public class SampleAutopilot extends Autopilot {
                     .setDevelopmentAppSecret("Your Development App Secret")
                     .setProductionAppKey("Your Production App Key")
                     .setProductionAppSecret("Your Production App Secret")
-                    .setNotificationAccentColor(ContextCompat.getColor(this, R.color.color_accent))
+                    .setGcmSender("Your GCM/Firebase Sender ID")
+                    .setNotificationAccentColor(ContextCompat.getColor(context, R.color.color_accent))
                     .setNotificationIcon(R.drawable.ic_notification)
                     .build();
 

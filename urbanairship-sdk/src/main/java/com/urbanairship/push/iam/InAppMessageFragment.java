@@ -266,7 +266,7 @@ public class InAppMessageFragment extends Fragment {
                 dismiss(true);
 
                 @Action.Situation int situation = actionButton.isForegroundAction() ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON :
-                                      Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                                                  Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
 
                 runActions(message.getButtonActionValues(actionButton.getId()), situation);
 
@@ -383,6 +383,15 @@ public class InAppMessageFragment extends Fragment {
      */
     public InAppMessage getMessage() {
         return message;
+    }
+
+    /**
+     * In-app message display timer.
+     *
+     * @return The in-app message display timer.
+     */
+    protected Timer getTimer() {
+        return timer;
     }
 
     /**

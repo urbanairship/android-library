@@ -23,34 +23,27 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
-        if (intent == null || intent.getAction() == null) {
+        if (intent == null || intent.getExtras() == null || !ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE.equals(intent.getAction())) {
+            if (isOrderedBroadcast()) {
+                setResultCode(Activity.RESULT_OK);
+            }
             return;
         }
 
-        Logger.verbose("AdmPushReceiver - Received intent: " + intent.getAction());
-
         final boolean isOrderedBroadcast = isOrderedBroadcast();
-        final PendingResult result;
+        final PendingResult result = goAsync();
+        final PushMessage message = new PushMessage(intent.getExtras());
 
-        switch (intent.getAction()) {
-            case ADMConstants.LowLevel.ACTION_RECEIVE_ADM_MESSAGE:
+        Logger.verbose("AdmPushReceiver - Received push.");
 
-                result = goAsync();
-                PushProviderBridge.receivedPush(context, AdmPushProvider.class, new PushMessage(intent.getExtras()), new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isOrderedBroadcast) {
-                            result.setResultCode(Activity.RESULT_OK);
-                        }
-                        result.finish();
-                    }
-                });
-                break;
-
-            default:
+        PushProviderBridge.receivedPush(context, AdmPushProvider.class, message, new Runnable() {
+            @Override
+            public void run() {
                 if (isOrderedBroadcast) {
-                    setResultCode(Activity.RESULT_OK);
+                    result.setResultCode(Activity.RESULT_OK);
                 }
-        }
+                result.finish();
+            }
+        });
     }
 }
