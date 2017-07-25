@@ -201,6 +201,16 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String EXTRA_NOTIFICATION_CHANNEL = "com.urbanairship.notification_channel";
 
     /**
+     * The extra key for the delivery priority.
+     */
+    public static final String EXTRA_DELIVERY_PRIORITY = "com.urbanairship.priority";
+
+    /**
+     * Constant for the extra {@link #EXTRA_DELIVERY_PRIORITY} that indicates the push is high priority.
+     */
+    public static final String PRIORITY_HIGH = "high";
+
+    /**
      * Default sound name.
      */
     private static final String DEFAULT_SOUND_NAME = "default";
@@ -221,7 +231,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      *
      * @param pushBundle The intent extras for the push
      */
-    public PushMessage(Bundle pushBundle) {
+    public PushMessage(@NonNull Bundle pushBundle) {
         this.pushBundle = pushBundle;
 
         this.data = new HashMap<>();

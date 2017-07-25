@@ -54,23 +54,32 @@ public abstract class PushProviderBridge {
     public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage, @NonNull final Runnable callback) {
         Logger.info("Received push: "  + pushMessage);
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(context)
-                    .setLongRunning(false)
-                    .setMessage(pushMessage)
-                    .setProviderClass(provider.toString())
-                    .setOnFinish(callback)
-                    .build();
+        // If older than Android O or a high priority message try to start the push service
+        if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
 
-            PushManager.PUSH_EXECUTOR.execute(pushRunnable);
-        } else {
             Intent intent = new Intent(context, PushService.class)
                     .setAction(PushService.ACTION_PROCESS_PUSH)
                     .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
                     .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
 
-            WakefulBroadcastReceiver.startWakefulService(context, intent);
-            callback.run();
+            try {
+                WakefulBroadcastReceiver.startWakefulService(context, intent);
+                callback.run();
+                return;
+            } catch (IllegalStateException e) {
+                Logger.error("Unable to run push in the push service.", e);
+                WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            }
         }
+
+        // Otherwise fallback to running push in th executor
+        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(context)
+                .setLongRunning(false)
+                .setMessage(pushMessage)
+                .setProviderClass(provider.toString())
+                .setOnFinish(callback)
+                .build();
+
+        PushManager.PUSH_EXECUTOR.execute(pushRunnable);
     }
 }
