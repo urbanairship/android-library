@@ -23,7 +23,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +75,6 @@ public class InAppMessageManager extends AirshipComponent {
     private final Handler handler;
     private final ActivityMonitor activityMonitor;
 
-    private WeakReference<Activity> activityReference;
     private InAppMessageFragment currentFragment;
     private boolean autoDisplayPendingMessage;
     private boolean displayAsap;
@@ -446,7 +444,7 @@ public class InAppMessageManager extends AirshipComponent {
             currentMessage = pending;
 
             synchronized (listeners) {
-                for (Listener listener : listeners) {
+                for (Listener listener : new ArrayList<>(listeners)) {
                     listener.onDisplay(currentFragment, pending);
                 }
             }
@@ -514,7 +512,7 @@ public class InAppMessageManager extends AirshipComponent {
      */
     @Nullable
     private Activity getCurrentActivity() {
-        return activityReference == null ? null : activityReference.get();
+        return activityMonitor.getCurrentActivity();
     }
 
     // Life cycle hooks
@@ -547,7 +545,6 @@ public class InAppMessageManager extends AirshipComponent {
      */
     void onActivityPaused(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity paused: " + activity);
-        activityReference = null;
         handler.removeCallbacks(displayRunnable);
     }
 
@@ -565,7 +562,6 @@ public class InAppMessageManager extends AirshipComponent {
             return;
         }
 
-        activityReference = new WeakReference<>(activity);
         handler.removeCallbacks(displayRunnable);
 
         if (autoDisplayPendingMessage) {
