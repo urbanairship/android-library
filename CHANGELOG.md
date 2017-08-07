@@ -3,6 +3,18 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.8.1 - August 8, 2017
+==============================
+
+Patch release for Message Center and GCM Registration.
+
+Bug Fixes
+---------
+ - Fixed an index out of bounds exception in the MessageViewAdapter.
+ - Fixed NPE in the MessageListFragment.
+ - Fixed GCM security exception when trying to register for push.
+
+
 Version 8.8.0 - July 25, 2017
 =============================
 
