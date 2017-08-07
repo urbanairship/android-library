@@ -16,6 +16,7 @@ import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.EventTestUtils;
 
 import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -47,6 +48,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     private Activity mockActivity;
     private Analytics mockAnalytics;
+    private TestActivityMonitor activityMonitor;
 
     @Before
     public void before() {
@@ -63,7 +65,18 @@ public class InAppMessageManagerTest extends BaseTestCase {
                 .setExpiry(Long.MAX_VALUE / 1000 * 1000) // Work around for precision loss issue
                 .create();
 
-        inAppMessageManager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, new TestActivityMonitor());
+        activityMonitor = new TestActivityMonitor();
+        activityMonitor.register();
+
+
+        inAppMessageManager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, activityMonitor);
+        inAppMessageManager.init();
+    }
+
+    @After
+    public void after() {
+        activityMonitor.unregister();
+        inAppMessageManager.tearDown();
     }
 
     /**
@@ -224,7 +237,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         inAppMessageManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppMessageManager.onActivityResumed(mockActivity);
+        activityMonitor.startActivity(mockActivity);
+        activityMonitor.resumeActivity(mockActivity);
 
         // Set the pending in-app message
         inAppMessageManager.setPendingMessage(message);
@@ -254,7 +268,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         inAppMessageManager.setDisplayAsapEnabled(true);
 
         // Set the current, resumed activity
-        inAppMessageManager.onActivityResumed(mockActivity);
+        activityMonitor.startActivity(mockActivity);
+        activityMonitor.resumeActivity(mockActivity);
 
         runMainLooperTasks();
 
@@ -272,14 +287,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
         FragmentTransaction transaction = mock(StubbedFragmentTransaction.class, CALLS_REAL_METHODS);
         when(mockActivity.getFragmentManager().beginTransaction()).thenReturn(transaction);
 
-        // Set the pending in-app message before setting show ASAP enabled
+        // Set the pending in-app message
         inAppMessageManager.setPendingMessage(message);
 
         // Notify foreground
-        inAppMessageManager.onForeground();
-
-        // Set the current, resumed activity
-        inAppMessageManager.onActivityResumed(mockActivity);
+        activityMonitor.startActivity(mockActivity);
+        activityMonitor.resumeActivity(mockActivity);
 
         runMainLooperTasks();
 

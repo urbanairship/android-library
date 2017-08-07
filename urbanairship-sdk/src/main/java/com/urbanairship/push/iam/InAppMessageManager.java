@@ -520,7 +520,7 @@ public class InAppMessageManager extends AirshipComponent {
     /**
      * Called when the app is foregrounded.
      */
-    void onForeground() {
+    private void onForeground() {
         Logger.verbose("InAppMessageManager - App foregrounded.");
         InAppMessage pending = getPendingMessage();
         if ((currentMessage == null && pending != null) || (pending != null && !pending.equals(currentMessage))) {
@@ -543,7 +543,7 @@ public class InAppMessageManager extends AirshipComponent {
      *
      * @param activity The paused activity.
      */
-    void onActivityPaused(@NonNull Activity activity) {
+    private void onActivityPaused(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity paused: " + activity);
         handler.removeCallbacks(displayRunnable);
     }
@@ -553,7 +553,7 @@ public class InAppMessageManager extends AirshipComponent {
      *
      * @param activity The resumed activity.
      */
-    void onActivityResumed(@NonNull Activity activity) {
+    private void onActivityResumed(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity resumed: " + activity);
 
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());

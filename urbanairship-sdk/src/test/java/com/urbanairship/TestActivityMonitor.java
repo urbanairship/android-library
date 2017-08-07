@@ -35,6 +35,19 @@ public class TestActivityMonitor extends ActivityMonitor {
     }
 
     /**
+     * Starts an activity.
+     */
+    public void startActivity(Activity activity) {
+        this.onActivityStarted(activity);
+        Robolectric.flushForegroundThreadScheduler();
+    }
+
+    public void resumeActivity(Activity activity) {
+        this.onActivityResumed(activity);
+        Robolectric.flushForegroundThreadScheduler();
+    }
+
+    /**
      * Stops an activity.
      */
     public void stopActivity() {
