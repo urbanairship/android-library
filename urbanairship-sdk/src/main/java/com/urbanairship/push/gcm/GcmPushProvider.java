@@ -52,6 +52,8 @@ public class GcmPushProvider implements PushProvider {
 
         } catch (IOException e) {
             throw new RegistrationException("GCM registration failed.", true, e);
+        } catch (SecurityException se) {
+            throw new RegistrationException("GCM registration failed.", false, se);
         }
         return token;
     }
