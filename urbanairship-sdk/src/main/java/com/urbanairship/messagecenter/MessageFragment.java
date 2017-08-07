@@ -207,10 +207,6 @@ public class MessageFragment extends Fragment {
      * Shows the progress bar
      */
     protected void showProgress() {
-        if (webView == null) {
-            return;
-        }
-
         if (errorPage != null && errorPage.getVisibility() == View.VISIBLE) {
             errorPage.animate()
                      .alpha(0f)
@@ -218,58 +214,62 @@ public class MessageFragment extends Fragment {
                      .setListener(null);
         }
 
-        webView.animate()
-               .alpha(0f)
-               .setDuration(200)
-               .setListener(null);
-
-        progressBar.animate()
-                   .alpha(1f)
+        if (webView != null) {
+            webView.animate()
+                   .alpha(0f)
                    .setDuration(200)
                    .setListener(null);
+        }
+
+        if (progressBar != null) {
+            progressBar.animate()
+                       .alpha(1f)
+                       .setDuration(200)
+                       .setListener(null);
+        }
     }
 
     /**
      * Shows the message.
      */
     protected void showMessage() {
-        if (webView == null) {
-            return;
-        }
-
-        webView.animate()
-               .alpha(1f)
-               .setDuration(200)
-               .setListener(null);
-
-        progressBar.animate()
-                   .alpha(0f)
+        if (webView != null) {
+            webView.animate()
+                   .alpha(1f)
                    .setDuration(200)
                    .setListener(null);
+        }
+
+        if (progressBar != null) {
+            progressBar.animate()
+                       .alpha(0f)
+                       .setDuration(200)
+                       .setListener(null);
+        }
     }
 
     /**
      * Shows the error page.
      */
     protected void showErrorPage() {
-        if (errorPage == null) {
-            return;
+        if (errorPage != null) {
+            if (errorPage.getVisibility() == View.GONE) {
+                errorPage.setAlpha(0);
+                errorPage.setVisibility(View.VISIBLE);
+            }
+
+            errorPage.animate()
+                     .alpha(1f)
+                     .setDuration(200)
+                     .setListener(null);
         }
 
-        if (errorPage.getVisibility() == View.GONE) {
-            errorPage.setAlpha(0);
-            errorPage.setVisibility(View.VISIBLE);
+        if (progressBar != null) {
+            progressBar.animate()
+                       .alpha(0f)
+                       .setDuration(200)
+                       .setListener(null);
         }
-
-        errorPage.animate()
-                 .alpha(1f)
-                 .setDuration(200)
-                 .setListener(null);
-
-        progressBar.animate()
-                   .alpha(0f)
-                   .setDuration(200)
-                   .setListener(null);
     }
 
     /**
