@@ -44,7 +44,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        if (position > items.size()) {
+        if (position >= items.size() || position < 0) {
             return null;
         }
 
@@ -53,7 +53,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        if (position > items.size()                                                                                                  ) {
+        if (position >= items.size() || position < 0) {
             return -1;
         }
 
@@ -68,7 +68,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
             view = layoutInflater.inflate(layout, parent, false);
         }
 
-        if (position <= items.size()) {
+        if (position < items.size() && position >= 0) {
             bindView(view, items.get(position), position);
         }
 
