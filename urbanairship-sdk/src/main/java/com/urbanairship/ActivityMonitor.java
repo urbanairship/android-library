@@ -32,7 +32,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
     private int startedActivities = 0;
     private long backgroundTime;
     private boolean isForeground;
-    private WeakReference<Activity> activityReference;
+    private WeakReference<Activity> resumedActivityReference;
 
     public ActivityMonitor() {
         this.handler = new Handler(Looper.getMainLooper());
@@ -115,7 +115,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityResumed(Activity activity) {
-        activityReference = new WeakReference<>(activity);
+        resumedActivityReference = new WeakReference<>(activity);
         for (Listener listener : new ArrayList<>(listeners)) {
             listener.onActivityResumed(activity);
         }
@@ -123,7 +123,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityPaused(Activity activity) {
-        activityReference = null;
+        resumedActivityReference = null;
         for (Listener listener : new ArrayList<>(listeners)) {
             listener.onActivityPaused(activity);
         }
@@ -147,8 +147,8 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
      * @return The resumed activity.
      */
     @Nullable
-    public Activity getCurrentActivity() {
-        return activityReference == null ? null : activityReference.get();
+    public Activity getResumedActivity() {
+        return resumedActivityReference == null ? null : resumedActivityReference.get();
     }
 
     @Override

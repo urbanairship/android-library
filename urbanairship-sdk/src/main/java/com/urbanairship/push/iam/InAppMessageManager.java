@@ -512,7 +512,7 @@ public class InAppMessageManager extends AirshipComponent {
      */
     @Nullable
     private Activity getCurrentActivity() {
-        return activityMonitor.getCurrentActivity();
+        return activityMonitor.getResumedActivity();
     }
 
     // Life cycle hooks
