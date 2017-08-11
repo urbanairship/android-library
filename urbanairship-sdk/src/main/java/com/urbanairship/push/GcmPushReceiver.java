@@ -44,14 +44,15 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
         normalizeIntent(context, intent);
 
+        final boolean isOrderedBroadcast = isOrderedBroadcast();
+
         if (intent.getAction() == null) {
-            if (this.isOrderedBroadcast()) {
+            if (isOrderedBroadcast) {
                 this.setResultCode(Activity.RESULT_CANCELED);
             }
             return;
         }
 
-        final boolean isOrderedBroadcast = isOrderedBroadcast();
         final PendingResult result;
 
 
@@ -60,6 +61,11 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 // In the edge case with null extras, drop the push and notify the developer
                 if (intent.getExtras() == null) {
                     Logger.warn("GcmPushReceiver - Received push with null extras");
+
+                    if (isOrderedBroadcast) {
+                        setResultCode(Activity.RESULT_CANCELED);
+                    }
+
                     return;
                 }
                 result = goAsync();
