@@ -9,7 +9,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
     private int startedActivities = 0;
     private long backgroundTime;
     private boolean isForeground;
+    private WeakReference<Activity> resumedActivityReference;
 
     public ActivityMonitor() {
         this.handler = new Handler(Looper.getMainLooper());
@@ -112,6 +115,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityResumed(Activity activity) {
+        resumedActivityReference = new WeakReference<>(activity);
         for (Listener listener : new ArrayList<>(listeners)) {
             listener.onActivityResumed(activity);
         }
@@ -119,6 +123,7 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityPaused(Activity activity) {
+        resumedActivityReference = null;
         for (Listener listener : new ArrayList<>(listeners)) {
             listener.onActivityPaused(activity);
         }
@@ -134,6 +139,16 @@ public class ActivityMonitor implements Application.ActivityLifecycleCallbacks {
             backgroundTime = System.currentTimeMillis() + BACKGROUND_DELAY_MS;
             handler.postDelayed(backgroundRunnable, BACKGROUND_DELAY_MS);
         }
+    }
+
+    /**
+     * Gets the current resumed activity.
+     *
+     * @return The resumed activity.
+     */
+    @Nullable
+    public Activity getResumedActivity() {
+        return resumedActivityReference == null ? null : resumedActivityReference.get();
     }
 
     @Override

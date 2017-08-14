@@ -23,7 +23,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +75,6 @@ public class InAppMessageManager extends AirshipComponent {
     private final Handler handler;
     private final ActivityMonitor activityMonitor;
 
-    private WeakReference<Activity> activityReference;
     private InAppMessageFragment currentFragment;
     private boolean autoDisplayPendingMessage;
     private boolean displayAsap;
@@ -446,7 +444,7 @@ public class InAppMessageManager extends AirshipComponent {
             currentMessage = pending;
 
             synchronized (listeners) {
-                for (Listener listener : listeners) {
+                for (Listener listener : new ArrayList<>(listeners)) {
                     listener.onDisplay(currentFragment, pending);
                 }
             }
@@ -514,7 +512,7 @@ public class InAppMessageManager extends AirshipComponent {
      */
     @Nullable
     private Activity getCurrentActivity() {
-        return activityReference == null ? null : activityReference.get();
+        return activityMonitor.getResumedActivity();
     }
 
     // Life cycle hooks
@@ -522,7 +520,7 @@ public class InAppMessageManager extends AirshipComponent {
     /**
      * Called when the app is foregrounded.
      */
-    void onForeground() {
+    private void onForeground() {
         Logger.verbose("InAppMessageManager - App foregrounded.");
         InAppMessage pending = getPendingMessage();
         if ((currentMessage == null && pending != null) || (pending != null && !pending.equals(currentMessage))) {
@@ -545,9 +543,8 @@ public class InAppMessageManager extends AirshipComponent {
      *
      * @param activity The paused activity.
      */
-    void onActivityPaused(@NonNull Activity activity) {
+    private void onActivityPaused(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity paused: " + activity);
-        activityReference = null;
         handler.removeCallbacks(displayRunnable);
     }
 
@@ -556,7 +553,7 @@ public class InAppMessageManager extends AirshipComponent {
      *
      * @param activity The resumed activity.
      */
-    void onActivityResumed(@NonNull Activity activity) {
+    private void onActivityResumed(@NonNull Activity activity) {
         Logger.verbose("InAppMessageManager - Activity resumed: " + activity);
 
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
@@ -565,7 +562,6 @@ public class InAppMessageManager extends AirshipComponent {
             return;
         }
 
-        activityReference = new WeakReference<>(activity);
         handler.removeCallbacks(displayRunnable);
 
         if (autoDisplayPendingMessage) {
