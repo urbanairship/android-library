@@ -60,7 +60,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             case ACTION_GCM_RECEIVE:
                 // In the edge case with null extras, drop the push and notify the developer
                 if (intent.getExtras() == null) {
-                    Logger.warn("GcmPushReceiver - Received push with null extras");
+                    Logger.warn("GcmPushReceiver - Received push with null extras, dropping message");
 
                     if (isOrderedBroadcast) {
                         setResultCode(Activity.RESULT_CANCELED);
