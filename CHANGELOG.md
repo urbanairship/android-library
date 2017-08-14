@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.8.2 - August 14, 2017
+===============================
+
+Patch release for a rare crash involving GCM push handling. Any apps using 
+GCM and experiencing NPEs in GCMPushReceiver should update.
+
+Bug Fixes
+---------
+- Fixed NPE in GCMPushReciever for the rare case of null extras.
+
+
 Version 8.8.1 - August 8, 2017
 ==============================
 
