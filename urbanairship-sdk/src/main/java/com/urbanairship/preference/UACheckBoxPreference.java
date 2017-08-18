@@ -44,7 +44,7 @@ public abstract class UACheckBoxPreference extends CheckBoxPreference {
     }
 
     private void init() {
-        listener = new ActivityMonitor.Listener() {
+        listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onActivityPaused(Activity activity) {
                 applyAirshipPreferenceRunnable.run();

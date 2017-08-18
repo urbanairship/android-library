@@ -4,9 +4,11 @@ package com.urbanairship;
 
 import android.app.Activity;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Robolectric;
+import org.robolectric.android.controller.ActivityController;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +28,8 @@ public class ActivityMonitorTest extends BaseTestCase {
         isForeground = false;
         activityMonitor = new ActivityMonitor();
 
-        activityMonitor.addListener(new ActivityMonitor.Listener() {
+        activityMonitor.registerListener(TestApplication.getApplication());
+        activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long timeMS) {
                 isForeground = true;
@@ -39,6 +42,11 @@ public class ActivityMonitorTest extends BaseTestCase {
         });
     }
 
+    @After
+    public void teardown() {
+        activityMonitor.unregisterListener(TestApplication.getApplication());
+    }
+
     /**
      * This test verifies adding an activity calls the onForeground delegate call
      *
@@ -46,9 +54,7 @@ public class ActivityMonitorTest extends BaseTestCase {
      */
     @Test
     public void testActivityStarted() throws Exception {
-        Activity activity = new Activity();
-        activityMonitor.onActivityStarted(activity);
-
+        Robolectric.buildActivity(Activity.class).create().start();
         Robolectric.flushForegroundThreadScheduler();
 
         assertTrue(isForeground);
@@ -62,12 +68,8 @@ public class ActivityMonitorTest extends BaseTestCase {
      */
     @Test
     public void testActivityStopped() throws Exception {
-        Activity activity = new Activity();
-        activityMonitor.onActivityStarted(activity);
-        activityMonitor.onActivityStopped(activity);
-
+        Robolectric.buildActivity(Activity.class).create().start().stop();
         Robolectric.flushForegroundThreadScheduler();
-
         assertFalse(isForeground);
     }
 
@@ -76,11 +78,11 @@ public class ActivityMonitorTest extends BaseTestCase {
      */
     @Test
     public void testRemoveAfterAddMultipleActivity() {
-        Activity activity = new Activity();
-        activityMonitor.onActivityStarted(activity);
-        activityMonitor.onActivityStarted(activity);
 
-        activityMonitor.onActivityStopped(activity);
+        ActivityController activity1 = Robolectric.buildActivity(Activity.class).create().start();
+        Robolectric.buildActivity(Activity.class).create().start();
+
+        activity1.stop();
 
         Robolectric.flushForegroundThreadScheduler();
 
@@ -92,25 +94,20 @@ public class ActivityMonitorTest extends BaseTestCase {
      */
     @Test
     public void testMultipleActivities() {
-        Activity activityOne = new Activity();
-        Activity activityTwo = new Activity();
-
-        activityMonitor.onActivityStarted(activityOne);
-        activityMonitor.onActivityStarted(activityTwo);
+        ActivityController activity1 = Robolectric.buildActivity(Activity.class).create().start();
+        ActivityController activity2 = Robolectric.buildActivity(Activity.class).create().start();
 
         Robolectric.flushForegroundThreadScheduler();
-
         assertTrue(isForeground);
 
-        activityMonitor.onActivityStopped(activityOne);
+        activity1.stop();
 
         Robolectric.flushForegroundThreadScheduler();
-
         assertTrue(isForeground);
 
-        activityMonitor.onActivityStopped(activityTwo);
-        Robolectric.flushForegroundThreadScheduler();
+        activity2.stop();
 
+        Robolectric.flushForegroundThreadScheduler();
         assertFalse(isForeground);
     }
 }

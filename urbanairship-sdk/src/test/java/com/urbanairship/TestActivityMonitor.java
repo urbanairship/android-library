@@ -15,22 +15,23 @@ public class TestActivityMonitor extends ActivityMonitor {
      * Registers the test activity monitor with the application.
      */
     public void register() {
-        TestApplication.getApplication().registerActivityLifecycleCallbacks(this);
+        registerListener(TestApplication.getApplication());
     }
 
     /**
      * Unregisters the test activity monitor with the application.
      */
     public void unregister() {
-        TestApplication.getApplication().unregisterActivityLifecycleCallbacks(this);
+        unregisterListener(TestApplication.getApplication());
     }
+
 
     /**
      * Starts an activity.
      */
     public void startActivity() {
         Activity activity = new Activity();
-        this.onActivityStarted(activity);
+        this.activityLifecycleCallbacks.onActivityStarted(activity);
         Robolectric.flushForegroundThreadScheduler();
     }
 
@@ -38,12 +39,12 @@ public class TestActivityMonitor extends ActivityMonitor {
      * Starts an activity.
      */
     public void startActivity(Activity activity) {
-        this.onActivityStarted(activity);
+        this.activityLifecycleCallbacks.onActivityStarted(activity);
         Robolectric.flushForegroundThreadScheduler();
     }
 
     public void resumeActivity(Activity activity) {
-        this.onActivityResumed(activity);
+        this.activityLifecycleCallbacks.onActivityResumed(activity);
         Robolectric.flushForegroundThreadScheduler();
     }
 
@@ -52,7 +53,7 @@ public class TestActivityMonitor extends ActivityMonitor {
      */
     public void stopActivity() {
         Activity activity = new Activity();
-        this.onActivityStopped(activity);
+        this.activityLifecycleCallbacks.onActivityStopped(activity);
         Robolectric.flushForegroundThreadScheduler();
     }
 }

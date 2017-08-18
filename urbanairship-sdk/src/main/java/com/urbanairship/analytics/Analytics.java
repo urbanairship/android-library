@@ -104,7 +104,7 @@ public class Analytics extends AirshipComponent {
         this.eventManager = builder.eventManager;
         this.executor = builder.executor == null ? Executors.newSingleThreadExecutor() : builder.executor;
 
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(final long time) {
                 Analytics.this.onForeground(time);
@@ -114,6 +114,7 @@ public class Analytics extends AirshipComponent {
             public void onBackground(final long time) {
                 Analytics.this.onBackground(time);
             }
+
         };
     }
 
