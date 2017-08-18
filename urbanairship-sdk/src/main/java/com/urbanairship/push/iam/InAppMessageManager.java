@@ -131,7 +131,7 @@ public class InAppMessageManager extends AirshipComponent {
             setPendingMessage(null);
         }
 
-        listener = new ActivityMonitor.Listener() {
+        listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 InAppMessageManager.this.onForeground();

@@ -20,7 +20,7 @@ public class ApplicationMetrics extends AirshipComponent {
                        @NonNull ActivityMonitor activityMonitor) {
         this.preferenceDataStore = preferenceDataStore;
         this.context = context.getApplicationContext();
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 preferenceDataStore.put(LAST_OPEN_KEY, time);

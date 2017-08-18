@@ -410,8 +410,6 @@ public class UAirship {
                 return;
             }
 
-            application.unregisterActivityLifecycleCallbacks(ActivityMonitor.shared(application));
-
             // Block until takeoff is finished
             UAirship airship = UAirship.shared();
 

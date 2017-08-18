@@ -82,7 +82,7 @@ public class UALocationManager extends AirshipComponent {
     public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 UALocationManager.this.updateServiceConnection();

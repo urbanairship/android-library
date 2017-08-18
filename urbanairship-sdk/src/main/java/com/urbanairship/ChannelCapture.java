@@ -60,7 +60,7 @@ public class ChannelCapture extends AirshipComponent {
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 executor.execute(new Runnable() {

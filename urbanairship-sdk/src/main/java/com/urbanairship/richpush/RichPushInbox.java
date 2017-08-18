@@ -148,7 +148,7 @@ public class RichPushInbox extends AirshipComponent {
         this.richPushResolver = resolver;
         this.executor = executor;
         this.jobDispatcher = jobDispatcher;
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 JobInfo jobInfo = JobInfo.newBuilder()

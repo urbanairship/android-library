@@ -97,7 +97,7 @@ public class Automation extends AirshipComponent {
         this.analytics = analytics;
         this.dataManager = dataManager;
         this.preferenceDataStore = preferenceDataStore;
-        this.listener = new ActivityMonitor.Listener() {
+        this.listener = new ActivityMonitor.SimpleListener() {
             @Override
             public void onForeground(long time) {
                 Automation.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
