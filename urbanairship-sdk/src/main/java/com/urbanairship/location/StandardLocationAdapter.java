@@ -10,9 +10,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
@@ -100,10 +101,10 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public void requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, PendingResult<Location> pendingResult) {
-        CancelableOperation cancelableOperation = new SingleLocationRequest(context, pendingResult, options);
-        pendingResult.addCancelable(cancelableOperation);
+    public Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback) {
+        CancelableOperation cancelableOperation = new SingleLocationRequest(context, options, resultCallback);
         cancelableOperation.run();
+        return cancelableOperation;
     }
 
     /**
@@ -181,10 +182,10 @@ class StandardLocationAdapter implements LocationAdapter {
          * SingleLocationRequest constructor.
          *
          * @param context The application context.
-         * @param pendingResult The pending result.
          * @param options The locationRequestOptions.
+         * @param resultCallback The result callback.
          */
-        SingleLocationRequest(@NonNull final Context context, final @NonNull PendingResult<Location> pendingResult, @NonNull final LocationRequestOptions options) {
+        SingleLocationRequest(@NonNull final Context context, @NonNull final LocationRequestOptions options, @NonNull final  ResultCallback<Location> resultCallback) {
             super();
             this.context = context.getApplicationContext();
             this.options = options;
@@ -195,7 +196,7 @@ class StandardLocationAdapter implements LocationAdapter {
                 @Override
                 public void onLocationChanged(Location location) {
                     stopUpdates();
-                    pendingResult.setResult(location);
+                    resultCallback.onResult(location);
                 }
 
                 @Override

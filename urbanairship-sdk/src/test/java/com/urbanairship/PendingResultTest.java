@@ -30,7 +30,8 @@ public class PendingResultTest extends BaseTestCase {
     public void setup() {
         looper = Shadows.shadowOf(Looper.myLooper());
         resultCallback = new TestResultCallback<>();
-        pendingResult = new PendingResult<>(resultCallback, Looper.myLooper());
+        pendingResult = new PendingResult<>();
+        pendingResult.addResultCallback(Looper.myLooper(), resultCallback);
     }
 
     @Test

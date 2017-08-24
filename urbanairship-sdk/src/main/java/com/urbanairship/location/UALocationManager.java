@@ -20,6 +20,7 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.LocationEvent;
 import com.urbanairship.json.JsonException;
@@ -239,80 +240,52 @@ public class UALocationManager extends AirshipComponent {
      * @return A cancelable object that can be used to cancel the request.
      */
     @NonNull
-    public Cancelable requestSingleLocation() {
-        return requestSingleLocation(null, getLocationRequestOptions());
-    }
-
-    /**
-     * Records a single location using either the foreground request options
-     * or the background request options depending on the application's state.
-     *
-     * @param locationCallback Callback with the location. The result may return a null location if
-     * the request is unable to be made due to insufficient permissions.
-     * @return A cancelable object that can be used to cancel the request.
-     */
-    @NonNull
-    public Cancelable requestSingleLocation(@Nullable LocationCallback locationCallback) {
-        return requestSingleLocation(locationCallback, getLocationRequestOptions());
+    public PendingResult<Location> requestSingleLocation() {
+        return requestSingleLocation(getLocationRequestOptions());
     }
 
     /**
      * Records a single location using custom location request options.
      *
-     * @param locationCallback Callback with the location. The result may return a null location or empty
-     * Cancelable request if the request is unable to be made due to insufficient permissions.
      * @param requestOptions The location request options.
      * @return A cancelable object that can be used to cancel the request.
      */
     @NonNull
-    public Cancelable requestSingleLocation(@Nullable final LocationCallback locationCallback, @NonNull final LocationRequestOptions requestOptions) {
+    public PendingResult<Location> requestSingleLocation(@NonNull final LocationRequestOptions requestOptions) {
+
+        final PendingResult<Location> pendingResult = new PendingResult<>();
+
         if (!isLocationPermitted()) {
-            return new Cancelable() {
-                @Override
-                public boolean cancel(boolean mayInterruptIfRunning) {
-                    return true;
-                }
-
-                @Override
-                public boolean cancel() {
-                    return true;
-                }
-
-                @Override
-                public boolean isDone() {
-                    return true;
-                }
-
-                @Override
-                public boolean isCancelled() {
-                    return true;
-                }
-            };
+            pendingResult.cancel();
+            return pendingResult;
         }
 
-        final PendingResult<Location> pendingResult = new PendingResult<>(new LocationCallback() {
+        pendingResult.addResultCallback(Looper.getMainLooper(), new ResultCallback<Location>() {
             @Override
-            public void onResult(final Location location) {
-                Logger.info("Received single location update: " + location);
-
-
-                if (locationCallback != null) {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            locationCallback.onResult(location);
-                        }
-                    });
-                }
-
-                UAirship.shared().getAnalytics().recordLocation(location, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
+            public void onResult(@Nullable Location result) {
+                Logger.info("Received single location update: " + result);
+                UAirship.shared().getAnalytics().recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
             }
         });
+
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                locationProvider.requestSingleLocation(pendingResult, requestOptions);
+                if (pendingResult.isDone()) {
+                    return;
+                }
+
+                Cancelable cancelable = locationProvider.requestSingleLocation(requestOptions, new ResultCallback<Location>() {
+                    @Override
+                    public void onResult(@Nullable Location result) {
+                        pendingResult.setResult(result);
+                    }
+                });
+
+                if (cancelable != null) {
+                    pendingResult.addCancelable(cancelable);
+                }
             }
         });
 

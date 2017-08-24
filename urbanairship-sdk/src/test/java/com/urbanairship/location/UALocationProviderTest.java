@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.location.Location;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.TestApplication;
 
 import org.junit.Before;
@@ -35,13 +35,13 @@ public class UALocationProviderTest extends BaseTestCase {
     LocationAdapter mockAdapterOne;
     LocationAdapter mockAdapterTwo;
     LocationRequestOptions options;
-    LocationCallback locationCallback;
+    ResultCallback<Location> locationCallback;
 
     @Before
     public void setUp() {
         context = TestApplication.getApplication();
 
-        locationCallback = new LocationCallback() {
+        locationCallback = new ResultCallback<Location>() {
             @Override
             public void onResult(Location location) {
 
@@ -122,12 +122,10 @@ public class UALocationProviderTest extends BaseTestCase {
     public void testSingleLocationRequest() {
         when(mockAdapterTwo.connect(context)).thenReturn(true);
 
-        PendingResult<Location> pendingResult = new PendingResult<>(locationCallback);
 
-        provider.requestSingleLocation(pendingResult, options);
-
-        verify(mockAdapterTwo).requestSingleLocation(eq(context), eq(options), eq(pendingResult));
-        verify(mockAdapterOne, times(0)).requestSingleLocation(eq(context), eq(options), eq(pendingResult));
+        provider.requestSingleLocation(options, locationCallback);
+        verify(mockAdapterTwo).requestSingleLocation(eq(context), eq(options), eq(locationCallback));
+        verify(mockAdapterOne, times(0)).requestSingleLocation(eq(context), eq(options), eq(locationCallback));
     }
 
 
@@ -136,11 +134,8 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationNoPermissions() {
-
-        PendingResult<Location> pendingResult = new PendingResult<>(locationCallback);
-
         when(mockAdapterOne.connect(context)).thenReturn(true);
-        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestSingleLocation(context, options, pendingResult);
+        doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestSingleLocation(context, options, locationCallback);
     }
 
     /**

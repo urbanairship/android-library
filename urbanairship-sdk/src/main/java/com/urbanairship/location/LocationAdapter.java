@@ -7,7 +7,8 @@ import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
-import com.urbanairship.PendingResult;
+import com.urbanairship.Cancelable;
+import com.urbanairship.ResultCallback;
 
 /**
  * The common interface for communicating with different location sources.
@@ -21,11 +22,11 @@ public interface LocationAdapter {
      *
      * @param context The application context.
      * @param options The location request options.
-     * @param pendingResult The pending location result.
+     * @param resultCallback The result callback.
      * @return PendingLocationResult that can be used to cancel the request or set a listener for
      * when the result is available.
      */
-    void requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, PendingResult<Location> pendingResult);
+    Cancelable requestSingleLocation(@NonNull Context context, @NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback);
 
     /**
      * Cancels location updates.

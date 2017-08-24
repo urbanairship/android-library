@@ -11,9 +11,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 
 import java.util.concurrent.Semaphore;
@@ -29,14 +30,14 @@ class FusedLocationAdapter implements LocationAdapter {
     private GoogleApiClient client;
 
     @Override
-    public void requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, final PendingResult<Location> pendingResult) {
+    public Cancelable requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
         if (client == null || !client.isConnected()) {
             Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
         }
 
-        CancelableOperation cancelableOperation = new SingleLocationRequest(pendingResult, options);
-        pendingResult.addCancelable(cancelableOperation);
+        CancelableOperation cancelableOperation = new SingleLocationRequest(options, resultCallback);
         cancelableOperation.run();
+        return cancelableOperation;
     }
 
     @Override
@@ -182,15 +183,15 @@ class FusedLocationAdapter implements LocationAdapter {
         /**
          * FusedLocationRequest constructor.
          *
-         * @param pendingResult The pending result.
+         * @param resultCallback The result callback.
          * @param options LocationRequestOptions options.
          */
-        SingleLocationRequest(final PendingResult<Location> pendingResult, LocationRequestOptions options) {
+        SingleLocationRequest(LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
             super(Looper.getMainLooper());
             this.fusedLocationListener = new com.google.android.gms.location.LocationListener() {
                 @Override
                 public void onLocationChanged(Location location) {
-                    pendingResult.setResult(location);
+                    resultCallback.onResult(location);
                 }
             };
 

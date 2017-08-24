@@ -6,7 +6,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -16,9 +18,9 @@ import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import com.urbanairship.Cancelable;
+import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
-import com.urbanairship.location.LocationCallback;
 import com.urbanairship.location.LocationRequestOptions;
 
 
@@ -28,7 +30,7 @@ import com.urbanairship.location.LocationRequestOptions;
  */
 public class LocationFragment extends Fragment {
 
-    private Cancelable pendingRequest;
+    private PendingResult<Location> pendingResult;
     private RadioGroup priorityGroup;
     private View progress;
     static final int PERMISSIONS_REQUEST_LOCATION = 100;
@@ -57,8 +59,8 @@ public class LocationFragment extends Fragment {
         super.onPause();
 
         // Cancel the request
-        if (pendingRequest != null) {
-            pendingRequest.cancel();
+        if (pendingResult != null) {
+            pendingResult.cancel();
             progress.setVisibility(View.INVISIBLE);
         }
     }
@@ -69,8 +71,8 @@ public class LocationFragment extends Fragment {
             return;
         }
 
-        if (pendingRequest != null) {
-            pendingRequest.cancel();
+        if (pendingResult != null) {
+            pendingResult.cancel();
         }
 
         progress.setVisibility(View.VISIBLE);
@@ -79,20 +81,21 @@ public class LocationFragment extends Fragment {
                 .setPriority(getPriority())
                 .create();
 
-        LocationCallback callback = new LocationCallback() {
-            @Override
-            public void onResult(Location location) {
-                progress.setVisibility(View.INVISIBLE);
+        pendingResult = UAirship.shared()
+                                .getLocationManager()
+                                .requestSingleLocation(options)
+                                .addResultCallback(Looper.getMainLooper(), new ResultCallback<Location>() {
+                                    @Override
+                                    public void onResult(@Nullable Location result) {
+                                        progress.setVisibility(View.INVISIBLE);
 
-                if (location != null) {
-                    Toast.makeText(getContext(), formatLocation(location), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Failed to get location", Toast.LENGTH_SHORT).show();
-                }
-            }
-        };
-
-        pendingRequest = UAirship.shared().getLocationManager().requestSingleLocation(callback, options);
+                                        if (result != null) {
+                                            Toast.makeText(getContext(), formatLocation(result), Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getContext(), "Failed to get location", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
     }
 
     @Override

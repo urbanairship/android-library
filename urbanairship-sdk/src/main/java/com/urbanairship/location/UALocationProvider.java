@@ -11,8 +11,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
+import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.google.PlayServicesUtils;
 
 import java.util.ArrayList;
@@ -110,12 +111,11 @@ class UALocationProvider {
     /**
      * Requests a single location update.
      *
-     * @param pendingResult The pending result.
      * @param options The request options.
      * @return A pending location result.
      */
     @WorkerThread
-    void requestSingleLocation(final PendingResult<Location> pendingResult, @NonNull LocationRequestOptions options) {
+    Cancelable requestSingleLocation(@NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback) {
         connect();
 
         if (connectedAdapter == null) {
@@ -125,10 +125,12 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
 
         try {
-            connectedAdapter.requestSingleLocation(context, options, pendingResult);
+            return connectedAdapter.requestSingleLocation(context, options, resultCallback);
         } catch (Exception ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
         }
+
+        return null;
     }
 
     /**
