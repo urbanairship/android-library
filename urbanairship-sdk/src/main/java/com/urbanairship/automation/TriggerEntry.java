@@ -1,11 +1,11 @@
-/* Copyright 2017 Urban Airship and Contributors */
-
 package com.urbanairship.automation;
+
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
@@ -13,10 +13,11 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 
-
 /**
  * Trigger information stored in the triggers table.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class TriggerEntry {
 
     static final String TABLE_NAME = "triggers";
@@ -29,11 +30,11 @@ class TriggerEntry {
     static final String COLUMN_NAME_IS_CANCELLATION = "t_cancellation";
     static final String COLUMN_NAME_ID = "t_row_id";
 
-    final String scheduleId;
-    final int type;
-    final double goal;
-    final JsonPredicate jsonPredicate;
-    final boolean isCancellation;
+    public final String scheduleId;
+    public final int type;
+    public final double goal;
+    public final JsonPredicate jsonPredicate;
+    public final boolean isCancellation;
 
     private long id = -1;
     private double progress;
@@ -92,7 +93,7 @@ class TriggerEntry {
      *
      * @return The trigger's progress.
      */
-    double getProgress() {
+    public double getProgress() {
         return this.progress;
     }
 
@@ -101,7 +102,7 @@ class TriggerEntry {
      *
      * @param progress The triggers progress.
      */
-    void setProgress(double progress) {
+    public void setProgress(double progress) {
         if (progress != this.progress) {
             this.progress = progress;
             this.isDirty = true;
@@ -138,4 +139,5 @@ class TriggerEntry {
         return null;
 
     }
+
 }

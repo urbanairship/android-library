@@ -5,6 +5,7 @@ package com.urbanairship.automation;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -20,8 +21,11 @@ import java.util.Map;
 /**
  * Class encapsulating the implementor-set information for an action schedule.
  */
-public class ActionScheduleInfo implements Parcelable {
+public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
 
+    /**
+     * @hide
+     */
     public static final Creator<ActionScheduleInfo> CREATOR = new Creator<ActionScheduleInfo>() {
         @Override
         public ActionScheduleInfo createFromParcel(Parcel in) {
@@ -96,13 +100,19 @@ public class ActionScheduleInfo implements Parcelable {
         return new Builder();
     }
 
+
     /**
-     * Gets the action triggers.
-     *
-     * @return A list of triggers.
+     * {@inheritDoc}
      */
+    @Override
     public List<Trigger> getTriggers() {
         return triggers;
+    }
+
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonValue getData() {
+        return JsonValue.wrapOpt(actions);
     }
 
     /**
@@ -115,46 +125,41 @@ public class ActionScheduleInfo implements Parcelable {
     }
 
     /**
-     * Gets the schedule fulfillment limit.
-     *
-     * @return The fulfillment limit.
+     * {@inheritDoc}
      */
+    @Override
     public int getLimit() {
         return limit;
     }
 
     /**
-     * Gets the schedule group.
-     *
-     * @return The schedule group.
+     * {@inheritDoc}
      */
+    @Override
     public String getGroup() {
         return group;
     }
 
     /**
-     * Gets the schedule start time in MS.
-     *
-     * @return The schedule start time in MS.
+     * {@inheritDoc}
      */
+    @Override
     public long getStart() {
         return start;
     }
 
     /**
-     * Gets the schedule end time in MS.
-     *
-     * @return The schedule end time in MS.
+     * {@inheritDoc}
      */
+    @Override
     public long getEnd() {
         return end;
     }
 
     /**
-     * Gets the schedule's delay.
-     *
-     * @return A ScheduleDelay instance.
+     * {@inheritDoc}
      */
+    @Override
     public ScheduleDelay getDelay() {
         return delay;
     }
@@ -170,7 +175,7 @@ public class ActionScheduleInfo implements Parcelable {
      * - "triggers": Required. An array of triggers. Trigger payload as defined by {@link Trigger#predicate}.
      * - "limit": Optional, defaults to 1. Number of times to trigger the actions payload before cancelling the schedule.
      * - "actions": Required. Actions payload to run when one or more of the triggers meets its goal.
-     *</pre>
+     * </pre>
      *
      * @param value The schedule.
      * @return The parsed ActionScheduleInfo.
@@ -207,6 +212,7 @@ public class ActionScheduleInfo implements Parcelable {
         }
     }
 
+
     /**
      * Builder class.
      */
@@ -227,6 +233,17 @@ public class ActionScheduleInfo implements Parcelable {
          */
         public Builder addTrigger(Trigger trigger) {
             this.triggers.add(trigger);
+            return this;
+        }
+
+        /**
+         * Adds a list of triggers.
+         *
+         * @param triggers A list of trigger instances.
+         * @return The Builder instance.
+         */
+        public Builder addTriggers(List<Trigger> triggers) {
+            this.triggers.addAll(triggers);
             return this;
         }
 

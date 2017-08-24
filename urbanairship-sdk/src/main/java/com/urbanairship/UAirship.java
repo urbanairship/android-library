@@ -604,7 +604,7 @@ public class UAirship {
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
         this.messageCenter = new MessageCenter();
-        this.automation = new Automation(application, airshipConfigOptions, analytics, preferenceDataStore, ActivityMonitor.shared(application));
+        this.automation = new Automation(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
 
         for (AirshipComponent component : getComponents()) {
             component.init();

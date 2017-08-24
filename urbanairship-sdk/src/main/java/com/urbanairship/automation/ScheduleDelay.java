@@ -14,6 +14,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Defines a conditions that might delay the execution of a schedule.
+ */
 public class ScheduleDelay implements Parcelable {
 
     @IntDef({APP_STATE_ANY, APP_STATE_FOREGROUND, APP_STATE_BACKGROUND})

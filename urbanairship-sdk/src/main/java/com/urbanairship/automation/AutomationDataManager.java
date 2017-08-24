@@ -9,6 +9,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.DataManager;
@@ -16,6 +17,7 @@ import com.urbanairship.util.DataManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +26,8 @@ import static com.urbanairship.util.UAStringUtil.repeat;
 /**
  * {@link DataManager} class for automation schedules.
  */
-class AutomationDataManager extends DataManager {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AutomationDataManager extends DataManager {
 
     /**
      * Maximum SQL argument count.
@@ -32,14 +35,9 @@ class AutomationDataManager extends DataManager {
     private static final int MAX_ARG_COUNT = 999;
 
     /**
-     * The database that the provider uses as its underlying data store
-     */
-    private static final String DATABASE_NAME = "ua_automation.db";
-
-    /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     /**
      * Appended to the end of schedules GET queries to group rows by schedule ID.
@@ -57,7 +55,7 @@ class AutomationDataManager extends DataManager {
      */
     private static final String GET_ACTIVE_TRIGGERS = "SELECT * FROM " + TriggerEntry.TABLE_NAME + " t" +
             " LEFT OUTER JOIN " + ScheduleEntry.TABLE_NAME + " a ON a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID +
-            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ? AND (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 OR a." + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + " = 1)";
+            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ? AND (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 OR a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)";
 
     /**
      * Class constructor.
@@ -65,8 +63,8 @@ class AutomationDataManager extends DataManager {
      * @param context The app context.
      * @param appKey The app key.
      */
-    AutomationDataManager(@NonNull Context context, @NonNull String appKey) {
-        super(context, appKey, DATABASE_NAME, DATABASE_VERSION);
+    public AutomationDataManager(@NonNull Context context, @NonNull String appKey, @NonNull String dbName) {
+        super(context, appKey, dbName, DATABASE_VERSION);
     }
 
     @Override
@@ -76,13 +74,13 @@ class AutomationDataManager extends DataManager {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + ScheduleEntry.TABLE_NAME + " ("
                 + ScheduleEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT UNIQUE,"
-                + ScheduleEntry.COLUMN_NAME_ACTIONS + " TEXT,"
+                + ScheduleEntry.COLUMN_NAME_DATA + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
-                + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + " INTEGER,"
+                + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
                 + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
@@ -107,23 +105,33 @@ class AutomationDataManager extends DataManager {
 
     @Override
     protected void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Upgrade 1 -> 2 changes (SDK 8.4)
+        //
+        //      action_schedules:
+        //          * _id column renamed to s_row_id
+        //          * schedule delay information added
+        //
+        //      triggers
+        //          * _id column renamed to t_row_id
+        //          * is_cancellation column added
+        //          * t_start column removed
+        //
+        // Upgrade 2 -> 3 changes (SDK 9.0)
+        //
+        //      action_schedules:
+        //          * s_is_pending_execution column renamed to s_execution_state
+        //          * s_actions column renamed to s_data
+        //
+
+        String tempScheduleTableName = "temp_schedule_entry_table";
+        String tempTriggersTableName = "temp_triggers_entry_table";
+        String oldIdColumn = "_id";
+        String oldActionsColumn = "s_actions";
+        String oldPendingExecutionColumn = "s_is_pending_execution";
+
         switch (oldVersion) {
-            // Upgrade 1 ~> 2 changes
-            //
-            //      action_schedules:
-            //          * _id column renamed to s_row_id
-            //          * schedule delay information added
-            //
-            //      triggers
-            //          * _id column renamed to t_row_id
-            //          * is_cancellation column added
-            //          * t_start column removed
-            //
             case 1:
                 // Update the schedule table and rename the ID column.
-                String tempScheduleTableName = "temp_schedule_entry_table";
-                String tempTriggersTableName = "temp_triggers_entry_table";
-                String oldIdColumn = "_id";
 
                 db.execSQL("BEGIN TRANSACTION;");
                 db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " RENAME TO " + tempScheduleTableName + ";");
@@ -132,13 +140,13 @@ class AutomationDataManager extends DataManager {
                 db.execSQL("CREATE TABLE " + ScheduleEntry.TABLE_NAME + " ("
                         + ScheduleEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                         + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT UNIQUE,"
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + " TEXT,"
+                        + oldActionsColumn + " TEXT,"
                         + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
-                        + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + " INTEGER,"
+                        + oldPendingExecutionColumn + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
@@ -160,13 +168,13 @@ class AutomationDataManager extends DataManager {
                 db.execSQL("INSERT INTO " + ScheduleEntry.TABLE_NAME + "("
                         + ScheduleEntry.COLUMN_NAME_ID + ", "
                         + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + ", "
+                        + oldActionsColumn + ", "
                         + ScheduleEntry.COLUMN_NAME_START + ", "
                         + ScheduleEntry.COLUMN_NAME_END + ", "
                         + ScheduleEntry.COLUMN_NAME_COUNT + ", "
                         + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
-                        + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + ", "
+                        + oldPendingExecutionColumn + ", "
                         + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
@@ -175,7 +183,7 @@ class AutomationDataManager extends DataManager {
                         "SELECT "
                         + oldIdColumn + ", "
                         + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + ", "
+                        + oldActionsColumn + ", "
                         + ScheduleEntry.COLUMN_NAME_START + ", "
                         + ScheduleEntry.COLUMN_NAME_END + ", "
                         + ScheduleEntry.COLUMN_NAME_COUNT + ", "
@@ -205,6 +213,94 @@ class AutomationDataManager extends DataManager {
                 db.execSQL("DROP TABLE " + tempScheduleTableName + ";");
                 db.execSQL("DROP TABLE " + tempTriggersTableName + ";");
                 db.execSQL("COMMIT;");
+
+            case 2:
+                db.execSQL("BEGIN TRANSACTION;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " RENAME TO " + tempScheduleTableName + ";");
+                db.execSQL("ALTER TABLE " + TriggerEntry.TABLE_NAME + " RENAME TO " + tempTriggersTableName + ";");
+
+                db.execSQL("CREATE TABLE " + ScheduleEntry.TABLE_NAME + " ("
+                        + ScheduleEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT UNIQUE,"
+                        + ScheduleEntry.COLUMN_NAME_DATA + " TEXT,"
+                        + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
+                        + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
+                        + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
+                        + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
+                        + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
+                        + ScheduleEntry.COLUMN_NAME_SECONDS + " DOUBLE"
+                        + ");");
+
+                db.execSQL("CREATE TABLE IF NOT EXISTS " + TriggerEntry.TABLE_NAME + " ("
+                        + TriggerEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        + TriggerEntry.COLUMN_NAME_TYPE + " INTEGER,"
+                        + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " INTEGER,"
+                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT,"
+                        + TriggerEntry.COLUMN_NAME_PREDICATE + " TEXT,"
+                        + TriggerEntry.COLUMN_NAME_PROGRESS + " DOUBLE,"
+                        + TriggerEntry.COLUMN_NAME_GOAL + " DOUBLE,"
+                        + "FOREIGN KEY(" + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ScheduleEntry.TABLE_NAME + "(" + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
+                        + ");");
+
+                db.execSQL("INSERT INTO " + ScheduleEntry.TABLE_NAME + "("
+                        + ScheduleEntry.COLUMN_NAME_ID + ", "
+                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
+                        + ScheduleEntry.COLUMN_NAME_DATA + ", "
+                        + ScheduleEntry.COLUMN_NAME_START + ", "
+                        + ScheduleEntry.COLUMN_NAME_END + ", "
+                        + ScheduleEntry.COLUMN_NAME_COUNT + ", "
+                        + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
+                        + ScheduleEntry.COLUMN_NAME_GROUP + ", "
+                        + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
+                        + ScheduleEntry.COLUMN_NAME_SCREEN + ", "
+                        + ScheduleEntry.COLUMN_NAME_SECONDS + ") " +
+                        "SELECT "
+                        + ScheduleEntry.COLUMN_NAME_ID + ", "
+                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
+                        + oldActionsColumn + ", "
+                        + ScheduleEntry.COLUMN_NAME_START + ", "
+                        + ScheduleEntry.COLUMN_NAME_END + ", "
+                        + ScheduleEntry.COLUMN_NAME_COUNT + ", "
+                        + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
+                        + ScheduleEntry.COLUMN_NAME_GROUP + ", "
+                        + oldPendingExecutionColumn + ", "
+                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
+                        + ScheduleEntry.COLUMN_NAME_SCREEN + ", "
+                        + ScheduleEntry.COLUMN_NAME_SECONDS + " " +
+                        "FROM " + tempScheduleTableName + ";");
+
+                db.execSQL("INSERT INTO " + TriggerEntry.TABLE_NAME + "("
+                        + TriggerEntry.COLUMN_NAME_ID + ", "
+                        + TriggerEntry.COLUMN_NAME_TYPE + ", "
+                        + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + ", "
+                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ", "
+                        + TriggerEntry.COLUMN_NAME_PREDICATE + ", "
+                        + TriggerEntry.COLUMN_NAME_PROGRESS + ", "
+                        + TriggerEntry.COLUMN_NAME_GOAL + ") " +
+                        "SELECT "
+                        + TriggerEntry.COLUMN_NAME_ID  + ", "
+                        + TriggerEntry.COLUMN_NAME_TYPE + ", "
+                        + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + ", "
+                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ", "
+                        + TriggerEntry.COLUMN_NAME_PREDICATE + ", "
+                        + TriggerEntry.COLUMN_NAME_PROGRESS + ", "
+                        + TriggerEntry.COLUMN_NAME_GOAL +
+                        " FROM " + tempTriggersTableName + ";");
+
+                db.execSQL("DROP TABLE " + tempScheduleTableName + ";");
+                db.execSQL("DROP TABLE " + tempTriggersTableName + ";");
+
+                db.execSQL("COMMIT;");
                 break;
 
             default:
@@ -220,96 +316,12 @@ class AutomationDataManager extends DataManager {
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being downgraded
-        Logger.debug("AutomationDataManager - Downgrading automation database from version " + oldVersion + " to " + newVersion);
+        Logger.debug("AutomationDataManager - Dropping automation database. Downgrading from version " + oldVersion + " to " + newVersion);
 
-        switch (oldVersion) {
-            case 2:
-                // Update the schedule table and rename the ID column.
-                String tempScheduleTableName = "temp_schedule_entry_table";
-                String tempTriggersTableName = "temp_triggers_entry_table";
-                String oldIdColumn = "_id";
-                String triggersStartColumn = "t_start";
-
-                db.execSQL("BEGIN TRANSACTION;");
-                db.execSQL("ALTER TABLE " + TriggerEntry.TABLE_NAME + " RENAME TO " + tempTriggersTableName + ";");
-                db.execSQL("ALTER TABLE " + tempTriggersTableName + " ADD COLUMN " + triggersStartColumn + ";");
-                db.execSQL("UPDATE " + tempTriggersTableName + " SET " + triggersStartColumn
-                        + " = (SELECT " + ScheduleEntry.COLUMN_NAME_START + " FROM " + ScheduleEntry.TABLE_NAME + " WHERE " + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = " + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ");");
-                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " RENAME TO " + tempScheduleTableName + ";");
-
-
-                db.execSQL("CREATE TABLE " + ScheduleEntry.TABLE_NAME + " ("
-                        + oldIdColumn + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT UNIQUE,"
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + " TEXT,"
-                        + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT"
-                        + ");");
-
-                db.execSQL("CREATE TABLE " + TriggerEntry.TABLE_NAME + "("
-                        + oldIdColumn + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                        + TriggerEntry.COLUMN_NAME_TYPE + " INTEGER,"
-                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + " TEXT,"
-                        + TriggerEntry.COLUMN_NAME_PREDICATE + " TEXT,"
-                        + TriggerEntry.COLUMN_NAME_PROGRESS + " DOUBLE,"
-                        + TriggerEntry.COLUMN_NAME_GOAL + " DOUBLE,"
-                        + triggersStartColumn + " INTEGER,"
-                        + "FOREIGN KEY(" + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ScheduleEntry.TABLE_NAME + "(" + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
-                        + ");");
-
-                db.execSQL("INSERT INTO " + ScheduleEntry.TABLE_NAME + "("
-                        + oldIdColumn + ", "
-                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + ", "
-                        + ScheduleEntry.COLUMN_NAME_START + ", "
-                        + ScheduleEntry.COLUMN_NAME_END + ", "
-                        + ScheduleEntry.COLUMN_NAME_COUNT + ", "
-                        + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
-                        + ScheduleEntry.COLUMN_NAME_GROUP + ") "
-                        + "SELECT "
-                        + ScheduleEntry.COLUMN_NAME_ID + ", "
-                        + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + ScheduleEntry.COLUMN_NAME_ACTIONS + ", "
-                        + ScheduleEntry.COLUMN_NAME_START + ", "
-                        + ScheduleEntry.COLUMN_NAME_END + ", "
-                        + ScheduleEntry.COLUMN_NAME_COUNT + ", "
-                        + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
-                        + ScheduleEntry.COLUMN_NAME_GROUP +
-                        " FROM " + tempScheduleTableName + ";");
-
-                db.execSQL("INSERT INTO " + TriggerEntry.TABLE_NAME + " ("
-                        + oldIdColumn + ", "
-                        + TriggerEntry.COLUMN_NAME_TYPE + ", "
-                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + TriggerEntry.COLUMN_NAME_PREDICATE + ", "
-                        + TriggerEntry.COLUMN_NAME_PROGRESS + ", "
-                        + TriggerEntry.COLUMN_NAME_GOAL + ", "
-                        + triggersStartColumn + ")" +
-                        " SELECT "
-                        + TriggerEntry.COLUMN_NAME_ID + ", "
-                        + TriggerEntry.COLUMN_NAME_TYPE + ", "
-                        + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ", "
-                        + TriggerEntry.COLUMN_NAME_PREDICATE + ", "
-                        + TriggerEntry.COLUMN_NAME_PROGRESS + ", "
-                        + TriggerEntry.COLUMN_NAME_GOAL + ", "
-                        + triggersStartColumn +
-                        " FROM " + tempTriggersTableName +
-                        " WHERE " + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " != 1;");
-
-                db.execSQL("DROP TABLE " + tempTriggersTableName + ";");
-                db.execSQL("DROP TABLE " + tempScheduleTableName + ";");
-
-                db.execSQL("COMMIT;");
-                break;
-            default:
-                // Drop the table and recreate it
-                db.execSQL("DROP TABLE IF EXISTS " + TriggerEntry.TABLE_NAME);
-                db.execSQL("DROP TABLE IF EXISTS " + ScheduleEntry.TABLE_NAME);
-                onCreate(db);
-        }
+        // Drop the table and recreate it
+        db.execSQL("DROP TABLE IF EXISTS " + TriggerEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ScheduleEntry.TABLE_NAME);
+        onCreate(db);
     }
 
     @Override
@@ -415,14 +427,12 @@ class AutomationDataManager extends DataManager {
         db.endTransaction();
     }
 
-
     /**
      * Deletes schedules given a list of IDs.
      *
      * @param schedulesToDelete The list of schedule IDs.
      */
     void deleteSchedules(@NonNull Collection<String> schedulesToDelete) {
-
         performSubSetOperations(schedulesToDelete, MAX_ARG_COUNT, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
@@ -430,15 +440,13 @@ class AutomationDataManager extends DataManager {
                 delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + inStatement + " )", subset.toArray(new String[subset.size()]));
             }
         });
-
     }
-
 
     /**
      * Gets schedules for a given group.
      *
      * @param group The schedule group.
-     * @return The list of {@link ActionSchedule} instances.
+     * @return The list of {@link ScheduleEntry} instances.
      */
     List<ScheduleEntry> getScheduleEntries(String group) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_GROUP + "=?" + ORDER_SCHEDULES_STATEMENT;
@@ -455,7 +463,7 @@ class AutomationDataManager extends DataManager {
     /**
      * Gets all schedules.
      *
-     * @return The list of {@link ActionSchedule} instances.
+     * @return The list of {@link ScheduleEntry} instances.
      */
     List<ScheduleEntry> getScheduleEntries() {
         String query = GET_SCHEDULES_QUERY + ORDER_SCHEDULES_STATEMENT;
@@ -470,10 +478,22 @@ class AutomationDataManager extends DataManager {
     }
 
     /**
+     * Gets a schedule entry for the given ID.
+     * @param scheduleId The schedule ID.
+     * @return A schedule entry or null if the schedule is unavailable.
+     */
+    ScheduleEntry getScheduleEntry(String scheduleId) {
+        Set<String> hashSet = new HashSet<>();
+        hashSet.add(scheduleId);
+        List<ScheduleEntry> scheduleEntries = getScheduleEntries(hashSet);
+        return scheduleEntries.size() > 0 ? scheduleEntries.get(0) : null;
+    }
+
+    /**
      * Gets schedules for a given set of IDs.
      *
      * @param ids The set of schedule IDs.
-     * @return The list of {@link ActionSchedule} instances.
+     * @return The list of {@link ScheduleEntry} instances.
      */
     List<ScheduleEntry> getScheduleEntries(Set<String> ids) {
         final List<ScheduleEntry> schedules = new ArrayList<>(ids.size());
@@ -482,8 +502,7 @@ class AutomationDataManager extends DataManager {
             @Override
             public void perform(List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
-
-
+                
                 Cursor cursor = rawQuery(query, subset.toArray(new String[subset.size()]));
                 if (cursor != null) {
                     schedules.addAll(generateSchedules(cursor));
@@ -497,13 +516,14 @@ class AutomationDataManager extends DataManager {
     }
 
     /**
-     * Gets all schedules that are pending execution.
+     * Gets schedules for a given state.
      *
-     * @return A list of pending execution schedules.
+     * @param executionState The execution state.
+     * @return A list of schedules.
      */
-    List<ScheduleEntry> getPendingExecutionSchedules() {
-        String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_IS_PENDING_EXECUTION + " = 1";
-        Cursor cursor = rawQuery(query, null);
+    List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int executionState) {
+        String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = ?";
+        Cursor cursor = rawQuery(query, new String[] { String.valueOf(executionState)});
 
         if (cursor == null) {
             return Collections.emptyList();
@@ -512,37 +532,6 @@ class AutomationDataManager extends DataManager {
         List<ScheduleEntry> entries = generateSchedules(cursor);
         cursor.close();
         return entries;
-    }
-
-    /**
-     * Interface for operating on a subset of IDs.
-     *
-     * @param <T> The list element type.
-     */
-    interface SetOperation<T> {
-        void perform(List<T> subset);
-    }
-
-    /**
-     * Performs an operation on a list of elements.
-     *
-     * @param ids The list of IDs.
-     * @param subSetCount The subset size to batch in an operation.
-     * @param operation The operation to perform.
-     * @param <T> The list element type.
-     */
-    private static <T> void performSubSetOperations(Collection<T> ids, int subSetCount, SetOperation<T> operation) {
-        List<T> remaining = new ArrayList<>(ids);
-
-        while (!remaining.isEmpty()) {
-            if (remaining.size() > subSetCount) {
-                operation.perform(remaining.subList(0, subSetCount));
-                remaining = remaining.subList(subSetCount, remaining.size());
-            } else {
-                operation.perform(remaining);
-                remaining.clear();
-            }
-        }
     }
 
     /**
@@ -578,7 +567,7 @@ class AutomationDataManager extends DataManager {
      *
      * @return The current schedule count.
      */
-    long getScheduleCount() {
+    public long getScheduleCount() {
         final SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             return -1;
@@ -607,5 +596,36 @@ class AutomationDataManager extends DataManager {
         }
 
         return entries;
+    }
+
+    /**
+     * Interface for operating on a subset of IDs.
+     *
+     * @param <T> The list element type.
+     */
+    interface SetOperation<T> {
+        void perform(List<T> subset);
+    }
+
+    /**
+     * Performs an operation on a list of elements.
+     *
+     * @param ids The list of IDs.
+     * @param subSetCount The subset size to batch in an operation.
+     * @param operation The operation to perform.
+     * @param <T> The list element type.
+     */
+    private static <T> void performSubSetOperations(Collection<T> ids, int subSetCount, SetOperation<T> operation) {
+        List<T> remaining = new ArrayList<>(ids);
+
+        while (!remaining.isEmpty()) {
+            if (remaining.size() > subSetCount) {
+                operation.perform(remaining.subList(0, subSetCount));
+                remaining = remaining.subList(subSetCount, remaining.size());
+            } else {
+                operation.perform(remaining);
+                remaining.clear();
+            }
+        }
     }
 }

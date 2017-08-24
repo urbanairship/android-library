@@ -3,6 +3,7 @@
 package com.urbanairship.actions;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.ActionSchedule;
 import com.urbanairship.automation.ActionScheduleInfo;
@@ -99,7 +100,11 @@ public class ScheduleActionTest extends BaseTestCase {
     @Test
     public void testPerform() throws JsonException {
         ActionScheduleInfo scheduleInfo = ActionScheduleInfo.parseJson(JsonValue.wrap(scheduleJson));
-        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(new ActionSchedule("automation id", scheduleInfo));
+
+        PendingResult<ActionSchedule> pendingResult = new PendingResult<>();
+        pendingResult.setResult(new ActionSchedule("automation id", scheduleInfo));
+
+        when(automation.schedule(any(ActionScheduleInfo.class))).thenReturn(pendingResult);
 
         ActionResult result = action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, scheduleJson));
         assertEquals("automation id", result.getValue().getString());

@@ -10,6 +10,8 @@ import com.urbanairship.automation.ActionScheduleInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Action to schedule {@link ActionScheduleInfo}.
  * <p/>
@@ -58,9 +60,9 @@ public class ScheduleAction extends Action {
     public ActionResult perform(@NonNull ActionArguments arguments) {
         try {
             ActionScheduleInfo info = ActionScheduleInfo.parseJson(arguments.getValue().toJsonValue());
-            ActionSchedule schedule = UAirship.shared().getAutomation().schedule(info);
+            ActionSchedule schedule = UAirship.shared().getAutomation().schedule(info).get();
             return schedule == null ? ActionResult.newEmptyResult() : ActionResult.newResult(ActionValue.wrap(schedule.getId()));
-        } catch (JsonException e) {
+        } catch (JsonException| InterruptedException | ExecutionException e) {
             return ActionResult.newErrorResult(e);
         }
     }

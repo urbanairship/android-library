@@ -90,7 +90,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.actionRegistry.registerDefaultActions();
         UAirship.sharedAirship.messageCenter = new MessageCenter();
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
-        UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);

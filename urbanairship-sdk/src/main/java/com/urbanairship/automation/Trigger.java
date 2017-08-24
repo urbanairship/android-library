@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -16,7 +17,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Trigger defines a condition to execute an {@link ActionSchedule}. Use {@link Triggers} to build
+ * Trigger defines a condition to execute an {@link ScheduleInfo}. Use {@link Triggers} to build
  * triggers.
  */
 public class Trigger implements Parcelable {
@@ -91,7 +92,8 @@ public class Trigger implements Parcelable {
     private final double goal;
     private final JsonPredicate predicate;
 
-    Trigger(@TriggerType int type, double goal, JsonPredicate predicate) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public Trigger(@TriggerType int type, double goal, JsonPredicate predicate) {
         this.type = type;
         this.goal = goal;
         this.predicate = predicate;

@@ -25,7 +25,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
     @Before
     public void setUp() {
-        dataManager = new AutomationDataManager(RuntimeEnvironment.application, "test");
+        dataManager = new AutomationDataManager(RuntimeEnvironment.application, "appKey", "test");
     }
 
     @After
@@ -77,17 +77,17 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testGetSchedule() {
         ScheduleEntry scheduleEntry = createSchedules(1).get(0);
-        TriggerEntry triggerEntry = scheduleEntry.triggers.get(0);
+        TriggerEntry triggerEntry = scheduleEntry.triggerEntries.get(0);
         dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
 
         ScheduleEntry retrieved = dataManager.getScheduleEntries(Collections.singleton(dataManager.getScheduleEntries("group 0").get(0).scheduleId)).get(0);
         assertEquals(scheduleEntry.group, retrieved.group);
-        assertEquals(scheduleEntry.actionsPayload, retrieved.actionsPayload);
+        assertEquals(scheduleEntry.data, retrieved.data);
         assertEquals(scheduleEntry.end, retrieved.end);
         assertEquals(scheduleEntry.start, retrieved.start);
         assertEquals(scheduleEntry.limit, retrieved.limit);
 
-        List<TriggerEntry> scheduleTriggers = retrieved.triggers;
+        List<TriggerEntry> scheduleTriggers = retrieved.triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
             @Override
             public int compare(TriggerEntry lhs, TriggerEntry rhs) {
@@ -110,8 +110,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
         List<ScheduleEntry> schedules = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             Trigger trigger = Triggers.newForegroundTriggerBuilder()
-                                     .setGoal(10)
-                                     .build();
+                                      .setGoal(10)
+                                      .build();
 
             ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
                                                             .setGroup("group")
@@ -122,7 +122,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .addTrigger(trigger)
                                                             .build();
 
-            ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_entry_" + i, schedule));
+            ScheduleEntry scheduleEntry = new ScheduleEntry("shedule_entry " + i, schedule);
             schedules.add(scheduleEntry);
         }
 
@@ -152,13 +152,13 @@ public class AutomationDataManagerTest extends BaseTestCase {
     public void testGetTriggers() {
         // Triggers that have yet to start should not be returned by the data manager.
         ActionScheduleInfo futureSchedule = ActionScheduleInfo.newBuilder()
-                .addAction("test_action", JsonValue.wrap("action_value"))
-                .addTrigger(Triggers.newForegroundTriggerBuilder().setGoal(3).build())
-                .setLimit(5)
-                .setGroup("group")
-                .setStart(System.currentTimeMillis() + 1000000)
-                .build();
-        ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_entry", futureSchedule));
+                                                              .addAction("test_action", JsonValue.wrap("action_value"))
+                                                              .addTrigger(Triggers.newForegroundTriggerBuilder().setGoal(3).build())
+                                                              .setLimit(5)
+                                                              .setGroup("group")
+                                                              .setStart(System.currentTimeMillis() + 1000000)
+                                                              .build();
+        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule);
 
         dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
         List<ScheduleEntry> schedules = createSchedules(20);
@@ -170,8 +170,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testBulkInsertSchedules() throws Exception {
         Trigger firstTrigger = Triggers.newForegroundTriggerBuilder()
-                                      .setGoal(10)
-                                      .build();
+                                       .setGoal(10)
+                                       .build();
 
         ActionScheduleInfo firstActionScheduleInfo = ActionScheduleInfo.newBuilder()
                                                                        .setGroup("group 0")
@@ -183,8 +183,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                        .build();
 
         Trigger secondTrigger = Triggers.newBackgroundTriggerBuilder()
-                                       .setGoal(10)
-                                       .build();
+                                        .setGoal(10)
+                                        .build();
 
         ActionScheduleInfo secondActionScheduleInfo = ActionScheduleInfo.newBuilder()
                                                                         .setGroup("group 1")
@@ -195,8 +195,8 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                         .addTrigger(secondTrigger)
                                                                         .build();
 
-        ScheduleEntry firstScheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_1", firstActionScheduleInfo));
-        ScheduleEntry secondScheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_2", secondActionScheduleInfo));
+        ScheduleEntry firstScheduleEntry = new ScheduleEntry("schedule_id_1", firstActionScheduleInfo);
+        ScheduleEntry secondScheduleEntry = new ScheduleEntry("schedule_id_2", secondActionScheduleInfo);
         List<ScheduleEntry> scheduleEntries = Arrays.asList(firstScheduleEntry, secondScheduleEntry);
         dataManager.saveSchedules(scheduleEntries);
 
@@ -214,25 +214,25 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
         assertEquals(2, schedules.size());
         assertEquals(firstActionScheduleInfo.getGroup(), schedules.get(0).group);
-        assertEquals(JsonValue.wrap(firstActionScheduleInfo.getActions()).toString(), schedules.get(0).actionsPayload);
+        assertEquals(JsonValue.wrap(firstActionScheduleInfo.getActions()), schedules.get(0).data);
         assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).end);
         assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).start);
         assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).limit);
 
-        assertEquals(firstTrigger.getGoal(), schedules.get(0).triggers.get(0).goal, 0.0);
-        assertEquals(firstTrigger.getPredicate(), schedules.get(0).triggers.get(0).jsonPredicate);
-        assertEquals(firstTrigger.getType(), schedules.get(0).triggers.get(0).type);
+        assertEquals(firstTrigger.getGoal(), schedules.get(0).triggerEntries.get(0).goal, 0.0);
+        assertEquals(firstTrigger.getPredicate(), schedules.get(0).triggerEntries.get(0).jsonPredicate);
+        assertEquals(firstTrigger.getType(), schedules.get(0).triggerEntries.get(0).type);
         assertEquals(0, schedules.get(0).getCount());
 
         assertEquals(secondActionScheduleInfo.getGroup(), schedules.get(1).group);
-        assertEquals(JsonValue.wrap(secondActionScheduleInfo.getActions()).toString(), schedules.get(1).actionsPayload);
+        assertEquals(JsonValue.wrap(secondActionScheduleInfo.getActions()), schedules.get(1).data);
         assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).end);
         assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).start);
         assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).limit);
 
-        assertEquals(secondTrigger.getGoal(), schedules.get(1).triggers.get(0).goal, 0.0);
-        assertEquals(secondTrigger.getPredicate(), schedules.get(1).triggers.get(0).jsonPredicate);
-        assertEquals(secondTrigger.getType(), schedules.get(1).triggers.get(0).type);
+        assertEquals(secondTrigger.getGoal(), schedules.get(1).triggerEntries.get(0).goal, 0.0);
+        assertEquals(secondTrigger.getPredicate(), schedules.get(1).triggerEntries.get(0).jsonPredicate);
+        assertEquals(secondTrigger.getType(), schedules.get(1).triggerEntries.get(0).type);
         assertEquals(0, schedules.get(0).getCount());
 
         List<TriggerEntry> triggers = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND);
@@ -251,18 +251,18 @@ public class AutomationDataManagerTest extends BaseTestCase {
     @Test
     public void testInsertSchedule() {
         ScheduleEntry actionScheduleInfo = createSchedules(1).get(0);
-        TriggerEntry trigger = actionScheduleInfo.triggers.get(0);
+        TriggerEntry trigger = actionScheduleInfo.triggerEntries.get(0);
         dataManager.saveSchedules(Collections.singletonList(actionScheduleInfo));
 
         List<ScheduleEntry> schedules = dataManager.getScheduleEntries();
         assertEquals(1, schedules.size());
         assertEquals(actionScheduleInfo.group, schedules.get(0).group);
-        assertEquals(actionScheduleInfo.actionsPayload, schedules.get(0).actionsPayload);
+        assertEquals(actionScheduleInfo.data, schedules.get(0).data);
         assertEquals(actionScheduleInfo.end, schedules.get(0).end);
         assertEquals(actionScheduleInfo.start, schedules.get(0).start);
         assertEquals(actionScheduleInfo.limit, schedules.get(0).limit);
 
-        List<TriggerEntry> scheduleTriggers = schedules.get(0).triggers;
+        List<TriggerEntry> scheduleTriggers = schedules.get(0).triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
             @Override
             public int compare(TriggerEntry lhs, TriggerEntry rhs) {
@@ -290,12 +290,12 @@ public class AutomationDataManagerTest extends BaseTestCase {
         List<ScheduleEntry> scheduleEntries = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
             Trigger foreground = Triggers.newForegroundTriggerBuilder()
-                                      .setGoal(10)
-                                      .build();
+                                         .setGoal(10)
+                                         .build();
 
             Trigger background = Triggers.newBackgroundTriggerBuilder()
-                                      .setGoal(3)
-                                      .build();
+                                         .setGoal(3)
+                                         .build();
 
             ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
                                                             .setGroup("group " + i)
@@ -307,11 +307,11 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .addTrigger(background)
                                                             .build();
 
-            ScheduleEntry scheduleEntry = new ScheduleEntry(new ActionSchedule("schedule_id_" + i, schedule));
+            ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_id_" + i, schedule);
             scheduleEntries.add(scheduleEntry);
         }
 
         return scheduleEntries;
     }
-    
+
 }

@@ -3,28 +3,43 @@ package com.urbanairship.automation;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
-import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * Schedule information stored in the schedules table.
+ * @hide
  */
-class ScheduleEntry {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+class ScheduleEntry implements ScheduleInfo {
+
+    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface State {}
+
+    static final int STATE_IDLE = 0;
+    static final int STATE_PENDING_EXECUTION = 1;
+    static final int STATE_EXECUTING = 2;
 
     static final String TABLE_NAME = "action_schedules";
     // Schedule
     static final String COLUMN_NAME_SCHEDULE_ID = "s_id";
 
     // Schedule Info
-    static final String COLUMN_NAME_ACTIONS = "s_actions";
+    static final String COLUMN_NAME_DATA = "s_data";
     static final String COLUMN_NAME_LIMIT = "s_limit";
     static final String COLUMN_NAME_GROUP = "s_group";
     static final String COLUMN_NAME_START = "s_start";
@@ -37,50 +52,49 @@ class ScheduleEntry {
     static final String COLUMN_NAME_REGION_ID = "d_region_id";
 
     // State
-    static final String COLUMN_NAME_IS_PENDING_EXECUTION = "s_is_pending_execution";
+    static final String COLUMN_NAME_EXECUTION_STATE = "s_execution_state";
     static final String COLUMN_NAME_PENDING_EXECUTION_DATE = "s_pending_execution_date";
     static final String COLUMN_NAME_COUNT = "s_count";
     static final String COLUMN_NAME_ID = "s_row_id";
 
 
-    final String scheduleId;
-    final String actionsPayload;
-    final int limit;
-    final String group;
-    final long start;
-    final long end;
-    final long seconds;
-    final String screen;
-    final int appState;
-    final String regionId;
-    final List<TriggerEntry> triggers = new ArrayList<>();
+    public final String scheduleId;
+    public final JsonSerializable data;
+    public final int limit;
+    public final String group;
+    public final long start;
+    public final long end;
+    public final long seconds;
+    public final String screen;
+    public final int appState;
+    public final String regionId;
+    public final List<TriggerEntry> triggerEntries = new ArrayList<>();
 
     // State
     private long id = -1;
 
     private int count;
-    private boolean isPendingExecution;
+    private int executionState = STATE_IDLE;
     private long pendingExecutionDate;
     private boolean isDirty;
 
-    ScheduleEntry(ActionSchedule schedule) {
-        this.scheduleId = schedule.getId();
-        this.actionsPayload = JsonValue.wrapOpt(schedule.getInfo().getActions()).toString();
+    ScheduleEntry(@NonNull String scheduleId, @NonNull ScheduleInfo scheduleInfo) {
+        this.scheduleId = scheduleId;
+        this.data = scheduleInfo.getData();
+        this.limit = scheduleInfo.getLimit();
+        this.group = scheduleInfo.getGroup();
+        this.start = scheduleInfo.getStart();
+        this.end = scheduleInfo.getEnd();
 
-        this.limit = schedule.getInfo().getLimit();
-        this.group = schedule.getInfo().getGroup();
-        this.start = schedule.getInfo().getStart();
-        this.end = schedule.getInfo().getEnd();
+        if (scheduleInfo.getDelay() != null) {
+            this.screen = scheduleInfo.getDelay().getScreen();
+            this.regionId = scheduleInfo.getDelay().getRegionId();
+            this.appState = scheduleInfo.getDelay().getAppState();
+            this.seconds = scheduleInfo.getDelay().getSeconds();
 
-        if (schedule.getInfo().getDelay() != null) {
-            this.screen = schedule.getInfo().getDelay().getScreen();
-            this.regionId = schedule.getInfo().getDelay().getRegionId();
-            this.appState = schedule.getInfo().getDelay().getAppState();
-            this.seconds = schedule.getInfo().getDelay().getSeconds();
-
-            for (Trigger trigger : schedule.getInfo().getDelay().getCancellationTriggers()) {
-                TriggerEntry triggerEntry = new TriggerEntry(trigger, schedule.getId(), true);
-                this.triggers.add(triggerEntry);
+            for (Trigger trigger : scheduleInfo.getDelay().getCancellationTriggers()) {
+                TriggerEntry triggerEntry = new TriggerEntry(trigger, scheduleId, true);
+                this.triggerEntries.add(triggerEntry);
             }
         } else {
             this.seconds = 0;
@@ -89,22 +103,30 @@ class ScheduleEntry {
             this.appState = ScheduleDelay.APP_STATE_ANY;
         }
 
-        for (Trigger trigger : schedule.getInfo().getTriggers()) {
-            TriggerEntry triggerEntry = new TriggerEntry(trigger, schedule.getId(), false);
-            this.triggers.add(triggerEntry);
+        for (Trigger trigger : scheduleInfo.getTriggers()) {
+            TriggerEntry triggerEntry = new TriggerEntry(trigger, scheduleId, false);
+            this.triggerEntries.add(triggerEntry);
         }
     }
 
-    ScheduleEntry(Cursor cursor) {
+    private ScheduleEntry(Cursor cursor) {
         this.id = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_ID));
         this.scheduleId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCHEDULE_ID));
         this.count = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_COUNT));
         this.limit = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_LIMIT));
         this.group = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_GROUP));
-        this.actionsPayload = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_ACTIONS));
+
+        JsonValue parsedData;
+        try {
+            parsedData = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA)));
+        } catch (JsonException e) {
+            parsedData = JsonValue.NULL;
+        }
+
+        this.data = parsedData;
         this.end = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_END));
         this.start = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_START));
-        this.isPendingExecution = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_IS_PENDING_EXECUTION)) == 1;
+        this.executionState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE));
         this.pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_PENDING_EXECUTION_DATE));
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
@@ -134,24 +156,25 @@ class ScheduleEntry {
     }
 
     /**
-     * Sets the pending execution status.
+     * Sets the execution state.
      *
-     * @param isPendingExecution Pending execution flag.
+     * @param executionState Pending execution flag.
      */
-    void setIsPendingExecution(boolean isPendingExecution) {
-        if (this.isPendingExecution != isPendingExecution) {
-            this.isPendingExecution = isPendingExecution;
+    void setExecutionState(int executionState) {
+        if (this.executionState != executionState) {
+            this.executionState = executionState;
             this.isDirty = true;
         }
     }
 
     /**
-     * Returns a flag indicating if the schedule is pending execution.
+     * Gets the execution state.
      *
-     * @return {@code true} if the schedule is pending execution, otherwise {@code false}.
+     * @return The execution state.
      */
-    boolean isPendingExecution() {
-        return isPendingExecution;
+    @State
+    int getExecutionState() {
+        return executionState;
     }
 
     /**
@@ -176,62 +199,23 @@ class ScheduleEntry {
     }
 
     /**
-     * Creates an {@link ActionSchedule} from the entry.
-     *
-     * @return An {@link ActionSchedule}.
-     */
-    ActionSchedule toSchedule() {
-        ActionScheduleInfo.Builder infoBuilder = ActionScheduleInfo.newBuilder()
-                                                                   .setEnd(end)
-                                                                   .setStart(start)
-                                                                   .setGroup(group)
-                                                                   .setLimit(limit);
-
-
-        ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
-                                                          .setAppState(appState)
-                                                          .setRegionId(regionId)
-                                                          .setScreen(screen)
-                                                          .setSeconds(seconds);
-
-        try {
-            JsonMap actionsMap = JsonValue.parseString(actionsPayload).optMap();
-            infoBuilder.addAllActions(actionsMap);
-        } catch (JsonException e) {
-            Logger.error("Unable to deserialize actions map. ", e);
-        }
-
-        for (TriggerEntry triggerEntry : triggers) {
-            if (triggerEntry.isCancellation) {
-                delayBuilder.addCancellationTrigger(triggerEntry.toTrigger());
-            } else {
-                infoBuilder.addTrigger(triggerEntry.toTrigger());
-            }
-        }
-
-        infoBuilder.setDelay(delayBuilder.build());
-
-        return new ActionSchedule(scheduleId, infoBuilder.build());
-    }
-
-    /**
      * Saves the entry to the database.
      *
      * @param database Saves the entry to the database.
      * @return {code} true if the entry was saved, otherwise {@code false}.
      */
     @WorkerThread
-    public boolean save(SQLiteDatabase database) {
+    boolean save(SQLiteDatabase database) {
         if (id == -1) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_NAME_SCHEDULE_ID, scheduleId);
-            contentValues.put(COLUMN_NAME_ACTIONS, actionsPayload);
+            contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
             contentValues.put(COLUMN_NAME_LIMIT, limit);
             contentValues.put(COLUMN_NAME_GROUP, group);
             contentValues.put(COLUMN_NAME_COUNT, count);
             contentValues.put(COLUMN_NAME_START, start);
             contentValues.put(COLUMN_NAME_END, end);
-            contentValues.put(COLUMN_NAME_IS_PENDING_EXECUTION, isPendingExecution ? 1 : 0);
+            contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
             contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
             contentValues.put(COLUMN_NAME_APP_STATE, appState);
             contentValues.put(COLUMN_NAME_REGION_ID, regionId);
@@ -244,14 +228,14 @@ class ScheduleEntry {
         } else if (isDirty) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_NAME_COUNT, count);
-            contentValues.put(COLUMN_NAME_IS_PENDING_EXECUTION, isPendingExecution ? 1 : 0);
+            contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
             contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
             if (database.updateWithOnConflict(TABLE_NAME, contentValues, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) == 0) {
                 return false;
             }
         }
 
-        for (TriggerEntry triggerEntry : triggers) {
+        for (TriggerEntry triggerEntry : triggerEntries) {
             if (!triggerEntry.save(database)) {
                 return false;
             }
@@ -265,7 +249,7 @@ class ScheduleEntry {
      * Generates a schedule entry from a cursor.
      *
      * @param cursor The {@link Cursor} instance.
-     * @return The {@link ActionSchedule} instance.
+     * @return The {@link ScheduleEntry} instance.
      */
     @Nullable
     static ScheduleEntry fromCursor(Cursor cursor) {
@@ -293,7 +277,7 @@ class ScheduleEntry {
             // If the row contains triggers, parse and add them to the builder.
             if (cursor.getColumnIndex(TriggerEntry.COLUMN_NAME_TYPE) != -1) {
                 TriggerEntry triggerEntry = new TriggerEntry(cursor);
-                scheduleEntry.triggers.add(triggerEntry);
+                scheduleEntry.triggerEntries.add(triggerEntry);
             }
 
             cursor.moveToNext();
@@ -303,4 +287,59 @@ class ScheduleEntry {
         return scheduleEntry;
     }
 
+    @Override
+    public List<Trigger> getTriggers() {
+        List<Trigger> triggers = new ArrayList<>();
+
+        for (TriggerEntry triggerEntry : this.triggerEntries) {
+            if (!triggerEntry.isCancellation) {
+                triggers.add(triggerEntry.toTrigger());
+            }
+        }
+
+        return triggers;
+    }
+
+    @Override
+    public JsonSerializable getData() {
+        return this.data;
+    }
+
+    @Override
+    public int getLimit() {
+        return this.limit;
+    }
+
+    @Override
+    public String getGroup() {
+        return this.group;
+    }
+
+    @Override
+    public long getStart() {
+        return this.start;
+    }
+
+    @Override
+    public long getEnd() {
+        return this.end;
+    }
+
+    @Override
+    public ScheduleDelay getDelay() {
+        ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
+                                                          .setAppState(appState)
+                                                          .setRegionId(regionId)
+                                                          .setScreen(screen)
+                                                          .setSeconds(seconds);
+
+
+        for (TriggerEntry triggerEntry : this.triggerEntries) {
+            if (triggerEntry.isCancellation) {
+                delayBuilder.addCancellationTrigger(triggerEntry.toTrigger());
+            }
+        }
+
+        return delayBuilder.build();
+    }
 }
