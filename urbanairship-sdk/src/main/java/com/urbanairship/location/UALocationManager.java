@@ -269,7 +269,14 @@ public class UALocationManager extends AirshipComponent {
         if (!isLocationPermitted()) {
             return new Cancelable() {
                 @Override
-                public void cancel() {}
+                public boolean cancel(boolean mayInterruptIfRunning) {
+                    return true;
+                }
+
+                @Override
+                public boolean cancel() {
+                    return true;
+                }
 
                 @Override
                 public boolean isDone() {
@@ -277,7 +284,7 @@ public class UALocationManager extends AirshipComponent {
                 }
 
                 @Override
-                public boolean isCanceled() {
+                public boolean isCancelled() {
                     return true;
                 }
             };

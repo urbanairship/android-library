@@ -4,12 +4,12 @@ package com.urbanairship.location;
 
 import android.location.Location;
 
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 
 /**
  * A location callback.
  */
-public interface LocationCallback extends PendingResult.ResultCallback<Location> {
+public interface LocationCallback extends ResultCallback<Location> {
 
     /**
      * Called when a new location is received.

@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -36,9 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -515,7 +513,7 @@ public class AutomationTest extends BaseTestCase {
     @Test
     public void testScheduleAsync() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        automation.scheduleAsync(customEventActionSchedule, new PendingResult.ResultCallback<ActionSchedule>() {
+        automation.scheduleAsync(customEventActionSchedule, new ResultCallback<ActionSchedule>() {
             @Override
             public void onResult(@Nullable ActionSchedule result) {
                 latch.countDown();

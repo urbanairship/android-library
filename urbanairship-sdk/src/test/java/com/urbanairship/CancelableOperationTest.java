@@ -42,7 +42,7 @@ public class CancelableOperationTest extends BaseTestCase {
 
         assertTrue(operation.onRunCalled);
         assertTrue(operation.isDone());
-        assertFalse(operation.isCanceled());
+        assertFalse(operation.isCancelled());
     }
 
     /**
@@ -62,14 +62,14 @@ public class CancelableOperationTest extends BaseTestCase {
         assertFalse(operation.onCancelCalled);
 
         assertTrue(operation.isDone());
-        assertTrue(operation.isCanceled());
+        assertTrue(operation.isCancelled());
 
         // Process all the messages
         looper.runToEndOfTasks();
 
         assertTrue(operation.onCancelCalled);
         assertTrue(operation.isDone());
-        assertTrue(operation.isCanceled());
+        assertTrue(operation.isCancelled());
         assertFalse(operation.onRunCalled);
     }
 
@@ -97,7 +97,7 @@ public class CancelableOperationTest extends BaseTestCase {
     public void testRunAfterCancel() {
         // Cancel it
         operation.cancel();
-        assertTrue(operation.isCanceled());
+        assertTrue(operation.isCancelled());
 
         // Try to run it
         operation.run();
@@ -105,7 +105,7 @@ public class CancelableOperationTest extends BaseTestCase {
         assertFalse(operation.onRunCalled);
         assertTrue(operation.onCancelCalled);
         assertTrue(operation.isDone());
-        assertTrue(operation.isCanceled());
+        assertTrue(operation.isCancelled());
     }
 
 

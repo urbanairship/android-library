@@ -54,9 +54,13 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
         };
     }
 
+    @Override
+    public final boolean cancel() {
+        return cancel(false);
+    }
 
     @Override
-    public final void cancel() {
+    public final boolean cancel(boolean mayInterruptIfRunning) {
         synchronized (this) {
             if (!isDone()) {
                 isCanceled = true;
@@ -68,7 +72,10 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
                         onCancel();
                     }
                 });
+                return true;
             }
+
+            return false;
         }
     }
 
@@ -92,7 +99,7 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     }
 
     @Override
-    public final boolean isCanceled() {
+    public final boolean isCancelled() {
         synchronized (this) {
             return isCanceled;
         }

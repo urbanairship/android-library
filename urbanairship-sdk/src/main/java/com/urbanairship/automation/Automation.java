@@ -18,8 +18,8 @@ import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
-import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -245,12 +245,12 @@ public class Automation extends AirshipComponent {
      * Schedules an {@link ActionScheduleInfo} instance asynchronously.
      *
      * @param scheduleInfo The {@link ActionScheduleInfo} instance.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
-     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be null
+     * @param callback An {@link com.urbanairship.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.ResultCallback#onResult(Object)} may be null
      * if the scheduling failed, the schedule count is greater than or equal to {@link #SCHEDULES_LIMIT},
      * or the scheduling was attempted off of the main process.
      */
-    public void scheduleAsync(final ActionScheduleInfo scheduleInfo, @Nullable final PendingResult.ResultCallback<ActionSchedule> callback) {
+    public void scheduleAsync(final ActionScheduleInfo scheduleInfo, @Nullable final ResultCallback<ActionSchedule> callback) {
         final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
 
         if (!UAirship.isMainProcess()) {
@@ -273,12 +273,12 @@ public class Automation extends AirshipComponent {
      * Schedules a list of {@link ActionScheduleInfo} instances asynchronously.
      *
      * @param scheduleInfos The list of {@link ActionScheduleInfo} instances.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
-     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * @param callback An {@link com.urbanairship.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.ResultCallback#onResult(Object)} may be
      * {@link Collections#emptyList()} if the scheduling failed, the schedule count is greater than or equal
      * to {@link #SCHEDULES_LIMIT}, or the scheduling was attempted off of the main process.
      */
-    public void scheduleAsync(final List<ActionScheduleInfo> scheduleInfos, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+    public void scheduleAsync(final List<ActionScheduleInfo> scheduleInfos, final ResultCallback<List<ActionSchedule>> callback) {
         final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
 
         if (!UAirship.isMainProcess()) {
@@ -462,11 +462,11 @@ public class Automation extends AirshipComponent {
      * Gets a schedule for a given schedule ID asynchronously.
      *
      * @param id The schedule ID.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
-     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * @param callback An {@link com.urbanairship.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.ResultCallback#onResult(Object)} may be
      * null if the schedule does not exist or the get was attempted off of the main process.
      */
-    public void getScheduleAsync(final String id, final PendingResult.ResultCallback<ActionSchedule> callback) {
+    public void getScheduleAsync(final String id, final ResultCallback<ActionSchedule> callback) {
         final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
 
         if (!UAirship.isMainProcess()) {
@@ -528,11 +528,11 @@ public class Automation extends AirshipComponent {
     /**
      * Gets all schedules asynchronously.
      *
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
-     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * @param callback An {@link com.urbanairship.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.ResultCallback#onResult(Object)} may be
      * {@link Collections#emptyList()} if no schedules exist or the get was attempted off of the main process.
      */
-    public void getSchedulesAsync(final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+    public void getSchedulesAsync(final ResultCallback<List<ActionSchedule>> callback) {
         final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
 
         if (!UAirship.isMainProcess()) {
@@ -576,11 +576,11 @@ public class Automation extends AirshipComponent {
      * Gets all schedules for a given group asynchronously.
      *
      * @param group The group.
-     * @param callback An {@link com.urbanairship.PendingResult.ResultCallback} implementation. The value
-     * returned to {@link com.urbanairship.PendingResult.ResultCallback#onResult(Object)} may be
+     * @param callback An {@link com.urbanairship.ResultCallback} implementation. The value
+     * returned to {@link com.urbanairship.ResultCallback#onResult(Object)} may be
      * {@link Collections#emptyList()} if no schedules exist or the get was attempted off of the main process.
      */
-    public void getSchedulesAsync(final String group, final PendingResult.ResultCallback<List<ActionSchedule>> callback) {
+    public void getSchedulesAsync(final String group, final ResultCallback<List<ActionSchedule>> callback) {
         final Looper looper = Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper();
 
         if (!UAirship.isMainProcess()) {
@@ -960,7 +960,7 @@ public class Automation extends AirshipComponent {
 
 
     /**
-     * Runs a {@link com.urbanairship.PendingResult.ResultCallback} instance for a given result. The
+     * Runs a {@link com.urbanairship.ResultCallback} instance for a given result. The
      * callback is posted to the thread's looper, and will default to the main looper if one doesn't exist.
      *
      * @param callback The callback.
@@ -968,7 +968,7 @@ public class Automation extends AirshipComponent {
      * @param looper The looper to which the callback is posted.
      * @param <T> The result type.
      */
-    private <T> void runCallback(@Nullable final PendingResult.ResultCallback<T> callback, @Nullable final T result, Looper looper) {
+    private <T> void runCallback(@Nullable final ResultCallback<T> callback, @Nullable final T result, Looper looper) {
         if (callback != null) {
             Handler handler = new Handler(looper);
             handler.post(new Runnable() {

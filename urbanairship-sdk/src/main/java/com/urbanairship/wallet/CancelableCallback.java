@@ -52,7 +52,7 @@ class CancelableCallback extends CancelableOperation {
      * @param pass The parsed response {@link Pass}.
      */
     void setResult(int status, Pass pass) {
-        if (isCanceled()) {
+        if (isCancelled()) {
             return;
         }
 
