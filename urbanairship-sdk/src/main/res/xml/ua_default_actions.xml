@@ -68,6 +68,10 @@
     <ActionEntry class="com.urbanairship.actions.ToastAction"
         name="toast_action" />
 
+    <ActionEntry class="com.urbanairship.actions.RateAppAction"
+                 name="rate_app_action"
+                 altName="^ra" />
+
     <ActionEntry class="com.urbanairship.actions.WalletAction"
         name="wallet_action"
         altName="^w" />

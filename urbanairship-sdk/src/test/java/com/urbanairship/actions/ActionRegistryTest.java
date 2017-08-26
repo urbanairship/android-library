@@ -38,7 +38,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions();
-        assertEquals("Default entries changed", 17, registry.getEntries().size());
+        assertEquals("Default entries changed", 18, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
@@ -57,13 +57,15 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
         validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
+        validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
+
 
     }
 
     @Test
     public void testDefaultActionsFromResource() {
         registry.registerDefaultActions(TestApplication.getApplication().getApplicationContext());
-        assertEquals("Default entries changed", 17, registry.getEntries().size());
+        assertEquals("Default entries changed", 18, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
@@ -82,6 +84,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
         validateEntry(registry.getEntry("^cc"), "^cc", "channel_capture_action");
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
+        validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
     }
 
     /**

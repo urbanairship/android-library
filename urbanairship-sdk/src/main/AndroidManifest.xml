@@ -37,6 +37,14 @@
         <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
         <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
 
+        <activity
+            android:name="com.urbanairship.actions.RateAppActivity"
+            android:theme="@style/RateAppActionBackgroundStyle">
+            <intent-filter>
+                <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"
@@ -62,6 +70,7 @@
             </intent-filter>
 
         </activity>
+
         <activity
             android:name="com.urbanairship.ChannelCaptureActivity"/>
 

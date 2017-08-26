@@ -51,6 +51,12 @@
     <string name="ua_delete">Delete</string>
     <string name="ua_select_all">Select All</string>
 
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Rate</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">No Thanks</string>
+    <string name="ua_rate_app_action_default_title">Enjoying <xliff:g id="app_name" example="this App">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Tap <xliff:g id="ok_button_title" example="Rate">%1$2s</xliff:g> to rate it on the app store.</string>
+
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g id="count" example="1">%1$d</xliff:g> selected</item>
