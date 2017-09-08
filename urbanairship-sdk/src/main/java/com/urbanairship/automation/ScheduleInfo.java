@@ -36,6 +36,13 @@ public interface ScheduleInfo {
     int getLimit();
 
     /**
+     * Gets the schedule priority level.
+     *
+     * @return The priority level.
+     */
+    int getPriority();
+
+    /**
      * Gets the schedule group.
      *
      * @return The schedule group.

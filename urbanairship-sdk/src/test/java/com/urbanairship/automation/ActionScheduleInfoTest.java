@@ -33,6 +33,7 @@ public class ActionScheduleInfoTest extends BaseTestCase {
                                       .put("triggers", JsonValue.wrapOpt(triggersJson))
                                       .put("group", "group id")
                                       .put("limit", 10)
+                                      .put("priority", 1)
                                       .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
                                       .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
                                       .build();
@@ -41,6 +42,7 @@ public class ActionScheduleInfoTest extends BaseTestCase {
 
         // Schedule Info
         assertEquals(10, info.getLimit());
+        assertEquals(1, info.getPriority());
         assertEquals(actions, JsonValue.wrap(info.getActions()).getMap());
         assertEquals(10000L, info.getStart());
         assertEquals(15000L, info.getEnd());

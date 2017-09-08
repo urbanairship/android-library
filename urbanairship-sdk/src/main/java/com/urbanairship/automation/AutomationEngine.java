@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -610,6 +611,14 @@ public class AutomationEngine<T extends Schedule> {
         HashSet<String> schedulesToDelete = new HashSet<>();
         HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
 
+        // Sort schedules by priority
+        Collections.sort(scheduleEntries, new Comparator<ScheduleEntry>() {
+            @Override
+            public int compare(ScheduleEntry lh, ScheduleEntry rh) {
+                return lh.priority - rh.priority;
+            }
+        });
+
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
             // Delete expired schedules.
             if (scheduleEntry.end > 0 && scheduleEntry.end < System.currentTimeMillis()) {
@@ -740,7 +749,7 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
-     * Converts a list of generic entries to a typed entries.
+     * Converts a list of generic entries to typed entries.
      *
      * @param entries The list of entries to convert.
      * @return The list of converted entries.

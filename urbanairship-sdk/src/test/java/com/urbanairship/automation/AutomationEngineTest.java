@@ -13,12 +13,15 @@ import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
 
+import junit.framework.Assert;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -288,6 +291,45 @@ public class AutomationEngineTest extends BaseTestCase {
         });
     }
 
+    @Test
+    public void testPriority() throws Exception {
+        ArrayList<ActionSchedule> schedules = new ArrayList<>();
+
+        Integer[] addedPriorityLevels = new Integer[]{5, 2, 1, 0, 0, 4, 3, 3, 2};
+        ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
+        Collections.sort(expectedExecutionOrder);
+
+        // Add schedules out of order
+        for (int priority : addedPriorityLevels) {
+            final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
+                                       .setCountGoal(1)
+                                       .setEventName("name")
+                                       .build();
+
+            final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                      .addTrigger(trigger)
+                                                                      .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                      .setPriority(priority)
+                                                                      .build();
+
+            Assert.assertEquals(scheduleInfo.getPriority(), priority);
+
+            PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+            runLooperTasks();
+            schedules.add(future.get());
+        }
+
+        // Trigger the schedules
+        new CustomEvent.Builder("name")
+                .create()
+                .track();
+
+        runLooperTasks();
+
+        // Verify the schedules were executed in ascending priority order
+        assertEquals(driver.priorityList, expectedExecutionOrder);
+    }
+
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(Triggers.newCustomEventTriggerBuilder()
@@ -422,11 +464,12 @@ public class AutomationEngineTest extends BaseTestCase {
     private static class TestActionScheduleDriver extends ActionAutomationDriver {
 
         Map<String, Callback> callbackMap = new HashMap<>();
-
+        ArrayList<Integer> priorityList = new ArrayList<>();
 
         @Override
         public void onExecuteTriggeredSchedule(ActionSchedule schedule, Callback finishCallback) {
             callbackMap.put(schedule.getId(), finishCallback);
+            priorityList.add(schedule.getInfo().getPriority());
         }
     }
 }
