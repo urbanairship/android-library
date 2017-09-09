@@ -15,6 +15,10 @@ import com.urbanairship.util.UAStringUtil;
  */
 public class Triggers {
 
+    public static AsapTriggerBuilder newAsapTriggerBuilder() {
+        return new AsapTriggerBuilder();
+    }
+
     /**
      * Creates a new foreground trigger builder.
      * 
@@ -76,6 +80,20 @@ public class Triggers {
      */
     public static CustomEventTriggerBuilder newCustomEventTriggerBuilder() {
         return new CustomEventTriggerBuilder();
+    }
+
+    /**
+     * ASAP trigger Builder class.
+     */
+    public static class AsapTriggerBuilder {
+        private AsapTriggerBuilder() {}
+
+        /**
+         * Builds the trigger instance.
+         *
+         * @return The trigger instance.
+         */
+        public Trigger build() { return new Trigger(Trigger.ASAP, 1, null); }
     }
 
     /**

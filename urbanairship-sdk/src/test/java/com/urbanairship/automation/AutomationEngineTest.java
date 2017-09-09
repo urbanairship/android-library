@@ -198,6 +198,12 @@ public class AutomationEngineTest extends BaseTestCase {
     }
 
     @Test
+    public void testAsap() throws Exception {
+        Trigger trigger = Triggers.newAsapTriggerBuilder().build();
+        verifyTrigger(trigger, null);
+    }
+
+    @Test
     public void testSecondsDelay() throws Exception {
         ScheduleDelay delay = ScheduleDelay.newBuilder()
                                            .setSeconds(1)
@@ -328,7 +334,10 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(entry.scheduleId, schedule.getId());
 
         // Trigger the schedule
-        generateEvents.run();
+        if (generateEvents != null) {
+            generateEvents.run();
+        }
+
         runLooperTasks();
 
         // Verify it started executing the schedule
@@ -345,7 +354,10 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 1);
 
         // Trigger it again
-        generateEvents.run();
+        if (generateEvents != null) {
+            generateEvents.run();
+        }
+
         runLooperTasks();
         driver.callbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
