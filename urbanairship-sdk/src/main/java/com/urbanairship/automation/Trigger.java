@@ -221,7 +221,7 @@ public class Trigger implements Parcelable {
         @TriggerType int type;
         JsonPredicate predicate = jsonMap.containsKey("predicate") ? JsonPredicate.parse(jsonMap.opt("predicate")) : null;
         double goal = jsonMap.opt("goal").getDouble(-1);
-        if (goal <= 0) {
+        if (!(goal > 0)) {
             throw new JsonException("Trigger goal must be defined and greater than 0.");
         }
 

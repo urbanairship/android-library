@@ -377,6 +377,9 @@ public class AutomationEngine<T extends Schedule> {
 
     /**
      * Helper method for checking for the presence of ASAP triggers
+     *
+     * @param triggers A list of Triggers.
+     * @return {@code true} if the list contains an ASAP trigger, otherwise {@code false}.
      */
     private boolean hasAsapTrigger(List<Trigger> triggers) {
         for (Trigger trigger : triggers) {
@@ -391,7 +394,7 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Helper method for manually updating asap triggers.
      */
-    private void updateAsapTriggers () {
+    private void updateAsapTriggers() {
         onEventAdded(JsonValue.NULL, Trigger.ASAP, 1.00);
     }
 
