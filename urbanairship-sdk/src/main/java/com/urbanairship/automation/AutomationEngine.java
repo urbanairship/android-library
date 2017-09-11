@@ -142,7 +142,6 @@ public class AutomationEngine<T extends Schedule> {
         backgroundThread.quit();
     }
 
-
     /**
      * Schedules a single action schedule.
      *
@@ -155,6 +154,8 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                boolean shouldHandleAsapTrigger = false;
+
                 if (dataManager.getScheduleCount() >= scheduleLimit) {
                     Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
                     pendingResult.setResult(null);
@@ -164,9 +165,17 @@ public class AutomationEngine<T extends Schedule> {
                 String scheduleId = UUID.randomUUID().toString();
                 ScheduleEntry entry = new ScheduleEntry(scheduleId, scheduleInfo);
 
+                if (hasAsapTrigger(scheduleInfo.getTriggers())) {
+                    shouldHandleAsapTrigger = true;
+                }
+
                 List<ScheduleEntry> entries = Collections.singletonList(entry);
                 dataManager.saveSchedules(entries);
                 pendingResult.setResult(convertEntries(entries).get(0));
+
+                if (shouldHandleAsapTrigger) {
+                    updateAsapTriggers();
+                }
             }
         });
 
@@ -185,6 +194,8 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                boolean shouldHandleAsapTrigger = false;
+
                 if (dataManager.getScheduleCount() + scheduleInfos.size() > scheduleLimit) {
                     Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
                     pendingResult.setResult(Collections.<T>emptyList());
@@ -195,10 +206,18 @@ public class AutomationEngine<T extends Schedule> {
                 for (ScheduleInfo info : scheduleInfos) {
                     String scheduleId = UUID.randomUUID().toString();
                     entries.add(new ScheduleEntry(scheduleId, info));
+
+                    if( hasAsapTrigger(info.getTriggers())) {
+                        shouldHandleAsapTrigger = true;
+                    }
                 }
 
                 dataManager.saveSchedules(entries);
                 pendingResult.setResult(convertEntries(entries));
+
+                if (shouldHandleAsapTrigger) {
+                    updateAsapTriggers();
+                }
             }
         });
 
@@ -354,6 +373,29 @@ public class AutomationEngine<T extends Schedule> {
      */
     public void checkPendingSchedules() {
         onScheduleConditionsChanged();
+    }
+
+    /**
+     * Helper method for checking for the presence of ASAP triggers
+     *
+     * @param triggers A list of Triggers.
+     * @return {@code true} if the list contains an ASAP trigger, otherwise {@code false}.
+     */
+    private boolean hasAsapTrigger(List<Trigger> triggers) {
+        for (Trigger trigger : triggers) {
+            if (trigger.getType() == Trigger.ASAP) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Helper method for manually updating asap triggers.
+     */
+    private void updateAsapTriggers() {
+        onEventAdded(JsonValue.NULL, Trigger.ASAP, 1.00);
     }
 
     /**
@@ -515,8 +557,6 @@ public class AutomationEngine<T extends Schedule> {
                     trigger.setProgress(trigger.getProgress() + value);
 
                     if (trigger.getProgress() >= trigger.goal) {
-                        trigger.setProgress(0);
-
                         if (trigger.isCancellation) {
                             cancelledSchedules.add(trigger.scheduleId);
                             cancelScheduleDelays(Collections.singletonList(trigger.scheduleId));
@@ -668,6 +708,9 @@ public class AutomationEngine<T extends Schedule> {
                     dataManager.deleteSchedules(Collections.singletonList(scheduleId));
                 } else {
                     dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+                    if (hasAsapTrigger(scheduleEntry.getTriggers())) {
+                        updateAsapTriggers();
+                    }
                 }
             }
         });

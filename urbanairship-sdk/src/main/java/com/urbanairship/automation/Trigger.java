@@ -22,9 +22,14 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class Trigger implements Parcelable {
 
-    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT })
+    @IntDef({ ASAP, LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
+
+    /**
+     * Trigger type for schedules that should execute as soon as possible
+     */
+    public static final int ASAP = 0;
 
     /**
      * Trigger type for foreground events. Foreground triggers
@@ -105,6 +110,9 @@ public class Trigger implements Parcelable {
         JsonPredicate predicate = null;
 
         switch (in.readInt()) {
+            case ASAP:
+                type = ASAP;
+                break;
             case LIFE_CYCLE_BACKGROUND:
                 type = LIFE_CYCLE_BACKGROUND;
                 break;
@@ -213,12 +221,16 @@ public class Trigger implements Parcelable {
         @TriggerType int type;
         JsonPredicate predicate = jsonMap.containsKey("predicate") ? JsonPredicate.parse(jsonMap.opt("predicate")) : null;
         double goal = jsonMap.opt("goal").getDouble(-1);
-        if (goal < 0) {
+        if (!(goal > 0)) {
             throw new JsonException("Trigger goal must be defined and greater than 0.");
         }
 
         String typeString = jsonMap.opt("type").getString("").toLowerCase();
         switch (typeString) {
+            case "asap":
+                type = ASAP;
+                break;
+
             case "custom_event_count":
                 type = CUSTOM_EVENT_COUNT;
                 break;
