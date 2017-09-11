@@ -350,7 +350,14 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify it's back to idle and progress is set
         assertTrue(driver.callbackMap.containsKey(schedule.getId()));
-        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+
+        if (generateEvents != null) {
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+        } else {
+            // ASAP triggers should automatically re-execute if the count has not been met
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
+        }
+
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 1);
 
         // Trigger it again
