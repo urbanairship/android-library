@@ -146,7 +146,6 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_PRIORITY + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
                         + oldPendingExecutionColumn + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
