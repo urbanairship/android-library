@@ -163,9 +163,14 @@ class PushManagerJobHandler {
         PushProvider provider = pushManager.getPushProvider();
         String currentToken = pushManager.getRegistrationToken();
 
-        if (provider == null || !provider.isAvailable(context)) {
-            Logger.error("Registration failed. Push provider unavailable: " + provider);
+        if (provider == null) {
+            Logger.error("Registration failed. Missing push provider.");
             return JobInfo.JOB_FINISHED;
+        }
+
+        if (!provider.isAvailable(context)) {
+            Logger.error("Registration failed. Push provider unavailable: " + provider);
+            return JobInfo.JOB_RETRY;
         }
 
         String token;
