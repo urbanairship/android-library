@@ -97,7 +97,7 @@ public class AdmPushProvider implements PushProvider {
     @Nullable
     @Override
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        return true;
+        return message.containsAirshipKeys();
     }
 
     @Override

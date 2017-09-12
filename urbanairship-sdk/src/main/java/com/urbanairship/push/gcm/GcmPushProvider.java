@@ -89,13 +89,13 @@ public class GcmPushProvider implements PushProvider {
     @Nullable
     @Override
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        String sender = message.getExtra("sender", null);
-        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
-            Logger.info("Ignoring GCM message from sender: " + sender);
-            return false;
+        String sender = message.getExtra("from", null);
+        boolean isValidSender = false;
+        if (sender != null) {
+            isValidSender = sender.equals(UAirship.shared().getAirshipConfigOptions().gcmSender);
         }
 
-        return true;
+        return isValidSender && message.containsAirshipKeys();
     }
 
     @Override

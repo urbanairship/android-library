@@ -5,7 +5,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -649,6 +648,24 @@ public class PushMessageTest extends BaseTestCase {
         assertNull(PushMessage.fromIntent(null));
         assertNull(PushMessage.fromIntent(new Intent()));
         assertNull(PushMessage.fromIntent(new Intent().putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, "not a bundle")));
+    }
+
+    /**
+     * Test that if the push contains any key that starts with "com.urbanairship" containsAirshipKeys
+     * returns true.
+     */
+    @Test
+    public void testContainsAirshipKeys() {
+        Bundle bundle = new Bundle();
+        bundle.putString("cool", "story");
+
+        PushMessage message = new PushMessage(bundle);
+        assertFalse(message.containsAirshipKeys());
+
+
+        bundle.putString("com.urbanairship.whatever", "value");
+        message = new PushMessage(bundle);
+        assertTrue(message.containsAirshipKeys());
     }
 }
 
