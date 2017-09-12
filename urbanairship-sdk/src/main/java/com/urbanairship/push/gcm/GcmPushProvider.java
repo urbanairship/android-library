@@ -77,7 +77,7 @@ public class GcmPushProvider implements PushProvider {
     }
 
     @Override
-    public boolean isSupported(@NonNull Context context, AirshipConfigOptions configOptions) {
+    public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         if (!configOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
             Logger.info("The GCM transport is not allowed. Unable to register for Android push notifications.");
             return false;

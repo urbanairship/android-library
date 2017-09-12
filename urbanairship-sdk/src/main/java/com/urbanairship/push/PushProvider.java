@@ -87,7 +87,7 @@ public interface PushProvider {
      * @param configOptions The airship config options.
      * @return {@code true} if the push provider is supported on the device, otherwise {@code false}.
      */
-    boolean isSupported(@NonNull Context context, AirshipConfigOptions configOptions);
+    boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions);
 
     /**
      * Checks if the push message should be handled by the Urban Airship SDK.
