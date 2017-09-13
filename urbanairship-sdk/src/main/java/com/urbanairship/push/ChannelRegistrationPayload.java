@@ -28,6 +28,8 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -54,6 +56,9 @@ class ChannelRegistrationPayload implements JsonSerializable {
     static final String IDENTITY_HINTS_KEY = "identity_hints";
     static final String USER_ID_KEY = "user_id";
     static final String APID_KEY = "apid";
+    static final String TIMEZONE_KEY = "timezone";
+    static final String LANGUAGE_KEY = "locale_language";
+    static final String COUNTRY_KEY = "locale_country";
 
     private final boolean optIn;
     private final boolean backgroundEnabled;
@@ -64,6 +69,9 @@ class ChannelRegistrationPayload implements JsonSerializable {
     private final Set<String> tags;
     private final String userId;
     private final String apid;
+    private final String timezone;
+    private final String language;
+    private final String country;
 
 
     /**
@@ -79,7 +87,9 @@ class ChannelRegistrationPayload implements JsonSerializable {
         private Set<String> tags;
         private String userId;
         private String apid;
-
+        private String timezone;
+        private String language;
+        private String country;
 
         /**
          * Set the optIn value
@@ -129,6 +139,42 @@ class ChannelRegistrationPayload implements JsonSerializable {
         @NonNull
         Builder setDeviceType(@NonNull String deviceType) {
             this.deviceType = deviceType;
+            return this;
+        }
+
+        /**
+         * Set the device timezone
+         *
+         * @param timezone A string value of the timezone ID
+         * @return The builder with timezone ID set
+         */
+        @NonNull
+        Builder setTimezone(@NonNull String timezone) {
+            this.timezone = timezone;
+            return this;
+        }
+
+        /**
+         * Set the device language
+         *
+         * @param language A string value of the language ID
+         * @return The builder with language ID set
+         */
+        @NonNull
+        Builder setLanguage(@NonNull String language) {
+            this.language = language;
+            return this;
+        }
+
+        /**
+         * Set the device country
+         *
+         * @param country A string value of the country ID
+         * @return The builder with country ID set
+         */
+        @NonNull
+        Builder setCountry(@NonNull String country) {
+            this.country = country;
             return this;
         }
 
@@ -199,34 +245,42 @@ class ChannelRegistrationPayload implements JsonSerializable {
         this.tags = builder.setTags ? builder.tags : null;
         this.userId = builder.userId;
         this.apid = builder.apid;
+        this.timezone = builder.timezone;
+        this.language = builder.language;
+        this.country = builder.country;
     }
 
     @Override
     public JsonValue toJsonValue() {
-        Map<String, Object> payload = new HashMap<>();
-        Map<String, Object> identityHints = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
+        JsonMap.Builder data = JsonMap.newBuilder();
 
-        // Channel
-        channel.put(DEVICE_TYPE_KEY, deviceType);
-        channel.put(OPT_IN_KEY, optIn);
-        channel.put(BACKGROUND_ENABLED_KEY, backgroundEnabled);
-        channel.put(PUSH_ADDRESS_KEY, pushAddress);
+        JsonMap.Builder identityHints = JsonMap.newBuilder();
+        JsonMap.Builder channel = JsonMap.newBuilder();
 
         if (!UAStringUtil.isEmpty(alias)) {
             channel.put(ALIAS_KEY, alias);
         }
 
+        channel.put(DEVICE_TYPE_KEY, deviceType);
         channel.put(SET_TAGS_KEY, setTags);
+        channel.put(OPT_IN_KEY, optIn);
+        channel.put(PUSH_ADDRESS_KEY, pushAddress);
+        channel.put(BACKGROUND_ENABLED_KEY, backgroundEnabled);
+
+        channel.putOpt(TIMEZONE_KEY, timezone);
+        channel.putOpt(LANGUAGE_KEY, language);
+        channel.putOpt(COUNTRY_KEY, country);
 
         // If setTags is TRUE, then include the tags
         if (setTags && tags != null) {
             channel.put(TAGS_KEY, JsonValue.wrapOpt(tags).getList());
         }
 
-        payload.put(CHANNEL_KEY, channel);
+        JsonMap channelMap = channel.build();
+        if (!channelMap.isEmpty()) {
+            data.put(CHANNEL_KEY, channelMap);
+        }
 
-        // Identity hints
         if (!UAStringUtil.isEmpty(userId)) {
             identityHints.put(USER_ID_KEY, userId);
         }
@@ -235,16 +289,12 @@ class ChannelRegistrationPayload implements JsonSerializable {
             identityHints.put(APID_KEY, apid);
         }
 
-        if (!identityHints.isEmpty()) {
-            payload.put(IDENTITY_HINTS_KEY, identityHints);
+        JsonMap identityHintsMap = identityHints.build();
+        if (!identityHintsMap.isEmpty()) {
+            data.put(IDENTITY_HINTS_KEY, identityHintsMap);
         }
 
-        try {
-            return JsonValue.wrap(payload);
-        } catch (JsonException e) {
-            Logger.error("ChannelRegistrationPayload - Failed to create channel registration payload as json", e);
-            return JsonValue.NULL;
-        }
+        return data.build().toJsonValue();
     }
 
     /**
@@ -306,6 +356,9 @@ class ChannelRegistrationPayload implements JsonSerializable {
         result = 31 * result + (tags == null ? 0 : tags.hashCode());
         result = 31 * result + (userId == null ? 0 : userId.hashCode());
         result = 31 * result + (apid == null ? 0 : apid.hashCode());
+        result = 31 * result + (timezone == null ? 0 : timezone.hashCode());
+        result = 31 * result + (language == null ? 0 : language.hashCode());
+        result = 31 * result + (country == null ? 0 : country.hashCode());
 
         return result;
     }

@@ -18,6 +18,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -34,8 +35,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -547,6 +550,20 @@ public class PushManager extends AirshipComponent {
             case UAirship.AMAZON_PLATFORM:
                 builder.setDeviceType("amazon");
                 break;
+        }
+
+        if (UAirship.shared().getAnalytics().isEnabled()) {
+            builder.setTimezone(TimeZone.getDefault().getID());
+
+            Locale locale = Locale.getDefault();
+
+            if (!UAStringUtil.isEmpty(locale.getCountry())) {
+                builder.setCountry(locale.getCountry());
+            }
+
+            if (!UAStringUtil.isEmpty(locale.getLanguage())) {
+                builder.setLanguage(locale.getLanguage());
+            }
         }
 
         if (getPushTokenRegistrationEnabled()) {
