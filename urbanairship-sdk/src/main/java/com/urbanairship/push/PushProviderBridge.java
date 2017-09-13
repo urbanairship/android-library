@@ -66,7 +66,7 @@ public abstract class PushProviderBridge {
                 WakefulBroadcastReceiver.startWakefulService(context, intent);
                 callback.run();
                 return;
-            } catch (IllegalStateException e) {
+            } catch (SecurityException | IllegalStateException e) {
                 Logger.error("Unable to run push in the push service.", e);
                 WakefulBroadcastReceiver.completeWakefulIntent(intent);
             }

@@ -3,6 +3,27 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.8.3 - September 13, 2017
+==================================
+
+Bug Fixes
+---------
+- Fixed not retrying push registration in the same app session when Google Play Services is out of date.
+- Fixed security exceptions when trying to start background services.
+- Fixed NPE when the push service was started with a null intent.
+- Fixed processing push messages sent from other providers when using the same GCM sender ID.
+
+Version 8.8.2 - August 14, 2017
+===============================
+
+Patch release for a rare crash involving GCM push handling. Any apps using 
+GCM and experiencing NPEs in GCMPushReceiver should update.
+
+Bug Fixes
+---------
+- Fixed NPE in GCMPushReceiver for the rare case of null extras.
+
+
 Version 8.8.1 - August 8, 2017
 ==============================
 

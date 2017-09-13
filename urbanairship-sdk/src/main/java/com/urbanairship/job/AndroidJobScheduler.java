@@ -24,7 +24,10 @@ public class AndroidJobScheduler implements Scheduler {
 
     @Override
     public void cancel(@NonNull Context context, int schedulerId) throws SchedulerException {
-        getScheduler(context).cancel(schedulerId);
+        JobScheduler scheduler = getScheduler(context);
+        if (scheduler != null) {
+            scheduler.cancel(schedulerId);
+        }
     }
 
     @Override
@@ -51,6 +54,11 @@ public class AndroidJobScheduler implements Scheduler {
      * @throws SchedulerException if the schedule fails.
      */
     private void scheduleJob(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long millisecondsDelay) throws SchedulerException {
+        JobScheduler scheduler = getScheduler(context);
+        if (scheduler == null) {
+            return;
+        }
+
         ComponentName component = new ComponentName(context, AndroidJobService.class);
         android.app.job.JobInfo.Builder builder = new android.app.job.JobInfo.Builder(scheduleId, component)
                 .setExtras(jobInfo.toPersistableBundle());
@@ -68,7 +76,7 @@ public class AndroidJobScheduler implements Scheduler {
         }
 
         try {
-            if (getScheduler(context).schedule(builder.build()) == JobScheduler.RESULT_FAILURE) {
+            if (scheduler.schedule(builder.build()) == JobScheduler.RESULT_FAILURE) {
                 throw new SchedulerException("Android JobScheduler failed to schedule job.");
             }
 

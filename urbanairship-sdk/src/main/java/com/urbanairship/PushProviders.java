@@ -11,6 +11,7 @@ import com.urbanairship.push.adm.AdmPushProvider;
 import com.urbanairship.push.gcm.GcmPushProvider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -40,25 +41,14 @@ class PushProviders {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init(Context context, AirshipConfigOptions configOptions) {
-        if (configOptions.isTransportAllowed(AirshipConfigOptions.ADM_TRANSPORT)) {
-            AdmPushProvider provider = new AdmPushProvider();
-            if (provider.isSupported(context)) {
-                supportedProviders.add(provider);
-
-                if (provider.isAvailable(context)) {
-                    availableProviders.add(provider);
-                }
+        for (PushProvider provider : Arrays.asList(new GcmPushProvider(), new AdmPushProvider())) {
+            if (!provider.isSupported(context, configOptions)) {
+                continue;
             }
-        }
 
-        if (configOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-            GcmPushProvider provider = new GcmPushProvider();
-            if (provider.isSupported(context)) {
-                supportedProviders.add(provider);
-
-                if (provider.isAvailable(context)) {
-                    availableProviders.add(provider);
-                }
+            supportedProviders.add(provider);
+            if (provider.isAvailable(context)) {
+                availableProviders.add(provider);
             }
         }
     }

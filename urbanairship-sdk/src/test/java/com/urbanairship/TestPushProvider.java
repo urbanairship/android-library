@@ -29,7 +29,7 @@ public class TestPushProvider implements PushProvider {
     }
 
     @Override
-    public boolean isSupported(@NonNull Context context) {
+    public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         return true;
     }
 

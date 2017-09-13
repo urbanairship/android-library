@@ -106,7 +106,7 @@ public class JobDispatcher {
             try {
                 getScheduler().cancel(context, jobInfo.getId());
                 context.startService(AirshipService.createIntent(context, jobInfo, null));
-            } catch (IllegalStateException ex) {
+            } catch (SecurityException | IllegalStateException ex) {
                 getScheduler().schedule(context, jobInfo, getScheduleId(jobInfo.getId()));
             }
         } catch (SchedulerException e) {

@@ -53,7 +53,7 @@ public abstract class AirshipComponent {
     }
 
     /**
-     * Called when a scheduled {@link Job} is ready to perform.
+     * Called when a scheduled {@link JobInfo} is ready to perform.
      *
      * @param airship The airship instance.
      * @param jobInfo The JobInfo.

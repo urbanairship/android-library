@@ -33,6 +33,9 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     private final String testApid = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final boolean testSetTags = true;
     private Set<String> testTags;
+    private final String testLanguage = "test_language";
+    private final String testTimezone = "test_timezone";
+    private final String testCountry = "test_country";
 
     private ChannelRegistrationPayload payload;
 
@@ -45,10 +48,10 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
     }
 
     /**
-     * Test that the json has the full expected payload.
+     * Test that the json has the full expected payload when analytics is enabled.
      */
     @Test
-    public void testAsJsonFullPayload() throws JSONException {
+    public void testAsJsonFullPayloadAnalyticsEnabled() throws JSONException {
         payload = new ChannelRegistrationPayload.Builder()
                 .setOptIn(testOptIn)
                 .setBackgroundEnabled(testBackgroundEnabled)
@@ -57,10 +60,13 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setPushAddress(testPushAddress)
                 .setTags(testSetTags, testTags)
                 .setUserId(testUserId)
-                .setApid(testApid).build();
+                .setApid(testApid)
+                .setLanguage(testLanguage)
+                .setTimezone(testTimezone)
+                .setCountry(testCountry)
+                .build();
 
         JsonMap body = payload.toJsonValue().getMap();
-
 
         // Top level fields
         assertTrue("Channel should be present in payload.", body.containsKey(ChannelRegistrationPayload.CHANNEL_KEY));
@@ -90,6 +96,10 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Set tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.SET_TAGS_KEY));
         assertEquals("Set tags should be true.", channel.get(ChannelRegistrationPayload.SET_TAGS_KEY).getBoolean(!testSetTags), testSetTags);
         assertTrue("Tags should be present in payload", channel.containsKey(ChannelRegistrationPayload.TAGS_KEY));
+
+        assertTrue("Timezone should be in payload", channel.containsKey(ChannelRegistrationPayload.TIMEZONE_KEY));
+        assertTrue("Language should be in payload", channel.containsKey(ChannelRegistrationPayload.LANGUAGE_KEY));
+        assertTrue("Country should be in payload", channel.containsKey(ChannelRegistrationPayload.COUNTRY_KEY));
 
         // Check the tags within channel item
         JsonList tags = channel.get(ChannelRegistrationPayload.TAGS_KEY).getList();

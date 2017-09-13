@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
@@ -59,7 +60,7 @@ public class GcmPushProvider implements PushProvider {
     }
 
     @Override
-    public boolean isAvailable(@NonNull  Context context) {
+    public boolean isAvailable(@NonNull Context context) {
         try {
             int playServicesStatus = PlayServicesUtils.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
@@ -72,30 +73,33 @@ public class GcmPushProvider implements PushProvider {
             return false;
         }
 
-        // The sender ID is crucial, if we don't have this, GCM is not available
-        if (UAirship.shared().getAirshipConfigOptions().gcmSender == null) {
-            Logger.error("The GCM sender ID is not set. Unable to register.");
-            return false;
-        }
-
         return true;
     }
 
     @Override
-    public boolean isSupported(@NonNull Context context) {
+    public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
+        if (!configOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
+            return false;
+        }
+
+        if (configOptions.gcmSender == null) {
+            Logger.info("The GCM sender ID is not set. Unable to register for Android push notifications.");
+            return false;
+        }
+
         return PlayServicesUtils.isGoogleCloudMessagingDependencyAvailable() && PlayServicesUtils.isGooglePlayStoreAvailable(context);
     }
 
     @Nullable
     @Override
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        String sender = message.getExtra("sender", null);
-        if (sender != null && !sender.equals(airship.getAirshipConfigOptions().gcmSender)) {
-            Logger.info("Ignoring GCM message from sender: " + sender);
-            return false;
+        String sender = message.getExtra("from", null);
+        boolean isValidSender = false;
+        if (sender != null) {
+            isValidSender = sender.equals(UAirship.shared().getAirshipConfigOptions().gcmSender);
         }
 
-        return true;
+        return isValidSender && message.containsAirshipKeys();
     }
 
     @Override

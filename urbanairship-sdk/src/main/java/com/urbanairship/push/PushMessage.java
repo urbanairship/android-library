@@ -300,6 +300,21 @@ public class PushMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Checks the message for Urban Airship keys.
+     *
+     * @return <code>true</code> if the message contains any Urban Airship keys.
+     */
+    public boolean containsAirshipKeys() {
+        for (String key : data.keySet()) {
+            if (key.startsWith("com.urbanairship")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Gets the message's canonical push ID
      *
      * @return The canonical push ID

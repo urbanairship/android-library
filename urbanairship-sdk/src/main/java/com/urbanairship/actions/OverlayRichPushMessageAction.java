@@ -11,6 +11,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * Displays an inbox message in a landing page.
@@ -51,7 +52,7 @@ public class OverlayRichPushMessageAction extends Action {
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_AUTOMATION:
-                if (arguments.getValue().getString() == null) {
+                if (UAStringUtil.isEmpty(arguments.getValue().getString())) {
                     return false;
                 }
 
@@ -82,7 +83,7 @@ public class OverlayRichPushMessageAction extends Action {
             }
         }
 
-        if (messageId == null) {
+        if (UAStringUtil.isEmpty(messageId)) {
             return ActionResult.newErrorResult(new Exception("Missing message ID."));
         }
 

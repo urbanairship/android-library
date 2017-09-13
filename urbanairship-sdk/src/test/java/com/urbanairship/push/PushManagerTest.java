@@ -16,6 +16,7 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -29,7 +30,9 @@ import org.robolectric.RuntimeEnvironment;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -42,6 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 public class PushManagerTest extends BaseTestCase {
 
@@ -597,6 +601,44 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setRegistrationToken(null);
 
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
+    }
+
+    /**
+     * Test testGetNextChannelRegistrationPayloadAnalyticsEnabled returns a payload with a top
+     * level timezone, language and country when analytics is enabled
+     */
+    @Test
+    public void testGetNextChannelRegistrationPayloadAnalyticsEnabled() throws JSONException {
+        when(mockAnalytics.isEnabled()).thenReturn(true);
+
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.setRegistrationToken("GCM_TOKEN");
+        pushManager.setPushTokenRegistrationEnabled(true);
+
+        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
+        assertNotNull("The payload should not be null.", payload);
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("timezone").getString(), TimeZone.getDefault().getID());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
+    }
+
+    /**
+     * Test testGetNextChannelRegistrationPayloadAnalyticsDisabled returns a payload without a top
+     * level timezone, language and country when analytics is disabled
+     */
+    @Test
+    public void testGetNextChannelRegistrationPayloadAnalyticsDisabled() throws JSONException {
+        when(mockAnalytics.isEnabled()).thenReturn(false);
+
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+        pushManager.setRegistrationToken("GCM_TOKEN");
+        pushManager.setPushTokenRegistrationEnabled(true);
+
+        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
+        assertNotNull("The payload should not be null.", payload);
+        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("timezone"));
+        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language"));
+        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country"));
     }
 
     /**
