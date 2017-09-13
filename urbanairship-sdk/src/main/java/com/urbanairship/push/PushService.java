@@ -66,7 +66,9 @@ public class PushService extends Service {
                 stopSelf(lastStartId);
             }
 
-            WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            if (intent != null && intent.getExtras() != null) {
+                WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            }
         }
 
         return START_NOT_STICKY;

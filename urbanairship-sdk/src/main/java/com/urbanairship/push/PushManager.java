@@ -341,7 +341,6 @@ public class PushManager extends AirshipComponent {
             JobInfo jobInfo = JobInfo.newBuilder()
                                      .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
                                      .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
-                                     .setNetworkAccessRequired(true)
                                      .setAirshipComponent(PushManager.class)
                                      .build();
 
