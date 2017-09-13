@@ -131,6 +131,19 @@ public class OverlayRichPushMessageActionTest extends BaseTestCase {
      * Test rejects null argument value.
      */
     @Test
+    public void testRejectsEmptyArgumentValue() {
+        for (@Action.Situation int situation : acceptedSituations) {
+            ActionArguments args = ActionTestUtils.createArgs(situation, "");
+            assertFalse("Should reject empty string argument value in situation " + situation,
+                    action.acceptsArguments(args));
+        }
+    }
+
+
+    /**
+     * Test rejects null argument value.
+     */
+    @Test
     public void testRejectsPlaceHolderWithNoMetadata() {
         for (@Action.Situation int situation : acceptedSituations) {
             ActionArguments args = ActionTestUtils.createArgs(situation, "auto");

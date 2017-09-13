@@ -118,4 +118,14 @@ public class OpenRichPushInboxActionTest extends BaseTestCase {
 
         verify(mockInbox).startInboxActivity();
     }
+
+    /**
+     * Test "" placeholder will load the inbox.
+     */
+    @Test
+    public void testPerformEmptyMessageId() {
+        action.perform(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ""));
+
+        verify(mockInbox).startInboxActivity();
+    }
 }
