@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -241,6 +242,33 @@ public class AutomationEngineTest extends BaseTestCase {
             @Override
             public void run() {
                 UAirship.shared().getAnalytics().trackScreen("some screen");
+            }
+        });
+    }
+
+    @Test
+    public void testMultipleScreenDelaySome() throws Exception {
+        ScheduleDelay delay = ScheduleDelay.newBuilder()
+                                           .setScreens(Arrays.asList("some screen", "some other screen"))
+                                           .build();
+
+        verifyDelay(delay, new Runnable() {
+            @Override
+            public void run() {
+                UAirship.shared().getAnalytics().trackScreen("some screen");
+            }
+        });
+    }
+
+    @Test
+    public void testMultipleScreenDelayOther() throws Exception {
+        ScheduleDelay delay = ScheduleDelay.newBuilder()
+                                           .setScreens(Arrays.asList("some screen", "some other screen"))
+                                           .build();
+        verifyDelay(delay, new Runnable() {
+            @Override
+            public void run() {
+                UAirship.shared().getAnalytics().trackScreen("some other screen");
             }
         });
     }
