@@ -8,6 +8,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.util.UAStringUtil;
 
 /**
  * Starts an activity to display either the {@link RichPushInbox} or a {@link RichPushMessage} using
@@ -71,10 +72,10 @@ public class OpenRichPushInboxAction extends Action {
             }
         }
 
-        if (messageId != null) {
-            UAirship.shared().getInbox().startMessageActivity(messageId);
-        } else {
+        if (UAStringUtil.isEmpty(messageId)) {
             UAirship.shared().getInbox().startInboxActivity();
+        } else {
+            UAirship.shared().getInbox().startMessageActivity(messageId);
         }
 
         return ActionResult.newEmptyResult();
