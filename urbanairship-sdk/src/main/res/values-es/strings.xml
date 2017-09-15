@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Comprar ahora</string>
     <string name="ua_notification_button_follow">Seguir</string>
     <string name="ua_notification_button_unfollow">Dejar de seguir</string>
-    <string name="ua_notification_button_opt_in">Participar</string>
-    <string name="ua_notification_button_opt_out">No participar</string>
+    <string name="ua_notification_button_opt_in">Optar por sí</string>
+    <string name="ua_notification_button_opt_out">Optar por no</string>
     <string name="ua_notification_button_remind">Recuérdame más tarde</string>
     <string name="ua_notification_button_share">Compartir</string>
     <string name="ua_notification_button_accept">Aceptar</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">Descargar</string>
     <string name="ua_notification_button_more_like">Más como esto</string>
     <string name="ua_notification_button_less_like">Menos como esto</string>
-    <string name="ua_notification_button_like">Me gusta</string>
-    <string name="ua_notification_button_dislike">No me gusta</string>
+    <string name="ua_notification_button_like">Me Gusta</string>
+    <string name="ua_notification_button_dislike">No Me Gusta</string>
     <string name="ua_notification_button_copy">Copiar</string>
     <string name="ua_notification_button_save">Guardar</string>
     <string name="ua_notification_button_add_to_calendar">Añadir al calendario</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Error de conexión</string>
     <string name="ua_mark_read">Marcar como leído</string>
     <string name="ua_delete">Eliminar</string>
+    <string name="ua_mc_no_longer_available">El mensaje seleccionado ya no está disponible.</string>
+    <string name="ua_content_error">Error de contenido</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> seleccionado</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> seleccionados</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> seleccionado</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> seleccionados</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Actualizar</string>
+    <string name="ua_open">Abrir</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Calificar</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">No, gracias</string>
+    <string name="ua_rate_app_action_default_title">¿Te gusta <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Toca <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> para calificarla en la tienda de aplicaciones.</string>
+    <string name="ua_rate_app_action_generic_display_name">Esta aplicación</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Notificaciones</string>
+    <string name="ua_default_channel_description">Actualizaciones generales de la aplicación</string>
+    <string name="ua_channel_id">ID de canal</string>
+    
 </resources>

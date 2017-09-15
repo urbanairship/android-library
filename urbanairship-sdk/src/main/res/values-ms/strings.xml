@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Beli Sekarang</string>
     <string name="ua_notification_button_follow">Ikut</string>
     <string name="ua_notification_button_unfollow">Nyahikut</string>
-    <string name="ua_notification_button_opt_in">Ikut serta</string>
-    <string name="ua_notification_button_opt_out">Tarik diri</string>
+    <string name="ua_notification_button_opt_in">Memilih masuk</string>
+    <string name="ua_notification_button_opt_out">Memilih keluar</string>
     <string name="ua_notification_button_remind">Ingatkan Saya Kemudian</string>
     <string name="ua_notification_button_share">Kongsi</string>
     <string name="ua_notification_button_accept">Terima</string>
@@ -23,7 +23,7 @@
     <string name="ua_notification_button_add_to_calendar">Tambah Ke Kalendar</string>
     <string name="ua_notification_button_add">Tambah</string>
     <string name="ua_notification_button_tell_me_more">Beritahu Saya Lagi</string>
-    <string name="ua_notification_button_send_info">Menghantar Info</string>
+    <string name="ua_notification_button_send_info">Hantar Maklumat</string>
     <string name="ua_notification_button_rate_now">Nilaikan Sekarang</string>
     <string name="ua_notification_button_search">Carian</string>
     <string name="ua_notification_button_book_now">Tempah Sekarang</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">Ralat Sambungan</string>
     <string name="ua_mark_read">Tanda Dibaca</string>
     <string name="ua_delete">Padam</string>
+    <string name="ua_mc_no_longer_available">Mesej yang dipilih tidak lagi tersedia.</string>
+    <string name="ua_content_error">Ralat kandungan</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> dipilih</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> dipilih</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Segarkan</string>
+    <string name="ua_open">Buka</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Nilaikan</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Tidak, Terima kasih</string>
+    <string name="ua_rate_app_action_default_title">Menikmati <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Ketik <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> untuk menilaikannya di kedai aplikasi.</string>
+    <string name="ua_rate_app_action_generic_display_name">Apl ini</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Pemberitahuan</string>
+    <string name="ua_default_channel_description">Kemas kini aplikasi umum</string>
+    <string name="ua_channel_id">ID Saluran</string>
+    
 </resources>

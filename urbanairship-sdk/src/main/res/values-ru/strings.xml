@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Купите сейчас</string>
     <string name="ua_notification_button_follow">Подписаться</string>
     <string name="ua_notification_button_unfollow">Отписаться</string>
-    <string name="ua_notification_button_opt_in">Подписаться на рассылку</string>
-    <string name="ua_notification_button_opt_out">Отписаться от рассылки</string>
+    <string name="ua_notification_button_opt_in">Принять</string>
+    <string name="ua_notification_button_opt_out">Отказаться</string>
     <string name="ua_notification_button_remind">Напомнить мне позже</string>
     <string name="ua_notification_button_share">Поделиться</string>
     <string name="ua_notification_button_accept">Принять</string>
@@ -23,7 +23,7 @@
     <string name="ua_notification_button_add_to_calendar">Добавить в календарь</string>
     <string name="ua_notification_button_add">Добавить</string>
     <string name="ua_notification_button_tell_me_more">Сказать больше</string>
-    <string name="ua_notification_button_send_info">Отправить информацию</string>
+    <string name="ua_notification_button_send_info">Отправить данные</string>
     <string name="ua_notification_button_rate_now">Оценить сейчас</string>
     <string name="ua_notification_button_search">Поиск</string>
     <string name="ua_notification_button_book_now">Забронировать сейчас</string>
@@ -48,17 +48,31 @@
     <string name="ua_connection_error">Ошибка подключения</string>
     <string name="ua_mark_read">Отметить как прочитанное</string>
     <string name="ua_delete">Удалить</string>
+    <string name="ua_mc_no_longer_available">Выбранное сообщение больше недоступно.</string>
+    <string name="ua_content_error">Ошибка контента</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> выбран</item>
-    <item quantity="few">
-      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
-    <item quantity="many">
-      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> выбран</item>
+        <item quantity="few"><xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+        <item quantity="many"><xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> выбрано</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Обновить</string>
+    <string name="ua_open">Открыть</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Оценить</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Нет, спасибо</string>
+    <string name="ua_rate_app_action_default_title">Вам нравится <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Нажмите <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, чтобы оценить его в App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Это приложение</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Уведомления</string>
+    <string name="ua_default_channel_description">Общие обновления приложения</string>
+    <string name="ua_channel_id">ID канала</string>
+    
 </resources>

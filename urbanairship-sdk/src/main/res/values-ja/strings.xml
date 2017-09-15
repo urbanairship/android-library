@@ -16,14 +16,14 @@
     <string name="ua_notification_button_download">ダウンロード</string>
     <string name="ua_notification_button_more_like">さらに似ている項目</string>
     <string name="ua_notification_button_less_like">もっと違う項目</string>
-    <string name="ua_notification_button_like">いいね！</string>
-    <string name="ua_notification_button_dislike">いいね！を取り消す</string>
+    <string name="ua_notification_button_like">いいね</string>
+    <string name="ua_notification_button_dislike">よくない</string>
     <string name="ua_notification_button_copy">コピーする</string>
     <string name="ua_notification_button_save">保存する</string>
     <string name="ua_notification_button_add_to_calendar">カレンダーに追加する</string>
     <string name="ua_notification_button_add">追加する</string>
     <string name="ua_notification_button_tell_me_more">詳しく教えてください</string>
-    <string name="ua_notification_button_send_info">情報を送信する</string>
+    <string name="ua_notification_button_send_info">情報を送る</string>
     <string name="ua_notification_button_rate_now">今すぐ評価する</string>
     <string name="ua_notification_button_search">検索する</string>
     <string name="ua_notification_button_book_now">今すぐ予約する</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">接続エラー</string>
     <string name="ua_mark_read">既読にする</string>
     <string name="ua_delete">削除する</string>
+    <string name="ua_mc_no_longer_available">選択したメッセージは使用できなくなりました。</string>
+    <string name="ua_content_error">コンテンツエラー</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g>が選択されています</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>が選択されています</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">リフレッシュ</string>
+    <string name="ua_open">開く</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">レート</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">結構です</string>
+    <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g>を楽しんでいますか？</string>
+    <string name="ua_rate_app_action_default_body"><xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>をタップしてアプリストアで評価しましょう。</string>
+    <string name="ua_rate_app_action_generic_display_name">このアプリ</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">通知</string>
+    <string name="ua_default_channel_description">一般的なアプリのアップデート</string>
+    <string name="ua_channel_id">チャンネルID</string>
+    
 </resources>

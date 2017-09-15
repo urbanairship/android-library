@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Osta nyt</string>
     <string name="ua_notification_button_follow">Seuraa</string>
     <string name="ua_notification_button_unfollow">Älä seuraa</string>
-    <string name="ua_notification_button_opt_in">Opt-in</string>
-    <string name="ua_notification_button_opt_out">Opt-out</string>
+    <string name="ua_notification_button_opt_in">Osallistun</string>
+    <string name="ua_notification_button_opt_out">En osallistu</string>
     <string name="ua_notification_button_remind">Muistuta minua myöhemmin</string>
     <string name="ua_notification_button_share">Jaa</string>
     <string name="ua_notification_button_accept">Hyväksy</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">Lataa</string>
     <string name="ua_notification_button_more_like">Lisää tämän kaltaisia</string>
     <string name="ua_notification_button_less_like">Vähemmän tämän kaltaisia</string>
-    <string name="ua_notification_button_like">Tykkää</string>
-    <string name="ua_notification_button_dislike">Älä tykkää</string>
+    <string name="ua_notification_button_like">Tykkään</string>
+    <string name="ua_notification_button_dislike">En tykkää</string>
     <string name="ua_notification_button_copy">Kopioi</string>
     <string name="ua_notification_button_save">Tallenna</string>
     <string name="ua_notification_button_add_to_calendar">Lisää kalenteriin</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Yhteysvirhe</string>
     <string name="ua_mark_read">Merkitse luetuksi</string>
     <string name="ua_delete">Poista</string>
+    <string name="ua_mc_no_longer_available">Valittu viesti ei ole enää saatavilla.</string>
+    <string name="ua_content_error">Sisältövirhe</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> valittu</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> valittu</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> valittu</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valittu</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Päivitä</string>
+    <string name="ua_open">Avaa</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Arvioi</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Ei kiitos</string>
+    <string name="ua_rate_app_action_default_title">Pidätkö sovelluksesta <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Arvioi se App Storessa napauttamalla <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>.</string>
+    <string name="ua_rate_app_action_generic_display_name">Tämä sovellus</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Ilmoitukset</string>
+    <string name="ua_default_channel_description">Yleiset sovelluspäivitykset</string>
+    <string name="ua_channel_id">Kanavatunnus</string>
+    
 </resources>

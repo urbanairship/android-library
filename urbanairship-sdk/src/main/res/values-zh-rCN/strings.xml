@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">立刻购买</string>
     <string name="ua_notification_button_follow">关注</string>
     <string name="ua_notification_button_unfollow">取消关注</string>
-    <string name="ua_notification_button_opt_in">参加</string>
-    <string name="ua_notification_button_opt_out">不参加</string>
+    <string name="ua_notification_button_opt_in">选择参加</string>
+    <string name="ua_notification_button_opt_out">选择退出</string>
     <string name="ua_notification_button_remind">稍后提醒我</string>
     <string name="ua_notification_button_share">分享</string>
     <string name="ua_notification_button_accept">接受</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">连接错误</string>
     <string name="ua_mark_read">标记已读</string>
     <string name="ua_delete">删除</string>
+    <string name="ua_mc_no_longer_available">所选消息不再可用。</string>
+    <string name="ua_content_error">内容错误</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g>项已选</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>项已选</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">刷新</string>
+    <string name="ua_open">打开</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">评价</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">不用了，谢谢</string>
+    <string name="ua_rate_app_action_default_title">喜欢<xliff:g example="this App" id="app_name">%1$2s</xliff:g>？</string>
+    <string name="ua_rate_app_action_default_body">点击<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>在应用程序商店进行评价。</string>
+    <string name="ua_rate_app_action_generic_display_name">这款应用程序</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">通知</string>
+    <string name="ua_default_channel_description">一般应用程序更新</string>
+    <string name="ua_channel_id">通道ID</string>
+    
 </resources>

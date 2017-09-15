@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">지금 구매</string>
     <string name="ua_notification_button_follow">팔로우</string>
     <string name="ua_notification_button_unfollow">언팔로우</string>
-    <string name="ua_notification_button_opt_in">구독</string>
-    <string name="ua_notification_button_opt_out">구독중지</string>
+    <string name="ua_notification_button_opt_in">옵트인</string>
+    <string name="ua_notification_button_opt_out">옵트아웃</string>
     <string name="ua_notification_button_remind">나중에 알림</string>
     <string name="ua_notification_button_share">공유</string>
     <string name="ua_notification_button_accept">수락</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">다운로드</string>
     <string name="ua_notification_button_more_like">더 좋아함</string>
     <string name="ua_notification_button_less_like">덜 좋아함</string>
-    <string name="ua_notification_button_like">좋아요</string>
-    <string name="ua_notification_button_dislike">싫어요</string>
+    <string name="ua_notification_button_like">좋아함</string>
+    <string name="ua_notification_button_dislike">싫어함</string>
     <string name="ua_notification_button_copy">복사</string>
     <string name="ua_notification_button_save">저장</string>
     <string name="ua_notification_button_add_to_calendar">캘린더에 추가</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">연결 오류</string>
     <string name="ua_mark_read">읽음 표시</string>
     <string name="ua_delete">삭제</string>
+    <string name="ua_mc_no_longer_available">선택한 메시지를 더 이상 사용할 수 없습니다.</string>
+    <string name="ua_content_error">내용 오류</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> 개 선택됨</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> 개 선택됨</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">새로 고침</string>
+    <string name="ua_open">열기</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">평가</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">아니요, 괜찮습니다.</string>
+    <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g> 이(가) 마음에 드십니까?</string>
+    <string name="ua_rate_app_action_default_body"><xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> 을(를) 탭하여 앱스토어에서 평가해 주십시오.</string>
+    <string name="ua_rate_app_action_generic_display_name">이 앱</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">알림</string>
+    <string name="ua_default_channel_description">일반 앱 업데이트</string>
+    <string name="ua_channel_id">채널 ID</string>
+    
 </resources>

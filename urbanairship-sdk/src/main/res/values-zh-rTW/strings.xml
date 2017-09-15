@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">即刻下單</string>
     <string name="ua_notification_button_follow">關注</string>
     <string name="ua_notification_button_unfollow">取消關注</string>
-    <string name="ua_notification_button_opt_in">參加</string>
-    <string name="ua_notification_button_opt_out">不參加</string>
+    <string name="ua_notification_button_opt_in">選擇參加</string>
+    <string name="ua_notification_button_opt_out">選擇退出</string>
     <string name="ua_notification_button_remind">稍後提醒我</string>
     <string name="ua_notification_button_share">分享</string>
     <string name="ua_notification_button_accept">接受</string>
@@ -23,7 +23,7 @@
     <string name="ua_notification_button_add_to_calendar">添加到日曆</string>
     <string name="ua_notification_button_add">添加</string>
     <string name="ua_notification_button_tell_me_more">告訴我更多</string>
-    <string name="ua_notification_button_send_info">發送信息</string>
+    <string name="ua_notification_button_send_info">傳送資訊</string>
     <string name="ua_notification_button_rate_now">現在就評價吧</string>
     <string name="ua_notification_button_search">搜索</string>
     <string name="ua_notification_button_book_now">現在預訂</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">連接錯誤</string>
     <string name="ua_mark_read">標記已讀</string>
     <string name="ua_delete">刪除</string>
+    <string name="ua_mc_no_longer_available">所選訊息不再可用。</string>
+    <string name="ua_content_error">內容錯誤</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g>項已選</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>項已選</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">重新整理</string>
+    <string name="ua_open">打開</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">評價</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">不用了，謝謝</string>
+    <string name="ua_rate_app_action_default_title">喜歡<xliff:g example="this App" id="app_name">%1$2s</xliff:g>？</string>
+    <string name="ua_rate_app_action_default_body">點擊<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>在應用程式商店進行評價。</string>
+    <string name="ua_rate_app_action_generic_display_name">這款應用程式</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">通知</string>
+    <string name="ua_default_channel_description">一般應用程式更新</string>
+    <string name="ua_channel_id">通道ID</string>
+    
 </resources>

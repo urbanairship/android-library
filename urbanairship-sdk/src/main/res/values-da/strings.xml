@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Køb nu</string>
     <string name="ua_notification_button_follow">Følg</string>
     <string name="ua_notification_button_unfollow">Følg ikke længere</string>
-    <string name="ua_notification_button_opt_in">Tilmeld</string>
-    <string name="ua_notification_button_opt_out">Frameld</string>
+    <string name="ua_notification_button_opt_in">Vælg</string>
+    <string name="ua_notification_button_opt_out">Fravælg</string>
     <string name="ua_notification_button_remind">Mind mig om det senere</string>
     <string name="ua_notification_button_share">Del</string>
     <string name="ua_notification_button_accept">Acceptér</string>
@@ -16,7 +16,7 @@
     <string name="ua_notification_button_download">Hent</string>
     <string name="ua_notification_button_more_like">Mere som denne</string>
     <string name="ua_notification_button_less_like">Mindre som denne</string>
-    <string name="ua_notification_button_like">Synes om</string>
+    <string name="ua_notification_button_like">Synes godt om</string>
     <string name="ua_notification_button_dislike">Synes ikke om</string>
     <string name="ua_notification_button_copy">Kopiér</string>
     <string name="ua_notification_button_save">Gem</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Forbindelsesfejl</string>
     <string name="ua_mark_read">Markeret som læst</string>
     <string name="ua_delete">Slet</string>
+    <string name="ua_mc_no_longer_available">Den valgte meddelelse er ikke længere tilgængelig.</string>
+    <string name="ua_content_error">Fejl i indhold</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> valgt</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> valgt</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> valgt</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valgt</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Opdatér</string>
+    <string name="ua_open">Åbn</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Bedøm</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nej tak</string>
+    <string name="ua_rate_app_action_default_title">Kan du lide <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Tryk på <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> at give en anmeldelse i App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Denne app</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Underretninger</string>
+    <string name="ua_default_channel_description">Generelle appopdateringer</string>
+    <string name="ua_channel_id">Kanal-id</string>
+    
 </resources>

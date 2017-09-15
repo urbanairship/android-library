@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Acquista ora</string>
     <string name="ua_notification_button_follow">Segui</string>
     <string name="ua_notification_button_unfollow">Smetti di seguire</string>
-    <string name="ua_notification_button_opt_in">Opt-in</string>
-    <string name="ua_notification_button_opt_out">Opt-out</string>
+    <string name="ua_notification_button_opt_in">Accetta</string>
+    <string name="ua_notification_button_opt_out">Rifiuta</string>
     <string name="ua_notification_button_remind">Ricordamelo più tardi</string>
     <string name="ua_notification_button_share">Condividi</string>
     <string name="ua_notification_button_accept">Accetta</string>
@@ -23,7 +23,7 @@
     <string name="ua_notification_button_add_to_calendar">Aggiungi al calendario</string>
     <string name="ua_notification_button_add">Aggiungi</string>
     <string name="ua_notification_button_tell_me_more">Più informazioni</string>
-    <string name="ua_notification_button_send_info">Invia informazioni</string>
+    <string name="ua_notification_button_send_info">Invia Info</string>
     <string name="ua_notification_button_rate_now">Valuta adesso</string>
     <string name="ua_notification_button_search">Cerca</string>
     <string name="ua_notification_button_book_now">Prenota adesso</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Errore di connessione</string>
     <string name="ua_mark_read">Segna come letto</string>
     <string name="ua_delete">Elimina</string>
+    <string name="ua_mc_no_longer_available">Il messaggio selezionato non è più disponibile.</string>
+    <string name="ua_content_error">Errore nel contenuto</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> selezionato</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> selezionati</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> selezionato</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> selezionati</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Aggiorna</string>
+    <string name="ua_open">Apri</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Vota</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">No grazie</string>
+    <string name="ua_rate_app_action_default_title">Ti piace <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Tocca <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> di votarla su App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Questa app</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Notifiche</string>
+    <string name="ua_default_channel_description">Aggiornamenti generali dell\'app</string>
+    <string name="ua_channel_id">ID canale</string>
+    
 </resources>

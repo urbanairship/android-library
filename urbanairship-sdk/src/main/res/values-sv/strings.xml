@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Köp nu</string>
     <string name="ua_notification_button_follow">Följ</string>
     <string name="ua_notification_button_unfollow">Sluta följa</string>
-    <string name="ua_notification_button_opt_in">Anmäl dig</string>
-    <string name="ua_notification_button_opt_out">Avanmäl dig</string>
+    <string name="ua_notification_button_opt_in">Välj</string>
+    <string name="ua_notification_button_opt_out">Välj bort</string>
     <string name="ua_notification_button_remind">Påminn mig senare</string>
     <string name="ua_notification_button_share">Dela</string>
     <string name="ua_notification_button_accept">Acceptera</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Anslutningsfel</string>
     <string name="ua_mark_read">Markera som läst</string>
     <string name="ua_delete">Radera</string>
+    <string name="ua_mc_no_longer_available">Det valda meddelandet är inte längre tillgängligt.</string>
+    <string name="ua_content_error">Innehållsfel</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> valt</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> valda</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> valt</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valda</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Uppdatera</string>
+    <string name="ua_open">Öppna</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Betygsätt</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nej tack</string>
+    <string name="ua_rate_app_action_default_title">Gillar du <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Tryck på <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> för att betygsätta den på App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Denna app</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Meddelanden</string>
+    <string name="ua_default_channel_description">Allmänna appuppdateringar</string>
+    <string name="ua_channel_id">Kanal-ID</string>
+    
 </resources>

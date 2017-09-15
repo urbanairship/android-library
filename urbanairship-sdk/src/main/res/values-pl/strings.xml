@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Kup teraz</string>
     <string name="ua_notification_button_follow">Obserwuj</string>
     <string name="ua_notification_button_unfollow">Przestań obserwować</string>
-    <string name="ua_notification_button_opt_in">Subskrybuj</string>
-    <string name="ua_notification_button_opt_out">Zrezygnuj</string>
+    <string name="ua_notification_button_opt_in">Zgadzam się</string>
+    <string name="ua_notification_button_opt_out">Nie zgadzam się</string>
     <string name="ua_notification_button_remind">Przypomnij mi później</string>
     <string name="ua_notification_button_share">Udostępnij</string>
     <string name="ua_notification_button_accept">Akceptuj</string>
@@ -16,14 +16,14 @@
     <string name="ua_notification_button_download">Pobierz</string>
     <string name="ua_notification_button_more_like">Więcej podobnych treści</string>
     <string name="ua_notification_button_less_like">Mniej podobnych treści</string>
-    <string name="ua_notification_button_like">Polub</string>
-    <string name="ua_notification_button_dislike">Cofnij polubienie</string>
+    <string name="ua_notification_button_like">Podoba mi się</string>
+    <string name="ua_notification_button_dislike">Nie podoba mi się</string>
     <string name="ua_notification_button_copy">Kopiuj</string>
     <string name="ua_notification_button_save">Zapisz</string>
     <string name="ua_notification_button_add_to_calendar">Dodaj do kalendarza</string>
     <string name="ua_notification_button_add">Dodaj</string>
     <string name="ua_notification_button_tell_me_more">Więcej informacji</string>
-    <string name="ua_notification_button_send_info">Wyślij informacje</string>
+    <string name="ua_notification_button_send_info">Wyślij info</string>
     <string name="ua_notification_button_rate_now">Oceń teraz</string>
     <string name="ua_notification_button_search">Szukaj</string>
     <string name="ua_notification_button_book_now">Rezerwuj teraz</string>
@@ -48,17 +48,31 @@
     <string name="ua_connection_error">Błąd połączenia</string>
     <string name="ua_mark_read">Zaznacz jako przeczytane</string>
     <string name="ua_delete">Usuń</string>
+    <string name="ua_mc_no_longer_available">Wybrana wiadomość nie jest już dostępna.</string>
+    <string name="ua_content_error">Błąd treści</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">Wybrano: <xliff:g example="1" id="count">%1$d</xliff:g>
-    </item>
-    <item quantity="few">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g>
-    </item>
-    <item quantity="many">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g>
-    </item>
-    <item quantity="other">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g>
-    </item>
-  </plurals>
+        <item quantity="one">Wybrano: <xliff:g example="1" id="count">%1$d</xliff:g></item>
+        <item quantity="few">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="many">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="other">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Odśwież</string>
+    <string name="ua_open">Otwórz</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Oceń</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nie, dziękuję</string>
+    <string name="ua_rate_app_action_default_title">Podoba Ci się aplikacja <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Dotknij <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, aby ocenić ją w sklepie z aplikacjami.</string>
+    <string name="ua_rate_app_action_generic_display_name">Ta aplikacja</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Powiadomienia</string>
+    <string name="ua_default_channel_description">Ogólne aktualizacje aplikacji</string>
+    <string name="ua_channel_id">ID kanału</string>
+    
 </resources>

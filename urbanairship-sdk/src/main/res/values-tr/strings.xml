@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Şimdi Satın Al</string>
     <string name="ua_notification_button_follow">Takip Et</string>
     <string name="ua_notification_button_unfollow">Takibi Bırak</string>
-    <string name="ua_notification_button_opt_in">Ekle</string>
-    <string name="ua_notification_button_opt_out">Çıkar</string>
+    <string name="ua_notification_button_opt_in">Onay ver</string>
+    <string name="ua_notification_button_opt_out">Vazgeç</string>
     <string name="ua_notification_button_remind">Daha Sonra Hatırlat</string>
     <string name="ua_notification_button_share">Paylaş</string>
     <string name="ua_notification_button_accept">Kabul Et</string>
@@ -48,13 +48,29 @@
     <string name="ua_connection_error">Bağlantı Hatası</string>
     <string name="ua_mark_read">Okundu Olarak İşaretle</string>
     <string name="ua_delete">Sil</string>
+    <string name="ua_mc_no_longer_available">Seçilen mesaj artık mevcut değil.</string>
+    <string name="ua_content_error">İçerik hatası</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one">
-      <xliff:g example="1" id="count">%1$d</xliff:g> seçildi</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> seçildi</item>
-  </plurals>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> seçildi</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> seçildi</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Yenile</string>
+    <string name="ua_open">Aç</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Oran</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Hayır Teşekkürler</string>
+    <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g> uygulamasını sevdiniz mi?</string>
+    <string name="ua_rate_app_action_default_body">App Store üzerinde oy vermek için <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> düğmesine dokunun.</string>
+    <string name="ua_rate_app_action_generic_display_name">Bu uygulama</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Bildirimler</string>
+    <string name="ua_default_channel_description">Genel uygulama güncellemeleri</string>
+    <string name="ua_channel_id">Kanal kimliği</string>
+    
 </resources>

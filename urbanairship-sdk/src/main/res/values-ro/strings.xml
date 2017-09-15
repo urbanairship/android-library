@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Cumpără Acum</string>
     <string name="ua_notification_button_follow">Urmărește</string>
     <string name="ua_notification_button_unfollow">Nu mai urmări</string>
-    <string name="ua_notification_button_opt_in">Abonare</string>
-    <string name="ua_notification_button_opt_out">Dezabonare</string>
+    <string name="ua_notification_button_opt_in">Opțiune primire</string>
+    <string name="ua_notification_button_opt_out">Opțiune oprire</string>
     <string name="ua_notification_button_remind">Amintește-mi mai târziu</string>
     <string name="ua_notification_button_share">Distribuie</string>
     <string name="ua_notification_button_accept">Acceptă</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">Descarcă</string>
     <string name="ua_notification_button_more_like">Mai Multe Asemănătoare</string>
     <string name="ua_notification_button_less_like">Mai Puține Asemănătoare</string>
-    <string name="ua_notification_button_like">Îți place</string>
-    <string name="ua_notification_button_dislike">Nu îți place</string>
+    <string name="ua_notification_button_like">Îmi Place</string>
+    <string name="ua_notification_button_dislike">Nu Îmi Place</string>
     <string name="ua_notification_button_copy">Copiază</string>
     <string name="ua_notification_button_save">Salvează</string>
     <string name="ua_notification_button_add_to_calendar">Adaugă În Calendar</string>
@@ -48,14 +48,30 @@
     <string name="ua_connection_error">Eroare de Conexiune</string>
     <string name="ua_mark_read">Marchează ca Citit</string>
     <string name="ua_delete">Șterge</string>
+    <string name="ua_mc_no_longer_available">Mesajul selectat nu mai este disponibil.</string>
+    <string name="ua_content_error">Eroare de conținut</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="one"> <xliff:g example="1" id="count">%1$d</xliff:g> a fost selectat</item>
-    <item quantity="few">
-      <xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
-  </plurals>
+        <item quantity="one"> <xliff:g example="1" id="count">%1$d</xliff:g> a fost selectat</item>
+        <item quantity="few"><xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> au fost selectate</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Împrospătare</string>
+    <string name="ua_open">Deschide</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Evaluează</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nu, Mulțumesc</string>
+    <string name="ua_rate_app_action_default_title">Îți place <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Apasă <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> pentru a o evalua în magazinul de aplicații.</string>
+    <string name="ua_rate_app_action_generic_display_name">Această Aplicație</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Notificări</string>
+    <string name="ua_default_channel_description">Actualizări generale aplicație</string>
+    <string name="ua_channel_id">ID Canal</string>
+    
 </resources>

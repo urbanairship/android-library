@@ -8,7 +8,7 @@
     <string name="ua_notification_button_follow">Ikuti</string>
     <string name="ua_notification_button_unfollow">Berhenti ikuti</string>
     <string name="ua_notification_button_opt_in">Turut serta</string>
-    <string name="ua_notification_button_opt_out">Batal turut serta</string>
+    <string name="ua_notification_button_opt_out">Tidak turut serta</string>
     <string name="ua_notification_button_remind">Ingatkan Lagi Nanti</string>
     <string name="ua_notification_button_share">Bagikan</string>
     <string name="ua_notification_button_accept">Setujui</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">Galat Koneksi</string>
     <string name="ua_mark_read">Tandai sebagai Sudah Dibaca</string>
     <string name="ua_delete">Hapus</string>
+    <string name="ua_mc_no_longer_available">Pesan terpilih sudah tidak tersedia.</string>
+    <string name="ua_content_error">Kesalahan konten</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">
-      <xliff:g example="3" id="count">%1$d</xliff:g> terpilih</item>
-  </plurals>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> terpilih</item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Segarkan</string>
+    <string name="ua_open">Buka</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Beri nilai</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Tidak, terima kasih</string>
+    <string name="ua_rate_app_action_default_title">Suka <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Ketuk <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> untuk memberinya nilai di App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Aplikasi ini</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Pemberitahuan</string>
+    <string name="ua_default_channel_description">Pembaruan umum aplikasi</string>
+    <string name="ua_channel_id">ID Saluran</string>
+    
 </resources>

@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">ซื้อตอนนี้</string>
     <string name="ua_notification_button_follow">ติดตาม</string>
     <string name="ua_notification_button_unfollow">เลิกติดตาม</string>
-    <string name="ua_notification_button_opt_in">เลือกเก็บ</string>
-    <string name="ua_notification_button_opt_out">เลือกทิ้ง</string>
+    <string name="ua_notification_button_opt_in">เข้าร่วม</string>
+    <string name="ua_notification_button_opt_out">ปฏิเสธเข้าร่วม</string>
     <string name="ua_notification_button_remind">เตือนฉันภายหลัง</string>
     <string name="ua_notification_button_share">แชร์</string>
     <string name="ua_notification_button_accept">ยอมรับ</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">ดาวน์โหลด</string>
     <string name="ua_notification_button_more_like">เอาแบบนี้อีก</string>
     <string name="ua_notification_button_less_like">ไม่เอาแบบนี้อีก</string>
-    <string name="ua_notification_button_like">ถูกใจ</string>
-    <string name="ua_notification_button_dislike">ไม่ถูกใจ</string>
+    <string name="ua_notification_button_like">ชอบ</string>
+    <string name="ua_notification_button_dislike">ไม่ชอบ</string>
     <string name="ua_notification_button_copy">คัดลอก</string>
     <string name="ua_notification_button_save">บันทึก</string>
     <string name="ua_notification_button_add_to_calendar">เพิ่มไปยังปฏิทิน</string>
@@ -48,11 +48,28 @@
     <string name="ua_connection_error">การเชื่อมต่อผิดพลาด</string>
     <string name="ua_mark_read">ทำเครื่องหมายว่าอ่านแล้ว</string>
     <string name="ua_delete">ลบ</string>
+    <string name="ua_mc_no_longer_available">ข้อความที่เลือกไม่สามารถใช้ได้อีกต่อไป</string>
+    <string name="ua_content_error">เนื้อหาผิดพลาด</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-    <item quantity="other">เลือกแล้ว<xliff:g example="3" id="count">%1$d</xliff:g>
-    </item>
-  </plurals>
+        <item quantity="other">เลือกแล้ว<xliff:g example="3" id="count">%1$d</xliff:g></item>
+    </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">รีเฟรช</string>
+    <string name="ua_open">เปิด</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">ให้คะแนน</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">ไม่เป็นไรขอบคุณ</string>
+    <string name="ua_rate_app_action_default_title">เอ็นจอยกับ <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">แตะ <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> เพื่อให้คะแนนไว้ในแอปสโตร์</string>
+    <string name="ua_rate_app_action_generic_display_name">แอปนี้</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">การแจ้งเตือน</string>
+    <string name="ua_default_channel_description">การอัปเดตแอปทั่วไป</string>
+    <string name="ua_channel_id">ช่องไอดี</string>
+    
 </resources>

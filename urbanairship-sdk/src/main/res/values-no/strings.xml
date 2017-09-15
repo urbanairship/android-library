@@ -7,8 +7,8 @@
     <string name="ua_notification_button_buy_now">Kjøp nå</string>
     <string name="ua_notification_button_follow">Følg</string>
     <string name="ua_notification_button_unfollow">Slutt å følge</string>
-    <string name="ua_notification_button_opt_in">Meld deg på</string>
-    <string name="ua_notification_button_opt_out">Meld deg av</string>
+    <string name="ua_notification_button_opt_in">Velg</string>
+    <string name="ua_notification_button_opt_out">Velg bort</string>
     <string name="ua_notification_button_remind">Minn meg på det senere</string>
     <string name="ua_notification_button_share">Del</string>
     <string name="ua_notification_button_accept">Aksepter</string>
@@ -16,8 +16,8 @@
     <string name="ua_notification_button_download">Last ned</string>
     <string name="ua_notification_button_more_like">Mer som dette</string>
     <string name="ua_notification_button_less_like">Mindre som dette</string>
-    <string name="ua_notification_button_like">Like</string>
-    <string name="ua_notification_button_dislike">Mislike</string>
+    <string name="ua_notification_button_like">Lik</string>
+    <string name="ua_notification_button_dislike">Liker ikke</string>
     <string name="ua_notification_button_copy">Kopier</string>
     <string name="ua_notification_button_save">Lagre</string>
     <string name="ua_notification_button_add_to_calendar">Legg til i kalender</string>
@@ -48,6 +48,8 @@
     <string name="ua_connection_error">Tilkoblingsfeil</string>
     <string name="ua_mark_read">Merk som lest</string>
     <string name="ua_delete">Slett</string>
+    <string name="ua_mc_no_longer_available">Den valgte meldingen er ikke lenger tilgjengelig</string>
+    <string name="ua_content_error">Innholdsfeil</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
@@ -55,4 +57,20 @@
         <item quantity="other"><xliff:g example="1" id="count">%1$d</xliff:g> valgt</item>
     </plurals>
 
+    <!-- General -->    
+    <string name="ua_refresh">Oppdater</string>
+    <string name="ua_open">Åpne</string>
+    
+    <!-- Rate App Action -->    
+    <string name="ua_rate_app_action_default_rate_positive_button">Vurder</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nei takk</string>
+    <string name="ua_rate_app_action_default_title">Liker du <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Trykk på <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> for å vurdere den i App Store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Denne applikasjonen</string>
+    
+    <!-- Channels -->    
+    <string name="ua_default_channel_name">Varsler</string>
+    <string name="ua_default_channel_description">Generelle applikasjonsoppdateringer</string>
+    <string name="ua_channel_id">Kanal-ID</string>
+    
 </resources>
