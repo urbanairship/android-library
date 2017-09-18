@@ -163,11 +163,11 @@ public class ScheduleDelay implements Parcelable {
      * Parses a ScheduleDelay from JSON.
      * </p>
      * <pre>
-     * - "seconds": Required. The minimum time in seconds that is needed to pass before running the actions.
+     * - "seconds": Optional. The minimum time in seconds that is needed to pass before running the actions.
      * - "screen": Optional string or array of strings. Specifies the name of an app screen that the user must
      * currently be viewing before the schedule's actions are able to be executed.
-     * - "app_state": Required. Specifies the app state that is required before the schedule's actions are able
-     * to execute. Either "foreground" or "background".
+     * - "app_state": Optional. Specifies the app state that is required before the schedule's actions are able
+     * to execute. Either "foreground" or "background". Invalid app states will throw a JsonException.
      * - "region": Optional. Specifies the ID of a region that the device must currently be in before the
      * schedule's actions are able to be executed.
      * - "cancellation_triggers": Optional. An array of triggers. Each cancels the pending execution of
@@ -185,7 +185,7 @@ public class ScheduleDelay implements Parcelable {
                 .setSeconds(jsonMap.opt("seconds").getLong(0));
 
         @AppState int appState;
-        String appStateString = jsonMap.opt("app_state").getString("").toLowerCase();
+        String appStateString = jsonMap.opt("app_state").getString("any").toLowerCase();
         switch (appStateString) {
             case "any":
                 appState = APP_STATE_ANY;
@@ -217,7 +217,7 @@ public class ScheduleDelay implements Parcelable {
             builder.setRegionId(jsonMap.opt("region_id").getString(""));
         }
 
-        for (JsonValue triggerJson : jsonMap.opt("triggers").optList()) {
+        for (JsonValue triggerJson : jsonMap.opt("cancellation_triggers").optList()) {
             builder.addCancellationTrigger(Trigger.parseJson(triggerJson));
         }
 
