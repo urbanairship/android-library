@@ -205,9 +205,7 @@ public class ScheduleDelay implements Parcelable {
             JsonValue screenValue = jsonMap.opt("screen");
             if (screenValue.isString()) {
                 String screenString = screenValue.getString();
-                if (screenString != null) {
-                    builder.setScreen(screenString);
-                }
+                builder.setScreen(screenString);
             } else {
                 builder.setScreens(screenValue.optList());
             }
