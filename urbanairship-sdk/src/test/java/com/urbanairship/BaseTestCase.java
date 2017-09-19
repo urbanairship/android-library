@@ -11,7 +11,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
 @RunWith(TestRunner.class)
-@Config(minSdk = 18, maxSdk = 25, shadows = { ShadowNotificationManagerExtension.class })
+@Config(minSdk = 25, maxSdk = 25, shadows = { ShadowNotificationManagerExtension.class })
 public abstract class BaseTestCase {
 
 

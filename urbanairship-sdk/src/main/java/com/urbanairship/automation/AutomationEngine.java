@@ -768,8 +768,10 @@ public class AutomationEngine<T extends Schedule> {
             return false;
         }
 
-        if (scheduleEntry.screen != null && !scheduleEntry.screen.equals(screen)) {
-            return false;
+        if (scheduleEntry.screens != null && !scheduleEntry.screens.isEmpty()) {
+            if (!scheduleEntry.screens.contains(screen)) {
+                return false;
+            }
         }
 
         if (scheduleEntry.regionId != null && !scheduleEntry.regionId.equals(regionId)) {

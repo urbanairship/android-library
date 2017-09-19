@@ -65,7 +65,7 @@ class ScheduleEntry implements ScheduleInfo {
     public final long start;
     public final long end;
     public final long seconds;
-    public final String screen;
+    public final List<String> screens;
     public final int appState;
     public final String regionId;
     public final List<TriggerEntry> triggerEntries = new ArrayList<>();
@@ -87,7 +87,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.end = scheduleInfo.getEnd();
 
         if (scheduleInfo.getDelay() != null) {
-            this.screen = scheduleInfo.getDelay().getScreen();
+            this.screens = scheduleInfo.getDelay().getScreens();
             this.regionId = scheduleInfo.getDelay().getRegionId();
             this.appState = scheduleInfo.getDelay().getAppState();
             this.seconds = scheduleInfo.getDelay().getSeconds();
@@ -99,7 +99,7 @@ class ScheduleEntry implements ScheduleInfo {
         } else {
             this.seconds = 0;
             this.regionId = null;
-            this.screen = null;
+            this.screens = null;
             this.appState = ScheduleDelay.APP_STATE_ANY;
         }
 
@@ -130,7 +130,31 @@ class ScheduleEntry implements ScheduleInfo {
         this.pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_PENDING_EXECUTION_DATE));
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
-        this.screen = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCREEN));
+
+        JsonValue parsedScreens;
+
+        try {
+            parsedScreens = JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCREEN)));
+        } catch (JsonException e) {
+            parsedScreens = JsonValue.NULL;
+        }
+
+        this.screens = new ArrayList<>();
+
+        if (parsedScreens.isJsonList()) {
+            for (JsonValue value : parsedScreens.optList()) {
+                if (value.getString() != null) {
+                    this.screens.add(value.getString());
+                }
+            }
+        } else {
+            // Migrate old screen name data
+            String oldScreenName = parsedScreens.getString();
+            if (oldScreenName != null) {
+                this.screens.add(oldScreenName);
+            }
+        }
+
         this.seconds = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_SECONDS));
     }
 
@@ -219,7 +243,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
             contentValues.put(COLUMN_NAME_APP_STATE, appState);
             contentValues.put(COLUMN_NAME_REGION_ID, regionId);
-            contentValues.put(COLUMN_NAME_SCREEN, screen);
+            contentValues.put(COLUMN_NAME_SCREEN, JsonValue.wrapOpt(screens).optList().toString());
             contentValues.put(COLUMN_NAME_SECONDS, seconds);
             id = database.insert(TABLE_NAME, null, contentValues);
             if (id == -1) {
@@ -330,7 +354,7 @@ class ScheduleEntry implements ScheduleInfo {
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
                                                           .setAppState(appState)
                                                           .setRegionId(regionId)
-                                                          .setScreen(screen)
+                                                          .setScreens(screens)
                                                           .setSeconds(seconds);
 
 

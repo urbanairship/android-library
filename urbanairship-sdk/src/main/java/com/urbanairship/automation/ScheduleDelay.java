@@ -6,12 +6,14 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,14 +53,14 @@ public class ScheduleDelay implements Parcelable {
     };
 
     private final long seconds;
-    private final String screen;
+    private final List<String> screens;
     private final int appState;
     private final String regionId;
     private final List<Trigger> cancellationTriggers;
 
     ScheduleDelay(Builder builder) {
         this.seconds = builder.seconds;
-        this.screen = builder.screen;
+        this.screens = builder.screens;
         this.appState = builder.appState;
         this.regionId = builder.regionId;
         this.cancellationTriggers = builder.cancellationTriggers;
@@ -66,7 +68,8 @@ public class ScheduleDelay implements Parcelable {
 
     protected ScheduleDelay(Parcel in) {
         this.seconds = in.readLong();
-        this.screen = in.readString();
+        this.screens = new ArrayList<>();
+        in.readList(this.screens, String.class.getClassLoader());
 
         int appState;
         switch (in.readInt()) {
@@ -90,7 +93,7 @@ public class ScheduleDelay implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(seconds);
-        dest.writeString(screen);
+        dest.writeList(screens);
         dest.writeInt(appState);
         dest.writeString(regionId);
         dest.writeTypedList(cancellationTriggers);
@@ -120,12 +123,12 @@ public class ScheduleDelay implements Parcelable {
     }
 
     /**
-     * Get the execution screen.
+     * Get the execution screens
      *
-     * @return The execution screen.
+     * @return The execution screens.
      */
-    public String getScreen() {
-        return screen;
+    public List<String> getScreens() {
+        return screens;
     }
 
     /**
@@ -160,11 +163,11 @@ public class ScheduleDelay implements Parcelable {
      * Parses a ScheduleDelay from JSON.
      * </p>
      * <pre>
-     * - "seconds": Required. The minimum time in seconds that is needed to pass before running the actions.
-     * - "screen": Optional. Specifies the name of an app screen that the user must currently be viewing
-     * before the schedule's actions are able to be executed.
-     * - "app_state": Required. Specifies the app state that is required before the schedule's actions are able
-     * to execute. Either "foreground" or "background".
+     * - "seconds": Optional. The minimum time in seconds that is needed to pass before running the actions.
+     * - "screen": Optional string or array of strings. Specifies the name of an app screen that the user must
+     * currently be viewing before the schedule's actions are able to be executed.
+     * - "app_state": Optional. Specifies the app state that is required before the schedule's actions are able
+     * to execute. Either "foreground" or "background". Invalid app states will throw a JsonException.
      * - "region": Optional. Specifies the ID of a region that the device must currently be in before the
      * schedule's actions are able to be executed.
      * - "cancellation_triggers": Optional. An array of triggers. Each cancels the pending execution of
@@ -182,7 +185,7 @@ public class ScheduleDelay implements Parcelable {
                 .setSeconds(jsonMap.opt("seconds").getLong(0));
 
         @AppState int appState;
-        String appStateString = jsonMap.opt("app_state").getString("").toLowerCase();
+        String appStateString = jsonMap.opt("app_state").getString("any").toLowerCase();
         switch (appStateString) {
             case "any":
                 appState = APP_STATE_ANY;
@@ -199,14 +202,20 @@ public class ScheduleDelay implements Parcelable {
         builder.setAppState(appState);
 
         if (jsonMap.containsKey("screen")) {
-            builder.setScreen(jsonMap.opt("screen").getString(""));
+            JsonValue screenValue = jsonMap.opt("screen");
+            if (screenValue.isString()) {
+                String screenString = screenValue.getString();
+                builder.setScreen(screenString);
+            } else {
+                builder.setScreens(screenValue.optList());
+            }
         }
 
         if (jsonMap.containsKey("region_id")) {
             builder.setRegionId(jsonMap.opt("region_id").getString(""));
         }
 
-        for (JsonValue triggerJson : jsonMap.opt("triggers").optList()) {
+        for (JsonValue triggerJson : jsonMap.opt("cancellation_triggers").optList()) {
             builder.addCancellationTrigger(Trigger.parseJson(triggerJson));
         }
 
@@ -222,7 +231,7 @@ public class ScheduleDelay implements Parcelable {
      */
     public static class Builder {
         private long seconds;
-        private String screen = null;
+        private List<String> screens = new ArrayList<>();
         private int appState = APP_STATE_ANY;
         private String regionId = null;
         private List<Trigger> cancellationTriggers = new ArrayList<>();
@@ -245,7 +254,34 @@ public class ScheduleDelay implements Parcelable {
          * @return The Builder instance.
          */
         public Builder setScreen(String screen) {
-            this.screen = screen;
+            this.screens = Arrays.asList(screen);
+            return this;
+        }
+
+        /**
+         * Sets the app screens.
+         *
+         * @param screens The app screens.
+         * @return The Builder instance.
+         */
+        public Builder setScreens(List<String> screens) {
+            this.screens = screens;
+            return this;
+        }
+
+        /**
+         * Sets the app screens.
+         *
+         * @param screens
+         * @return The Builder instance.
+         */
+        public Builder setScreens(JsonList screens) {
+            this.screens = new ArrayList<>();
+            for (JsonValue value : screens) {
+                if (value.getString() != null) {
+                    this.screens.add(value.getString());
+                }
+            }
             return this;
         }
 
