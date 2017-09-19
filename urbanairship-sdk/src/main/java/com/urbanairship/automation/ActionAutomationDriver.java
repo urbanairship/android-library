@@ -46,6 +46,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                                                             .setStart(info.getStart())
                                                             .setGroup(info.getGroup())
                                                             .setLimit(info.getLimit())
+                                                            .setPriority(info.getPriority())
                                                             .addAllActions(info.getData().toJsonValue().optMap())
                                                             .setDelay(info.getDelay())
                                                             .addTriggers(info.getTriggers())

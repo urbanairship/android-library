@@ -46,6 +46,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     private final List<Trigger> triggers;
     private final Map<String, JsonValue> actions;
     private final int limit;
+    private final int priority;
     private final String group;
     private final long start;
     private final long end;
@@ -55,6 +56,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.triggers = builder.triggers;
         this.actions = builder.actions;
         this.limit = builder.limit;
+        this.priority = builder.priority;
         this.group = builder.group;
         this.start = builder.start;
         this.end = builder.end;
@@ -64,6 +66,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     protected ActionScheduleInfo(Parcel in) {
         this.triggers = in.createTypedArrayList(Trigger.CREATOR);
         this.limit = in.readInt();
+        this.priority = in.readInt();
         this.group = in.readString();
         this.start = in.readLong();
         this.end = in.readLong();
@@ -79,6 +82,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeTypedList(triggers);
         dest.writeInt(limit);
+        dest.writeInt(priority);
         dest.writeString(group);
         dest.writeLong(start);
         dest.writeLong(end);
@@ -136,6 +140,12 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * {@inheritDoc}
      */
     @Override
+    public int getPriority() { return priority; }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getGroup() {
         return group;
     }
@@ -174,6 +184,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * - "end": Optional. End time as an ISO 8601 timestamp. After the schedule is past the end time it will automatically be canceled.
      * - "triggers": Required. An array of triggers. Trigger payload as defined by {@link Trigger#predicate}.
      * - "limit": Optional, defaults to 1. Number of times to trigger the actions payload before cancelling the schedule.
+     * - "priority": Optional, defaults to 0. In case of conflict, schedules will be executed by priority in ascending order.
      * - "actions": Required. Actions payload to run when one or more of the triggers meets its goal.
      * </pre>
      *
@@ -187,6 +198,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         ActionScheduleInfo.Builder builder = newBuilder()
                 .addAllActions(jsonMap.opt("actions").optMap())
                 .setLimit(jsonMap.opt("limit").getInt(1))
+                .setPriority(jsonMap.opt("priority").getInt(0))
                 .setGroup(jsonMap.opt("group").getString(null));
 
         if (jsonMap.containsKey("end")) {
@@ -223,6 +235,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         private long start = -1;
         private long end = -1;
         private int limit = 1;
+        private int priority = 0;
         private ScheduleDelay delay = null;
 
         /**
@@ -278,6 +291,16 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          */
         public Builder setLimit(int limit) {
             this.limit = limit;
+            return this;
+        }
+
+        /**
+         * Sets the priority level, in ascending order.
+         * @param priority The priority level.
+         * @return The Builder instance.
+         */
+        public Builder setPriority(int priority) {
+            this.priority = priority;
             return this;
         }
 

@@ -41,6 +41,7 @@ class ScheduleEntry implements ScheduleInfo {
     // Schedule Info
     static final String COLUMN_NAME_DATA = "s_data";
     static final String COLUMN_NAME_LIMIT = "s_limit";
+    static final String COLUMN_NAME_PRIORITY = "s_priority";
     static final String COLUMN_NAME_GROUP = "s_group";
     static final String COLUMN_NAME_START = "s_start";
     static final String COLUMN_NAME_END = "s_end";
@@ -61,6 +62,7 @@ class ScheduleEntry implements ScheduleInfo {
     public final String scheduleId;
     public final JsonSerializable data;
     public final int limit;
+    public final int priority;
     public final String group;
     public final long start;
     public final long end;
@@ -82,6 +84,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.scheduleId = scheduleId;
         this.data = scheduleInfo.getData();
         this.limit = scheduleInfo.getLimit();
+        this.priority = scheduleInfo.getPriority();
         this.group = scheduleInfo.getGroup();
         this.start = scheduleInfo.getStart();
         this.end = scheduleInfo.getEnd();
@@ -114,6 +117,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.scheduleId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_SCHEDULE_ID));
         this.count = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_COUNT));
         this.limit = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_LIMIT));
+        this.priority = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_PRIORITY));
         this.group = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_GROUP));
 
         JsonValue parsedData;
@@ -235,6 +239,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_SCHEDULE_ID, scheduleId);
             contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
             contentValues.put(COLUMN_NAME_LIMIT, limit);
+            contentValues.put(COLUMN_NAME_PRIORITY, priority);
             contentValues.put(COLUMN_NAME_GROUP, group);
             contentValues.put(COLUMN_NAME_COUNT, count);
             contentValues.put(COLUMN_NAME_START, start);
@@ -333,6 +338,9 @@ class ScheduleEntry implements ScheduleInfo {
     public int getLimit() {
         return this.limit;
     }
+
+    @Override
+    public int getPriority() { return this.priority; }
 
     @Override
     public String getGroup() {

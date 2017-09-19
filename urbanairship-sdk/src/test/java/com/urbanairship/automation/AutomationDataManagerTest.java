@@ -86,6 +86,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(scheduleEntry.end, retrieved.end);
         assertEquals(scheduleEntry.start, retrieved.start);
         assertEquals(scheduleEntry.limit, retrieved.limit);
+        assertEquals(scheduleEntry.priority, retrieved.priority);
 
         List<TriggerEntry> scheduleTriggers = retrieved.triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
@@ -178,6 +179,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                        .setStart(System.currentTimeMillis())
                                                                        .setEnd(System.currentTimeMillis() + 100000)
                                                                        .setLimit(100)
+                                                                       .setPriority(1)
                                                                        .addAction("test_action", JsonValue.wrap("action_value"))
                                                                        .addTrigger(firstTrigger)
                                                                        .build();
@@ -191,6 +193,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                                         .setStart(System.currentTimeMillis())
                                                                         .setEnd(System.currentTimeMillis() + 100000)
                                                                         .setLimit(100)
+                                                                        .setPriority(2)
                                                                         .addAction("test_action", JsonValue.wrap("action_value"))
                                                                         .addTrigger(secondTrigger)
                                                                         .build();
@@ -218,6 +221,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).end);
         assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).start);
         assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).limit);
+        assertEquals(firstActionScheduleInfo.getPriority(), schedules.get(0).priority);
 
         assertEquals(firstTrigger.getGoal(), schedules.get(0).triggerEntries.get(0).goal, 0.0);
         assertEquals(firstTrigger.getPredicate(), schedules.get(0).triggerEntries.get(0).jsonPredicate);
@@ -229,6 +233,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).end);
         assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).start);
         assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).limit);
+        assertEquals(secondActionScheduleInfo.getPriority(), schedules.get(1).priority);
 
         assertEquals(secondTrigger.getGoal(), schedules.get(1).triggerEntries.get(0).goal, 0.0);
         assertEquals(secondTrigger.getPredicate(), schedules.get(1).triggerEntries.get(0).jsonPredicate);
@@ -261,6 +266,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(actionScheduleInfo.end, schedules.get(0).end);
         assertEquals(actionScheduleInfo.start, schedules.get(0).start);
         assertEquals(actionScheduleInfo.limit, schedules.get(0).limit);
+        assertEquals(actionScheduleInfo.priority, schedules.get(0).priority);
 
         List<TriggerEntry> scheduleTriggers = schedules.get(0).triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
@@ -302,6 +308,7 @@ public class AutomationDataManagerTest extends BaseTestCase {
                                                             .setStart(System.currentTimeMillis())
                                                             .setEnd(System.currentTimeMillis() + 100000)
                                                             .setLimit(100)
+                                                            .setPriority(2)
                                                             .addAction("test_action", JsonValue.wrap("action_value"))
                                                             .addTrigger(foreground)
                                                             .addTrigger(background)
