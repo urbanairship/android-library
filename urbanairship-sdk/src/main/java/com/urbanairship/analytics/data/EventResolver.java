@@ -212,7 +212,7 @@ public class EventResolver extends UrbanAirshipResolver {
         while (getDatabaseSize() > maxDatabaseSize) {
 
             String sessionId = getOldestSessionId();
-            if (sessionId.isEmpty()) {
+            if (sessionId.isEmpty() || sessionId == null) {
                 break;
             }
 
