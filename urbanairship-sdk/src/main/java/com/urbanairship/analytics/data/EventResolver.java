@@ -13,6 +13,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.UrbanAirshipProvider;
 import com.urbanairship.UrbanAirshipResolver;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -212,7 +213,7 @@ public class EventResolver extends UrbanAirshipResolver {
         while (getDatabaseSize() > maxDatabaseSize) {
 
             String sessionId = getOldestSessionId();
-            if (sessionId.isEmpty()) {
+            if (UAStringUtil.isEmpty(sessionId))  {
                 break;
             }
 
