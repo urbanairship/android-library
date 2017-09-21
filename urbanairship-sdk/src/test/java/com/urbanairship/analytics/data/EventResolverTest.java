@@ -66,6 +66,19 @@ public class EventResolverTest extends BaseTestCase {
         assertEquals(0, eventResolver.getEventCount());
     }
 
+    /**
+     * Test trimming the database when the oldest session ID is null does not throw
+     * an exception.
+     */
+    @Test
+    public void testTrimDatabaseNullSessionId() {
+        // Insert an event when a null session ID
+        TestEvent event = new TestEvent("some-id");
+        eventResolver.insertEvent(event, null);
+
+        // Trim the database
+        eventResolver.trimDatabase(0);
+    }
 
     /**
      * Test deleting several events at once
