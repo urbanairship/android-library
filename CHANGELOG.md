@@ -3,6 +3,16 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+
+Version 8.8.4 - September 22, 2017
+==================================
+
+Patch release for a crash involving the analytics event resolver.
+
+Bug Fixes
+---------
+- Fixed NPE for an edge case where session ID is null during a database maintenance operation.
+
 Version 8.8.3 - September 13, 2017
 ==================================
 
