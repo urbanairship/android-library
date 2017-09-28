@@ -8,7 +8,7 @@ import android.os.SystemClock;
 /**
  * Timer that can be stopped and started.
  */
-abstract class Timer {
+public abstract class Timer {
     private boolean isStarted;
     private long startTimeMs;
     private long remainingTimeMs;
