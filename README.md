@@ -56,8 +56,8 @@ Create a new `airshipconfig.properties` file with your application’s settings:
    developmentLogLevel = DEBUG
    productionLogLevel = ERROR
 
-   # GCM Sender ID
-   gcmSender = Your Google API Project Number
+   # FCM Sender ID
+   fcmSenderId = Your Google API Project Number
 
    # Notification customization
    notificationIcon = ic_notification
