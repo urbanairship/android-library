@@ -739,7 +739,7 @@ public class AirshipConfigOptions {
          *
          * @param gcmSender The sender ID used to send GCM pushes.
          * @return The config options builder.
-         * @deprecated Set the  FCM sender ID instead.
+         * @deprecated Set the FCM sender ID instead.
          */
         @Deprecated
         public Builder setGcmSender(String gcmSender) {
