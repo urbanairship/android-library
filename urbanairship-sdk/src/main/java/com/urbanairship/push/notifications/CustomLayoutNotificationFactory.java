@@ -52,11 +52,7 @@ public class CustomLayoutNotificationFactory extends NotificationFactory {
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null)
                 .setCustomContentView(contentView);
 
-
-        Notification notification = extendBuilder(builder, message, notificationId).build();
-        notification = applyNotificationChannel(message, notification);
-
-        return notification;
+        return extendBuilder(builder, message, notificationId).build();
     }
 
     /**

@@ -36,7 +36,7 @@ public class GcmPushProvider implements PushProvider {
 
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
-        String senderId = UAirship.shared().getAirshipConfigOptions().gcmSender;
+        String senderId = UAirship.shared().getAirshipConfigOptions().getFcmSenderId();
         if (senderId == null) {
             return null;
         }
@@ -82,8 +82,8 @@ public class GcmPushProvider implements PushProvider {
             return false;
         }
 
-        if (configOptions.gcmSender == null) {
-            Logger.info("The GCM sender ID is not set. Unable to register for Android push notifications.");
+        if (configOptions.getFcmSenderId() == null) {
+            Logger.info("The GCM/FCM sender ID is not set. Unable to register for Android push notifications.");
             return false;
         }
 
@@ -96,7 +96,7 @@ public class GcmPushProvider implements PushProvider {
         String sender = message.getExtra("from", null);
         boolean isValidSender = false;
         if (sender != null) {
-            isValidSender = sender.equals(UAirship.shared().getAirshipConfigOptions().gcmSender);
+            isValidSender = sender.equals(UAirship.shared().getAirshipConfigOptions().getFcmSenderId());
         }
 
         return isValidSender && message.containsAirshipKeys();

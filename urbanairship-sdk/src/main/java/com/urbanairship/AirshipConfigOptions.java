@@ -90,9 +90,34 @@ public class AirshipConfigOptions {
     public final String landingPageContentURL;
 
     /**
-     * The sender ID used to send GCM pushes. This is your Google API project number.
+     * The GCM/FCM sender ID used for push registration. This is your Google API project number.
+     * <p>
+     * Will be used in {@link #getFcmSenderId()} if the {@link #fcmSenderId} is not set.
+     *
+     * @deprecated Use FCM sender ID instead. To be removed in SDK 10.0.
      */
+    @Deprecated
     public final String gcmSender;
+
+
+    /**
+     * The FCM sender ID for push registration. Used as a fallback
+     * if the production or development FCM sender ID is not set.
+     * This is your Google API project number.
+     */
+    public final String fcmSenderId;
+
+    /**
+     * The FCM sender ID used for push registration in development mode.
+     * This is your Google API project number.
+     */
+    public final String developmentFcmSenderId;
+
+    /**
+     * The FCM sender ID used for push registration in production mode.
+     * This is your Google API project number.
+     */
+    public final String productionFcmSenderId;
 
     /**
      * The transport types allowed for Push.
@@ -225,6 +250,9 @@ public class AirshipConfigOptions {
         this.analyticsServer = builder.analyticsServer;
         this.landingPageContentURL = builder.landingPageContentURL;
         this.gcmSender = builder.gcmSender;
+        this.fcmSenderId = builder.fcmSenderId;
+        this.developmentFcmSenderId = builder.developmentFcmSenderId;
+        this.productionFcmSenderId = builder.productionFcmSenderId;
         this.allowedTransports = builder.allowedTransports;
         this.whitelist = builder.whitelist;
         this.inProduction = builder.inProduction;
@@ -269,6 +297,29 @@ public class AirshipConfigOptions {
         return inProduction ? productionLogLevel : developmentLogLevel;
     }
 
+
+    /**
+     * Returns the development or production FCM sender ID.
+     *
+     * @return The FCM sender ID.
+     */
+    public String getFcmSenderId() {
+        String senderId = inProduction ? productionFcmSenderId : developmentFcmSenderId;
+
+        if (senderId != null) {
+            return senderId;
+        }
+
+        if (fcmSenderId != null) {
+            return fcmSenderId;
+        }
+
+        if (gcmSender != null) {
+            return gcmSender;
+        }
+
+        return null;
+    }
 
     /**
      * Check to see if the specified transport type is allowed.
@@ -320,7 +371,9 @@ public class AirshipConfigOptions {
         private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
         private static final String FIELD_WALLET_URL = "walletUrl";
         private static final String FIELD_NOTIFICATION_CHANNEL = "notificationChannel";
-
+        private static final String FIELD_FCM_SENDER_ID = "fcmSenderId";
+        private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
+        private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -330,6 +383,9 @@ public class AirshipConfigOptions {
         private String analyticsServer = "https://combine.urbanairship.com/";
         private String landingPageContentURL = "https://dl.urbanairship.com/aaa/";
         private String gcmSender;
+        private String fcmSenderId;
+        private String productionFcmSenderId;
+        private String developmentFcmSenderId;
         private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT };
         private String[] whitelist = null;
         private Boolean inProduction = null;
@@ -373,8 +429,8 @@ public class AirshipConfigOptions {
          * # Flag to indicate what credentials to use
          * inProduction = false
          *
-         * # Required for GCM
-         * gcmSender = Your GCM sender ID is your Google API project number (required for GCM)
+         * # Required for FCM
+         * fcmSenderId = Your FCM sender ID is your Google API project number (required for GCM)
          *
          * # Log levels
          * developmentLogLevel = DEBUG
@@ -418,7 +474,7 @@ public class AirshipConfigOptions {
          *    developmentAppKey = "Your Development App Key"
          *    developmentAppSecret = "Your Development App Secret"
          *    developmentLogLevel = "VERBOSE"
-         *    gcmSender = "Your GCM sender ID is your Google API project number (required for GCM)" />
+         *    fcmSenderId = "Your FCM sender ID is your Google API project number (required for GCM)" />
          * }
          * </pre>
          *
@@ -537,6 +593,18 @@ public class AirshipConfigOptions {
 
                         case FIELD_NOTIFICATION_CHANNEL:
                             this.setNotificationChannel(configParser.getString(i));
+                            break;
+
+                        case FIELD_FCM_SENDER_ID:
+                            this.setFcmSenderId(configParser.getString(i));
+                            break;
+
+                        case FIELD_DEVELOPMENT_FCM_SENDER_ID:
+                            this.setDevelopmentFcmSenderId(configParser.getString(i));
+                            break;
+
+                        case FIELD_PRODUCTION_FCM_SENDER_ID:
+                            this.setProductionFcmSenderId(configParser.getString(i));
                             break;
                     }
                 } catch (Exception e) {
@@ -671,9 +739,44 @@ public class AirshipConfigOptions {
          *
          * @param gcmSender The sender ID used to send GCM pushes.
          * @return The config options builder.
+         * @deprecated Set the FCM sender ID instead.
          */
+        @Deprecated
         public Builder setGcmSender(String gcmSender) {
             this.gcmSender = gcmSender;
+            return this;
+        }
+
+        /**
+         * Sets the production FCM sender ID.
+         *
+         * @param senderId The production FCM sender ID.
+         * @return The config options builder.
+         */
+        public Builder setProductionFcmSenderId(String senderId) {
+            this.productionFcmSenderId = senderId;
+            return this;
+        }
+
+        /**
+         * Sets the development FCM sender ID.
+         *
+         * @param senderId The development FCM sender ID.
+         * @return The config options builder.
+         */
+        public Builder setDevelopmentFcmSenderId(String senderId) {
+            this.developmentFcmSenderId = senderId;
+            return this;
+        }
+
+        /**
+         * Sets the default FCM sender ID.
+         *
+         * @param senderId The FCM sender ID.
+         * @return The config options builder.
+         */
+        public Builder setFcmSenderId(String senderId) {
+            this.fcmSenderId = senderId;
             return this;
         }
 
@@ -722,7 +825,7 @@ public class AirshipConfigOptions {
             try {
                 Class<?> clazz = Class.forName(context.getPackageName() + ".BuildConfig");
                 Field field = clazz.getField("DEBUG");
-                inProduction =  !(boolean)field.get(null);
+                inProduction = !(boolean) field.get(null);
             } catch (Exception e) {
                 Logger.warn("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
                 inProduction = false;
@@ -880,6 +983,10 @@ public class AirshipConfigOptions {
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
                 Logger.warn("Production App Secret matches Development App Secret");
+            }
+
+            if (gcmSender != null) {
+                Logger.warn("AirshipConfigOption's gcmSender is deprecated. Please use fcmSenderId instead.");
             }
 
             return new AirshipConfigOptions(this);

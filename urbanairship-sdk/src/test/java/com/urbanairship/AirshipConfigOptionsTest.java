@@ -87,4 +87,71 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals(0, aco.notificationAccentColor);
         assertEquals(0, aco.notificationIcon);
     }
+
+    @Test
+    public void testDevelopmentFcmSenderId() {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .setInProduction(false)
+                .setDevelopmentFcmSenderId("dev fcm sender ID")
+                .setProductionFcmSenderId("prod fcm sender ID")
+                .setFcmSenderId("fcm sender ID")
+                .setGcmSender("deprecated gcm sender ID")
+                .build();
+
+        assertEquals("dev fcm sender ID", aco.getFcmSenderId());
+    }
+
+    @Test
+    public void testProductionFcmSenderId() {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .setInProduction(true)
+                .setDevelopmentFcmSenderId("dev fcm sender ID")
+                .setProductionFcmSenderId("prod fcm sender ID")
+                .setFcmSenderId("fcm sender ID")
+                .setGcmSender("deprecated gcm sender ID")
+                .build();
+
+        assertEquals("prod fcm sender ID", aco.getFcmSenderId());
+    }
+
+    @Test
+    public void testCommonFcmSenderId() {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .setInProduction(true)
+                .setDevelopmentFcmSenderId("dev fcm sender ID")
+                .setFcmSenderId("fcm sender ID")
+                .setGcmSender("deprecated gcm sender ID")
+                .build();
+
+        assertEquals("fcm sender ID", aco.getFcmSenderId());
+
+
+    }
+
+    @Test
+    public void testGcmSenderId() {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .setProductionAppSecret("appSecret")
+                .setProductionAppKey("appKey")
+                .setInProduction(true)
+                .setDevelopmentFcmSenderId("dev fcm sender ID")
+                .setGcmSender("deprecated gcm sender ID")
+                .build();
+
+        assertEquals("deprecated gcm sender ID", aco.getFcmSenderId());
+    }
 }

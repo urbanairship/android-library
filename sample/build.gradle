@@ -10,7 +10,7 @@ repositories {
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion "26.0.1"
 
     lintOptions {
         disable 'MissingTranslation', 'AppCompatResource'
@@ -33,20 +33,20 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:26.0.0'
-    compile 'com.android.support:design:26.0.0'
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:design:26.1.0'
 
     // Recommended for in-app messages
-    compile 'com.android.support:cardview-v7:26.0.0'
+    compile 'com.android.support:cardview-v7:26.1.0'
 
     // Use the Urban Airship SDK project.
     compile project(':urbanairship-sdk')
 
     // Normally apps will use the AAR artifact from jcenter:
-    // compile 'com.urbanairship.android:urbanairship-sdk:8.5.+'
+    // compile 'com.urbanairship.android:urbanairship-sdk:8.9.+'
 
     // Allows Urban Airship location services to use Fused Location
-    compile 'com.google.android.gms:play-services-location:11.0.1'
+    compile 'com.google.android.gms:play-services-location:11.4.0'
 
     // Testing-only dependencies
     androidTestCompile 'com.android.support.test:runner:1.0.0'
@@ -59,7 +59,7 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-intents:3.0.0'
     androidTestCompile 'com.android.support.test.espresso.idling:idling-concurrent:3.0.0'
 
-    androidTestCompile 'com.android.support:support-annotations:26.0.0'
-    androidTestCompile 'com.android.support:appcompat-v7:26.0.0'
-    androidTestCompile 'com.android.support:design:26.0.0'
+    androidTestCompile 'com.android.support:support-annotations:26.1.0'
+    androidTestCompile 'com.android.support:appcompat-v7:26.1.0'
+    androidTestCompile 'com.android.support:design:26.1.0'
 }

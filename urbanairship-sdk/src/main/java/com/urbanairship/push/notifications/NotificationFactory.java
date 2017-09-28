@@ -256,8 +256,8 @@ public class NotificationFactory {
      * Creates a <code>Notification</code> for an incoming push message.
      * <p/>
      * In order to handle notification opens, the application should register a broadcast receiver
-     * that extends {@link com.urbanairship.AirshipReceiver}. When the notification is opened
-     * it will call {@link com.urbanairship.AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
+     * that extends {@link AirshipReceiver}. When the notification is opened
+     * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
      * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
      * or {@code false} is returned, an open will be handled by either starting the launcher activity or
      * by sending the notification's content intent if it is present.
@@ -273,9 +273,7 @@ public class NotificationFactory {
         }
 
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null);
-        Notification notification = applyNotificationChannel(message, builder.build());
-
-        return notification;
+        return builder.build();
     }
 
     /**
@@ -341,6 +339,11 @@ public class NotificationFactory {
         // Styles
         builder.extend(new StyleNotificationExtender(getContext(), message)
                 .setDefaultStyle(defaultStyle));
+
+        // Channels for Android O
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(getActiveNotificationChannel(message));
+        }
 
         return builder;
     }
@@ -412,27 +415,6 @@ public class NotificationFactory {
         notificationManager.createNotificationChannel(channel);
 
         return DEFAULT_NOTIFICATION_CHANNEL;
-    }
-
-    /**
-     * Applies notification channel.
-     *
-     * @param message The push message.
-     * @param notification The notification.
-     * @return The notification with a notification channel applied.
-     * @hide
-     */
-    Notification applyNotificationChannel(PushMessage message, Notification notification) {
-        // TODO: Remove this once support library 26.0 comes out
-        if (Build.VERSION.SDK_INT >= 26) {
-            if (notification.getChannelId() == null) {
-                return Notification.Builder.recoverBuilder(getContext(), notification)
-                                           .setChannelId(getActiveNotificationChannel(message))
-                                           .build();
-            }
-        }
-
-        return notification;
     }
 
     /**

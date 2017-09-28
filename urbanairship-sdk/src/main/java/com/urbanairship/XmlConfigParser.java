@@ -100,7 +100,17 @@ class XmlConfigParser implements ConfigParser {
 
     @Override
     public int getDrawableResourceId(int index) {
-        return attributeSet.getAttributeResourceValue(index, 0);
+        int resourceValue = attributeSet.getAttributeResourceValue(index, 0);
+        if (resourceValue != 0) {
+            return resourceValue;
+        }
+
+        String resourceName = attributeSet.getAttributeValue(index);
+        if (resourceName != null) {
+            return context.getResources().getIdentifier(getString(index), "drawable", context.getPackageName());
+        }
+
+        return 0;
     }
 
     @Override
