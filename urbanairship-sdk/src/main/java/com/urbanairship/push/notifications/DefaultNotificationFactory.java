@@ -57,11 +57,7 @@ public class DefaultNotificationFactory extends NotificationFactory {
         }
 
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, new NotificationCompat.BigTextStyle().bigText(message.getAlert()));
-
-        Notification notification = extendBuilder(builder, message, notificationId).build();
-        notification = applyNotificationChannel(message, notification);
-
-        return notification;
+        return extendBuilder(builder, message, notificationId).build();
     }
 
     /**
