@@ -3,6 +3,23 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.0 - September 28, 2017
+==================================
+
+Minor feature release.
+
+New Features
+------------
+- Added airship config options to set the production and development FCM sender ID. Applications that
+  use the same sender ID for both production and development can use `fcmSenderId` to be used in
+  both modes.
+- Made the Timer class public for in-app messaging customization.
+- Updated Google Play Services to 11.4 and Support Library to 26.1.0
+
+Deprecations
+------------
+- gcmSender is deprecated in the AirshipConfig options. Use fcmSenderId instead.
+
 Version 8.8.3 - September 13, 2017
 ==================================
 

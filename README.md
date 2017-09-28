@@ -16,7 +16,7 @@ Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement
 ## Requirements
 - minSdkVersion 15+
 - compileSdkVersion 26
-- Google Play Services 11.0.0+
+- Google Play Services 11.4.0+
 
 ## Quickstart
 
@@ -27,14 +27,14 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:8.6.+'
-     compile 'com.google.android.gms:play-services-gcm:11.0.1'
+     compile 'com.urbanairship.android:urbanairship-sdk:8.9.+'
+     compile 'com.google.android.gms:play-services-gcm:11.4.0'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:25.3.1'
+     compile 'com.android.support:cardview-v7:26.1.0'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:11.0.1'
+     compile 'com.google.android.gms:play-services-location:11.4.0'
    }
 ```
 
