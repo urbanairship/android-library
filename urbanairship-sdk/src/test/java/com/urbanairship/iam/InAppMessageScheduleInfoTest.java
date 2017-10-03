@@ -52,7 +52,6 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                                                         .setEnd(2)
                                                                         .setLimit(3)
                                                                         .setDelay(delay)
-                                                                        .setGroup("group id")
                                                                         .setPriority(-4)
                                                                         .setMessage(message)
                                                                         .build();
@@ -63,7 +62,7 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
         assertEquals(2, scheduleInfo.getEnd());
         assertEquals(3, scheduleInfo.getLimit());
         assertEquals(delay, scheduleInfo.getDelay());
-        assertEquals("group id", scheduleInfo.getGroup());
+        assertEquals("message id", scheduleInfo.getGroup());
         assertEquals(-4, scheduleInfo.getPriority());
         assertEquals(message, scheduleInfo.getInAppMessage());
         assertEquals(message, scheduleInfo.getData());

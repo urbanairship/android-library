@@ -284,7 +284,7 @@ public class CoreReceiver extends BroadcastReceiver {
             return;
         }
 
-        InAppMessageManager iamManager = UAirship.shared().getInAppMessageManager();
+        InAppMessageManager iamManager = UAirship.shared().getLegacyInAppMessageManager();
         InAppMessage pendingMessage = iamManager.getPendingMessage();
         InAppMessage currentMessage = iamManager.getCurrentMessage();
 

@@ -151,7 +151,7 @@ class IncomingPushRunnable implements Runnable {
         InAppMessage inAppMessage = message.getInAppMessage();
         if (inAppMessage != null) {
             Logger.debug("PushJobHandler - Received a Push with an in-app message.");
-            airship.getInAppMessageManager().setPendingMessage(inAppMessage);
+            airship.getLegacyInAppMessageManager().setPendingMessage(inAppMessage);
         }
 
 

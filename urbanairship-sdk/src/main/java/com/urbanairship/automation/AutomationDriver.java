@@ -1,3 +1,5 @@
+/* Copyright 2017 Urban Airship and Contributors */
+
 package com.urbanairship.automation;
 
 import android.support.annotation.MainThread;
@@ -47,7 +49,9 @@ public interface AutomationDriver<T extends Schedule> {
      * @param scheduleId The schedule ID.
      * @param info The generic schedule info.
      * @return A typed schedule.
+     * @throws ParseScheduleException If the scheduleInfo is unparsable. The automation engine will delete
+     * the schedule.
      */
     @NonNull
-    T createSchedule(String scheduleId, @NonNull ScheduleInfo info);
+    T createSchedule(String scheduleId, @NonNull ScheduleInfo info) throws ParseScheduleException;
 }

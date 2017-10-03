@@ -358,7 +358,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        assertEquals(new PushMessage(pushBundle).getInAppMessage(), UAirship.shared().getInAppMessageManager().getPendingMessage());
+        assertEquals(new PushMessage(pushBundle).getInAppMessage(), UAirship.shared().getLegacyInAppMessageManager().getPendingMessage());
     }
 
     /**

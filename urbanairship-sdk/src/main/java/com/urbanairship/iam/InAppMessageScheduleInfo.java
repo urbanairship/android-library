@@ -28,7 +28,6 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     private final List<Trigger> triggers;
     private final ScheduleDelay delay;
     private final InAppMessage message;
-    private final String group;
     private final int priority;
 
     /**
@@ -43,7 +42,6 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         this.triggers = Collections.unmodifiableList(builder.triggers);
         this.delay = builder.delay;
         this.message = builder.message;
-        this.group = builder.group;
         this.priority = builder.priority;
     }
 
@@ -110,7 +108,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      */
     @Override
     public String getGroup() {
-        return group;
+        return message.getId();
     }
 
     /**
@@ -141,7 +139,6 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         public final List<Trigger> triggers = new ArrayList<>();
         public ScheduleDelay delay;
         public InAppMessage message;
-        public String group;
         public int priority;
 
         private Builder() {}
@@ -165,17 +162,6 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
          */
         public Builder setMessage(InAppMessage message) {
             this.message = message;
-            return this;
-        }
-
-        /**
-         * Sets the group.
-         *
-         * @param group The group.
-         * @return The Builder instance.
-         */
-        public Builder setGroup(String group) {
-            this.group = group;
             return this;
         }
 

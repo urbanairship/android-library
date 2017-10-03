@@ -8,9 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.urbanairship.actions.Action;
-import com.urbanairship.actions.ActionService;
-import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.PushManager;
@@ -94,7 +91,7 @@ public class CoreReceiverTest extends BaseTestCase {
                 .create();
 
         // Set the pending in-app message
-        InAppMessageManager inAppMessageManager = UAirship.shared().getInAppMessageManager();
+        InAppMessageManager inAppMessageManager = UAirship.shared().getLegacyInAppMessageManager();
         inAppMessageManager.setPendingMessage(inAppMessage);
 
         // Create the push message with the matching send ID

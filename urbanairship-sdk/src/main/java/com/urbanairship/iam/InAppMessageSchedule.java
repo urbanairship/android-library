@@ -4,7 +4,6 @@ package com.urbanairship.iam;
 
 import com.urbanairship.automation.Schedule;
 
-
 /**
  * Defines an in-app message schedule.
  */

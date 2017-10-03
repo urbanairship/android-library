@@ -31,13 +31,17 @@ public class TestActivityMonitor extends ActivityMonitor {
      */
     public void startActivity() {
         Activity activity = new Activity();
-        this.activityLifecycleCallbacks.onActivityStarted(activity);
-        Robolectric.flushForegroundThreadScheduler();
+        startActivity(activity);
     }
 
     /**
-     * Starts an activity.
+     * Stops an activity.
      */
+    public void stopActivity() {
+        Activity activity = new Activity();
+        stopActivity(activity);
+    }
+
     public void startActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityStarted(activity);
         Robolectric.flushForegroundThreadScheduler();
@@ -48,11 +52,12 @@ public class TestActivityMonitor extends ActivityMonitor {
         Robolectric.flushForegroundThreadScheduler();
     }
 
-    /**
-     * Stops an activity.
-     */
-    public void stopActivity() {
-        Activity activity = new Activity();
+    public void pauseActivity(Activity activity) {
+        this.activityLifecycleCallbacks.onActivityPaused(activity);
+        Robolectric.flushForegroundThreadScheduler();
+    }
+
+    public void stopActivity(Activity activity) {
         this.activityLifecycleCallbacks.onActivityStopped(activity);
         Robolectric.flushForegroundThreadScheduler();
     }

@@ -1,3 +1,5 @@
+/* Copyright 2017 Urban Airship and Contributors */
+
 package com.urbanairship.automation;
 
 import android.os.Handler;
@@ -608,7 +610,7 @@ public class AutomationEngine<T extends Schedule> {
             return new HashSet<>();
         }
 
-        HashSet<String> schedulesToDelete = new HashSet<>();
+        final HashSet<String> schedulesToDelete = new HashSet<>();
         HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
 
         // Sort schedules by priority
@@ -656,10 +658,15 @@ public class AutomationEngine<T extends Schedule> {
                     result = false;
 
                     if (isScheduleConditionsSatisfied(scheduleEntry)) {
-                        schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
+                        try {
+                            schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
 
-                        if (driver.isScheduleReadyToExecute(schedule)) {
-                            result = true;
+                            if (driver.isScheduleReadyToExecute(schedule)) {
+                                result = true;
+                            }
+                        } catch (ParseScheduleException e) {
+                            Logger.error("Unable to create schedule.", e);
+                            schedulesToDelete.add(scheduleEntry.scheduleId);
                         }
                     }
                     latch.countDown();
@@ -709,6 +716,10 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
 
+                if (scheduleEntry == null) {
+                    return;
+                }
+
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                 scheduleEntry.setPendingExecutionDate(-1);
                 scheduleEntry.setCount(scheduleEntry.getCount() + 1);
@@ -757,7 +768,12 @@ public class AutomationEngine<T extends Schedule> {
     private List<T> convertEntries(List<ScheduleEntry> entries) {
         List<T> schedules = new ArrayList<>();
         for (ScheduleEntry entry : entries) {
-            schedules.add(driver.createSchedule(entry.scheduleId, entry));
+            try {
+                schedules.add(driver.createSchedule(entry.scheduleId, entry));
+            } catch (ParseScheduleException e) {
+                Logger.error("Unable to create schedule.", e);
+                cancel(Collections.singletonList(entry.scheduleId));
+            }
         }
 
         return schedules;

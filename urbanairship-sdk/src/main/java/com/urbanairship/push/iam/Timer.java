@@ -31,14 +31,14 @@ public abstract class Timer {
      *
      * @param milliseconds The duration of the timer in milliseconds.
      */
-    Timer(long milliseconds) {
+    public Timer(long milliseconds) {
         this.remainingTimeMs = milliseconds;
     }
 
     /**
      * Starts the timer.
      */
-    void start() {
+    public void start() {
         if (isStarted) {
             return;
         }
@@ -56,7 +56,7 @@ public abstract class Timer {
     /**
      * Stops the timer.
      */
-    void stop() {
+    public void stop() {
         if (!isStarted) {
             return;
         }
@@ -73,7 +73,7 @@ public abstract class Timer {
      *
      * @return The total run time in milliseconds.
      */
-    long getRunTime() {
+    public long getRunTime() {
         if (isStarted) {
             return elapsedTimeMs + SystemClock.elapsedRealtime() - startTimeMs;
         }

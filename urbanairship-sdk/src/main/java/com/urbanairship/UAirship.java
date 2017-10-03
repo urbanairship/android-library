@@ -24,6 +24,7 @@ import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
+import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -31,7 +32,6 @@ import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
-import com.urbanairship.push.iam.InAppMessageManager;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -109,7 +109,9 @@ public class UAirship {
     RichPushInbox inbox;
     UALocationManager locationManager;
     Whitelist whitelist;
+    com.urbanairship.push.iam.InAppMessageManager legacyInAppMessageManager;
     InAppMessageManager inAppMessageManager;
+
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
     NamedUser namedUser;
@@ -596,7 +598,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
-        this.inAppMessageManager = new InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
+        this.legacyInAppMessageManager = new com.urbanairship.push.iam.InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
         this.namedUser = new NamedUser(application, preferenceDataStore);
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
@@ -605,6 +607,7 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
         this.messageCenter = new MessageCenter();
         this.automation = new Automation(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        this.inAppMessageManager = new InAppMessageManager(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
 
         for (AirshipComponent component : getComponents()) {
             component.init();
@@ -682,13 +685,23 @@ public class UAirship {
     }
 
     /**
-     * Returns the {@link com.urbanairship.push.iam.InAppMessageManager} instance.
+     * Returns the legacy {@link com.urbanairship.push.iam.InAppMessageManager} instance.
      *
-     * @return The {@link com.urbanairship.push.iam.InAppMessageManager} instance.
+     * @return The legacy {@link com.urbanairship.push.iam.InAppMessageManager} instance.
      */
-    public InAppMessageManager getInAppMessageManager() {
+    public com.urbanairship.push.iam.InAppMessageManager getLegacyInAppMessageManager() {
+        return legacyInAppMessageManager;
+    }
+
+    /**
+     * Returns the {@link com.urbanairship.iam.InAppMessageManager} instance.
+     *
+     * @return The {@link com.urbanairship.iam.InAppMessageManager} instance.
+     */
+    public InAppMessageManager getInAppMessagingManager() {
         return inAppMessageManager;
     }
+
 
     /**
      * Returns the UAirship {@link com.urbanairship.analytics.Analytics} instance.
@@ -774,13 +787,14 @@ public class UAirship {
             components.add(inbox);
             components.add(pushManager);
             components.add(locationManager);
-            components.add(inAppMessageManager);
+            components.add(legacyInAppMessageManager);
             components.add(channelCapture);
             components.add(applicationMetrics);
             components.add(analytics);
             components.add(messageCenter);
             components.add(namedUser);
             components.add(automation);
+            components.add(inAppMessageManager);
         }
 
         return components;

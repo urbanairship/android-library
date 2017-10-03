@@ -113,9 +113,9 @@ public class SampleTest {
             airshipReceiver.waitForChannelUpdate();
         }
 
-        UAirship.shared().getInAppMessageManager().setAutoDisplayDelay(0);
-        UAirship.shared().getInAppMessageManager().setDisplayAsapEnabled(true);
-        UAirship.shared().getInAppMessageManager().setPendingMessage(null);
+        UAirship.shared().getLegacyInAppMessageManager().setAutoDisplayDelay(0);
+        UAirship.shared().getLegacyInAppMessageManager().setDisplayAsapEnabled(true);
+        UAirship.shared().getLegacyInAppMessageManager().setPendingMessage(null);
 
         channelId = UAirship.shared().getPushManager().getChannelId();
 
