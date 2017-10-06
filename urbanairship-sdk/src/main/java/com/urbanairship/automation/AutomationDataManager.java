@@ -55,7 +55,8 @@ public class AutomationDataManager extends DataManager {
      */
     private static final String GET_ACTIVE_TRIGGERS = "SELECT * FROM " + TriggerEntry.TABLE_NAME + " t" +
             " LEFT OUTER JOIN " + ScheduleEntry.TABLE_NAME + " a ON a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID +
-            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ? AND (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 OR a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)";
+            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ? AND (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 OR a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)" +
+            " AND t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + " LIKE ?";
 
     /**
      * Class constructor.
@@ -542,11 +543,12 @@ public class AutomationDataManager extends DataManager {
      * Gets triggers for a given type.
      *
      * @param type The trigger type.
+     * @param scheduleID The ID of the schedule containing the trigger
      * @return THe list of {@link TriggerEntry} instances.
      */
-    List<TriggerEntry> getActiveTriggerEntries(int type) {
+    List<TriggerEntry> getActiveTriggerEntries(int type, String scheduleID) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()) });
+        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleID});
 
         if (cursor == null) {
             return triggers;
@@ -565,6 +567,14 @@ public class AutomationDataManager extends DataManager {
         return triggers;
     }
 
+    /**
+     * Gets triggers for a given type.
+     * @param type The trigger type.
+     * @return THe list of {@link TriggerEntry} instances.
+     */
+    List<TriggerEntry> getActiveTriggerEntries(int type) {
+        return getActiveTriggerEntries(type, "%");
+    }
 
     /**
      * Returns the current schedule count.
