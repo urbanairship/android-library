@@ -39,6 +39,10 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
         PushProviderBridge.receivedPush(context, AdmPushProvider.class, message, new Runnable() {
             @Override
             public void run() {
+                if (result == null) {
+                    return;
+                }
+
                 if (isOrderedBroadcast) {
                     result.setResultCode(Activity.RESULT_OK);
                 }
