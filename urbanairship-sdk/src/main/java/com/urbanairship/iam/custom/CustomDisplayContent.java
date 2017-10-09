@@ -4,13 +4,13 @@ package com.urbanairship.iam.custom;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonValue;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_CUSTOM} in-app message.
  */
-public class CustomDisplayContent implements JsonSerializable {
+public class CustomDisplayContent implements DisplayContent {
 
     private final JsonValue value;
 

@@ -26,7 +26,7 @@ public class BannerDisplayAdapter implements InAppMessageAdapter {
 
         BannerDisplayContent displayContent = displayArguments.getMessage().getDisplayContent();
         int enter, exit;
-        if (displayContent.getPosition() == BannerDisplayContent.POSITION_TOP) {
+        if (displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP) {
             enter = R.animator.ua_iam_slide_in_top;
             exit = R.animator.ua_iam_slide_out_top;
         } else {

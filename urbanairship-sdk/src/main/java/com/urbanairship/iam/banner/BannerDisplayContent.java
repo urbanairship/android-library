@@ -3,268 +3,389 @@
 package com.urbanairship.iam.banner;
 
 import android.graphics.Color;
-import android.support.annotation.IntDef;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
+import android.support.annotation.StringDef;
 
-import com.urbanairship.Logger;
-import com.urbanairship.actions.ActionValue;
+import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.iam.DisplayContent;
+import com.urbanairship.iam.ImageInfo;
+import com.urbanairship.iam.TextInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.Checks;
+import com.urbanairship.util.ColorUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_BANNER} in-app message.
  */
-public class BannerDisplayContent implements JsonSerializable {
+public class BannerDisplayContent implements DisplayContent {
 
-    @IntDef({ POSITION_TOP, POSITION_BOTTOM})
+    @StringDef({ PLACEMENT_TOP, PLACEMENT_BOTTOM })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Position {}
+    public @interface Placement {}
 
     /**
      * Display the message on top of the screen.
      */
-    public static final int POSITION_TOP = 1;
+    public static final String PLACEMENT_TOP = "top";
 
     /**
      * Display the message on bottom of the screen.
      */
-    public static final int POSITION_BOTTOM = 0;
-
-    private final String alert;
-    private final Long durationMilliseconds;
-    private final Integer primaryColor;
-    private final Integer secondaryColor;
-    private final int position;
-    private final String buttonGroupId;
-
-    @NonNull
-    private final Map<String, ActionValue> clickActionValues;
+    public static final String PLACEMENT_BOTTOM = "bottom";
 
 
-    @NonNull
-    private final Map<String, Map<String, ActionValue>> buttonActionValues;
+    @StringDef({ TEMPLATE_LEFT_ICON, TEMPLATE_RIGHT_ICON })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Template {}
 
     /**
-     * Creates a InAppMessage from a {@link com.urbanairship.push.iam.InAppMessage.Builder}.
-     * @param builder An InAppMessage builder.
+     * Template to display the optional icon on the left.
+     */
+    public static final String TEMPLATE_LEFT_ICON = "icon_text";
+
+    /**
+     * Template to display the optional icon on the right.
+     */
+    public static final String TEMPLATE_RIGHT_ICON = "text_icon";
+
+    /**
+     * Default duration in milliseconds.
+     */
+    public static final long DEFAULT_DURATION_MS = 30000;
+
+    /**
+     * JSON key for actions. Not supported in the API but is needed for compatibility of v1 banners.
+     */
+    private static final String ACTIONS_KEY = "actions";
+
+    private final TextInfo heading;
+    private final TextInfo body;
+    private final ImageInfo image;
+    private final List<ButtonInfo> buttons;
+    @ButtonLayout
+    private final String buttonLayout;
+    @Placement
+    private final String placement;
+    @Template
+    private final String template;
+    private final long duration;
+    private final int backgroundColor;
+    private final int dismissButtonColor;
+    private final float borderRadius;
+    private final Map<String, JsonValue> actions;
+
+    /**
+     * Default factory method.
+     *
+     * @param builder The display content builder.
      */
     private BannerDisplayContent(Builder builder) {
-        this.alert = builder.alert;
-        this.durationMilliseconds = builder.durationMilliseconds;
-        this.buttonGroupId = builder.buttonGroupId;
-        this.buttonActionValues = builder.buttonActionValues;
-        this.clickActionValues = builder.clickActionValues == null ? new HashMap<String, ActionValue>() : builder.clickActionValues;
-        this.position = builder.position;
-        this.primaryColor = builder.primaryColor;
-        this.secondaryColor = builder.secondaryColor;
+        this.heading = builder.heading;
+        this.body = builder.body;
+        this.image = builder.image;
+        this.buttonLayout = builder.buttonLayout;
+        this.buttons = builder.buttons;
+        this.placement = builder.placement;
+        this.template = builder.template;
+        this.duration = builder.duration;
+        this.backgroundColor = builder.backgroundColor;
+        this.dismissButtonColor = builder.dismissButtonColor;
+        this.borderRadius = builder.borderRadius;
+        this.actions = builder.actions;
     }
 
     /**
-     * Creates an in-app message from a JSON payload.
+     * Parses banner display JSON.
      *
      * @param json The json payload.
-     * @return The in-app message, or null if the payload defines an invalid in-app message.
+     * @return The parsed banner display content.
+     * @throws JsonException If the json was unable to be parsed.
      */
     @Nullable
-    public static BannerDisplayContent parseJson(JsonValue json) {
-        if (json == null) {
-            return null;
-        }
+    public static BannerDisplayContent parseJson(JsonValue json) throws JsonException {
+        JsonMap content = json.optMap();
 
-        JsonMap displayJson = json.optMap();
         Builder builder = newBuilder();
 
-        builder.setAlert(displayJson.opt("alert").getString())
-               .setPrimaryColor(parseColor(displayJson.opt("primary_color").getString()))
-               .setSecondaryColor(parseColor(displayJson.opt("secondary_color").getString()));
-
-        long duration;
-        if (displayJson.containsKey("duration_ms")) {
-            duration = displayJson.get("duration_ms").getLong(0);
-            if (duration > 0) {
-                builder.setDuration(duration);
-            }
-        } else {
-            duration = displayJson.opt("duration").getLong(0);
-            if (duration > 0) {
-                builder.setDuration(TimeUnit.SECONDS.toMillis(duration));
-            }
+        // Heading
+        if (content.containsKey(HEADING_KEY)) {
+            builder.setHeading(TextInfo.parseJson(content.opt(HEADING_KEY)));
         }
 
-        if ("top".equalsIgnoreCase(displayJson.opt("position").getString())) {
-            builder.setPosition(POSITION_TOP);
-        } else {
-            builder.setPosition(POSITION_BOTTOM);
+        // Body
+        if (content.containsKey(BODY_KEY)) {
+            builder.setBody(TextInfo.parseJson(content.opt(BODY_KEY)));
         }
 
-        JsonMap actionsJson = displayJson.opt("actions").getMap();
-        if (actionsJson != null) {
-            // On click actions
-            JsonMap clickActionsJson = actionsJson.opt("on_click").getMap();
-            if (clickActionsJson != null) {
-                Map<String, ActionValue> clickActions = new HashMap<>();
-                for (Map.Entry<String, JsonValue> entry : clickActionsJson) {
-                    clickActions.put(entry.getKey(), new ActionValue(entry.getValue()));
-                }
-                builder.setClickActionValues(clickActions);
+        // Image
+        if (content.containsKey(IMAGE_KEY)) {
+            builder.setImage(ImageInfo.parseJson(content.get(IMAGE_KEY)));
+        }
+
+        // Buttons
+        if (content.containsKey(BUTTONS_KEY)) {
+            JsonList buttonJsonList = content.get(BUTTONS_KEY).getList();
+            if (buttonJsonList == null) {
+                throw new JsonException("Buttons must be an array of button objects.");
             }
 
-            // Button group
-            builder.setButtonGroupId(actionsJson.opt("button_group").getString());
+            builder.setButtons(ButtonInfo.parseJson(buttonJsonList));
+        }
 
-            // Button actions
-            JsonMap buttonActionsJson = actionsJson.opt("button_actions").getMap();
-            if (buttonActionsJson != null) {
-
-                for (Map.Entry<String, JsonValue> entry : buttonActionsJson.entrySet()) {
-                    String buttonId = entry.getKey();
-                    JsonMap actionJson = buttonActionsJson.opt(buttonId).getMap();
-
-                    Map<String, ActionValue> actions = new HashMap<>();
-                    for (Map.Entry<String, JsonValue> buttonEntry : actionJson.entrySet()) {
-                        actions.put(buttonEntry.getKey(), new ActionValue(buttonEntry.getValue()));
-                    }
-
-                    builder.setButtonActionValues(buttonId, actions);
-                }
+        // Button Layout
+        if (content.containsKey(BUTTON_LAYOUT_KEY)) {
+            switch (content.opt(BUTTON_LAYOUT_KEY).getString("")) {
+                case BUTTON_LAYOUT_STACKED:
+                    builder.setButtonLayout(BUTTON_LAYOUT_STACKED);
+                    break;
+                case BUTTON_LAYOUT_JOINED:
+                    builder.setButtonLayout(BUTTON_LAYOUT_JOINED);
+                    break;
+                case BUTTON_LAYOUT_SEPARATE:
+                    builder.setButtonLayout(BUTTON_LAYOUT_SEPARATE);
+                    break;
+                default:
+                    throw new JsonException("Unexpected button layout: " + content.opt(BUTTON_LAYOUT_KEY));
             }
         }
 
-        return builder.build();
-    }
-
-
-    @Override
-    public JsonValue toJsonValue() {
-
-        JsonMap.Builder builder = JsonMap.newBuilder()
-                .put("alert", alert)
-                .put("position", position == POSITION_TOP ? "top" : "bottom")
-                .putOpt("duration_ms", durationMilliseconds)
-                .put("actions", JsonMap.newBuilder()
-                                      .put("on_click", JsonValue.wrapOpt(clickActionValues))
-                                      .put("button_group", JsonValue.wrapOpt(buttonGroupId))
-                                      .put("button_actions", JsonValue.wrapOpt(buttonActionValues))
-                                      .build());
-
-
-        if (primaryColor != null) {
-            builder.put("primary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & primaryColor)));
+        // Placement
+        if (content.containsKey(PLACEMENT_KEY)) {
+            switch (content.opt(PLACEMENT_KEY).getString("")) {
+                case PLACEMENT_BOTTOM:
+                    builder.setPlacement(PLACEMENT_BOTTOM);
+                    break;
+                case PLACEMENT_TOP:
+                    builder.setPlacement(PLACEMENT_TOP);
+                    break;
+                default:
+                    throw new JsonException("Unexpected placement: " + content.opt(PLACEMENT_KEY));
+            }
         }
 
-        if (secondaryColor != null) {
-            builder.put("secondary_color", String.format(Locale.US, "#%06X", (0xFFFFFF & secondaryColor)));
+        // Template
+        if (content.containsKey(TEMPLATE_KEY)) {
+            switch (content.opt(TEMPLATE_KEY).getString("")) {
+                case TEMPLATE_LEFT_ICON:
+                    builder.setTemplate(TEMPLATE_LEFT_ICON);
+                    break;
+                case TEMPLATE_RIGHT_ICON:
+                    builder.setTemplate(TEMPLATE_RIGHT_ICON);
+                    break;
+                default:
+                    throw new JsonException("Unexpected template: " + content.opt(TEMPLATE_KEY));
+            }
         }
 
-        return builder.build().toJsonValue();
-    }
+        // Duration
+        if (content.containsKey(DURATION_KEY)) {
+            long duration = content.opt(DURATION_KEY).getLong(0);
+            if (duration == 0) {
+                throw new JsonException("Invalid duration: " + content.opt(DURATION_KEY));
+            }
 
-    /**
-     * Returns the message's alert.
-     *
-     * @return The message's alert.
-     */
-    public String getAlert() {
-        return alert;
-    }
-
-    /**
-     * Returns the on click action name to action value map.
-     *
-     * @return The on click action values.
-     */
-    @NonNull
-    public Map<String, ActionValue> getClickActionValues() {
-        return Collections.unmodifiableMap(clickActionValues);
-    }
-
-    /**
-     * Returns the specified button's action name to action value map.
-     *
-     * @return The button's action values.
-     */
-    @Nullable
-    public Map<String, ActionValue> getButtonActionValues(String buttonId) {
-        if (buttonActionValues.containsKey(buttonId)) {
-            return Collections.unmodifiableMap(buttonActionValues.get(buttonId));
-        } else {
-            return null;
+            builder.setDuration(duration, TimeUnit.SECONDS);
         }
-    }
 
-    /**
-     * Returns the button group ID. The button group can be fetched from {@link com.urbanairship.push.PushManager#getNotificationActionGroup(String)}
-     *
-     * @return The button group ID.
-     */
-    public String getButtonGroupId() {
-        return buttonGroupId;
-    }
 
-    /**
-     * Returns the duration in milliseconds for how long the message should be shown.
-     *
-     * @return The duration of the message in milliseconds.
-     */
-    public Long getDuration() {
-        return durationMilliseconds;
-    }
+        // Background color
+        if (content.containsKey(BACKGROUND_COLOR_KEY)) {
+            try {
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+            } catch (IllegalArgumentException e) {
+                throw new JsonException("Invalid background button color: " + content.opt(BACKGROUND_COLOR_KEY), e);
+            }
+        }
 
-    /**
-     * Returns the position of the in-app message. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}.
-     *
-     * @return The message's position.
-     */
-    @Position
-    public int getPosition() {
-        return position;
-    }
+        // Dismiss button color
+        if (content.containsKey(DISMISS_BUTTON_COLOR_KEY)) {
+            try {
+                builder.setDismissButtonColor(Color.parseColor(content.opt(DISMISS_BUTTON_COLOR_KEY).getString("")));
+            } catch (IllegalArgumentException e) {
+                throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
+            }
+        }
 
-    /**
-     * Returns the message's primary color.
-     *
-     * @return The message's primary color.
-     */
-    public Integer getPrimaryColor() {
-        return primaryColor;
-    }
+        // Border radius
+        if (content.containsKey(BORDER_RADIUS_KEY)) {
+            if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
+                throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
+            }
 
-    /**
-     * Returns the message's secondary color.
-     *
-     * @return The message's secondary color.
-     */
-    public Integer getSecondaryColor() {
-        return secondaryColor;
-    }
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+        }
 
-    /**
-     * Helper method to parse a color string.
-     *
-     * @param colorString The color as a #RRGGBB string.
-     */
-    private static Integer parseColor(String colorString) {
-        if (UAStringUtil.isEmpty(colorString)) {
-            return null;
+        // Actions
+        if (content.containsKey(ACTIONS_KEY)) {
+            JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
+            if (jsonMap == null) {
+                throw new JsonException("Actions must be a JSON object: " + content.opt(BORDER_RADIUS_KEY));
+            }
+
+            builder.setActions(jsonMap.getMap());
         }
 
         try {
-            return Color.parseColor(colorString);
+            return builder.build();
         } catch (IllegalArgumentException e) {
-            Logger.warn("InAppMessage - Unable to parse color: " + colorString, e);
-            return null;
+            throw new JsonException("Invalid banner JSON: " + content, e);
         }
+    }
+
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                      .put(HEADING_KEY, heading)
+                      .put(BODY_KEY, body)
+                      .put(IMAGE_KEY, image)
+                      .put(BUTTONS_KEY, JsonValue.wrapOpt(buttons))
+                      .put(BUTTON_LAYOUT_KEY, buttonLayout)
+                      .put(PLACEMENT_KEY, placement)
+                      .put(TEMPLATE_KEY, template)
+                      .put(DURATION_KEY, TimeUnit.MILLISECONDS.toSeconds(duration))
+                      .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
+                      .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
+                      .put(BORDER_RADIUS_KEY, borderRadius)
+                      .put(ACTIONS_KEY, JsonValue.wrapOpt(actions))
+                      .build()
+                      .toJsonValue();
+    }
+
+
+    /**
+     * Returns the optional heading {@link TextInfo}.
+     *
+     * @return The banner heading.
+     */
+    @Nullable
+    public TextInfo getHeading() {
+        return heading;
+    }
+
+    /**
+     * Returns the optional body {@link TextInfo}.
+     *
+     * @return The banner body.
+     */
+    @Nullable
+    public TextInfo getBody() {
+        return body;
+    }
+
+    /**
+     * Returns the optional {@link ImageInfo}.
+     *
+     * @return The banner image.
+     */
+    @Nullable
+    public ImageInfo getImage() {
+        return image;
+    }
+
+    /**
+     * Returns the list of optional buttons.
+     *
+     * @return A list of buttons.
+     */
+    @NonNull
+    public List<ButtonInfo> getButtons() {
+        return buttons;
+    }
+
+    /**
+     * Returns the button layout.
+     *
+     * @return The button layout.
+     */
+    @NonNull
+    @ButtonLayout
+    public String getButtonLayout() {
+        return buttonLayout;
+    }
+
+    /**
+     * Returns the banner placement.
+     *
+     * @return The banner placement.
+     */
+    @NonNull
+    @Placement
+    public String getPlacement() {
+        return placement;
+    }
+
+    /**
+     * Returns the banner template.
+     *
+     * @return The banner template.
+     */
+    @NonNull
+    @Template
+    public String getTemplate() {
+        return template;
+    }
+
+    /**
+     * Returns the banner display duration.
+     *
+     * @return The banner display duration.
+     */
+    public long getDuration() {
+        return duration;
+    }
+
+    /**
+     * Returns the banner background color.
+     *
+     * @return The banner background color.
+     */
+    @ColorInt
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    /**
+     * Returns the banner dismiss button color.
+     *
+     * @return The banner dismiss button color.
+     */
+    @ColorInt
+    public int getDismissButtonColor() {
+        return dismissButtonColor;
+    }
+
+    /**
+     * Returns the border radius in dps.
+     *
+     * @return Border radius in dps.
+     */
+    public float getBorderRadius() {
+        return borderRadius;
+    }
+
+    /**
+     * Returns the action names and values to be run when the banner is clicked.
+     *
+     * @return The action map.
+     */
+    @NonNull
+    public Map<String, JsonValue> getActions() {
+        return actions;
     }
 
     @Override
@@ -278,72 +399,94 @@ public class BannerDisplayContent implements JsonSerializable {
 
         BannerDisplayContent that = (BannerDisplayContent) o;
 
-        if (position != that.position) {
+        if (duration != that.duration) {
             return false;
         }
-
-        if (alert != null ? !alert.equals(that.alert) : that.alert != null) {
+        if (backgroundColor != that.backgroundColor) {
             return false;
         }
-
-        if (durationMilliseconds != null ? !durationMilliseconds.equals(that.durationMilliseconds) : that.durationMilliseconds != null) {
+        if (dismissButtonColor != that.dismissButtonColor) {
             return false;
         }
-
-        if (primaryColor != null ? !primaryColor.equals(that.primaryColor) : that.primaryColor != null) {
+        if (Float.compare(that.borderRadius, borderRadius) != 0) {
             return false;
         }
-
-        if (secondaryColor != null ? !secondaryColor.equals(that.secondaryColor) : that.secondaryColor != null) {
+        if (heading != null ? !heading.equals(that.heading) : that.heading != null) {
             return false;
         }
-
-        if (buttonGroupId != null ? !buttonGroupId.equals(that.buttonGroupId) : that.buttonGroupId != null) {
+        if (body != null ? !body.equals(that.body) : that.body != null) {
             return false;
         }
-
-        if (!clickActionValues.equals(that.clickActionValues)) {
+        if (image != null ? !image.equals(that.image) : that.image != null) {
             return false;
         }
+        if (buttons != null ? !buttons.equals(that.buttons) : that.buttons != null) {
+            return false;
+        }
+        if (buttonLayout != null ? !buttonLayout.equals(that.buttonLayout) : that.buttonLayout != null) {
+            return false;
+        }
+        if (placement != null ? !placement.equals(that.placement) : that.placement != null) {
+            return false;
+        }
+        if (template != null ? !template.equals(that.template) : that.template != null) {
+            return false;
+        }
+        return actions != null ? actions.equals(that.actions) : that.actions == null;
 
-        return buttonActionValues.equals(that.buttonActionValues);
     }
 
     @Override
     public int hashCode() {
-        int result = (alert != null ? alert.hashCode() : 0);
-        result = 31 * result + (durationMilliseconds != null ? durationMilliseconds.hashCode() : 0);
-        result = 31 * result + (primaryColor != null ? primaryColor.hashCode() : 0);
-        result = 31 * result + (secondaryColor != null ? secondaryColor.hashCode() : 0);
-        result = 31 * result + position;
-        result = 31 * result + (buttonGroupId != null ? buttonGroupId.hashCode() : 0);
-        result = 31 * result + clickActionValues.hashCode();
-        result = 31 * result + buttonActionValues.hashCode();
+        int result = heading != null ? heading.hashCode() : 0;
+        result = 31 * result + (body != null ? body.hashCode() : 0);
+        result = 31 * result + (image != null ? image.hashCode() : 0);
+        result = 31 * result + (buttons != null ? buttons.hashCode() : 0);
+        result = 31 * result + (buttonLayout != null ? buttonLayout.hashCode() : 0);
+        result = 31 * result + (placement != null ? placement.hashCode() : 0);
+        result = 31 * result + (template != null ? template.hashCode() : 0);
+        result = 31 * result + (int) (duration ^ (duration >>> 32));
+        result = 31 * result + backgroundColor;
+        result = 31 * result + dismissButtonColor;
+        result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
+        result = 31 * result + (actions != null ? actions.hashCode() : 0);
         return result;
     }
 
+    @Override
+    public String toString() {
+        return toJsonValue().toString();
+    }
 
+    /**
+     * Builder factory method.
+     *
+     * @return A builder instance.
+     */
     public static Builder newBuilder() {
         return new Builder();
     }
+
     /**
-     * InAppMessage Builder.
+     * Banner Display Content Builder.
      */
     public static class Builder {
 
-        @Nullable
-        private Map<String, ActionValue> clickActionValues;
-
-        @NonNull
-        private Map<String, Map<String, ActionValue>> buttonActionValues = new HashMap<>();
-
-        private String buttonGroupId;
-        private String alert;
-        private Long durationMilliseconds;
-
-        private int position = POSITION_BOTTOM;
-        private Integer primaryColor;
-        private Integer secondaryColor;
+        private TextInfo heading;
+        private TextInfo body;
+        private ImageInfo image;
+        private List<ButtonInfo> buttons = new ArrayList<>();
+        @ButtonLayout
+        private String buttonLayout = BUTTON_LAYOUT_SEPARATE;
+        @Placement
+        private String placement = PLACEMENT_BOTTOM;
+        @Template
+        private String template = TEMPLATE_LEFT_ICON;
+        private long duration = DEFAULT_DURATION_MS;
+        private int backgroundColor = Color.WHITE;
+        private int dismissButtonColor = Color.BLACK;
+        private float borderRadius = 0;
+        private final Map<String, JsonValue> actions = new HashMap<>();
 
         /**
          * Default constructor.
@@ -351,119 +494,180 @@ public class BannerDisplayContent implements JsonSerializable {
         private Builder() {}
 
         /**
-         * Sets the message's on click action values.
+         * Sets the banner's heading.
          *
-         * @param actionValues The message's on click action values.
-         * @return The builder.
+         * @param heading The banner's heading.
+         * @return The builder instance.
          */
         @NonNull
-        public Builder setClickActionValues(@Nullable Map<String, ActionValue> actionValues) {
-            if (actionValues == null) {
-                this.clickActionValues = null;
-            } else {
-                this.clickActionValues = new HashMap<>(actionValues);
+        public Builder setHeading(TextInfo heading) {
+            this.heading = heading;
+            return this;
+        }
+
+        /**
+         * Sets the banner's body.
+         *
+         * @param body The banner's body.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setBody(TextInfo body) {
+            this.body = body;
+            return this;
+        }
+
+        /**
+         * Adds a button the button info. Only 2 buttons are supported.
+         *
+         * @param buttonInfo Adds a button to the banner.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder addButton(@NonNull ButtonInfo buttonInfo) {
+            this.buttons.add(buttonInfo);
+            return this;
+        }
+
+        /**
+         * Sets the banner's buttons. Only 2 buttons are supported.
+         *
+         * @param buttons A list of button infos.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setButtons(List<ButtonInfo> buttons) {
+            this.buttons.clear();
+            if (buttons != null) {
+                this.buttons.addAll(buttons);
             }
 
             return this;
         }
 
         /**
-         * Sets the message's button actions for a given button ID.
+         * Sets the image.
          *
-         * @param buttonId The button's ID.
-         * @param actionValues The button's action values.
-         * @return The builder.
+         * @param image The image info.
+         * @return The builder instance.
          */
         @NonNull
-        public Builder setButtonActionValues(@NonNull String buttonId, @Nullable Map<String, ActionValue> actionValues) {
-            if (actionValues == null) {
-                buttonActionValues.remove(buttonId);
-            } else {
-                buttonActionValues.put(buttonId, new HashMap<>(actionValues));
+        public Builder setImage(@NonNull ImageInfo image) {
+            this.image = image;
+            return this;
+        }
+
+        /**
+         * Sets the button layout. Only {@link #BUTTON_LAYOUT_SEPARATE} and {@link #BUTTON_LAYOUT_JOINED}
+         * are allowed. Defaults to {@link #BUTTON_LAYOUT_SEPARATE}.
+         *
+         * @param buttonLayout The button layout.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setButtonLayout(@NonNull @ButtonLayout String buttonLayout) {
+            this.buttonLayout = buttonLayout;
+            return this;
+        }
+
+        /**
+         * Sets the banner's placement. Defaults to {@link #PLACEMENT_BOTTOM}.
+         *
+         * @param placement The banner's placement.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setPlacement(@NonNull @Placement String placement) {
+            this.placement = placement;
+            return this;
+        }
+
+        /**
+         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_ICON}.
+         *
+         * @param template The banner's template.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setTemplate(@NonNull @Template String template) {
+            this.template = template;
+            return this;
+        }
+
+        /**
+         * Sets the background color. Defaults to white.
+         *
+         * @param color The background color.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setBackgroundColor(@ColorInt int color) {
+            this.backgroundColor = color;
+            return this;
+        }
+
+        /**
+         * Sets the dismiss button color. Defaults to black.
+         *
+         * @param color The dismiss button color.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setDismissButtonColor(@ColorInt int color) {
+            this.dismissButtonColor = color;
+            return this;
+        }
+
+        /**
+         * Sets the border radius in dps. Defaults to 0.
+         *
+         * @param borderRadius The border radius.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setBorderRadius(float borderRadius) {
+            this.borderRadius = borderRadius;
+            return this;
+        }
+
+        /**
+         * Sets the display duration. Defaults to {@link #DEFAULT_DURATION_MS}.
+         *
+         * @param duration The duration in milliseconds.
+         * @param timeUnit The time unit.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setDuration(@Size(min = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.duration = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the actions to run when the banner is clicked.
+         *
+         * @param actions The action map.
+         * @return The builder instance.
+         */
+        public Builder setActions(Map<String, JsonValue> actions) {
+            this.actions.clear();
+
+            if (actions != null) {
+                this.actions.putAll(actions);
             }
+
             return this;
         }
 
         /**
-         * Sets the message's button group ID.
+         * Adds an action to run when the banner is clicked.
          *
-         * @param buttonGroupId The message's button group ID.
-         * @return The builder.
+         * @param actionName The action name.
+         * @param actionValue The action value.
+         * @return The builder instance.
          */
-        @NonNull
-        public Builder setButtonGroupId(@Nullable String buttonGroupId) {
-            this.buttonGroupId = buttonGroupId;
-            return this;
-        }
-
-        /**
-         * Sets the message's alert.
-         *
-         * @param alert The message's alert.
-         * @return The builder.
-         */
-        @NonNull
-        public Builder setAlert(@Nullable String alert) {
-            this.alert = alert;
-            return this;
-        }
-
-        /**
-         * Sets the duration to show the message for.
-         *
-         * @param milliseconds The duration in milliseconds.
-         * @return The builder.
-         * @throws IllegalArgumentException if the duration is less than or equal to 0.
-         */
-        @NonNull
-        public Builder setDuration(@Nullable Long milliseconds) {
-            if (milliseconds != null && milliseconds <= 0) {
-                throw new IllegalArgumentException("Duration must be greater than 0 milliseconds");
-            }
-
-            this.durationMilliseconds = milliseconds;
-            return this;
-        }
-
-        /**
-         * Sets the message's position. Either {@link #POSITION_BOTTOM} or {@link #POSITION_TOP}
-         * are acceptable values. Any other value will result in an illegal argument exception.
-         *
-         * @param position The message's position.
-         * @return The builder.
-         * @throws IllegalArgumentException If the position is not {@link #POSITION_BOTTOM} nor {@link #POSITION_TOP}.
-         */
-        @NonNull
-        public Builder setPosition(@Position int position) {
-            if (position != POSITION_TOP && position != POSITION_BOTTOM) {
-                throw new IllegalArgumentException("Position must be either InAppMessage.POSITION_BOTTOM or InAppMessage.POSITION_TOP.");
-            }
-
-            this.position = position;
-            return this;
-        }
-
-        /**
-         * Sets the message's primary color.
-         *
-         * @param color The message's primary color.
-         * @return The builder.
-         */
-        @NonNull
-        public Builder setPrimaryColor(@Nullable Integer color) {
-            this.primaryColor = color;
-            return this;
-        }
-
-        /**
-         * Sets the message's secondary color.
-         *
-         * @param color The message's secondary color.
-         * @return The builder.
-         */
-        @NonNull
-        public Builder setSecondaryColor(@Nullable Integer color) {
-            this.secondaryColor = color;
+        public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
+            this.actions.put(actionName, actionValue);
             return this;
         }
 
@@ -471,9 +675,14 @@ public class BannerDisplayContent implements JsonSerializable {
          * Builds the banner display content.
          *
          * @return The banner display content.
+         * @throws IllegalArgumentException If the button layout is stacked, if more than 2 button
+         * are defined, or if the banner does not define at least a heading, body, or buttons.
          */
         @NonNull
         public BannerDisplayContent build() {
+            Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
+            Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
+            Checks.checkArgument(!buttons.isEmpty() && buttons.size() <= 2, "Banner requires at least 1 button and a max of 2 buttons.");
             return new BannerDisplayContent(this);
         }
     }

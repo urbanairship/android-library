@@ -24,6 +24,13 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class InAppMessage implements Parcelable, JsonSerializable {
 
+    // JSON keys
+    private static final String MESSAGE_ID_KEY = "message_id";
+    private static final String DISPLAY_TYPE_KEY = "display_type";
+    private static final String DISPLAY_CONTENT_KEY = "display";
+    private static final String EXTRA_KEY = "extra";
+
+
     @StringDef({ TYPE_BANNER, TYPE_CUSTOM })
     @Retention(RetentionPolicy.SOURCE)
     @interface DisplayType {}
@@ -38,11 +45,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     public static final String TYPE_CUSTOM = "custom";
 
-    // JSON keys
-    private static final String MESSAGE_ID_KEY = "message_id";
-    private static final String DISPLAY_TYPE_KEY = "display_type";
-    private static final String DISPLAY_CONTENT_KEY = "display";
-    private static final String EXTRA_KEY = "extra";
+
 
     @DisplayType
     private final String type;
@@ -82,7 +85,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * @param <T> The expected content type.
      * @return The display content.
      */
-    public <T extends JsonSerializable> T getDisplayContent() {
+    public <T extends DisplayContent> T getDisplayContent() {
         if (content == null) {
             return null;
         }
@@ -239,6 +242,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return toJsonValue().toString();
+    }
 
     /**
      * In-app message builder.
@@ -259,7 +266,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param content The display content as a json value.
          * @return The builder object.
          */
-        private Builder setDisplayContent(String type, JsonValue content) {
+        private Builder setDisplayContent(String type, JsonValue content) throws JsonException {
             switch (type) {
                 case TYPE_BANNER:
                     this.setDisplayContent(BannerDisplayContent.parseJson(content));
