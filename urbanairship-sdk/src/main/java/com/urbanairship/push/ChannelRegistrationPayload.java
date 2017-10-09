@@ -1,44 +1,15 @@
-/*
-Copyright 2009-2013 Urban Airship Inc. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/* Copyright 2017 Urban Airship and Contributors */
 
 package com.urbanairship.push;
 
 import android.support.annotation.NonNull;
 
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAStringUtil;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -252,42 +223,33 @@ class ChannelRegistrationPayload implements JsonSerializable {
 
     @Override
     public JsonValue toJsonValue() {
-        JsonMap.Builder data = JsonMap.newBuilder();
-
-        JsonMap.Builder identityHints = JsonMap.newBuilder();
-        JsonMap.Builder channel = JsonMap.newBuilder();
-
-        if (!UAStringUtil.isEmpty(alias)) {
-            channel.put(ALIAS_KEY, alias);
-        }
-
-        channel.put(DEVICE_TYPE_KEY, deviceType);
-        channel.put(SET_TAGS_KEY, setTags);
-        channel.put(OPT_IN_KEY, optIn);
-        channel.put(PUSH_ADDRESS_KEY, pushAddress);
-        channel.put(BACKGROUND_ENABLED_KEY, backgroundEnabled);
-
-        channel.putOpt(TIMEZONE_KEY, timezone);
-        channel.putOpt(LANGUAGE_KEY, language);
-        channel.putOpt(COUNTRY_KEY, country);
+        // Channel Payload
+        JsonMap.Builder channel = JsonMap.newBuilder()
+                                         .put(ALIAS_KEY, alias)
+                                         .put(DEVICE_TYPE_KEY, deviceType)
+                                         .put(SET_TAGS_KEY, setTags)
+                                         .put(OPT_IN_KEY, optIn)
+                                         .put(PUSH_ADDRESS_KEY, pushAddress)
+                                         .put(BACKGROUND_ENABLED_KEY, backgroundEnabled)
+                                         .put(TIMEZONE_KEY, timezone)
+                                         .put(LANGUAGE_KEY, language)
+                                         .put(COUNTRY_KEY, country);
 
         // If setTags is TRUE, then include the tags
         if (setTags && tags != null) {
             channel.put(TAGS_KEY, JsonValue.wrapOpt(tags).getList());
         }
 
-        JsonMap channelMap = channel.build();
-        if (!channelMap.isEmpty()) {
-            data.put(CHANNEL_KEY, channelMap);
-        }
 
-        if (!UAStringUtil.isEmpty(userId)) {
-            identityHints.put(USER_ID_KEY, userId);
-        }
+        // Identity hints
+        JsonMap.Builder identityHints = JsonMap.newBuilder()
+                                               .put(USER_ID_KEY, userId)
+                                               .put(APID_KEY, apid);
 
-        if (!UAStringUtil.isEmpty(apid)) {
-            identityHints.put(APID_KEY, apid);
-        }
+
+        // Full payload
+        JsonMap.Builder data = JsonMap.newBuilder()
+                                      .put(CHANNEL_KEY, channel.build());
 
         JsonMap identityHintsMap = identityHints.build();
         if (!identityHintsMap.isEmpty()) {
@@ -307,107 +269,106 @@ class ChannelRegistrationPayload implements JsonSerializable {
         return this.toJsonValue().toString();
     }
 
-    /**
-     * Compares this instance with the specified object and indicates if they are equal.
-     *
-     * @param o The object to compare this instance with.
-     * @return <code>true</code>if objects are equal, <code>false</code> otherwise
-     */
     @Override
     public boolean equals(Object o) {
-
-        // Return false if the object is null or has the wrong type
-        if (o == null || !(o instanceof ChannelRegistrationPayload)) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        // Cast to the appropriate type.
-        ChannelRegistrationPayload lhs = (ChannelRegistrationPayload) o;
+        ChannelRegistrationPayload that = (ChannelRegistrationPayload) o;
 
-        // Check each field
-        return ((optIn == lhs.optIn) &&
-                (backgroundEnabled == lhs.backgroundEnabled) &&
-                (alias == null ? lhs.alias == null : alias.equals(lhs.alias)) &&
-                (deviceType == null ? lhs.deviceType == null : deviceType.equals(lhs.deviceType)) &&
-                (pushAddress == null ? lhs.pushAddress == null : pushAddress.equals(lhs.pushAddress)) &&
-                (setTags == lhs.setTags) &&
-                (tags == null ? lhs.tags == null : tags.equals(lhs.tags)) &&
-                (userId == null ? lhs.userId == null : userId.equals(lhs.userId)) &&
-                (apid == null ? lhs.apid == null : apid.equals(lhs.apid)));
+        if (optIn != that.optIn) {
+            return false;
+        }
+        if (backgroundEnabled != that.backgroundEnabled) {
+            return false;
+        }
+        if (setTags != that.setTags) {
+            return false;
+        }
+        if (alias != null ? !alias.equals(that.alias) : that.alias != null) {
+            return false;
+        }
+        if (deviceType != null ? !deviceType.equals(that.deviceType) : that.deviceType != null) {
+            return false;
+        }
+        if (pushAddress != null ? !pushAddress.equals(that.pushAddress) : that.pushAddress != null) {
+            return false;
+        }
+        if (tags != null ? !tags.equals(that.tags) : that.tags != null) {
+            return false;
+        }
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
+            return false;
+        }
+        if (apid != null ? !apid.equals(that.apid) : that.apid != null) {
+            return false;
+        }
+        if (timezone != null ? !timezone.equals(that.timezone) : that.timezone != null) {
+            return false;
+        }
+        if (language != null ? !language.equals(that.language) : that.language != null) {
+            return false;
+        }
+        return country != null ? country.equals(that.country) : that.country == null;
+
     }
 
-    /**
-     * Returns an integer hash code for this object.
-     *
-     * @return This object's hash code.
-     */
     @Override
     public int hashCode() {
-        // Start with a non-zero constant.
-        int result = 17;
-
-        // Include a hash for each field.
-        result = 31 * result + (optIn ? 1 : 0);
+        int result = (optIn ? 1 : 0);
         result = 31 * result + (backgroundEnabled ? 1 : 0);
-        result = 31 * result + (alias == null ? 0 : alias.hashCode());
-        result = 31 * result + (deviceType == null ? 0 : deviceType.hashCode());
-        result = 31 * result + (pushAddress == null ? 0 : pushAddress.hashCode());
+        result = 31 * result + (alias != null ? alias.hashCode() : 0);
+        result = 31 * result + (deviceType != null ? deviceType.hashCode() : 0);
+        result = 31 * result + (pushAddress != null ? pushAddress.hashCode() : 0);
         result = 31 * result + (setTags ? 1 : 0);
-        result = 31 * result + (tags == null ? 0 : tags.hashCode());
-        result = 31 * result + (userId == null ? 0 : userId.hashCode());
-        result = 31 * result + (apid == null ? 0 : apid.hashCode());
-        result = 31 * result + (timezone == null ? 0 : timezone.hashCode());
-        result = 31 * result + (language == null ? 0 : language.hashCode());
-        result = 31 * result + (country == null ? 0 : country.hashCode());
-
+        result = 31 * result + (tags != null ? tags.hashCode() : 0);
+        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        result = 31 * result + (apid != null ? apid.hashCode() : 0);
+        result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
+        result = 31 * result + (language != null ? language.hashCode() : 0);
+        result = 31 * result + (country != null ? country.hashCode() : 0);
         return result;
     }
 
     /**
      * Creates a ChannelRegistrationPayload from JSON object
      *
-     * @param jsonString The JSON object to create the ChannelRegistrationPayload from
+     * @param jsonValue The JSON object to create the ChannelRegistrationPayload from
      * @return The payload as a ChannelRegistrationPayload
      */
-    static ChannelRegistrationPayload parseJson(String jsonString) throws JsonException {
-        JsonMap jsonMap = JsonValue.parseString(jsonString).getMap();
-        if (jsonMap == null || jsonMap.isEmpty()) {
-            return null;
+    static ChannelRegistrationPayload parseJson(JsonValue jsonValue) throws JsonException {
+        JsonMap jsonMap = jsonValue.optMap();
+        JsonMap channelJson = jsonMap.opt(CHANNEL_KEY).optMap();
+        JsonMap identityHints = jsonMap.opt(IDENTITY_HINTS_KEY).optMap();
+
+        if (channelJson.isEmpty() && identityHints.isEmpty()) {
+            throw new JsonException("Invalid channel payload: " + jsonValue);
         }
 
-        Builder builder = new Builder();
-
-        JsonMap channelJSON = jsonMap.opt(CHANNEL_KEY).getMap();
-        if (channelJSON != null) {
-            builder.setOptIn(channelJSON.opt(OPT_IN_KEY).getBoolean(false))
-                    .setBackgroundEnabled(channelJSON.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
-                    .setDeviceType(channelJSON.opt(DEVICE_TYPE_KEY).getString())
-                    .setPushAddress(channelJSON.opt(PUSH_ADDRESS_KEY).getString())
-                    .setAlias(channelJSON.opt(ALIAS_KEY).getString())
-                    .setUserId(channelJSON.opt(USER_ID_KEY).getString())
-                    .setApid(channelJSON.opt(APID_KEY).getString());
-
-            Set<String> tags = null;
-            if (channelJSON.opt(TAGS_KEY).isJsonList()) {
-                tags = new HashSet<>();
-                for (JsonValue tag : channelJSON.get(TAGS_KEY).getList()) {
-                    if (tag.isString()) {
-                        tags.add(tag.getString());
-                    }
-                }
+        Set<String> tags = new HashSet<>();
+        for (JsonValue tag : channelJson.get(TAGS_KEY).optList()) {
+            if (tag.isString()) {
+                tags.add(tag.getString());
+            } else {
+                throw new JsonException("Invalid tag: " + tag);
             }
-
-            builder.setTags(channelJSON.opt(SET_TAGS_KEY).getBoolean(false), tags);
         }
 
-        JsonMap identityHints = jsonMap.opt(IDENTITY_HINTS_KEY).getMap();
-
-        if (identityHints != null) {
-            builder.setUserId(identityHints.opt(USER_ID_KEY).getString())
-                    .setApid(identityHints.opt(APID_KEY).getString());
-        }
-
-        return builder.build();
-
+        return new Builder().setOptIn(channelJson.opt(OPT_IN_KEY).getBoolean(false))
+                            .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
+                            .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
+                            .setPushAddress(channelJson.opt(PUSH_ADDRESS_KEY).getString())
+                            .setAlias(channelJson.opt(ALIAS_KEY).getString())
+                            .setLanguage(channelJson.opt(LANGUAGE_KEY).getString())
+                            .setCountry(channelJson.opt(COUNTRY_KEY).getString())
+                            .setTimezone(channelJson.opt(TIMEZONE_KEY).getString())
+                            .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
+                            .setUserId(identityHints.opt(USER_ID_KEY).getString())
+                            .setApid(identityHints.opt(APID_KEY).getString())
+                            .build();
     }
 }

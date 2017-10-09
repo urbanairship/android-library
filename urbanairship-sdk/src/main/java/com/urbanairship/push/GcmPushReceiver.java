@@ -53,9 +53,6 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
             return;
         }
 
-        final PendingResult result;
-
-
         switch (intent.getAction()) {
             case ACTION_GCM_RECEIVE:
                 // In the edge case with null extras, drop the push and notify the developer
@@ -68,13 +65,19 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
                     return;
                 }
-                result = goAsync();
+
+                final PendingResult result = goAsync();
                 PushProviderBridge.receivedPush(context, GcmPushProvider.class, new PushMessage(intent.getExtras()), new Runnable() {
                     @Override
                     public void run() {
+                        if (result == null) {
+                            return;
+                        }
+
                         if (isOrderedBroadcast) {
                             result.setResultCode(Activity.RESULT_OK);
                         }
+
                         result.finish();
                     }
                 });

@@ -3,6 +3,18 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.1 - October 9, 2017
+===============================
+
+Bug fixes for the Urban Airship mParticle kit and for some applications that are experiencing large number
+of channel registration updates.
+
+Bug Fixes
+---------
+- Fixed Channel Registration Payload equality checks to prevent extra channel registration updates.
+- Fixed NPE when receiving a push with the Urban Airship mParticle kit.
+
+
 Version 8.9.0 - September 28, 2017
 ==================================
 
