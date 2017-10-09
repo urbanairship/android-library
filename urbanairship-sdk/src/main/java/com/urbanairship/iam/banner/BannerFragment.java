@@ -122,7 +122,6 @@ public class BannerFragment extends Fragment {
 
     @Override
     public void onStop() {
-        Logger.error("onStop: " + this);
         super.onStop();
 
         if (!getActivity().isChangingConfigurations()) {

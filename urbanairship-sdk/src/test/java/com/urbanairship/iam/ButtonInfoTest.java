@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
@@ -13,7 +14,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * {@link ButtonInfo} tests.
  */
-public class ButtonInfoTest {
+public class ButtonInfoTest extends BaseTestCase {
 
 
     @Test

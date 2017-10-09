@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
@@ -13,7 +14,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * {@link TextInfo} tests.
  */
-public class TextInfoTest {
+public class TextInfoTest extends BaseTestCase {
 
     @Test
     public void testJson() throws JsonException {

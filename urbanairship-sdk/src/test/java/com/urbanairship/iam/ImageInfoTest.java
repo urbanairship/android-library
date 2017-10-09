@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
@@ -11,7 +12,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * {@link ImageInfo} tests.
  */
-public class ImageInfoTest {
+public class ImageInfoTest extends BaseTestCase {
 
     @Test
     public void testJson() throws JsonException {
