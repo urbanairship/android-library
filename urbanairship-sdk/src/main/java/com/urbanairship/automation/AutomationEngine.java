@@ -13,7 +13,6 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.ActivityMonitor;
-import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.analytics.Analytics;
@@ -27,6 +26,7 @@ import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Subscriber;
+import com.urbanairship.reactive.Subscription;
 import com.urbanairship.util.Checks;
 
 import java.math.BigDecimal;
@@ -69,7 +69,7 @@ public class AutomationEngine<T extends Schedule> {
 
     private Map<Integer, Observable<JsonSerializable>> eventObservables;
     private Subject<TriggerUpdate> stateObservableUpdates;
-    private Cancelable compoundTriggerSubscription;
+    private Subscription compoundTriggerSubscription;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -354,6 +354,13 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
+     * Triggers the engine to recheck all pending schedules.
+     */
+    public void checkPendingSchedules() {
+        onScheduleConditionsChanged();
+    }
+
+    /**
      * Gets all schedules.
      *
      * @return A pending result.
@@ -414,7 +421,7 @@ public class AutomationEngine<T extends Schedule> {
         final List<Observable<TriggerUpdate>> eventObservables = new ArrayList<>();
 
         for (final @Trigger.TriggerType int type : getCompoundTriggerTypes()) {
-            eventObservables.add(getEventObservable(type).observeOn(Schedulers.runLoop(backgroundThread.getLooper()))
+            eventObservables.add(getEventObservable(type).observeOn(Schedulers.looper(backgroundThread.getLooper()))
                                                          .map(new Function<JsonSerializable, TriggerUpdate>() {
                                                              @Override
                                                              public TriggerUpdate apply(JsonSerializable json) {

@@ -23,9 +23,9 @@ public class TriggerObservables {
      * @return An Observable of JsonSerializable.
      */
     public static Observable<JsonSerializable> foregrounded(final ActivityMonitor monitor) {
-        return Observable.create(new Function<Observer<JsonSerializable>, Cancelable>() {
+        return Observable.create(new Function<Observer<JsonSerializable>, Subscription>() {
             @Override
-            public Cancelable apply(Observer<JsonSerializable> observer) {
+            public Subscription apply(Observer<JsonSerializable> observer) {
                 if (monitor.isAppForegrounded()) {
                     observer.onNext(JsonValue.NULL);
                 }
@@ -42,9 +42,9 @@ public class TriggerObservables {
      * @return An Observable of JsonSerializable.
      */
     public static Observable<JsonSerializable> newSession(final ActivityMonitor monitor) {
-        return Observable.create(new Function<Observer<JsonSerializable>, Cancelable>() {
+        return Observable.create(new Function<Observer<JsonSerializable>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<JsonSerializable> observer) {
+            public Subscription apply(final Observer<JsonSerializable> observer) {
                 final ActivityMonitor.SimpleListener listener = new ActivityMonitor.SimpleListener() {
                     @Override
                     public void onForeground(long time) {
