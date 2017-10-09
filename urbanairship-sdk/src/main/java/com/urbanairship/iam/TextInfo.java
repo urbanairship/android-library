@@ -281,6 +281,7 @@ public class TextInfo implements JsonSerializable {
          * Builds the text info.
          *
          * @return The text info.
+         * @throws IllegalArgumentException If the text is missing.
          */
         public TextInfo build() {
             Checks.checkNotNull(text, "Missing text");

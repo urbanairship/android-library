@@ -426,6 +426,7 @@ public class ButtonInfo implements JsonSerializable {
          * Builds the button info.
          *
          * @return The button info.
+         * @throws IllegalArgumentException If the label is missing.
          */
         public ButtonInfo build() {
             Checks.checkNotNull(label, "Missing label.");
