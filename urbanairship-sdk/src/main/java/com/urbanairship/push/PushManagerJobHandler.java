@@ -288,7 +288,6 @@ class PushManagerJobHandler {
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, true);
             return JobInfo.JOB_RETRY;
-
         }
 
         // 200 or 201
@@ -357,9 +356,24 @@ class PushManagerJobHandler {
     private boolean shouldUpdateRegistration(@NonNull ChannelRegistrationPayload payload) {
         // check time and payload
         ChannelRegistrationPayload lastSuccessPayload = getLastRegistrationPayload();
+        if (lastSuccessPayload == null) {
+            Logger.verbose("PushManagerJobHandler - Should update registration. Last payload is null.");
+            return true;
+        }
+
+
         long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
-        return (!payload.equals(lastSuccessPayload)) ||
-                (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS);
+        if (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
+            Logger.verbose("PushManagerJobHandler - Should update registration. Time since last registration time is greater than 24 hours.");
+            return true;
+        }
+
+        if (!payload.equals(lastSuccessPayload)) {
+            Logger.verbose("PushManagerJobHandler - Should update registration. Channel registration payload has changed.");
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -399,10 +413,8 @@ class PushManagerJobHandler {
      */
     @Nullable
     private ChannelRegistrationPayload getLastRegistrationPayload() {
-        String payloadJSON = dataStore.getString(LAST_REGISTRATION_PAYLOAD_KEY, null);
-
         try {
-            return ChannelRegistrationPayload.parseJson(payloadJSON);
+            return ChannelRegistrationPayload.parseJson(dataStore.getJsonValue(LAST_REGISTRATION_PAYLOAD_KEY));
         } catch (JsonException e) {
             Logger.error("PushManagerJobHandler - Failed to parse payload from JSON.", e);
             return null;
@@ -419,6 +431,7 @@ class PushManagerJobHandler {
 
         // If its in the future reset it
         if (lastRegistrationTime > System.currentTimeMillis()) {
+            Logger.verbose("Resetting last registration time.");
             dataStore.put(LAST_REGISTRATION_TIME_KEY, 0);
             return 0;
         }

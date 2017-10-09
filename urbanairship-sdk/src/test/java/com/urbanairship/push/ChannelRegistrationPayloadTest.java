@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import junit.framework.Assert;
 
@@ -16,7 +17,6 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.Set;
 
-import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -351,26 +351,17 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .setUserId(testUserId)
                 .setApid(testApid).build();
 
-        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue().toString());
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue());
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
+        assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
+
     }
 
     /**
      * Test payload created from empty JSON
      */
-    @Test
+    @Test(expected = JsonException.class)
     public void testCreateFromEmptyJSON() throws JsonException {
-        assertNull("Creating a payload from an empty json object should return null.",
-                ChannelRegistrationPayload.parseJson(""));
+        ChannelRegistrationPayload.parseJson(JsonValue.NULL);
     }
-
-    /**
-     * Test payload created from null JSON
-     */
-    @Test
-    public void testCreateFromNullJSON() throws JsonException {
-        assertNull("Creating a payload from a null json object should return null.",
-                ChannelRegistrationPayload.parseJson(null));
-    }
-
 }
