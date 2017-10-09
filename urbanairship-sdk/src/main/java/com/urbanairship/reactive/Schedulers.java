@@ -7,8 +7,6 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Cancelable;
-
 /**
  * Scheduler implementations
  *
@@ -16,34 +14,38 @@ import com.urbanairship.Cancelable;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Schedulers {
-
-    /**
-     * Creates a a scheduler that targets the current looper at schedule time.
-     *
-     * @return A Scheduler.
-     */
-    public static CurrentLooper currentLooper() {
-        return new CurrentLooper();
-    }
-
     /**
      * Creates a Scheduler that targets the provided looper at scheduler time.
      *
-     * @param looper The looper.
-     * @return A Scheduler
+     * @param looper The looper to schedule on.
+     * @return A Scheduler.
      */
-    public static RunLoop runLoop(Looper looper) {
-        return new RunLoop(looper);
+    public static LooperScheduler looper(Looper looper) {
+        return new LooperScheduler(looper);
     }
 
     /**
-     * Abstract Scheduler base class.
+     * Scheduler that targets a specific RunLoop at schedule time.
      */
-    public static abstract class Base implements Scheduler {
-        public Cancelable schedule(final Runnable runnable) {
-            final Cancelable subscription = Subscription.empty();
+    public static class LooperScheduler implements Scheduler {
 
-            new Handler(getLooper()).post(new Runnable() {
+        private Looper looper;
+
+        /**
+         * Run loop Scheduler constructor.
+         * @param looper The looper to scheduler on.
+         */
+        public LooperScheduler(@NonNull Looper looper) {
+            if (looper == null) {
+                throw new IllegalArgumentException("Looper cannot be null");
+            }
+            this.looper = looper;
+        }
+
+        public Subscription schedule(final Runnable runnable) {
+            final Subscription subscription = Subscription.empty();
+
+            new Handler(looper).post(new Runnable() {
                 @Override
                 public void run() {
                     if (!subscription.isCancelled()) {
@@ -55,10 +57,10 @@ public class Schedulers {
             return subscription;
         }
 
-        public Cancelable schedule(final Runnable runnable, long delayTimeMs) {
-            final Cancelable subscription = Subscription.empty();
+        public Subscription schedule(final Runnable runnable, long delayTimeMs) {
+            final Subscription subscription = Subscription.empty();
 
-            new Handler(getLooper()).postDelayed(new Runnable() {
+            new Handler(looper).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     if (!subscription.isCancelled()) {
@@ -68,41 +70,6 @@ public class Schedulers {
             }, delayTimeMs);
 
             return subscription;
-        }
-
-        abstract Looper getLooper();
-    }
-
-    /**
-     * Scheduler that targets the current looper at schedule time.
-     */
-    public static class CurrentLooper extends Base {
-        @Override
-        Looper getLooper() {
-            return Looper.myLooper();
-        }
-    }
-
-    /**
-     * Scheduler that targets a specific looper at scheduler time.
-     */
-    public static class RunLoop extends Base {
-        private Looper looper;
-
-        /**
-         * Run loop Scheduler constructor.
-         * @param looper The looper to scheduler on.
-         */
-        RunLoop(@NonNull Looper looper) {
-            if (looper == null) {
-                throw new IllegalArgumentException("Looper cannot be null");
-            }
-            this.looper = looper;
-        }
-
-        @Override
-        Looper getLooper(){
-            return looper;
         }
     }
 }

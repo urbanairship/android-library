@@ -6,7 +6,7 @@ import android.support.annotation.RestrictTo;
 
 /**
  * Interface for reactive observers. Intended for
- * Use with {@link IObservable}.
+ * Use with {@link Observable}.
  *
  * @param <T> The type of the value under observation.
  *

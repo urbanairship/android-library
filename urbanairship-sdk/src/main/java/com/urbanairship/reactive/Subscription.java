@@ -7,17 +7,17 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.Cancelable;
 
 /**
- * Cancelable implementation for Observables.
+ * Subscription implementation for Observables.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class Subscription implements Cancelable {
+public class Subscription {
 
     private Runnable runnable;
     private boolean canceled = false;
 
-    Subscription() {}
+    public Subscription() {}
 
     /**
      * Subscription constructor
@@ -32,7 +32,7 @@ public class Subscription implements Cancelable {
      * @param runnable The runnable
      * @return A Subscription.
      */
-    public static Cancelable create(final Runnable runnable) {
+    public static Subscription create(final Runnable runnable) {
         return new Subscription(runnable);
     }
 
@@ -40,35 +40,25 @@ public class Subscription implements Cancelable {
      * Creates a new Subscription with no side effects.
      * @return A Subscription.
      */
-    public static Cancelable empty() {
+    public static Subscription empty() {
         return new Subscription();
     }
 
-    @Override
-    synchronized
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    /**
+     * Cancels the Subscription.
+     */
+    public synchronized void cancel() {
         if (this.runnable != null) {
             this.runnable.run();
         }
         this.canceled = true;
-        return true;
     }
 
-    @Override
-    synchronized
-    public boolean cancel() {
-        return cancel(true);
-    }
-
-    @Override
-    synchronized
-    public boolean isDone() {
-        return this.runnable == null ? true : this.canceled;
-    }
-
-    @Override
-    synchronized
-    public boolean isCancelled() {
+    /**
+     * Checks whether the Subscription is cancelled.
+     * @return <code>true</code> if the Subscription is cancelled, <code>false</code> otherwise.
+     */
+    public synchronized boolean isCancelled() {
         return this.canceled;
     }
 }

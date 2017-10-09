@@ -4,6 +4,7 @@ package com.urbanairship.reactive;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Predicate;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
@@ -43,6 +45,12 @@ public class ObservableTest extends BaseTestCase {
         backgroundThread = new HandlerThread("test");
         backgroundThread.start();
         backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+
+    @After
+    public void tearDown() {
+        backgroundThread.getLooper().quit();
+        backgroundThread.quit();
     }
 
     @Test
@@ -221,7 +229,7 @@ public class ObservableTest extends BaseTestCase {
     public void testObserveOn() throws Exception {
         Observable<Integer> three = Observable.just(3);
 
-        Observable<Integer> immediateThree = three.observeOn(Schedulers.currentLooper());
+        Observable<Integer> immediateThree = three.observeOn(Schedulers.looper(Looper.myLooper()));
 
         immediateThree.subscribe(new Subscriber<Integer>() {
             @Override
@@ -234,7 +242,7 @@ public class ObservableTest extends BaseTestCase {
         Assert.assertTrue(resultMap.get("next"));
 
         ShadowLooper shadowLooper = Shadows.shadowOf(backgroundThread.getLooper());
-        Observable<Integer> runLoopThree = three.observeOn(Schedulers.runLoop(backgroundThread.getLooper()));
+        Observable<Integer> runLoopThree = three.observeOn(Schedulers.looper(backgroundThread.getLooper()));
 
         resultMap.put("next", false);
 

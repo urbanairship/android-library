@@ -15,15 +15,18 @@ import com.urbanairship.Cancelable;
 public interface Scheduler {
     /**
      * Schedules a runnable.
+     *
      * @param runnable The runnable.
+     * @return A Subscription.
      */
-    Cancelable schedule(Runnable runnable);
+    Subscription schedule(Runnable runnable);
 
     /**
      * Schedules a runnable to be executed after a delay
      *
      * @param runnable The runnable.
      * @param delayTimeMs The delay time in milliseconds.
+     * @return A Subscription.
      */
-    Cancelable schedule(Runnable runnable, long delayTimeMs);
+    Subscription schedule(Runnable runnable, long delayTimeMs);
 }

@@ -10,35 +10,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Subscription for tracking and cancelling multiple cancelables.
+ * Subscription for tracking and cancelling multiple subscriptions.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CompoundSubscription extends Subscription {
 
-    private List<Cancelable> cancelables;
+    private List<Subscription> subscriptions;
 
     /**
      * Default constructor
      */
-    CompoundSubscription() {
-        this.cancelables = new ArrayList<>();
+    public CompoundSubscription() {
+        this.subscriptions = new ArrayList<>();
     }
 
     /**
-     * Adds a Cancelable
-     * @param cancelable
+     * Adds a Subscription
+     * @param subscription
      */
-    public void add(Cancelable cancelable) {
-        cancelables.add(cancelable);
+    public synchronized void add(Subscription subscription) {
+        subscriptions.add(subscription);
+    }
+
+    /**
+     * Removes a Subscription
+     * @param subscription
+     */
+    public synchronized void remove(Subscription subscription) {
+        subscriptions.remove(subscription);
     }
 
     @Override
-    public synchronized boolean cancel() {
-        for (Cancelable cancelable : cancelables) {
-            cancelable.cancel();
+    public synchronized void cancel() {
+        for (Subscription subscription : new ArrayList<>(subscriptions)) {
+            subscription.cancel();
+            subscriptions.remove(subscription);
         }
-        return super.cancel();
+
+        super.cancel();
     }
 }

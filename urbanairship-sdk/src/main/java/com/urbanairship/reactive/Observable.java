@@ -4,12 +4,11 @@ package com.urbanairship.reactive;
 
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Cancelable;
 import com.urbanairship.Predicate;
 
-import java.util.ArrayList;
+import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Observable implementation for creating push-based sequences.
@@ -21,16 +20,16 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Observable<T> {
 
-    private Function<Observer<T>, Cancelable> onSubscribe;
+    private Function<Observer<T>, Subscription> onSubscribe;
 
     /**
      * Factory method for creating Observables.
      *
-     * @param func A function mapping observers to cancelables.
+     * @param func A function mapping observers to Subscriptions.
      * @param <T> The type of the value.
      * @return An Observable of the underlying type.
      */
-    public static <T> Observable<T> create(Function<Observer<T>, Cancelable> func) {
+    public static <T> Observable<T> create(Function<Observer<T>, Subscription> func) {
         Observable<T> observable = new Observable<>();
         observable.onSubscribe = func;
         return observable;
@@ -44,9 +43,9 @@ public class Observable<T> {
      * @return An Observable of the underlying type.
      */
     public static <T> Observable<T> just(final T value) {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
+            public Subscription apply(final Observer<T> observer) {
                 observer.onNext(value);
                 observer.onCompleted();
                 return Subscription.empty();
@@ -61,9 +60,9 @@ public class Observable<T> {
      * @return An Observable of the underlying type.
      */
     public static <T> Observable<T> empty() {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
+            public Subscription apply(final Observer<T> observer) {
                 observer.onCompleted();
                 return Subscription.empty();
             }
@@ -77,9 +76,9 @@ public class Observable<T> {
      * @return An Observable of the underlying type.
      */
     public static <T> Observable<T> never() {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(Observer<T> observer) {
+            public Subscription apply(Observer<T> observer) {
                 return Subscription.empty();
             }
         });
@@ -93,9 +92,9 @@ public class Observable<T> {
      * @return An Observable of the underlying type.
      */
     public static <T> Observable<T> error(final Exception e) {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
+            public Subscription apply(final Observer<T> observer) {
                 observer.onError(e);
                 return Subscription.empty();
             }
@@ -110,9 +109,9 @@ public class Observable<T> {
      * @return An Observable of the underlying type.
      */
     public static <T> Observable<T> from(final Collection<T> collection) {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
+            public Subscription apply(final Observer<T> observer) {
                 for (final T value : collection) {
                     observer.onNext(value);
                 }
@@ -130,7 +129,7 @@ public class Observable<T> {
      * @param observer The Observer.
      * @return A Cancellable that unsubscribes the Observer when canceled.
      */
-    public Cancelable subscribe(Observer<T> observer) {
+    public Subscription subscribe(Observer<T> observer) {
         return this.onSubscribe.apply(observer);
     }
 
@@ -194,37 +193,42 @@ public class Observable<T> {
      * @return A merged Observable.
      */
     public static <T> Observable<T> merge(final Observable<T> lh, final Observable<T> rh) {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
-                final int[] completed = {0};
-                final CompoundSubscription subscription = new CompoundSubscription();
+            public Subscription apply(final Observer<T> observer) {
+                final AtomicInteger completed = new AtomicInteger(0);
+                final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
                 final Observer<T> innerObserver = new Observer<T>() {
                     @Override
                     public void onNext(T value) {
-                        observer.onNext(value);
+                        synchronized (observer) {
+                            observer.onNext(value);
+                        }
                     }
 
                     @Override
                     public void onCompleted() {
-                        completed[0]++;
-                        if (completed[0] == 2) {
-                            observer.onCompleted();
+                        synchronized (observer) {
+                            if (completed.incrementAndGet() == 2) {
+                                observer.onCompleted();
+                            }
                         }
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        subscription.cancel();
-                        observer.onError(e);
+                        synchronized (observer) {
+                            compoundSubscription.cancel();
+                            observer.onError(e);
+                        }
                     }
                 };
 
-                subscription.add(lh.subscribe(innerObserver));
-                subscription.add(rh.subscribe(innerObserver));
+                compoundSubscription.add(lh.subscribe(innerObserver));
+                compoundSubscription.add(rh.subscribe(innerObserver));
 
-                return subscription;
+                return compoundSubscription;
             }
         });
     }
@@ -241,7 +245,7 @@ public class Observable<T> {
         for (Observable<T> observable : observables) {
             next = merge(next, observable);
         }
-        return  next;
+        return next;
     }
 
     /**
@@ -251,14 +255,12 @@ public class Observable<T> {
      * @return A transformed Observable whose callbacks are delivered on the supplied scheduler.
      */
     public Observable<T> observeOn(final Scheduler scheduler) {
-        return create(new Function<Observer<T>, Cancelable>() {
+        return create(new Function<Observer<T>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<T> observer) {
-                final CompoundSubscription compoundSubscription = new CompoundSubscription();
-                final Cancelable subscription = Subscription.empty();
+            public Subscription apply(final Observer<T> observer) {
+                final CompoundSubscription subscription = new CompoundSubscription();
 
-                compoundSubscription.add(subscription);
-                compoundSubscription.add(subscribe(new Observer<T>() {
+                subscription.add(subscribe(new Observer<T>() {
                     @Override
                     public void onNext(final T value) {
                         scheduler.schedule(new Runnable() {
@@ -296,7 +298,7 @@ public class Observable<T> {
                     }
                 }));
 
-                return compoundSubscription;
+                return subscription;
             }
         });
     }
@@ -309,80 +311,98 @@ public class Observable<T> {
      * @return An observable of the return type
      */
     private <R> Observable<R> bind(final Function<T, Observable<R>> binding) {
-        final Observable<T> originalObservable = this;
-        final CompoundSubscription subscription = new CompoundSubscription();
+        final WeakReference<Observable<T>> weakThis = new WeakReference<>(this);
+        final CompoundSubscription compoundSubscription = new CompoundSubscription();
 
-        return Observable.create(new Function<Observer<R>, Cancelable>() {
+        return Observable.create(new Function<Observer<R>, Subscription>() {
             @Override
-            public Cancelable apply(final Observer<R> observer) {
-                final ObservableHolder holder = new ObservableHolder(observer);
-                holder.addObservable(originalObservable);
+            public Subscription apply(final Observer<R> observer) {
+                final ObservableTracker holder = new ObservableTracker(observer, compoundSubscription);
 
-                subscription.add(originalObservable.subscribe(new Subscriber<T>(){
+                Observable<T> originalObservable = weakThis.get();
+                // This should not happen
+                if (originalObservable == null) {
+                    observer.onCompleted();
+                    return Subscription.empty();
+                }
+
+                final SerialSubscription thisSubscription = new SerialSubscription();
+                compoundSubscription.add(thisSubscription);
+
+                thisSubscription.setSubscription(originalObservable.subscribe(new Subscriber<T>(){
                     @Override
                     public void onNext(T value) {
                         final Observable<R> bound = binding.apply(value);
                         if (bound != null) {
                             holder.addObservable(bound);
-                            subscription.add(bound.subscribe(new Subscriber<R>(){
-                                @Override
-                                public void onNext(R value) {
-                                    observer.onNext(value);
-                                }
-
-                                @Override
-                                public void onCompleted() {
-                                    holder.completeObservable(bound);
-                                }
-
-                                @Override
-                                public void onError(Exception e) {
-                                    observer.onError(e);
-                                }
-                            }));
                         } else {
-                            holder.completeObservable(originalObservable);
+                            // Early termination
+                            thisSubscription.cancel();
+                            holder.completeObservable(thisSubscription);
                         }
                     }
 
                     @Override
                     public void onCompleted() {
-                        holder.completeObservable(originalObservable);
+                        holder.completeObservable(thisSubscription);
                     }
 
                     @Override
                     public void onError(Exception e) {
+                        compoundSubscription.cancel();
                         observer.onError(e);
                     }
                 }));
 
-                return subscription;
+                return compoundSubscription;
             }
         });
     }
 
     /**
-     * Holder class facilitating bind operation.
+     * Inner class facilitating bind operation.
      *
      * @param <T> The underlying type of the Observables
      */
-    private static class ObservableHolder<T> {
+    private static class ObservableTracker<T> {
         private Observer observer;
-        private List<Observable> observables;
+        private CompoundSubscription compoundSubscription;
+        private AtomicInteger observableCount = new AtomicInteger(0);
 
-        ObservableHolder(Observer observer) {
-            this.observables = new ArrayList<>();
+        ObservableTracker(Observer observer, CompoundSubscription compoundSubscription) {
             this.observer = observer;
+            this.compoundSubscription = compoundSubscription;
         }
 
-        public void addObservable(Observable observable) {
-            observables.add(observable);
+        public void addObservable(final Observable observable) {
+            observableCount.getAndIncrement();
+
+            final SerialSubscription thisSubscription = new SerialSubscription();
+            thisSubscription.setSubscription(observable.subscribe(new Observer() {
+                @Override
+                public void onNext(Object value) {
+                    observer.onNext(value);
+                }
+
+                @Override
+                public void onCompleted() {
+                    completeObservable(thisSubscription);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    compoundSubscription.cancel();
+                    observer.onError(e);
+                }
+            }));
         }
 
-        public void completeObservable(Observable observable) {
-            observables.remove(observable);
-            if (observables.size() == 0) {
+        public void completeObservable(Subscription subscription) {
+            if (observableCount.decrementAndGet() == 0) {
                 observer.onCompleted();
+                compoundSubscription.cancel();
+            } else {
+                compoundSubscription.remove(subscription);
             }
         }
     }

@@ -4,8 +4,6 @@ package com.urbanairship.reactive;
 
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Cancelable;
-
 import java.util.ArrayList;
 
 /**
@@ -19,7 +17,7 @@ import java.util.ArrayList;
 public class Subject<T> extends Observable<T> implements Observer<T> {
 
     private ArrayList<Observer<T>> observers;
-    private boolean canceled = false;
+    private boolean cancelled = false;
     private boolean completed = false;
     private Exception error;
 
@@ -92,7 +90,7 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
 
     @Override
     synchronized
-    public Cancelable subscribe(final Observer<T> observer) {
+    public Subscription subscribe(final Observer<T> observer) {
         if (!isCompleted() && !hasError()) {
             observers.add(observer);
         }
@@ -101,7 +99,7 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
             public void run() {
                 if (hasObservers()) {
                     observers.remove(observer);
-                    canceled = true;
+                    cancelled = true;
                 }
             }
         });
