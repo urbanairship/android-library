@@ -486,7 +486,12 @@ public class AutomationEngine<T extends Schedule> {
                               });
                           }
                       })
-                      .subscribe(stateObservableUpdates);
+                      .subscribe(new Subscriber<TriggerUpdate>() {
+                          @Override
+                          public void onNext(TriggerUpdate value) {
+                              stateObservableUpdates.onNext(value);
+                          }
+                      });
         }
     }
 
