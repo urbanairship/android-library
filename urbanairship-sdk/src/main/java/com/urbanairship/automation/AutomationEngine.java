@@ -15,6 +15,7 @@ import android.support.annotation.WorkerThread;
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
+import com.urbanairship.Predicate;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
@@ -51,6 +52,8 @@ import java.util.concurrent.TimeUnit;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationEngine<T extends Schedule> {
 
+    private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION);
+
     private final AutomationDataManager dataManager;
     private final ActivityMonitor activityMonitor;
     private final AutomationDriver<T> driver;
@@ -62,12 +65,11 @@ public class AutomationEngine<T extends Schedule> {
 
     @VisibleForTesting
     HandlerThread backgroundThread;
-    private List<ScheduleRunnable<Void>> delayedRunnables = new ArrayList<>();
+    private List<ScheduleRunnable> delayedRunnables = new ArrayList<>();
 
     private String screen;
     private String regionId;
 
-    private Map<Integer, Observable<JsonSerializable>> eventObservables;
     private Subject<TriggerUpdate> stateObservableUpdates;
     private Subscription compoundTriggerSubscription;
 
@@ -127,8 +129,6 @@ public class AutomationEngine<T extends Schedule> {
 
         this.backgroundThread = new HandlerThread("delayed");
         this.mainHandler = new Handler(Looper.getMainLooper());
-
-        this.eventObservables = new HashMap<>();
     }
 
     /**
@@ -230,7 +230,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @param ids List of schedule Ids to cancel.
      * @return A pending result.
-     * */
+     */
     public PendingResult<Void> cancel(@NonNull final List<String> ids) {
         final PendingResult<Void> pendingResult = new PendingResult<>();
 
@@ -259,14 +259,9 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                List<ScheduleEntry> entries = dataManager.getScheduleEntries(group);
-
                 dataManager.deleteGroup(group);
                 cancelGroupDelays(group);
-
-                if (pendingResult != null) {
-                    pendingResult.setResult(null);
-                }
+                pendingResult.setResult(null);
             }
         });
 
@@ -379,19 +374,12 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
-     * Returns a list of compound trigger types.
-     * @return The compound trigger types.
-     */
-    private List<Integer> getCompoundTriggerTypes() {
-        return Arrays.asList(Trigger.ACTIVE_SESSION);
-    }
-
-    /**
-     * Returns event observables for compound triggers.
+     * Creates an event observables for compound triggers.
+     *
      * @param type The trigger type
      * @return The corresponding observable, or an empty observable in case no match was found.
      */
-    private Observable<JsonSerializable> getEventObservable(@Trigger.TriggerType int type) {
+    private Observable<JsonSerializable> createEventObservable(@Trigger.TriggerType int type) {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
                 return TriggerObservables.newSession(activityMonitor);
@@ -401,11 +389,12 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
-     * Returns state observables for compound triggers.
+     * Creates a state observables for compound triggers.
+     *
      * @param type The trigger type
      * @return The corresponding observable, or an empty observable in case no match was found.
      */
-    private Observable<JsonSerializable> getStateObservable(@Trigger.TriggerType int type) {
+    private Observable<JsonSerializable> createStateObservable(@Trigger.TriggerType int type) {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
                 return TriggerObservables.foregrounded(activityMonitor);
@@ -420,8 +409,8 @@ public class AutomationEngine<T extends Schedule> {
     private void restoreCompoundTriggers() {
         final List<Observable<TriggerUpdate>> eventObservables = new ArrayList<>();
 
-        for (final @Trigger.TriggerType int type : getCompoundTriggerTypes()) {
-            eventObservables.add(getEventObservable(type).observeOn(Schedulers.looper(backgroundThread.getLooper()))
+        for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
+            eventObservables.add(createEventObservable(type).observeOn(Schedulers.looper(backgroundThread.getLooper()))
                                                          .map(new Function<JsonSerializable, TriggerUpdate>() {
                                                              @Override
                                                              public TriggerUpdate apply(JsonSerializable json) {
@@ -443,18 +432,15 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-
                 List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries();
-
-                for (ScheduleEntry entry : scheduleEntries) {
-                    subscribeStateObservables(entry);
-                }
+                subscribeStateObservables(scheduleEntries);
             }
         });
     }
 
     /**
      * Sorts a list of schedule entries by priority.
+     *
      * @param entries The schedule entries.
      */
     @WorkerThread
@@ -469,42 +455,39 @@ public class AutomationEngine<T extends Schedule> {
 
     /**
      * Processes a list of schedule entries and subscribes for state updates to any compound triggers
+     *
      * @param entries The schedule entries.
      */
     @WorkerThread
     private void subscribeStateObservables(List<ScheduleEntry> entries) {
         sortSchedulesByPriority(entries);
 
-        Observable.from(entries).flatMap(new Function<ScheduleEntry, Observable<TriggerUpdate>>() {
-            @Override
-            public Observable<TriggerUpdate> apply(final ScheduleEntry entry) {
-                return Observable.from(getCompoundTriggerTypes()).flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
-                    @Override
-                    public Observable<TriggerUpdate> apply(final Integer type) {
-                        return getStateObservable(type).map(new Function<JsonSerializable, TriggerUpdate>() {
-                            @Override
-                            public TriggerUpdate apply(JsonSerializable json) {
-                                return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
-                            }
-                        });
-                    }
-                });
-            }
-        }).subscribe( new Subscriber<TriggerUpdate>() {
-            @Override
-            public void onNext(final TriggerUpdate update) {
-               stateObservableUpdates.onNext(update);
-            }
-        });
-    }
-
-    /**
-     * Processes a schedule entry and subscribes for state updates to any compound triggers.
-     * @param entry The schedule entry.
-     */
-    @WorkerThread
-    private void subscribeStateObservables(ScheduleEntry entry) {
-        subscribeStateObservables(Collections.singletonList(entry));
+        for (final ScheduleEntry scheduleEntry : entries) {
+            Observable.from(COMPOUND_TRIGGER_TYPES)
+                      .filter(new Predicate<Integer>() {
+                          @Override
+                          public boolean apply(Integer triggerType) {
+                              for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
+                                  if (triggerEntry.type == triggerType) {
+                                      return true;
+                                  }
+                              }
+                              return false;
+                          }
+                      })
+                      .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
+                          @Override
+                          public Observable<TriggerUpdate> apply(final Integer type) {
+                              return createStateObservable(type).map(new Function<JsonSerializable, TriggerUpdate>() {
+                                  @Override
+                                  public TriggerUpdate apply(JsonSerializable json) {
+                                      return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, scheduleEntry.scheduleId), json, 1.0);
+                                  }
+                              });
+                          }
+                      })
+                      .subscribe(stateObservableUpdates);
+        }
     }
 
     /**
@@ -629,6 +612,27 @@ public class AutomationEngine<T extends Schedule> {
     }
 
     /**
+     * For a given event, retrieves and iterates through any relevant triggers.
+     *
+     * @param json The relevant event data.
+     * @param type The event type.
+     * @param value The trigger value to increment by.
+     */
+    private void onEventAdded(final JsonSerializable json, final int type, final double value) {
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Logger.debug("Automation - updating triggers with type: " + type);
+                List<TriggerEntry> triggerEntries = dataManager.getActiveTriggerEntries(type);
+                if (triggerEntries.isEmpty()) {
+                    return;
+                }
+                updateTriggers(triggerEntries, json, value);
+            }
+        });
+    }
+
+    /**
      * Iterates through a list of triggers that need to respond to an event or state. If a trigger goal
      * is achieved, the correlated schedule is retrieved and the action is applied. The trigger progress
      * and schedule count will then either be incremented or reset / removed.
@@ -637,7 +641,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param json The relevant event or state data.
      * @param value The trigger value to increment by.
      */
-    private void updateTriggers(final List<TriggerEntry> triggerEntries, final JsonSerializable json, final double value) {
+    private void updateTriggers(@NonNull final List<TriggerEntry> triggerEntries, final JsonSerializable json, final double value) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -696,27 +700,6 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 dataManager.saveTriggers(updatedTriggers);
-            }
-        });
-    }
-
-    /**
-     * For a given event, retrieves and iterates through any relevant triggers.
-     *
-     * @param json The relevant event data.
-     * @param type The event type.
-     * @param value The trigger value to increment by.
-     */
-    private void onEventAdded(final JsonSerializable json, final int type, final double value) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Logger.debug("Automation - updating triggers with type: " + type);
-                List<TriggerEntry> triggerEntries = dataManager.getActiveTriggerEntries(type);
-                if (triggerEntries.isEmpty()) {
-                    return;
-                }
-                updateTriggers(triggerEntries, json, value);
             }
         });
     }

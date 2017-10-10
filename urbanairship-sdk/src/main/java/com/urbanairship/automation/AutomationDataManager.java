@@ -541,14 +541,23 @@ public class AutomationDataManager extends DataManager {
 
     /**
      * Gets triggers for a given type.
-     *
      * @param type The trigger type.
-     * @param scheduleID The ID of the schedule containing the trigger
      * @return THe list of {@link TriggerEntry} instances.
      */
-    List<TriggerEntry> getActiveTriggerEntries(int type, String scheduleID) {
+    List<TriggerEntry> getActiveTriggerEntries(int type) {
+        return getActiveTriggerEntries(type, "%");
+    }
+
+    /**
+     * Gets triggers for a given type.
+     *
+     * @param type The trigger type.
+     * @param scheduleId The ID of the schedule containing the trigger
+     * @return THe list of {@link TriggerEntry} instances.
+     */
+    List<TriggerEntry> getActiveTriggerEntries(int type, @NonNull String scheduleId) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleID});
+        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId});
 
         if (cursor == null) {
             return triggers;
@@ -567,14 +576,7 @@ public class AutomationDataManager extends DataManager {
         return triggers;
     }
 
-    /**
-     * Gets triggers for a given type.
-     * @param type The trigger type.
-     * @return THe list of {@link TriggerEntry} instances.
-     */
-    List<TriggerEntry> getActiveTriggerEntries(int type) {
-        return getActiveTriggerEntries(type, "%");
-    }
+
 
     /**
      * Returns the current schedule count.
