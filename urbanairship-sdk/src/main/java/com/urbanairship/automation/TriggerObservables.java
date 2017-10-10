@@ -14,7 +14,7 @@ import com.urbanairship.reactive.Subscription;
 /**
  * Factory methods for creating compound trigger observables
  */
-public class TriggerObservables {
+class TriggerObservables {
     /**
      * Creates a state observable that sends onNext if the app is currently foregrounded,
      * and completes.
