@@ -10,14 +10,12 @@ import java.util.ArrayList;
  * Subject implementation. A Subject is both an Observer and an Observable.
  *
  * @param <T> The type under observation.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Subject<T> extends Observable<T> implements Observer<T> {
 
     private ArrayList<Observer<T>> observers;
-    private boolean cancelled = false;
     private boolean completed = false;
     private Exception error;
 
@@ -34,29 +32,32 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
      * @param <T> The type under observation
      * @return A Subject of the underlying type.
      */
-    public static<T> Subject<T> create() {
+    public static <T> Subject<T> create() {
         return new Subject();
     }
 
     /**
-     * <code>true</code> if an error has been observed, <code>false</code> otherwise.
-     * @return
+     * {@code true} if an error has been observed, {@code false} otherwise.
+     *
+     * @return {@code true} if an error has been observed, {@code false} otherwise.
      */
     synchronized boolean hasError() {
         return error != null;
     }
 
     /**
-     * <code>true</code> if the subject is completed, <code>false</code> otherwise.
-     * @return
+     * {@code true} if the subject is completed, {@code false} otherwise.
+     *
+     * @return {@code true} if the subject is completed, {@code false} otherwise.
      */
     synchronized boolean isCompleted() {
         return completed;
     }
 
     /**
-     * <code>true</code> if the subject has any subscribed observers, <code>false</code> otherwise.
-     * @return
+     * {@code true} if the subject has any subscribed observers, {@code false} otherwise.
+     *
+     * @return {@code true} if the subject has any subscribed observers, {@code false} otherwise.
      */
     synchronized boolean hasObservers() {
         return this.observers.size() > 0;
@@ -99,7 +100,6 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
             public void run() {
                 if (hasObservers()) {
                     observers.remove(observer);
-                    cancelled = true;
                 }
             }
         });

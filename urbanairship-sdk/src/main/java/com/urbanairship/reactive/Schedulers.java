@@ -21,6 +21,9 @@ public class Schedulers {
      * @return A Scheduler.
      */
     public static LooperScheduler looper(Looper looper) {
+        if (looper == null) {
+            throw new IllegalArgumentException("Looper cannot be null");
+        }
         return new LooperScheduler(looper);
     }
 
@@ -36,9 +39,6 @@ public class Schedulers {
          * @param looper The looper to scheduler on.
          */
         public LooperScheduler(@NonNull Looper looper) {
-            if (looper == null) {
-                throw new IllegalArgumentException("Looper cannot be null");
-            }
             this.looper = looper;
         }
 

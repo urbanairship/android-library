@@ -4,8 +4,6 @@ package com.urbanairship.reactive;
 
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Cancelable;
-
 /**
  * Subscription implementation for Observables.
  *
@@ -17,13 +15,16 @@ public class Subscription {
     private Runnable runnable;
     private boolean canceled = false;
 
-    public Subscription() {}
+    /**
+     * Default constructor.
+     */
+    protected Subscription() {}
 
     /**
      * Subscription constructor
      * @param runnable A runnable to execute on disposal.
      */
-    Subscription(Runnable runnable) {
+    protected Subscription(Runnable runnable) {
         this.runnable = runnable;
     }
 

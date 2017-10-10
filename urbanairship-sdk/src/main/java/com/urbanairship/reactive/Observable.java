@@ -317,7 +317,7 @@ public class Observable<T> {
         return Observable.create(new Function<Observer<R>, Subscription>() {
             @Override
             public Subscription apply(final Observer<R> observer) {
-                final ObservableTracker holder = new ObservableTracker(observer, compoundSubscription);
+                final ObservableTracker<R> holder = new ObservableTracker<>(observer, compoundSubscription);
 
                 Observable<T> originalObservable = weakThis.get();
                 // This should not happen
@@ -365,22 +365,22 @@ public class Observable<T> {
      * @param <T> The underlying type of the Observables
      */
     private static class ObservableTracker<T> {
-        private Observer observer;
+        private Observer<T> observer;
         private CompoundSubscription compoundSubscription;
         private AtomicInteger observableCount = new AtomicInteger(0);
 
-        ObservableTracker(Observer observer, CompoundSubscription compoundSubscription) {
+        ObservableTracker(Observer<T> observer, CompoundSubscription compoundSubscription) {
             this.observer = observer;
             this.compoundSubscription = compoundSubscription;
         }
 
-        public void addObservable(final Observable observable) {
+        void addObservable(final Observable<T> observable) {
             observableCount.getAndIncrement();
 
             final SerialSubscription thisSubscription = new SerialSubscription();
-            thisSubscription.setSubscription(observable.subscribe(new Observer() {
+            thisSubscription.setSubscription(observable.subscribe(new Observer<T>() {
                 @Override
-                public void onNext(Object value) {
+                public void onNext(T value) {
                     observer.onNext(value);
                 }
 
@@ -397,7 +397,7 @@ public class Observable<T> {
             }));
         }
 
-        public void completeObservable(Subscription subscription) {
+        void completeObservable(Subscription subscription) {
             if (observableCount.decrementAndGet() == 0) {
                 observer.onCompleted();
                 compoundSubscription.cancel();
