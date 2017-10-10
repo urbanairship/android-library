@@ -411,12 +411,12 @@ public class AutomationEngine<T extends Schedule> {
 
         for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
             eventObservables.add(createEventObservable(type).observeOn(Schedulers.looper(backgroundThread.getLooper()))
-                                                         .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                                             @Override
-                                                             public TriggerUpdate apply(JsonSerializable json) {
-                                                                 return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
-                                                             }
-                                                         }));
+                                                            .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                                                @Override
+                                                                public TriggerUpdate apply(JsonSerializable json) {
+                                                                    return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
+                                                                }
+                                                            }));
         }
 
         Observable<TriggerUpdate> eventStream = Observable.merge(eventObservables);
