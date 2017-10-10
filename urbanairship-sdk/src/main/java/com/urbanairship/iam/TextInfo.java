@@ -78,7 +78,7 @@ public class TextInfo implements JsonSerializable {
     }
 
     /**
-     * Parses an {@link TextInfo} from a {@link JsonValue}.
+     * Parses a {@link TextInfo} from a {@link JsonValue}.
      *
      * @param jsonValue The json value.
      * @return The parsed text info.
@@ -122,6 +122,7 @@ public class TextInfo implements JsonSerializable {
                     break;
                 case ALIGNMENT_RIGHT:
                     builder.setAlignment(ALIGNMENT_RIGHT);
+                    break;
                 default:
                     throw new JsonException("Unexpected alignment: " + content.opt(ALIGNMENT_KEY));
             }

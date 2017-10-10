@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.Logger;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.iam.DisplayArguments;
@@ -23,11 +22,6 @@ import java.util.Map;
 public class BannerFragment extends Fragment {
 
     private static final String DISMISSED = "DISMISSED";
-
-    /**
-     * Default duration in milliseconds. The value is only used if the in-app message's
-     * {@link BannerDisplayContent#getDuration()} returns null.
-     */
     private static final String DISPLAY_ARGS = "DISPLAY_ARGS";
     private static final String EXIT_ANIMATION = "EXIT_ANIMATION";
 

@@ -140,7 +140,7 @@ public class ButtonInfo implements JsonSerializable {
             }
         }
 
-        // Dismiss button color
+        // Border Color
         if (content.containsKey(BORDER_COLOR_KEY)) {
             try {
                 builder.setBorderColor(Color.parseColor(content.opt(BORDER_COLOR_KEY).getString("")));
@@ -153,7 +153,7 @@ public class ButtonInfo implements JsonSerializable {
         if (content.containsKey(ACTIONS_KEY)) {
             JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
-                throw new JsonException("Actions must be a JSON object: " + content.opt(BORDER_RADIUS_KEY));
+                throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
             }
 
             builder.setActions(jsonMap.getMap());
