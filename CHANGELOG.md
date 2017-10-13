@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.2 - October 13, 2017
+================================
+
+Bug fixes for a rare NPE that can occur on takeoff when loading XML resources
+on takeOff. Any apps seeing this crash should update.
+
+Bug Fixes
+---------
+- Catch Android framework NPEs in ActionButtonGroupsParser and ActioRegistry
+  XML resource loading
+
 Version 8.9.1 - October 9, 2017
 ===============================
 
