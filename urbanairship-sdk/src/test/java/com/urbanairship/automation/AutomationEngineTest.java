@@ -10,8 +10,11 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
+import com.urbanairship.reactive.Observable;
+import com.urbanairship.reactive.Subscriber;
 
 import junit.framework.Assert;
 
@@ -41,7 +44,6 @@ public class AutomationEngineTest extends BaseTestCase {
     private AutomationDataManager automationDataManager;
     private AutomationEngine<ActionSchedule> automationEngine;
     private TestActivityMonitor activityMonitor;
-
 
     @Before
     public void setUp() {
@@ -185,6 +187,30 @@ public class AutomationEngineTest extends BaseTestCase {
         });
     }
 
+    @Test
+    public void testActiveSession() throws Exception {
+        Trigger trigger = Triggers.newActiveSessionTriggerBuilder()
+                                  .setGoal(1)
+                                  .build();
+
+        verifyTrigger(trigger, new Runnable() {
+            @Override
+            public void run() {
+                activityMonitor.startActivity();
+            }
+        });
+    }
+
+    @Test
+    public void testActiveSessionLateSubscription() throws Exception {
+        Trigger trigger = Triggers.newActiveSessionTriggerBuilder()
+                                  .setGoal(1)
+                                  .build();
+
+        activityMonitor.startActivity();
+
+        verifyTrigger(trigger, null);
+    }
 
     @Test
     public void testScreenEvent() throws Exception {
@@ -199,12 +225,6 @@ public class AutomationEngineTest extends BaseTestCase {
                 UAirship.shared().getAnalytics().trackScreen("screen");
             }
         });
-    }
-
-    @Test
-    public void testAsap() throws Exception {
-        Trigger trigger = Triggers.newAsapTriggerBuilder().build();
-        verifyTrigger(trigger, null);
     }
 
     @Test
@@ -387,6 +407,11 @@ public class AutomationEngineTest extends BaseTestCase {
     }
 
     private void verifyTrigger(Trigger trigger, Runnable generateEvents) throws Exception {
+        generateEvents = generateEvents != null ? generateEvents : new Runnable() {
+            @Override
+            public void run() {}
+        };
+
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(trigger)
                                                                   .addAction("test_action", JsonValue.wrap("action_value"))
