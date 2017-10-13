@@ -258,9 +258,9 @@ public class Observable<T> {
         return create(new Function<Observer<T>, Subscription>() {
             @Override
             public Subscription apply(final Observer<T> observer) {
-                final CompoundSubscription subscription = new CompoundSubscription();
+                final SerialSubscription subscription = new SerialSubscription();
 
-                subscription.add(subscribe(new Observer<T>() {
+                subscription.setSubscription(subscribe(new Observer<T>() {
                     @Override
                     public void onNext(final T value) {
                         scheduler.schedule(new Runnable() {

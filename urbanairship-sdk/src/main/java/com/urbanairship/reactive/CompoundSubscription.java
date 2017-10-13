@@ -29,7 +29,14 @@ public class CompoundSubscription extends Subscription {
      * @param subscription The subscription.
      */
     public synchronized void add(Subscription subscription) {
-        subscriptions.add(subscription);
+        if (subscription.isCancelled()) {
+            return;
+        }
+        if (isCancelled()) {
+            subscription.cancel();
+        } else {
+            subscriptions.add(subscription);
+        }
     }
 
     /**
@@ -37,7 +44,9 @@ public class CompoundSubscription extends Subscription {
      * @param subscription The subscription.
      */
     public synchronized void remove(Subscription subscription) {
-        subscriptions.remove(subscription);
+        if (!isCancelled()) {
+            subscriptions.remove(subscription);
+        }
     }
 
     @Override
