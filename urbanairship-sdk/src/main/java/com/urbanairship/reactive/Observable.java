@@ -367,7 +367,7 @@ public class Observable<T> {
     private static class ObservableTracker<T> {
         private Observer<T> observer;
         private CompoundSubscription compoundSubscription;
-        private AtomicInteger observableCount = new AtomicInteger(0);
+        private AtomicInteger observableCount = new AtomicInteger(1);
 
         ObservableTracker(Observer<T> observer, CompoundSubscription compoundSubscription) {
             this.observer = observer;

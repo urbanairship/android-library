@@ -11,6 +11,7 @@ import com.urbanairship.Predicate;
 
 import junit.framework.Assert;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,19 +29,21 @@ import static com.urbanairship.reactive.Observable.merge;
 
 public class ObservableTest extends BaseTestCase {
 
-    private Map<String, Boolean> resultMap;
+    private Map<String, Integer> resultMap;
     private List<Object> values;
+    private Exception error;
+    private Integer nexts;
+    private Integer completes;
+    private Integer errors;
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
 
     @Before
     public void setUp() {
-        resultMap = new HashMap<>();
-        resultMap.put("next", false);
-        resultMap.put("complete", false);
-        resultMap.put("error", false);
-
         values = new ArrayList<>();
+        nexts = 0;
+        completes = 0;
+        errors = 0;
 
         backgroundThread = new HandlerThread("test");
         backgroundThread.start();
@@ -53,120 +56,95 @@ public class ObservableTest extends BaseTestCase {
         backgroundThread.quit();
     }
 
-    @Test
-    public void testJust() throws Exception {
-        Observable<Integer> obs = Observable.just(3);
-        obs.subscribe(new Subscriber<Integer>() {
+    public <T> void validateObservable(Observable<T> observable, Looper looper, Exception expectedError,
+                                       List<T> expectedValues, int nextCount, int completeCount, int errorCount) {
+        observable.subscribe(new Subscriber<T>() {
             @Override
-            public void onNext(Integer value) {
-                Assert.assertEquals(value.intValue(), 3);
-                resultMap.put("next", true);
+            public void onNext(T value) {
+                values.add(value);
+                nexts++;
             }
 
             @Override
             public void onCompleted() {
-                resultMap.put("complete", true);
+                completes++;
+            }
+
+            @Override
+            public void onError(Exception e) {
+                error = e;
+                errors++;
             }
         });
 
-        Assert.assertTrue(resultMap.get("next"));
-        Assert.assertTrue(resultMap.get("complete"));
-        Assert.assertFalse(resultMap.get("error"));
+        if (looper == null) {
+            Assert.assertEquals(values, expectedValues);
+            Assert.assertEquals(error, expectedError);
+            Assert.assertEquals(nexts.intValue(), nextCount);
+            Assert.assertEquals(completes.intValue(), completeCount);
+            Assert.assertEquals(errors.intValue(), errorCount);
+        } else {
+            ShadowLooper shadowLooper = Shadows.shadowOf(looper);
+            while(shadowLooper.getScheduler().areAnyRunnable()) {
+                shadowLooper.runToEndOfTasks();
+            }
+
+            Assert.assertEquals(values, expectedValues);
+            Assert.assertEquals(error, expectedError);
+            Assert.assertEquals(nexts.intValue(), nextCount);
+            Assert.assertEquals(completes.intValue(), completeCount);
+            Assert.assertEquals(errors.intValue(), errorCount);
+        }
+    }
+
+
+    public <T> void validateObservable(Observable<T> observable, List<T> expectedValues,
+                                       int nextCount, int completeCount, int errorCount) {
+        validateObservable(observable, null, null, expectedValues, nextCount, completeCount, errorCount);
+    }
+
+    public <T> void validateObservable(Observable<T> observable, Looper looper, List<T> expectedValues,
+                                       int nextCount, int completeCount, int errorCount) {
+        validateObservable(observable, looper, null, expectedValues, nextCount, completeCount, errorCount);
+    }
+
+    public <T> void validateObservable(Observable<T> observable, Exception expectedError, List<T> expectedValues,
+                                       int nextCount, int completeCount, int errorCount) {
+        validateObservable(observable, null, expectedError, expectedValues, nextCount, completeCount, errorCount);
+    }
+
+    @Test
+    public void testJust() throws Exception {
+        Observable<Integer> obs = Observable.just(3);
+        validateObservable(obs, Arrays.asList(3), 1, 1, 0);
     }
 
     @Test
     public void testEmpty() throws Exception {
         Observable<Integer> obs = Observable.empty();
-        obs.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                resultMap.put("next", true);
-            }
-
-            @Override
-            public void onCompleted() {
-                resultMap.put("complete", true);
-            }
-        });
-
-        Assert.assertFalse(resultMap.get("next"));
-        Assert.assertTrue(resultMap.get("complete"));
+        validateObservable(obs, new ArrayList<Integer>(), 0, 1, 0);
     }
 
     @Test
     public void testNever() throws Exception {
         Observable<Integer> obs = Observable.never();
-        obs.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                resultMap.put("next", true);
-            }
-
-            @Override
-            public void onCompleted() {
-                resultMap.put("complete", true);
-            }
-        });
-
-        Assert.assertFalse(resultMap.get("next"));
-        Assert.assertFalse(resultMap.get("complete"));
+        validateObservable(obs, new ArrayList<Integer>(), 0, 0, 0);
     }
+
 
     @Test
     public void testError() throws Exception {
         final Exception exception = new Exception("Oh no");
         Observable<Integer> obs = Observable.error(exception);
-        obs.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                resultMap.put("next", true);
-            }
-
-            @Override
-            public void onCompleted() {
-                resultMap.put("complete", true);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Assert.assertEquals(e, exception);
-                resultMap.put("error", true);
-            }
-        });
-
-        Assert.assertFalse(resultMap.get("next"));
-        Assert.assertFalse(resultMap.get("complete"));
-        Assert.assertTrue(resultMap.get("error"));
+        validateObservable(obs, exception, new ArrayList<Integer>(), 0, 0, 1);
     }
+
 
     @Test
     public void testFromCollection() throws  Exception {
         List<Integer> ints = Arrays.asList(1, 2, 3, 4, 5);
         Observable<Integer> obs = Observable.from(ints);
-
-        obs.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                resultMap.put("next", true);
-                values.add(value);
-            }
-
-            @Override
-            public void onCompleted() {
-                resultMap.put("complete", true);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                resultMap.put("error", true);
-            }
-        });
-
-        Assert.assertTrue(resultMap.get("next"));
-        Assert.assertTrue(resultMap.get("complete"));
-        Assert.assertFalse(resultMap.get("error"));
-
-        Assert.assertEquals(values, ints);
+        validateObservable(obs, ints, 5, 1, 0);
     }
 
     @Test
@@ -180,33 +158,14 @@ public class ObservableTest extends BaseTestCase {
             }
         });
 
-        mapped.subscribe(new Subscriber<String>() {
-            @Override
-            public void onNext(String value) {
-                resultMap.put("next", true);
-                values.add(value);
-            }
-
-            @Override
-            public void onCompleted() {
-                resultMap.put("complete", true);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                super.onError(e);
-            }
-        });
-
-        Assert.assertTrue(resultMap.get("next"));
-        Assert.assertTrue(resultMap.get("complete"));
-        Assert.assertFalse(resultMap.get("error"));
-        Assert.assertEquals(values, Arrays.asList("1", "2", "3"));
+        validateObservable(mapped, Arrays.asList("1", "2", "3"), 3, 1, 0);
     }
+
 
     @Test
     public void testFilter() throws Exception {
-        Observable<Integer> three = Observable.from(Arrays.asList(1,2,3,4,5,6));
+        List<Integer> ints = Arrays.asList(1, 2, 3, 4, 5, 6);
+        Observable<Integer> three = Observable.from(ints);
 
         Observable<Integer> filtered = three.filter(new Predicate<Integer>() {
             @Override
@@ -215,72 +174,34 @@ public class ObservableTest extends BaseTestCase {
             }
         });
 
-        filtered.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                values.add(value);
-            }
-        });
+        List<Integer> expectedInts = Arrays.asList(4, 5, 6);
 
-        Assert.assertEquals(values, Arrays.asList(4, 5, 6));
+        validateObservable(filtered, expectedInts, 3, 1, 0);
     }
 
     @Test
-    public void testObserveOn() throws Exception {
+    public void testObserveOnMyLooper() throws Exception {
         Observable<Integer> three = Observable.just(3);
 
-        Observable<Integer> immediateThree = three.observeOn(Schedulers.looper(Looper.myLooper()));
+        Observable<Integer> myThree = three.observeOn(Schedulers.looper(Looper.myLooper()));
 
-        immediateThree.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                Assert.assertEquals(value.intValue(), 3);
-                resultMap.put("next", true);
-            }
-        });
+        validateObservable(myThree, Arrays.asList(3), 1, 1, 0);
+    }
 
-        Assert.assertTrue(resultMap.get("next"));
+    @Test
+    public void testObserveOnBackgroundLooper() throws Exception {
+        Observable<Integer> three = Observable.just(3);
+        Observable<Integer> backgroundThree = three.observeOn(Schedulers.looper(backgroundThread.getLooper()));
 
-        ShadowLooper shadowLooper = Shadows.shadowOf(backgroundThread.getLooper());
-        Observable<Integer> runLoopThree = three.observeOn(Schedulers.looper(backgroundThread.getLooper()));
-
-        resultMap.put("next", false);
-
-        runLoopThree.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                Assert.assertEquals(value.intValue(), 3);
-                resultMap.put("next", true);
-            }
-        });
-
-        while (shadowLooper.getScheduler().areAnyRunnable()) {
-            shadowLooper.runToEndOfTasks();
-        }
-
-        Assert.assertTrue(resultMap.get("next"));
+        validateObservable(backgroundThree, backgroundThread.getLooper(), Arrays.asList(3), 1, 1, 0);
     }
 
     @Test
     public void testMerge() throws  Exception {
         Observable<Integer> first = Observable.from(Arrays.asList(1, 2, 3));
         Observable<Integer> second = Observable.from(Arrays.asList(4, 5, 6));
+        Observable<Integer> merged = Observable.merge(first, second);
 
-        merge(first, second).subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onNext(Integer value) {
-                values.add(value);
-            }
-
-            @Override
-            public void onCompleted() {
-                Assert.assertFalse(resultMap.get("complete"));
-                resultMap.put("complete", true);
-                super.onCompleted();
-            }
-        });
-
-        Assert.assertEquals(values, Arrays.asList(1, 2, 3, 4, 5, 6));
-        Assert.assertTrue(resultMap.get("complete"));
+        validateObservable(merged, Arrays.asList(1, 2, 3, 4, 5, 6), 6, 1, 0);
     }
 }
