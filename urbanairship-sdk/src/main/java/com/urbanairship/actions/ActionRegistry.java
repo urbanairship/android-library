@@ -3,6 +3,7 @@
 package com.urbanairship.actions;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
@@ -212,9 +213,9 @@ public final class ActionRegistry {
      * @param context The application context.
      */
     public void registerDefaultActions(Context context) {
-        XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
-
         try {
+            XmlResourceParser parser = context.getResources().getXml(R.xml.ua_default_actions);
+
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
                 int tagType = parser.getEventType();
                 String tagName = parser.getName();
@@ -261,10 +262,10 @@ public final class ActionRegistry {
                     Logger.error("Predicate class " + predicateClassName + " not found. Skipping predicate.");
                 }
             }
-        } catch (XmlPullParserException | IOException e) {
+        } catch (XmlPullParserException | IOException | Resources.NotFoundException | NullPointerException e) {
+            // Note: NullPointerException can occur in rare circumstances further down the call stack
             Logger.error("Failed to parse ActionEntry:" + e.getMessage());
         }
-
     }
 
     /**
