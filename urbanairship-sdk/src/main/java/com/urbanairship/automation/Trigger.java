@@ -22,14 +22,9 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class Trigger implements Parcelable {
 
-    @IntDef({ ASAP, LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT })
+    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION})
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
-
-    /**
-     * Trigger type for schedules that should execute as soon as possible
-     */
-    public static final int ASAP = 0;
 
     /**
      * Trigger type for foreground events. Foreground triggers
@@ -81,6 +76,12 @@ public class Trigger implements Parcelable {
      */
     public static final int LIFE_CYCLE_APP_INIT = 8;
 
+    /**
+     * Trigger type for active app sessions. Active app session triggers can be created with
+     * {@link Triggers#newActiveSessionTriggerBuilder()}.
+     */
+    public static final int ACTIVE_SESSION = 9;
+
     public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
         @Override
         public Trigger createFromParcel(Parcel in) {
@@ -110,9 +111,6 @@ public class Trigger implements Parcelable {
         JsonPredicate predicate = null;
 
         switch (in.readInt()) {
-            case ASAP:
-                type = ASAP;
-                break;
             case LIFE_CYCLE_BACKGROUND:
                 type = LIFE_CYCLE_BACKGROUND;
                 break;
@@ -136,6 +134,9 @@ public class Trigger implements Parcelable {
                 break;
             case SCREEN_VIEW:
                 type = SCREEN_VIEW;
+                break;
+            case ACTIVE_SESSION:
+                type = ACTIVE_SESSION;
                 break;
             default:
                 throw new IllegalStateException("Invalid trigger type from parcel.");
@@ -227,10 +228,6 @@ public class Trigger implements Parcelable {
 
         String typeString = jsonMap.opt("type").getString("").toLowerCase();
         switch (typeString) {
-            case "asap":
-                type = ASAP;
-                break;
-
             case "custom_event_count":
                 type = CUSTOM_EVENT_COUNT;
                 break;
@@ -261,6 +258,10 @@ public class Trigger implements Parcelable {
 
             case "region_exit":
                 type = REGION_EXIT;
+                break;
+
+            case "active_session":
+                type = ACTIVE_SESSION;
                 break;
 
             default:

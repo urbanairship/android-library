@@ -169,6 +169,26 @@ public class AutomationDataManagerTest extends BaseTestCase {
     }
 
     @Test
+    public void testGetTriggersForSchedule() throws Exception {
+        ActionScheduleInfo futureSchedule = ActionScheduleInfo.newBuilder()
+                                                              .addAction("test_action", JsonValue.wrap("action_value"))
+                                                              .addTrigger(Triggers.newForegroundTriggerBuilder().setGoal(3).build())
+                                                              .setLimit(5)
+                                                              .setGroup("group")
+                                                              .setStart(System.currentTimeMillis())
+                                                              .build();
+
+        ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_entry", futureSchedule);
+
+        dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+        List<ScheduleEntry> schedules = createSchedules(20);
+        dataManager.saveSchedules(schedules);
+
+        List<TriggerEntry> retrieved = dataManager.getActiveTriggerEntries(Trigger.LIFE_CYCLE_FOREGROUND, scheduleEntry.scheduleId);
+        assertEquals(1, retrieved.size());
+    }
+
+    @Test
     public void testBulkInsertSchedules() throws Exception {
         Trigger firstTrigger = Triggers.newForegroundTriggerBuilder()
                                        .setGoal(10)

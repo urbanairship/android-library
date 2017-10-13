@@ -14,11 +14,6 @@ import com.urbanairship.util.UAStringUtil;
  * Class providing factory methods and builder classes for {@link Trigger}.
  */
 public class Triggers {
-
-    public static AsapTriggerBuilder newAsapTriggerBuilder() {
-        return new AsapTriggerBuilder();
-    }
-
     /**
      * Creates a new foreground trigger builder.
      * 
@@ -83,17 +78,12 @@ public class Triggers {
     }
 
     /**
-     * ASAP trigger Builder class.
+     * Creates a new active session trigger builder.
+     *
+     * @return The new active session trigger builder.
      */
-    public static class AsapTriggerBuilder {
-        private AsapTriggerBuilder() {}
-
-        /**
-         * Builds the trigger instance.
-         *
-         * @return The trigger instance.
-         */
-        public Trigger build() { return new Trigger(Trigger.ASAP, 1, null); }
+    public static ActiveSessionTriggerBuilder newActiveSessionTriggerBuilder() {
+        return new ActiveSessionTriggerBuilder();
     }
 
     /**
@@ -304,6 +294,34 @@ public class Triggers {
                                                                           .build())
                                                    .build();
             return new Trigger(type, goal, predicate);
+        }
+    }
+
+    /**
+     * Active session trigger builder class.
+     */
+    public static class ActiveSessionTriggerBuilder {
+        private double goal;
+
+        private ActiveSessionTriggerBuilder() {}
+
+        /**
+         * Sets the goal for {@link Trigger#ACTIVE_SESSION} triggers.
+         *
+         * @param goal The trigger goal.
+         * @return The Builder instance.
+         */
+        ActiveSessionTriggerBuilder setGoal(double goal) {
+            this.goal = goal;
+            return this;
+        }
+
+        /**
+         * Buildes the trigger instance.
+         * @return The trigger instance.
+         */
+        public Trigger build() {
+            return new Trigger(Trigger.ACTIVE_SESSION, goal, null);
         }
     }
 
