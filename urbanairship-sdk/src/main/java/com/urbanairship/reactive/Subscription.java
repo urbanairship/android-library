@@ -22,14 +22,14 @@ public class Subscription {
 
     /**
      * Subscription constructor
-     * @param runnable A runnable to execute on disposal.
+     * @param runnable A runnable to execute on cancel.
      */
     protected Subscription(Runnable runnable) {
         this.runnable = runnable;
     }
 
     /**
-     * Creates a new Subscription that executes the provided runnable when disposed.
+     * Creates a new Subscription that executes the provided runnable when cancelled.
      * @param runnable The runnable
      * @return A Subscription.
      */
