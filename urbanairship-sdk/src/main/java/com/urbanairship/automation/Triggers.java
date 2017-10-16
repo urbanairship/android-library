@@ -311,7 +311,7 @@ public class Triggers {
          * @param goal The trigger goal.
          * @return The Builder instance.
          */
-        ActiveSessionTriggerBuilder setGoal(double goal) {
+        public ActiveSessionTriggerBuilder setGoal(double goal) {
             this.goal = goal;
             return this;
         }

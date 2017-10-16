@@ -445,12 +445,16 @@ public class AutomationEngine<T extends Schedule> {
      */
     @WorkerThread
     private void sortSchedulesByPriority(List<ScheduleEntry> entries) {
-        Collections.sort(entries, new Comparator<ScheduleEntry>() {
-            @Override
-            public int compare(ScheduleEntry lh, ScheduleEntry rh) {
-                return lh.getPriority() - rh.getPriority();
-            }
-        });
+        // Collections.singletonList and Collections.emptyList will throw an UnsupportedOperationException
+        // if you try to sort the entries. Make sure we have more than 1 element (ArrayList) before sorting.
+        if (entries.size() > 1) {
+            Collections.sort(entries, new Comparator<ScheduleEntry>() {
+                @Override
+                public int compare(ScheduleEntry lh, ScheduleEntry rh) {
+                    return lh.getPriority() - rh.getPriority();
+                }
+            });
+        }
     }
 
     /**
