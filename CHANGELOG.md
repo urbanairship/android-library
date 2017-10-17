@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.3 - October 17, 2017
+================================
+
+Fixes a NPE during channel registration if the devices do not have any tags set. Apps running
+8.9.1 or 8.9.2 should update.
+
+Bug Fixes
+---------
+- Fixed a NPE during channel registration.
+
+
 Version 8.9.2 - October 13, 2017
 ================================
 
