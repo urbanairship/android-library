@@ -350,7 +350,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         Set<String> tags = new HashSet<>();
-        for (JsonValue tag : channelJson.get(TAGS_KEY).optList()) {
+        for (JsonValue tag : channelJson.opt(TAGS_KEY).optList()) {
             if (tag.isString()) {
                 tags.add(tag.getString());
             } else {

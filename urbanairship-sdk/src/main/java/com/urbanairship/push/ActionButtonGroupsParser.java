@@ -48,7 +48,8 @@ class ActionButtonGroupsParser {
         try {
             parser = context.getResources().getXml(resource);
             return parseGroups(context, parser);
-        } catch (IOException | XmlPullParserException | Resources.NotFoundException e) {
+        } catch (IOException | XmlPullParserException | Resources.NotFoundException | NullPointerException e) {
+            // Note: NullPointerException can occur in rare circumstances further down the call stack
             Logger.error("Failed to parse NotificationActionButtonGroups:" + e.getMessage());
             return new HashMap<>();
         }
