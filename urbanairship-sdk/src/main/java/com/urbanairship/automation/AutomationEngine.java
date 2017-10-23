@@ -59,7 +59,7 @@ public class AutomationEngine<T extends Schedule> {
     private final AutomationDriver<T> driver;
     private final Analytics analytics;
     private final long scheduleLimit;
-
+    private boolean isStarted;
     private Handler backgroundHandler;
     private Handler mainHandler;
 
@@ -135,6 +135,10 @@ public class AutomationEngine<T extends Schedule> {
      * Performs setup and starts listening for events.
      */
     public void start() {
+        if (isStarted) {
+            return;
+        }
+
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
 
@@ -147,6 +151,8 @@ public class AutomationEngine<T extends Schedule> {
         onScheduleConditionsChanged();
 
         restoreCompoundTriggers();
+
+        isStarted = true;
     }
 
     /**
@@ -154,11 +160,16 @@ public class AutomationEngine<T extends Schedule> {
      * is no longer valid.
      */
     public void stop() {
+        if (!isStarted) {
+            return;
+        }
+
         compoundTriggerSubscription.cancel();
         activityMonitor.removeListener(activityListener);
         analytics.removeAnalyticsListener(analyticsListener);
         cancelAllDelays();
         backgroundThread.quit();
+        isStarted = false;
     }
 
     /**

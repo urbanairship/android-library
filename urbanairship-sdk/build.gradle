@@ -86,18 +86,6 @@ android.libraryVariants.all { variant ->
     }
 }
 
-android {
-    testOptions {
-        unitTests.all {
-            def enabled_sdks = "18"
-            if (project.hasProperty("sdks")) {
-                enabled_sdks = sdks
-            }
-            systemProperty 'robolectric.enabledSdks', enabled_sdks
-        }
-    }
-}
-
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -201,13 +189,15 @@ def getDexMethodCount() {
     }
 }
 
-task runDexMethodCount << {
-    def count = getDexMethodCount()
+task runDexMethodCount {
+    doLast {
+        def count = getDexMethodCount()
 
-    File dex = file("${project.buildDir}/dex-counts/release")
-    dex.getParentFile().mkdirs()
-    dex.text = "Dex Method Count: ${count}"
-    println("Dex Method Count: ${count}")
+        File dex = file("${project.buildDir}/dex-counts/release")
+        dex.getParentFile().mkdirs()
+        dex.text = "Dex Method Count: ${count}"
+        println("Dex Method Count: ${count}")
+    }
 }
 
 project.afterEvaluate {
