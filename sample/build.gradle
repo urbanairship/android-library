@@ -33,11 +33,11 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:26.1.0'
-    compile 'com.android.support:design:26.1.0'
+    compile "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
+    compile "com.android.support:design:${airshipProperties.supportLibVersion}"
 
     // Recommended for in-app messages
-    compile 'com.android.support:cardview-v7:26.1.0'
+    compile "com.android.support:cardview-v7:${airshipProperties.supportLibVersion}"
 
     // Use the Urban Airship SDK project.
     compile project(':urbanairship-sdk')
@@ -46,10 +46,10 @@ dependencies {
     // compile 'com.urbanairship.android:urbanairship-sdk:8.9.+'
 
     // Allows Urban Airship location services to use Fused Location
-    compile 'com.google.android.gms:play-services-location:11.4.0'
+    compile "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"
 
     // Testing-only dependencies
-    androidTestCompile 'com.android.support:support-annotations:26.1.0'
+    androidTestCompile "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
     // Hamcrest library for testing
