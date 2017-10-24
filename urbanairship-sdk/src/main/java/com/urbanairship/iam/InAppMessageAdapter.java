@@ -4,7 +4,6 @@ package com.urbanairship.iam;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
@@ -14,10 +13,24 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * In-app message adapter. An adapter is responsible for displaying and fetching assets for a particular type
- * of in-app message.
+ * In-app message adapter. An adapter is responsible for displaying a particular type of in-app message.
  */
 public interface InAppMessageAdapter {
+
+
+    /**
+     * Factory interface for InAppMessageAdapters.
+     */
+    interface Factory {
+
+        /**
+         * Creates an InAppMessageAdapter for the given message.
+         *
+         * @param message The in-app message.
+         * @return A InAppMessageAdapter.
+         */
+        InAppMessageAdapter createAdapter(InAppMessage message);
+    }
 
     @IntDef({ RETRY, OK })
     @Retention(RetentionPolicy.SOURCE)
@@ -33,6 +46,17 @@ public interface InAppMessageAdapter {
      */
     int RETRY = 1;
 
+
+    /**
+     * Called before {@link #onDisplay(Activity, boolean, DisplayHandler)} to prepare the message to be displayed.
+     *
+     * @param context The application context.
+     * @return {@link #OK} if the in-app message is ready to be displayed, otherwise {@code false}.
+     */
+    @WorkerThread
+    @AdapterResult
+    int onPrepare(@NonNull Context context);
+
     /**
      * Called to display an in-app message. The display handler's {@link DisplayHandler#requestDisplayLock(Activity)} must
      * be called during `onStart()` in either the activity or fragment, and if the request is denied must
@@ -40,34 +64,19 @@ public interface InAppMessageAdapter {
      * or fragment is finished being displayed call {@link DisplayHandler#finished()}.
      *
      * @param activity The current resumed activity.
-     * @param arguments The in-app message arguments.
+     * @param isRedisplay {@code true} If the in-app message is being redisplayed, otherwise {@code false}.
+     * @param displayHandler The display handler.
      * @return {@link #OK} if the in-app message was able to be displayed, otherwise {@link #RETRY} to
      * try again later.
      */
     @MainThread
     @AdapterResult
-    int display(@NonNull Activity activity, @NonNull DisplayArguments arguments);
+    int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler);
 
     /**
-     * Called to prefetch assets for an in-app message. The assets, or references to the assets should
-     * be stored in the provided bundle.
-     *
-     * @param context The application context.
-     * @param message The in-app message.
-     * @param assets The assets bundle.
-     * @return {@link #OK} if the assets were able to be fetched, otherwise {@link #RETRY} to
-     * try again later.
+     * Called after the in-app message is finished displaying.
+     * Perform any cache clean up here.
      */
     @WorkerThread
-    @AdapterResult
-    int prefetchAssets(@NonNull Context context, @NonNull InAppMessage message, @NonNull Bundle assets);
-
-    /**
-     * Called before display or prefetch to make sure the adapter is able to handle the in-app message.
-     *
-     * @param message The in-app message.
-     * @return {@code true} if the adapter is able to handle the message, otherwise {@code false}.
-     */
-    @MainThread
-    boolean acceptsMessage(@NonNull InAppMessage message);
+    void onFinish();
 }

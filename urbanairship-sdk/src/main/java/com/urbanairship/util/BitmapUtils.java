@@ -7,26 +7,20 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.webkit.URLUtil;
 
 import com.urbanairship.Logger;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Locale;
 
 /**
  * A class containing utility methods related to bitmaps.
  */
 public class BitmapUtils {
-
-    private final static int NETWORK_TIMEOUT_MS = 2000;
-    private final static int BUFFER_SIZE = 1024;
-
 
     /**
      * Create a scaled bitmap.
@@ -42,30 +36,47 @@ public class BitmapUtils {
     public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
         Logger.verbose("BitmapUtils - Fetching image from: " + url);
 
-        File outputFile = File.createTempFile("ua_", ".temp", context.getCacheDir());
-        Logger.verbose("BitmapUtils - Created temp file: " + outputFile);
-
-        if (!downloadFile(url, outputFile)) {
-            Logger.verbose("BitmapUtils - Failed to fetch image from: " + url);
-            return null;
+        boolean deleteFile = false;
+        File imageFile = null;
+        if (URLUtil.isFileUrl(url.toString())) {
+            deleteFile = false;
+            try {
+                imageFile = new File(url.toURI());
+            } catch (URISyntaxException e) {
+                Logger.error("BitmapUtils - Invalid URL: " + url);
+            }
         }
+
+        if (imageFile == null) {
+            imageFile = File.createTempFile("ua_", ".temp", context.getCacheDir());
+            deleteFile = true;
+            Logger.verbose("BitmapUtils - Created temp file: " + imageFile);
+
+            if (!FileUtils.downloadFile(url, imageFile)) {
+                Logger.verbose("BitmapUtils - Failed to fetch image from: " + url);
+                return null;
+            }
+        }
+
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
 
-        BitmapFactory.decodeFile(outputFile.getAbsolutePath(), options);
+        BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
         int width = options.outWidth;
         int height = options.outHeight;
 
         options.inSampleSize = calculateInSampleSize(width, height, reqWidth, reqHeight);
         options.inJustDecodeBounds = false;
-        Bitmap bitmap = BitmapFactory.decodeFile(outputFile.getAbsolutePath(), options);
+        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
-        if (outputFile.delete()) {
-            Logger.verbose("BitmapUtils - Deleted temp file: " + outputFile);
-        } else {
-            Logger.verbose("BitmapUtils - Failed to delete temp file: " + outputFile);
+        if (deleteFile) {
+            if (imageFile.delete()) {
+                Logger.verbose("BitmapUtils - Deleted temp file: " + imageFile);
+            } else {
+                Logger.verbose("BitmapUtils - Failed to delete temp file: " + imageFile);
+            }
         }
 
         if (bitmap == null) {
@@ -110,61 +121,5 @@ public class BitmapUtils {
         return inSampleSize;
     }
 
-    /**
-     * Downloads a file to disk.
-     *
-     * @param url The URL image.
-     * @param file The file path where the image will be downloaded.
-     * @return <code>true</code> if file was downloaded, <code>false</code> otherwise.
-     * @throws IOException
-     */
-    private static boolean downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
-        Logger.verbose("Downloading file from: " + url + " to: " + file.getAbsolutePath());
 
-        InputStream inputStream = null;
-        FileOutputStream outputStream = null;
-        URLConnection conn = null;
-
-        try {
-            conn = url.openConnection();
-            conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
-            conn.setUseCaches(true);
-            inputStream = conn.getInputStream();
-
-            if (conn instanceof HttpURLConnection && !UAHttpStatusUtil.inSuccessRange(((HttpURLConnection) conn).getResponseCode())) {
-                Logger.warn("Unable to download file from URL. Received response code: " + ((HttpURLConnection) conn).getResponseCode());
-                return false;
-            }
-
-            if (inputStream != null) {
-                outputStream = new FileOutputStream(file);
-
-                byte[] buffer = new byte[BUFFER_SIZE];
-                int bytesRead;
-
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-
-                outputStream.close();
-                inputStream.close();
-
-                return true;
-            }
-        } finally {
-            if (outputStream != null) {
-                outputStream.close();
-            }
-
-            if (inputStream != null) {
-                inputStream.close();
-            }
-
-            if (conn != null && conn instanceof HttpURLConnection) {
-                ((HttpURLConnection) conn).disconnect();
-            }
-        }
-
-        return false;
-    }
 }

@@ -2,29 +2,40 @@ package com.urbanairship.iam.banner;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.iam.DisplayArguments;
+import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 
 /**
  * Banner display adapter.
  */
-public class BannerDisplayAdapter implements InAppMessageAdapter {
+public class BannerAdapter implements InAppMessageAdapter {
+
+    private final InAppMessage message;
+
+    /**
+     * Default constructor.
+     * @param message The in-app message.
+     */
+    protected BannerAdapter(InAppMessage message) {
+        this.message = message;
+    }
+
+    @Override
+    public int onPrepare(@NonNull Context context) {
+        return OK;
+    }
 
     @Override
     @AdapterResult
-    public int display(@NonNull Activity activity, DisplayArguments displayArguments) {
-        if (activity.isFinishing()) {
-            Logger.error("InAppMessageManager - Unable to display in-app messages for an activity that is finishing.");
-            return RETRY;
-        }
+    public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
 
-        BannerDisplayContent displayContent = displayArguments.getMessage().getDisplayContent();
+        BannerDisplayContent displayContent = message.getDisplayContent();
+
         int enter, exit;
         if (displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP) {
             enter = R.animator.ua_iam_slide_in_top;
@@ -39,7 +50,11 @@ public class BannerDisplayAdapter implements InAppMessageAdapter {
             return RETRY;
         }
 
-        BannerFragment fragment = BannerFragment.newInstance(displayArguments, exit);
+        BannerFragment fragment = BannerFragment.newBuilder()
+                .setDisplayHandler(displayHandler)
+                .setExitAnimation(exit)
+                .setInAppMessage(message)
+                .build();
 
         Logger.info("InAppMessageManager - Displaying in-app message.");
 
@@ -52,14 +67,7 @@ public class BannerDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    @AdapterResult
-    public int prefetchAssets(Context context, InAppMessage message, Bundle assets) {
-        return OK;
-    }
+    public void onFinish() {
 
-    @Override
-    public boolean acceptsMessage(InAppMessage message) {
-        BannerDisplayContent displayContent = message.getDisplayContent();
-        return displayContent != null;
     }
 }
