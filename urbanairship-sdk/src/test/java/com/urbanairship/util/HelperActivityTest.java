@@ -31,8 +31,7 @@ public class HelperActivityTest extends BaseTestCase {
     @Test
     public void testHandleStartActivityForResult() {
         Intent intent = new Intent("test intent");
-        HelperActivity activity = Robolectric.buildActivity(HelperActivity.class)
-                                             .withIntent(new Intent().putExtra(HelperActivity.START_ACTIVITY_INTENT_EXTRA, intent))
+        HelperActivity activity = Robolectric.buildActivity(HelperActivity.class, new Intent().putExtra(HelperActivity.START_ACTIVITY_INTENT_EXTRA, intent))
                                              .create()
                                              .get();
 

@@ -30,8 +30,7 @@ public class ChannelCaptureActivityTest extends BaseTestCase {
         intent.putExtra(ChannelCapture.CHANNEL, "channel id");
         intent.putExtra(ChannelCapture.URL, "https://go.urbanairship.com/lol");
 
-        channelCaptureActivity = Robolectric.buildActivity(ChannelCaptureActivity.class)
-                .withIntent(intent)
+        channelCaptureActivity = Robolectric.buildActivity(ChannelCaptureActivity.class, intent)
                 .create()
                 .start()
                 .visible()

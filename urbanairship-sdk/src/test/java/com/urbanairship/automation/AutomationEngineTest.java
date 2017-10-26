@@ -475,10 +475,11 @@ public class AutomationEngineTest extends BaseTestCase {
         ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
         ShadowLooper automationLooper = Shadows.shadowOf(automationEngine.backgroundThread.getLooper());
 
-        while (mainLooper.getScheduler().areAnyRunnable() || automationLooper.getScheduler().areAnyRunnable()) {
+        do {
             mainLooper.runToEndOfTasks();
             automationLooper.runToEndOfTasks();
         }
+        while (mainLooper.getScheduler().areAnyRunnable() || automationLooper.getScheduler().areAnyRunnable());
     }
 
     private void advanceAutomationLooperScheduler(long millis) {
