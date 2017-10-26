@@ -56,7 +56,6 @@ public class MessageListFragment extends Fragment {
     private RichPushInbox richPushInbox;
     private MessageViewAdapter adapter;
     private Cancelable fetchMessagesOperation;
-    private ImageLoader imageLoader;
     private String currentMessageId;
     private RichPushInbox.Predicate predicate;
     private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
@@ -216,14 +215,13 @@ public class MessageListFragment extends Fragment {
      */
     @NonNull
     protected MessageViewAdapter createMessageViewAdapter() {
-        imageLoader = new ImageLoader(getContext());
         return new MessageViewAdapter(getContext(), R.layout.ua_item_mc) {
             @Override
             protected void bindView(View view, RichPushMessage message, final int position) {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
-                    itemView.updateMessage(message, placeHolder, imageLoader);
+                    itemView.updateMessage(message, placeHolder);
                     itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
                     itemView.setSelectionListener(new View.OnClickListener() {
                         @Override

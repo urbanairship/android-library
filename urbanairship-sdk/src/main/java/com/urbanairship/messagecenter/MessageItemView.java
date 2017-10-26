@@ -143,9 +143,8 @@ public class MessageItemView extends FrameLayout {
      *
      * @param message The message.
      * @param placeholder Image place holder.
-     * @param imageLoader An {@link ImageLoader} to load the icon view.
      */
-    void updateMessage(RichPushMessage message, @DrawableRes int placeholder, ImageLoader imageLoader) {
+    void updateMessage(RichPushMessage message, @DrawableRes int placeholder) {
         titleView.setText(message.getTitle());
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
@@ -160,7 +159,7 @@ public class MessageItemView extends FrameLayout {
         }
 
         if (iconView != null) {
-            imageLoader.load(message.getListIconUrl(), placeholder, iconView);
+            ImageLoader.shared(getContext()).load(message.getListIconUrl(), placeholder, iconView);
         }
     }
 

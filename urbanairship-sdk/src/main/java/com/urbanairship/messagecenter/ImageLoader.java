@@ -11,10 +11,12 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.http.HttpResponseCache;
 import android.os.AsyncTask;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.util.LruCache;
+import android.util.LruCache;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
@@ -32,8 +34,11 @@ import java.util.concurrent.Executors;
 
 /**
  * Asynchronous bitmap loader for image views.
+ *
+ * @hide
  */
-class ImageLoader {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ImageLoader {
 
     private static final String CACHE_DIR = "urbanairship-cache";
 
@@ -56,13 +61,29 @@ class ImageLoader {
     private final Context context;
     private final Map<ImageView, Request> requestMap;
     private final LruCache<String, BitmapDrawable> memoryCache;
+    private static ImageLoader sharedInstance;
+
+    /**
+     * Returns the shared image loader instance.
+     *
+     * @param context The application context.
+     * @return The shared image loader.
+     */
+    @MainThread
+    public static ImageLoader shared(Context context) {
+        if (sharedInstance == null) {
+            sharedInstance = new ImageLoader(context);
+        }
+
+        return sharedInstance;
+    }
 
     /**
      * Creates an ImageLoader.
      *
      * @param context The application context.
      */
-    ImageLoader(Context context) {
+    private ImageLoader(Context context) {
         this.context = context.getApplicationContext();
         this.requestMap = new WeakHashMap<>();
         this.executor = Executors.newFixedThreadPool(2);
@@ -82,7 +103,7 @@ class ImageLoader {
      *
      * @param imageView The imageView.
      */
-    void cancelRequest(ImageView imageView) {
+    public void cancelRequest(ImageView imageView) {
         if (imageView == null) {
             return;
         }
@@ -95,11 +116,12 @@ class ImageLoader {
 
     /**
      * Loads an image into an image view.
+     *
      * @param imageUrl The url to load.
      * @param placeHolder The optional placeholder.
      * @param imageView The image view.
      */
-    void load(String imageUrl, @DrawableRes int placeHolder, @NonNull ImageView imageView) {
+    public void load(String imageUrl, @DrawableRes int placeHolder, @NonNull ImageView imageView) {
         cancelRequest(imageView);
 
         Request request = new Request(imageUrl, placeHolder, imageView) {

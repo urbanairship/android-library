@@ -4,15 +4,19 @@ package com.urbanairship.iam.banner;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.AnimatorRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionRunRequest;
-import com.urbanairship.iam.DisplayArguments;
+import com.urbanairship.iam.DisplayHandler;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.InAppMessageCache;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.iam.Timer;
+import com.urbanairship.util.Checks;
 
 import java.util.Map;
 
@@ -22,42 +26,53 @@ import java.util.Map;
 public class BannerFragment extends Fragment {
 
     private static final String DISMISSED = "DISMISSED";
-    private static final String DISPLAY_ARGS = "DISPLAY_ARGS";
+    private static final String IN_APP_MESSAGE = "IN_APP_MESSAGE";
     private static final String EXIT_ANIMATION = "EXIT_ANIMATION";
+    private static final String DISPLAY_HANDLER = "DISPLAY_HANDLER";
+    private static final String CACHE = "CACHE";
+
 
     private boolean isDismissed;
     private Timer timer;
-    private DisplayArguments displayArguments;
+    private InAppMessage inAppMessage;
+    private DisplayHandler displayHandler;
+    private InAppMessageCache cache;
     private BannerDisplayContent displayContent;
+    private int exitAnimation;
 
-    public static BannerFragment newInstance(DisplayArguments arguments, int exitAnimation) {
+
+    private static BannerFragment newInstance(Builder builder) {
         BannerFragment fragment = new BannerFragment();
 
         Bundle bundle = new Bundle();
-        bundle.putParcelable(DISPLAY_ARGS, arguments);
-        bundle.putInt(EXIT_ANIMATION, exitAnimation);
+        if (builder.cache != null) {
+            bundle.putParcelable(IN_APP_MESSAGE, builder.cache);
+        }
+
+        bundle.putInt(EXIT_ANIMATION, builder.exitAnimation);
+        bundle.putParcelable(IN_APP_MESSAGE, builder.inAppMessage);
+        bundle.putParcelable(DISPLAY_HANDLER, builder.displayHandler);
+        bundle.putParcelable(CACHE, builder.cache);
+
         fragment.setArguments(bundle);
         return fragment;
     }
-
 
     @Override
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
         this.setRetainInstance(true);
 
-        this.displayArguments = getArguments().getParcelable(DISPLAY_ARGS);
-        if (displayArguments == null) {
+        this.displayHandler = getArguments().getParcelable(DISPLAY_HANDLER);
+        this.inAppMessage = getArguments().getParcelable(IN_APP_MESSAGE);
+        this.cache = getArguments().getParcelable(CACHE);
+
+        if (displayHandler == null || inAppMessage == null || inAppMessage.getType() != InAppMessage.TYPE_BANNER) {
             dismiss(false);
             return;
         }
 
-        this.displayContent = displayArguments.getMessage().getDisplayContent();
-        if (displayContent == null) {
-            dismiss(false);
-            return;
-        }
-
+        this.displayContent = inAppMessage.getDisplayContent();
         long duration = displayContent.getDuration();
         this.timer = new Timer(duration) {
             @Override
@@ -83,7 +98,7 @@ public class BannerFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        if (displayArguments != null && !displayArguments.getHandler().requestDisplayLock(getActivity())) {
+        if (displayHandler != null && !displayHandler.requestDisplayLock(getActivity())) {
             isDismissed = true;
         }
     }
@@ -108,8 +123,8 @@ public class BannerFragment extends Fragment {
         if (!isDismissed && getActivity().isFinishing()) {
             isDismissed = true;
 
-            if (displayArguments != null) {
-                displayArguments.getHandler().continueOnNextActivity();
+            if (displayHandler != null) {
+                displayHandler.continueOnNextActivity();
             }
         }
     }
@@ -119,8 +134,8 @@ public class BannerFragment extends Fragment {
         super.onStop();
 
         if (!getActivity().isChangingConfigurations()) {
-            if (displayArguments != null &&  !isDismissed) {
-                displayArguments.getHandler().continueOnNextActivity();
+            if (displayHandler != null && !isDismissed) {
+                displayHandler.continueOnNextActivity();
             }
             isDismissed = true;
             removeSelf(false);
@@ -166,8 +181,8 @@ public class BannerFragment extends Fragment {
      */
     public void dismiss(boolean animate) {
 
-        if (displayArguments != null) {
-            displayArguments.getHandler().finished();
+        if (displayHandler != null) {
+            displayHandler.finished();
         }
 
         timer.stop();
@@ -234,6 +249,83 @@ public class BannerFragment extends Fragment {
                             .setSituation(situation)
                             .run();
         }
+
+
     }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * BannerFragment builder.
+     */
+    public static class Builder {
+
+        private InAppMessage inAppMessage;
+        private DisplayHandler displayHandler;
+        private InAppMessageCache cache;
+        private int exitAnimation;
+
+        private Builder() {};
+
+        /**
+         * Sets the display handler.
+         *
+         * @param displayHandler The display handler.
+         * @return The builder instance.
+         */
+        public Builder setDisplayHandler(DisplayHandler displayHandler) {
+            this.displayHandler = displayHandler;
+            return this;
+        }
+
+
+        /**
+         * Sets the in-app message.
+         *
+         * @param inAppMessage The in-app message.
+         * @return The builder instance.
+         */
+        public Builder setInAppMessage(InAppMessage inAppMessage) {
+            this.inAppMessage = inAppMessage;
+            return this;
+        }
+
+        /**
+         * Sets the cache.
+         *
+         * @param cache The in-app message cache.
+         * @return The builder instance.
+         */
+        public Builder setCache(InAppMessageCache cache) {
+            this.cache = cache;
+            return this;
+        }
+
+        /**
+         * Sets the exit animation.
+         *
+         * @param animation The exit animation.
+         * @return The builder instance.
+         */
+        public Builder setExitAnimation(@AnimatorRes int animation) {
+            this.exitAnimation = animation;
+            return this;
+        }
+
+        /**
+         * Builds the fragment.
+         *
+         * @return The banner fragment.
+         * @throws IllegalArgumentException if the in-app message or display handler is not set.
+         */
+        public BannerFragment build() {
+            Checks.checkNotNull(inAppMessage, "Missing in-app message.");
+            Checks.checkNotNull(displayHandler, "Missing display handler.");
+            return BannerFragment.newInstance(this);
+        }
+    }
+
 }
 
