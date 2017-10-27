@@ -275,6 +275,7 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_END + ", "
                         + ScheduleEntry.COLUMN_NAME_COUNT + ", "
                         + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
+                        + "0, " // Default priority
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
                         + oldPendingExecutionColumn + ", "
                         + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
