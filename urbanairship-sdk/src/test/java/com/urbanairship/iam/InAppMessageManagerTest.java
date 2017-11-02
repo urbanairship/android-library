@@ -276,4 +276,30 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verify(mockAdapter, times(2)).onPrepare(any(Context.class));
     }
 
+    @Test
+    public void testAudienceConditionsCheck() {
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+
+
+        // Schedule that requires notification opt-in to be true
+        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
+                                                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                   .setMessage(InAppMessage.newBuilder()
+                                                                                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                                           .setId("message id")
+                                                                                                           .setAudience(Audience.newBuilder()
+                                                                                                                       .setNotificationsOptIn(true)
+                                                                                                                       .build())
+                                                                                                           .build())
+                                                                                   .build());
+
+        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+
+        // Verify the schedule is cancelled.
+        verify(mockEngine).cancel(Collections.singletonList("schedule id"));
+    }
 }

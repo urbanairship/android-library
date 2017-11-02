@@ -135,9 +135,27 @@ public class InAppMessageManager extends AirshipComponent {
         this.driver.setCallbacks(new InAppMessageDriver.Callbacks() {
             @Override
             public boolean isMessageReady(String scheduleId, InAppMessage message) {
-                AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+                if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
+                    cancelSchedule(scheduleId);
+                    adapterWrappers.remove(scheduleId);
+                    return false;
+                }
 
+                AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
                 if (adapterWrapper == null) {
+                    InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
+                    if (factory == null) {
+                        return false;
+                    }
+
+                    try {
+                        InAppMessageAdapter adapter = factory.createAdapter(message);
+                        adapterWrappers.put(scheduleId, new AdapterWrapper(scheduleId, adapter));
+                    } catch (Exception e) {
+                        Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
+                        return false;
+                    }
+
                     prepareMessage(scheduleId, message);
                     return false;
                 }
@@ -218,18 +236,7 @@ public class InAppMessageManager extends AirshipComponent {
 
     private void prepareMessage(final String scheduleId, final InAppMessage message) {
         if (!adapterWrappers.containsKey(scheduleId)) {
-            InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
-            if (factory == null) {
-                return;
-            }
-
-            try {
-                InAppMessageAdapter adapter = factory.createAdapter(message);
-                adapterWrappers.put(scheduleId, new AdapterWrapper(scheduleId, adapter));
-            } catch (Exception e) {
-                Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
-                return;
-            }
+            return;
         }
 
         executor.execute(new Runnable() {
@@ -261,7 +268,8 @@ public class InAppMessageManager extends AirshipComponent {
      * Schedules an in-app message.
      *
      * @param messageScheduleInfo The in-app message schedule info.
-     * @return A pending result with the {@link InAppMessageSchedule}.
+     * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be nil if
+     * the message's audience
      */
     public PendingResult<InAppMessageSchedule> scheduleMessage(InAppMessageScheduleInfo messageScheduleInfo) {
         return automationEngine.schedule(messageScheduleInfo);

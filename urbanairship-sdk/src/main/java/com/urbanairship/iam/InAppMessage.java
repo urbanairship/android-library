@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.Logger;
@@ -29,6 +30,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String DISPLAY_TYPE_KEY = "display_type";
     private static final String DISPLAY_CONTENT_KEY = "display";
     private static final String EXTRA_KEY = "extra";
+    private static final String AUDIENCE_KEY = "audience";
 
 
     @StringDef({ TYPE_BANNER, TYPE_CUSTOM })
@@ -46,12 +48,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     public static final String TYPE_CUSTOM = "custom";
 
 
-
     @DisplayType
     private final String type;
     private final JsonMap extras;
     private final String id;
     private final JsonSerializable content;
+    private final Audience audience;
 
     /**
      * Default constructor.
@@ -63,6 +65,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.content = builder.content;
         this.id = builder.id;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
+        this.audience = builder.audience;
     }
 
     /**
@@ -115,6 +118,16 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return extras;
     }
 
+    /**
+     * Gets the audience.
+     *
+     * @return The audience.
+     */
+    @Nullable
+    public Audience getAudience() {
+        return audience;
+    }
+
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -122,42 +135,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(EXTRA_KEY, extras)
                       .putOpt(DISPLAY_CONTENT_KEY, content)
                       .putOpt(DISPLAY_TYPE_KEY, type)
+                      .putOpt(AUDIENCE_KEY, audience)
                       .build().toJsonValue();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        InAppMessage message = (InAppMessage) o;
-
-        if (type != null ? !type.equals(message.type) : message.type != null) {
-            return false;
-        }
-        if (extras != null ? !extras.equals(message.extras) : message.extras != null) {
-            return false;
-        }
-
-        if (id != null ? !id.equals(message.id) : message.id != null) {
-            return false;
-        }
-        return content != null ? content.equals(message.content) : message.content == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + (extras != null ? extras.hashCode() : 0);
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + (content != null ? content.hashCode() : 0);
-        return result;
-    }
 
     /**
      * Parses a json value.
@@ -171,12 +152,18 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
 
+        InAppMessage.Builder builder = InAppMessage.newBuilder()
+                           .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
+                           .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
+                           .setDisplayContent(type, content);
+
+
+        if (jsonValue.optMap().containsKey(AUDIENCE_KEY)) {
+            builder.setAudience(Audience.parseJson(jsonValue.optMap().opt(AUDIENCE_KEY)));
+        }
+
         try {
-            return InAppMessage.newBuilder()
-                               .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
-                               .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
-                               .setDisplayContent(type, content)
-                               .build();
+            return builder.build();
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid InAppMessage json.", e);
         }
@@ -204,6 +191,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             String type = in.readString();
             String contentPayload = in.readString();
             String extraPayload = in.readString();
+            String audiencePayload = in.readString();
 
             InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                        .setId(id);
@@ -212,6 +200,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                 builder.setExtras(JsonValue.parseString(extraPayload).optMap());
             } catch (JsonException e) {
                 Logger.error("InAppMessage - Invalid extras from parcel: " + extraPayload);
+            }
+
+            if (audiencePayload != null) {
+                try {
+                    builder.setAudience(Audience.parseJson(JsonValue.parseString(audiencePayload)));
+                } catch (JsonException e) {
+                    Logger.error("InAppMessage - Invalid audience from parcel: " + extraPayload);
+                }
             }
 
             try {
@@ -235,6 +231,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         dest.writeString(type);
         dest.writeString(content.toJsonValue().toString());
         dest.writeString(extras.toString());
+        dest.writeString(audience == null ? null : audience.toJsonValue().toString());
     }
 
     @Override
@@ -247,6 +244,42 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return toJsonValue().toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        InAppMessage that = (InAppMessage) o;
+
+        if (type != null ? !type.equals(that.type) : that.type != null) {
+            return false;
+        }
+        if (extras != null ? !extras.equals(that.extras) : that.extras != null) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (content != null ? !content.equals(that.content) : that.content != null) {
+            return false;
+        }
+        return audience != null ? audience.equals(that.audience) : that.audience == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (extras != null ? extras.hashCode() : 0);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + (audience != null ? audience.hashCode() : 0);
+        return result;
+    }
+
     /**
      * In-app message builder.
      */
@@ -256,6 +289,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private JsonMap extras;
         private String id;
         private JsonSerializable content;
+        private Audience audience;
 
         private Builder() {}
 
@@ -323,6 +357,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          */
         public Builder setId(String id) {
             this.id = id;
+            return this;
+        }
+
+        /**
+         * Sets the audience.
+         *
+         * @param audience The audience.
+         * @return The builder.
+         */
+        public Builder setAudience(Audience audience) {
+            this.audience = audience;
             return this;
         }
 
