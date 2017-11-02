@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_BANNER} in-app message.
  */
@@ -49,19 +48,19 @@ public class BannerDisplayContent implements DisplayContent {
     public static final String PLACEMENT_BOTTOM = "bottom";
 
 
-    @StringDef({ TEMPLATE_LEFT_ICON, TEMPLATE_RIGHT_ICON })
+    @StringDef({ TEMPLATE_LEFT_IMAGE, TEMPLATE_RIGHT_IMAGE })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Template {}
 
     /**
-     * Template to display the optional icon on the left.
+     * Template to display the optional image on the left.
      */
-    public static final String TEMPLATE_LEFT_ICON = "icon_text";
+    public static final String TEMPLATE_LEFT_IMAGE = "image_text";
 
     /**
-     * Template to display the optional icon on the right.
+     * Template to display the optional image on the right.
      */
-    public static final String TEMPLATE_RIGHT_ICON = "text_icon";
+    public static final String TEMPLATE_RIGHT_IMAGE = "text_image";
 
     /**
      * Default duration in milliseconds.
@@ -181,11 +180,11 @@ public class BannerDisplayContent implements DisplayContent {
         // Template
         if (content.containsKey(TEMPLATE_KEY)) {
             switch (content.opt(TEMPLATE_KEY).getString("")) {
-                case TEMPLATE_LEFT_ICON:
-                    builder.setTemplate(TEMPLATE_LEFT_ICON);
+                case TEMPLATE_LEFT_IMAGE:
+                    builder.setTemplate(TEMPLATE_LEFT_IMAGE);
                     break;
-                case TEMPLATE_RIGHT_ICON:
-                    builder.setTemplate(TEMPLATE_RIGHT_ICON);
+                case TEMPLATE_RIGHT_IMAGE:
+                    builder.setTemplate(TEMPLATE_RIGHT_IMAGE);
                     break;
                 default:
                     throw new JsonException("Unexpected template: " + content.opt(TEMPLATE_KEY));
@@ -220,7 +219,6 @@ public class BannerDisplayContent implements DisplayContent {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
         }
-
         // Border radius
         if (content.containsKey(BORDER_RADIUS_KEY)) {
             if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
@@ -481,7 +479,7 @@ public class BannerDisplayContent implements DisplayContent {
         @Placement
         private String placement = PLACEMENT_BOTTOM;
         @Template
-        private String template = TEMPLATE_LEFT_ICON;
+        private String template = TEMPLATE_LEFT_IMAGE;
         private long duration = DEFAULT_DURATION_MS;
         private int backgroundColor = Color.WHITE;
         private int dismissButtonColor = Color.BLACK;
@@ -583,7 +581,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_ICON}.
+         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_IMAGE}.
          *
          * @param template The banner's template.
          * @return The builder instance.

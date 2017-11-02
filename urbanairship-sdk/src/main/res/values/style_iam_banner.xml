@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="UrbanAirship.InAppBanner"/>
+
+    <style name="UrbanAirship.InAppBanner.Layout">
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:elevation">8dp</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.Pull">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">5dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:background">@drawable/ua_iam_banner_pull_background</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.Image">
+        <item name="android:layout_width">120dp</item>
+        <item name="android:layout_height">120dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.Heading">
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.Body">
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.ButtonLayout">
+        <item name="android:minHeight">32dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="buttonStackedSpaceHeight">8dp</item>
+        <item name="buttonSeparatedSpaceWidth">8dp</item>
+    </style>
+
+    <style name="UrbanAirship.InAppBanner.Button" />
+</resources>

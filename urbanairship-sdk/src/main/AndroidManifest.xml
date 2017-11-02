@@ -39,7 +39,7 @@
 
         <activity
             android:name="com.urbanairship.actions.RateAppActivity"
-            android:theme="@style/RateAppActionBackgroundStyle">
+            android:theme="@style/UrbanAirship.RateAppActivity">
             <intent-filter>
                 <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -49,7 +49,7 @@
         <activity
             android:name="com.urbanairship.actions.LandingPageActivity"
             android:exported="false"
-            android:theme="@style/LandingPageStyle">
+            android:theme="@style/UrbanAirship.LandingPageActivity">
 
             <meta-data
                 android:name="com.urbanairship.action.LANDING_PAGE_VIEW"

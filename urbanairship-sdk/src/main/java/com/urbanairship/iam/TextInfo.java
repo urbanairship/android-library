@@ -16,6 +16,8 @@ import com.urbanairship.util.ColorUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Text display info.
@@ -27,6 +29,7 @@ public class TextInfo implements JsonSerializable {
     private static final String SIZE_KEY = "size";
     private static final String COLOR_KEY = "color";
     private static final String ALIGNMENT_KEY = "alignment";
+    private static final String STYLE_KEY = "style";
 
     @StringDef({ ALIGNMENT_RIGHT, ALIGNMENT_LEFT, ALIGNMENT_CENTER })
     @Retention(RetentionPolicy.SOURCE)
@@ -43,9 +46,18 @@ public class TextInfo implements JsonSerializable {
     public static final String ALIGNMENT_LEFT = "left";
 
     /**
-     * Center text alignment.`
+     * Center text alignment.
      */
     public static final String ALIGNMENT_CENTER = "center";
+
+
+    @StringDef({ STYLE_BOLD, STYLE_UNDERLINE, STYLE_ITALIC })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Style {}
+
+    public static final String STYLE_BOLD = "bold";
+    public static final String STYLE_UNDERLINE = "underline";
+    public static final String STYLE_ITALIC = "italic";
 
     private final String text;
     @ColorInt
@@ -53,6 +65,8 @@ public class TextInfo implements JsonSerializable {
     private final float size;
     @Alignment
     private final String alignment;
+    @Style
+    private final List<String> styles;
 
     /**
      * Default constructor.
@@ -64,6 +78,7 @@ public class TextInfo implements JsonSerializable {
         this.color = builder.color;
         this.size = builder.size;
         this.alignment = builder.alignment;
+        this.styles = builder.styles;
     }
 
     @Override
@@ -73,6 +88,7 @@ public class TextInfo implements JsonSerializable {
                       .put(COLOR_KEY, ColorUtils.convertToString(color))
                       .put(SIZE_KEY, size)
                       .put(ALIGNMENT_KEY, alignment)
+                      .put(STYLE_KEY, JsonValue.wrapOpt(styles))
                       .build()
                       .toJsonValue();
     }
@@ -128,6 +144,30 @@ public class TextInfo implements JsonSerializable {
             }
         }
 
+        // Styles
+        if (content.containsKey(STYLE_KEY)) {
+            if (!content.opt(STYLE_KEY).isJsonList()) {
+                throw new JsonException("Style must be an array: " + content.opt(STYLE_KEY));
+            }
+
+            for (JsonValue value : content.opt(STYLE_KEY).optList()) {
+                switch (value.getString("").toLowerCase()) {
+                    case STYLE_BOLD:
+                        builder.addStyle(STYLE_BOLD);
+                        break;
+                    case STYLE_ITALIC:
+                        builder.addStyle(STYLE_ITALIC);
+                        break;
+                    case STYLE_UNDERLINE:
+                        builder.addStyle(STYLE_UNDERLINE);
+                        break;
+                    default:
+                        throw new JsonException("Invalid style: " + value);
+
+                }
+            }
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -174,6 +214,17 @@ public class TextInfo implements JsonSerializable {
         return alignment;
     }
 
+    /**
+     * Returns a list of text styles.
+     *
+     * @return The list of text styles.
+     */
+    @NonNull
+    @Style
+    public List<String> getStyles() {
+        return styles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -194,7 +245,10 @@ public class TextInfo implements JsonSerializable {
         if (text != null ? !text.equals(textInfo.text) : textInfo.text != null) {
             return false;
         }
-        return alignment != null ? alignment.equals(textInfo.alignment) : textInfo.alignment == null;
+        if (alignment != null ? !alignment.equals(textInfo.alignment) : textInfo.alignment != null) {
+            return false;
+        }
+        return styles != null ? styles.equals(textInfo.styles) : textInfo.styles == null;
 
     }
 
@@ -204,6 +258,7 @@ public class TextInfo implements JsonSerializable {
         result = 31 * result + color;
         result = 31 * result + (size != +0.0f ? Float.floatToIntBits(size) : 0);
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
+        result = 31 * result + (styles != null ? styles.hashCode() : 0);
         return result;
     }
 
@@ -229,8 +284,10 @@ public class TextInfo implements JsonSerializable {
         @ColorInt
         private int color = Color.BLACK;
         private float size = 14;
+
         @Alignment
         private String alignment = ALIGNMENT_LEFT;
+        private List<String> styles = new ArrayList<>();
 
         private Builder() {}
 
@@ -275,6 +332,19 @@ public class TextInfo implements JsonSerializable {
          */
         public Builder setAlignment(@NonNull @Alignment String alignment) {
             this.alignment = alignment;
+            return this;
+        }
+
+        /**
+         * Adds a style.
+         *
+         * @param style The text style.
+         * @return The builder instance.
+         */
+        public Builder addStyle(@NonNull @Style String style) {
+            if (!styles.contains(style)) {
+                styles.add(style);
+            }
             return this;
         }
 

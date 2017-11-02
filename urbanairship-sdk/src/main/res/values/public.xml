@@ -68,7 +68,7 @@
     <public name="ua_state_highlighted" type="attr"/>
 
     <!-- Styles -->
-    <public name="LandingPageStyle" type="style"/>
+    <public name="UrbanAirship.LandingPageActivity" type="style"/>
     <public name="InAppMessage.Banner.TextAppearance" type="style"/>
     <public name="InAppMessage.Banner" type="style"/>
     <public name="Widget.UrbanAirship.InAppMessage.Banner.Card" />

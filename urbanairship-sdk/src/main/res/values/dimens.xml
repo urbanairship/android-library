@@ -8,4 +8,7 @@
 
     <!-- The in-app message banner width -->
     <dimen name="ua_iam_banner_width">320dp</dimen>
+
+    <!-- Max in-app message banner width -1 = match_parent -->
+    <dimen name="ua_iam_banner_max_width">-1px</dimen>
 </resources>

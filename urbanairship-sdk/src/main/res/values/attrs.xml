@@ -27,10 +27,112 @@
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="TextAppearance">
+        <!-- Font path -->
+        <attr name="urbanAirshipFontPath" format="string"/>
+    </declare-styleable>
+
+    <!-- Theme attributes -->
+    <declare-styleable name="Theme">
+        <!-- Attribute to allow style override for in-app message banners -->
+        <attr name="inAppMessageBannerStyle" format="reference"/>
+
+        <!-- Attribute to allow style override for the Message Center -->
+        <attr name="messageCenterStyle" format="reference"/>
+    </declare-styleable>
+
+    <!-- Redefine CardView attributes so we can define them without causing missing
+    attribute errors if the consuming application does not depend on the card support library. -->
+    <declare-styleable name="CardView">
+        <!-- Background color for CardView. -->
+        <attr name="optCardBackgroundColor" format="color"/>
+        <!-- Corner radius for CardView. -->
+        <attr name="optCardCornerRadius" format="dimension"/>
+        <!-- Elevation for CardView. -->
+        <attr name="optCardElevation" format="dimension"/>
+    </declare-styleable>
+
+    <!-- Style attributes for in-app message banners -->
+    <declare-styleable name="BannerView">
+        <!-- The banner's font path -->
+        <attr name="bannerFontPath" format="string"/>
+
+        <!-- The banner's text appearance -->
+        <attr name="bannerTextAppearance" format="reference"/>
+
+        <!-- Primary color, used as the background color -->
+        <attr name="bannerPrimaryColor" format="color"/>
+
+        <!-- Secondary color, used for any text and icons -->
+        <attr name="bannerSecondaryColor" format="color"/>
+
+        <!-- The icon for the dismiss button -->
+        <attr name="bannerDismissButtonDrawable" format="reference"/>
+
+        <!-- If the dismiss button should be removed from the banner or not -->
+        <attr name="bannerNoDismissButton" format="boolean"/>
+
+        <!-- The banner action button text appearance -->
+        <attr name="bannerActionButtonTextAppearance" format="reference"/>
+    </declare-styleable>
+
+
+
+
+
+
+
+    <!-- Style attributes for Message Center  -->
+    <declare-styleable name="MessageCenter">
+        <!-- Message item's background -->
+        <attr name="messageCenterItemBackground" format="reference"/>
+
+        <!-- Message title text appearance -->
+        <attr name="messageCenterItemTitleTextAppearance" format="reference"/>
+
+        <!-- Message date text appearance -->
+        <attr name="messageCenterItemDateTextAppearance" format="reference"/>
+
+        <!-- Text appearance for the message not selected message when displaying the Message Center
+          in a split view -->
+        <attr name="messageNotSelectedTextAppearance" format="reference"/>
+
+        <!-- Text for the message not selected message when displaying the Message Center in a split view -->
+        <attr name="messageNotSelectedText" format="string"/>
+
+        <!-- Empty Message Center message text appearance -->
+        <attr name="messageCenterEmptyMessageTextAppearance" format="reference"/>
+
+        <!-- Empty Message Center message text -->
+        <attr name="messageCenterEmptyMessageText" format="string"/>
+
+        <!-- Message Center list divider color -->
+        <attr name="messageCenterDividerColor" format="color"/>
+
+        <!-- If the Message Center should display message icons or not -->
+        <attr name="messageCenterItemIconEnabled" format="boolean"/>
+
+        <!-- Icon placeholder -->
+        <attr name="messageCenterItemIconPlaceholder" format="reference"/>
+
+    </declare-styleable>
+
+
+    <!-- Style attributes for view states  -->
+    <declare-styleable name="States">
+        <!-- The list view item is highlighted when needing to differentiate from activation -->
+        <attr name="ua_state_highlighted" format="boolean"/>
+    </declare-styleable>
 
     <declare-styleable name="UrbanAirshipActionButton">
         <attr name="android:icon"/>
         <attr name="android:label" />
+    </declare-styleable>
+
+
+    <declare-styleable name="UrbanAirshipInAppButtonLayout">
+        <attr name="buttonStackedSpaceHeight" format="dimension" />
+        <attr name="buttonSeparatedSpaceWidth" format="dimension" />
     </declare-styleable>
 
 

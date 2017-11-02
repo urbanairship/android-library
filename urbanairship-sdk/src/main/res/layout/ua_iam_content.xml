@@ -35,6 +35,7 @@
         style="@style/Widget.UrbanAirship.InAppMessage.Banner.Divider"/>
 
     <LinearLayout
+        android:orientation="horizontal"
         android:id="@+id/action_buttons"
         style="@style/Widget.UrbanAirship.InAppMessage.Banner.ActionButtonContainer"/>
 

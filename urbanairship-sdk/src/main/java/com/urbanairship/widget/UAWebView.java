@@ -79,7 +79,7 @@ public class UAWebView extends WebView {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      * @param defResStyle A resource identifier of a style resource that supplies default values for
-     * the view, used only if defStyle is 0 or can not be found in the theme. Can be 0 to not
+     * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -99,7 +99,7 @@ public class UAWebView extends WebView {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      * @param defResStyle A resource identifier of a style resource that supplies default values for
-     * the view, used only if defStyle is 0 or can not be found in the theme. Can be 0 to not
+     * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
     @SuppressLint({ "NewApi", "SetJavaScriptEnabled" })

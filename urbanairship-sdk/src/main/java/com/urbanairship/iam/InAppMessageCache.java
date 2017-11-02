@@ -52,7 +52,7 @@ public class InAppMessageCache implements Parcelable {
      * @param in The parcel.
      */
     private InAppMessageCache(Parcel in) {
-        assets = in.readBundle();
+        assets = in.readBundle(getClass().getClassLoader());
         directory = new File(in.readString());
     }
 

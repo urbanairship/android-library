@@ -1,46 +1,49 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.push.iam.view;
+package com.urbanairship.iam.banner;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
-import com.urbanairship.Logger;
+import com.urbanairship.R;
 
 /**
- * The SwipeDismissViewLayout allows its children to be dismissed from a horizontal swipe or drag. The
- * layout will notify the listener when a child view is being dismissed or dragged. A dismissed view
- * will be settled at the edge of the SwipeDismissViewLayout view. After the view is settled, it
- * will call the listener's {@link SwipeDismissViewLayout.Listener#onDismissed}
- * and be removed from the SwipeDismissViewLayout.
+ * The BannerDismissLayout allows dismissing a banner with a vertical swipe gesture.
  */
-public class SwipeDismissViewLayout extends FrameLayout {
+public class BannerDismissLayout extends FrameLayout {
 
     /**
      * The percent of a view's width it must be dragged before its considered dismissible when the velocity
      * is less then the {@link #getMinFlingVelocity()}.
      */
-    private static final float IDLE_MIN_DRAG_PERCENT = .75f;
+    private static final float IDLE_MIN_DRAG_PERCENT = .4f;
 
     /**
      * The percent of a view's width it must be dragged before its considered dismissible when the velocity
      * is greater then the {@link #getMinFlingVelocity()}.
      */
     private static final float FLING_MIN_DRAG_PERCENT = .1f;
+
+
+    private static final int DEFAULT_OVER_DRAG_DP = 24;
+
+    private float overDragAmount;
+
+    @BannerDisplayContent.Placement
+    private String placement = BannerDisplayContent.PLACEMENT_BOTTOM;
+
 
     /**
      * Interface to listen for dismissing the message view.
@@ -70,21 +73,10 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * SwipeDismissViewLayout Constructor
      *
      * @param context A Context object used to access application assets.
-     */
-    public SwipeDismissViewLayout(@NonNull Context context) {
-        super(context);
-        init(context);
-    }
-
-    /**
-     * SwipeDismissViewLayout Constructor
-     *
-     * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
+    public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, 0);
     }
 
     /**
@@ -94,8 +86,8 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
+        this(context, attrs, defStyle, 0);
         init(context);
     }
 
@@ -109,26 +101,21 @@ public class SwipeDismissViewLayout extends FrameLayout {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public SwipeDismissViewLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
+    public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context);
     }
 
-    /**
-     * Performs any initialization steps.
-     *
-     * @param context The application context.
-     */
-    private void init(@NonNull Context context) {
+    private void init(Context context) {
         if (isInEditMode()) {
             return;
         }
 
+        dragHelper = ViewDragHelper.create(this, new ViewDragCallback());
+
         ViewConfiguration vc = ViewConfiguration.get(context);
         minFlingVelocity = vc.getScaledMinimumFlingVelocity();
-
-        dragHelper = ViewDragHelper.create(this, new ViewDragCallback());
+        overDragAmount = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_OVER_DRAG_DP, context.getResources().getDisplayMetrics());
     }
 
     /**
@@ -264,18 +251,18 @@ public class SwipeDismissViewLayout extends FrameLayout {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (dragHelper.shouldInterceptTouchEvent(event) || super.onInterceptTouchEvent(event)) {
-            Logger.error("onInterceptTouchEvent " + event);
             return true;
-        } else if (dragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE && MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_MOVE) {
+        }
 
+        if (dragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE && event.getActionMasked() == MotionEvent.ACTION_MOVE) {
             /*
              * Check if the touch exceeded the touch slop. If so, check if we can drag and interrupt
              * any children. This breaks any children that are horizontally scrollable, unless they
              * prevent the parent view from intercepting the event.
              */
-            if (dragHelper.checkTouchSlop(ViewDragHelper.DIRECTION_HORIZONTAL)) {
+            if (dragHelper.checkTouchSlop(ViewDragHelper.DIRECTION_VERTICAL)) {
                 View child = dragHelper.findTopChildUnder((int) event.getX(), (int) event.getY());
-                if (child != null && !ViewCompat.canScrollHorizontally(child, dragHelper.getTouchSlop())) {
+                if (child != null && !child.canScrollVertically(dragHelper.getTouchSlop())) {
                     dragHelper.captureChildView(child, event.getPointerId(0));
                     return dragHelper.getViewDragState() == ViewDragHelper.STATE_DRAGGING;
                 }
@@ -288,7 +275,23 @@ public class SwipeDismissViewLayout extends FrameLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         dragHelper.processTouchEvent(event);
+
+        if (dragHelper.getCapturedView() == null) {
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                if (dragHelper.checkTouchSlop(ViewDragHelper.DIRECTION_VERTICAL)) {
+                    View child = dragHelper.findTopChildUnder((int) event.getX(), (int) event.getY());
+                    if (child != null && !child.canScrollVertically(dragHelper.getTouchSlop())) {
+                        dragHelper.captureChildView(child, event.getPointerId(0));
+                    }
+                }
+            }
+        }
+
         return dragHelper.getCapturedView() != null;
+    }
+
+    public void setPlacement(@BannerDisplayContent.Placement @NonNull String placement) {
+        this.placement = placement;
     }
 
     /**
@@ -308,12 +311,19 @@ public class SwipeDismissViewLayout extends FrameLayout {
 
         @Override
         public int clampViewPositionHorizontal(View child, int left, int dx) {
-            return left;
+            return child.getLeft();
         }
 
         @Override
         public int clampViewPositionVertical(View child, int top, int dy) {
-            return child.getTop();
+            switch (placement) {
+                case BannerDisplayContent.PLACEMENT_TOP:
+                    return Math.round(Math.min(top, startTop + overDragAmount));
+
+                case BannerDisplayContent.PLACEMENT_BOTTOM:
+                default:
+                    return Math.round(Math.max(top, startTop - overDragAmount));
+            }
         }
 
         @Override
@@ -328,14 +338,13 @@ public class SwipeDismissViewLayout extends FrameLayout {
         @Override
         @SuppressLint("NewApi")
         public void onViewPositionChanged(View view, int left, int top, int dx, int dy) {
-            int range = getWidth() / 2;
-            int moved = Math.abs(left - startLeft);
+            int range = getHeight();
+            int moved = Math.abs(top - startTop);
 
             if (range > 0) {
                 dragPercent = moved / (float) range;
             }
 
-            view.setAlpha(1 - dragPercent);
             invalidate();
         }
 
@@ -366,21 +375,17 @@ public class SwipeDismissViewLayout extends FrameLayout {
 
         @Override
         public void onViewReleased(final View view, float xv, float yv) {
-            boolean isSwipeLeft;
-            float absXv = Math.abs(xv);
 
-            if (absXv > minFlingVelocity) {
-                isSwipeLeft = xv > 0;
-            } else {
-                isSwipeLeft =  startLeft < view.getLeft();
+            float absYv = Math.abs(yv);
+            if (BannerDisplayContent.PLACEMENT_TOP.equals(placement) ?  startTop >= view.getTop() : startTop <= view.getTop()) {
+                isDismissed = dragPercent >= IDLE_MIN_DRAG_PERCENT ||
+                        absYv > minFlingVelocity ||
+                        dragPercent > FLING_MIN_DRAG_PERCENT;
             }
 
-            isDismissed = (dragPercent >= IDLE_MIN_DRAG_PERCENT) ||
-                    (Math.abs(xv) > minFlingVelocity && dragPercent > FLING_MIN_DRAG_PERCENT);
-
             if (isDismissed) {
-                int offSet = isSwipeLeft ? -view.getWidth() : view.getWidth();
-                dragHelper.settleCapturedViewAt(startLeft - offSet, startTop);
+                int top = BannerDisplayContent.PLACEMENT_TOP.equals(placement) ?  - view.getHeight() : getHeight() + view.getHeight();
+                dragHelper.settleCapturedViewAt(startLeft, top);
             } else {
                 dragHelper.settleCapturedViewAt(startLeft, startTop);
             }

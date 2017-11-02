@@ -70,7 +70,7 @@ public class MessageItemView extends FrameLayout {
      * the view. Can be 0 to not look for defaults.
      * @param defStyleRes A resource identifier of a style resource that
      * supplies default values for the view, used only if
-     * defStyleAttr is 0 or can not be found in the theme. Can be 0
+     * defStyleAttr is 0 or cannot be found in the theme. Can be 0
      * to not look for defaults.
      */
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
