@@ -176,7 +176,7 @@ task javadoc(dependsOn: 'javadocRelease')
 def getDexMethodCount() {
     try {
         def dx = "${android.getSdkDirectory()}/build-tools/${android.getBuildToolsRevision()}/dx"
-        def jar = "${project.buildDir}/intermediates/bundles/default/classes.jar"
+        def jar = "${project.buildDir}/intermediates/bundles/release/classes.jar"
         def output = new ByteArrayOutputStream()
         exec {
             commandLine "../tools/dex-method-count.sh", dx, jar

@@ -62,5 +62,5 @@ dependencies {
 
     androidTestImplementation "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
     androidTestImplementation "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
-    androidTestImplementation 'com.android.support:design:26.1.0'
+    androidTestImplementation "com.android.support:design:${airshipProperties.supportLibVersion}"
 }
