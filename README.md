@@ -31,7 +31,7 @@ Include Urban Airship into the build.gradle file:
      compile 'com.google.android.gms:play-services-gcm:11.4.0'
 
      // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:26.1.0'
+     compile 'com.android.support:cardview-v7:26.0.2'
 
      // Recommended for location services
      compile 'com.google.android.gms:play-services-location:11.4.0'

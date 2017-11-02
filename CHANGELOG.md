@@ -3,6 +3,18 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.4 - October 24, 2017
+================================
+
+Minor change to the dependencies to depend on 26.0.2 instead of 26.1.0 of the support libraries
+to prevent pulling in the architecture components. Applications that want to use 26.1.0 can continue
+to do so by defining 26.1.0 in the app's build.gradle file. The SDK is still fully compatible with 26.1.0.
+
+Changes
+-------
+- Change support library version to 26.0.2.
+
+
 Version 8.9.3 - October 17, 2017
 ================================
 
