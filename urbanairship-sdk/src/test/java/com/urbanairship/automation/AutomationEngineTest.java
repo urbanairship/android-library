@@ -10,11 +10,8 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
-import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
-import com.urbanairship.reactive.Observable;
-import com.urbanairship.reactive.Subscriber;
 
 import junit.framework.Assert;
 
@@ -37,6 +34,9 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class AutomationEngineTest extends BaseTestCase {
 
@@ -348,6 +348,38 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify the schedules were executed in ascending priority order
         assertEquals(driver.priorityList, expectedExecutionOrder);
+    }
+
+
+    @Test
+    public void testExpiryListener() throws Exception {
+        final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
+                                        .setCountGoal(1)
+                                        .setEventName("name")
+                                        .build();
+
+        final ActionScheduleInfo expiredScheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(trigger)
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setEnd(System.currentTimeMillis() - 1)
+                                                                  .build();
+
+        AutomationEngine.ScheduleExpiryListener<ActionSchedule> expiryListener = mock(AutomationEngine.ScheduleExpiryListener.class);
+        automationEngine.setScheduleExpiryListener(expiryListener);
+
+        // Schedule it
+        automationEngine.schedule(expiredScheduleInfo);
+        runLooperTasks();
+
+        // Trigger the schedules
+        new CustomEvent.Builder("name")
+                .create()
+                .track();
+
+        runLooperTasks();
+
+        // Verify the listener was called
+        verify(expiryListener).onScheduleExpired(any(ActionSchedule.class));
     }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {

@@ -17,7 +17,7 @@ import com.urbanairship.UAirship;
  * using a view, request the display lock when the attached activity visibility changes to
  * VISIBLE in onWindowVisibilityChanged.
  * <p>
- * When the in-app message is finished, call {@link #finished()}. This will finish the display of an
+ * When the in-app message is finished, call {@link #finished(ResolutionInfo)}. This will finish the display of an
  * in-app message and allow it to be triggered again by one of the in-app message triggers. If the
  * hosting Activity finishes before the in-app message is able to be displayed, call {@link #continueOnNextActivity()}
  * to have the in-app message redisplay on the next activity.
@@ -74,9 +74,11 @@ public class DisplayHandler implements Parcelable {
      * Called when the in-app message is finished displaying. After calling this method, the in-app
      * message should immediately dismiss its view to prevent the current activity from redisplaying
      * the in-app message if still on the back stack.
+     *
+     * @param resolutionInfo Info on why the message has finished.
      */
-    public void finished() {
-        UAirship.shared().getInAppMessagingManager().messageFinished(scheduleId);
+    public void finished(@NonNull ResolutionInfo resolutionInfo) {
+        UAirship.shared().getInAppMessagingManager().messageFinished(scheduleId, resolutionInfo);
     }
 
     /**

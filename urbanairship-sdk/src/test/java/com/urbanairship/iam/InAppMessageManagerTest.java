@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -44,6 +45,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private InAppMessageDriver mockDriver;
     private AutomationEngine<InAppMessageSchedule> mockEngine;
     private InAppMessageDriver.Callbacks driverCallbacks;
+    private Analytics mockAnalytics;
 
     private InAppMessageSchedule schedule;
 
@@ -55,6 +57,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         activityMonitor = new TestActivityMonitor();
         mockDriver = mock(InAppMessageDriver.class);
         mockAdapter = mock(InAppMessageAdapter.class);
+        mockAnalytics = mock(Analytics.class);
         mainLooper = Shadows.shadowOf(Looper.getMainLooper());
 
         doAnswer(new Answer<Void>() {
@@ -67,7 +70,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         mockEngine = mock(AutomationEngine.class);
 
-        manager = new InAppMessageManager(activityMonitor, new Executor() {
+
+        manager = new InAppMessageManager(mockAnalytics, activityMonitor, new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
@@ -133,7 +137,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
 
         // Finish displaying the in-app message
-        manager.messageFinished(schedule.getId());
+        manager.messageFinished(schedule.getId(), ResolutionInfo.dismissed(100));
+        verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
 
         // Verify schedules are still not displayed due to the display interval
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
@@ -167,6 +172,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Display it
         driverCallbacks.onDisplay(schedule.getId());
+
+        verify(mockAnalytics).addEvent(any(DisplayEvent.class));
 
         verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
     }

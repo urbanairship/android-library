@@ -141,10 +141,12 @@ public class Automation extends AirshipComponent {
      * @param group The schedule group.
      * @return A pending result.
      */
-    public PendingResult<Void> cancelGroup(@NonNull final String group) {
+    public PendingResult<Boolean> cancelGroup(@NonNull final String group) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
-            return new PendingResult();
+            PendingResult<Boolean> pendingResult = new PendingResult<>();
+            pendingResult.setResult(false);
+            return pendingResult;
         }
 
         return automationEngine.cancelGroup(group);

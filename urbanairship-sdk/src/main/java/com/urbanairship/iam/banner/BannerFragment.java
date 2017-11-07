@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.AnimatorRes;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.OnApplyWindowInsetsListener;
 import android.support.v4.view.ViewCompat;
@@ -29,6 +30,7 @@ import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageCache;
+import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppTextView;
 import com.urbanairship.json.JsonValue;
@@ -100,12 +102,12 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         }
 
         this.displayContent = inAppMessage.getDisplayContent();
-        long duration = displayContent.getDuration();
+        final long duration = displayContent.getDuration();
         this.timer = new Timer(duration) {
             @Override
             protected void onFinish() {
                 if (isResumed()) {
-                    dismiss(true);
+                    dismiss(true, ResolutionInfo.timedOut(duration));
                 }
             }
         };
@@ -279,14 +281,15 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
      * Dismisses the fragment.
      *
      * @param animate {@code true} if the fragment should animate out, otherwise {@code false}.
+     * @param resolutionInfo The resolution info.
      */
-    public void dismiss(boolean animate) {
+    public void dismiss(boolean animate, @NonNull ResolutionInfo resolutionInfo) {
         if (isDismissed) {
             return;
         }
 
         if (displayHandler != null) {
-            displayHandler.finished();
+            displayHandler.finished(resolutionInfo);
         }
 
         timer.stop();
@@ -297,7 +300,6 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         isDismissed = true;
         removeSelf(animate);
-
     }
 
     /**
@@ -321,7 +323,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
     @Override
     public void onButtonClicked(View view, ButtonInfo buttonInfo) {
         runActions(buttonInfo.getActions());
-        dismiss(true);
+        dismiss(true, ResolutionInfo.buttonPressed(buttonInfo, timer.getRunTime()));
 
         if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
             UAirship.shared().getInAppMessagingManager().cancelMessage(inAppMessage.getId());
@@ -329,7 +331,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
     }
 
     public void onDismissed(View view) {
-        dismiss(false);
+        dismiss(false, ResolutionInfo.dismissed(timer.getRunTime()));
     }
 
     @Override
@@ -473,6 +475,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
     /**
      * Gets the banner content layout for the banner's template.
+     *
      * @return The banner template layout.
      */
     @LayoutRes

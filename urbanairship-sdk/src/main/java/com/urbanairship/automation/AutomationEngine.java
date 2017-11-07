@@ -62,6 +62,7 @@ public class AutomationEngine<T extends Schedule> {
     private boolean isStarted;
     private Handler backgroundHandler;
     private Handler mainHandler;
+    private ScheduleExpiryListener<T> expiryListener;
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -114,6 +115,18 @@ public class AutomationEngine<T extends Schedule> {
             onScheduleConditionsChanged();
         }
     };
+
+    /**
+     * Expired schedule listener.
+     */
+    public interface ScheduleExpiryListener<T extends Schedule> {
+        /**
+         * Called when a schedule is expired.
+         *
+         * @param schedule The expired schedule.
+         */
+        void onScheduleExpired(T schedule);
+    }
 
     /**
      * Default constructor.
@@ -264,15 +277,14 @@ public class AutomationEngine<T extends Schedule> {
      * @param group The schedule group.
      * @return A pending result.
      */
-    public PendingResult<Void> cancelGroup(@NonNull final String group) {
-        final PendingResult<Void> pendingResult = new PendingResult<>();
+    public PendingResult<Boolean> cancelGroup(@NonNull final String group) {
+        final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                dataManager.deleteGroup(group);
                 cancelGroupDelays(group);
-                pendingResult.setResult(null);
+                pendingResult.setResult(dataManager.deleteGroup(group));
             }
         });
 
@@ -382,6 +394,17 @@ public class AutomationEngine<T extends Schedule> {
         });
 
         return pendingResult;
+    }
+
+    /**
+     * Sets the schedule expiry listener.
+     *
+     * @param expiryListener The listener.
+     */
+    public void setScheduleExpiryListener(ScheduleExpiryListener<T> expiryListener) {
+        synchronized (this) {
+            this.expiryListener = expiryListener;
+        }
     }
 
     /**
@@ -736,14 +759,16 @@ public class AutomationEngine<T extends Schedule> {
             return new HashSet<>();
         }
 
+        final HashSet<ScheduleEntry> expiredScheduleEntries = new HashSet<>();
         final HashSet<String> schedulesToDelete = new HashSet<>();
-        HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
+        final HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
 
         sortSchedulesByPriority(scheduleEntries);
 
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
             // Delete expired schedules.
             if (scheduleEntry.end > 0 && scheduleEntry.end < System.currentTimeMillis()) {
+                expiredScheduleEntries.add(scheduleEntry);
                 schedulesToDelete.add(scheduleEntry.scheduleId);
                 continue;
             }
@@ -786,7 +811,7 @@ public class AutomationEngine<T extends Schedule> {
                             }
                         } catch (ParseScheduleException e) {
                             Logger.error("Unable to create schedule.", e);
-                            schedulesToDelete.add(scheduleEntry.scheduleId);
+                            this.exception = e;
                         }
                     }
                     latch.countDown();
@@ -805,7 +830,9 @@ public class AutomationEngine<T extends Schedule> {
                 Logger.error("Failed to execute schedule. ", ex);
             }
 
-            if (runnable.result) {
+            if (runnable.exception != null) {
+                schedulesToDelete.add(scheduleEntry.scheduleId);
+            } else if (runnable.result) {
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
                 schedulesToUpdate.add(scheduleEntry);
             } else if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_IDLE) {
@@ -820,10 +847,38 @@ public class AutomationEngine<T extends Schedule> {
             }
         }
 
+        notifyExpiredSchedules(expiredScheduleEntries);
+
         dataManager.saveSchedules(schedulesToUpdate);
         dataManager.deleteSchedules(schedulesToDelete);
 
         return schedulesToDelete;
+    }
+
+    /**
+     * Helper method to notify the expiry listener for expired schedule entries.
+     *
+     * @param expiredScheduleEntries Expired schedule entries.
+     */
+    @WorkerThread
+    private void notifyExpiredSchedules(@NonNull Collection<ScheduleEntry> expiredScheduleEntries) {
+        final List<T> schedules = convertEntries(expiredScheduleEntries);
+        if (schedules.isEmpty()) {
+            return;
+        }
+
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (T schedule : schedules) {
+                    synchronized (this) {
+                        if (expiryListener != null) {
+                            expiryListener.onScheduleExpired(schedule);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -884,7 +939,7 @@ public class AutomationEngine<T extends Schedule> {
      * @param entries The list of entries to convert.
      * @return The list of converted entries.
      */
-    private List<T> convertEntries(List<ScheduleEntry> entries) {
+    private List<T> convertEntries(Collection<ScheduleEntry> entries) {
         List<T> schedules = new ArrayList<>();
         for (ScheduleEntry entry : entries) {
             try {
@@ -948,6 +1003,7 @@ public class AutomationEngine<T extends Schedule> {
         final String scheduleId;
         final String group;
         ReturnType result;
+        Exception exception;
 
         ScheduleRunnable(String scheduleId, String group) {
             this.scheduleId = scheduleId;

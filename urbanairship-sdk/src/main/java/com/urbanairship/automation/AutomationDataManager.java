@@ -359,11 +359,14 @@ public class AutomationDataManager extends DataManager {
      * Deletes schedules given a group.
      *
      * @param group The schedule group.
+     * @return {@code true} if the group was deleted, otherwise {@code false}.
      */
-    void deleteGroup(String group) {
+    boolean deleteGroup(String group) {
         if (delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " = ?", new String[] { group }) < 0) {
             Logger.warn("AutomationDataManager - failed to delete schedules for group " + group);
+            return false;
         }
+        return true;
     }
 
     /**
