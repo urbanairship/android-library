@@ -383,6 +383,11 @@ public class UAirship {
                 readyCallback.onAirshipReady(sharedAirship);
             }
 
+            // Notify each component that airship is ready
+            for (AirshipComponent component : sharedAirship.getComponents()) {
+                component.onAirshipReady(sharedAirship);
+            }
+
             // Fire any pendingAirshipRequests
             synchronized (pendingAirshipRequests) {
                 queuePendingAirshipRequests = false;

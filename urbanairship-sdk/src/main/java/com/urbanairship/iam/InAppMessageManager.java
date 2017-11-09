@@ -59,6 +59,7 @@ public class InAppMessageManager extends AirshipComponent {
     private Stack<String> carryOverScheduleIds = new Stack<>();
     private Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private boolean isDisplayedLocked = false;
+    private boolean isAirshipReady = false;
 
     private final Executor executor;
     private final ActivityMonitor activityMonitor;
@@ -138,6 +139,10 @@ public class InAppMessageManager extends AirshipComponent {
         this.driver.setCallbacks(new InAppMessageDriver.Callbacks() {
             @Override
             public boolean isMessageReady(String scheduleId, InAppMessage message) {
+                if (!isAirshipReady) {
+                    return false;
+                }
+
                 if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
                     cancelSchedule(scheduleId);
                     adapterWrappers.remove(scheduleId);
@@ -242,6 +247,17 @@ public class InAppMessageManager extends AirshipComponent {
         });
 
         automationEngine.start();
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Override
+    public void onAirshipReady(UAirship airship) {
+        super.onAirshipReady(airship);
+        isAirshipReady = true;
+        automationEngine.checkPendingSchedules();
     }
 
     private void prepareMessage(final String scheduleId) {

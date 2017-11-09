@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
@@ -28,6 +29,7 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -95,6 +97,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
         });
 
         manager.init();
+        manager.onAirshipReady(UAirship.shared());
+
     }
 
     @Test
@@ -153,6 +157,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testScheduleDataFetched() {
+        clearInvocations(mockEngine);
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         verify(mockEngine).checkPendingSchedules();

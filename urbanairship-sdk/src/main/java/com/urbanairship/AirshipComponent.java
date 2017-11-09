@@ -67,4 +67,13 @@ public abstract class AirshipComponent {
         return JobInfo.JOB_FINISHED;
     }
 
+    /**
+     * Called when airship instance is ready.
+     *
+     * @param airship The airship instance.
+     * @hide
+     */
+    @WorkerThread
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected void onAirshipReady(UAirship airship) {}
 }
