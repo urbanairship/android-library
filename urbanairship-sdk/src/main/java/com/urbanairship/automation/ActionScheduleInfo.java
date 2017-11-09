@@ -43,6 +43,16 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      */
     public static final long TRIGGER_LIMIT = 10;
 
+    // JSON KEYS
+    private static final String ACTIONS_KEY = "actions";
+    private static final String LIMIT_KEY = "limit";
+    private static final String PRIORITY_KEY = "priority";
+    private static final String GROUP_KEY = "group";
+    private static final String END_KEY = "end";
+    private static final String START_KEY = "start";
+    private static final String TRIGGERS_KEY = "triggers";
+    private static final String DELAY_KEY = "delay";
+
     private final List<Trigger> triggers;
     private final Map<String, JsonValue> actions;
     private final int limit;
@@ -186,6 +196,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * - "limit": Optional, defaults to 1. Number of times to trigger the actions payload before cancelling the schedule.
      * - "priority": Optional, defaults to 0. In case of conflict, schedules will be executed by priority in ascending order.
      * - "actions": Required. Actions payload to run when one or more of the triggers meets its goal.
+     * - "delay": Optional {@link ScheduleDelay}.
      * </pre>
      *
      * @param value The schedule.
@@ -196,25 +207,25 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         JsonMap jsonMap = value.optMap();
 
         ActionScheduleInfo.Builder builder = newBuilder()
-                .addAllActions(jsonMap.opt("actions").optMap())
-                .setLimit(jsonMap.opt("limit").getInt(1))
-                .setPriority(jsonMap.opt("priority").getInt(0))
-                .setGroup(jsonMap.opt("group").getString(null));
+                .addAllActions(jsonMap.opt(ACTIONS_KEY).optMap())
+                .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0))
+                .setGroup(jsonMap.opt(GROUP_KEY).getString(null));
 
-        if (jsonMap.containsKey("end")) {
-            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt("end").getString(), -1));
+        if (jsonMap.containsKey(END_KEY)) {
+            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString(), -1));
         }
 
-        if (jsonMap.containsKey("start")) {
-            builder.setStart(DateUtils.parseIso8601(jsonMap.opt("start").getString(), -1));
+        if (jsonMap.containsKey(START_KEY)) {
+            builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString(), -1));
         }
 
-        for (JsonValue triggerJson : jsonMap.opt("triggers").optList()) {
+        for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
             builder.addTrigger(Trigger.parseJson(triggerJson));
         }
 
-        if (jsonMap.containsKey("delay")) {
-            builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt("delay")));
+        if (jsonMap.containsKey(DELAY_KEY)) {
+            builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt(DELAY_KEY)));
         }
 
         try {
@@ -223,7 +234,6 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
             throw new JsonException("Invalid schedule info", e);
         }
     }
-
 
     /**
      * Builder class.

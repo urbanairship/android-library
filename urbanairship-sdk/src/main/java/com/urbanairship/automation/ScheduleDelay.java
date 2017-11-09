@@ -21,9 +21,20 @@ import java.util.List;
  */
 public class ScheduleDelay implements Parcelable {
 
-    @IntDef({APP_STATE_ANY, APP_STATE_FOREGROUND, APP_STATE_BACKGROUND})
+    public static final String SECONDS_KEY = "seconds";
+
+    // JSON Keys
+    private static final String APP_STATE_KEY = "app_state";
+    private static final String APP_STATE_ANY_NAME = "any";
+    private static final String APP_STATE_FOREGROUND_NAME = "foreground";
+    private static final String APP_STATE_BACKGROUND_NAME = "background";
+    private static final String SCREEN_KEY = "screen";
+    private static final String REGION_ID_KEY = "region_id";
+    private static final String CANCELLATION_TRIGGERS_KEY = "cancellation_triggers";
+
+    @IntDef({ APP_STATE_ANY, APP_STATE_FOREGROUND, APP_STATE_BACKGROUND})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface AppState {};
+    public @interface AppState {}
 
     /**
      * Type representing either the foreground or background app state.
@@ -182,18 +193,18 @@ public class ScheduleDelay implements Parcelable {
         JsonMap jsonMap = value.optMap();
 
         Builder builder = ScheduleDelay.newBuilder()
-                .setSeconds(jsonMap.opt("seconds").getLong(0));
+                .setSeconds(jsonMap.opt(SECONDS_KEY).getLong(0));
 
         @AppState int appState;
-        String appStateString = jsonMap.opt("app_state").getString("any").toLowerCase();
+        String appStateString = jsonMap.opt(APP_STATE_KEY).getString(APP_STATE_ANY_NAME).toLowerCase();
         switch (appStateString) {
-            case "any":
+            case APP_STATE_ANY_NAME:
                 appState = APP_STATE_ANY;
                 break;
-            case "foreground":
+            case APP_STATE_FOREGROUND_NAME:
                 appState = APP_STATE_FOREGROUND;
                 break;
-            case "background":
+            case APP_STATE_BACKGROUND_NAME:
                 appState = APP_STATE_BACKGROUND;
                 break;
             default:
@@ -201,8 +212,8 @@ public class ScheduleDelay implements Parcelable {
         }
         builder.setAppState(appState);
 
-        if (jsonMap.containsKey("screen")) {
-            JsonValue screenValue = jsonMap.opt("screen");
+        if (jsonMap.containsKey(SCREEN_KEY)) {
+            JsonValue screenValue = jsonMap.opt(SCREEN_KEY);
             if (screenValue.isString()) {
                 String screenString = screenValue.getString();
                 builder.setScreen(screenString);
@@ -211,11 +222,11 @@ public class ScheduleDelay implements Parcelable {
             }
         }
 
-        if (jsonMap.containsKey("region_id")) {
-            builder.setRegionId(jsonMap.opt("region_id").getString(""));
+        if (jsonMap.containsKey(REGION_ID_KEY)) {
+            builder.setRegionId(jsonMap.opt(REGION_ID_KEY).getString(""));
         }
 
-        for (JsonValue triggerJson : jsonMap.opt("cancellation_triggers").optList()) {
+        for (JsonValue triggerJson : jsonMap.opt(CANCELLATION_TRIGGERS_KEY).optList()) {
             builder.addCancellationTrigger(Trigger.parseJson(triggerJson));
         }
 

@@ -22,7 +22,21 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class Trigger implements Parcelable {
 
-    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION})
+    // JSON
+    private static final String GOAL_KEY = "goal";
+    private static final String TYPE_KEY = "type";
+    private static final String PREDICATE_KEY = "predicate";
+    private static final String CUSTOM_EVENT_COUNT_NAME = "custom_event_count";
+    private static final String CUSTOM_EVENT_VALUE_NAME = "custom_event_value";
+    private static final String FOREGROUND_NAME = "foreground";
+    private static final String BACKGROUND_NAME = "background";
+    private static final String APP_INIT_NAME = "app_init";
+    private static final String SCREEN_NAME = "screen";
+    private static final String REGION_ENTER_NAME = "region_enter";
+    private static final String REGION_EXIT_NAME = "region_exit";
+    private static final String ACTIVE_SESSION_NAME = "active_session";
+
+    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -208,8 +222,7 @@ public class Trigger implements Parcelable {
      * <pre>
      * - "goal": Required. The trigger's goal. Either the count of event occurrences or the aggregate value of custom event values ("custom_event_value").
      * - "predicate": Optional. Json predicate as defined by {@link JsonPredicate} scheme.
-     * - "type": Required. Either "custom_event_value", "custom_event_count", "foreground", "background",
-     *           "region_enter", "region_exit", or "screen".
+     * - "type": Required. The trigger type.
      * </pre>
      *
      * @param value The trigger JSON.
@@ -220,47 +233,47 @@ public class Trigger implements Parcelable {
         JsonMap jsonMap = value.optMap();
 
         @TriggerType int type;
-        JsonPredicate predicate = jsonMap.containsKey("predicate") ? JsonPredicate.parse(jsonMap.opt("predicate")) : null;
-        double goal = jsonMap.opt("goal").getDouble(-1);
+        JsonPredicate predicate = jsonMap.containsKey(PREDICATE_KEY) ? JsonPredicate.parse(jsonMap.opt(PREDICATE_KEY)) : null;
+        double goal = jsonMap.opt(GOAL_KEY).getDouble(-1);
         if (!(goal > 0)) {
             throw new JsonException("Trigger goal must be defined and greater than 0.");
         }
 
-        String typeString = jsonMap.opt("type").getString("").toLowerCase();
+        String typeString = jsonMap.opt(TYPE_KEY).getString("").toLowerCase();
         switch (typeString) {
-            case "custom_event_count":
+            case CUSTOM_EVENT_COUNT_NAME:
                 type = CUSTOM_EVENT_COUNT;
                 break;
 
-            case "custom_event_value":
+            case CUSTOM_EVENT_VALUE_NAME:
                 type = CUSTOM_EVENT_VALUE;
                 break;
 
-            case "foreground":
+            case FOREGROUND_NAME:
                 type = LIFE_CYCLE_FOREGROUND;
                 break;
 
-            case "background":
+            case BACKGROUND_NAME:
                 type = LIFE_CYCLE_BACKGROUND;
                 break;
 
-            case "app_init":
+            case APP_INIT_NAME:
                 type = LIFE_CYCLE_APP_INIT;
                 break;
 
-            case "screen":
+            case SCREEN_NAME:
                 type = SCREEN_VIEW;
                 break;
 
-            case "region_enter":
+            case REGION_ENTER_NAME:
                 type = REGION_ENTER;
                 break;
 
-            case "region_exit":
+            case REGION_EXIT_NAME:
                 type = REGION_EXIT;
                 break;
 
-            case "active_session":
+            case ACTIVE_SESSION_NAME:
                 type = ACTIVE_SESSION;
                 break;
 
