@@ -10,6 +10,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * {@link ValueMatcher} tests.
+ */
 public class ValueMatcherTest extends BaseTestCase {
 
     @Test
@@ -94,7 +97,15 @@ public class ValueMatcherTest extends BaseTestCase {
     }
 
     @Test
-    public void testParse() {
+    public void testVersionMatcher() {
+        ValueMatcher matcher = ValueMatcher.newVersionMatcher("1.+");
+
+        assertTrue(matcher.apply(JsonValue.wrap("1.2.4")));
+        assertFalse(matcher.apply(JsonValue.wrap("2.0.0")));
+    }
+
+    @Test
+    public void testParse() throws JsonException {
         Double min = 5.0;
         Double max = 7.0;
         JsonValue json = JsonMap.newBuilder()
@@ -121,6 +132,14 @@ public class ValueMatcherTest extends BaseTestCase {
                       .toJsonValue();
 
         matcher = ValueMatcher.newValueMatcher(JsonValue.wrap("string"));
+        assertEquals(matcher, ValueMatcher.parse(json));
+
+        json = JsonMap.newBuilder()
+                      .put("version", "1.2.4")
+                      .build()
+                      .toJsonValue();
+
+        matcher = ValueMatcher.newVersionMatcher("1.2.4");
         assertEquals(matcher, ValueMatcher.parse(json));
     }
 }

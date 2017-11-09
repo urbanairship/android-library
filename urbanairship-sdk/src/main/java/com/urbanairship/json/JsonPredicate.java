@@ -15,19 +15,20 @@ import java.util.List;
 /**
  * Class abstracting a JSON predicate. The predicate is contained to the following schema:
  * <p/>
- * <predicate>       := <json_matcher> | <not> | <and> | <or>
- * <not>             := { "not": { <predicate> } }
- * <and>             := { "and": [<predicate>, <predicate>, …] }
- * <or>              := { "or": [<predicate>, <predicate>, …] }
+ * <predicate>         := <json_matcher> | <not> | <and> | <or>
+ * <not>               := { "not": { <predicate> } }
+ * <and>               := { "and": [<predicate>, <predicate>, …] }
+ * <or>                := { "or": [<predicate>, <predicate>, …] }
  * <p/>
- * <json_matcher>    := { <selector>, "value": { <value_matcher> }} | { "value": {<value_matcher>}}
- * <selector>        := <scope>, "key": string | "key": string | <scope>
- * <scope>           := "scope": string | "scope": [string, string, …]
+ * <json_matcher>      := { <selector>, "value": { <value_matcher> }} | { "value": {<value_matcher>}}
+ * <selector>          := <scope>, "key": string | "key": string | <scope>
+ * <scope>             := "scope": string | "scope": [string, string, …]
  * <p/>
- * <value_matcher>   := <numeric_matcher> | <string_matcher> | <presence_matcher>
- * <numeric_matcher> := "equals": number | "at_least": number | "at_most": number | "at_least": number, "at_most": number
- * <string_matcher>  := "equals": string
- * <presence_matcher>    := "is_present": boolean
+ * <value_matcher>     := <numeric_matcher> | <string_matcher> | <presence_matcher> | <version_matcher>
+ * <numeric_matcher>   := "equals": number | "at_least": number | "at_most": number | "at_least": number, "at_most": number
+ * <string_matcher>    := "equals": string
+ * <presence_matcher>  := "is_present": boolean
+ * <version_matcher>   := "version": version matcher
  */
 public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializable> {
 
