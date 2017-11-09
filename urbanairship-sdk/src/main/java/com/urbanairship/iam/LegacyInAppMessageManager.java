@@ -227,6 +227,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             BannerDisplayContent.Builder displayContentBuilder = BannerDisplayContent.newBuilder()
                                                                                      .setBackgroundColor(secondaryColor)
                                                                                      .setDismissButtonColor(primaryColor)
+                                                                                     .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
                                                                                      .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
                                                                                      .setPlacement(inAppMessage.getPlacement())
                                                                                      .setActions(inAppMessage.getClickActionValues())
@@ -275,4 +276,5 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                                            .build();
         }
     }
+
 }

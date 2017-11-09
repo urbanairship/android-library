@@ -87,8 +87,14 @@
 
 
     <declare-styleable name="UrbanAirshipInAppButtonLayout">
-        <attr name="buttonStackedSpaceHeight" format="dimension" />
-        <attr name="buttonSeparatedSpaceWidth" format="dimension" />
+        <attr name="urbanAirshipButtonLayoutResourceId" format="reference" />
+        <attr name="urbanAirshipStackedSpaceHeight" format="dimension" />
+        <attr name="urbanAirshipSeparatedSpaceWidth" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="UrbanAirshipLayout">
+        <attr name="urbanAirshipMaxWidth" format="dimension" />
+        <attr name="urbanAirshipMaxHeight" format="dimension" />
     </declare-styleable>
 
 

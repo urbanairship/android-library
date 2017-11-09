@@ -15,7 +15,7 @@
         tools:src="@drawable/ua_ic_image_placeholder"/>
 
 
-    <com.urbanairship.iam.view.InAppTextView
+    <TextView
         android:id="@+id/heading"
         style="@style/UrbanAirship.InAppBanner.Heading"
         android:layout_width="wrap_content"
@@ -26,7 +26,7 @@
         android:layout_toStartOf="@+id/image"
         tools:text="Banner Heading"/>
 
-    <com.urbanairship.iam.view.InAppTextView
+    <TextView
         android:id="@+id/body"
         style="@style/UrbanAirship.InAppBanner.Body"
         android:layout_width="wrap_content"

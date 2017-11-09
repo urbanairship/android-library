@@ -4,12 +4,11 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 
 import com.urbanairship.R;
@@ -21,11 +20,12 @@ import java.util.List;
 /**
  * In-app button layout. Supports stacked, separated, and joined button layouts.
  */
-public class InAppButtonLayout extends LinearLayout {
+public class InAppButtonLayout extends BoundedLinearLayout {
 
     private int stackedSpaceHeight;
     private int separatedSpaceWidth;
 
+    private int buttonLayoutResourceId;
     /**
      * Button click listener.
      */
@@ -101,8 +101,10 @@ public class InAppButtonLayout extends LinearLayout {
     private void init(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         if (attrs != null) {
             TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.UrbanAirshipInAppButtonLayout, defStyle, defResStyle);
-            stackedSpaceHeight = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipInAppButtonLayout_buttonStackedSpaceHeight, 0);
-            separatedSpaceWidth = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipInAppButtonLayout_buttonSeparatedSpaceWidth, 0);
+            stackedSpaceHeight = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipInAppButtonLayout_urbanAirshipStackedSpaceHeight, 0);
+            separatedSpaceWidth = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipInAppButtonLayout_urbanAirshipSeparatedSpaceWidth, 0);
+            buttonLayoutResourceId = attributes.getResourceId(R.styleable.UrbanAirshipInAppButtonLayout_urbanAirshipButtonLayoutResourceId, 0);
+            attributes.recycle();
         }
     }
 
@@ -131,22 +133,21 @@ public class InAppButtonLayout extends LinearLayout {
         setMeasureWithLargestChildEnabled(true);
 
         for (int i = 0; i < buttonInfos.size(); i++) {
-            @InAppButton.BorderRadiusFlag int radiusFlag = 0;
+            @BorderRadius.BorderRadiusFlag int radiusFlag = 0;
             final ButtonInfo buttonInfo = buttonInfos.get(i);
 
             if (isJoined) {
                 if (i == 0) {
-                    radiusFlag = InAppButton.BORDER_RADIUS_BOTTOM_LEFT | InAppButton.BORDER_RADIUS_TOP_LEFT;
+                    radiusFlag = BorderRadius.LEFT;
                 } else if (i == buttonInfos.size() - 1) {
-                    radiusFlag = InAppButton.BORDER_RADIUS_TOP_RIGHT | InAppButton.BORDER_RADIUS_BOTTOM_RIGHT;
+                    radiusFlag = BorderRadius.RIGHT;
                 }
             } else {
-                radiusFlag = InAppButton.BORDER_RADIUS_ALL;
+                radiusFlag = BorderRadius.ALL;
             }
 
-            final InAppButton button = new InAppButton(getContext(), null, R.style.UrbanAirship_InAppBanner_Button);
-            button.setButtonInfo(buttonInfo, radiusFlag);
-            button.setGravity(Gravity.CENTER_VERTICAL);
+            final Button button = (Button) LayoutInflater.from(getContext()).inflate(buttonLayoutResourceId, this, false);
+            InAppViewUtils.applyButtonInfo(button, buttonInfo, radiusFlag);
 
             if (isStacked) {
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0);

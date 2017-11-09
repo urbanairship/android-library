@@ -4,23 +4,28 @@ package com.urbanairship.iam.banner;
 
 import android.app.Fragment;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.AnimatorRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.OnApplyWindowInsetsListener;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.WindowInsetsCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.R;
@@ -31,8 +36,10 @@ import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageCache;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.iam.view.BackgroundDrawableBuilder;
+import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.InAppButtonLayout;
-import com.urbanairship.iam.view.InAppTextView;
+import com.urbanairship.iam.view.InAppViewUtils;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.messagecenter.ImageLoader;
 import com.urbanairship.util.Checks;
@@ -43,12 +50,15 @@ import java.util.Map;
  * A fragment that displays an in-app message banner.
  */
 public class BannerFragment extends Fragment implements InAppButtonLayout.ButtonClickListener,
+                                                        OnClickListener,
                                                         BannerDismissLayout.Listener {
 
     /**
      * Cache key for the banner image.
      */
     public static final String IMAGE_CACHE_KEY = "IMAGE_CACHE_KEY";
+
+    private static final float PRESSED_ALPHA_PERCENT = .2f;
 
     private static final String DISMISSED = "DISMISSED";
     private static final String IN_APP_MESSAGE = "IN_APP_MESSAGE";
@@ -135,20 +145,25 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         // Banner View
         LinearLayout bannerView = view.findViewById(R.id.banner);
-        bannerView.setBackgroundColor(displayContent.getBackgroundColor());
+        bannerView.setBackground(createBannerBackground());
+
+        if (!displayContent.getActions().isEmpty()) {
+            bannerView.setClickable(true);
+            bannerView.setOnClickListener(this);
+        }
 
         // Heading
-        InAppTextView heading = view.findViewById(R.id.heading);
+        TextView heading = view.findViewById(R.id.heading);
         if (displayContent.getHeading() != null) {
-            heading.setTextInfo(displayContent.getHeading());
+            InAppViewUtils.applyTextInfo(heading, displayContent.getHeading());
         } else {
             heading.setVisibility(View.GONE);
         }
 
         // Body
-        InAppTextView body = view.findViewById(R.id.body);
+        TextView body = view.findViewById(R.id.body);
         if (displayContent.getBody() != null) {
-            body.setTextInfo(displayContent.getBody());
+            InAppViewUtils.applyTextInfo(body, displayContent.getBody());
         } else {
             body.setVisibility(View.GONE);
         }
@@ -477,6 +492,24 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
     }
 
     /**
+     * Creates the banner's background drawable.
+     *
+     * @return The banner's background drawable.
+     */
+    private Drawable createBannerBackground() {
+        int pressedColor = ColorUtils.setAlphaComponent(displayContent.getDismissButtonColor(), Math.round(Color.alpha(displayContent.getDismissButtonColor()) * PRESSED_ALPHA_PERCENT));
+
+        @BorderRadius.BorderRadiusFlag
+        int borderRadiusFlag = displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP ? BorderRadius.BOTTOM : BorderRadius.TOP;
+
+        return BackgroundDrawableBuilder.newBuilder(getActivity())
+                                        .setBackgroundColor(displayContent.getBackgroundColor())
+                                        .setPressedColor(pressedColor)
+                                        .setBorderRadius(displayContent.getBorderRadius(), borderRadiusFlag)
+                                        .build();
+    }
+
+    /**
      * Gets the banner content layout for the banner's template.
      *
      * @return The banner template layout.
@@ -499,6 +532,16 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
      */
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (displayContent.getActions().isEmpty()) {
+            return;
+        }
+
+        runActions(displayContent.getActions());
+        dismiss(true, ResolutionInfo.messageClicked(timer.getRunTime()));
     }
 
     /**

@@ -6,12 +6,12 @@
     android:clipToPadding="false"
     android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <com.urbanairship.iam.view.BoundedLinearLayout
         android:id="@+id/banner"
         style="@style/UrbanAirship.InAppBanner.Layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+        android:layout_gravity="bottom|center_horizontal"
         android:orientation="vertical">
 
         <View
@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-    </LinearLayout>
+    </com.urbanairship.iam.view.BoundedLinearLayout>
 
 
 </com.urbanairship.iam.banner.BannerDismissLayout>
