@@ -4,7 +4,9 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
@@ -30,6 +32,7 @@ public class TextInfo implements JsonSerializable {
     private static final String COLOR_KEY = "color";
     private static final String ALIGNMENT_KEY = "alignment";
     private static final String STYLE_KEY = "style";
+    private static final String ANDROID_DRAWABLE_RES_ID_KEY = "android_drawable_res_id";
 
     @StringDef({ ALIGNMENT_RIGHT, ALIGNMENT_LEFT, ALIGNMENT_CENTER })
     @Retention(RetentionPolicy.SOURCE)
@@ -68,6 +71,9 @@ public class TextInfo implements JsonSerializable {
     @Style
     private final List<String> styles;
 
+    @DrawableRes
+    private final int drawable;
+
     /**
      * Default constructor.
      *
@@ -79,6 +85,7 @@ public class TextInfo implements JsonSerializable {
         this.size = builder.size;
         this.alignment = builder.alignment;
         this.styles = builder.styles;
+        this.drawable = builder.drawable;
     }
 
     @Override
@@ -89,6 +96,7 @@ public class TextInfo implements JsonSerializable {
                       .put(SIZE_KEY, size)
                       .put(ALIGNMENT_KEY, alignment)
                       .put(STYLE_KEY, JsonValue.wrapOpt(styles))
+                      .putOpt(ANDROID_DRAWABLE_RES_ID_KEY, drawable == 0 ? null : drawable)
                       .build()
                       .toJsonValue();
     }
@@ -168,11 +176,15 @@ public class TextInfo implements JsonSerializable {
             }
         }
 
+        // Android drawable
+        builder.setDrawable(content.opt(ANDROID_DRAWABLE_RES_ID_KEY).getInt(0));
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid text object JSON: " + content, e);
         }
+
     }
 
     /**
@@ -180,7 +192,7 @@ public class TextInfo implements JsonSerializable {
      *
      * @return The text.
      */
-    @NonNull
+    @Nullable
     public String getText() {
         return text;
     }
@@ -225,6 +237,16 @@ public class TextInfo implements JsonSerializable {
         return styles;
     }
 
+    /**
+     * Returns the button icon.
+     *
+     * @return The icon resource ID.
+     */
+    @DrawableRes
+    public int getDrawable() {
+        return drawable;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -248,6 +270,9 @@ public class TextInfo implements JsonSerializable {
         if (alignment != null ? !alignment.equals(textInfo.alignment) : textInfo.alignment != null) {
             return false;
         }
+        if (drawable != textInfo.drawable) {
+            return false;
+        }
         return styles != null ? styles.equals(textInfo.styles) : textInfo.styles == null;
 
     }
@@ -259,6 +284,7 @@ public class TextInfo implements JsonSerializable {
         result = 31 * result + (size != +0.0f ? Float.floatToIntBits(size) : 0);
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         result = 31 * result + (styles != null ? styles.hashCode() : 0);
+        result = 31 * result + drawable;
         return result;
     }
 
@@ -284,6 +310,8 @@ public class TextInfo implements JsonSerializable {
         @ColorInt
         private int color = Color.BLACK;
         private float size = 14;
+        @DrawableRes
+        private int drawable;
 
         @Alignment
         private String alignment = ALIGNMENT_LEFT;
@@ -299,6 +327,17 @@ public class TextInfo implements JsonSerializable {
          */
         public Builder setText(String text) {
             this.text = text;
+            return this;
+        }
+
+        /**
+         * Sets the drawable to appear next to the text.
+         *
+         * @param drawable The drawable resource ID.
+         * @return The builder instance.
+         */
+        public Builder setDrawable(@DrawableRes int drawable) {
+            this.drawable = drawable;
             return this;
         }
 
@@ -352,10 +391,10 @@ public class TextInfo implements JsonSerializable {
          * Builds the text info.
          *
          * @return The text info.
-         * @throws IllegalArgumentException If the text is missing.
+         * @throws IllegalArgumentException If the text and label are missing.
          */
         public TextInfo build() {
-            Checks.checkNotNull(text, "Missing text");
+            Checks.checkArgument(drawable != 0 || text != null, "Missing text");
             return new TextInfo(this);
         }
     }

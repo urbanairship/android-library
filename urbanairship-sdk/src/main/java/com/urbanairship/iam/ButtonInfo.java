@@ -60,6 +60,7 @@ public class ButtonInfo implements JsonSerializable {
     private final int borderColor;
     private final Map<String, JsonValue> actions;
 
+
     /**
      * Default constructor.
      *
@@ -200,6 +201,7 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @return The button's label.
      */
+    @NonNull
     public TextInfo getLabel() {
         return label;
     }
@@ -244,6 +246,7 @@ public class ButtonInfo implements JsonSerializable {
         return borderRadius;
     }
 
+
     /**
      * Returns the action names and values to be run when the button is clicked.
      *
@@ -253,6 +256,7 @@ public class ButtonInfo implements JsonSerializable {
     public Map<String, JsonValue> getActions() {
         return actions;
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -274,6 +278,7 @@ public class ButtonInfo implements JsonSerializable {
         if (borderColor != that.borderColor) {
             return false;
         }
+
         if (label != null ? !label.equals(that.label) : that.label != null) {
             return false;
         }
@@ -284,7 +289,6 @@ public class ButtonInfo implements JsonSerializable {
             return false;
         }
         return actions != null ? actions.equals(that.actions) : that.actions == null;
-
     }
 
     @Override
@@ -429,7 +433,7 @@ public class ButtonInfo implements JsonSerializable {
          * @throws IllegalArgumentException If the label is missing.
          */
         public ButtonInfo build() {
-            Checks.checkNotNull(label, "Missing label.");
+            Checks.checkArgument(label != null, "Missing label.");
             return new ButtonInfo(this);
         }
     }

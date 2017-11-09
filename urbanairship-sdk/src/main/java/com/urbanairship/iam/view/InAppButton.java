@@ -33,6 +33,7 @@ public class InAppButton extends InAppTextView {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
 
+
     @IntDef(flag = true,
             value = { BORDER_RADIUS_TOP_LEFT,
                       BORDER_RADIUS_TOP_RIGHT,
@@ -120,6 +121,8 @@ public class InAppButton extends InAppTextView {
     public void setButtonInfo(final ButtonInfo buttonInfo, @BorderRadiusFlag int borderRadiusFlag) {
         setTextInfo(buttonInfo.getLabel());
         setBackground(createBackground(buttonInfo, borderRadiusFlag));
+
+
     }
 
     @Override
@@ -209,4 +212,5 @@ public class InAppButton extends InAppTextView {
 
         return radii;
     }
+
 }

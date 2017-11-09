@@ -16,15 +16,14 @@ import static junit.framework.Assert.assertEquals;
  */
 public class ButtonInfoTest extends BaseTestCase {
 
-
     @Test
     public void testJson() throws JsonException {
         ButtonInfo original = ButtonInfo.newBuilder()
-                                    .setLabel(TextInfo.newBuilder()
-                                            .setText("hi")
-                                            .build())
-                                    .addAction("cool", JsonValue.wrap("story"))
-                                    .build();
+                                        .setLabel(TextInfo.newBuilder()
+                                                          .setText("hi")
+                                                          .build())
+                                        .addAction("cool", JsonValue.wrap("story"))
+                                        .build();
 
 
         ButtonInfo fromJson = ButtonInfo.parseJson(original.toJsonValue());
@@ -36,7 +35,7 @@ public class ButtonInfoTest extends BaseTestCase {
     @Test(expected = IllegalArgumentException.class)
     public void testMissingLabel() {
         ButtonInfo.newBuilder()
-                .build();
+                  .build();
     }
 
 }

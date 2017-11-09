@@ -10,17 +10,15 @@ import android.os.Bundle;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
+import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.iam.InAppMessage;
-import com.urbanairship.push.iam.InAppMessageManager;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
-import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -34,6 +32,7 @@ public class CoreReceiverTest extends BaseTestCase {
     CoreReceiver receiver;
     NotificationManager notificationManager;
     Analytics analytics;
+    LegacyInAppMessageManager legacyInAppMessageManager;
 
     @Before
     public void before() {
@@ -41,7 +40,9 @@ public class CoreReceiverTest extends BaseTestCase {
         context = mock(Context.class);
         notificationManager = mock(NotificationManager.class);
         analytics = mock(Analytics.class);
+        legacyInAppMessageManager = mock(LegacyInAppMessageManager.class);
 
+        TestApplication.getApplication().setLegacyInAppMessageManager(legacyInAppMessageManager);
         TestApplication.getApplication().setAnalytics(analytics);
         when(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(notificationManager);
     }
@@ -80,21 +81,10 @@ public class CoreReceiverTest extends BaseTestCase {
     }
 
     /**
-     * Test when a notification is opened it clears the pending in-app message.
+     * Test when a notification is opened it notifies the legacy in-app messaging manager.
      */
     @Test
-    public void testOnNotificationOpenedProxyClearPendingInAppMessage() {
-        InAppMessage inAppMessage = new InAppMessage.Builder()
-                .setAlert("oh hi")
-                .setExpiry(1000l)
-                .setId("sendId")
-                .create();
-
-        // Set the pending in-app message
-        InAppMessageManager inAppMessageManager = UAirship.shared().getLegacyInAppMessageManager();
-        inAppMessageManager.setPendingMessage(inAppMessage);
-
-        // Create the push message with the matching send ID
+    public void testNotifyLegacyIamManager() {
         Bundle pushBundle = new Bundle();
         pushBundle.putString(PushMessage.EXTRA_SEND_ID, "sendId");
         PushMessage message = new PushMessage(pushBundle);
@@ -106,7 +96,7 @@ public class CoreReceiverTest extends BaseTestCase {
 
 
         receiver.onReceive(context, intent);
-        assertNull(inAppMessageManager.getPendingMessage());
+        verify(legacyInAppMessageManager).onPushResponse(message);
     }
 
     /**

@@ -12,12 +12,10 @@ import android.os.Parcel;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.actions.OpenRichPushInboxAction;
 import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.iam.InAppMessage;
 
 import junit.framework.Assert;
 
@@ -387,62 +385,6 @@ public class PushMessageTest extends BaseTestCase {
         assertEquals("The category should match.", pushMessage.getCategory(), "promo");
     }
 
-    /**
-     * Test getting the in-app message from the push payload.
-     */
-    @Test
-    public void getGetInAppMessage() throws JsonException {
-        String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
-                "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
-                "\"alert\": \"Oh hi!\"}, \"actions\": {\"button_group\": \"ua_yes_no\"," +
-                "\"button_actions\": {\"yes\": {\"^+t\": \"yes_tag\"}, \"no\": {\"^+t\": \"no_tag\"}}," +
-                "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
-                "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
-
-        InAppMessage expected = new InAppMessage.Builder(InAppMessage.parseJson(inAppJson))
-                .setId("send id")
-                .create();
-
-        Bundle extras = new Bundle();
-        extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
-        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
-
-        PushMessage pushMessage = new PushMessage(extras);
-        assertEquals(expected, pushMessage.getInAppMessage());
-    }
-
-    /**
-     * Test getting the in-app message from the push payload amends the message
-     * to include the open MCRAP action if the push also contains a rich push message ID.
-     */
-    @Test
-    public void getGetInAppMessageAmendsOpenMcRap() throws JsonException, ActionValueException {
-        String inAppJson = "{\"display\": {\"primary_color\": \"#FF0000\"," +
-                "\"duration\": 10, \"secondary_color\": \"#00FF00\", \"type\": \"banner\"," +
-                "\"alert\": \"Oh hi!\"}, \"actions\": {\"button_group\": \"ua_yes_no\"," +
-                "\"button_actions\": {\"yes\": {\"^+t\": \"yes_tag\"}, \"no\": {\"^+t\": \"no_tag\"}}," +
-                "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
-                "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
-
-
-        InAppMessage rawMessage = InAppMessage.parseJson(inAppJson);
-
-        HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
-        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap("message_id"));
-
-        InAppMessage expected = new InAppMessage.Builder(rawMessage)
-                .setId("send id")
-                .setClickActionValues(actions)
-                .create();
-
-        Bundle extras = new Bundle();
-        extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
-        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
-        extras.putString(PushMessage.EXTRA_RICH_PUSH_ID, "message_id");
-
-        PushMessage pushMessage = new PushMessage(extras);
-        assertEquals(expected, pushMessage.getInAppMessage());
-    }
 
     /**
      * Test get public notification payload.

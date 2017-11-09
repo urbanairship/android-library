@@ -113,10 +113,6 @@ public class SampleTest {
             airshipReceiver.waitForChannelUpdate();
         }
 
-        UAirship.shared().getLegacyInAppMessageManager().setAutoDisplayDelay(0);
-        UAirship.shared().getLegacyInAppMessageManager().setDisplayAsapEnabled(true);
-        UAirship.shared().getLegacyInAppMessageManager().setPendingMessage(null);
-
         channelId = UAirship.shared().getPushManager().getChannelId();
 
         // Make sure we have a channel

@@ -43,15 +43,6 @@ public class BannerDisplayContentTest extends BaseTestCase {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testMissingButtons() {
-        BannerDisplayContent.newBuilder()
-                            .setBody(TextInfo.newBuilder()
-                                             .setText("oh hi")
-                                             .build())
-                            .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testTooManyButtons() {
         BannerDisplayContent.newBuilder()
                             .setBody(TextInfo.newBuilder()

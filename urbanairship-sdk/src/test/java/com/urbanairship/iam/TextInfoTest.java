@@ -21,6 +21,7 @@ public class TextInfoTest extends BaseTestCase {
         TextInfo original = TextInfo.newBuilder()
                                     .setAlignment(TextInfo.ALIGNMENT_CENTER)
                                     .setFontSize(3000)
+                                    .setDrawable(100)
                                     .setColor(Color.RED)
                                     .setText("OH hi")
                                     .build();
@@ -34,7 +35,7 @@ public class TextInfoTest extends BaseTestCase {
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testMissingText() {
+    public void testMissingTextAndDrawable() {
         TextInfo.newBuilder()
                 .build();
     }

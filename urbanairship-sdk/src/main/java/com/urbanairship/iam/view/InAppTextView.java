@@ -4,11 +4,17 @@ package com.urbanairship.iam.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.TextView;
 
@@ -65,18 +71,34 @@ public class InAppTextView extends TextView {
         super(context, attrs, defStyle, defResStyle);
     }
 
-
     /**
      * Sets the text info.
      *
      * @param textInfo The text info.
      */
     public void setTextInfo(TextInfo textInfo) {
-        setText(textInfo.getText());
+        if (textInfo.getDrawable() != 0) {
+
+            int size = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textInfo.getFontSize(), getResources().getDisplayMetrics()));
+
+            final Drawable drawable = ContextCompat.getDrawable(getContext(), textInfo.getDrawable());
+            drawable.setBounds(0, 0, size, size);
+            drawable.setColorFilter(textInfo.getColor(), PorterDuff.Mode.MULTIPLY);
+
+            String label = textInfo.getText() == null ? " " : "  " + textInfo.getText();
+
+            CenteredImageSpan imageSpan = new CenteredImageSpan(drawable);
+            SpannableString text = new SpannableString(label);
+            text.setSpan(imageSpan, 0, 1, 0);
+            setText(text);
+        } else {
+            setText(textInfo.getText());
+        }
+
         setTextSize(textInfo.getFontSize());
         setTextColor(textInfo.getColor());
 
-        int typefaceFlags = Typeface.NORMAL;
+        int typefaceFlags = getTypeface().getStyle();
         for (@TextInfo.Style String style : textInfo.getStyles()) {
             switch (style) {
                 case TextInfo.STYLE_BOLD:
@@ -107,5 +129,29 @@ public class InAppTextView extends TextView {
             }
         }
         setTypeface(getTypeface(), typefaceFlags);
+    }
+
+
+    /**
+     * Helper class that centers the image span vertically.
+     */
+    private static class CenteredImageSpan extends ImageSpan {
+
+        public CenteredImageSpan(Drawable drawable) {
+            super(drawable);
+        }
+
+        @Override
+        public void draw(Canvas canvas, CharSequence text, int start,  int end, float x, int top, int y, int bottom, Paint paint) {
+            canvas.save();
+
+            Drawable drawable = getDrawable();
+
+            int dy = bottom - drawable.getBounds().bottom - paint.getFontMetricsInt().descent / 2;
+            canvas.translate(x, dy);
+            drawable.draw(canvas);
+
+            canvas.restore();
+        }
     }
 }

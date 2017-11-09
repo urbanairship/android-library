@@ -21,6 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
+        android:layout_alignWithParentIfMissing="true"
         android:layout_toEndOf="@+id/image"
         android:layout_toRightOf="@+id/image"
         tools:text="Banner Heading"/>
@@ -32,6 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
+        android:layout_alignWithParentIfMissing="true"
         android:layout_below="@+id/heading"
         android:layout_toEndOf="@+id/image"
         android:layout_toRightOf="@+id/image"

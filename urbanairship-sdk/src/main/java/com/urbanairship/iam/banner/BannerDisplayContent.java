@@ -68,9 +68,15 @@ public class BannerDisplayContent implements DisplayContent {
     public static final long DEFAULT_DURATION_MS = 30000;
 
     /**
+     * Maximum number of button supported by a banner.
+     */
+    public static final int MAX_BUTTONS = 2;
+
+    /**
      * JSON key for actions. Not supported in the API but is needed for compatibility of v1 banners.
      */
     private static final String ACTIONS_KEY = "actions";
+
 
     private final TextInfo heading;
     private final TextInfo body;
@@ -680,7 +686,7 @@ public class BannerDisplayContent implements DisplayContent {
         public BannerDisplayContent build() {
             Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
-            Checks.checkArgument(!buttons.isEmpty() && buttons.size() <= 2, "Banner requires at least 1 button and a max of 2 buttons.");
+            Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
             return new BannerDisplayContent(this);
         }
     }

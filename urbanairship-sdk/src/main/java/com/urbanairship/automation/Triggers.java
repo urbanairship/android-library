@@ -16,7 +16,7 @@ import com.urbanairship.util.UAStringUtil;
 public class Triggers {
     /**
      * Creates a new foreground trigger builder.
-     * 
+     *
      * @return The new foreground trigger builder.
      */
     public static LifeCycleTriggerBuilder newForegroundTriggerBuilder() {
@@ -25,7 +25,7 @@ public class Triggers {
 
     /**
      * Creates a new background trigger builder.
-     * 
+     *
      * @return The new background trigger builder.
      */
     public static LifeCycleTriggerBuilder newBackgroundTriggerBuilder() {
@@ -90,7 +90,7 @@ public class Triggers {
      * Lifecycle trigger Builder class.
      */
     public static class LifeCycleTriggerBuilder {
-        private double goal;
+        private double goal = 1;
         private final int type;
 
         private LifeCycleTriggerBuilder(int type) {
@@ -123,7 +123,7 @@ public class Triggers {
      */
     public static class RegionTriggerBuilder {
         private final int type;
-        private double goal;
+        private double goal = 1;
         private String regionId;
 
         private RegionTriggerBuilder(int type) {
@@ -178,7 +178,7 @@ public class Triggers {
      * Screen trigger Builder class.
      */
     public static class ScreenTriggerBuilder {
-        private double goal;
+        private double goal = 1;
         private String screenName;
 
         private ScreenTriggerBuilder() {
@@ -233,7 +233,7 @@ public class Triggers {
      * Custom event trigger Builder class.
      */
     public static class CustomEventTriggerBuilder {
-        private double goal;
+        private double goal = 1;
         private int type;
         private String eventName;
 
@@ -301,7 +301,7 @@ public class Triggers {
      * Active session trigger builder class.
      */
     public static class ActiveSessionTriggerBuilder {
-        private double goal;
+        private double goal = 1;
 
         private ActiveSessionTriggerBuilder() {}
 
@@ -318,6 +318,7 @@ public class Triggers {
 
         /**
          * Buildes the trigger instance.
+         *
          * @return The trigger instance.
          */
         public Trigger build() {

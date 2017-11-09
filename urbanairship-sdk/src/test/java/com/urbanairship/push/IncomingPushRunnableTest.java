@@ -14,10 +14,9 @@ import android.support.v4.app.NotificationManagerCompat;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
-import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
-import com.urbanairship.push.iam.InAppMessage;
+import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.push.notifications.NotificationFactory;
 
 import org.junit.Before;
@@ -53,6 +52,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private PushManager pushManager;
     private NotificationManagerCompat notificationManager;
     private Analytics analytics;
+    private LegacyInAppMessageManager legacyInAppMessageManager;
 
     private Notification notification;
     private NotificationFactory notificationFactory;
@@ -104,7 +104,9 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
 
         analytics = mock(Analytics.class);
+        legacyInAppMessageManager = mock(LegacyInAppMessageManager.class);
 
+        TestApplication.getApplication().setLegacyInAppMessageManager(legacyInAppMessageManager);
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
 
@@ -334,31 +336,25 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     }
 
     /**
-     * Test delivering a push with an in-app message sets the pending notification.
+     * Test the legacy in-app message manager is notified of the push.
      */
     @Test
-    public void testDeliverPushInAppMessage() {
+    public void testNotifyLegacyIamManager() {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
-        pushBundle.putString(PushMessage.EXTRA_IN_APP_MESSAGE, new InAppMessage.Builder()
-                .setAlert("oh hi")
-                .setExpiry(1000l)
-                .create()
-                .toJsonValue()
-                .toString());
-
+        PushMessage push = new PushMessage(pushBundle);
         pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
                 .setProviderClass(testPushProvider.getClass().toString())
-                .setMessage(new PushMessage(pushBundle))
+                .setMessage(push)
                 .setNotificationManager(notificationManager)
                 .setLongRunning(true)
                 .build();
 
         pushRunnable.run();
 
-        assertEquals(new PushMessage(pushBundle).getInAppMessage(), UAirship.shared().getLegacyInAppMessageManager().getPendingMessage());
+        verify(legacyInAppMessageManager).onPushReceived(push);
     }
 
     /**

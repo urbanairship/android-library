@@ -24,7 +24,6 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.push.iam.InAppMessage;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
@@ -147,13 +146,8 @@ class IncomingPushRunnable implements Runnable {
         // Run the push actions
         runActions();
 
-        // Store any pending in-app messages
-        InAppMessage inAppMessage = message.getInAppMessage();
-        if (inAppMessage != null) {
-            Logger.debug("PushJobHandler - Received a Push with an in-app message.");
-            airship.getLegacyInAppMessageManager().setPendingMessage(inAppMessage);
-        }
-
+        // Notify the legacy in-app message manager about the received push
+        airship.getLegacyInAppMessageManager().onPushReceived(message);
 
         Integer notificationId = null;
         if (!airship.getPushManager().isOptIn()) {

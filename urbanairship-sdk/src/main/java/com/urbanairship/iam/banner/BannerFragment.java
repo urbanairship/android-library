@@ -35,7 +35,6 @@ import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppTextView;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.messagecenter.ImageLoader;
-import com.urbanairship.push.iam.Timer;
 import com.urbanairship.util.Checks;
 
 import java.util.Map;
@@ -167,8 +166,12 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         // Button Layout
         InAppButtonLayout buttonLayout = view.findViewById(R.id.buttons);
-        buttonLayout.setButtons(displayContent.getButtonLayout(), displayContent.getButtons());
-        buttonLayout.setButtonClickListener(this);
+        if (displayContent.getButtons().isEmpty()) {
+            buttonLayout.setVisibility(View.GONE);
+        } else {
+            buttonLayout.setButtons(displayContent.getButtonLayout(), displayContent.getButtons());
+            buttonLayout.setButtonClickListener(this);
+        }
 
         // Banner dismiss pull
         View bannerPull = view.findViewById(R.id.banner_pull);

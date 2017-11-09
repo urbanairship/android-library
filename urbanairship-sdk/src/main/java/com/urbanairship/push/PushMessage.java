@@ -1,3 +1,5 @@
+/* Copyright 2017 Urban Airship and Contributors */
+
 package com.urbanairship.push;
 
 import android.content.Context;
@@ -14,19 +16,16 @@ import android.support.annotation.Nullable;
 import com.urbanairship.Logger;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.OpenRichPushInboxAction;
-import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.push.iam.InAppMessage;
+import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.UAMathUtil;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -186,7 +185,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String EXTRA_EXPIRATION = "com.urbanairship.push.EXPIRATION";
 
     /**
-     * The extra key for the {@link com.urbanairship.push.iam.InAppMessage} payload.
+     * The extra key for the the legacy in-app message payload.
      */
     public static final String EXTRA_IN_APP_MESSAGE = "com.urbanairship.in_app";
 
@@ -215,11 +214,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     private static final String DEFAULT_SOUND_NAME = "default";
 
-    private static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
-            OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
-            OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
-            OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
-            OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
     private Bundle pushBundle;
     private final Map<String, String> data;
@@ -351,7 +345,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     @Nullable
     public String getSendId() {
-        return  data.get(EXTRA_SEND_ID);
+        return data.get(EXTRA_SEND_ID);
     }
 
     /**
@@ -361,7 +355,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     @Nullable
     public String getMetadata() {
-        return  data.get(EXTRA_METADATA);
+        return data.get(EXTRA_METADATA);
     }
 
     /**
@@ -404,7 +398,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
 
         if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
-            if (Collections.disjoint(actions.keySet(), INBOX_ACTION_NAMES)) {
+            if (Collections.disjoint(actions.keySet(), RichPushInbox.INBOX_ACTION_NAMES)) {
                 actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, ActionValue.wrap(getRichPushMessageId()));
             }
         }
@@ -599,40 +593,6 @@ public class PushMessage implements Parcelable, JsonSerializable {
         return defaultIcon;
     }
 
-    /**
-     * Gets the {@link com.urbanairship.push.iam.InAppMessage} from the push bundle.
-     *
-     * @return The in-app message.
-     */
-    @Nullable
-    public InAppMessage getInAppMessage() {
-        if (data.containsKey(EXTRA_IN_APP_MESSAGE)) {
-            try {
-                InAppMessage rawMessage = InAppMessage.parseJson(data.get(EXTRA_IN_APP_MESSAGE));
-                if (rawMessage == null) {
-                    return null;
-                }
-
-                InAppMessage.Builder builder = new InAppMessage.Builder(rawMessage)
-                        .setId(getSendId());
-
-                if (!UAStringUtil.isEmpty(getRichPushMessageId())) {
-                    if (Collections.disjoint(rawMessage.getClickActionValues().keySet(), INBOX_ACTION_NAMES)) {
-                        HashMap<String, ActionValue> actions = new HashMap<>(rawMessage.getClickActionValues());
-                        actions.put(OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME, new ActionValue(JsonValue.wrap(getRichPushMessageId())));
-                        builder.setClickActionValues(actions);
-                    }
-                }
-
-                return builder.create();
-
-            } catch (JsonException e) {
-                Logger.error("PushMessage - unable to create in-app message from push payload", e);
-            }
-        }
-
-        return null;
-    }
 
     /**
      * Returns the notification tag that should be used when posting the notification.
@@ -731,7 +691,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
         return JsonValue.wrapOpt(data);
     }
 
-
+    /**
+     * Creates a push message from a json value.
+     *
+     * @param jsonValue The json value.
+     * @return The push message.
+     */
     public static PushMessage fromJsonValue(JsonValue jsonValue) {
         Map<String, String> data = new HashMap<>();
         for (Map.Entry<String, JsonValue> entry : jsonValue.optMap().entrySet()) {
@@ -743,5 +708,15 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
 
         return new PushMessage(data);
+    }
+
+    /**
+     * Checks if the push message contains a key.
+     *
+     * @param key The key to check.
+     * @return {@code true} if the push message contains a value at the key, otherwise {@code false}.
+     */
+    public boolean containsKey(String key) {
+        return this.data.containsKey(key);
     }
 }

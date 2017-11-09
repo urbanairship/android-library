@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.push.iam;
+package com.urbanairship.iam.banner;
 
 import android.os.Handler;
 import android.os.SystemClock;

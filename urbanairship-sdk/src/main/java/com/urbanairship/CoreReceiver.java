@@ -16,9 +16,6 @@ import com.urbanairship.actions.ActionService;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
-import com.urbanairship.push.iam.InAppMessage;
-import com.urbanairship.push.iam.InAppMessageManager;
-import com.urbanairship.push.iam.ResolutionEvent;
 import com.urbanairship.util.UAStringUtil;
 
 
@@ -81,8 +78,8 @@ public class CoreReceiver extends BroadcastReceiver {
         // Set the conversion send metadata.
         UAirship.shared().getAnalytics().setConversionMetadata(message.getMetadata());
 
-        // Clear the in-app message if it matches the push send Id
-        clearInAppMessage(message.getSendId());
+        // Notify the legacy in-app message manager about the push
+        UAirship.shared().getLegacyInAppMessageManager().onPushResponse(message);
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtras(intent.getExtras())
@@ -125,8 +122,8 @@ public class CoreReceiver extends BroadcastReceiver {
             UAirship.shared().getAnalytics().setConversionMetadata(message.getMetadata());
         }
 
-        // Clear the in-app message if it matches the push send Id
-        clearInAppMessage(message.getSendId());
+        // Notify the legacy in-app message manager about the push
+        UAirship.shared().getLegacyInAppMessageManager().onPushResponse(message);
 
         // Dismiss the notification
         NotificationManagerCompat.from(context).cancel(notificationId);
@@ -270,32 +267,6 @@ public class CoreReceiver extends BroadcastReceiver {
         } else {
             Logger.info("Unable to launch application. Launch intent is unavailable.");
             return false;
-        }
-    }
-
-    /**
-     * Helper method to clear the pending in-app message and generate a resolution event if the
-     * message is pending and currently not being displayed.
-     *
-     * @param messageId The message ID to clear.
-     */
-    private static void clearInAppMessage(String messageId) {
-        if (UAStringUtil.isEmpty(messageId)) {
-            return;
-        }
-
-        InAppMessageManager iamManager = UAirship.shared().getLegacyInAppMessageManager();
-        InAppMessage pendingMessage = iamManager.getPendingMessage();
-        InAppMessage currentMessage = iamManager.getCurrentMessage();
-
-        // Only clear it if the messageId matches and the pending message is not currently showing
-        if (pendingMessage != null && messageId.equals(pendingMessage.getId()) && !pendingMessage.equals(currentMessage)) {
-            Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
-            iamManager.setPendingMessage(null);
-
-            // Direct open event
-            ResolutionEvent resolutionEvent = ResolutionEvent.createDirectOpenResolutionEvent(pendingMessage);
-            UAirship.shared().getAnalytics().addEvent(resolutionEvent);
         }
     }
 }

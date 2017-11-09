@@ -19,6 +19,8 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.OpenRichPushInboxAction;
+import com.urbanairship.actions.OverlayRichPushMessageAction;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.messagecenter.MessageActivity;
@@ -26,6 +28,7 @@ import com.urbanairship.messagecenter.MessageCenterActivity;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,6 +47,12 @@ import java.util.concurrent.Executors;
  * server the next time the inbox is synchronized.
  */
 public class RichPushInbox extends AirshipComponent {
+
+    public static final List<String> INBOX_ACTION_NAMES = Arrays.asList(
+            OpenRichPushInboxAction.DEFAULT_REGISTRY_NAME,
+            OpenRichPushInboxAction.DEFAULT_REGISTRY_SHORT_NAME,
+            OverlayRichPushMessageAction.DEFAULT_REGISTRY_NAME,
+            OverlayRichPushMessageAction.DEFAULT_REGISTRY_SHORT_NAME);
 
     /**
      * A listener interface for receiving event callbacks related to inbox updates.

@@ -34,53 +34,9 @@
 
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
-        <!-- Attribute to allow style override for in-app message banners -->
-        <attr name="inAppMessageBannerStyle" format="reference"/>
-
         <!-- Attribute to allow style override for the Message Center -->
         <attr name="messageCenterStyle" format="reference"/>
     </declare-styleable>
-
-    <!-- Redefine CardView attributes so we can define them without causing missing
-    attribute errors if the consuming application does not depend on the card support library. -->
-    <declare-styleable name="CardView">
-        <!-- Background color for CardView. -->
-        <attr name="optCardBackgroundColor" format="color"/>
-        <!-- Corner radius for CardView. -->
-        <attr name="optCardCornerRadius" format="dimension"/>
-        <!-- Elevation for CardView. -->
-        <attr name="optCardElevation" format="dimension"/>
-    </declare-styleable>
-
-    <!-- Style attributes for in-app message banners -->
-    <declare-styleable name="BannerView">
-        <!-- The banner's font path -->
-        <attr name="bannerFontPath" format="string"/>
-
-        <!-- The banner's text appearance -->
-        <attr name="bannerTextAppearance" format="reference"/>
-
-        <!-- Primary color, used as the background color -->
-        <attr name="bannerPrimaryColor" format="color"/>
-
-        <!-- Secondary color, used for any text and icons -->
-        <attr name="bannerSecondaryColor" format="color"/>
-
-        <!-- The icon for the dismiss button -->
-        <attr name="bannerDismissButtonDrawable" format="reference"/>
-
-        <!-- If the dismiss button should be removed from the banner or not -->
-        <attr name="bannerNoDismissButton" format="boolean"/>
-
-        <!-- The banner action button text appearance -->
-        <attr name="bannerActionButtonTextAppearance" format="reference"/>
-    </declare-styleable>
-
-
-
-
-
-
 
     <!-- Style attributes for Message Center  -->
     <declare-styleable name="MessageCenter">

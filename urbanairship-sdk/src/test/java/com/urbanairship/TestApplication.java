@@ -13,6 +13,7 @@ import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -82,7 +83,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inbox = new RichPushInbox(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.locationManager = new UALocationManager(this, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.legacyInAppMessageManager = new com.urbanairship.push.iam.InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, airshipConfigOptions, new TestPushProvider());
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
@@ -92,6 +92,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
         UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);
@@ -116,6 +117,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setAnalytics(Analytics analytics) {
         UAirship.shared().analytics = analytics;
+    }
+
+    public void setLegacyInAppMessageManager(LegacyInAppMessageManager legacyInAppMessageManager) {
+        UAirship.shared().legacyInAppMessageManager = legacyInAppMessageManager;
     }
 
     public void setOptions(AirshipConfigOptions options) {

@@ -25,6 +25,7 @@ import com.urbanairship.analytics.data.EventResolver;
 import com.urbanairship.automation.Automation;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.iam.LegacyInAppMessageManager;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.location.UALocationManager;
@@ -52,6 +53,7 @@ public class UAirship {
      * Broadcast that is sent when UAirship is finished taking off.
      */
     public static final String ACTION_AIRSHIP_READY = "com.urbanairship.AIRSHIP_READY";
+
 
     @IntDef({ AMAZON_PLATFORM, ANDROID_PLATFORM })
     @Retention(RetentionPolicy.SOURCE)
@@ -109,9 +111,8 @@ public class UAirship {
     RichPushInbox inbox;
     UALocationManager locationManager;
     Whitelist whitelist;
-    com.urbanairship.push.iam.InAppMessageManager legacyInAppMessageManager;
     InAppMessageManager inAppMessageManager;
-
+    LegacyInAppMessageManager legacyInAppMessageManager;
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
     NamedUser namedUser;
@@ -598,7 +599,6 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
         this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
-        this.legacyInAppMessageManager = new com.urbanairship.push.iam.InAppMessageManager(preferenceDataStore, ActivityMonitor.shared(application));
         this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
         this.namedUser = new NamedUser(application, preferenceDataStore);
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
@@ -608,6 +608,7 @@ public class UAirship {
         this.messageCenter = new MessageCenter();
         this.automation = new Automation(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
         this.inAppMessageManager = new InAppMessageManager(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
 
         for (AirshipComponent component : getComponents()) {
             component.init();
@@ -685,11 +686,11 @@ public class UAirship {
     }
 
     /**
-     * Returns the legacy {@link com.urbanairship.push.iam.InAppMessageManager} instance.
+     * Returns the legacy {@link com.urbanairship.iam.LegacyInAppMessageManager} instance
      *
-     * @return The legacy {@link com.urbanairship.push.iam.InAppMessageManager} instance.
+     * @return The legacy {@link com.urbanairship.iam.LegacyInAppMessageManager} instance.
      */
-    public com.urbanairship.push.iam.InAppMessageManager getLegacyInAppMessageManager() {
+    public LegacyInAppMessageManager getLegacyInAppMessageManager() {
         return legacyInAppMessageManager;
     }
 
@@ -795,6 +796,7 @@ public class UAirship {
             components.add(namedUser);
             components.add(automation);
             components.add(inAppMessageManager);
+            components.add(legacyInAppMessageManager);
         }
 
         return components;
