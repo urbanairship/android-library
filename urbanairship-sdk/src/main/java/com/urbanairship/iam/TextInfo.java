@@ -32,7 +32,9 @@ public class TextInfo implements JsonSerializable {
     private static final String COLOR_KEY = "color";
     private static final String ALIGNMENT_KEY = "alignment";
     private static final String STYLE_KEY = "style";
+    private static final String FONT_FAMILY_KEY = "font_family";
     private static final String ANDROID_DRAWABLE_RES_ID_KEY = "android_drawable_res_id";
+
 
     @StringDef({ ALIGNMENT_RIGHT, ALIGNMENT_LEFT, ALIGNMENT_CENTER })
     @Retention(RetentionPolicy.SOURCE)
@@ -71,6 +73,8 @@ public class TextInfo implements JsonSerializable {
     @Style
     private final List<String> styles;
 
+    private final List<String> fontFamilies;
+
     @DrawableRes
     private final int drawable;
 
@@ -84,8 +88,9 @@ public class TextInfo implements JsonSerializable {
         this.color = builder.color;
         this.size = builder.size;
         this.alignment = builder.alignment;
-        this.styles = builder.styles;
+        this.styles = new ArrayList<>(builder.styles);
         this.drawable = builder.drawable;
+        this.fontFamilies = new ArrayList<>(builder.fontFamilies);
     }
 
     @Override
@@ -96,6 +101,7 @@ public class TextInfo implements JsonSerializable {
                       .put(SIZE_KEY, size)
                       .put(ALIGNMENT_KEY, alignment)
                       .put(STYLE_KEY, JsonValue.wrapOpt(styles))
+                      .put(FONT_FAMILY_KEY, JsonValue.wrapOpt(fontFamilies))
                       .putOpt(ANDROID_DRAWABLE_RES_ID_KEY, drawable == 0 ? null : drawable)
                       .build()
                       .toJsonValue();
@@ -176,6 +182,20 @@ public class TextInfo implements JsonSerializable {
             }
         }
 
+        // Fonts
+        if (content.containsKey(FONT_FAMILY_KEY)) {
+            if (!content.opt(FONT_FAMILY_KEY).isJsonList()) {
+                throw new JsonException("Fonts must be an array: " + content.opt(STYLE_KEY));
+            }
+
+            for (JsonValue value : content.opt(FONT_FAMILY_KEY).optList()) {
+                if (!value.isString()) {
+                    throw new JsonException("Invalid font: " + value);
+                }
+                builder.addFontFamily(value.getString());
+            }
+        }
+
         // Android drawable
         builder.setDrawable(content.opt(ANDROID_DRAWABLE_RES_ID_KEY).getInt(0));
 
@@ -238,6 +258,16 @@ public class TextInfo implements JsonSerializable {
     }
 
     /**
+     * List of font families.
+     *
+     * @return The list of font families.
+     */
+    @NonNull
+    public List<String> getFontFamilies() {
+        return fontFamilies;
+    }
+
+    /**
      * Returns the button icon.
      *
      * @return The icon resource ID.
@@ -264,17 +294,19 @@ public class TextInfo implements JsonSerializable {
         if (Float.compare(textInfo.size, size) != 0) {
             return false;
         }
+        if (drawable != textInfo.drawable) {
+            return false;
+        }
         if (text != null ? !text.equals(textInfo.text) : textInfo.text != null) {
             return false;
         }
         if (alignment != null ? !alignment.equals(textInfo.alignment) : textInfo.alignment != null) {
             return false;
         }
-        if (drawable != textInfo.drawable) {
+        if (styles != null ? !styles.equals(textInfo.styles) : textInfo.styles != null) {
             return false;
         }
-        return styles != null ? styles.equals(textInfo.styles) : textInfo.styles == null;
-
+        return fontFamilies != null ? fontFamilies.equals(textInfo.fontFamilies) : textInfo.fontFamilies == null;
     }
 
     @Override
@@ -284,6 +316,7 @@ public class TextInfo implements JsonSerializable {
         result = 31 * result + (size != +0.0f ? Float.floatToIntBits(size) : 0);
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         result = 31 * result + (styles != null ? styles.hashCode() : 0);
+        result = 31 * result + (fontFamilies != null ? fontFamilies.hashCode() : 0);
         result = 31 * result + drawable;
         return result;
     }
@@ -316,6 +349,7 @@ public class TextInfo implements JsonSerializable {
         @Alignment
         private String alignment = ALIGNMENT_LEFT;
         private List<String> styles = new ArrayList<>();
+        private List<String> fontFamilies = new ArrayList<>();
 
         private Builder() {}
 
@@ -384,6 +418,18 @@ public class TextInfo implements JsonSerializable {
             if (!styles.contains(style)) {
                 styles.add(style);
             }
+            return this;
+        }
+
+        /**
+         * Adds a font family. The first font family found in the application's font resource directory
+         * will be used.
+         *
+         * @param font The font family.
+         * @return The builder instance.
+         */
+        public Builder addFontFamily(String font) {
+            fontFamilies.add(font);
             return this;
         }
 

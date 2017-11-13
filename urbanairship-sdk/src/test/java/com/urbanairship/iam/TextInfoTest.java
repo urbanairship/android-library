@@ -22,6 +22,7 @@ public class TextInfoTest extends BaseTestCase {
                                     .setAlignment(TextInfo.ALIGNMENT_CENTER)
                                     .setFontSize(3000)
                                     .setDrawable(100)
+                                    .addFontFamily("cool_font")
                                     .setColor(Color.RED)
                                     .setText("OH hi")
                                     .build();

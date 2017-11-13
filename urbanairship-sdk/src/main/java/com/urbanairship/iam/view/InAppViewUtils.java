@@ -2,6 +2,7 @@ package com.urbanairship.iam.view;
 /* Copyright 2017 Urban Airship and Contributors */
 
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,7 +12,9 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
@@ -23,6 +26,9 @@ import android.widget.TextView;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.TextInfo;
+import com.urbanairship.util.UAStringUtil;
+
+import java.util.List;
 
 public class InAppViewUtils {
 
@@ -86,6 +92,8 @@ public class InAppViewUtils {
         textView.setTextColor(textInfo.getColor());
 
         int typefaceFlags = textView.getTypeface().getStyle();
+        int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
+
         for (@TextInfo.Style String style : textInfo.getStyles()) {
             switch (style) {
                 case TextInfo.STYLE_BOLD:
@@ -95,7 +103,7 @@ public class InAppViewUtils {
                     typefaceFlags |= Typeface.ITALIC;
                     break;
                 case TextInfo.STYLE_UNDERLINE:
-                    textView.setPaintFlags(textView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+                    paintFlags |= Paint.UNDERLINE_TEXT_FLAG;
                     break;
             }
         }
@@ -115,7 +123,15 @@ public class InAppViewUtils {
                     break;
             }
         }
-        textView.setTypeface(textView.getTypeface(), typefaceFlags);
+
+
+        Typeface typeface = getTypeFace(textView.getContext(), textInfo.getFontFamilies());
+        if (typeface == null) {
+            typeface = textView.getTypeface();
+        }
+
+        textView.setTypeface(typeface, typefaceFlags);
+        textView.setPaintFlags(paintFlags);
     }
 
 
@@ -140,5 +156,28 @@ public class InAppViewUtils {
 
             canvas.restore();
         }
+    }
+
+    /**
+     * Finds the first available font in the list.
+     *
+     * @param context The application context.
+     * @param fontFamilies The list of font families.
+     * @return The typeface with a specified font, or null if the font was not found.
+     */
+    @Nullable
+    private static Typeface getTypeFace(@NonNull Context context, @NonNull List<String> fontFamilies) {
+        for (String font : fontFamilies) {
+            if (UAStringUtil.isEmpty(font)) {
+                continue;
+            }
+
+            int resourceId = context.getResources().getIdentifier(font, "font", context.getPackageName());
+            if (resourceId != 0) {
+                return ResourcesCompat.getFont(context, resourceId);
+            }
+        }
+
+        return null;
     }
 }
