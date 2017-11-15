@@ -2,20 +2,17 @@
 
 package com.urbanairship.reactive;
 
-import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.support.v4.util.Pair;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Predicate;
 
 import junit.framework.Assert;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -25,29 +22,20 @@ import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
 
-import static com.urbanairship.reactive.Observable.merge;
-
 public class ObservableTest extends BaseTestCase {
 
-    private Map<String, Integer> resultMap;
     private List<Object> values;
     private Exception error;
     private Integer nexts;
     private Integer completes;
     private Integer errors;
     private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
 
     @Before
     public void setUp() {
-        values = new ArrayList<>();
-        nexts = 0;
-        completes = 0;
-        errors = 0;
-
+        initializeValues();
         backgroundThread = new HandlerThread("test");
         backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
     }
 
     @After
@@ -56,8 +44,36 @@ public class ObservableTest extends BaseTestCase {
         backgroundThread.quit();
     }
 
-    public <T> void validateObservable(Observable<T> observable, Looper looper, Exception expectedError,
-                                       List<T> expectedValues, int nextCount, int completeCount, int errorCount) {
+    public void initializeValues() {
+        values = new ArrayList<>();
+        nexts = 0;
+        completes = 0;
+        errors = 0;
+    }
+
+    public <T> void performAsserts(final Looper looper, final Exception expectedError, final List<T> expectedValues,
+                                   final int nextCount, final int completeCount, final int errorCount) {
+        if (looper == null) {
+            Assert.assertEquals(values, expectedValues);
+            Assert.assertEquals(error, expectedError);
+            Assert.assertEquals(nexts.intValue(), nextCount);
+            Assert.assertEquals(completes.intValue(), completeCount);
+            Assert.assertEquals(errors.intValue(), errorCount);
+        } else {
+            ShadowLooper shadowLooper = Shadows.shadowOf(looper);
+            while (shadowLooper.getScheduler().areAnyRunnable()) {
+                shadowLooper.runToEndOfTasks();
+            }
+
+            Assert.assertEquals(values, expectedValues);
+            Assert.assertEquals(error, expectedError);
+            Assert.assertEquals(nexts.intValue(), nextCount);
+            Assert.assertEquals(completes.intValue(), completeCount);
+            Assert.assertEquals(errors.intValue(), errorCount);
+        }
+    }
+
+    public <T> void subscribeObservable(Observable<T> observable) {
         observable.subscribe(new Subscriber<T>() {
             @Override
             public void onNext(T value) {
@@ -76,25 +92,12 @@ public class ObservableTest extends BaseTestCase {
                 errors++;
             }
         });
+    }
 
-        if (looper == null) {
-            Assert.assertEquals(values, expectedValues);
-            Assert.assertEquals(error, expectedError);
-            Assert.assertEquals(nexts.intValue(), nextCount);
-            Assert.assertEquals(completes.intValue(), completeCount);
-            Assert.assertEquals(errors.intValue(), errorCount);
-        } else {
-            ShadowLooper shadowLooper = Shadows.shadowOf(looper);
-            while(shadowLooper.getScheduler().areAnyRunnable()) {
-                shadowLooper.runToEndOfTasks();
-            }
-
-            Assert.assertEquals(values, expectedValues);
-            Assert.assertEquals(error, expectedError);
-            Assert.assertEquals(nexts.intValue(), nextCount);
-            Assert.assertEquals(completes.intValue(), completeCount);
-            Assert.assertEquals(errors.intValue(), errorCount);
-        }
+    public <T> void validateObservable(Observable<T> observable, final Looper looper, final Exception expectedError,
+                                       final List<T> expectedValues, final int nextCount, final int completeCount, final int errorCount) {
+        subscribeObservable(observable);
+        performAsserts(looper, expectedError, expectedValues, nextCount, completeCount, errorCount);
     }
 
 
@@ -141,7 +144,7 @@ public class ObservableTest extends BaseTestCase {
 
 
     @Test
-    public void testFromCollection() throws  Exception {
+    public void testFromCollection() throws Exception {
         List<Integer> ints = Arrays.asList(1, 2, 3, 4, 5);
         Observable<Integer> obs = Observable.from(ints);
         validateObservable(obs, ints, 5, 1, 0);
@@ -197,11 +200,110 @@ public class ObservableTest extends BaseTestCase {
     }
 
     @Test
-    public void testMerge() throws  Exception {
-        Observable<Integer> first = Observable.from(Arrays.asList(1, 2, 3));
-        Observable<Integer> second = Observable.from(Arrays.asList(4, 5, 6));
+    public void testDefer() throws Exception {
+        final ArrayList<Integer> ints = new ArrayList<>(Arrays.asList(1, 2, 3));
+
+        Observable<Integer> deferred = Observable.defer(new Supplier<Observable<Integer>>() {
+            @Override
+            public Observable<Integer> apply() {
+                return Observable.from(ints);
+            }
+        });
+
+        ints.add(4);
+
+        validateObservable(deferred, Arrays.asList(1, 2, 3, 4), 4, 1, 0);
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+        Subject<Integer> first = Subject.create();
+        Subject<Integer> second = Subject.create();
+
         Observable<Integer> merged = Observable.merge(first, second);
 
-        validateObservable(merged, Arrays.asList(1, 2, 3, 4, 5, 6), 6, 1, 0);
+        subscribeObservable(merged);
+
+        first.onNext(1);
+        second.onNext(4);
+        first.onNext(2);
+        second.onNext(5);
+        first.onNext(3);
+        second.onNext(6);
+
+        first.onCompleted();
+        second.onCompleted();
+
+        performAsserts(null, null, Arrays.asList(1, 4, 2, 5, 3, 6), 6, 1, 0);
+    }
+
+    @Test
+    public void testConcat() throws Exception {
+        Subject<Integer> first = Subject.create();
+        Subject<Integer> second = Subject.create();
+
+        Observable<Integer> merged = Observable.concat(first, second);
+
+        subscribeObservable(merged);
+
+        first.onNext(1);
+        second.onNext(4);
+        first.onNext(2);
+        second.onNext(5);
+        first.onNext(3);
+        second.onNext(6);
+
+        first.onCompleted();
+
+        second.onNext(7);
+        second.onNext(8);
+        second.onNext(9);
+
+        second.onCompleted();
+
+        performAsserts(null, null, Arrays.asList(1, 2, 3, 7, 8, 9), 6, 1, 0);
+    }
+
+    @Test
+    public void testDefaultIfEmpty() throws Exception {
+        Observable<Integer> one = Observable.just(1);
+        Observable<Integer> empty = Observable.empty();
+        Observable<Integer> defaultOne = one.defaultIfEmpty(2);
+        Observable<Integer> defaultEmpty = empty.defaultIfEmpty(2);
+
+        validateObservable(defaultOne, Arrays.asList(1), 1, 1, 0);
+
+        initializeValues();
+
+        validateObservable(defaultEmpty, Arrays.asList(2), 1, 1, 0);
+    }
+
+    @Test
+    public void testZip() throws Exception {
+        Subject<Integer> first = Subject.create();
+        Subject<Integer> second = Subject.create();
+
+        Observable<Pair<Integer, Integer>> zipped = Observable.zip(first, second, new BiFunction<Integer, Integer, Pair<Integer, Integer>>() {
+            @Override
+            public Pair<Integer, Integer> apply(Integer lh, Integer rh) {
+                return new Pair<>(lh, rh);
+            }
+        });
+
+        subscribeObservable(zipped);
+
+        first.onNext(1);
+        second.onNext(4);
+        first.onNext(2);
+        second.onNext(5);
+        first.onNext(3);
+        second.onNext(6);
+
+        first.onCompleted();
+        second.onCompleted();
+
+        List<Pair<Integer, Integer>> expected = Arrays.asList(new Pair<>(1, 4), new Pair<>(2, 5), new Pair<>(3, 6));
+
+        performAsserts(null, null, expected, 3, 1, 0);
     }
 }

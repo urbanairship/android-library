@@ -33,6 +33,7 @@ import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -113,6 +114,7 @@ public class UAirship {
     Whitelist whitelist;
     InAppMessageManager inAppMessageManager;
     LegacyInAppMessageManager legacyInAppMessageManager;
+    RemoteData remoteData;
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
     NamedUser namedUser;
@@ -614,6 +616,7 @@ public class UAirship {
         this.automation = new Automation(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
         this.inAppMessageManager = new InAppMessageManager(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
+        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
 
         for (AirshipComponent component : getComponents()) {
             component.init();
@@ -708,6 +711,15 @@ public class UAirship {
         return inAppMessageManager;
     }
 
+    /**
+     * Returns the RemoteData instance.
+     *
+     * @hide
+     * @return The RemoteData instance.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public RemoteData getRemoteData() { return remoteData; }
+
 
     /**
      * Returns the UAirship {@link com.urbanairship.analytics.Analytics} instance.
@@ -793,7 +805,6 @@ public class UAirship {
             components.add(inbox);
             components.add(pushManager);
             components.add(locationManager);
-            components.add(legacyInAppMessageManager);
             components.add(channelCapture);
             components.add(applicationMetrics);
             components.add(analytics);
@@ -802,6 +813,7 @@ public class UAirship {
             components.add(automation);
             components.add(inAppMessageManager);
             components.add(legacyInAppMessageManager);
+            components.add(remoteData);
         }
 
         return components;

@@ -20,6 +20,7 @@ import com.urbanairship.location.UALocationManager;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
 
 import org.robolectric.Robolectric;
@@ -93,6 +94,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.automation = new Automation(this, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
+        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(getApplicationContext()));
 
         ProviderInfo info = new ProviderInfo();
         info.authority = UrbanAirshipProvider.getAuthorityString(this);
@@ -118,10 +120,12 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void setAnalytics(Analytics analytics) {
         UAirship.shared().analytics = analytics;
     }
-
+    
     public void setLegacyInAppMessageManager(LegacyInAppMessageManager legacyInAppMessageManager) {
         UAirship.shared().legacyInAppMessageManager = legacyInAppMessageManager;
     }
+
+    public void setRemoteData(RemoteData remoteData) { UAirship.shared().remoteData = remoteData; }
 
     public void setOptions(AirshipConfigOptions options) {
         UAirship.shared().airshipConfigOptions = options;

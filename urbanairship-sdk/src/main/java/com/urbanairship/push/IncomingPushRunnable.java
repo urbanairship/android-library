@@ -100,6 +100,10 @@ class IncomingPushRunnable implements Runnable {
             airship.getInbox().fetchMessages();
         }
 
+        if (message.isRemoteData()) {
+            airship.getRemoteData().refresh();
+        }
+
         NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory != null && !isLongRunning && factory.requiresLongRunningTask(message)) {

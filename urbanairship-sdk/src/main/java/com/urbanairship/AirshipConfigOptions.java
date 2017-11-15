@@ -90,6 +90,11 @@ public class AirshipConfigOptions {
     public final String landingPageContentURL;
 
     /**
+     * The remote data server URL.
+     */
+    public final String remoteDataURL;
+
+    /**
      * The GCM/FCM sender ID used for push registration. This is your Google API project number.
      * <p>
      * Will be used in {@link #getFcmSenderId()} if the {@link #fcmSenderId} is not set.
@@ -249,6 +254,7 @@ public class AirshipConfigOptions {
         this.hostURL = builder.hostURL;
         this.analyticsServer = builder.analyticsServer;
         this.landingPageContentURL = builder.landingPageContentURL;
+        this.remoteDataURL = builder.remoteDataURL;
         this.gcmSender = builder.gcmSender;
         this.fcmSenderId = builder.fcmSenderId;
         this.developmentFcmSenderId = builder.developmentFcmSenderId;
@@ -355,6 +361,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_HOST_URL = "hostURL";
         private static final String FIELD_ANALYTICS_SERVER = "analyticsServer";
         private static final String FIELD_LANDING_PAGE_CONTENT_URL = "landingPageContentURL";
+        private static final String FIELD_REMOTE_DATA_URL = "remoteDataURL";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_WHITELIST = "whitelist";
@@ -382,6 +389,7 @@ public class AirshipConfigOptions {
         private String hostURL = "https://device-api.urbanairship.com/";
         private String analyticsServer = "https://combine.urbanairship.com/";
         private String landingPageContentURL = "https://dl.urbanairship.com/aaa/";
+        private String remoteDataURL = "https://remote-data.urbanairship.com/";
         private String gcmSender;
         private String fcmSenderId;
         private String productionFcmSenderId;
@@ -529,6 +537,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_LANDING_PAGE_CONTENT_URL:
                             this.setLandingPageContentURL(configParser.getString(i));
+                            break;
+
+                        case FIELD_REMOTE_DATA_URL:
+                            this.setRemoteDataURL(configParser.getString(i));
                             break;
 
                         case FIELD_GCM_SENDER:
@@ -731,6 +743,17 @@ public class AirshipConfigOptions {
          */
         public Builder setLandingPageContentURL(String landingPageContentURL) {
             this.landingPageContentURL = landingPageContentURL;
+            return this;
+        }
+
+        /**
+         * Set the remote data URL.
+         *
+         * @param remoteDataURL The remote data URL.
+         * @return The config options builder.
+         */
+        public Builder setRemoteDataURL(String remoteDataURL) {
+            this.remoteDataURL = remoteDataURL;
             return this;
         }
 
