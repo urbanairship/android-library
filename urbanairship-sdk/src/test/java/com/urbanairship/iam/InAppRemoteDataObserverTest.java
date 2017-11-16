@@ -3,26 +3,36 @@
 package com.urbanairship.iam;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.reactive.Subject;
+import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link InAppRemoteDataObserver} tests.
@@ -30,12 +40,28 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public class InAppRemoteDataObserverTest extends BaseTestCase {
 
     private InAppRemoteDataObserver observer;
-    private InAppRemoteDataObserver.Callback callback;
+    private InAppMessageScheduler scheduler;
+    private RemoteData remoteData;
+    private Subject<RemoteDataPayload> updates;
 
     @Before
     public void setup() {
-        callback = mock(InAppRemoteDataObserver.Callback.class);
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, callback);
+        remoteData = mock(RemoteData.class);
+        updates = Subject.create();
+        when(remoteData.payloadsForType(anyString())).thenReturn(updates);
+
+        scheduler = mock(InAppMessageScheduler.class);
+
+        PendingResult<Collection<InAppMessageSchedule>> scheduleResult = new PendingResult<>();
+        scheduleResult.setResult(Collections.emptyList());
+        when(scheduler.schedule(ArgumentMatchers.<InAppMessageScheduleInfo>anyCollection())).thenReturn(scheduleResult);
+
+        PendingResult<Void> cancelResult = new PendingResult<>();
+        cancelResult.setResult(null);
+        when(scheduler.cancelMessages(ArgumentMatchers.<String>anyCollection())).thenReturn(cancelResult);
+
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore);
+        observer.subscribe(remoteData, scheduler);
     }
 
     @Test
@@ -47,11 +73,16 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .build();
 
+
+        // Return empty pending results when the message is requested
+        when(scheduler.getMessages("foo")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getMessages("bar")).thenReturn(createMessagesPendingResult());
+
         // Notify the observer
-        observer.onNext(payload);
+        updates.onNext(payload);
 
         // Verify we get a callback to schedule foo and bar
-        verify(callback).onSchedule(Mockito.argThat(new ArgumentMatcher<List<InAppMessageScheduleInfo>>() {
+        verify(scheduler).schedule(Mockito.argThat(new ArgumentMatcher<List<InAppMessageScheduleInfo>>() {
             @Override
             public boolean matches(List<InAppMessageScheduleInfo> argument) {
                 if (argument.size() != 2) {
@@ -71,11 +102,13 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
                 .build();
 
+        when(scheduler.getMessages("baz")).thenReturn(createMessagesPendingResult());
+
         // Notify the observer
-        observer.onNext(payload);
+        updates.onNext(payload);
 
         // Verify we get a callback with to schedule baz
-        verify(callback).onSchedule(Mockito.argThat(new ArgumentMatcher<List<InAppMessageScheduleInfo>>() {
+        verify(scheduler).schedule(Mockito.argThat(new ArgumentMatcher<List<InAppMessageScheduleInfo>>() {
             @Override
             public boolean matches(List<InAppMessageScheduleInfo> argument) {
                 if (argument.size() != 1) {
@@ -84,10 +117,8 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 return argument.get(0).getInAppMessage().getId().equals("baz");
             }
         }));
-
-        verifyNoMoreInteractions(callback);
-
     }
+
 
     @Test
     public void testCancel() {
@@ -97,25 +128,35 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .addScheduleInfo("bar", 100, 100)
                 .build();
 
-        observer.onNext(payload);
+
+        // Return empty pending results when the message is requested
+        when(scheduler.getMessages("foo")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getMessages("bar")).thenReturn(createMessagesPendingResult());
+
+        updates.onNext(payload);
 
         // Update the message without bar
         payload = new TestPayloadBuilder()
                 .addScheduleInfo("foo", 100, 100)
                 .build();
 
-        observer.onNext(payload);
+        updates.onNext(payload);
 
         // Verify callback is called to cancel bar
-        verify(callback).onCancel(Mockito.argThat(new ArgumentMatcher<List<String>>() {
+        verify(scheduler).cancelMessages(Mockito.argThat(new ArgumentMatcher<Collection<String>>() {
             @Override
-            public boolean matches(List<String> argument) {
+            public boolean matches(Collection<String> argument) {
                 if (argument.size() != 1) {
                     return false;
                 }
                 return argument.contains("bar");
             }
         }));
+    }
+
+    @Test
+    public void testDefaultNewUserCutoffTime() {
+        assertEquals(-1, observer.getScheduleNewUserCutOffTime());
     }
 
 
@@ -139,10 +180,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                                     .put("goal", 20.0)
                                     .build());
 
-            InAppMessage message = InAppMessage.newBuilder()
-                                               .setId(messageId)
-                                               .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                               .build();
+            InAppMessage message = createMessage(messageId);
 
 
             JsonMap scheduleJson = JsonMap.newBuilder()
@@ -164,5 +202,28 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
             return new RemoteDataPayload("in_app_messages", timeStamp, data);
         }
+    }
+
+    private static PendingResult<Collection<InAppMessage>> createMessagesPendingResult(String... ids) {
+        PendingResult<Collection<InAppMessage>> pendingResult = new PendingResult<>();
+
+        Collection<InAppMessage> collection = new HashSet<>();
+
+        if (ids != null) {
+            for (String id : ids) {
+                collection.add(createMessage(id));
+            }
+        }
+
+        pendingResult.setResult(collection);
+        return pendingResult;
+    }
+
+    private static InAppMessage createMessage(String messageId) {
+        return InAppMessage.newBuilder()
+                           .setId(messageId)
+                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                           .build();
+
     }
 }

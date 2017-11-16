@@ -15,6 +15,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -116,7 +117,7 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfos A list of {@link ActionScheduleInfo}.
      * @return A pending result.
      */
-    public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
+    public PendingResult<Collection<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
@@ -143,7 +144,7 @@ public class Automation extends AirshipComponent {
      * @param ids The list of schedule IDs.
      * @return A pending result.
      */
-    public Future<Void> cancel(@NonNull final List<String> ids) {
+    public Future<Void> cancel(@NonNull final Collection<String> ids) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();

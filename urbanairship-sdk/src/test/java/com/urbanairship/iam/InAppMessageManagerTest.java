@@ -85,7 +85,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
             }
-        }, mockDriver, mockEngine, mockRemoteData);
+        }, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager());
 
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()

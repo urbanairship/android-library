@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
@@ -18,6 +19,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
@@ -30,6 +32,8 @@ import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +45,7 @@ import java.util.concurrent.Executors;
 /**
  * In-app messaging manager.
  */
-public class InAppMessageManager extends AirshipComponent {
+public class InAppMessageManager extends AirshipComponent implements InAppMessageScheduler {
 
     /**
      * Fetch retry delay.
@@ -272,11 +276,14 @@ public class InAppMessageManager extends AirshipComponent {
 
         automationEngine.start();
 
-
+        // If the new user cut off time is not set either set it to the max long or 0 depending
+        // on if the channel is created or not.
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
             remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? Long.MAX_VALUE : 0);
         }
 
+        // Add a listener to the remote data to set the new user cut off time to the
+        // last modified time if its earlier then the current new user cut off time.
         remoteData.addListener(new RemoteData.Listener() {
             @Override
             public void onDataRefreshed() {
@@ -306,20 +313,7 @@ public class InAppMessageManager extends AirshipComponent {
         super.onAirshipReady(airship);
         isAirshipReady = true;
         automationEngine.checkPendingSchedules();
-
-        remoteDataSubscriber.subscribe(remoteData, new InAppRemoteDataObserver.Callback() {
-            @Override
-            public void onSchedule(List<InAppMessageScheduleInfo> scheduleInfos) {
-                automationEngine.schedule(scheduleInfos);
-            }
-
-            @Override
-            public void onCancel(List<String> messageIds) {
-                for (String messageId : messageIds) {
-                    automationEngine.cancelGroup(messageId);
-                }
-            }
-        });
+        remoteDataSubscriber.subscribe(remoteData, this);
     }
 
     @Override
@@ -369,35 +363,66 @@ public class InAppMessageManager extends AirshipComponent {
     }
 
     /**
-     * Schedules an in-app message.
-     *
-     * @param messageScheduleInfo The in-app message schedule info.
-     * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be nil if
-     * the message's audience
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<Collection<InAppMessageSchedule>> schedule(Collection<InAppMessageScheduleInfo> scheduleInfos) {
+        return automationEngine.schedule(scheduleInfos);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public PendingResult<InAppMessageSchedule> scheduleMessage(InAppMessageScheduleInfo messageScheduleInfo) {
         return automationEngine.schedule(messageScheduleInfo);
     }
 
     /**
-     * Cancels an in-app message schedule.
-     *
-     * @param scheduleId The in-app message's schedule ID.
-     * @return A pending result.
+     * {@inheritDoc}
      */
     public PendingResult<Void> cancelSchedule(String scheduleId) {
         return automationEngine.cancel(Collections.singletonList(scheduleId));
     }
 
     /**
-     * Cancels an in-app message schedule for the given message ID. If more than
-     * one in-app message shares the same ID, they will all be cancelled.
-     *
-     * @param messageId The in-app message's ID.
-     * @return A pending result.
+     * {@inheritDoc}
      */
     public PendingResult<Boolean> cancelMessage(String messageId) {
         return automationEngine.cancelGroup(messageId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<Void> cancelMessages(Collection<String> messageIds) {
+        return automationEngine.cancelGroups(messageIds);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<Collection<InAppMessage>> getMessages(final String messageId) {
+        final PendingResult<Collection<InAppMessage>> pendingResult = new PendingResult<>();
+
+        automationEngine.getSchedules(messageId).addResultCallback(new ResultCallback<List<InAppMessageSchedule>>() {
+            @Override
+            public void onResult(@Nullable List<InAppMessageSchedule> result) {
+                if (result == null || result.isEmpty()) {
+                    pendingResult.setResult(Collections.<InAppMessage>emptyList());
+                }
+
+                List<InAppMessage> messages = new ArrayList<>();
+                for (InAppMessageSchedule schedule : result) {
+                    messages.add(schedule.getInfo().getInAppMessage());
+                }
+
+                pendingResult.setResult(messages);
+            }
+        });
+
+        return pendingResult;
     }
 
     /**

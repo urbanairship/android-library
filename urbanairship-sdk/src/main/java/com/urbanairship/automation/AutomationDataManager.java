@@ -437,6 +437,21 @@ public class AutomationDataManager extends DataManager {
     }
 
     /**
+     * Deletes schedules given a list of groups.
+     *
+     * @param groups The list of groups.
+     */
+    void deleteGroups(@NonNull Collection<String> groups) {
+        performSubSetOperations(groups, MAX_ARG_COUNT, new SetOperation<String>() {
+            @Override
+            public void perform(List<String> subset) {
+                String inStatement = repeat("?", subset.size(), ", ");
+                delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " IN ( " + inStatement + " )", subset.toArray(new String[subset.size()]));
+            }
+        });
+    }
+
+    /**
      * Deletes schedules given a list of IDs.
      *
      * @param schedulesToDelete The list of schedule IDs.

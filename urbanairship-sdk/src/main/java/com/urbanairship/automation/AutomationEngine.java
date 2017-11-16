@@ -237,11 +237,11 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Schedules a list of action schedules.
      *
-     * @param scheduleInfos A list of {@link ScheduleInfo}.
+     * @param scheduleInfos A collection of {@link ScheduleInfo}.
      * @return A pending result.
      */
-    public PendingResult<List<T>> schedule(@NonNull final List<? extends ScheduleInfo> scheduleInfos) {
-        final PendingResult<List<T>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<T>> schedule(@NonNull final Collection<? extends ScheduleInfo> scheduleInfos) {
+        final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -270,10 +270,10 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Cancels schedules.
      *
-     * @param ids List of schedule Ids to cancel.
+     * @param ids A collection of schedule Ids to cancel.
      * @return A pending result.
      */
-    public PendingResult<Void> cancel(@NonNull final List<String> ids) {
+    public PendingResult<Void> cancel(@NonNull final Collection<String> ids) {
         final PendingResult<Void> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
@@ -301,8 +301,29 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                cancelGroupDelays(group);
+                cancelGroupDelays(Collections.singletonList(group));
                 pendingResult.setResult(dataManager.deleteGroup(group));
+            }
+        });
+
+        return pendingResult;
+    }
+
+    /**
+     * Cancels schedule groups.
+     *
+     * @param groups A collection of groups.
+     * @return A pending result.
+     */
+    public PendingResult<Void> cancelGroups(@NonNull final Collection<String> groups) {
+        final PendingResult<Void> pendingResult = new PendingResult<>();
+
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                cancelGroupDelays(groups);
+                dataManager.deleteGroups(groups);
+                pendingResult.setResult(null);
             }
         });
 
@@ -590,11 +611,11 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Cancel delay schedule handler by a group.
      *
-     * @param group A schedule identifier.
+     * @param groups A schedule identifier.
      */
-    private void cancelGroupDelays(String group) {
+    private void cancelGroupDelays(Collection<String> groups) {
         for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
-            if (group.equals(runnable.group)) {
+            if (groups.contains(runnable.group)) {
                 backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
                 delayedRunnables.remove(runnable);
             }

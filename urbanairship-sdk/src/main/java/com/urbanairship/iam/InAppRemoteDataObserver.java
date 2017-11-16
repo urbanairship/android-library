@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.WorkerThread;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
@@ -22,6 +23,7 @@ import com.urbanairship.util.UAStringUtil;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.
@@ -44,26 +46,6 @@ class InAppRemoteDataObserver {
     private Subscription subscription;
 
     /**
-     * Observer callbacks.
-     */
-    interface Callback {
-
-        /**
-         * New schedules that need to be scheduled.
-         *
-         * @param scheduleInfos The list of schedule infos.
-         */
-        void onSchedule(List<InAppMessageScheduleInfo> scheduleInfos);
-
-        /**
-         * Message Ids that need to be cancelled.
-         *
-         * @param messageIds The list of message IDs.
-         */
-        void onCancel(List<String> messageIds);
-    }
-
-    /**
      * Default constructor.
      *
      * @param preferenceDataStore The preference data store.
@@ -76,9 +58,9 @@ class InAppRemoteDataObserver {
      * Subscribes to remote data.
      *
      * @param remoteData The remote data.
-     * @param callback Callbacks.
+     * @param scheduler Scheduler.
      */
-    void subscribe(final RemoteData remoteData, final Callback callback) {
+    void subscribe(final RemoteData remoteData, final InAppMessageScheduler scheduler) {
         cancel();
 
         this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
@@ -91,22 +73,37 @@ class InAppRemoteDataObserver {
                                       .subscribe(new Subscriber<RemoteDataPayload>() {
                                           @Override
                                           public void onNext(RemoteDataPayload payload) {
-                                              processPayload(payload, callback);
+                                              try {
+                                                  processPayload(payload, scheduler);
+                                              } catch (ExecutionException e) {
+                                                  e.printStackTrace();
+                                              } catch (InterruptedException e) {
+                                                  e.printStackTrace();
+                                              }
                                           }
                                       });
     }
 
+    /**
+     * Cancels the subscription.
+     */
     void cancel() {
         if (this.subscription != null) {
             this.subscription.cancel();
         }
     }
 
-    private void processPayload(RemoteDataPayload payload, Callback callback) {
+    /**
+     * Processes a payload.
+     * @param payload The remote data payload.
+     * @param scheduler The scheduler.
+     */
+    @WorkerThread
+    private void processPayload(RemoteDataPayload payload, InAppMessageScheduler scheduler) throws ExecutionException, InterruptedException {
         long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
-        preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
 
         List<String> messageIds = new ArrayList<>();
+
         List<InAppMessageScheduleInfo> newSchedules = new ArrayList<>();
 
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
@@ -129,6 +126,10 @@ class InAppRemoteDataObserver {
             messageIds.add(messageId);
 
             if (createdTimeStamp > lastUpdate) {
+                if (!scheduler.getMessages(messageId).get().isEmpty()) {
+                    continue;
+                }
+
                 try {
                     InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson);
                     if (checkSchedule(scheduleInfo, createdTimeStamp)) {
@@ -146,14 +147,15 @@ class InAppRemoteDataObserver {
         deletedMessageIds.removeAll(messageIds);
 
         if (!deletedMessageIds.isEmpty()) {
-            callback.onCancel(deletedMessageIds);
+            scheduler.cancelMessages(deletedMessageIds).get();
         }
 
         if (!newSchedules.isEmpty()) {
-            callback.onSchedule(newSchedules);
+            scheduler.schedule(newSchedules).get();
         }
 
         setScheduledMessageIds(messageIds);
+        preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
     }
 
     private boolean checkSchedule(InAppMessageScheduleInfo scheduleInfo, long createdTimeStamp) {
@@ -191,18 +193,18 @@ class InAppRemoteDataObserver {
     }
 
     /**
-     * Sets the schedule new user audience check cut off time. Any schedules that have
-     * a new user condition will be dropped if the schedule create time is after the
-     * cut off time.
+     * Gets the schedule new user audience check cut off time.
      *
      * @return The new user cut off time.
      */
     long getScheduleNewUserCutOffTime() {
-        return preferenceDataStore.getLong(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, Long.MAX_VALUE);
+        return preferenceDataStore.getLong(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, -1);
     }
 
     /**
-     * Sets the schedule new user cut off time.
+     * Sets the schedule new user cut off time. Any schedules that have
+     * a new user condition will be dropped if the schedule create time is after the
+     * cut off time.
      *
      * @param time The schedule new user cut off time.
      */

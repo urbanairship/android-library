@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ public class RemoteData extends AirshipComponent {
     private static final String DATABASE_NAME = "ua_remotedata.db";
 
     /**
-     * The key for getting and setting the las`t modified timestamp from the preference datastore.
+     * The key for getting and setting the last modified timestamp from the preference datastore.
      */
     private static final String LAST_MODIFIED_KEY = "com.urbanairship.remotedata.LAST_MODIFIED";
 
