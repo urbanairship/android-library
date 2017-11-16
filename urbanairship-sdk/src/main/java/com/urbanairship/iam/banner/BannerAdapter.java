@@ -46,7 +46,7 @@ public class BannerAdapter implements InAppMessageAdapter {
     @Override
     public int onPrepare(@NonNull Context context) {
         BannerDisplayContent displayContent = message.getDisplayContent();
-        if (displayContent.getImage() == null) {
+        if (displayContent.getMedia() == null) {
             return OK;
         }
 
@@ -56,7 +56,7 @@ public class BannerAdapter implements InAppMessageAdapter {
             }
 
             File file = cache.file(IMAGE_FILE_NAME);
-            if (!FileUtils.downloadFile(new URL(displayContent.getImage().getUrl()), file)) {
+            if (!FileUtils.downloadFile(new URL(displayContent.getMedia().getUrl()), file)) {
                 return RETRY;
             }
             cache.getBundle().putString(BannerFragment.IMAGE_CACHE_KEY, Uri.fromFile(file).toString());

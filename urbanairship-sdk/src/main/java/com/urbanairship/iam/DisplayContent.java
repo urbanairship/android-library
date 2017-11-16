@@ -41,7 +41,7 @@ public interface DisplayContent extends JsonSerializable {
     String BORDER_RADIUS_KEY = "border_radius";
     String BUTTON_LAYOUT_KEY = "button_layout";
     String BUTTONS_KEY = "buttons";
-    String IMAGE_KEY = "image";
+    String MEDIA_KEY = "media";
     String URL_KEY = "url";
     String DISMISS_BUTTON_COLOR_KEY = "dismiss_button_color";
     String TEMPLATE_KEY = "template";

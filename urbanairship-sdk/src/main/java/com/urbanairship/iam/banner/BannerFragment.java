@@ -170,11 +170,10 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         // Image
         ImageView image = view.findViewById(R.id.image);
-        if (displayContent.getImage() != null) {
-            String imageLocation = cache != null ? cache.getBundle().getString(IMAGE_CACHE_KEY, null) : displayContent.getImage().getUrl();
-            if (imageLocation != null) {
-                ImageLoader.shared(getActivity()).load(imageLocation, 0, image);
-            }
+        if (displayContent.getMedia() != null) {
+            String imageLocation = cache != null ? cache.getBundle().getString(IMAGE_CACHE_KEY, displayContent.getMedia().getUrl()) : displayContent.getMedia().getUrl();
+            ImageLoader.shared(getActivity()).load(imageLocation, 0, image);
+            image.setContentDescription(displayContent.getMedia().getDescription());
         } else {
             image.setVisibility(View.GONE);
         }
@@ -517,11 +516,11 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
     @LayoutRes
     private int getContentLayout() {
         switch (displayContent.getTemplate()) {
-            case BannerDisplayContent.TEMPLATE_RIGHT_IMAGE:
-                return R.layout.ua_iam_banner_content_right_image;
-            case BannerDisplayContent.TEMPLATE_LEFT_IMAGE:
+            case BannerDisplayContent.TEMPLATE_RIGHT_MEDIA:
+                return R.layout.ua_iam_banner_content_right_media;
+            case BannerDisplayContent.TEMPLATE_LEFT_MEDIA:
             default:
-                return R.layout.ua_iam_banner_content_left_image;
+                return R.layout.ua_iam_banner_content_left_media;
         }
     }
 

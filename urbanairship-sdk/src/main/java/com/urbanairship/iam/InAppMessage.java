@@ -47,7 +47,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      */
     public static final String TYPE_CUSTOM = "custom";
 
-
     @DisplayType
     private final String type;
     private final JsonMap extras;
@@ -82,8 +81,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * Returns the display content.
      * <p>
      * The return type depends on the in-app message type:
-     * {@link #TYPE_BANNER}: a {@link BannerDisplayContent} will be returned
-     * {@link #TYPE_CUSTOM}: a {@link CustomDisplayContent} will be returned
+     * {@link #TYPE_BANNER}: a {@link com.urbanairship.iam.banner.BannerDisplayContent} will be returned
+     * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent} will be returned
      *
      * @param <T> The expected content type.
      * @return The display content.

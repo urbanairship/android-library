@@ -11,7 +11,7 @@ import android.support.annotation.StringDef;
 
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
-import com.urbanairship.iam.ImageInfo;
+import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -48,19 +48,19 @@ public class BannerDisplayContent implements DisplayContent {
     public static final String PLACEMENT_BOTTOM = "bottom";
 
 
-    @StringDef({ TEMPLATE_LEFT_IMAGE, TEMPLATE_RIGHT_IMAGE })
+    @StringDef({ TEMPLATE_LEFT_MEDIA, TEMPLATE_RIGHT_MEDIA })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Template {}
 
     /**
-     * Template to display the optional image on the left.
+     * Template to display the optional media on the left.
      */
-    public static final String TEMPLATE_LEFT_IMAGE = "image_text";
+    public static final String TEMPLATE_LEFT_MEDIA = "media_text";
 
     /**
-     * Template to display the optional image on the right.
+     * Template to display the optional media on the right.
      */
-    public static final String TEMPLATE_RIGHT_IMAGE = "text_image";
+    public static final String TEMPLATE_RIGHT_MEDIA = "text_media";
 
     /**
      * Default duration in milliseconds.
@@ -80,7 +80,7 @@ public class BannerDisplayContent implements DisplayContent {
 
     private final TextInfo heading;
     private final TextInfo body;
-    private final ImageInfo image;
+    private final MediaInfo media;
     private final List<ButtonInfo> buttons;
     @ButtonLayout
     private final String buttonLayout;
@@ -102,7 +102,7 @@ public class BannerDisplayContent implements DisplayContent {
     private BannerDisplayContent(Builder builder) {
         this.heading = builder.heading;
         this.body = builder.body;
-        this.image = builder.image;
+        this.media = builder.media;
         this.buttonLayout = builder.buttonLayout;
         this.buttons = builder.buttons;
         this.placement = builder.placement;
@@ -138,8 +138,8 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         // Image
-        if (content.containsKey(IMAGE_KEY)) {
-            builder.setImage(ImageInfo.parseJson(content.get(IMAGE_KEY)));
+        if (content.containsKey(MEDIA_KEY)) {
+            builder.setMedia(MediaInfo.parseJson(content.get(MEDIA_KEY)));
         }
 
         // Buttons
@@ -186,11 +186,11 @@ public class BannerDisplayContent implements DisplayContent {
         // Template
         if (content.containsKey(TEMPLATE_KEY)) {
             switch (content.opt(TEMPLATE_KEY).getString("")) {
-                case TEMPLATE_LEFT_IMAGE:
-                    builder.setTemplate(TEMPLATE_LEFT_IMAGE);
+                case TEMPLATE_LEFT_MEDIA:
+                    builder.setTemplate(TEMPLATE_LEFT_MEDIA);
                     break;
-                case TEMPLATE_RIGHT_IMAGE:
-                    builder.setTemplate(TEMPLATE_RIGHT_IMAGE);
+                case TEMPLATE_RIGHT_MEDIA:
+                    builder.setTemplate(TEMPLATE_RIGHT_MEDIA);
                     break;
                 default:
                     throw new JsonException("Unexpected template: " + content.opt(TEMPLATE_KEY));
@@ -256,7 +256,7 @@ public class BannerDisplayContent implements DisplayContent {
         return JsonMap.newBuilder()
                       .put(HEADING_KEY, heading)
                       .put(BODY_KEY, body)
-                      .put(IMAGE_KEY, image)
+                      .put(MEDIA_KEY, media)
                       .put(BUTTONS_KEY, JsonValue.wrapOpt(buttons))
                       .put(BUTTON_LAYOUT_KEY, buttonLayout)
                       .put(PLACEMENT_KEY, placement)
@@ -292,13 +292,13 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     /**
-     * Returns the optional {@link ImageInfo}.
+     * Returns the optional {@link MediaInfo}.
      *
-     * @return The banner image.
+     * @return The banner media.
      */
     @Nullable
-    public ImageInfo getImage() {
-        return image;
+    public MediaInfo getMedia() {
+        return media;
     }
 
     /**
@@ -421,7 +421,7 @@ public class BannerDisplayContent implements DisplayContent {
         if (body != null ? !body.equals(that.body) : that.body != null) {
             return false;
         }
-        if (image != null ? !image.equals(that.image) : that.image != null) {
+        if (media != null ? !media.equals(that.media) : that.media != null) {
             return false;
         }
         if (buttons != null ? !buttons.equals(that.buttons) : that.buttons != null) {
@@ -444,7 +444,7 @@ public class BannerDisplayContent implements DisplayContent {
     public int hashCode() {
         int result = heading != null ? heading.hashCode() : 0;
         result = 31 * result + (body != null ? body.hashCode() : 0);
-        result = 31 * result + (image != null ? image.hashCode() : 0);
+        result = 31 * result + (media != null ? media.hashCode() : 0);
         result = 31 * result + (buttons != null ? buttons.hashCode() : 0);
         result = 31 * result + (buttonLayout != null ? buttonLayout.hashCode() : 0);
         result = 31 * result + (placement != null ? placement.hashCode() : 0);
@@ -478,14 +478,14 @@ public class BannerDisplayContent implements DisplayContent {
 
         private TextInfo heading;
         private TextInfo body;
-        private ImageInfo image;
+        private MediaInfo media;
         private List<ButtonInfo> buttons = new ArrayList<>();
         @ButtonLayout
         private String buttonLayout = BUTTON_LAYOUT_SEPARATE;
         @Placement
         private String placement = PLACEMENT_BOTTOM;
         @Template
-        private String template = TEMPLATE_LEFT_IMAGE;
+        private String template = TEMPLATE_LEFT_MEDIA;
         private long duration = DEFAULT_DURATION_MS;
         private int backgroundColor = Color.WHITE;
         private int dismissButtonColor = Color.BLACK;
@@ -550,14 +550,14 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the image.
+         * Sets the banner media. Only {@link MediaInfo#TYPE_IMAGE} is supported.
          *
-         * @param image The image info.
+         * @param media The media info.
          * @return The builder instance.
          */
         @NonNull
-        public Builder setImage(@NonNull ImageInfo image) {
-            this.image = image;
+        public Builder setMedia(@NonNull MediaInfo media) {
+            this.media = media;
             return this;
         }
 
@@ -587,7 +587,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_IMAGE}.
+         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_MEDIA}.
          *
          * @param template The banner's template.
          * @return The builder instance.
@@ -680,13 +680,15 @@ public class BannerDisplayContent implements DisplayContent {
          *
          * @return The banner display content.
          * @throws IllegalArgumentException If the button layout is stacked, if more than 2 button
-         * are defined, or if the banner does not define at least a heading, body, or buttons.
+         * are defined, if the supplied media is not an image, or if the banner does not define at least a heading, body, or buttons.
          */
         @NonNull
         public BannerDisplayContent build() {
             Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
+            Checks.checkArgument(media == null || !media.getType().equals(MediaInfo.TYPE_IMAGE), "Banner only supports image media");
+
             return new BannerDisplayContent(this);
         }
     }
