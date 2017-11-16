@@ -71,6 +71,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public LegacyInAppMessageManager(PreferenceDataStore preferenceDataStore, InAppMessageManager inAppMessageManager, Analytics analytics) {
+        super(preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.inAppMessageManager = inAppMessageManager;
         this.analytics = analytics;

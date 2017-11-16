@@ -151,6 +151,8 @@ public class RichPushInbox extends AirshipComponent {
     @VisibleForTesting
     RichPushInbox(Context context, PreferenceDataStore dataStore, final JobDispatcher jobDispatcher,
                   RichPushUser user, RichPushResolver resolver, Executor executor, ActivityMonitor activityMonitor) {
+        super(dataStore);
+
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
@@ -184,6 +186,8 @@ public class RichPushInbox extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
+
         if (UAStringUtil.isEmpty(user.getId())) {
             final RichPushUser.Listener userListener = new RichPushUser.Listener() {
                 @Override

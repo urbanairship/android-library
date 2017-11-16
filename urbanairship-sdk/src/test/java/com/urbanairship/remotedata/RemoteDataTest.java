@@ -29,7 +29,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -66,7 +68,7 @@ public class RemoteDataTest extends BaseTestCase {
 
     @After
     public void teardown() {
-        remoteData.stop();
+        remoteData.tearDown();
         activityMonitor.unregister();
     }
 
@@ -76,6 +78,7 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testForegroundTransition() {
         remoteData.init();
+        clearInvocations(mockDispatcher);
         activityMonitor.startActivity();
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
@@ -88,12 +91,39 @@ public class RemoteDataTest extends BaseTestCase {
         verifyNoMoreInteractions(mockDispatcher);
     }
 
+
+    /**
+     * Test a foreground transition will not trigger a refresh if its before the foreground refresh
+     * interval.
+     */
+    @Test
+    public void testRefreshInterval() {
+        remoteData.init();
+        clearInvocations(mockDispatcher);
+        remoteData.setForegroundRefreshInterval(100000);
+
+
+        activityMonitor.startActivity();
+        activityMonitor.stopActivity();
+
+
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(RemoteDataJobHandler.ACTION_REFRESH);
+            }
+        }));
+
+
+
+    }
+
     /**
      * Test that an empty cache will result in empty model objects in the initial callback.
      */
     @Test
     public void testPayloadsForTypeWithEmptyCache() {
-        remoteData.start();
+        remoteData.init();
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
         Observable<RemoteDataPayload> payloadsObservable = remoteData.payloadsForType("type");
@@ -126,7 +156,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypeWithMissingTypeInResponse() throws Exception {
-        remoteData.start();
+        remoteData.init();
         remoteData.dataStore.savePayload(payload);
 
         Assert.assertEquals(remoteData.dataStore.getPayloads().size(), 1);
@@ -166,7 +196,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypeDistinctness() {
-        remoteData.start();
+        remoteData.init();
 
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 
@@ -212,7 +242,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesWithEmptyCache() {
-        remoteData.start();
+        remoteData.init();
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
         Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes("type", "otherType");
@@ -252,7 +282,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesWithMissingTypeInResponse() throws Exception {
-        remoteData.start();
+        remoteData.init();
         remoteData.dataStore.savePayload(payload);
         remoteData.dataStore.savePayload(otherPayload);
 
@@ -296,7 +326,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testPayloadsForTypesDistinctness() {
-        remoteData.start();
+        remoteData.init();
 
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
@@ -356,7 +386,7 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testHandleRefreshResponse() {
-        remoteData.start();
+        remoteData.init();
 
         final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
 

@@ -95,6 +95,7 @@ public class Analytics extends AirshipComponent {
      * @param builder The builder instance.
      */
     private Analytics(Builder builder) {
+        super(builder.preferenceDataStore);
         this.context = builder.context.getApplicationContext();
         this.preferenceDataStore = builder.preferenceDataStore;
         this.configOptions = builder.configOptions;
@@ -120,6 +121,7 @@ public class Analytics extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
         startNewSession();
 
         activityMonitor.addListener(listener);

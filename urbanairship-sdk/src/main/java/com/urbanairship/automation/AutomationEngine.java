@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -63,6 +64,7 @@ public class AutomationEngine<T extends Schedule> {
     private Handler backgroundHandler;
     private Handler mainHandler;
     private ScheduleExpiryListener<T> expiryListener;
+    private AtomicBoolean isPaused = new AtomicBoolean(false);
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -73,6 +75,7 @@ public class AutomationEngine<T extends Schedule> {
 
     private Subject<TriggerUpdate> stateObservableUpdates;
     private Subscription compoundTriggerSubscription;
+    ;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -115,6 +118,7 @@ public class AutomationEngine<T extends Schedule> {
             onScheduleConditionsChanged();
         }
     };
+
 
     /**
      * Expired schedule listener.
@@ -166,6 +170,20 @@ public class AutomationEngine<T extends Schedule> {
         restoreCompoundTriggers();
 
         isStarted = true;
+    }
+
+    /**
+     * Pauses processing any triggers or executing schedules. Any events will be dropped and
+     * not counted towards a trigger's goal.
+     *
+     * @param isPaused {@code true} to pause the engine, otherwise {@code false}.
+     */
+    public void setPaused(boolean isPaused) {
+        this.isPaused.set(isPaused);
+
+        if (!isPaused) {
+            onScheduleConditionsChanged();
+        }
     }
 
     /**
@@ -688,9 +706,10 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (triggerEntries.isEmpty()) {
+                if (isPaused.get() || triggerEntries.isEmpty()) {
                     return;
                 }
+
                 Set<String> triggeredSchedules = new HashSet<>();
                 Set<String> cancelledSchedules = new HashSet<>();
 
@@ -755,7 +774,7 @@ public class AutomationEngine<T extends Schedule> {
      */
     @WorkerThread
     private Set<String> handleTriggeredSchedules(final List<ScheduleEntry> scheduleEntries) {
-        if (scheduleEntries.isEmpty()) {
+        if (isPaused.get() || scheduleEntries.isEmpty()) {
             return new HashSet<>();
         }
 
@@ -801,6 +820,10 @@ public class AutomationEngine<T extends Schedule> {
                 public void run() {
                     T schedule = null;
                     result = false;
+
+                    if (isPaused.get()) {
+                        return;
+                    }
 
                     if (isScheduleConditionsSatisfied(scheduleEntry)) {
                         try {

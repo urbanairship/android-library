@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
@@ -16,6 +17,23 @@ import java.util.concurrent.Executors;
  */
 public abstract class AirshipComponent {
 
+    private static final String ENABLE_KEY_PREFIX = "airshipComponent.enable_";
+
+    private final PreferenceDataStore dataStore;
+    private final String enableKey;
+
+
+    /**
+     * Default constructor.
+     * @param dataStore The preference data store.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public AirshipComponent(PreferenceDataStore dataStore) {
+        this.dataStore = dataStore;
+        this.enableKey = ENABLE_KEY_PREFIX + getClass().getName();
+    }
+
     /**
      * Default job executor.
      */
@@ -28,7 +46,17 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void init() {}
+    @CallSuper
+    protected void init() {
+        dataStore.addListener(new PreferenceDataStore.PreferenceChangeListener() {
+            @Override
+            public void onPreferenceChange(String key) {
+                if (key.equals(enableKey)) {
+                    onComponentEnableChange(isComponentEnabled());
+                }
+            }
+        });
+    }
 
     /**
      * Tear down the manager.
@@ -76,4 +104,35 @@ public abstract class AirshipComponent {
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void onAirshipReady(UAirship airship) {}
+
+    /**
+     * Called when the component is enabled or disabled.
+     * @param isEnabled {@code true} if the component is enabled, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected void onComponentEnableChange(boolean isEnabled) {}
+
+    /**
+     * Enables/disables the component.
+     * Disabled components not receive calls to {@link #onPerformJob(UAirship, JobInfo)}.
+     *
+     * @param enabled {@code true} to enable the component, {@code false} to disable.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void setComponentEnabled(boolean enabled) {
+        dataStore.put(enableKey, enabled);
+    }
+
+    /**
+     * Checks if the component is enabled.
+     *
+     * @return {@code true} if enabled, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean isComponentEnabled() {
+        return dataStore.getBoolean(enableKey, true);
+    }
 }

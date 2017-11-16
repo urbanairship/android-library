@@ -33,6 +33,7 @@ import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.util.ManifestUtils;
@@ -115,6 +116,7 @@ public class UAirship {
     InAppMessageManager inAppMessageManager;
     LegacyInAppMessageManager legacyInAppMessageManager;
     RemoteData remoteData;
+    RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
     MessageCenter messageCenter;
     NamedUser namedUser;
@@ -612,11 +614,12 @@ public class UAirship {
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
-        this.messageCenter = new MessageCenter();
-        this.automation = new Automation(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
-        this.inAppMessageManager = new InAppMessageManager(application, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        this.messageCenter = new MessageCenter(preferenceDataStore);
+        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
         this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
+        this.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, this.remoteData);
 
         for (AirshipComponent component : getComponents()) {
             component.init();
@@ -814,6 +817,7 @@ public class UAirship {
             components.add(inAppMessageManager);
             components.add(legacyInAppMessageManager);
             components.add(remoteData);
+            components.add(remoteConfigManager);
         }
 
         return components;

@@ -79,6 +79,7 @@ public class NamedUser extends AirshipComponent {
      */
     @VisibleForTesting
     NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, JobDispatcher dispatcher) {
+        super(preferenceDataStore);
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
@@ -87,6 +88,7 @@ public class NamedUser extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
         tagGroupStore.migrateTagGroups(PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY);
 
         // Start named user update

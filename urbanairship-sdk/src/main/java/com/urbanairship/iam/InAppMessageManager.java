@@ -17,6 +17,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
@@ -101,7 +102,10 @@ public class InAppMessageManager extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public InAppMessageManager(Context context, AirshipConfigOptions configOptions, Analytics analytics, ActivityMonitor activityMonitor) {
+    public InAppMessageManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions,
+                               Analytics analytics, ActivityMonitor activityMonitor) {
+        super(preferenceDataStore);
+
         this.activityMonitor = activityMonitor;
         this.analytics = analytics;
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -119,7 +123,9 @@ public class InAppMessageManager extends AirshipComponent {
     }
 
     @VisibleForTesting
-    InAppMessageManager(Analytics analytics, ActivityMonitor activityMonitor, Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine) {
+    InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
+                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine) {
+        super(preferenceDataStore);
         this.analytics = analytics;
         this.activityMonitor = activityMonitor;
         this.driver = driver;
@@ -258,6 +264,15 @@ public class InAppMessageManager extends AirshipComponent {
         super.onAirshipReady(airship);
         isAirshipReady = true;
         automationEngine.checkPendingSchedules();
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Override
+    protected void onComponentEnableChange(boolean isEnabled) {
+        automationEngine.setPaused(!isEnabled);
     }
 
     private void prepareMessage(final String scheduleId) {

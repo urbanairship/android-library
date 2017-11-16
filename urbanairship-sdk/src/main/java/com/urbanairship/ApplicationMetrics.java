@@ -18,6 +18,7 @@ public class ApplicationMetrics extends AirshipComponent {
 
     ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore,
                        @NonNull ActivityMonitor activityMonitor) {
+        super(preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.context = context.getApplicationContext();
         this.listener = new ActivityMonitor.SimpleListener() {
@@ -31,6 +32,7 @@ public class ApplicationMetrics extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
         activityMonitor.addListener(listener);
     }
 

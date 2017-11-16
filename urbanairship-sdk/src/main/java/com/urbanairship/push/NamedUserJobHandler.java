@@ -60,7 +60,7 @@ class NamedUserJobHandler {
     }
 
     /**
-     * Called to handle jobs from {@link NamedUser#onPerformJob(UAirship, Job)}.
+     * Called to handle jobs from {@link NamedUser#onPerformJob(UAirship, JobInfo)}.
      *
      * @param jobInfo The airship jobInfo.
      * @return The job result.

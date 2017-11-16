@@ -11,6 +11,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.ContextCompat;
 
@@ -81,6 +82,8 @@ public class UALocationManager extends AirshipComponent {
      * @hide
      */
     public UALocationManager(@NonNull final Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull ActivityMonitor activityMonitor) {
+        super(preferenceDataStore);
+
         this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
         this.listener = new ActivityMonitor.SimpleListener() {
@@ -103,11 +106,22 @@ public class UALocationManager extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
 
         preferenceDataStore.addListener(preferenceChangeListener);
         activityMonitor.addListener(listener);
+        updateServiceConnection();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected void onComponentEnableChange(boolean isEnabled) {
         updateServiceConnection();
     }
 
@@ -304,7 +318,7 @@ public class UALocationManager extends AirshipComponent {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (isContinuousLocationUpdatesAllowed()) {
+                if (isComponentEnabled() && isContinuousLocationUpdatesAllowed()) {
                     LocationRequestOptions options = getLocationRequestOptions();
                     LocationRequestOptions lastLocationOptions = getLastUpdateOptions();
 

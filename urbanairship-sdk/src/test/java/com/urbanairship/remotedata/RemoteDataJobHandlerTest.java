@@ -15,12 +15,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
-
 
 import java.util.Arrays;
 
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,6 +84,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
     }
 
     private void validateRemoteDataSuccess(int status) {
+        clearInvocations(remoteData);
 
         Response response = refreshSuccessResponse(status);
 
@@ -102,6 +101,9 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
             verify(remoteData).setLastModified("lastModifiedResponse");
             verify(remoteData).handleRefreshResponse(RemoteDataPayload.parsePayloads(responsePayload.get("payloads")));
         }
+
+        verify(remoteData).onRefreshFinished();
+
 
         reset(client);
     }

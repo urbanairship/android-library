@@ -16,7 +16,6 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
-import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -42,6 +41,7 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -1070,5 +1070,17 @@ public class PushManagerTest extends BaseTestCase {
         // Verify that the token has been migrated to the new setting
         assertEquals("admIdToken", preferenceDataStore.getString(PushManager.REGISTRATION_TOKEN_KEY, null));
         assertTrue(preferenceDataStore.getBoolean(PushManager.REGISTRATION_TOKEN_MIGRATED_KEY, false));
+    }
+
+    @Test
+    public void testComponentEnabled() {
+        pushManager.onComponentEnableChange(true);
+
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+            @Override
+            public boolean matches(JobInfo jobInfo) {
+                return jobInfo.getAction().equals(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION);
+            }
+        }));
     }
 }

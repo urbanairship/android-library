@@ -33,7 +33,7 @@ public class Subject<T> extends Observable<T> implements Observer<T> {
      * @return A Subject of the underlying type.
      */
     public static <T> Subject<T> create() {
-        return new Subject();
+        return new Subject<>();
     }
 
     /**

@@ -77,6 +77,14 @@ class Job implements Runnable {
             return;
         }
 
+        if (!component.isComponentEnabled()) {
+            Logger.warn("JobDispatcher - Component disabled. Dropping jobInfo: " + jobInfo);
+            if (callback != null) {
+                callback.onFinish(this, JobInfo.JOB_FINISHED);
+            }
+            return;
+        }
+
         component.getJobExecutor(jobInfo).execute(new Runnable() {
             @Override
             public void run() {

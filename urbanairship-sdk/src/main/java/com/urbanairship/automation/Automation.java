@@ -11,6 +11,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
+import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 
@@ -46,8 +47,10 @@ public class Automation extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public Automation(@NonNull Context context, @NonNull AirshipConfigOptions configOptions,
-                      @NonNull Analytics analytics, @NonNull ActivityMonitor activityMonitor) {
+    public Automation(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                      @NonNull AirshipConfigOptions configOptions,  @NonNull Analytics analytics,
+                      @NonNull ActivityMonitor activityMonitor) {
+        super(preferenceDataStore);
 
         this.automationEngine = new AutomationEngine.Builder<ActionSchedule>()
                 .setScheduleLimit(SCHEDULES_LIMIT)
@@ -60,6 +63,8 @@ public class Automation extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
+
         if (!UAirship.isMainProcess()) {
             return;
         }
@@ -67,6 +72,19 @@ public class Automation extends AirshipComponent {
         automationEngine.start();
     }
 
+    /**
+     * {@inheritDoc}
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onComponentEnableChange(boolean isEnabled) {
+        if (!UAirship.isMainProcess()) {
+            return;
+        }
+
+        automationEngine.setPaused(!isEnabled);
+    }
 
     @Override
     protected void tearDown() {

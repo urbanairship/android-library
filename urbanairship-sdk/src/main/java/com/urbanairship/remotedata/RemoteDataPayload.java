@@ -129,6 +129,16 @@ public class RemoteDataPayload {
         return result;
     }
 
+
+    @Override
+    public String toString() {
+        return "RemoteDataPayload{" +
+                "type='" + type + '\'' +
+                ", timestamp=" + timestamp +
+                ", data=" + data +
+                '}';
+    }
+
     /**
      * Gets the type.
      *

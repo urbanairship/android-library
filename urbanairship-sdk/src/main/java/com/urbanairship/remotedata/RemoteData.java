@@ -3,6 +3,7 @@
 package com.urbanairship.remotedata;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -22,9 +23,9 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.reactive.BiFunction;
 import com.urbanairship.reactive.Function;
+import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
-import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Supplier;
 
 import java.util.Arrays;
@@ -49,6 +50,21 @@ public class RemoteData extends AirshipComponent {
      */
     private static final String LAST_MODIFIED_KEY = "com.urbanairship.remotedata.LAST_MODIFIED";
 
+    /**
+     * The key for getting and setting the foreground refresh interval from the preference datastore.
+     */
+    private static final String FOREGROUND_REFRESH_INTERVAL_KEY = "com.urbanairship.remotedata.FOREGROUND_REFRESH_INTERVAL";
+
+    /**
+     * The key for getting and setting the last refresh time from the preference datastore.
+     */
+    private static final String LAST_REFRESH_TIME_KEY = "com.urbanairship.remotedata.LAST_REFRESH_TIME";
+
+    /**
+     * The key for getting and setting the app version of the last refresh from the preference datastore.
+     */
+    private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
+
     private Context context;
     private AirshipConfigOptions configOptions;
     private JobDispatcher jobDispatcher;
@@ -60,7 +76,7 @@ public class RemoteData extends AirshipComponent {
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
         public void onForeground(long time) {
-           RemoteData.this.refresh();
+            RemoteData.this.onForeground();
         }
     };
 
@@ -96,6 +112,7 @@ public class RemoteData extends AirshipComponent {
      */
     @VisibleForTesting
     RemoteData(Context context, @NonNull PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, ActivityMonitor activityMonitor, JobDispatcher dispatcher) {
+        super(preferenceDataStore);
         this.context = context;
         this.configOptions = configOptions;
         this.jobDispatcher = dispatcher;
@@ -108,14 +125,22 @@ public class RemoteData extends AirshipComponent {
 
     @Override
     protected void init() {
-        start();
+        super.init();
+        backgroundThread.start();
+        backgroundHandler = new Handler(this.backgroundThread.getLooper());
         activityMonitor.addListener(activityListener);
+
+        int appVersion = preferenceDataStore.getInt(LAST_REFRESH_APP_VERSION_KEY, 0);
+        PackageInfo packageInfo = UAirship.getPackageInfo();
+        if (packageInfo != null && packageInfo.versionCode != appVersion) {
+            refresh();
+        }
     }
 
     @Override
     protected void tearDown() {
         activityMonitor.removeListener(activityListener);
-        stop();
+        backgroundThread.quit();
     }
 
     @WorkerThread
@@ -126,7 +151,36 @@ public class RemoteData extends AirshipComponent {
             jobHandler = new RemoteDataJobHandler(context, airship);
         }
 
+
         return jobHandler.performJob(jobInfo);
+    }
+
+    /**
+     * Called when the application is foregrounded.
+     */
+    private void onForeground() {
+        long timeSinceLastRefresh = System.currentTimeMillis() - preferenceDataStore.getLong(LAST_REFRESH_TIME_KEY, -1);
+        if (getForegroundRefreshInterval() <= timeSinceLastRefresh) {
+            refresh();
+        }
+    }
+
+    /**
+     * Sets the foreground refresh interval.
+     *
+     * @param milliseconds The foreground refresh interval.
+     */
+    public void setForegroundRefreshInterval(long milliseconds) {
+        preferenceDataStore.put(FOREGROUND_REFRESH_INTERVAL_KEY, milliseconds);
+    }
+
+    /**
+     * Gets the foreground refresh interval.
+     *
+     * @return The foreground refresh interval.
+     */
+    public long getForegroundRefreshInterval() {
+        return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, 0l);
     }
 
     /**
@@ -169,26 +223,10 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
-     * Spins up the background thread and handler.
-     */
-    void start() {
-        backgroundThread.start();
-        backgroundHandler = new Handler(this.backgroundThread.getLooper());
-    }
-
-    /**
-     * Winds down the background thread and handler.
-     */
-    void stop() {
-        backgroundThread.quit();
-    }
-
-    /**
      * Refresh response callback for use from the RemoteDataJobHandler.
      *
      * @param newPayloads A list of new payloads.
      */
-    @WorkerThread
     void handleRefreshResponse(final List<RemoteDataPayload> newPayloads) {
         backgroundHandler.post(new Runnable() {
             @Override
@@ -204,7 +242,7 @@ public class RemoteData extends AirshipComponent {
      *
      * @param lastModified The timestamp in ISO-8601 format.
      */
-    @WorkerThread void setLastModified(String lastModified) {
+    void setLastModified(String lastModified) {
         preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
     }
 
@@ -213,9 +251,22 @@ public class RemoteData extends AirshipComponent {
      *
      * @return A timestamp in ISO-8601 format, or <code>null</code> if one has not been received.
      */
-    @WorkerThread String getLastModified() {
+    String getLastModified() {
         return preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
     }
+
+    /**
+     * Called when the job is finished refreshing the remote data.
+     */
+    @WorkerThread
+    void onRefreshFinished() {
+        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, System.currentTimeMillis());
+        PackageInfo packageInfo = UAirship.getPackageInfo();
+        if (packageInfo != null) {
+            preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
+        }
+    }
+
 
     private Observable<RemoteDataPayload> allPayloadsForType(final @NonNull String type) {
         Observable<RemoteDataPayload> cached = cachedPayloads().defaultIfEmpty(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
@@ -246,7 +297,7 @@ public class RemoteData extends AirshipComponent {
                     public Collection<RemoteDataPayload> apply(RemoteDataPayload payload, RemoteDataPayload otherPayload) {
                         return Arrays.asList(payload, otherPayload);
                     }
-        });
+                });
     }
 
     /**

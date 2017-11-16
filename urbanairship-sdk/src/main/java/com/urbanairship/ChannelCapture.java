@@ -57,6 +57,7 @@ public class ChannelCapture extends AirshipComponent {
      */
     ChannelCapture(Context context, AirshipConfigOptions configOptions, PushManager pushManager, PreferenceDataStore preferenceDataStore,
                    ActivityMonitor activityMonitor) {
+        super(preferenceDataStore);
         this.context = context.getApplicationContext();
         this.configOptions = configOptions;
         this.pushManager = pushManager;
@@ -78,6 +79,8 @@ public class ChannelCapture extends AirshipComponent {
 
     @Override
     protected void init() {
+        super.init();
+
         // ClipboardManager must be prepared on a thread with a prepared looper
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override

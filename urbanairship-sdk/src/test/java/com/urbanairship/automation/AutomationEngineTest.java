@@ -350,7 +350,6 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(driver.priorityList, expectedExecutionOrder);
     }
 
-
     @Test
     public void testExpiryListener() throws Exception {
         final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
@@ -380,6 +379,65 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify the listener was called
         verify(expiryListener).onScheduleExpired(any(ActionSchedule.class));
+    }
+
+    @Test
+    public void testPause() throws Exception {
+        // Pause
+        automationEngine.setPaused(true);
+
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .build();
+
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        runLooperTasks();
+
+        ActionSchedule schedule = future.get();
+
+        // Verify it was saved
+        ScheduleEntry entry = automationDataManager.getScheduleEntry(schedule.getId());
+        assertEquals(entry.scheduleId, schedule.getId());
+
+        // Try to trigger the schedule
+        new CustomEvent.Builder("event")
+                .create()
+                .track();
+
+        runLooperTasks();
+
+        // Verify it's still idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+        assertFalse(driver.callbackMap.containsKey(schedule.getId()));
+
+        // Resume
+        automationEngine.setPaused(false);
+        runLooperTasks();
+
+        // Verify it's still idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+        assertFalse(driver.callbackMap.containsKey(schedule.getId()));
+
+        // Actually trigger the schedule
+        new CustomEvent.Builder("event")
+                .create()
+                .track();
+        runLooperTasks();
+
+        // Verify it started executing the schedule
+        assertTrue(driver.callbackMap.containsKey(schedule.getId()));
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
+
+        // Finish executing the schedule
+        driver.callbackMap.get(schedule.getId()).onFinish();
+        runLooperTasks();
+
+        // Schedule should be deleted
+        assertNull(automationDataManager.getScheduleEntry(schedule.getId()));
     }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {

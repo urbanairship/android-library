@@ -15,9 +15,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import org.json.JSONException;
-
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -116,6 +113,7 @@ public class RemoteDataJobHandler {
                 if (map.containsKey("payloads")) {
                     List<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.get("payloads"));
                     remoteData.handleRefreshResponse(payloads);
+                    remoteData.onRefreshFinished();
                     return JobInfo.JOB_FINISHED;
                 }
             } catch (JsonException e) {
@@ -126,6 +124,7 @@ public class RemoteDataJobHandler {
         } else if (status == 304) {
             // Not modified
             Logger.debug("Remote data not modified since last refresh");
+            remoteData.onRefreshFinished();
             return JobInfo.JOB_FINISHED;
         } else {
             // Error

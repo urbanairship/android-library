@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationEngine;
@@ -73,7 +74,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockEngine = mock(AutomationEngine.class);
 
 
-        manager = new InAppMessageManager(mockAnalytics, activityMonitor, new Executor() {
+        manager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor, new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();

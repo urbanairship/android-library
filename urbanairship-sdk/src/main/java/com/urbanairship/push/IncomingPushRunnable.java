@@ -95,14 +95,21 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
+        // Process any remote data background push before we decide ot drop the push on the ground
+        if (message.isRemoteData()) {
+            airship.getRemoteData().refresh();
+        }
+
+        if (!airship.getPushManager().isComponentEnabled()) {
+            Logger.info("PushManager component is disabled, ignoring message.");
+            return;
+        }
+
         if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
             Logger.debug("PushJobHandler - Received a Rich Push.");
             airship.getInbox().fetchMessages();
         }
 
-        if (message.isRemoteData()) {
-            airship.getRemoteData().refresh();
-        }
 
         NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 

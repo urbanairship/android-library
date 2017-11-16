@@ -18,7 +18,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
@@ -307,6 +306,7 @@ public class PushManager extends AirshipComponent {
      */
     @VisibleForTesting
     PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider provider, JobDispatcher dispatcher) {
+        super(preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
@@ -325,7 +325,7 @@ public class PushManager extends AirshipComponent {
 
     @Override
     protected void init() {
-
+        super.init();
         if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
         }
@@ -339,7 +339,6 @@ public class PushManager extends AirshipComponent {
         channelCreationDelayEnabled = getChannelId() == null && configOptions.channelCreationDelayEnabled;
 
         // Start registration
-
         if (UAirship.isMainProcess()) {
             JobInfo jobInfo = JobInfo.newBuilder()
                                      .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
@@ -356,7 +355,23 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @hide
+     */
+    @Override
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onComponentEnableChange(boolean isEnabled) {
+        if (isEnabled) {
+            JobInfo jobInfo = JobInfo.newBuilder()
+                                     .setAction(PushManagerJobHandler.ACTION_UPDATE_PUSH_REGISTRATION)
+                                     .setId(JobInfo.CHANNEL_UPDATE_PUSH_TOKEN)
+                                     .setAirshipComponent(PushManager.class)
+                                     .build();
 
+            jobDispatcher.dispatch(jobInfo);
+        }
+    }
 
     /**
      * @hide
