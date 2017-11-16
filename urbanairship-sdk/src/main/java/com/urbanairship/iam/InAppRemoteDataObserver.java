@@ -2,14 +2,19 @@
 
 package com.urbanairship.iam;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.reactive.Observer;
+import com.urbanairship.reactive.Subscriber;
+import com.urbanairship.reactive.Subscription;
+import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -19,11 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Observer for {@link com.urbanairship.remotedata.RemoteData}.
+ * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.
  */
-class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
+class InAppRemoteDataObserver {
 
-    public static final String IAM_PAYLOAD_TYPE = "in_app_messages";
+    private static final String IAM_PAYLOAD_TYPE = "in_app_messages";
 
     // JSON keys
     private static final String MESSAGES_JSON_KEY = "in_app_messages";
@@ -31,11 +36,12 @@ class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
     private static final String UPDATED_JSON_KEY = "last_updated";
 
     // Data store keys
-    private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP_";
+    private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
     private static final String SCHEDULED_MESSAGES_KEY = "com.urbanairship.iam.data.SCHEDULED_MESSAGES";
+    private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
 
     private final PreferenceDataStore preferenceDataStore;
-    private Callback callback;
+    private Subscription subscription;
 
     /**
      * Observer callbacks.
@@ -61,27 +67,49 @@ class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
      * Default constructor.
      *
      * @param preferenceDataStore The preference data store.
-     * @param callback The observer callback.
      */
-    InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore, @NonNull Callback callback) {
+    InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore) {
         this.preferenceDataStore = preferenceDataStore;
-        this.callback = callback;
     }
 
-    @Override
-    public void onNext(RemoteDataPayload payload) {
-        long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
-        if (payload.getTimestamp() == lastUpdate) {
-            return;
-        }
+    /**
+     * Subscribes to remote data.
+     *
+     * @param remoteData The remote data.
+     * @param callback Callbacks.
+     */
+    void subscribe(final RemoteData remoteData, final Callback callback) {
+        cancel();
 
+        this.subscription = remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
+                                      .filter(new Predicate<RemoteDataPayload>() {
+                                          @Override
+                                          public boolean apply(RemoteDataPayload payload) {
+                                              return payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
+                                          }
+                                      })
+                                      .subscribe(new Subscriber<RemoteDataPayload>() {
+                                          @Override
+                                          public void onNext(RemoteDataPayload payload) {
+                                              processPayload(payload, callback);
+                                          }
+                                      });
+    }
+
+    void cancel() {
+        if (this.subscription != null) {
+            this.subscription.cancel();
+        }
+    }
+
+    private void processPayload(RemoteDataPayload payload, Callback callback) {
+        long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
-        JsonList messages = payload.getData().opt(MESSAGES_JSON_KEY).optList();
 
         List<String> messageIds = new ArrayList<>();
         List<InAppMessageScheduleInfo> newSchedules = new ArrayList<>();
 
-        for (JsonValue messageJson : messages) {
+        for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
             long createdTimeStamp, lastUpdatedTimeStamp;
 
             try {
@@ -103,7 +131,9 @@ class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
             if (createdTimeStamp > lastUpdate) {
                 try {
                     InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson);
-                    newSchedules.add(scheduleInfo);
+                    if (checkSchedule(scheduleInfo, createdTimeStamp)) {
+                        newSchedules.add(scheduleInfo);
+                    }
                 } catch (JsonException e) {
                     Logger.error("Failed to parse in-app message: " + messageJson, e);
                 }
@@ -126,11 +156,12 @@ class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
         setScheduledMessageIds(messageIds);
     }
 
-    @Override
-    public void onCompleted() {}
-
-    @Override
-    public void onError(Exception e) {}
+    private boolean checkSchedule(InAppMessageScheduleInfo scheduleInfo, long createdTimeStamp) {
+        Context context = UAirship.getApplicationContext();
+        Audience audience = scheduleInfo.getInAppMessage().getAudience();
+        boolean allowNewUser = createdTimeStamp <= getScheduleNewUserCutOffTime();
+        return AudienceChecks.checkAudience(context, audience, allowNewUser);
+    }
 
     /**
      * Gets the stored scheduled message IDs.
@@ -159,4 +190,23 @@ class InAppRemoteDataObserver implements Observer<RemoteDataPayload> {
         preferenceDataStore.put(SCHEDULED_MESSAGES_KEY, JsonValue.wrapOpt(messageIds));
     }
 
+    /**
+     * Sets the schedule new user audience check cut off time. Any schedules that have
+     * a new user condition will be dropped if the schedule create time is after the
+     * cut off time.
+     *
+     * @return The new user cut off time.
+     */
+    long getScheduleNewUserCutOffTime() {
+        return preferenceDataStore.getLong(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, Long.MAX_VALUE);
+    }
+
+    /**
+     * Sets the schedule new user cut off time.
+     *
+     * @param time The schedule new user cut off time.
+     */
+    void setScheduleNewUserCutOffTime(long time) {
+        preferenceDataStore.put(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, time);
+    }
 }

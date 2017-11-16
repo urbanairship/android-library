@@ -23,11 +23,13 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
-import com.urbanairship.reactive.Subscription;
+import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,13 +66,13 @@ public class InAppMessageManager extends AirshipComponent {
     private Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private boolean isDisplayedLocked = false;
     private boolean isAirshipReady = false;
-    private Subscription subscription;
+    private final InAppRemoteDataObserver remoteDataSubscriber;
 
     private final Executor executor;
     private final ActivityMonitor activityMonitor;
     private final RemoteData remoteData;
-    private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
+    private final PushManager pushManager;
     private final Handler mainHandler;
     private final InAppMessageDriver driver;
     private final AutomationEngine<InAppMessageSchedule> automationEngine;
@@ -106,17 +108,20 @@ public class InAppMessageManager extends AirshipComponent {
      * @param configOptions The config options.
      * @param analytics Analytics instance.
      * @param activityMonitor The activity monitor.
+     * @param remoteData Remote data.
+     * @param pushManager The push manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions,
-                               Analytics analytics, ActivityMonitor activityMonitor, RemoteData remoteData) {
+                               Analytics analytics, ActivityMonitor activityMonitor, RemoteData remoteData, PushManager pushManager) {
         super(preferenceDataStore);
 
         this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;
         this.analytics = analytics;
-        this.preferenceDataStore = preferenceDataStore;
+        this.pushManager = pushManager;
+        this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.executor = Executors.newSingleThreadExecutor();
         this.driver = new InAppMessageDriver();
@@ -133,12 +138,14 @@ public class InAppMessageManager extends AirshipComponent {
 
     @VisibleForTesting
     InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
-                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine, RemoteData remoteData) {
+                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
+                        RemoteData remoteData, PushManager pushManager) {
         super(preferenceDataStore);
         this.analytics = analytics;
-        this.preferenceDataStore = preferenceDataStore;
         this.activityMonitor = activityMonitor;
         this.remoteData = remoteData;
+        this.pushManager = pushManager;
+        this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.driver = driver;
         this.automationEngine = engine;
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -265,27 +272,29 @@ public class InAppMessageManager extends AirshipComponent {
 
         automationEngine.start();
 
-        subscription = remoteData.payloadsForType(InAppRemoteDataObserver.IAM_PAYLOAD_TYPE)
-                                 .subscribe(new InAppRemoteDataObserver(preferenceDataStore, new InAppRemoteDataObserver.Callback() {
-                                     @Override
-                                     public void onSchedule(List<InAppMessageScheduleInfo> scheduleInfos) {
-                                         automationEngine.schedule(scheduleInfos);
-                                     }
 
-                                     @Override
-                                     public void onCancel(List<String> messageIds) {
-                                         for (String messageId : messageIds) {
-                                             automationEngine.cancelGroup(messageId);
-                                         }
-                                     }
-                                 }));
-    }
+        if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
+            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? Long.MAX_VALUE : 0);
+        }
 
-    @Override
-    protected void tearDown() {
-        super.tearDown();
-        subscription.cancel();
-        automationEngine.stop();
+        remoteData.addListener(new RemoteData.Listener() {
+            @Override
+            public void onDataRefreshed() {
+                if (remoteData.getLastModified() == null) {
+                    return;
+                }
+
+                try {
+                    long lastModifiedTime = DateUtils.parseIso8601(remoteData.getLastModified());
+                    if (lastModifiedTime <= remoteDataSubscriber.getScheduleNewUserCutOffTime()) {
+                        remoteDataSubscriber.setScheduleNewUserCutOffTime(lastModifiedTime);
+                    }
+                    remoteData.remoteListener(this);
+                } catch (ParseException e) {
+                    Logger.error("InAppMessageManager - Failed to parse last modified time: " + remoteData.getLastModified(), e);
+                }
+            }
+        });
     }
 
     /**
@@ -297,6 +306,27 @@ public class InAppMessageManager extends AirshipComponent {
         super.onAirshipReady(airship);
         isAirshipReady = true;
         automationEngine.checkPendingSchedules();
+
+        remoteDataSubscriber.subscribe(remoteData, new InAppRemoteDataObserver.Callback() {
+            @Override
+            public void onSchedule(List<InAppMessageScheduleInfo> scheduleInfos) {
+                automationEngine.schedule(scheduleInfos);
+            }
+
+            @Override
+            public void onCancel(List<String> messageIds) {
+                for (String messageId : messageIds) {
+                    automationEngine.cancelGroup(messageId);
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void tearDown() {
+        super.tearDown();
+        remoteDataSubscriber.cancel();
+        automationEngine.stop();
     }
 
     /**
@@ -395,7 +425,6 @@ public class InAppMessageManager extends AirshipComponent {
     @MainThread
     void continueOnNextActivity(String scheduleId) {
         Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: " + scheduleId);
-
 
         Activity previousActivity = currentActivity.get();
 

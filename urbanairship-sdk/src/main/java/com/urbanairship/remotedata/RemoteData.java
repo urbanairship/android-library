@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
@@ -26,6 +27,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +50,7 @@ public class RemoteData extends AirshipComponent {
     private static final String DATABASE_NAME = "ua_remotedata.db";
 
     /**
-     * The key for getting and setting the last modified timestamp from the preference datastore.
+     * The key for getting and setting the las`t modified timestamp from the preference datastore.
      */
     private static final String LAST_MODIFIED_KEY = "com.urbanairship.remotedata.LAST_MODIFIED";
 
@@ -74,6 +76,7 @@ public class RemoteData extends AirshipComponent {
     private PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
     private ActivityMonitor activityMonitor;
+    private final List<Listener> listeners = new ArrayList<>();
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -90,6 +93,11 @@ public class RemoteData extends AirshipComponent {
 
     @VisibleForTesting
     RemoteDataStore dataStore;
+
+    public interface Listener {
+        void onDataRefreshed();
+    }
+
 
     /**
      * RemoteData constructor.
@@ -272,6 +280,28 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
+     * Adds a listener for remote data updates.
+     *
+     * @param listener A listener.
+     */
+    public void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener for remote data updates.
+     *
+     * @param listener A listener.
+     */
+    public void remoteListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    /**
      * Refresh response callback for use from the RemoteDataJobHandler.
      *
      * @param newPayloads A list of new payloads.
@@ -300,7 +330,8 @@ public class RemoteData extends AirshipComponent {
      *
      * @return A timestamp in ISO-8601 format, or <code>null</code> if one has not been received.
      */
-    String getLastModified() {
+    @Nullable
+    public String getLastModified() {
         return preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
     }
 
@@ -313,6 +344,13 @@ public class RemoteData extends AirshipComponent {
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
             preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
+        }
+
+
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onDataRefreshed();
+            }
         }
     }
 
