@@ -15,7 +15,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Job handler for fetching remote data
@@ -111,7 +111,7 @@ public class RemoteDataJobHandler {
                 JsonValue json = JsonValue.parseString(body);
                 JsonMap map = json.optMap();
                 if (map.containsKey("payloads")) {
-                    List<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.get("payloads"));
+                    Set<RemoteDataPayload> payloads = RemoteDataPayload.parsePayloads(map.get("payloads"));
                     remoteData.handleRefreshResponse(payloads);
                     remoteData.onRefreshFinished();
                     return JobInfo.JOB_FINISHED;

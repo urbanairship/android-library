@@ -15,13 +15,11 @@ import com.urbanairship.ActivityMonitor;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
-import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.reactive.BiFunction;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
@@ -30,7 +28,11 @@ import com.urbanairship.reactive.Supplier;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * RemoteData top-level class.
@@ -81,7 +83,7 @@ public class RemoteData extends AirshipComponent {
     };
 
     @VisibleForTesting
-    Subject<List<RemoteDataPayload>> payloadUpdates;
+    Subject<Set<RemoteDataPayload>> payloadUpdates;
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -206,7 +208,25 @@ public class RemoteData extends AirshipComponent {
      * @return An Observable of RemoteDataPayload.
      */
     public Observable<RemoteDataPayload> payloadsForType(final @NonNull String type) {
-        return allPayloadsForType(type).distinctUntilChanged();
+        return payloadsForTypes(Collections.singleton(type)).flatMap(new Function<Collection<RemoteDataPayload>, Observable<RemoteDataPayload>>() {
+            @Override
+            public Observable<RemoteDataPayload> apply(Collection<RemoteDataPayload> payloads) {
+                return Observable.from(payloads);
+            }
+        });
+    }
+
+
+    /**
+     * Produces an Observable of a List of RemoteDataPayload objects corresponding to the provided types.
+     * Subscribers will be notified of any cached data upon subscription, as well as subsequent changes
+     * following refresh updates, provided one of the payload's timestamps is fresh.
+     *
+     * @param types Array of types.
+     * @return An Observable of RemoteDataPayload.
+     */
+    public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull String... types) {
+        return payloadsForTypes(Arrays.asList(types));
     }
 
     /**
@@ -214,12 +234,41 @@ public class RemoteData extends AirshipComponent {
      * Subscribers will be notified of any cached data upon subscription, as well as subsequent changes
      * following refresh updates, provided one of the payload's timestamps is fresh.
      *
-     * @param type A desired type
-     * @param type Another desired type
+     * @param types A collection of types.
      * @return An Observable of RemoteDataPayload.
      */
-    public Observable<Collection<RemoteDataPayload>> payloadsForTypes(final String type, final String otherType) {
-        return allPayloadsForTypes(type, otherType).distinctUntilChanged();
+    public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
+        return Observable.concat(cachedPayloads(types), payloadUpdates)
+                         .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
+                             @Override
+                             public Map<String, Collection<RemoteDataPayload>> apply(Set<RemoteDataPayload> payloads) {
+                                 Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
+                                 for (RemoteDataPayload payload : payloads) {
+                                     if (!map.containsKey(payload.getType())) {
+                                         map.put(payload.getType(), new HashSet<RemoteDataPayload>());
+                                     }
+                                     map.get(payload.getType()).add(payload);
+                                 }
+
+                                 return map;
+                             }
+                         })
+                         .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
+                             @Override
+                             public Collection<RemoteDataPayload> apply(Map<String, Collection<RemoteDataPayload>> payloadMap) {
+                                 Set<RemoteDataPayload> payloads = new HashSet<>();
+                                 for (String type : new HashSet<>(types)) {
+                                     if (payloadMap.containsKey(type)) {
+                                         payloads.addAll(payloadMap.get(type));
+                                     } else {
+                                         payloads.add(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
+                                     }
+                                 }
+
+                                 return payloads;
+                             }
+                         })
+                         .distinctUntilChanged();
     }
 
     /**
@@ -227,12 +276,12 @@ public class RemoteData extends AirshipComponent {
      *
      * @param newPayloads A list of new payloads.
      */
-    void handleRefreshResponse(final List<RemoteDataPayload> newPayloads) {
+    void handleRefreshResponse(final Set<RemoteDataPayload> newPayloads) {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
                 overwriteCachedData(newPayloads);
-                notifySubscribers(newPayloads);
+                payloadUpdates.onNext(newPayloads);
             }
         });
     }
@@ -267,61 +316,25 @@ public class RemoteData extends AirshipComponent {
         }
     }
 
-
-    private Observable<RemoteDataPayload> allPayloadsForType(final @NonNull String type) {
-        Observable<RemoteDataPayload> cached = cachedPayloads().defaultIfEmpty(new RemoteDataPayload(type, 0, JsonMap.newBuilder().build()));
-        Observable<RemoteDataPayload> updated = payloadUpdates.map(new Function<List<RemoteDataPayload>, RemoteDataPayload>() {
-            @Override
-            public RemoteDataPayload apply(List<RemoteDataPayload> payloads) {
-                for (RemoteDataPayload payload : payloads) {
-                    if (payload.getType().equals(type)) {
-                        return payload;
-                    }
-                }
-                return new RemoteDataPayload(type, 0, JsonMap.newBuilder().build());
-            }
-        });
-
-        return Observable.concat(cached, updated).filter(new Predicate<RemoteDataPayload>() {
-            @Override
-            public boolean apply(RemoteDataPayload payload) {
-                return payload.getType().equals(type);
-            }
-        });
-    }
-
-    private Observable<Collection<RemoteDataPayload>> allPayloadsForTypes(final String type, final String otherType) {
-        return Observable.zip(allPayloadsForType(type), allPayloadsForType(otherType),
-                new BiFunction<RemoteDataPayload, RemoteDataPayload, Collection<RemoteDataPayload>>() {
-                    @Override
-                    public Collection<RemoteDataPayload> apply(RemoteDataPayload payload, RemoteDataPayload otherPayload) {
-                        return Arrays.asList(payload, otherPayload);
-                    }
-                });
-    }
-
     /**
      * Produces an Observable of RemoteDataPayload drawn from the cache.
      * Subscription side effects are implicitly tied to the background thread.
      *
+     * @param types The data types.
      * @return An Observable of RemoteDataPayload.
      */
-    private Observable<RemoteDataPayload> cachedPayloads() {
-        return Observable.defer(new Supplier<Observable<RemoteDataPayload>>() {
+    private Observable<Set<RemoteDataPayload>> cachedPayloads(final Collection<String> types) {
+        return Observable.defer(new Supplier<Observable<Set<RemoteDataPayload>>>() {
             @Override
-            public Observable<RemoteDataPayload> apply() {
-                return Observable.from(dataStore.getPayloads()).subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
+            public Observable<Set<RemoteDataPayload>> apply() {
+                return Observable.just(dataStore.getPayloads(types))
+                                 .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
             }
         });
     }
 
     @WorkerThread
-    private void notifySubscribers(final List<RemoteDataPayload> newPayloads) {
-        payloadUpdates.onNext(newPayloads);
-    }
-
-    @WorkerThread
-    private void overwriteCachedData(final List<RemoteDataPayload> newPayloads) {
+    private void overwriteCachedData(final Set<RemoteDataPayload> newPayloads) {
         // Clear the cache
         if (!dataStore.deletePayloads()) {
             Logger.error("Unable to delete existing payload data");

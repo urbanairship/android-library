@@ -21,7 +21,6 @@ import java.util.Collections;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,7 +38,8 @@ public class RemoteConfigManagerTest extends BaseTestCase {
     public void setup() {
         this.remoteData = mock(RemoteData.class);
         this.updates = Subject.create();
-        when(remoteData.payloadsForTypes(anyString(), anyString())).thenReturn(updates);
+        when(remoteData.payloadsForTypes("app_config", "app_config:android")).thenReturn(updates);
+
 
         this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication().preferenceDataStore, remoteData);
         this.remoteConfigManager.init();

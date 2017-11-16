@@ -13,8 +13,9 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Model representing a remote data payload.
@@ -84,11 +85,11 @@ public class RemoteDataPayload {
      * @param value The JSON.
      * @return A List of RemoteDataPayloads.
      */
-    public static List<RemoteDataPayload> parsePayloads(@NonNull JsonValue value) {
+    public static Set<RemoteDataPayload> parsePayloads(@NonNull JsonValue value) {
         JsonList list = value.optList();
 
         try {
-            ArrayList<RemoteDataPayload> payloads = new ArrayList<>();
+            Set<RemoteDataPayload> payloads = new HashSet<>();
 
             for (JsonValue payload : list) {
                 payloads.add(parsePayload(payload));
@@ -98,7 +99,7 @@ public class RemoteDataPayload {
             Logger.error("Unable to parse remote data payloads: " + value.toString());
         }
 
-        return new ArrayList<>();
+        return Collections.emptySet();
     }
 
     @Override

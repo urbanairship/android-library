@@ -12,12 +12,13 @@ import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RemoteDataStoreTest extends BaseTestCase {
 
     private RemoteDataStore dataStore;
-    private List<RemoteDataPayload> payloads;
+    private Set<RemoteDataPayload> payloads;
 
     @Before
     public void setUp() {
@@ -25,7 +26,7 @@ public class RemoteDataStoreTest extends BaseTestCase {
 
         RemoteDataPayload payload = new RemoteDataPayload("type", 123, JsonMap.newBuilder().put("foo", "bar").build());
         RemoteDataPayload otherPayload = new RemoteDataPayload("otherType", 234, JsonMap.newBuilder().put("baz", "boz").build());
-        payloads = Arrays.asList(payload, otherPayload);
+        payloads = new HashSet<>(Arrays.asList(payload, otherPayload));
     }
 
     @After
@@ -48,9 +49,13 @@ public class RemoteDataStoreTest extends BaseTestCase {
     @Test
     public void testGetPayloads() {
         dataStore.savePayloads(payloads);
-        List<RemoteDataPayload> savedPayloads = dataStore.getPayloads();
+        Set<RemoteDataPayload> savedPayloads = dataStore.getPayloads(Arrays.asList("type", "otherType"));
         Assert.assertNotNull(savedPayloads);
         Assert.assertEquals(payloads, savedPayloads);
+
+        savedPayloads = dataStore.getPayloads(Arrays.asList("type"));
+        Assert.assertEquals(1, savedPayloads.size());
+        Assert.assertEquals("type", savedPayloads.iterator().next().getType());
     }
 
     /**
@@ -60,6 +65,6 @@ public class RemoteDataStoreTest extends BaseTestCase {
     public void testDeletePayloads() {
         dataStore.savePayloads(payloads);
         dataStore.deletePayloads();
-        Assert.assertTrue(dataStore.getPayloads().size() == 0);
+        Assert.assertTrue(dataStore.getPayloads(Arrays.asList("type", "otherType")).size() == 0);
     }
 }

@@ -13,7 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 public class RemoteDataPayloadTest extends BaseTestCase {
 
@@ -38,7 +38,7 @@ public class RemoteDataPayloadTest extends BaseTestCase {
 
     @Test
     public void testParsePayloads() {
-        List<RemoteDataPayload> parsedPayloads = RemoteDataPayload.parsePayloads(payloads);
+        Set<RemoteDataPayload> parsedPayloads = RemoteDataPayload.parsePayloads(payloads);
         Assert.assertEquals("Parsed payloads should have a size of one", parsedPayloads.size(), 1);
         for (RemoteDataPayload parsedPayload : parsedPayloads) {
             verifyPayload(parsedPayload);

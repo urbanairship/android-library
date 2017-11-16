@@ -11,8 +11,10 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.util.DataManager;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -30,11 +32,6 @@ public class RemoteDataStore extends DataManager {
      * The database version.
      */
     private static final int DATABASE_VERSION = 1;
-
-    /**
-     * Query for retrieving payloads.
-     */
-    private static final String GET_PAYLOADS_QUERY = "SELECT * FROM " + RemoteDataPayloadEntry.TABLE_NAME;
 
     /**
      * RemoteDataStore constructor.
@@ -64,7 +61,7 @@ public class RemoteDataStore extends DataManager {
      * @param payloads The payloads.
      * @return A boolean indicating success.
      */
-    public boolean savePayloads(@NonNull List<RemoteDataPayload> payloads) {
+    public boolean savePayloads(@NonNull Set<RemoteDataPayload> payloads) {
         if (payloads.isEmpty()) {
             return true;
         }
@@ -108,18 +105,35 @@ public class RemoteDataStore extends DataManager {
      *
      * @return A List of RemoteDataPayload.
      */
-    public List<RemoteDataPayload> getPayloads() {
-        return payloadsForEntries(getPayloadEntries());
+    public Set<RemoteDataPayload> getPayloads() {
+        return getPayloads(null);
     }
 
     /**
-     * Gets the payload for a specific type, or <code>null</code> if none could be found.
+     * Gets all payloads of the specified types.
      *
-     * @param type A payload type.
-     * @return A RemoteDataPayload, or <code>null</code> if none could be found.
+     * @param types The specified types.
+     * @return A List of RemoteDataPayload.
      */
-    public RemoteDataPayload getPayload(String type) {
-        return payloadForEntry(getPayloadEntry(type));
+    public Set<RemoteDataPayload> getPayloads(Collection<String> types) {
+        Cursor cursor;
+        if (types == null) {
+            cursor = this.query(RemoteDataPayloadEntry.TABLE_NAME, null,
+                    null, null, null);
+        } else {
+            String where = RemoteDataPayloadEntry.COLUMN_NAME_TYPE + " IN ( " + UAStringUtil.repeat("?", types.size(), ", ") + " )";
+
+            cursor = this.query(RemoteDataPayloadEntry.TABLE_NAME, null,
+                    where, types.toArray(new String[types.size()]), null);
+
+        }
+        if (cursor == null) {
+            return Collections.emptySet();
+        }
+
+        List<RemoteDataPayloadEntry> entries = generatePayloadEntries(cursor);
+        cursor.close();
+        return payloadsForEntries(entries);
     }
 
     /**
@@ -127,6 +141,7 @@ public class RemoteDataStore extends DataManager {
      *
      * @return A boolean indicating success.
      */
+
     public boolean deletePayloads() {
         boolean success = delete(RemoteDataPayloadEntry.TABLE_NAME, null, null) >= 0;
         if (!success) {
@@ -141,8 +156,8 @@ public class RemoteDataStore extends DataManager {
      * @param entries A list of payload entries.
      * @return A list of payloads.
      */
-    private List<RemoteDataPayload> payloadsForEntries(List<RemoteDataPayloadEntry> entries) {
-        ArrayList<RemoteDataPayload> payloads = new ArrayList<>();
+    private Set<RemoteDataPayload> payloadsForEntries(List<RemoteDataPayloadEntry> entries) {
+        Set<RemoteDataPayload> payloads = new HashSet<>();
         for (RemoteDataPayloadEntry entry : entries) {
             RemoteDataPayload payload = payloadForEntry(entry);
             if (payload != null) {
@@ -175,40 +190,6 @@ public class RemoteDataStore extends DataManager {
     }
 
     /**
-     * Helper method for getting payload entries from the database.
-     *
-     * @return A list of RemoteDataPayloadEntry
-     */
-    private List<RemoteDataPayloadEntry> getPayloadEntries() {
-        String query = GET_PAYLOADS_QUERY;
-        Cursor cursor = rawQuery(query, null);
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-
-        List<RemoteDataPayloadEntry> entries = generatePayloadEntries(cursor);
-        cursor.close();
-        return entries;
-    }
-
-    /**
-     * Helper method for getting a payload entry by type from the database.
-     *
-     * @return A RemoteDataPayloadEntry or <code>null</code> if none could be found.
-     */
-    private RemoteDataPayloadEntry getPayloadEntry(String type) {
-        String query = GET_PAYLOADS_QUERY + " WHERE " + RemoteDataPayloadEntry.COLUMN_NAME_TYPE + " = ?";
-        Cursor cursor = rawQuery(query, new String[]{type});
-        if (cursor == null) {
-            return null;
-        }
-
-        List<RemoteDataPayloadEntry> entries = generatePayloadEntries(cursor);
-        cursor.close();
-        return entries.size() > 0 ? entries.get(0) : null;
-    }
-
-    /**
      * Helper method to generate payload entries from a a cursor.
      *
      * @param cursor The cursor.
@@ -221,9 +202,7 @@ public class RemoteDataStore extends DataManager {
         List<RemoteDataPayloadEntry> entries = new ArrayList<>();
         while (!cursor.isAfterLast()) {
             RemoteDataPayloadEntry entry = new RemoteDataPayloadEntry(cursor);
-            if (entry != null) {
-                entries.add(entry);
-            }
+            entries.add(entry);
             cursor.moveToNext();
         }
 

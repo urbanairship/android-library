@@ -27,7 +27,9 @@ import org.robolectric.shadows.ShadowLooper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
@@ -143,7 +145,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
 
         // The second callback should be the refreshed data
@@ -182,7 +184,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(Arrays.asList(otherPayload));
+        remoteData.handleRefreshResponse(asSet(otherPayload));
 
         runLooperTasks();
 
@@ -214,7 +216,7 @@ public class RemoteDataTest extends BaseTestCase {
         // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
 
         // We should get a second callback with the refreshed data
@@ -224,13 +226,13 @@ public class RemoteDataTest extends BaseTestCase {
         subscribedPayloads.clear();
 
         // Replaying the response should not result in another callback because the data hasn't changed
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
         Assert.assertEquals(subscribedPayloads.size(), 0);
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
         RemoteDataPayload freshPayload = new RemoteDataPayload(payload.getType(), payload.getTimestamp() + 100000, payload.getData());
-        remoteData.handleRefreshResponse(Arrays.asList(freshPayload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(freshPayload, otherPayload));
         runLooperTasks();
 
         Assert.assertEquals(subscribedPayloads.size(), 1);
@@ -245,7 +247,7 @@ public class RemoteDataTest extends BaseTestCase {
         remoteData.init();
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
-        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes("type", "otherType");
+        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
 
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
             @Override
@@ -267,14 +269,14 @@ public class RemoteDataTest extends BaseTestCase {
 
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
 
         // The second callback should be the refreshed data
         Assert.assertEquals(subscribedPayloads.size(), 1);
         collection = subscribedPayloads.get(0);
         Assert.assertEquals(collection.size(), 2);
-        Assert.assertEquals(collection, Arrays.asList(payload, otherPayload));
+        Assert.assertEquals(collection, asSet(payload, otherPayload));
     }
 
     /**
@@ -292,7 +294,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
-        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes("type", "otherType");
+        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
 
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
             @Override
@@ -306,19 +308,19 @@ public class RemoteDataTest extends BaseTestCase {
         // The first callback should be the cached payload
         Assert.assertEquals(subscribedPayloads.size(), 1);
         Collection<RemoteDataPayload> collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection, Arrays.asList(payload, otherPayload));
+        Assert.assertEquals(collection, asSet(payload, otherPayload));
 
         subscribedPayloads.clear();
 
         RemoteDataPayload freshOtherPayload = new RemoteDataPayload(otherPayload.getType(), otherPayload.getTimestamp() + 10000, otherPayload.getData());
 
-        remoteData.handleRefreshResponse(Arrays.asList(freshOtherPayload));
+        remoteData.handleRefreshResponse(asSet(freshOtherPayload));
         runLooperTasks();
 
         // The second callback should have an empty placeholder for the first payload
         Assert.assertEquals(subscribedPayloads.size(), 1);
         collection = subscribedPayloads.get(0);
-        Assert.assertEquals(collection, Arrays.asList(emptyPayload, freshOtherPayload));
+        Assert.assertEquals(collection, asSet(emptyPayload, freshOtherPayload));
     }
 
     /**
@@ -330,7 +332,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         final List<Collection<RemoteDataPayload>> subscribedPayloads = new ArrayList<>();
 
-        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes("type", "otherType");
+        Observable<Collection<RemoteDataPayload>> payloadsObservable = remoteData.payloadsForTypes(Arrays.asList("type", "otherType"));
         payloadsObservable.subscribe(new Subscriber<Collection<RemoteDataPayload>>(){
             @Override
             public void onNext(Collection<RemoteDataPayload> value) {
@@ -343,24 +345,24 @@ public class RemoteDataTest extends BaseTestCase {
         // Clear the first callback
         subscribedPayloads.clear();
 
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
 
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(Arrays.asList(payload, otherPayload)));
+        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
 
         // Replaying the response should not result in another callback because the timestamp hasn't changed
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(Arrays.asList(payload, otherPayload)));
+        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(payload, otherPayload)));
 
         subscribedPayloads.clear();
 
         // Sending a fresh payload with an updated timestamp should result in a new callback
         RemoteDataPayload freshPayload = new RemoteDataPayload(payload.getType(), payload.getTimestamp() + 100000, payload.getData());
-        remoteData.handleRefreshResponse(Arrays.asList(freshPayload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(freshPayload, otherPayload));
         runLooperTasks();
 
-        Assert.assertEquals(subscribedPayloads, Arrays.asList(Arrays.asList(freshPayload, otherPayload)));
+        Assert.assertEquals(subscribedPayloads, Arrays.asList(asSet(freshPayload, otherPayload)));
     }
 
     /**
@@ -388,33 +390,31 @@ public class RemoteDataTest extends BaseTestCase {
     public void testHandleRefreshResponse() {
         remoteData.init();
 
-        final List<RemoteDataPayload> subscribedPayloads = new ArrayList<>();
+        final Set<RemoteDataPayload> subscribedPayloads = new HashSet<>();
 
-        remoteData.payloadUpdates.subscribe(new Subscriber<List<RemoteDataPayload>>() {
+        remoteData.payloadUpdates.subscribe(new Subscriber<Set<RemoteDataPayload>>() {
             @Override
-            public void onNext(List<RemoteDataPayload> payloads) {
-                for (RemoteDataPayload payload : payloads) {
-                    subscribedPayloads.add(payload);
-                }
+            public void onNext(Set<RemoteDataPayload> payloads) {
+                subscribedPayloads.addAll(payloads);
             }
         });
 
-        remoteData.handleRefreshResponse(Arrays.asList(payload, otherPayload));
+        remoteData.handleRefreshResponse(asSet(payload, otherPayload));
         runLooperTasks();
 
-        Assert.assertEquals(Arrays.asList(payload, otherPayload), subscribedPayloads);
-        Assert.assertEquals(remoteData.dataStore.getPayloads(), Arrays.asList(payload, otherPayload));
+        Assert.assertEquals(asSet(payload, otherPayload), subscribedPayloads);
+        Assert.assertEquals(remoteData.dataStore.getPayloads(), asSet(payload, otherPayload));
 
         subscribedPayloads.clear();
 
         // Subsequent refresh response missing previously known types
-        remoteData.handleRefreshResponse(Arrays.asList(otherPayload));
+        remoteData.handleRefreshResponse(asSet(otherPayload));
         runLooperTasks();
 
-        Assert.assertEquals(Arrays.asList(otherPayload), subscribedPayloads);
+        Assert.assertEquals(asSet(otherPayload), subscribedPayloads);
 
         // "Deleted" payload types should not persist in the cache
-        Assert.assertEquals(remoteData.dataStore.getPayloads(), Arrays.asList(otherPayload));
+        Assert.assertEquals(remoteData.dataStore.getPayloads(), asSet(otherPayload));
     }
 
     /**
@@ -429,5 +429,10 @@ public class RemoteDataTest extends BaseTestCase {
             backgroundLooper.runToEndOfTasks();
         }
         while (mainLooper.getScheduler().areAnyRunnable() || backgroundLooper.getScheduler().areAnyRunnable());
+    }
+
+
+    private static <T> Set<T> asSet(T... items) {
+        return new HashSet<T>(Arrays.asList(items));
     }
 }
