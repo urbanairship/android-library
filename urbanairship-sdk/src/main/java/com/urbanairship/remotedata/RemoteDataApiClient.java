@@ -9,12 +9,14 @@ import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * API client for fetching remote data.
@@ -26,7 +28,12 @@ public class RemoteDataApiClient  {
 
     private AirshipConfigOptions configOptions;
     private RequestFactory requestFactory;
-    private static final String REMOTE_DATA_PATH = "api/channels/";
+
+    ///api/remote-data/app/{appkey}/{platform}
+    private static final String REMOTE_DATA_PATH = "api/remote-data/app/%s/%s";
+
+    private static final String AMAZON = "amazon";
+    private static final String ANDROID = "android";
 
     /**
      * RemoteDataApiClient constructor.
@@ -56,7 +63,7 @@ public class RemoteDataApiClient  {
      * @return A Response.
      */
     Response fetchRemoteData(String lastModified) {
-        URL url = getRemoteDataURL(REMOTE_DATA_PATH);
+        URL url = getRemoteDataURL();
 
         Request request = requestFactory.createRequest("GET", url)
                                         .setCredentials(configOptions.getAppKey(), configOptions.getAppSecret());
@@ -71,15 +78,16 @@ public class RemoteDataApiClient  {
     /**
      * Gets a device url for a given path.
      *
-     * @param path The API path.
      * @return The device URL or {@code null} if the URL is invalid.
      */
     @Nullable
-    protected URL getRemoteDataURL(@NonNull String path) {
+    private URL getRemoteDataURL() {
         try {
-            return new URL(configOptions.remoteDataURL + path);
+            String appKey = configOptions.getAppKey();
+            String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID;
+            return new URL(configOptions.remoteDataURL + String.format(Locale.US, REMOTE_DATA_PATH, appKey, platform));
         } catch (MalformedURLException e) {
-            Logger.error("Invalid URL: " + path, e);
+            Logger.error("Invalid URL.", e);
             return null;
         }
     }
