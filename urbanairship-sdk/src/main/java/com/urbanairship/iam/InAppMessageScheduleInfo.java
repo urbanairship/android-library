@@ -2,11 +2,17 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.automation.ScheduleDelay;
 import com.urbanairship.automation.ScheduleInfo;
 import com.urbanairship.automation.Trigger;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
+import com.urbanairship.util.DateUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +27,9 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      * The triggers limit for a single schedule.
      */
     public static final long TRIGGER_LIMIT = 10;
+
+    // JSON key
+    private static String MESSAGE_KEY  = "message";
 
     private final int limit;
     private final long start;
@@ -126,6 +135,54 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      */
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Creates a schedule info from a json value.
+     *
+     * @param value The json value.
+     * @return A schedule info.
+     * @throws JsonException If the json value contains an invalid schedule info.
+     */
+    public static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        JsonMap jsonMap = value.optMap();
+
+        InAppMessageScheduleInfo.Builder builder = newBuilder()
+                .setMessage(InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY)))
+                .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
+                .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
+
+        if (jsonMap.containsKey(END_KEY)) {
+            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString(), -1));
+        }
+
+        if (jsonMap.containsKey(START_KEY)) {
+            builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString(), -1));
+        }
+
+        for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
+            builder.addTrigger(Trigger.parseJson(triggerJson));
+        }
+
+        if (jsonMap.containsKey(DELAY_KEY)) {
+            builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt(DELAY_KEY)));
+        }
+
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("Invalid schedule info", e);
+        }
+    }
+
+    /**
+     * Parses a message ID from a schedule info json value.
+     *
+     * @param jsonValue The json value.
+     * @return The message ID or {@code null} if the message ID was unavailable.
+     */
+    static String parseMessageId(JsonValue jsonValue) {
+        return jsonValue.optMap().opt(MESSAGE_KEY).optMap().opt(InAppMessage.MESSAGE_ID_KEY).getString();
     }
 
     /**

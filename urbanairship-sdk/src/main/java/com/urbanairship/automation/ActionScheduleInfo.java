@@ -45,13 +45,6 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
 
     // JSON KEYS
     private static final String ACTIONS_KEY = "actions";
-    private static final String LIMIT_KEY = "limit";
-    private static final String PRIORITY_KEY = "priority";
-    private static final String GROUP_KEY = "group";
-    private static final String END_KEY = "end";
-    private static final String START_KEY = "start";
-    private static final String TRIGGERS_KEY = "triggers";
-    private static final String DELAY_KEY = "delay";
 
     private final List<Trigger> triggers;
     private final Map<String, JsonValue> actions;

@@ -14,6 +14,9 @@ import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.reactive.Subject;
+import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.remotedata.RemoteDataPayload;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +52,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private AutomationEngine<InAppMessageSchedule> mockEngine;
     private InAppMessageDriver.Callbacks driverCallbacks;
     private Analytics mockAnalytics;
+    private RemoteData mockRemoteData;
 
     private InAppMessageSchedule schedule;
 
@@ -72,14 +76,16 @@ public class InAppMessageManagerTest extends BaseTestCase {
         }).when(mockDriver).setCallbacks(any(InAppMessageDriver.Callbacks.class));
 
         mockEngine = mock(AutomationEngine.class);
-
+        mockRemoteData = mock(RemoteData.class);
+        Subject<RemoteDataPayload> subject = Subject.create();
+        when(mockRemoteData.payloadsForType(any(String.class))).thenReturn(subject);
 
         manager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor, new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
             }
-        }, mockDriver, mockEngine);
+        }, mockDriver, mockEngine, mockRemoteData);
 
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()

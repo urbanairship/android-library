@@ -16,6 +16,7 @@ import java.util.List;
 import static junit.framework.Assert.assertEquals;
 
 public class ActionScheduleInfoTest extends BaseTestCase {
+
     @Test
     public void testParseJson() throws Exception {
         List<JsonMap> triggersJson = new ArrayList<>();

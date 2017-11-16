@@ -26,7 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 public class InAppMessage implements Parcelable, JsonSerializable {
 
     // JSON keys
-    private static final String MESSAGE_ID_KEY = "message_id";
+    static final String MESSAGE_ID_KEY = "message_id";
     private static final String DISPLAY_TYPE_KEY = "display_type";
     private static final String DISPLAY_CONTENT_KEY = "display";
     private static final String EXTRA_KEY = "extra";

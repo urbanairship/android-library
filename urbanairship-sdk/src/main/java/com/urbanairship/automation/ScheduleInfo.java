@@ -13,6 +13,15 @@ import java.util.List;
  */
 public interface ScheduleInfo {
 
+    // JSON KEYS
+    String LIMIT_KEY = "limit";
+    String PRIORITY_KEY = "priority";
+    String GROUP_KEY = "group";
+    String END_KEY = "end";
+    String START_KEY = "start";
+    String DELAY_KEY = "delay";
+    String TRIGGERS_KEY = "triggers";
+
     /**
      * Gets the action triggers.
      *

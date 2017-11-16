@@ -23,11 +23,14 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
+import com.urbanairship.reactive.Subscription;
+import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Executor;
@@ -61,14 +64,18 @@ public class InAppMessageManager extends AirshipComponent {
     private Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private boolean isDisplayedLocked = false;
     private boolean isAirshipReady = false;
+    private Subscription subscription;
 
     private final Executor executor;
     private final ActivityMonitor activityMonitor;
+    private final RemoteData remoteData;
+    private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
     private final Handler mainHandler;
     private final InAppMessageDriver driver;
     private final AutomationEngine<InAppMessageSchedule> automationEngine;
     private final Map<String, InAppMessageAdapter.Factory> adapterFactories = new HashMap<>();
+
 
     private final Runnable postDisplayRunnable = new Runnable() {
         @Override
@@ -103,11 +110,13 @@ public class InAppMessageManager extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public InAppMessageManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions,
-                               Analytics analytics, ActivityMonitor activityMonitor) {
+                               Analytics analytics, ActivityMonitor activityMonitor, RemoteData remoteData) {
         super(preferenceDataStore);
 
         this.activityMonitor = activityMonitor;
+        this.remoteData = remoteData;
         this.analytics = analytics;
+        this.preferenceDataStore = preferenceDataStore;
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.executor = Executors.newSingleThreadExecutor();
         this.driver = new InAppMessageDriver();
@@ -124,10 +133,12 @@ public class InAppMessageManager extends AirshipComponent {
 
     @VisibleForTesting
     InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
-                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine) {
+                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine, RemoteData remoteData) {
         super(preferenceDataStore);
         this.analytics = analytics;
+        this.preferenceDataStore = preferenceDataStore;
         this.activityMonitor = activityMonitor;
+        this.remoteData = remoteData;
         this.driver = driver;
         this.automationEngine = engine;
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -253,6 +264,28 @@ public class InAppMessageManager extends AirshipComponent {
         });
 
         automationEngine.start();
+
+        subscription = remoteData.payloadsForType(InAppRemoteDataObserver.IAM_PAYLOAD_TYPE)
+                                 .subscribe(new InAppRemoteDataObserver(preferenceDataStore, new InAppRemoteDataObserver.Callback() {
+                                     @Override
+                                     public void onSchedule(List<InAppMessageScheduleInfo> scheduleInfos) {
+                                         automationEngine.schedule(scheduleInfos);
+                                     }
+
+                                     @Override
+                                     public void onCancel(List<String> messageIds) {
+                                         for (String messageId : messageIds) {
+                                             automationEngine.cancelGroup(messageId);
+                                         }
+                                     }
+                                 }));
+    }
+
+    @Override
+    protected void tearDown() {
+        super.tearDown();
+        subscription.cancel();
+        automationEngine.stop();
     }
 
     /**

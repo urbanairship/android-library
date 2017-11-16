@@ -103,7 +103,7 @@ public class UAirship {
     private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
     private static boolean queuePendingAirshipRequests = true;
 
-    List<AirshipComponent> components;
+    List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -586,6 +586,9 @@ public class UAirship {
         this.platform = determinePlatform(providers);
         PushProvider pushProvider = determinePushProvider(platform, providers);
 
+        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
+        this.actionRegistry = new ActionRegistry();
+        this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
         this.analytics = new Analytics.Builder(application)
@@ -604,24 +607,45 @@ public class UAirship {
                         .setJobAction(Analytics.ACTION_SEND)
                         .build())
                 .build();
+        components.add(this.analytics);
 
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
-        this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
-        this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
-        this.namedUser = new NamedUser(application, preferenceDataStore);
-        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
-        this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
-        this.actionRegistry = new ActionRegistry();
-        this.actionRegistry.registerDefaultActions(getApplicationContext());
-        this.messageCenter = new MessageCenter(preferenceDataStore);
-        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
-        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
-        this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
-        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
-        this.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, this.remoteData);
+        components.add(this.applicationMetrics);
 
-        for (AirshipComponent component : getComponents()) {
+        this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));
+        components.add(this.inbox);
+
+        this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
+        components.add(this.locationManager);
+
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
+        components.add(this.pushManager);
+
+        this.namedUser = new NamedUser(application, preferenceDataStore);
+        components.add(this.namedUser);
+
+        this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));
+        components.add(this.channelCapture);
+
+        this.messageCenter = new MessageCenter(preferenceDataStore);
+        components.add(this.messageCenter);
+
+        this.automation = new Automation(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application));
+        components.add(this.automation);
+
+        this.remoteData = new RemoteData(application, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(application));
+        components.add(this.remoteData);
+
+        this.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, this.remoteData);
+        components.add(this.remoteConfigManager);
+
+        this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions, analytics, ActivityMonitor.shared(application), this.remoteData);
+        components.add(this.inAppMessageManager);
+
+        this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);
+        components.add(this.legacyInAppMessageManager);
+
+        for (AirshipComponent component : components) {
             component.init();
         }
 
@@ -649,7 +673,6 @@ public class UAirship {
         // Teardown the preference data store last
         preferenceDataStore.tearDown();
     }
-
 
     /**
      * Returns the current configuration options.
@@ -717,8 +740,8 @@ public class UAirship {
     /**
      * Returns the RemoteData instance.
      *
-     * @hide
      * @return The RemoteData instance.
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public RemoteData getRemoteData() { return remoteData; }
@@ -802,24 +825,6 @@ public class UAirship {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public List<AirshipComponent> getComponents() {
-        if (components == null) {
-            // Initialize the rest of the AirshipComponents
-            components = new ArrayList<>();
-            components.add(inbox);
-            components.add(pushManager);
-            components.add(locationManager);
-            components.add(channelCapture);
-            components.add(applicationMetrics);
-            components.add(analytics);
-            components.add(messageCenter);
-            components.add(namedUser);
-            components.add(automation);
-            components.add(inAppMessageManager);
-            components.add(legacyInAppMessageManager);
-            components.add(remoteData);
-            components.add(remoteConfigManager);
-        }
-
         return components;
     }
 

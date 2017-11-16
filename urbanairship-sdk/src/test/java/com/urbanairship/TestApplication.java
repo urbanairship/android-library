@@ -93,9 +93,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.messageCenter = new MessageCenter(preferenceDataStore);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));
-        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, UAirship.sharedAirship.inAppMessageManager, UAirship.sharedAirship.analytics);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(getApplicationContext()));
+        UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()), UAirship.sharedAirship.remoteData);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();

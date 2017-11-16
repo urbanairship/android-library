@@ -7,7 +7,9 @@ import com.urbanairship.automation.ScheduleDelay;
 import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +45,72 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                 .setSeconds(100)
                 .build();
     }
+
+    @Test
+    public void testFromJson() throws Exception {
+        List<JsonMap> triggersJson = new ArrayList<>();
+        triggersJson.add(JsonMap.newBuilder()
+                                .put("type", "foreground")
+                                .put("goal", 20.0)
+                                .build());
+
+        InAppMessage message = InAppMessage.newBuilder()
+                .setId("some-id")
+                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                .build();
+
+
+        JsonMap scheduleJson = JsonMap.newBuilder()
+                                      .put("message", message)
+                                      .put("triggers", JsonValue.wrapOpt(triggersJson))
+                                      .put("limit", 10)
+                                      .put("priority", 1)
+                                      .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
+                                      .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
+                                      .build();
+
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.fromJson(scheduleJson.toJsonValue());
+
+        // Schedule Info
+        assertEquals(10, info.getLimit());
+        assertEquals(1, info.getPriority());
+        assertEquals(message, info.getInAppMessage());
+        assertEquals(10000L, info.getStart());
+        assertEquals(15000L, info.getEnd());
+        assertEquals("some-id", info.getGroup());
+
+        // Triggers
+        assertEquals(1, info.getTriggers().size());
+        assertEquals(Trigger.LIFE_CYCLE_FOREGROUND, info.getTriggers().get(0).getType());
+        assertEquals(20.0, info.getTriggers().get(0).getGoal());
+    }
+
+    @Test
+    public void testParseMessageId() throws Exception {
+        List<JsonMap> triggersJson = new ArrayList<>();
+        triggersJson.add(JsonMap.newBuilder()
+                                .put("type", "foreground")
+                                .put("goal", 20.0)
+                                .build());
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setId("some-id")
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+
+        JsonMap scheduleJson = JsonMap.newBuilder()
+                                      .put("message", message)
+                                      .put("triggers", JsonValue.wrapOpt(triggersJson))
+                                      .put("limit", 10)
+                                      .put("priority", 1)
+                                      .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
+                                      .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
+                                      .build();
+
+        assertEquals("some-id", InAppMessageScheduleInfo.parseMessageId(scheduleJson.toJsonValue()));
+    }
+
 
     @Test
     public void testBuilder() {
