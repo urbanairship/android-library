@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
-import android.support.v4.os.AsyncTaskCompat;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.HttpAuthHandler;
@@ -435,7 +434,7 @@ public class UAWebViewClient extends WebViewClient {
         Logger.info("Loading UrbanAirship Javascript interface.");
         InjectJsBridgeTask task = new InjectJsBridgeTask(view.getContext(), view);
         injectJsBridgeTaskMap.put(view, task);
-        AsyncTaskCompat.executeParallel(task);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @CallSuper
