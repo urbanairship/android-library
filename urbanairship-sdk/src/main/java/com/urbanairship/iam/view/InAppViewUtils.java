@@ -91,7 +91,7 @@ public class InAppViewUtils {
         textView.setTextSize(textInfo.getFontSize());
         textView.setTextColor(textInfo.getColor());
 
-        int typefaceFlags = textView.getTypeface().getStyle();
+        int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
         int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
         for (@TextInfo.Style String style : textInfo.getStyles()) {

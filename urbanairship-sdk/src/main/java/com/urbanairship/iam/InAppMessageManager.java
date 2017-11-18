@@ -27,11 +27,9 @@ import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
-import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -276,32 +274,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         automationEngine.start();
 
-        // If the new user cut off time is not set either set it to the max long or 0 depending
-        // on if the channel is created or not.
+        // New user cut off time
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? Long.MAX_VALUE : 0);
+            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? System.currentTimeMillis() : 0);
         }
-
-        // Add a listener to the remote data to set the new user cut off time to the
-        // last modified time if its earlier then the current new user cut off time.
-        remoteData.addListener(new RemoteData.Listener() {
-            @Override
-            public void onDataRefreshed() {
-                if (remoteData.getLastModified() == null) {
-                    return;
-                }
-
-                try {
-                    long lastModifiedTime = DateUtils.parseIso8601(remoteData.getLastModified());
-                    if (lastModifiedTime <= remoteDataSubscriber.getScheduleNewUserCutOffTime()) {
-                        remoteDataSubscriber.setScheduleNewUserCutOffTime(lastModifiedTime);
-                    }
-                    remoteData.remoteListener(this);
-                } catch (ParseException e) {
-                    Logger.error("InAppMessageManager - Failed to parse last modified time: " + remoteData.getLastModified(), e);
-                }
-            }
-        });
     }
 
     /**

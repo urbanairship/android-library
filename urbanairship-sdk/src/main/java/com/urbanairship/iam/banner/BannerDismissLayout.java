@@ -17,8 +17,6 @@ import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
-import com.urbanairship.R;
-
 /**
  * The BannerDismissLayout allows dismissing a banner with a vertical swipe gesture.
  */
@@ -70,7 +68,7 @@ public class BannerDismissLayout extends FrameLayout {
     private Listener listener;
 
     /**
-     * SwipeDismissViewLayout Constructor
+     * BannerDismissLayout Constructor
      *
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
@@ -80,19 +78,19 @@ public class BannerDismissLayout extends FrameLayout {
     }
 
     /**
-     * SwipeDismissViewLayout Constructor
+     * BannerDismissLayout Constructor
      *
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
     public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
-        this(context, attrs, defStyle, 0);
+        super(context, attrs, defStyle);
         init(context);
     }
 
     /**
-     * SwipeDismissViewLayout Constructor
+     * BannerDismissLayout Constructor
      *
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.

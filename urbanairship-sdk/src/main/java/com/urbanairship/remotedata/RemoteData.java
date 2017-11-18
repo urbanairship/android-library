@@ -27,13 +27,11 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Supplier;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,7 +75,6 @@ public class RemoteData extends AirshipComponent {
     private PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
     private ActivityMonitor activityMonitor;
-    private final List<Listener> listeners = new ArrayList<>();
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -94,11 +91,6 @@ public class RemoteData extends AirshipComponent {
 
     @VisibleForTesting
     RemoteDataStore dataStore;
-
-    public interface Listener {
-        void onDataRefreshed();
-    }
-
 
     /**
      * RemoteData constructor.
@@ -281,28 +273,6 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
-     * Adds a listener for remote data updates.
-     *
-     * @param listener A listener.
-     */
-    public void addListener(Listener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
-    }
-
-    /**
-     * Removes a listener for remote data updates.
-     *
-     * @param listener A listener.
-     */
-    public void remoteListener(Listener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
-    }
-
-    /**
      * Refresh response callback for use from the RemoteDataJobHandler.
      *
      * @param newPayloads A list of new payloads.
@@ -320,7 +290,7 @@ public class RemoteData extends AirshipComponent {
     /**
      * Saves the last modified timestamp received in a refresh request.
      *
-     * @param lastModified The timestamp in ISO-8601 format.
+     * @param lastModified The timestamp in RFC 1123 format.
      */
     void setLastModified(String lastModified) {
         preferenceDataStore.put(LAST_MODIFIED_KEY, lastModified);
@@ -329,7 +299,7 @@ public class RemoteData extends AirshipComponent {
     /**
      * Retrieves the mostly recent last modified timestamp received from the server.
      *
-     * @return A timestamp in ISO-8601 format, or <code>null</code> if one has not been received.
+     * @return A timestamp in RFC 1123 format, or <code>null</code> if one has not been received.
      */
     @Nullable
     public String getLastModified() {
@@ -345,13 +315,6 @@ public class RemoteData extends AirshipComponent {
         PackageInfo packageInfo = UAirship.getPackageInfo();
         if (packageInfo != null) {
             preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, packageInfo.versionCode);
-        }
-
-
-        synchronized (listeners) {
-            for (Listener listener : new ArrayList<>(listeners)) {
-                listener.onDataRefreshed();
-            }
         }
     }
 
