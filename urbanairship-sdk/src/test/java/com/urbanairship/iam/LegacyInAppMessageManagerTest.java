@@ -75,6 +75,10 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
                     return false;
                 }
 
+                if (displayContent.getDuration() != 10000) {
+                    return false;
+                }
+
                 return true;
             }
         }));

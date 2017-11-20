@@ -65,7 +65,7 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Default duration in milliseconds.
      */
-    public static final long DEFAULT_DURATION_MS = 30000;
+    public static final long DEFAULT_DURATION_MS = 15000;
 
     /**
      * Maximum number of button supported by a banner.

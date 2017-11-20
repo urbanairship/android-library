@@ -20,6 +20,8 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Legacy in-app message manager.
  */
@@ -236,6 +238,10 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                                                                                                       .setText(inAppMessage.getAlert())
                                                                                                       .setColor(primaryColor)
                                                                                                       .build());
+
+            if (inAppMessage.getDuration() != null) {
+                displayContentBuilder.setDuration(inAppMessage.getDuration(), TimeUnit.MILLISECONDS);
+            }
 
             // Buttons
             if (inAppMessage.getButtonGroupId() != null) {
