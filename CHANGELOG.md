@@ -3,6 +3,15 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 8.9.5 - November 20, 2017
+=================================
+
+Changes
+-------
+- Removes the use of AsyncTaskCompat.
+- Added proguard rules to ignore warnings for classes that use optional dependencies.
+
+
 Version 8.9.4 - October 24, 2017
 ================================
 
