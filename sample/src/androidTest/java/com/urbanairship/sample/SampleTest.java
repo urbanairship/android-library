@@ -66,9 +66,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Test basic pushes, message center and in-app messages using UIAutomator.
+ * Test basic pushes, message center and in-app messages using Espresso.
  * <p/>
  * To run the test suite on emulator or device with API 21+:
+ * Turn off animations on your test device via Settings by opening Developer options and turning all the following options off:
+ * Window animation scale, Transition animation scale and Animator duration scale.
  * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.appKey="APP_KEY" -Pandroid.testInstrumentationRunnerArguments.masterSecret="MASTER_SECRET"
  */
 @RunWith(AndroidJUnit4.class)
@@ -112,6 +114,8 @@ public class SampleTest {
             UAirship.shared().getPushManager().editTags().clear().apply();
             airshipReceiver.waitForChannelUpdate();
         }
+
+        UAirship.shared().getInAppMessagingManager().setDisplayInterval(0, TimeUnit.SECONDS);
 
         channelId = UAirship.shared().getPushManager().getChannelId();
 
@@ -299,12 +303,28 @@ public class SampleTest {
                                              .setInAppMessage(inAppMessagePayload)
                                              .build();
 
-
         pushSender.send(pushPayload);
         if (airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS) == null) {
             fail("Unable to send in-app message.");
         }
 
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        // Click YES button
+        onView(withText(containsString("Yes")))
+                .perform(click());
+
+        assertTrue(UAirship.shared().getPushManager().getTags().contains("YES_INTERACTIVE_BUTTON_TAG"));
+
+        // Test in-app message with interactive buttons
+        pushSender.send(pushPayload);
+        if (airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS) == null) {
+            fail("Unable to send in-app message.");
+        }
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 
         // Click the in-app message
         onView(withText(inAppMessagePayload.getAlert()))
@@ -315,18 +335,6 @@ public class SampleTest {
 
         // Close the landing page
         Espresso.pressBack();
-
-        // Test in-app message with interactive buttons
-        pushSender.send(pushPayload);
-        if (airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS) == null) {
-            fail("Unable to send in-app message.");
-        }
-
-        // Click YES button
-        onView(withText("Yes"))
-                .perform(click());
-
-        assertTrue(UAirship.shared().getPushManager().getTags().contains("YES_INTERACTIVE_BUTTON_TAG"));
     }
 
     public static class TestAirshipReceiver extends AirshipReceiver {
