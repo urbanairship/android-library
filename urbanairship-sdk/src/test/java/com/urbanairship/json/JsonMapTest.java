@@ -78,14 +78,16 @@ public class JsonMapTest extends BaseTestCase {
         List list = Arrays.asList("String", 1.2, false, 1, 'c');
 
         jsonMap = JsonMap.newBuilder()
-                .putAll(jsonMap)
-                .put("boolean", true)
-                .put("int", 1)
-                .put("char", 'c')
-                .put("String", "String")
-                .put("list", JsonValue.wrapOpt(list))
-                .build();
+                         .putAll(jsonMap)
+                         .put("boolean", true)
+                         .put("int", 1)
+                         .put("char", 'c')
+                         .put("String", "String")
+                         .put("Empty String", "")
+                         .put("list", JsonValue.wrapOpt(list))
+                         .build();
 
+        assertEquals("", jsonMap.get("Empty String").getString());
         assertEquals("some-value", jsonMap.get("some-key").getString());
         assertEquals("another-value", jsonMap.get("another-key").getString());
         assertEquals(true, jsonMap.get("boolean").getBoolean(false));

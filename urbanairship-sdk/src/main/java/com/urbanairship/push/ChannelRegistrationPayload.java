@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -97,7 +98,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
             if (alias != null) {
                 alias = alias.trim();
             }
-            this.alias = alias;
+            this.alias = UAStringUtil.isEmpty(alias) ? null : alias;
             return this;
         }
 
@@ -183,7 +184,7 @@ class ChannelRegistrationPayload implements JsonSerializable {
          */
         @NonNull
         Builder setUserId(String userId) {
-            this.userId = userId;
+            this.userId = UAStringUtil.isEmpty(userId) ? null : userId;
             return this;
         }
 
