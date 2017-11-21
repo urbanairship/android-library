@@ -238,7 +238,7 @@ public class BannerDisplayContent implements DisplayContent {
         if (content.containsKey(ACTIONS_KEY)) {
             JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
-                throw new JsonException("Actions must be a JSON object: " + content.opt(BORDER_RADIUS_KEY));
+                throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
             }
 
             builder.setActions(jsonMap.getMap());

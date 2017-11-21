@@ -9,6 +9,9 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.actions.StubbedActionRunRequest;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
@@ -20,6 +23,7 @@ import com.urbanairship.remotedata.RemoteDataPayload;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
@@ -58,6 +62,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     private InAppMessageAdapter mockAdapter;
     private ShadowLooper mainLooper;
+    private ActionRunRequestFactory actionRunRequestFactory;
 
     @Before
     public void setup() {
@@ -66,6 +71,10 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
         mainLooper = Shadows.shadowOf(Looper.getMainLooper());
+        actionRunRequestFactory = mock(ActionRunRequestFactory.class);
+
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
 
         doAnswer(new Answer<Void>() {
             @Override
@@ -80,12 +89,13 @@ public class InAppMessageManagerTest extends BaseTestCase {
         Subject<RemoteDataPayload> subject = Subject.create();
         when(mockRemoteData.payloadsForType(any(String.class))).thenReturn(subject);
 
+
         manager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor, new Executor() {
             @Override
             public void execute(@NonNull Runnable runnable) {
                 runnable.run();
             }
-        }, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager());
+        }, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory);
 
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
@@ -93,6 +103,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                    .setMessage(InAppMessage.newBuilder()
                                                                                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                                                                                            .setId("message id")
+                                                                                                           .addAction("action_name", JsonValue.wrap("action_value"))
                                                                                                            .build())
                                                                                    .build());
 
@@ -172,6 +183,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testOnDisplay() {
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
+
         // Resume an activity
         Activity activity = new Activity();
         activityMonitor.startActivity(activity);
@@ -185,9 +199,14 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Display it
         driverCallbacks.onDisplay(schedule.getId());
 
+        // Verify a display event was added
         verify(mockAnalytics).addEvent(any(DisplayEvent.class));
 
+        // Verify the adapter onDisplay was called
         verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
+
+        // Verify the display actions ran
+        verify(actionRunRequest).run();
     }
 
     @Test
@@ -202,6 +221,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
 
         // Display it
         when(mockAdapter.onDisplay(eq(activity), anyBoolean(), any(DisplayHandler.class))).thenReturn(InAppMessageAdapter.OK);
@@ -311,8 +333,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                                                                                            .setId("message id")
                                                                                                            .setAudience(Audience.newBuilder()
-                                                                                                                       .setNotificationsOptIn(true)
-                                                                                                                       .build())
+                                                                                                                                .setNotificationsOptIn(true)
+                                                                                                                                .build())
                                                                                                            .build())
                                                                                    .build());
 

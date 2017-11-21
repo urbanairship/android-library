@@ -82,6 +82,13 @@ public class DisplayHandler implements Parcelable {
     }
 
     /**
+     * Prevents the message from displaying again.
+     */
+    public void cancelFutureDisplays() {
+        UAirship.shared().getInAppMessagingManager().cancelSchedule(scheduleId);
+    }
+
+    /**
      * Called to obtain the display lock. If the in-app message is being displayed in a fragment or
      * directly in an activity, it should be called in the onStart method. If the in-app message is
      * attached directly to a view it should be called in the view's onWindowVisibilityChanged when
