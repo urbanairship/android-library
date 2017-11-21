@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.IntRange;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * In-app messaging manager.
@@ -53,7 +55,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * Default delay between displaying in-app messages.
      */
-    private static final long MESSAGE_DISPLAY_INTERVAL_MS = 5000;
+    public static final long DEFAULT_DISPLAY_INTERVAL_MS = 30000;
 
     /**
      * Metadata an app can use to prevent an in-app message from showing on a specific activity.
@@ -79,6 +81,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final InAppMessageDriver driver;
     private final AutomationEngine<InAppMessageSchedule> automationEngine;
     private final Map<String, InAppMessageAdapter.Factory> adapterFactories = new HashMap<>();
+    private long displayInterval = DEFAULT_DISPLAY_INTERVAL_MS;
 
 
     private final Runnable postDisplayRunnable = new Runnable() {
@@ -152,6 +155,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine = engine;
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.executor = executor;
+
     }
 
     /**
@@ -245,7 +249,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     if (!carryOverScheduleIds.isEmpty() && resumedActivity != null) {
                         display(resumedActivity, carryOverScheduleIds.pop(), true);
                     } else {
-                        mainHandler.postDelayed(postDisplayRunnable, MESSAGE_DISPLAY_INTERVAL_MS);
+                        mainHandler.postDelayed(postDisplayRunnable, displayInterval);
                     }
                 }
             }
@@ -416,6 +420,25 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     }
 
     /**
+     * Sets the in-app message display interval. Defaults to {@link #DEFAULT_DISPLAY_INTERVAL_MS}.
+     *
+     * @param time The display interval.
+     * @param timeUnit The time unit.
+     */
+    public void setDisplayInterval(@IntRange(from=0) long time, @NonNull TimeUnit timeUnit) {
+        this.displayInterval = timeUnit.toMillis(time);
+    }
+
+    /**
+     * Gets the display interval in milliseconds.
+     *
+     * @return The display interval in milliseconds.
+     */
+    public long getDisplayInterval() {
+        return this.displayInterval;
+    }
+
+    /**
      * Called by the display handler when an in-app message is unable to finish displaying on the current activity
      * and needs to be redisplayed on the next.
      *
@@ -448,7 +471,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         if (currentScheduleId == null) {
-            mainHandler.postDelayed(postDisplayRunnable, MESSAGE_DISPLAY_INTERVAL_MS);
+            if (displayInterval > 0) {
+                mainHandler.postDelayed(postDisplayRunnable, displayInterval);
+            } else {
+                mainHandler.post(postDisplayRunnable);
+            }
         }
     }
 
@@ -488,7 +515,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         if (scheduleId.equals(currentScheduleId)) {
             currentScheduleId = null;
             currentActivity = null;
-            mainHandler.postDelayed(postDisplayRunnable, MESSAGE_DISPLAY_INTERVAL_MS);
+
+            if (displayInterval > 0) {
+                mainHandler.postDelayed(postDisplayRunnable, displayInterval);
+            } else {
+                mainHandler.post(postDisplayRunnable);
+            }
         }
     }
 
