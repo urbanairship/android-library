@@ -10,7 +10,6 @@ import android.os.Looper;
 import android.support.annotation.IntRange;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
@@ -20,7 +19,6 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
@@ -31,7 +29,6 @@ import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -346,28 +343,28 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * {@inheritDoc}
      */
     @Override
-    public PendingResult<Collection<InAppMessageSchedule>> schedule(Collection<InAppMessageScheduleInfo> scheduleInfos) {
+    public PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos) {
         return automationEngine.schedule(scheduleInfos);
     }
 
     /**
      * {@inheritDoc}
      */
-    public PendingResult<InAppMessageSchedule> scheduleMessage(InAppMessageScheduleInfo messageScheduleInfo) {
+    public PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo) {
         return automationEngine.schedule(messageScheduleInfo);
     }
 
     /**
      * {@inheritDoc}
      */
-    public PendingResult<Void> cancelSchedule(String scheduleId) {
+    public PendingResult<Void> cancelSchedule(@NonNull String scheduleId) {
         return automationEngine.cancel(Collections.singletonList(scheduleId));
     }
 
     /**
      * {@inheritDoc}
      */
-    public PendingResult<Boolean> cancelMessage(String messageId) {
+    public PendingResult<Boolean> cancelMessage(@NonNull String messageId) {
         return automationEngine.cancelGroup(messageId);
     }
 
@@ -375,7 +372,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * {@inheritDoc}
      */
     @Override
-    public PendingResult<Void> cancelMessages(Collection<String> messageIds) {
+    public PendingResult<Void> cancelMessages(@NonNull Collection<String> messageIds) {
         return automationEngine.cancelGroups(messageIds);
     }
 
@@ -383,26 +380,16 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * {@inheritDoc}
      */
     @Override
-    public PendingResult<Collection<InAppMessage>> getMessages(final String messageId) {
-        final PendingResult<Collection<InAppMessage>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<InAppMessageSchedule>> getSchedules(@NonNull final String messageId) {
+        return automationEngine.getSchedules(messageId);
+    }
 
-        automationEngine.getSchedules(messageId).addResultCallback(new ResultCallback<List<InAppMessageSchedule>>() {
-            @Override
-            public void onResult(@Nullable List<InAppMessageSchedule> result) {
-                if (result == null || result.isEmpty()) {
-                    pendingResult.setResult(Collections.<InAppMessage>emptyList());
-                }
-
-                List<InAppMessage> messages = new ArrayList<>();
-                for (InAppMessageSchedule schedule : result) {
-                    messages.add(schedule.getInfo().getInAppMessage());
-                }
-
-                pendingResult.setResult(messages);
-            }
-        });
-
-        return pendingResult;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId) {
+        return automationEngine.getSchedule(scheduleId);
     }
 
     /**

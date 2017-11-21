@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import com.urbanairship.PendingResult;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface for scheduling in-app messages.
@@ -41,6 +42,7 @@ public interface InAppMessageScheduler {
      * Message Ids that need to be cancelled.
      *
      * @param messageIds The list of message IDs.
+     * @return A pending result.
      */
     PendingResult<Void> cancelMessages(Collection<String> messageIds);
 
@@ -48,13 +50,24 @@ public interface InAppMessageScheduler {
      * New schedules that need to be scheduled.
      *
      * @param scheduleInfos The list of schedule infos.
+     * @return A pending result.
      */
-    PendingResult<Collection<InAppMessageSchedule>> schedule(Collection<InAppMessageScheduleInfo> scheduleInfos);
+    PendingResult<List<InAppMessageSchedule>> schedule(List<InAppMessageScheduleInfo> scheduleInfos);
 
     /**
+     * Gets the schedules associated with the message ID.
      *
-     * @param messageId
-     * @return
+     * @param messageId The message ID.
+     * @return A pending result.
      */
-    PendingResult<Collection<InAppMessage>> getMessages(String messageId);
+    PendingResult<Collection<InAppMessageSchedule>> getSchedules(String messageId);
+
+    /**
+     * Gets the schedule.
+     *
+     * @param scheduleId The schedule ID.
+     * @return A pending result.
+     */
+    PendingResult<InAppMessageSchedule> getSchedule(String scheduleId);
+
 }

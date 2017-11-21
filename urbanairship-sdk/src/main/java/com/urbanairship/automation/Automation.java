@@ -117,7 +117,7 @@ public class Automation extends AirshipComponent {
      * @param scheduleInfos A list of {@link ActionScheduleInfo}.
      * @return A pending result.
      */
-    public PendingResult<Collection<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
+    public PendingResult<List<ActionSchedule>> schedule(@NonNull final List<ActionScheduleInfo> scheduleInfos) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return new PendingResult<>();
@@ -208,7 +208,7 @@ public class Automation extends AirshipComponent {
      * @param scheduleIds The requested schedule IDs.
      * @return A pending result.
      */
-    public PendingResult<List<ActionSchedule>> getSchedules(@NonNull final Set<String> scheduleIds) {
+    public PendingResult<Collection<ActionSchedule>> getSchedules(@NonNull final Set<String> scheduleIds) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return null;
@@ -222,7 +222,7 @@ public class Automation extends AirshipComponent {
      *
      * @return A pending result.
      */
-    public PendingResult<List<ActionSchedule>> getSchedules() {
+    public PendingResult<Collection<ActionSchedule>> getSchedules() {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return null;
@@ -237,7 +237,7 @@ public class Automation extends AirshipComponent {
      * @param group The group.
      * @return A pending result.
      */
-    public PendingResult<List<ActionSchedule>> getSchedules(final String group) {
+    public PendingResult<Collection<ActionSchedule>> getSchedules(final String group) {
         if (!UAirship.isMainProcess()) {
             Logger.warn("Automation - Cannot access the Automation API outside of the main process");
             return null;

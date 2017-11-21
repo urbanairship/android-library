@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestApplication;
+import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -52,9 +54,9 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
         scheduler = mock(InAppMessageScheduler.class);
 
-        PendingResult<Collection<InAppMessageSchedule>> scheduleResult = new PendingResult<>();
+        PendingResult<List<InAppMessageSchedule>> scheduleResult = new PendingResult<>();
         scheduleResult.setResult(Collections.emptyList());
-        when(scheduler.schedule(ArgumentMatchers.<InAppMessageScheduleInfo>anyCollection())).thenReturn(scheduleResult);
+        when(scheduler.schedule(ArgumentMatchers.<InAppMessageScheduleInfo>anyList())).thenReturn(scheduleResult);
 
         PendingResult<Void> cancelResult = new PendingResult<>();
         cancelResult.setResult(null);
@@ -75,8 +77,8 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
 
         // Return empty pending results when the message is requested
-        when(scheduler.getMessages("foo")).thenReturn(createMessagesPendingResult());
-        when(scheduler.getMessages("bar")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getSchedules("foo")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getSchedules("bar")).thenReturn(createMessagesPendingResult());
 
         // Notify the observer
         updates.onNext(payload);
@@ -102,7 +104,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(2))
                 .build();
 
-        when(scheduler.getMessages("baz")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getSchedules("baz")).thenReturn(createMessagesPendingResult());
 
         // Notify the observer
         updates.onNext(payload);
@@ -130,8 +132,8 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
 
         // Return empty pending results when the message is requested
-        when(scheduler.getMessages("foo")).thenReturn(createMessagesPendingResult());
-        when(scheduler.getMessages("bar")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getSchedules("foo")).thenReturn(createMessagesPendingResult());
+        when(scheduler.getSchedules("bar")).thenReturn(createMessagesPendingResult());
 
         updates.onNext(payload);
 
@@ -204,14 +206,19 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         }
     }
 
-    private static PendingResult<Collection<InAppMessage>> createMessagesPendingResult(String... ids) {
-        PendingResult<Collection<InAppMessage>> pendingResult = new PendingResult<>();
+    private static PendingResult<Collection<InAppMessageSchedule>> createMessagesPendingResult(String... ids) {
+        PendingResult<Collection<InAppMessageSchedule>> pendingResult = new PendingResult<>();
 
-        Collection<InAppMessage> collection = new HashSet<>();
+        Collection<InAppMessageSchedule> collection = new HashSet<>();
 
         if (ids != null) {
             for (String id : ids) {
-                collection.add(createMessage(id));
+                InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
+                        .setMessage(createMessage(id))
+                        .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                        .build();
+
+                collection.add(new InAppMessageSchedule(UUID.randomUUID().toString(), scheduleInfo));
             }
         }
 

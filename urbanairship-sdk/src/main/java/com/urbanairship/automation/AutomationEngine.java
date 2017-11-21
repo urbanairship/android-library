@@ -237,11 +237,11 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Schedules a list of action schedules.
      *
-     * @param scheduleInfos A collection of {@link ScheduleInfo}.
+     * @param scheduleInfos A list of {@link ScheduleInfo}.
      * @return A pending result.
      */
-    public PendingResult<Collection<T>> schedule(@NonNull final Collection<? extends ScheduleInfo> scheduleInfos) {
-        final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
+    public PendingResult<List<T>> schedule(@NonNull final List<? extends ScheduleInfo> scheduleInfos) {
+        final PendingResult<List<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -375,11 +375,11 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Gets a list of schedules.
      *
-     * @param scheduleIds The list of schedule IDs.
+     * @param scheduleIds A collection of schedule IDs.
      * @return A pending result.
      */
-    public PendingResult<List<T>> getSchedules(@NonNull final Set<String> scheduleIds) {
-        final PendingResult<List<T>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<T>> getSchedules(@NonNull final Set<String> scheduleIds) {
+        final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -397,8 +397,8 @@ public class AutomationEngine<T extends Schedule> {
      * @param group The schedule group.
      * @return A pending result.
      */
-    public PendingResult<List<T>> getSchedules(final String group) {
-        final PendingResult<List<T>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<T>> getSchedules(final String group) {
+        final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override
@@ -422,8 +422,8 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @return A pending result.
      */
-    public PendingResult<List<T>> getSchedules() {
-        final PendingResult<List<T>> pendingResult = new PendingResult<>();
+    public PendingResult<Collection<T>> getSchedules() {
+        final PendingResult<Collection<T>> pendingResult = new PendingResult<>();
 
         backgroundHandler.post(new Runnable() {
             @Override

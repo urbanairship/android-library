@@ -126,7 +126,7 @@ class InAppRemoteDataObserver {
             messageIds.add(messageId);
 
             if (createdTimeStamp > lastUpdate) {
-                if (!scheduler.getMessages(messageId).get().isEmpty()) {
+                if (!scheduler.getSchedules(messageId).get().isEmpty()) {
                     continue;
                 }
 
