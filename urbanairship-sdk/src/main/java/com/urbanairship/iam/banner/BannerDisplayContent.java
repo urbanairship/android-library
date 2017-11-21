@@ -238,7 +238,7 @@ public class BannerDisplayContent implements DisplayContent {
         if (content.containsKey(ACTIONS_KEY)) {
             JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
             if (jsonMap == null) {
-                throw new JsonException("Actions must be a JSON object: " + content.opt(BORDER_RADIUS_KEY));
+                throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
             }
 
             builder.setActions(jsonMap.getMap());
@@ -687,7 +687,7 @@ public class BannerDisplayContent implements DisplayContent {
             Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
-            Checks.checkArgument(media == null || !media.getType().equals(MediaInfo.TYPE_IMAGE), "Banner only supports image media");
+            Checks.checkArgument(media == null || media.getType().equals(MediaInfo.TYPE_IMAGE), "Banner only supports image media");
 
             return new BannerDisplayContent(this);
         }

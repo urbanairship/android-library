@@ -29,8 +29,7 @@ import android.widget.TextView;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
-import com.urbanairship.actions.ActionRunRequest;
+import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
@@ -40,11 +39,8 @@ import com.urbanairship.iam.view.BackgroundDrawableBuilder;
 import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.messagecenter.ImageLoader;
 import com.urbanairship.util.Checks;
-
-import java.util.Map;
 
 /**
  * A fragment that displays an in-app message banner.
@@ -339,11 +335,11 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
     @Override
     public void onButtonClicked(View view, ButtonInfo buttonInfo) {
-        runActions(buttonInfo.getActions());
+        InAppActionUtils.runActions(buttonInfo);
         dismiss(true, ResolutionInfo.buttonPressed(buttonInfo, timer.getRunTime()));
 
         if (buttonInfo.getBehavior().equals(ButtonInfo.BEHAVIOR_CANCEL)) {
-            UAirship.shared().getInAppMessagingManager().cancelMessage(inAppMessage.getId());
+            displayHandler.cancelFutureDisplays();
         }
     }
 
@@ -372,23 +368,6 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
      */
     protected Timer getTimer() {
         return timer;
-    }
-
-    /**
-     * Helper method to run a map of action name to action values.
-     *
-     * @param actions The action value map.
-     */
-    protected void runActions(Map<String, JsonValue> actions) {
-        if (actions == null) {
-            return;
-        }
-
-        for (Map.Entry<String, JsonValue> entry : actions.entrySet()) {
-            ActionRunRequest.createRequest(entry.getKey())
-                            .setValue(entry.getValue())
-                            .run();
-        }
     }
 
     /**
@@ -539,7 +518,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
             return;
         }
 
-        runActions(displayContent.getActions());
+        InAppActionUtils.runActions(displayContent.getActions());
         dismiss(true, ResolutionInfo.messageClicked(timer.getRunTime()));
     }
 

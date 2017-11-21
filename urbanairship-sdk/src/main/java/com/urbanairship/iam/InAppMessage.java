@@ -19,6 +19,8 @@ import com.urbanairship.util.Checks;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Defines an in-app message.
@@ -31,6 +33,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String DISPLAY_CONTENT_KEY = "display";
     private static final String EXTRA_KEY = "extra";
     private static final String AUDIENCE_KEY = "audience";
+    private static final String ACTIONS_KEY = "actions";
+
 
 
     @StringDef({ TYPE_BANNER, TYPE_CUSTOM })
@@ -53,6 +57,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final String id;
     private final JsonSerializable content;
     private final Audience audience;
+    private final Map<String, JsonValue> actions;
 
     /**
      * Default constructor.
@@ -65,6 +70,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.id = builder.id;
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.audience = builder.audience;
+        this.actions = builder.actions;
     }
 
     /**
@@ -127,6 +133,15 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return audience;
     }
 
+    /**
+     * Gets the actions.
+     *
+     * @return The actions.
+     */
+    public Map<String, JsonValue> getActions() {
+        return actions;
+    }
+
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -135,6 +150,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(DISPLAY_CONTENT_KEY, content)
                       .putOpt(DISPLAY_TYPE_KEY, type)
                       .putOpt(AUDIENCE_KEY, audience)
+                      .putOpt(ACTIONS_KEY, actions)
                       .build().toJsonValue();
     }
 
@@ -155,6 +171,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                            .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
                            .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                            .setDisplayContent(type, content);
+
+
+        // Actions
+        if (jsonValue.optMap().containsKey(ACTIONS_KEY)) {
+            JsonMap jsonMap = jsonValue.optMap().get(ACTIONS_KEY).getMap();
+            if (jsonMap == null) {
+                throw new JsonException("Actions must be a JSON object: " + jsonValue.optMap().opt(ACTIONS_KEY));
+            }
+
+            builder.setActions(jsonMap.getMap());
+        }
 
 
         if (jsonValue.optMap().containsKey(AUDIENCE_KEY)) {
@@ -190,13 +217,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             String type = in.readString();
             String contentPayload = in.readString();
             String extraPayload = in.readString();
+            String actionsPayload = in.readString();
             String audiencePayload = in.readString();
+
 
             InAppMessage.Builder builder = InAppMessage.newBuilder()
                                                        .setId(id);
 
             try {
-                builder.setExtras(JsonValue.parseString(extraPayload).optMap());
+                builder.setExtras(JsonValue.parseString(extraPayload).optMap())
+                       .setActions(JsonValue.parseString(actionsPayload).optMap().getMap());
+
             } catch (JsonException e) {
                 Logger.error("InAppMessage - Invalid extras from parcel: " + extraPayload);
             }
@@ -230,7 +261,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         dest.writeString(type);
         dest.writeString(content.toJsonValue().toString());
         dest.writeString(extras.toString());
+        dest.writeString(JsonValue.wrapOpt(actions).toString());
         dest.writeString(audience == null ? null : audience.toJsonValue().toString());
+
     }
 
     @Override
@@ -266,7 +299,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         if (content != null ? !content.equals(that.content) : that.content != null) {
             return false;
         }
-        return audience != null ? audience.equals(that.audience) : that.audience == null;
+        if (audience != null ? !audience.equals(that.audience) : that.audience != null) {
+            return false;
+        }
+        return actions != null ? actions.equals(that.actions) : that.actions == null;
     }
 
     @Override
@@ -276,6 +312,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (content != null ? content.hashCode() : 0);
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
+        result = 31 * result + (actions != null ? actions.hashCode() : 0);
         return result;
     }
 
@@ -289,6 +326,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private String id;
         private JsonSerializable content;
         private Audience audience;
+        private Map<String, JsonValue> actions = new HashMap<>();
 
         private Builder() {}
 
@@ -369,6 +407,37 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.audience = audience;
             return this;
         }
+
+
+
+        /**
+         * Sets the actions to run when the in-app message is displayed.
+         *
+         * @param actions The action map.
+         * @return The builder.
+         */
+        public Builder setActions(Map<String, JsonValue> actions) {
+            this.actions.clear();
+
+            if (actions != null) {
+                this.actions.putAll(actions);
+            }
+
+            return this;
+        }
+
+        /**
+         * Adds an action to run when the in-app message is displayed.
+         *
+         * @param actionName The action name.
+         * @param actionValue The action value.
+         * @return The builder.
+         */
+        public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
+            this.actions.put(actionName, actionValue);
+            return this;
+        }
+
 
         /**
          * Builds the in-app message.

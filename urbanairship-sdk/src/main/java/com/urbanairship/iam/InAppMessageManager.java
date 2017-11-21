@@ -20,6 +20,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationEngine;
@@ -58,6 +59,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Metadata an app can use to prevent an in-app message from showing on a specific activity.
      */
     public final static String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
+    private final ActionRunRequestFactory actionRunRequestFactory;
 
     // State
     private String currentScheduleId;
@@ -134,6 +136,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 .setScheduleLimit(200)
                 .setDriver(driver)
                 .build();
+        this.actionRunRequestFactory = new ActionRunRequestFactory();
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
     }
@@ -141,7 +144,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @VisibleForTesting
     InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
                         Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
-                        RemoteData remoteData, PushManager pushManager) {
+                        RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory) {
         super(preferenceDataStore);
         this.analytics = analytics;
         this.activityMonitor = activityMonitor;
@@ -152,6 +155,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine = engine;
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.executor = executor;
+        this.actionRunRequestFactory = actionRunRequestFactory;
 
     }
 
@@ -185,7 +189,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                     try {
                         InAppMessageAdapter adapter = factory.createAdapter(message);
-                        adapterWrappers.put(scheduleId, new AdapterWrapper(scheduleId, message.getId(), adapter));
+                        adapterWrappers.put(scheduleId, new AdapterWrapper(scheduleId, message, adapter));
                     } catch (Exception e) {
                         Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
                         return false;
@@ -486,7 +490,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return;
         }
 
-        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.messageId, resolutionInfo));
+        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message.getId(), resolutionInfo));
 
         driver.displayFinished(scheduleId);
         executor.execute(new Runnable() {
@@ -578,7 +582,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             carryOverScheduleIds.remove(scheduleId);
 
             if (!isRedisplay) {
-                analytics.addEvent(new DisplayEvent(adapterWrapper.messageId));
+                analytics.addEvent(new DisplayEvent(adapterWrapper.message.getId()));
+                InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
             }
         } else if (!carryOverScheduleIds.contains(scheduleId)) {
             carryOverScheduleIds.push(scheduleId);
@@ -619,13 +624,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     public static final class AdapterWrapper {
         private final String scheduleId;
-        private final String messageId;
+        private final InAppMessage message;
         public volatile boolean isReady;
         public InAppMessageAdapter adapter;
 
-        public AdapterWrapper(@NonNull String scheduleId, @NonNull String messageId, @NonNull InAppMessageAdapter adapter) {
+        public AdapterWrapper(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull InAppMessageAdapter adapter) {
             this.scheduleId = scheduleId;
-            this.messageId = messageId;
+            this.message = message;
             this.adapter = adapter;
         }
 

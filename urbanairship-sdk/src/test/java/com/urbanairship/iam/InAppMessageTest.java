@@ -27,17 +27,18 @@ public class InAppMessageTest extends BaseTestCase {
     @Before
     public void setup() {
         customDisplayContent = new CustomDisplayContent(JsonValue.NULL);
-        bannerDisplayContent =   BannerDisplayContent.newBuilder()
-                                                     .setBody(TextInfo.newBuilder()
-                                                                      .setText("oh hi")
-                                                                      .build())
-                                                     .addButton(ButtonInfo.newBuilder()
-                                                                          .setLabel(TextInfo.newBuilder()
-                                                                                            .setText("Oh hi")
-                                                                                            .build())
-                                                                          .setId("id")
-                                                                          .build())
-                                                     .build();
+        bannerDisplayContent = BannerDisplayContent.newBuilder()
+                                                   .setBody(TextInfo.newBuilder()
+                                                                    .setText("oh hi")
+                                                                    .build())
+                                                   .addButton(ButtonInfo.newBuilder()
+                                                                        .setLabel(TextInfo.newBuilder()
+                                                                                          .setText("Oh hi")
+                                                                                          .build())
+                                                                        .setId("id")
+                                                                        .build())
+                                                   .addAction("action_name", JsonValue.wrap("action_value"))
+                                                   .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -59,6 +60,7 @@ public class InAppMessageTest extends BaseTestCase {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(bannerDisplayContent)
                                            .setId("messageId")
+                                           .addAction("action_name", JsonValue.wrap(100))
                                            .build();
 
         assertEquals(InAppMessage.TYPE_BANNER, message.getType());
@@ -84,17 +86,21 @@ public class InAppMessageTest extends BaseTestCase {
 
     @Test
     public void testFromJson() throws JsonException {
+        JsonMap actionsMap = JsonMap.newBuilder().put("action_value", "action_name").build();
         JsonMap jsonMap = JsonMap.newBuilder()
-                                      .put("display_type", "custom")
-                                      .put("display", customDisplayContent.toJsonValue())
-                                      .put("message_id", "messageId")
-                                      .build();
+                                 .put("display_type", "custom")
+                                 .put("display", customDisplayContent.toJsonValue())
+                                 .put("message_id", "messageId")
+                                 .put("actions", actionsMap)
+                                 .build();
 
         InAppMessage message = InAppMessage.fromJson(jsonMap.toJsonValue());
 
         assertEquals("messageId", message.getId());
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
         assertEquals(customDisplayContent, message.getDisplayContent());
+        assertEquals(actionsMap.getMap(), message.getActions());
+
     }
 
     @Test(expected = JsonException.class)
