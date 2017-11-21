@@ -12,3 +12,8 @@
 ## Actions
 -keep public class * extends com.urbanairship.actions.Action
 -keep public class * implements com.urbanairship.actions.ActionRegistry$Predicate
+
+## Optional
+-dontwarn com.urbanairship.location.FusedLocationAdapter*
+-dontwarn com.urbanairship.push.iam.view.BannerCardView*
+-dontwarn com.urbanairship.messagecenter.ThemedActivity*

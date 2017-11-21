@@ -3,6 +3,26 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+
+Version 8.9.6 - November 21, 2017
+=================================
+
+Fixes a bug with channel registration updates happening too often if you set the alias as an empty
+string instead of null. Applications that are seeing frequent channel updates should update.
+
+Changes
+-------
+- Fixed channel registration updates.
+
+Version 8.9.5 - November 20, 2017
+=================================
+
+Changes
+-------
+- Removes the use of AsyncTaskCompat.
+- Added proguard rules to ignore warnings for classes that use optional dependencies.
+
+
 Version 8.9.4 - October 24, 2017
 ================================
 

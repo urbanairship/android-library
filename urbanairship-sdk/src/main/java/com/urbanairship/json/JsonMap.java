@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
-import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.json.JSONStringer;
@@ -278,7 +277,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          * @return The JSON map builder.
          */
         public Builder put(@NonNull String key, String value) {
-            if (!UAStringUtil.isEmpty(value)) {
+            if (value != null) {
                 put(key, JsonValue.wrap(value));
             } else {
                 map.remove(key);
