@@ -379,4 +379,20 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
         assertTrue("Payloads should match.", payload.equals(jsonPayload));
         assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
     }
+
+
+    @Test
+    public void testFromJsonEmptyAlias() throws JsonException {
+        payload = new ChannelRegistrationPayload.Builder()
+                .setOptIn(testOptIn)
+                .setAlias("")
+                .setDeviceType(testDeviceType)
+                .setPushAddress(testPushAddress)
+                .setUserId(testUserId)
+                .setApid(testApid).build();
+
+        ChannelRegistrationPayload jsonPayload = ChannelRegistrationPayload.parseJson(payload.toJsonValue());
+        assertTrue("Payloads should match.", payload.equals(jsonPayload));
+        assertEquals("Payloads should match.", payload.hashCode(), jsonPayload.hashCode());
+    }
 }
