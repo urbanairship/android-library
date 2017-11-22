@@ -14,7 +14,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
@@ -25,6 +24,7 @@ import android.widget.TextView;
 
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.Fonts;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.util.UAStringUtil;
 
@@ -134,7 +134,6 @@ public class InAppViewUtils {
         textView.setPaintFlags(paintFlags);
     }
 
-
     /**
      * Helper class that centers the image span vertically.
      */
@@ -167,14 +166,14 @@ public class InAppViewUtils {
      */
     @Nullable
     private static Typeface getTypeFace(@NonNull Context context, @NonNull List<String> fontFamilies) {
-        for (String font : fontFamilies) {
-            if (UAStringUtil.isEmpty(font)) {
+        for (String fontFamily : fontFamilies) {
+            if (UAStringUtil.isEmpty(fontFamily)) {
                 continue;
             }
 
-            int resourceId = context.getResources().getIdentifier(font, "font", context.getPackageName());
-            if (resourceId != 0) {
-                return ResourcesCompat.getFont(context, resourceId);
+            Typeface typeface = Fonts.shared(context).getFontFamily(fontFamily);
+            if (typeface != null) {
+                return typeface;
             }
         }
 
