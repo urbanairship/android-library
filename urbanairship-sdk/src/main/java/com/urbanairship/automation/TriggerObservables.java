@@ -3,12 +3,12 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.ActivityMonitor;
-import com.urbanairship.Cancelable;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Observer;
+import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscription;
 
 /**
@@ -32,7 +32,7 @@ class TriggerObservables {
                 observer.onCompleted();
                 return Subscription.empty();
             }
-        });
+        }).subscribeOn(Schedulers.main());
     }
 
     /**
@@ -61,6 +61,6 @@ class TriggerObservables {
                     }
                 });
             }
-        });
+        }).subscribeOn(Schedulers.main());
     }
 }
