@@ -4,6 +4,8 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
 
@@ -58,6 +60,7 @@ public class BoundedLinearLayout extends LinearLayout {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public BoundedLinearLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context, attrs, defStyle, defResStyle);

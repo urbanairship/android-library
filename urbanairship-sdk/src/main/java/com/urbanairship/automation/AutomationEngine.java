@@ -24,6 +24,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
+import com.urbanairship.reactive.Scheduler;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.reactive.Subscriber;
@@ -75,7 +76,7 @@ public class AutomationEngine<T extends Schedule> {
 
     private Subject<TriggerUpdate> stateObservableUpdates;
     private Subscription compoundTriggerSubscription;
-    ;
+    private Scheduler backgroundScheduler;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -144,7 +145,7 @@ public class AutomationEngine<T extends Schedule> {
         this.driver = builder.driver;
         this.scheduleLimit = builder.limit;
 
-        this.backgroundThread = new HandlerThread("delayed");
+        this.backgroundThread = new HandlerThread("automation");
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -158,17 +159,16 @@ public class AutomationEngine<T extends Schedule> {
 
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
+        this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
 
         activityMonitor.addListener(activityListener);
         analytics.addAnalyticsListener(analyticsListener);
 
         resetExecutingSchedules();
         rescheduleDelays();
-        onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
-        onScheduleConditionsChanged();
-
         restoreCompoundTriggers();
-
+        onScheduleConditionsChanged();
+        onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
         isStarted = true;
     }
 
@@ -261,6 +261,7 @@ public class AutomationEngine<T extends Schedule> {
                 dataManager.saveSchedules(entries);
                 subscribeStateObservables(entries);
                 pendingResult.setResult(convertEntries(entries));
+
             }
         });
 
@@ -282,6 +283,7 @@ public class AutomationEngine<T extends Schedule> {
                 dataManager.deleteSchedules(ids);
                 cancelScheduleDelays(ids);
                 pendingResult.setResult(null);
+
             }
         });
 
@@ -303,6 +305,7 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 cancelGroupDelays(Collections.singletonList(group));
                 pendingResult.setResult(dataManager.deleteGroup(group));
+
             }
         });
 
@@ -483,13 +486,14 @@ public class AutomationEngine<T extends Schedule> {
         final List<Observable<TriggerUpdate>> eventObservables = new ArrayList<>();
 
         for (final @Trigger.TriggerType int type : COMPOUND_TRIGGER_TYPES) {
-            eventObservables.add(createEventObservable(type).observeOn(Schedulers.looper(backgroundThread.getLooper()))
-                                                            .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                                                @Override
-                                                                public TriggerUpdate apply(JsonSerializable json) {
-                                                                    return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
-                                                                }
-                                                            }));
+            Observable<TriggerUpdate> observable = createEventObservable(type).observeOn(backgroundScheduler)
+                                                                              .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                                                                  @Override
+                                                                                  public TriggerUpdate apply(JsonSerializable json) {
+                                                                                      return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
+                                                                                  }
+                                                                              });
+            eventObservables.add(observable);
         }
 
         Observable<TriggerUpdate> eventStream = Observable.merge(eventObservables);
@@ -505,8 +509,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries();
-                subscribeStateObservables(scheduleEntries);
+                subscribeStateObservables(dataManager.getScheduleEntries());
             }
         });
     }
@@ -555,12 +558,14 @@ public class AutomationEngine<T extends Schedule> {
                       .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
                           @Override
                           public Observable<TriggerUpdate> apply(final Integer type) {
-                              return createStateObservable(type).map(new Function<JsonSerializable, TriggerUpdate>() {
-                                  @Override
-                                  public TriggerUpdate apply(JsonSerializable json) {
-                                      return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, scheduleEntry.scheduleId), json, 1.0);
-                                  }
-                              });
+                              return createStateObservable(type)
+                                      .observeOn(backgroundScheduler)
+                                      .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                          @Override
+                                          public TriggerUpdate apply(JsonSerializable json) {
+                                              return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, scheduleEntry.scheduleId), json, 1.0);
+                                          }
+                                      });
                           }
                       })
                       .subscribe(new Subscriber<TriggerUpdate>() {
@@ -1082,6 +1087,8 @@ public class AutomationEngine<T extends Schedule> {
             this.json = json;
             this.value = value;
         }
+
+
     }
 
     /**

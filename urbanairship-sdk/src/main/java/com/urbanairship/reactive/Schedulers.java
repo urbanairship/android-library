@@ -14,6 +14,9 @@ import android.support.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Schedulers {
+
+    private static LooperScheduler main;
+
     /**
      * Creates a Scheduler that targets the provided looper at scheduler time.
      *
@@ -28,6 +31,19 @@ public class Schedulers {
     }
 
     /**
+     * Gets the scheduler that targets the main looper.
+     *
+     * @return A Scheduler.
+     */
+    public static LooperScheduler main() {
+        if (main == null) {
+            main = looper(Looper.getMainLooper());
+        }
+
+        return main;
+    }
+
+    /**
      * Scheduler that targets a specific RunLoop at schedule time.
      */
     public static class LooperScheduler implements Scheduler {
@@ -36,6 +52,7 @@ public class Schedulers {
 
         /**
          * Run loop Scheduler constructor.
+         *
          * @param looper The looper to scheduler on.
          */
         public LooperScheduler(@NonNull Looper looper) {

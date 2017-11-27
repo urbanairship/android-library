@@ -329,7 +329,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
      *
      * @return The in-app message.
      */
-    public BannerDisplayContent getdisplayContent() {
+    public BannerDisplayContent getDisplayContent() {
         return displayContent;
     }
 
