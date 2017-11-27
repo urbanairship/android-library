@@ -400,7 +400,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Sets a {@link InAppMessageAdapter} for a given display type.
      *
      * @param displayType The display type.
-     * @param factory The adapter facotry.
+     * @param factory The adapter factory.
      */
     public void setAdapterFactory(@InAppMessage.DisplayType String displayType, InAppMessageAdapter.Factory factory) {
         if (factory == null) {

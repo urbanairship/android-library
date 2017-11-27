@@ -24,7 +24,7 @@ public interface DisplayContent extends JsonSerializable {
     String BUTTON_LAYOUT_SEPARATE = "separate";
 
     /**
-     * Buttons are dipslayed right next to each other.
+     * Buttons are displayed right next to each other.
      */
     String BUTTON_LAYOUT_JOINED = "joined";
 
