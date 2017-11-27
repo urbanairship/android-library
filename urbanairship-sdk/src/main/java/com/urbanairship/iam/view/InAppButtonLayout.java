@@ -4,6 +4,8 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -83,6 +85,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public InAppButtonLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context, attrs, defStyle, defResStyle);
@@ -164,7 +167,10 @@ public class InAppButtonLayout extends BoundedLinearLayout {
 
                 if (!isJoined && i > 0) {
                     params.setMargins(separatedSpaceWidth, 0, 0, 0);
-                    params.setMarginStart(separatedSpaceWidth);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        params.setMarginStart(separatedSpaceWidth);
+                    }
                 }
             }
 
