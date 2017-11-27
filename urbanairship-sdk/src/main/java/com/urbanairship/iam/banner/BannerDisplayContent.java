@@ -55,12 +55,12 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Template to display the optional media on the left.
      */
-    public static final String TEMPLATE_LEFT_MEDIA = "media_text";
+    public static final String TEMPLATE_LEFT_MEDIA = "media_left";
 
     /**
      * Template to display the optional media on the right.
      */
-    public static final String TEMPLATE_RIGHT_MEDIA = "text_media";
+    public static final String TEMPLATE_RIGHT_MEDIA = "media_right";
 
     /**
      * Default duration in milliseconds.
