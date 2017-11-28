@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.iam.ButtonInfo;
@@ -60,6 +61,11 @@ public class FullScreenDisplayContent implements DisplayContent {
     private final int backgroundColor;
     private final int dismissButtonColor;
     private final ButtonInfo footer;
+
+    /**
+     * Maximum number of buttons.
+     */
+    public static final int MAX_BUTTONS = 5;
 
     /**
      * Default factory method.
@@ -407,7 +413,8 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Adds a button the button info.
+         * Adds a button the button info. Max of 5 buttons are supported.
+         * If more than 2 buttons are supplied, button layout will default to stacked.
          *
          * @param buttonInfo Adds a button to the message.
          * @return The builder instance.
@@ -419,13 +426,14 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the message's buttons.
+         * Sets the message's buttons. Max of 5 buttons are supported.
+         * If more than 2 buttons are supplied, button layout will default to stacked.
          *
          * @param buttons A list of button infos.
          * @return The builder instance.
          */
         @NonNull
-        public Builder setButtons(List<ButtonInfo> buttons) {
+        public Builder setButtons(@Size(max = 5) List<ButtonInfo> buttons) {
             this.buttons.clear();
             if (buttons != null) {
                 this.buttons.addAll(buttons);
@@ -447,7 +455,8 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the button layout.
+         * Sets the button layout. If more than 2 buttons are supplied,
+         * the layout will default to {@link com.urbanairship.iam.DisplayContent.ButtonLayout#BUTTON_LAYOUT_STACKED}.
          *
          * @param buttonLayout The button layout.
          * @return The builder instance.
@@ -514,6 +523,11 @@ public class FullScreenDisplayContent implements DisplayContent {
          */
         @NonNull
         public FullScreenDisplayContent build() {
+            if (buttons.size() > 2) {
+                buttonLayout = BUTTON_LAYOUT_STACKED;
+            }
+
+            Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Full screen allows a max of " + MAX_BUTTONS + " buttons");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             return new FullScreenDisplayContent(this);
         }

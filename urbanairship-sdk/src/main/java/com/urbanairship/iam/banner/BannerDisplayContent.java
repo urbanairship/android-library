@@ -225,6 +225,7 @@ public class BannerDisplayContent implements DisplayContent {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
         }
+
         // Border radius
         if (content.containsKey(BORDER_RADIUS_KEY)) {
             if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
@@ -540,7 +541,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setButtons(List<ButtonInfo> buttons) {
+        public Builder setButtons(@Size(max = 2) List<ButtonInfo> buttons) {
             this.buttons.clear();
             if (buttons != null) {
                 this.buttons.addAll(buttons);
