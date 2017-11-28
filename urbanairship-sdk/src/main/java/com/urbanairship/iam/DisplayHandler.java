@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.UAirship;
 
@@ -30,8 +31,10 @@ public class DisplayHandler implements Parcelable {
      * Default constructor.
      *
      * @param scheduleId The schedule ID.
+     * @hide
      */
-    DisplayHandler(@NonNull String scheduleId) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public DisplayHandler(@NonNull String scheduleId) {
         this.scheduleId = scheduleId;
     }
 

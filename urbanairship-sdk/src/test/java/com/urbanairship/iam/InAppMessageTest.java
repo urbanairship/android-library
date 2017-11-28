@@ -7,6 +7,7 @@ import android.os.Parcel;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -21,8 +22,9 @@ import static junit.framework.Assert.assertEquals;
  */
 public class InAppMessageTest extends BaseTestCase {
 
-    CustomDisplayContent customDisplayContent;
-    BannerDisplayContent bannerDisplayContent;
+    private CustomDisplayContent customDisplayContent;
+    private BannerDisplayContent bannerDisplayContent;
+    private FullScreenDisplayContent fullScreenDisplayContent;
 
     @Before
     public void setup() {
@@ -38,6 +40,18 @@ public class InAppMessageTest extends BaseTestCase {
                                                                         .setId("id")
                                                                         .build())
                                                    .addAction("action_name", JsonValue.wrap("action_value"))
+                                                   .build();
+
+        fullScreenDisplayContent = FullScreenDisplayContent.newBuilder()
+                                                   .setBody(TextInfo.newBuilder()
+                                                                    .setText("oh hi")
+                                                                    .build())
+                                                   .addButton(ButtonInfo.newBuilder()
+                                                                        .setLabel(TextInfo.newBuilder()
+                                                                                          .setText("Oh hi")
+                                                                                          .build())
+                                                                        .setId("id")
+                                                                        .build())
                                                    .build();
     }
 
@@ -85,6 +99,20 @@ public class InAppMessageTest extends BaseTestCase {
     }
 
     @Test
+    public void testFullScreenDisplayContent() throws JsonException {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(fullScreenDisplayContent)
+                                           .setId("messageId")
+                                           .build();
+
+        assertEquals(InAppMessage.TYPE_FULL_SCREEN, message.getType());
+        assertEquals(fullScreenDisplayContent, message.getDisplayContent());
+
+        verifyParcelable(message);
+        verifyJsonSerialization(message);
+    }
+
+    @Test
     public void testFromJson() throws JsonException {
         JsonMap actionsMap = JsonMap.newBuilder().put("action_value", "action_name").build();
         JsonMap jsonMap = JsonMap.newBuilder()
@@ -100,7 +128,6 @@ public class InAppMessageTest extends BaseTestCase {
         assertEquals(InAppMessage.TYPE_CUSTOM, message.getType());
         assertEquals(customDisplayContent, message.getDisplayContent());
         assertEquals(actionsMap.getMap(), message.getActions());
-
     }
 
     @Test(expected = JsonException.class)

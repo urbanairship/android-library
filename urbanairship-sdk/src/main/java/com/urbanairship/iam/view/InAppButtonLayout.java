@@ -129,7 +129,7 @@ public class InAppButtonLayout extends BoundedLinearLayout {
     public void setButtons(@DisplayContent.ButtonLayout String layout, final List<ButtonInfo> buttonInfos) {
 
         boolean isStacked = DisplayContent.BUTTON_LAYOUT_STACKED.equals(layout);
-        boolean isJoined = !isStacked && DisplayContent.BUTTON_LAYOUT_JOINED.equals(layout);
+        boolean isJoined = !isStacked && DisplayContent.BUTTON_LAYOUT_JOINED.equals(layout) && buttonInfos.size() > 1;
 
         removeAllViews();
         setOrientation(isStacked ? VERTICAL : HORIZONTAL);

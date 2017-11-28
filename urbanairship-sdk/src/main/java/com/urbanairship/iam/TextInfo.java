@@ -7,6 +7,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
@@ -359,7 +360,7 @@ public class TextInfo implements JsonSerializable {
          * @param text The text.
          * @return The builder instance.
          */
-        public Builder setText(String text) {
+        public Builder setText(@NonNull @Size(min = 1) String text) {
             this.text = text;
             return this;
         }
@@ -440,7 +441,7 @@ public class TextInfo implements JsonSerializable {
          * @throws IllegalArgumentException If the text and label are missing.
          */
         public TextInfo build() {
-            Checks.checkArgument(drawable != 0 || text != null, "Missing text");
+            Checks.checkArgument(drawable != 0 || text != null, "Missing text.");
             return new TextInfo(this);
         }
     }

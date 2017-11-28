@@ -1,12 +1,11 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.iam.banner;
+package com.urbanairship.iam.fullscreen;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.iam.ButtonInfo;
@@ -23,60 +22,32 @@ import com.urbanairship.util.ColorUtils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_BANNER} in-app message.
+ * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_FULL_SCREEN} in-app message.
  */
-public class BannerDisplayContent implements DisplayContent {
-
-    @StringDef({ PLACEMENT_TOP, PLACEMENT_BOTTOM })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Placement {}
-
-    /**
-     * Display the message on top of the screen.
-     */
-    public static final String PLACEMENT_TOP = "top";
-
-    /**
-     * Display the message on bottom of the screen.
-     */
-    public static final String PLACEMENT_BOTTOM = "bottom";
+public class FullScreenDisplayContent implements DisplayContent {
 
 
-    @StringDef({ TEMPLATE_LEFT_MEDIA, TEMPLATE_RIGHT_MEDIA })
+    @StringDef({ TEMPLATE_HEADER_MEDIA_BODY, TEMPLATE_MEDIA_HEADER_BODY, TEMPLATE_HEADER_BODY_MEDIA })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Template {}
 
     /**
-     * Template to display the optional media on the left.
+     * Template with display order of header, media, body, buttons, footer.
      */
-    public static final String TEMPLATE_LEFT_MEDIA = "media_left";
+    public static final String TEMPLATE_HEADER_MEDIA_BODY = "header_media_body";
 
     /**
-     * Template to display the optional media on the right.
+     * Template with display order of media, header, body, buttons, footer.
      */
-    public static final String TEMPLATE_RIGHT_MEDIA = "media_right";
+    public static final String TEMPLATE_MEDIA_HEADER_BODY = "media_header_body";
 
     /**
-     * Default duration in milliseconds.
+     * Template with display order of header, body, media, buttons, footer.
      */
-    public static final long DEFAULT_DURATION_MS = 15000;
-
-    /**
-     * Maximum number of button supported by a banner.
-     */
-    public static final int MAX_BUTTONS = 2;
-
-    /**
-     * JSON key for actions. Not supported in the API but is needed for compatibility of v1 banners.
-     */
-    private static final String ACTIONS_KEY = "actions";
-
+    public static final String TEMPLATE_HEADER_BODY_MEDIA = "header_body_media";
 
     private final TextInfo heading;
     private final TextInfo body;
@@ -84,45 +55,38 @@ public class BannerDisplayContent implements DisplayContent {
     private final List<ButtonInfo> buttons;
     @ButtonLayout
     private final String buttonLayout;
-    @Placement
-    private final String placement;
     @Template
     private final String template;
-    private final long duration;
     private final int backgroundColor;
     private final int dismissButtonColor;
-    private final float borderRadius;
-    private final Map<String, JsonValue> actions;
+    private final ButtonInfo footer;
 
     /**
      * Default factory method.
      *
      * @param builder The display content builder.
      */
-    private BannerDisplayContent(Builder builder) {
+    private FullScreenDisplayContent(Builder builder) {
         this.heading = builder.heading;
         this.body = builder.body;
         this.media = builder.media;
         this.buttonLayout = builder.buttonLayout;
         this.buttons = builder.buttons;
-        this.placement = builder.placement;
         this.template = builder.template;
-        this.duration = builder.duration;
         this.backgroundColor = builder.backgroundColor;
         this.dismissButtonColor = builder.dismissButtonColor;
-        this.borderRadius = builder.borderRadius;
-        this.actions = builder.actions;
+        this.footer = builder.footer;
     }
 
     /**
-     * Parses banner display JSON.
+     * Parses full screen display JSON.
      *
      * @param json The json payload.
-     * @return The parsed banner display content.
+     * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
     @Nullable
-    public static BannerDisplayContent parseJson(JsonValue json) throws JsonException {
+    public static FullScreenDisplayContent parseJson(JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 
         Builder builder = newBuilder();
@@ -137,7 +101,7 @@ public class BannerDisplayContent implements DisplayContent {
             builder.setBody(TextInfo.parseJson(content.opt(BODY_KEY)));
         }
 
-        // Image
+        // Media
         if (content.containsKey(MEDIA_KEY)) {
             builder.setMedia(MediaInfo.parseJson(content.get(MEDIA_KEY)));
         }
@@ -169,42 +133,26 @@ public class BannerDisplayContent implements DisplayContent {
             }
         }
 
-        // Placement
-        if (content.containsKey(PLACEMENT_KEY)) {
-            switch (content.opt(PLACEMENT_KEY).getString("")) {
-                case PLACEMENT_BOTTOM:
-                    builder.setPlacement(PLACEMENT_BOTTOM);
-                    break;
-                case PLACEMENT_TOP:
-                    builder.setPlacement(PLACEMENT_TOP);
-                    break;
-                default:
-                    throw new JsonException("Unexpected placement: " + content.opt(PLACEMENT_KEY));
-            }
+        // Footer
+        if (content.containsKey(FOOTER_KEY)) {
+            builder.setFooter(ButtonInfo.parseJson(content.opt(FOOTER_KEY)));
         }
 
         // Template
         if (content.containsKey(TEMPLATE_KEY)) {
             switch (content.opt(TEMPLATE_KEY).getString("")) {
-                case TEMPLATE_LEFT_MEDIA:
-                    builder.setTemplate(TEMPLATE_LEFT_MEDIA);
+                case TEMPLATE_HEADER_BODY_MEDIA:
+                    builder.setTemplate(TEMPLATE_HEADER_BODY_MEDIA);
                     break;
-                case TEMPLATE_RIGHT_MEDIA:
-                    builder.setTemplate(TEMPLATE_RIGHT_MEDIA);
+                case TEMPLATE_HEADER_MEDIA_BODY:
+                    builder.setTemplate(TEMPLATE_HEADER_MEDIA_BODY);
+                    break;
+                case TEMPLATE_MEDIA_HEADER_BODY:
+                    builder.setTemplate(TEMPLATE_MEDIA_HEADER_BODY);
                     break;
                 default:
                     throw new JsonException("Unexpected template: " + content.opt(TEMPLATE_KEY));
             }
-        }
-
-        // Duration
-        if (content.containsKey(DURATION_KEY)) {
-            long duration = content.opt(DURATION_KEY).getLong(0);
-            if (duration == 0) {
-                throw new JsonException("Invalid duration: " + content.opt(DURATION_KEY));
-            }
-
-            builder.setDuration(duration, TimeUnit.SECONDS);
         }
 
 
@@ -225,29 +173,11 @@ public class BannerDisplayContent implements DisplayContent {
                 throw new JsonException("Invalid dismiss button color: " + content.opt(DISMISS_BUTTON_COLOR_KEY), e);
             }
         }
-        // Border radius
-        if (content.containsKey(BORDER_RADIUS_KEY)) {
-            if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
-                throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
-            }
-
-            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
-        }
-
-        // Actions
-        if (content.containsKey(ACTIONS_KEY)) {
-            JsonMap jsonMap = content.get(ACTIONS_KEY).getMap();
-            if (jsonMap == null) {
-                throw new JsonException("Actions must be a JSON object: " + content.opt(ACTIONS_KEY));
-            }
-
-            builder.setActions(jsonMap.getMap());
-        }
 
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
-            throw new JsonException("Invalid banner JSON: " + content, e);
+            throw new JsonException("Invalid full screen message JSON: " + content, e);
         }
     }
 
@@ -259,13 +189,10 @@ public class BannerDisplayContent implements DisplayContent {
                       .put(MEDIA_KEY, media)
                       .put(BUTTONS_KEY, JsonValue.wrapOpt(buttons))
                       .put(BUTTON_LAYOUT_KEY, buttonLayout)
-                      .put(PLACEMENT_KEY, placement)
                       .put(TEMPLATE_KEY, template)
-                      .put(DURATION_KEY, TimeUnit.MILLISECONDS.toSeconds(duration))
                       .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
                       .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
-                      .put(BORDER_RADIUS_KEY, borderRadius)
-                      .put(ACTIONS_KEY, JsonValue.wrapOpt(actions))
+                      .put(FOOTER_KEY, footer)
                       .build()
                       .toJsonValue();
     }
@@ -274,7 +201,7 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Returns the optional heading {@link TextInfo}.
      *
-     * @return The banner heading.
+     * @return The display heading.
      */
     @Nullable
     public TextInfo getHeading() {
@@ -284,7 +211,7 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Returns the optional body {@link TextInfo}.
      *
-     * @return The banner body.
+     * @return The display body.
      */
     @Nullable
     public TextInfo getBody() {
@@ -294,7 +221,7 @@ public class BannerDisplayContent implements DisplayContent {
     /**
      * Returns the optional {@link MediaInfo}.
      *
-     * @return The banner media.
+     * @return The display media.
      */
     @Nullable
     public MediaInfo getMedia() {
@@ -322,21 +249,11 @@ public class BannerDisplayContent implements DisplayContent {
         return buttonLayout;
     }
 
-    /**
-     * Returns the banner placement.
-     *
-     * @return The banner placement.
-     */
-    @NonNull
-    @Placement
-    public String getPlacement() {
-        return placement;
-    }
 
     /**
-     * Returns the banner template.
+     * Returns the template.
      *
-     * @return The banner template.
+     * @return The template.
      */
     @NonNull
     @Template
@@ -344,19 +261,11 @@ public class BannerDisplayContent implements DisplayContent {
         return template;
     }
 
-    /**
-     * Returns the banner display duration.
-     *
-     * @return The banner display duration.
-     */
-    public long getDuration() {
-        return duration;
-    }
 
     /**
-     * Returns the banner background color.
+     * Returns the background color.
      *
-     * @return The banner background color.
+     * @return The background color.
      */
     @ColorInt
     public int getBackgroundColor() {
@@ -364,9 +273,9 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     /**
-     * Returns the banner dismiss button color.
+     * Returns the dismiss button color.
      *
-     * @return The banner dismiss button color.
+     * @return The dismiss button color.
      */
     @ColorInt
     public int getDismissButtonColor() {
@@ -374,22 +283,18 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     /**
-     * Returns the border radius in dps.
+     * Returns the footer button.
      *
-     * @return Border radius in dps.
+     * @return The footer button.
      */
-    public float getBorderRadius() {
-        return borderRadius;
+    @Nullable
+    public ButtonInfo getFooter() {
+        return footer;
     }
 
-    /**
-     * Returns the action names and values to be run when the banner is clicked.
-     *
-     * @return The action map.
-     */
-    @NonNull
-    public Map<String, JsonValue> getActions() {
-        return actions;
+    @Override
+    public String toString() {
+        return toJsonValue().toString();
     }
 
     @Override
@@ -401,18 +306,12 @@ public class BannerDisplayContent implements DisplayContent {
             return false;
         }
 
-        BannerDisplayContent that = (BannerDisplayContent) o;
+        FullScreenDisplayContent that = (FullScreenDisplayContent) o;
 
-        if (duration != that.duration) {
-            return false;
-        }
         if (backgroundColor != that.backgroundColor) {
             return false;
         }
         if (dismissButtonColor != that.dismissButtonColor) {
-            return false;
-        }
-        if (Float.compare(that.borderRadius, borderRadius) != 0) {
             return false;
         }
         if (heading != null ? !heading.equals(that.heading) : that.heading != null) {
@@ -430,14 +329,10 @@ public class BannerDisplayContent implements DisplayContent {
         if (buttonLayout != null ? !buttonLayout.equals(that.buttonLayout) : that.buttonLayout != null) {
             return false;
         }
-        if (placement != null ? !placement.equals(that.placement) : that.placement != null) {
-            return false;
-        }
         if (template != null ? !template.equals(that.template) : that.template != null) {
             return false;
         }
-        return actions != null ? actions.equals(that.actions) : that.actions == null;
-
+        return footer != null ? footer.equals(that.footer) : that.footer == null;
     }
 
     @Override
@@ -447,19 +342,11 @@ public class BannerDisplayContent implements DisplayContent {
         result = 31 * result + (media != null ? media.hashCode() : 0);
         result = 31 * result + (buttons != null ? buttons.hashCode() : 0);
         result = 31 * result + (buttonLayout != null ? buttonLayout.hashCode() : 0);
-        result = 31 * result + (placement != null ? placement.hashCode() : 0);
         result = 31 * result + (template != null ? template.hashCode() : 0);
-        result = 31 * result + (int) (duration ^ (duration >>> 32));
         result = 31 * result + backgroundColor;
         result = 31 * result + dismissButtonColor;
-        result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
-        result = 31 * result + (actions != null ? actions.hashCode() : 0);
+        result = 31 * result + (footer != null ? footer.hashCode() : 0);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return toJsonValue().toString();
     }
 
     /**
@@ -472,7 +359,7 @@ public class BannerDisplayContent implements DisplayContent {
     }
 
     /**
-     * Banner Display Content Builder.
+     * Display Content Builder.
      */
     public static class Builder {
 
@@ -482,15 +369,13 @@ public class BannerDisplayContent implements DisplayContent {
         private List<ButtonInfo> buttons = new ArrayList<>();
         @ButtonLayout
         private String buttonLayout = BUTTON_LAYOUT_SEPARATE;
-        @Placement
-        private String placement = PLACEMENT_BOTTOM;
+
         @Template
-        private String template = TEMPLATE_LEFT_MEDIA;
-        private long duration = DEFAULT_DURATION_MS;
+        private String template = TEMPLATE_HEADER_MEDIA_BODY;
+
         private int backgroundColor = Color.WHITE;
         private int dismissButtonColor = Color.BLACK;
-        private float borderRadius = 0;
-        private final Map<String, JsonValue> actions = new HashMap<>();
+        private ButtonInfo footer;
 
         /**
          * Default constructor.
@@ -498,9 +383,9 @@ public class BannerDisplayContent implements DisplayContent {
         private Builder() {}
 
         /**
-         * Sets the banner's heading.
+         * Sets the message's heading.
          *
-         * @param heading The banner's heading.
+         * @param heading The message's heading.
          * @return The builder instance.
          */
         @NonNull
@@ -510,9 +395,9 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the banner's body.
+         * Sets the message's body.
          *
-         * @param body The banner's body.
+         * @param body The message's body.
          * @return The builder instance.
          */
         @NonNull
@@ -522,9 +407,9 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Adds a button to the banner. Only 2 buttons are supported.
+         * Adds a button the button info.
          *
-         * @param buttonInfo Adds a button to the banner.
+         * @param buttonInfo Adds a button to the message.
          * @return The builder instance.
          */
         @NonNull
@@ -534,7 +419,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the banner's buttons. Only 2 buttons are supported.
+         * Sets the message's buttons.
          *
          * @param buttons A list of button infos.
          * @return The builder instance.
@@ -550,7 +435,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the banner media. Only {@link MediaInfo#TYPE_IMAGE} is supported.
+         * Sets the media.
          *
          * @param media The media info.
          * @return The builder instance.
@@ -562,8 +447,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the button layout. Only {@link #BUTTON_LAYOUT_SEPARATE} and {@link #BUTTON_LAYOUT_JOINED}
-         * are allowed. Defaults to {@link #BUTTON_LAYOUT_SEPARATE}.
+         * Sets the button layout.
          *
          * @param buttonLayout The button layout.
          * @return The builder instance.
@@ -574,22 +458,11 @@ public class BannerDisplayContent implements DisplayContent {
             return this;
         }
 
-        /**
-         * Sets the banner's placement. Defaults to {@link #PLACEMENT_BOTTOM}.
-         *
-         * @param placement The banner's placement.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setPlacement(@NonNull @Placement String placement) {
-            this.placement = placement;
-            return this;
-        }
 
         /**
-         * Sets the banner's template. Defaults to {@link #TEMPLATE_LEFT_MEDIA}.
+         * Sets the template. Defaults to {@link #TEMPLATE_HEADER_MEDIA_BODY}.
          *
-         * @param template The banner's template.
+         * @param template The message's template.
          * @return The builder instance.
          */
         @NonNull
@@ -623,73 +496,26 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the border radius in dps. Defaults to 0.
+         * Sets the footer button.
          *
-         * @param borderRadius The border radius.
+         * @param footer The footer button info.
          * @return The builder instance.
+         */
+        public Builder setFooter(ButtonInfo footer) {
+            this.footer = footer;
+            return this;
+        }
+
+        /**
+         * Builds the full screen display content.
+         *
+         * @return The full screen display content.
+         * @throws IllegalArgumentException If the heading and body are both missing.
          */
         @NonNull
-        public Builder setBorderRadius(float borderRadius) {
-            this.borderRadius = borderRadius;
-            return this;
-        }
-
-        /**
-         * Sets the display duration. Defaults to {@link #DEFAULT_DURATION_MS}.
-         *
-         * @param duration The duration in milliseconds.
-         * @param timeUnit The time unit.
-         * @return The builder instance.
-         */
-        @NonNull
-        public Builder setDuration(@Size(min = 0) long duration, @NonNull TimeUnit timeUnit) {
-            this.duration = timeUnit.toMillis(duration);
-            return this;
-        }
-
-        /**
-         * Sets the actions to run when the banner is clicked.
-         *
-         * @param actions The action map.
-         * @return The builder instance.
-         */
-        public Builder setActions(Map<String, JsonValue> actions) {
-            this.actions.clear();
-
-            if (actions != null) {
-                this.actions.putAll(actions);
-            }
-
-            return this;
-        }
-
-        /**
-         * Adds an action to run when the banner is clicked.
-         *
-         * @param actionName The action name.
-         * @param actionValue The action value.
-         * @return The builder instance.
-         */
-        public Builder addAction(@NonNull String actionName, @NonNull JsonValue actionValue) {
-            this.actions.put(actionName, actionValue);
-            return this;
-        }
-
-        /**
-         * Builds the banner display content.
-         *
-         * @return The banner display content.
-         * @throws IllegalArgumentException If the button layout is stacked, if more than 2 button
-         * are defined, if the supplied media is not an image, or if the banner does not define at least a heading, body, or buttons.
-         */
-        @NonNull
-        public BannerDisplayContent build() {
-            Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
+        public FullScreenDisplayContent build() {
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
-            Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
-            Checks.checkArgument(media == null || media.getType().equals(MediaInfo.TYPE_IMAGE), "Banner only supports image media");
-
-            return new BannerDisplayContent(this);
+            return new FullScreenDisplayContent(this);
         }
     }
 }
