@@ -45,7 +45,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         InAppButtonLayout buttonLayout = findViewById(R.id.buttons);
         ImageView imageView = findViewById(R.id.media);
         Button footer = findViewById(R.id.footer);
-        final ImageButton dismiss = findViewById(R.id.dismiss);
+        ImageButton dismiss = findViewById(R.id.dismiss);
 
         // Heading
         if (displayContent.getHeading() != null) {
@@ -64,7 +64,11 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         // Media
         // TODO: Support video and youtube
         if (displayContent.getMedia() != null && displayContent.getMedia().getType().equals(MediaInfo.TYPE_IMAGE)) {
-            String imageLocation = getCache() != null ? getCache().getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY, displayContent.getMedia().getUrl()) : displayContent.getMedia().getUrl();
+            String imageLocation =  displayContent.getMedia().getUrl();
+            if (getCache() != null) {
+                imageLocation = getCache().getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY, imageLocation);
+            }
+
             ImageLoader.shared(this).load(imageLocation, 0, imageView);
             imageView.setContentDescription(displayContent.getMedia().getDescription());
         } else {
@@ -72,11 +76,11 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         // Button Layout
-        if (displayContent.getButtons().isEmpty()) {
-            buttonLayout.setVisibility(View.GONE);
-        } else {
+        if (!displayContent.getButtons().isEmpty()) {
             buttonLayout.setButtons(displayContent.getButtonLayout(), displayContent.getButtons());
             buttonLayout.setButtonClickListener(this);
+        } else {
+            buttonLayout.setVisibility(View.GONE);
         }
 
         // Footer

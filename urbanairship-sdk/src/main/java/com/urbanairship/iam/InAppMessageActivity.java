@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.Logger;
 import com.urbanairship.messagecenter.ThemedActivity;
 
 /**
@@ -53,6 +54,7 @@ public abstract class InAppMessageActivity extends ThemedActivity {
         cache = getIntent().getParcelableExtra(IN_APP_CACHE_KEY);
 
         if (displayHandler == null || inAppMessage == null) {
+            Logger.error(getClass() + " unable to show message. Missing display handler or in-app message.");
             finish();
             return;
         }
