@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            tools:context="com.urbanairship.iam.fullscreen.FullScreenActivity">
+
+    <RelativeLayout
+        style="@style/UrbanAirship.InAppFullscreen.Layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/dismiss"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            style="@style/UrbanAirship.InAppFullscreen.DismissButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/dismiss"
+            android:id="@+id/heading"
+            style="@style/UrbanAirship.InAppFullscreen.Heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/body"
+            style="@style/UrbanAirship.InAppFullscreen.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/heading"
+            tools:text="Body text"/>
+
+        <ImageView
+            android:id="@+id/media"
+            style="@style/UrbanAirship.InAppFullscreen.Image"
+            android:layout_below="@id/body"
+            tools:src="@drawable/ua_ic_image_placeholder"/>
+
+        <com.urbanairship.iam.view.InAppButtonLayout
+            android:id="@+id/buttons"
+            style="@style/UrbanAirship.InAppFullscreen.ButtonLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/media"/>
+
+        <FrameLayout
+            android:id="@+id/footer_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@id/buttons">
+
+            <Button
+                android:id="@+id/footer"
+                style="@style/UrbanAirship.InAppFullscreen.Footer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"/>
+
+        </FrameLayout>
+
+    </RelativeLayout>
+</ScrollView>

@@ -30,6 +30,11 @@ public class InAppMessageCache implements Parcelable {
     };
 
 
+    /**
+     * Cache key for the in-app message media.
+     */
+    public static final String MEDIA_CACHE_KEY = "MEDIA_CACHE_KEY";
+
     private static final String CACHE_DIRECTORY = "com.urbanairship.iam";
     private static boolean isParentReady = false;
 

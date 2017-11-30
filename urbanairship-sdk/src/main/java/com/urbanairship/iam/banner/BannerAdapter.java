@@ -59,7 +59,7 @@ public class BannerAdapter implements InAppMessageAdapter {
             if (!FileUtils.downloadFile(new URL(displayContent.getMedia().getUrl()), file)) {
                 return RETRY;
             }
-            cache.getBundle().putString(BannerFragment.IMAGE_CACHE_KEY, Uri.fromFile(file).toString());
+            cache.getBundle().putString(InAppMessageCache.MEDIA_CACHE_KEY, Uri.fromFile(file).toString());
         } catch (IOException e) {
             return RETRY;
         }

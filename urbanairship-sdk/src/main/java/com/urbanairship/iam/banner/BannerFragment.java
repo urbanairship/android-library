@@ -49,10 +49,6 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
                                                         OnClickListener,
                                                         BannerDismissLayout.Listener {
 
-    /**
-     * Cache key for the banner image.
-     */
-    public static final String IMAGE_CACHE_KEY = "IMAGE_CACHE_KEY";
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
 
@@ -79,10 +75,6 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         BannerFragment fragment = new BannerFragment();
 
         Bundle bundle = new Bundle();
-        if (builder.cache != null) {
-            bundle.putParcelable(IN_APP_MESSAGE, builder.cache);
-        }
-
         bundle.putInt(EXIT_ANIMATION, builder.exitAnimation);
         bundle.putParcelable(IN_APP_MESSAGE, builder.inAppMessage);
         bundle.putParcelable(DISPLAY_HANDLER, builder.displayHandler);
@@ -167,7 +159,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         // Image
         ImageView image = view.findViewById(R.id.image);
         if (displayContent.getMedia() != null) {
-            String imageLocation = cache != null ? cache.getBundle().getString(IMAGE_CACHE_KEY, displayContent.getMedia().getUrl()) : displayContent.getMedia().getUrl();
+            String imageLocation = cache != null ? cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY, displayContent.getMedia().getUrl()) : displayContent.getMedia().getUrl();
             ImageLoader.shared(getActivity()).load(imageLocation, 0, image);
             image.setContentDescription(displayContent.getMedia().getDescription());
         } else {

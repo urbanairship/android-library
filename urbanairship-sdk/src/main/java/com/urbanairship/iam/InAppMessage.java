@@ -11,6 +11,7 @@ import android.support.annotation.StringDef;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -36,8 +37,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String ACTIONS_KEY = "actions";
 
 
-
-    @StringDef({ TYPE_BANNER, TYPE_CUSTOM })
+    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN })
     @Retention(RetentionPolicy.SOURCE)
     @interface DisplayType {}
 
@@ -50,6 +50,11 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * Custom in-app message.
      */
     public static final String TYPE_CUSTOM = "custom";
+
+    /**
+     * Fullscreen in-app message.
+     */
+    public static final String TYPE_FULL_SCREEN = "full_screen";
 
     @DisplayType
     private final String type;
@@ -87,8 +92,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * Returns the display content.
      * <p>
      * The return type depends on the in-app message type:
-     * {@link #TYPE_BANNER}: a {@link com.urbanairship.iam.banner.BannerDisplayContent} will be returned
-     * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent} will be returned
+     * {@link #TYPE_BANNER}: a {@link com.urbanairship.iam.banner.BannerDisplayContent},
+     * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent},
+     * {@link #TYPE_FULL_SCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent}
      *
      * @param <T> The expected content type.
      * @return The display content.
@@ -168,9 +174,9 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
 
         InAppMessage.Builder builder = InAppMessage.newBuilder()
-                           .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
-                           .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
-                           .setDisplayContent(type, content);
+                                                   .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
+                                                   .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
+                                                   .setDisplayContent(type, content);
 
 
         // Actions
@@ -194,7 +200,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             throw new JsonException("Invalid InAppMessage json.", e);
         }
     }
-
 
     /**
      * Creates a new builder.
@@ -263,7 +268,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         dest.writeString(extras.toString());
         dest.writeString(JsonValue.wrapOpt(actions).toString());
         dest.writeString(audience == null ? null : audience.toJsonValue().toString());
-
     }
 
     @Override
@@ -346,8 +350,24 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                 case TYPE_CUSTOM:
                     this.setDisplayContent(CustomDisplayContent.parseJson(content));
                     break;
+
+                case TYPE_FULL_SCREEN:
+                    this.setDisplayContent(FullScreenDisplayContent.parseJson(content));
+                    break;
             }
 
+            return this;
+        }
+
+        /**
+         * Sets the full screen display content and type.
+         *
+         * @param displayContent The full screen display content.
+         * @return The builder.
+         */
+        public Builder setDisplayContent(FullScreenDisplayContent displayContent) {
+            this.type = TYPE_FULL_SCREEN;
+            this.content = displayContent;
             return this;
         }
 
@@ -408,8 +428,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return this;
         }
 
-
-
         /**
          * Sets the actions to run when the in-app message is displayed.
          *
@@ -437,7 +455,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             this.actions.put(actionName, actionValue);
             return this;
         }
-
 
         /**
          * Builds the in-app message.

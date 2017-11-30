@@ -27,6 +27,7 @@ import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
@@ -139,6 +140,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
+        setAdapterFactory(InAppMessage.TYPE_FULL_SCREEN, new FullScreenAdapterFactory());
     }
 
     @VisibleForTesting
@@ -512,6 +514,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             } else {
                 mainHandler.post(postDisplayRunnable);
             }
+        }
+
+        if (resolutionInfo.buttonInfo != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.buttonInfo.getBehavior())) {
+            cancelSchedule(scheduleId);
         }
     }
 

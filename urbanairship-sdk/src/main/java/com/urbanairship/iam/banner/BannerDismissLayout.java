@@ -4,9 +4,11 @@ package com.urbanairship.iam.banner;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
@@ -99,6 +101,7 @@ public class BannerDismissLayout extends FrameLayout {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         init(context);

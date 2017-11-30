@@ -159,6 +159,16 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    protected void hideActionBar() {
+        if (delegate != null) {
+            if (delegate.getSupportActionBar() != null) {
+                delegate.getSupportActionBar().hide();
+            }
+        } else if (getActionBar() != null) {
+            getActionBar().hide();
+        }
+    }
+
     /**
      * Checks if AppCompat support library is both installed and available for the activity.
      *
