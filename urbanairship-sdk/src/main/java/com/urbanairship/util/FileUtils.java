@@ -48,7 +48,7 @@ public abstract class FileUtils {
             }
         }
 
-        return true;
+        return file.delete();
     }
 
     /**
