@@ -115,12 +115,15 @@ public class InAppMessageCache implements Parcelable {
         File parent;
         synchronized (CACHE_DIRECTORY) {
             parent = new File(context.getCacheDir(), CACHE_DIRECTORY);
+            if (!isParentReady) {
+                if (parent.exists()) {
+                    FileUtils.deleteRecursively(parent);
+                }
 
-            if (!isParentReady && parent.exists()) {
-                FileUtils.deleteRecursively(parent);
-
-                if (parent.mkdirs()) {
+                if (parent.exists() || parent.mkdirs()) {
                     isParentReady = true;
+                } else {
+                    throw new IOException("Unable to create cache directory");
                 }
             }
         }
