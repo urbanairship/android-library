@@ -31,6 +31,7 @@
             android:required="false" />
 
         <activity android:name="com.urbanairship.iam.fullscreen.FullScreenActivity" />
+        <activity android:name="com.urbanairship.iam.modal.ModalActivity" android:theme="@style/UrbanAirship.InAppModal.Activity"/>
         <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name="com.urbanairship.CoreActivity" />
         <activity android:name="com.urbanairship.google.PlayServicesErrorActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />

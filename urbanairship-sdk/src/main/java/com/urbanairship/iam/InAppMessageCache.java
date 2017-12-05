@@ -35,6 +35,16 @@ public class InAppMessageCache implements Parcelable {
      */
     public static final String MEDIA_CACHE_KEY = "MEDIA_CACHE_KEY";
 
+    /**
+     * Cache key for the image width.
+     */
+    public static final String IMAGE_WIDTH_CACHE_KEY = "width";
+
+    /**
+     * Cache key for the image height.
+     */
+    public static final String IMAGE_HEIGHT_CACHE_KEY = "height";
+
     private static final String CACHE_DIRECTORY = "com.urbanairship.iam";
     private static boolean isParentReady = false;
 

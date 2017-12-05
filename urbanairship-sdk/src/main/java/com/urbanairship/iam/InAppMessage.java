@@ -12,6 +12,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
+import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -37,7 +38,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String ACTIONS_KEY = "actions";
 
 
-    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN })
+    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN, TYPE_MODAL })
     @Retention(RetentionPolicy.SOURCE)
     @interface DisplayType {}
 
@@ -55,6 +56,11 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * Fullscreen in-app message.
      */
     public static final String TYPE_FULL_SCREEN = "full_screen";
+
+    /**
+     * Modal in-app message.
+     */
+    public static final String TYPE_MODAL = "modal";
 
     @DisplayType
     private final String type;
@@ -354,8 +360,24 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                 case TYPE_FULL_SCREEN:
                     this.setDisplayContent(FullScreenDisplayContent.parseJson(content));
                     break;
+
+                case TYPE_MODAL:
+                    this.setDisplayContent(ModalDisplayContent.parseJson(content));
+                    break;
             }
 
+            return this;
+        }
+
+        /**
+         * Sets the modal display content and type.
+         *
+         * @param displayContent The modal display content.
+         * @return The builder.
+         */
+        public Builder setDisplayContent(ModalDisplayContent displayContent) {
+            this.type = TYPE_MODAL;
+            this.content = displayContent;
             return this;
         }
 

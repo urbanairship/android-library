@@ -90,14 +90,15 @@ public class BoundedLinearLayout extends LinearLayout {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
 
-        if(maxWidth > 0 && maxWidth < width) {
+        if (maxWidth > 0 && maxWidth < width) {
             widthMeasureSpec = MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.getMode(widthMeasureSpec));
         }
 
-        if(maxHeight > 0 && maxHeight < height) {
+        if (maxHeight > 0 && maxHeight < height) {
             heightMeasureSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.getMode(heightMeasureSpec));
         }
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
+
 }

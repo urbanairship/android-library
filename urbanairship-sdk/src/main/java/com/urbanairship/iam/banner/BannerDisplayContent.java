@@ -121,7 +121,7 @@ public class BannerDisplayContent implements DisplayContent {
      * @return The parsed banner display content.
      * @throws JsonException If the json was unable to be parsed.
      */
-    @Nullable
+    @NonNull
     public static BannerDisplayContent parseJson(JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 

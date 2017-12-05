@@ -3,8 +3,13 @@
 package com.urbanairship.iam.view;
 
 import android.support.annotation.IntDef;
+import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewTreeObserver;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.ref.WeakReference;
 
 /**
  * Utils class to generate a border radius array.
@@ -103,6 +108,71 @@ public abstract class BorderRadius {
         }
 
         return radii;
+    }
+
+
+    /**
+     * Applies padding to the view to avoid from overlapping the border radius.
+     *
+     * @param view The view.
+     * @param borderRadius The border radius.
+     * @param borderRadiusFlag The border radius flags.
+     */
+    public static void applyBorderRadiusPadding(View view, final float borderRadius, @BorderRadiusFlag final int borderRadiusFlag) {
+        if (view.getWidth() == 0) {
+            final WeakReference<View> weakReference = new WeakReference<View>(view);
+            view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    View view = weakReference.get();
+                    if (view != null) {
+                        applyBorderRadiusPadding(view, borderRadius, borderRadiusFlag);
+                        view.getViewTreeObserver().removeOnPreDrawListener(this);
+                    }
+                    return false;
+                }
+            });
+        }
+
+        float borderRadiusPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, borderRadius, view.getResources().getDisplayMetrics());
+        borderRadiusPixels = Math.min(borderRadiusPixels, Math.min(view.getHeight() / 2, view.getWidth() / 2));
+
+        float x = borderRadiusPixels * (float) Math.sin(Math.toRadians(45.0));
+        float y = borderRadiusPixels * (float) Math.sin(Math.toRadians(45.0));
+
+        int borderPaddingX = Math.round(borderRadiusPixels - x);
+        int borderPaddingY = Math.round(borderRadiusPixels - y);
+
+        int paddingLeft = 0;
+        int paddingRight = 0;
+        int paddingTop = 0;
+        int paddingBottom = 0;
+
+
+        if ((borderRadiusFlag & TOP_LEFT) == TOP_LEFT) {
+            paddingLeft = borderPaddingX;
+            paddingTop = borderPaddingY;
+        }
+
+        if ((borderRadiusFlag & TOP_RIGHT) == TOP_RIGHT) {
+            paddingRight = borderPaddingX;
+            paddingTop = borderPaddingY;
+        }
+
+        if ((borderRadiusFlag & BOTTOM_RIGHT) == BOTTOM_RIGHT) {
+            paddingRight = borderPaddingX;
+            paddingBottom = borderPaddingY;
+        }
+
+        if ((borderRadiusFlag & BOTTOM_LEFT) == BOTTOM_LEFT) {
+            paddingLeft = borderPaddingX;
+            paddingBottom = borderPaddingY;
+        }
+
+        view.setPadding(view.getPaddingLeft() + paddingLeft,
+                view.getPaddingTop() + paddingTop,
+                view.getPaddingRight() + paddingRight,
+                view.getPaddingBottom() + paddingBottom);
     }
 
 }

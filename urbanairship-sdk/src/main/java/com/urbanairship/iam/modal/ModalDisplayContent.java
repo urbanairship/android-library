@@ -1,6 +1,7 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.iam.fullscreen;
+package com.urbanairship.iam.modal;
+
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
@@ -26,10 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_FULL_SCREEN} in-app message.
+ * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_MODAL} in-app message.
  */
-public class FullScreenDisplayContent implements DisplayContent {
-
+public class ModalDisplayContent implements DisplayContent {
 
     @StringDef({ TEMPLATE_HEADER_MEDIA_BODY, TEMPLATE_MEDIA_HEADER_BODY, TEMPLATE_HEADER_BODY_MEDIA })
     @Retention(RetentionPolicy.SOURCE)
@@ -61,18 +61,19 @@ public class FullScreenDisplayContent implements DisplayContent {
     private final int backgroundColor;
     private final int dismissButtonColor;
     private final ButtonInfo footer;
+    private final float borderRadius;
 
     /**
-     * Maximum number of buttons.
+     * Maximum number of button supported by a modal.
      */
-    public static final int MAX_BUTTONS = 5;
+    public static final int MAX_BUTTONS = 2;
 
     /**
      * Default factory method.
      *
      * @param builder The display content builder.
      */
-    private FullScreenDisplayContent(Builder builder) {
+    private ModalDisplayContent(Builder builder) {
         this.heading = builder.heading;
         this.body = builder.body;
         this.media = builder.media;
@@ -82,17 +83,18 @@ public class FullScreenDisplayContent implements DisplayContent {
         this.backgroundColor = builder.backgroundColor;
         this.dismissButtonColor = builder.dismissButtonColor;
         this.footer = builder.footer;
+        this.borderRadius = builder.borderRadius;
     }
 
     /**
-     * Parses full screen display JSON.
+     * Parses modal display JSON.
      *
      * @param json The json payload.
      * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
     @NonNull
-    public static FullScreenDisplayContent parseJson(JsonValue json) throws JsonException {
+    public static ModalDisplayContent parseJson(JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 
         Builder builder = newBuilder();
@@ -180,10 +182,20 @@ public class FullScreenDisplayContent implements DisplayContent {
             }
         }
 
+
+        // Border radius
+        if (content.containsKey(BORDER_RADIUS_KEY)) {
+            if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
+                throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
+            }
+
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
-            throw new JsonException("Invalid full screen message JSON: " + content, e);
+            throw new JsonException("Invalid in-app message modal JSON: " + content, e);
         }
     }
 
@@ -199,6 +211,7 @@ public class FullScreenDisplayContent implements DisplayContent {
                       .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
                       .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
                       .put(FOOTER_KEY, footer)
+                      .put(BORDER_RADIUS_KEY, borderRadius)
                       .build()
                       .toJsonValue();
     }
@@ -298,6 +311,15 @@ public class FullScreenDisplayContent implements DisplayContent {
         return footer;
     }
 
+    /**
+     * Returns the border radius in dps.
+     *
+     * @return Border radius in dps.
+     */
+    public float getBorderRadius() {
+        return borderRadius;
+    }
+
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -312,12 +334,15 @@ public class FullScreenDisplayContent implements DisplayContent {
             return false;
         }
 
-        FullScreenDisplayContent that = (FullScreenDisplayContent) o;
+        ModalDisplayContent that = (ModalDisplayContent) o;
 
         if (backgroundColor != that.backgroundColor) {
             return false;
         }
         if (dismissButtonColor != that.dismissButtonColor) {
+            return false;
+        }
+        if (Float.compare(that.borderRadius, borderRadius) != 0) {
             return false;
         }
         if (heading != null ? !heading.equals(that.heading) : that.heading != null) {
@@ -352,6 +377,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         result = 31 * result + backgroundColor;
         result = 31 * result + dismissButtonColor;
         result = 31 * result + (footer != null ? footer.hashCode() : 0);
+        result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
         return result;
     }
 
@@ -382,6 +408,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         private int backgroundColor = Color.WHITE;
         private int dismissButtonColor = Color.BLACK;
         private ButtonInfo footer;
+        private float borderRadius;
 
         /**
          * Default constructor.
@@ -413,8 +440,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Adds a button the button info. Max of 5 buttons are supported.
-         * If more than 2 buttons are supplied, button layout will default to stacked.
+         * Adds a button info.
          *
          * @param buttonInfo Adds a button to the message.
          * @return The builder instance.
@@ -426,14 +452,13 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the message's buttons. Max of 5 buttons are supported.
-         * If more than 2 buttons are supplied, button layout will default to stacked.
+         * Sets the message's buttons.
          *
          * @param buttons A list of button infos.
          * @return The builder instance.
          */
         @NonNull
-        public Builder setButtons(@Size(max = 5) List<ButtonInfo> buttons) {
+        public Builder setButtons(@Size(max = 2) List<ButtonInfo> buttons) {
             this.buttons.clear();
             if (buttons != null) {
                 this.buttons.addAll(buttons);
@@ -455,8 +480,7 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the button layout. If more than 2 buttons are supplied,
-         * the layout will default to {@link com.urbanairship.iam.DisplayContent.ButtonLayout#BUTTON_LAYOUT_STACKED}.
+         * Sets the button layout.
          *
          * @param buttonLayout The button layout.
          * @return The builder instance.
@@ -516,20 +540,29 @@ public class FullScreenDisplayContent implements DisplayContent {
         }
 
         /**
-         * Builds the full screen display content.
+         * Sets the border radius in dps. Defaults to 0.
          *
-         * @return The full screen display content.
-         * @throws IllegalArgumentException If more than 5 buttons are defined, or if the heading and body are both missing.
+         * @param borderRadius The border radius.
+         * @return The builder instance.
          */
         @NonNull
-        public FullScreenDisplayContent build() {
-            if (buttons.size() > 2) {
-                buttonLayout = BUTTON_LAYOUT_STACKED;
-            }
+        public Builder setBorderRadius(float borderRadius) {
+            this.borderRadius = borderRadius;
+            return this;
+        }
 
-            Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Full screen allows a max of " + MAX_BUTTONS + " buttons");
+        /**
+         * Builds the modal display content.
+         *
+         * @return The modal display content.
+         * @throws IllegalArgumentException If more than 2 buttons are defined, or if both the heading and body are missing.
+         */
+        @NonNull
+        public ModalDisplayContent build() {
+            Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Modal allows a max of " + MAX_BUTTONS + " buttons");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
-            return new FullScreenDisplayContent(this);
+            return new ModalDisplayContent(this);
         }
     }
 }
+

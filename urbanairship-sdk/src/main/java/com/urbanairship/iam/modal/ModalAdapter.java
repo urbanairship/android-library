@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.iam.fullscreen;
+package com.urbanairship.iam.modal;
 
 
 import android.app.Activity;
@@ -13,33 +13,33 @@ import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 
 /**
- * Full screen adapter.
+ * Modal adapter.
  */
-public class FullScreenAdapter extends CachingDisplayAdapter {
+public class ModalAdapter extends CachingDisplayAdapter {
 
     /**
      * Default constructor.
      *
      * @param message The in-app message.
      */
-    protected FullScreenAdapter(InAppMessage message) {
+    protected ModalAdapter(InAppMessage message) {
         super(message);
     }
 
     @Override
     public int onPrepare(@NonNull Context context) {
-        FullScreenDisplayContent displayContent = getMessage().getDisplayContent();
+        ModalDisplayContent displayContent = getMessage().getDisplayContent();
         return cacheMedia(context, displayContent.getMedia());
     }
 
     @Override
     public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
-        Intent intent = new Intent(activity, FullScreenActivity.class)
-                .putExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
-                .putExtra(FullScreenActivity.IN_APP_MESSAGE_KEY, getMessage());
+        Intent intent = new Intent(activity, ModalActivity.class)
+                .putExtra(ModalActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
+                .putExtra(ModalActivity.IN_APP_MESSAGE_KEY, getMessage());
 
         if (getCache() != null) {
-            intent.putExtra(FullScreenActivity.IN_APP_CACHE_KEY, getCache());
+            intent.putExtra(ModalActivity.IN_APP_CACHE_KEY, getCache());
         }
 
         activity.startActivity(intent);

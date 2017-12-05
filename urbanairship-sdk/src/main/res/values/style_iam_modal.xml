@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="UrbanAirship.InAppModal"/>
+
+    <style name="UrbanAirship.InAppModal.Activity">
+        <item name="android:windowBackground">@android:drawable/screen_background_dark_transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Layout">
+        <item name="android:elevation">24dp</item>
+        <item name="urbanAirshipMaxWidth">420dp</item>
+        <item name="android:layout_margin">24dp</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.DismissButton">
+        <item name="android:background">@null</item>
+        <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
+        <item name="android:layout_marginLeft">4dp</item>
+        <item name="android:layout_marginRight">4dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+
+    <style name="UrbanAirship.InAppModal.Content">
+        <item name="android:fadeScrollbars">false</item>
+        <item name="android:minHeight">200dp</item>
+        <item name="android:fillViewport">true</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Image">
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:adjustViewBounds">true</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Heading">
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Body">
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.ButtonLayout">
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="urbanAirshipStackedSpaceHeight">8dp</item>
+        <item name="urbanAirshipSeparatedSpaceWidth">8dp</item>
+        <item name="urbanAirshipButtonLayoutResourceId">@layout/ua_iam_fullscreen_button</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Button">
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Footer">
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:layout_marginBottom">8dp</item>
+
+    </style>
+</resources>

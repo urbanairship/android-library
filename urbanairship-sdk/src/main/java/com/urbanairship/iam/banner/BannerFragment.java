@@ -133,7 +133,13 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         // Banner View
         LinearLayout bannerView = view.findViewById(R.id.banner);
-        bannerView.setBackground(createBannerBackground());
+        ViewCompat.setBackground(bannerView, createBannerBackground());
+
+        if (displayContent.getBorderRadius() > 0) {
+            @BorderRadius.BorderRadiusFlag
+            int borderRadiusFlag = displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP ? BorderRadius.BOTTOM : BorderRadius.TOP;
+            BorderRadius.applyBorderRadiusPadding(bannerView, displayContent.getBorderRadius(), borderRadiusFlag);
+        }
 
         if (!displayContent.getActions().isEmpty()) {
             bannerView.setClickable(true);
