@@ -25,6 +25,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
+import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
@@ -143,6 +144,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_FULL_SCREEN, new FullScreenAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_MODAL, new ModalAdapterFactory());
+        setAdapterFactory(InAppMessage.TYPE_HTML, new HtmlAdapterFactory());
+
     }
 
     @VisibleForTesting

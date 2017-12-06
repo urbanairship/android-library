@@ -30,6 +30,7 @@
             android:name="com.amazon.device.messaging"
             android:required="false" />
 
+        <activity android:name="com.urbanairship.iam.html.HtmlActivity" />
         <activity android:name="com.urbanairship.iam.fullscreen.FullScreenActivity" />
         <activity android:name="com.urbanairship.iam.modal.ModalActivity" android:theme="@style/UrbanAirship.InAppModal.Activity"/>
         <activity android:name="com.urbanairship.util.HelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />

@@ -60,10 +60,7 @@
                 style="@style/UrbanAirship.InAppFullscreen.Footer"
                 android:id="@+id/footer"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"/>
-
+                android:layout_height="wrap_content" />
         </FrameLayout>
-
     </RelativeLayout>
 </ScrollView>

@@ -12,6 +12,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
+import com.urbanairship.iam.html.HtmlDisplayContent;
 import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -38,7 +39,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String ACTIONS_KEY = "actions";
 
 
-    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN, TYPE_MODAL })
+    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN, TYPE_MODAL, TYPE_HTML })
     @Retention(RetentionPolicy.SOURCE)
     @interface DisplayType {}
 
@@ -61,6 +62,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * Modal in-app message.
      */
     public static final String TYPE_MODAL = "modal";
+
+    /**
+     * HTML in-app message.
+     */
+    public static final String TYPE_HTML = "html";
+
 
     @DisplayType
     private final String type;
@@ -364,6 +371,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                 case TYPE_MODAL:
                     this.setDisplayContent(ModalDisplayContent.parseJson(content));
                     break;
+
+                case TYPE_HTML:
+                    this.setDisplayContent(HtmlDisplayContent.parseJson(content));
+                    break;
             }
 
             return this;
@@ -401,6 +412,18 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          */
         public Builder setDisplayContent(BannerDisplayContent displayContent) {
             this.type = TYPE_BANNER;
+            this.content = displayContent;
+            return this;
+        }
+
+        /**
+         * Sets the html display content and type.
+         *
+         * @param displayContent The html display content.
+         * @return The builder.
+         */
+        public Builder setDisplayContent(HtmlDisplayContent displayContent) {
+            this.type = TYPE_HTML;
             this.content = displayContent;
             return this;
         }
