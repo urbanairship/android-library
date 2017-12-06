@@ -2,12 +2,12 @@
 
 package com.urbanairship.iam.modal;
 
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,7 +133,9 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         }
 
         // DismissButton
-        dismiss.getDrawable().setColorFilter(displayContent.getDismissButtonColor(), PorterDuff.Mode.MULTIPLY);
+        Drawable dismissDrawable = DrawableCompat.wrap(dismiss.getDrawable()).mutate();
+        DrawableCompat.setTint(dismissDrawable, displayContent.getDismissButtonColor());
+        dismiss.setImageDrawable(dismissDrawable);
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

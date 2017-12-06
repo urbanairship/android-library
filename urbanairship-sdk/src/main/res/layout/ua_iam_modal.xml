@@ -11,7 +11,7 @@
     <com.urbanairship.iam.view.BoundedLinearLayout
         android:id="@+id/modal"
         style="@style/UrbanAirship.InAppModal.Layout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical">
@@ -27,7 +27,7 @@
         </FrameLayout>
 
         <ScrollView
-            style="@style/UrbanAirship.InAppModal.Content"
+            style="@style/UrbanAirship.InAppModal.ScrollView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">

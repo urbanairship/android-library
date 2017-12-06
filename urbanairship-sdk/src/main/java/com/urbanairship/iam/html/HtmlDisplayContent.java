@@ -5,7 +5,6 @@ package com.urbanairship.iam.html;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.json.JsonException;
@@ -39,7 +38,7 @@ public class HtmlDisplayContent implements DisplayContent {
      * @return The parsed display content.
      * @throws JsonException If the json was unable to be parsed.
      */
-    @Nullable
+    @NonNull
     public static HtmlDisplayContent parseJson(JsonValue json) throws JsonException {
         JsonMap content = json.optMap();
 

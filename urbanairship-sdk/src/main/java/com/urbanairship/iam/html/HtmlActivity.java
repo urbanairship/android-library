@@ -6,12 +6,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
-import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -114,7 +115,9 @@ public class HtmlActivity extends InAppMessageActivity {
         });
 
         // DismissButton
-        dismiss.getDrawable().setColorFilter(displayContent.getDismissButtonColor(), PorterDuff.Mode.MULTIPLY);
+        Drawable dismissDrawable = DrawableCompat.wrap(dismiss.getDrawable()).mutate();
+        DrawableCompat.setTint(dismissDrawable, displayContent.getDismissButtonColor());
+        dismiss.setImageDrawable(dismissDrawable);
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

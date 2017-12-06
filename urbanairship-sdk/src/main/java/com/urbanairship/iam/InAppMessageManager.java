@@ -176,7 +176,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         this.driver.setCallbacks(new InAppMessageDriver.Callbacks() {
             @Override
-            public boolean isMessageReady(String scheduleId, InAppMessage message) {
+            public boolean isMessageReady(@NonNull String scheduleId, @NonNull InAppMessage message) {
                 if (!isAirshipReady) {
                     return false;
                 }
@@ -226,7 +226,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
 
             @Override
-            public void onDisplay(String scheduleId) {
+            public void onDisplay(@NonNull String scheduleId) {
                 display(getResumedActivity(), scheduleId, false);
             }
         });

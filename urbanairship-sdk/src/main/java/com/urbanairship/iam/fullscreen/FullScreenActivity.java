@@ -2,11 +2,12 @@
 
 package com.urbanairship.iam.fullscreen;
 
-import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -97,7 +98,10 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         // DismissButton
-        dismiss.getDrawable().setColorFilter(displayContent.getDismissButtonColor(), PorterDuff.Mode.MULTIPLY);
+        Drawable dismissDrawable = DrawableCompat.wrap(dismiss.getDrawable()).mutate();
+        DrawableCompat.setTint(dismissDrawable, displayContent.getDismissButtonColor());
+        dismiss.setImageDrawable(dismissDrawable);
+
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -105,6 +109,9 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
                 finish();
             }
         });
+
+        // Background color
+        getWindow().getDecorView().setBackgroundColor(displayContent.getBackgroundColor());
     }
 
     @Override

@@ -136,7 +136,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             inAppMessageManager.cancelMessage(pendingMessageId).addResultCallback(new ResultCallback<Boolean>() {
                 @Override
                 public void onResult(@Nullable Boolean result) {
-                    if (result) {
+                    if (result != null && result) {
                         Logger.debug("LegacyInAppMessageManager - Pending in-app message replaced.");
                         ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessageReplaced(pendingMessageId, messageId);
                         analytics.addEvent(resolutionEvent);
@@ -167,7 +167,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         inAppMessageManager.cancelMessage(push.getSendId()).addResultCallback(new ResultCallback<Boolean>() {
             @Override
             public void onResult(@Nullable Boolean result) {
-                if (result) {
+                if (result != null && result) {
                     Logger.info("Clearing pending in-app message due to directly interacting with the message's push notification.");
                     // Direct open event
                     ResolutionEvent resolutionEvent = ResolutionEvent.legacyMessagePushOpened(push.getSendId());
@@ -255,17 +255,21 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
                         NotificationActionButton button = group.getNotificationActionButtons().get(i);
 
+                        TextInfo.Builder labelBuilder = TextInfo.newBuilder()
+                                                                .setDrawable(button.getIcon())
+                                                                .setColor(secondaryColor)
+                                                                .setAlignment(TextInfo.ALIGNMENT_CENTER);
+
+                        if (button.getLabel() != 0) {
+                            labelBuilder.setText(context.getString(button.getLabel()));
+                        }
+
                         ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
                                                                          .setActions(inAppMessage.getButtonActionValues(button.getId()))
                                                                          .setId(button.getId())
                                                                          .setBackgroundColor(primaryColor)
                                                                          .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
-                                                                         .setLabel(TextInfo.newBuilder()
-                                                                                           .setText(button.getLabel() != 0 ? context.getString(button.getLabel()) : null)
-                                                                                           .setDrawable(button.getIcon())
-                                                                                           .setColor(secondaryColor)
-                                                                                           .setAlignment(TextInfo.ALIGNMENT_CENTER)
-                                                                                           .build());
+                                                                         .setLabel(labelBuilder.build());
 
                         displayContentBuilder.addButton(buttonInfoBuilder.build());
                     }

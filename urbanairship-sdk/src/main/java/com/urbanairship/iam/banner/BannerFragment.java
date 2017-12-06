@@ -5,7 +5,6 @@ package com.urbanairship.iam.banner;
 import android.app.Fragment;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +13,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.ColorUtils;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.OnApplyWindowInsetsListener;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.WindowInsetsCompat;
@@ -29,9 +29,9 @@ import android.widget.TextView;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.R;
-import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayHandler;
+import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageCache;
 import com.urbanairship.iam.ResolutionInfo;
@@ -183,7 +183,9 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         // Banner dismiss pull
         View bannerPull = view.findViewById(R.id.banner_pull);
-        bannerPull.getBackground().setColorFilter(displayContent.getDismissButtonColor(), PorterDuff.Mode.MULTIPLY);
+        Drawable drawable = DrawableCompat.wrap(bannerPull.getBackground()).mutate();
+        DrawableCompat.setTint(drawable, displayContent.getDismissButtonColor());
+        ViewCompat.setBackground(bannerPull, drawable);
 
         // If the parent is `android.R.id.content` apply the window insets
         if (container != null && container.getId() == android.R.id.content) {

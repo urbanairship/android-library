@@ -34,7 +34,9 @@ public final class ResolutionInfo {
      * @param displayMilliseconds The display time in milliseconds.
      */
     private ResolutionInfo(@Type @NonNull String type, long displayMilliseconds) {
-        this(type, displayMilliseconds, null);
+        this.type = type;
+        this.displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
+        this.buttonInfo = null;
     }
 
     /**
@@ -42,9 +44,9 @@ public final class ResolutionInfo {
      *
      * @param type The resolution type.
      * @param displayMilliseconds The display time in milliseconds.
-     * @param buttonInfo The button info.
+     * @param buttonInfo The optional button info.
      */
-    private ResolutionInfo(@Type @NonNull String type, long displayMilliseconds, ButtonInfo buttonInfo) {
+    private ResolutionInfo(@Type @NonNull String type, long displayMilliseconds, @NonNull ButtonInfo buttonInfo) {
         this.type = type;
         this.displayMilliseconds = displayMilliseconds > 0 ? displayMilliseconds : 0;
         this.buttonInfo = buttonInfo;

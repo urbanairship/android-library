@@ -125,6 +125,11 @@ public class Audience implements JsonSerializable {
             builder.setVersionPredicate(JsonPredicate.parse(content.get(APP_VERSION_KEY)));
         }
 
+        // Tags
+        if (content.containsKey(TAGS_KEY)) {
+            builder.setTagSelector(TagSelector.parseJson(content.get(TAGS_KEY)));
+        }
+
         return builder.build();
     }
 

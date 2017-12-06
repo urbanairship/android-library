@@ -15,16 +15,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.ColorUtils;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextPaint;
+import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.urbanairship.Fonts;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
-import com.urbanairship.Fonts;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.util.UAStringUtil;
 
@@ -73,12 +77,18 @@ public class InAppViewUtils {
 
             try {
                 Drawable drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
-                drawable.setBounds(0, 0, size, size);
-                drawable.setColorFilter(textInfo.getColor(), PorterDuff.Mode.MULTIPLY);
-                String label = textInfo.getText() == null ? " " : "  " + textInfo.getText();
-                CenteredImageSpan imageSpan = new CenteredImageSpan(drawable);
+                Drawable wrappedDrawable = DrawableCompat.wrap(drawable).mutate();
+
+                wrappedDrawable.setBounds(0, 0, size, size);
+                wrappedDrawable.setColorFilter(textInfo.getColor(), PorterDuff.Mode.MULTIPLY);
+
+                String label = textInfo.getText() == null ? "" : "  " + textInfo.getText();
+                CenteredImageSpan imageSpan = new CenteredImageSpan(wrappedDrawable);
                 SpannableString text = new SpannableString(label);
-                text.setSpan(imageSpan, 0, 1, 0);
+
+                text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                text.setSpan(new RemoveUnderlineSpan(), 1, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                 textView.setText(text);
             } catch (Resources.NotFoundException e) {
                 Logger.error("Unable to find button drawable.", e);
@@ -135,7 +145,17 @@ public class InAppViewUtils {
     }
 
     /**
-     * Helper class that centers the image span vertically.
+     * Span that removes underline.
+     */
+    private static class RemoveUnderlineSpan extends CharacterStyle {
+        @Override
+        public void updateDrawState(TextPaint textPaint) {
+            textPaint.setUnderlineText(false);
+        }
+    }
+
+    /**
+     * Centered image span.
      */
     private static class CenteredImageSpan extends ImageSpan {
 
@@ -179,4 +199,6 @@ public class InAppViewUtils {
 
         return null;
     }
+
+
 }
