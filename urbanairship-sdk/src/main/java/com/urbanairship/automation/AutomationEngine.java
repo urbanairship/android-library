@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationEngine<T extends Schedule> {
 
-    private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION);
+    private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION, Trigger.VERSION);
 
     private final AutomationDataManager dataManager;
     private final ActivityMonitor activityMonitor;
@@ -474,6 +474,8 @@ public class AutomationEngine<T extends Schedule> {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
                 return TriggerObservables.foregrounded(activityMonitor);
+            case Trigger.VERSION:
+                return TriggerObservables.appVersionUpdated();
             default:
                 return Observable.empty();
         }
@@ -754,6 +756,8 @@ public class AutomationEngine<T extends Schedule> {
                     trigger.setProgress(trigger.getProgress() + value);
 
                     if (trigger.getProgress() >= trigger.goal) {
+                        trigger.setProgress(0);
+
                         if (trigger.isCancellation) {
                             cancelledSchedules.add(trigger.scheduleId);
                             cancelScheduleDelays(Collections.singletonList(trigger.scheduleId));

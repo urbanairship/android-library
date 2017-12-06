@@ -11,10 +11,13 @@ import android.support.annotation.NonNull;
 public class ApplicationMetrics extends AirshipComponent {
 
     private static final String LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN";
+    private static final String LAST_APP_VERSION_KEY = "com.urbanairship.application.metrics.APP_VERSION";
+
     private final PreferenceDataStore preferenceDataStore;
     private final Context context;
     private final ActivityMonitor.Listener listener;
     private final ActivityMonitor activityMonitor;
+    private boolean appVersionUpdated;
 
     ApplicationMetrics(@NonNull Context context, @NonNull final PreferenceDataStore preferenceDataStore,
                        @NonNull ActivityMonitor activityMonitor) {
@@ -28,11 +31,13 @@ public class ApplicationMetrics extends AirshipComponent {
             }
         };
         this.activityMonitor = activityMonitor;
+        this.appVersionUpdated = false;
     }
 
     @Override
     protected void init() {
         super.init();
+        checkAppVersion();
         activityMonitor.addListener(listener);
     }
 
@@ -56,5 +61,34 @@ public class ApplicationMetrics extends AirshipComponent {
      */
     public long getLastOpenTimeMillis() {
         return preferenceDataStore.getLong(LAST_OPEN_KEY, -1);
+    }
+
+    /**
+     * Determines whether the app version has been updated.
+     *
+     * @return <code>true</code> if the app version has been updated, otherwise <code>false</code>.
+     */
+    public boolean getAppVersionUpdated() {
+        return appVersionUpdated;
+    }
+
+    /**
+     * Gets the current app version.
+     *
+     * @return The current app version.
+     */
+    public int getCurrentAppVersion() {
+        return UAirship.getAppVersion();
+    }
+
+    private int getLastAppVersion() {
+        return preferenceDataStore.getInt(LAST_APP_VERSION_KEY, -1);
+    }
+
+    private void checkAppVersion() {
+        if (UAirship.getAppVersion() > getLastAppVersion()) {
+            preferenceDataStore.put(LAST_APP_VERSION_KEY, UAirship.getAppVersion());
+            appVersionUpdated = true;
+        }
     }
 }

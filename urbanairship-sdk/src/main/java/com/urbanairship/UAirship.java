@@ -523,6 +523,21 @@ public class UAirship {
     }
 
     /**
+     * Returns the current Application version.
+     *
+     * @return The version, or -1 if the package cannot be read.
+     */
+    public static int getAppVersion() {
+        PackageInfo packageInfo = UAirship.getPackageInfo();
+
+        if (packageInfo != null) {
+            return packageInfo.versionCode;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
      * Returns the current Application's context.
      *
      * @return The current application Context.

@@ -4,13 +4,17 @@ package com.urbanairship.automation;
 
 import android.os.Looper;
 
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.json.JsonMatcher;
+import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.RegionEvent;
 
 import junit.framework.Assert;
@@ -37,6 +41,7 @@ import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AutomationEngineTest extends BaseTestCase {
 
@@ -44,11 +49,15 @@ public class AutomationEngineTest extends BaseTestCase {
     private AutomationDataManager automationDataManager;
     private AutomationEngine<ActionSchedule> automationEngine;
     private TestActivityMonitor activityMonitor;
+    private ApplicationMetrics mockMetrics;
 
     @Before
     public void setUp() {
         activityMonitor = new TestActivityMonitor();
         activityMonitor.register();
+
+        mockMetrics = mock(ApplicationMetrics.class);
+        TestApplication.getApplication().setApplicationMetrics(mockMetrics);
 
         driver = new TestActionScheduleDriver();
         automationDataManager = new AutomationDataManager(TestApplication.getApplication(), "appKey", "AutomationEngineTest");
@@ -208,6 +217,25 @@ public class AutomationEngineTest extends BaseTestCase {
                                   .build();
 
         activityMonitor.startActivity();
+
+        verifyTrigger(trigger, null);
+    }
+
+    @Test
+    public void testVersion() throws Exception {
+        when(mockMetrics.getAppVersionUpdated()).thenReturn(true);
+        when(mockMetrics.getCurrentAppVersion()).thenReturn(2);
+
+        JsonPredicate predicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                      .setKey("android")
+                                                                      .setValueMatcher(ValueMatcher.newNumberRangeMatcher(2.0, 4.0))
+                                                                      .build())
+                                               .build();
+
+        Trigger trigger = Triggers.newVersionTriggerBuilder(predicate)
+                                  .setGoal(1)
+                                  .build();
 
         verifyTrigger(trigger, null);
     }

@@ -35,8 +35,9 @@ public class Trigger implements Parcelable {
     private static final String REGION_ENTER_NAME = "region_enter";
     private static final String REGION_EXIT_NAME = "region_exit";
     private static final String ACTIVE_SESSION_NAME = "active_session";
+    private static final String VERSION_NAME = "version";
 
-    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION })
+    @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT, CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT, ACTIVE_SESSION, VERSION })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -96,6 +97,12 @@ public class Trigger implements Parcelable {
      */
     public static final int ACTIVE_SESSION = 9;
 
+    /**
+     * Trigger type for version. Version triggers can be create with
+     * {@link Triggers#newVersionTriggerBuilder(JsonPredicate)}
+     */
+    public static final int VERSION = 10;
+
     public static final Creator<Trigger> CREATOR = new Creator<Trigger>() {
         @Override
         public Trigger createFromParcel(Parcel in) {
@@ -151,6 +158,9 @@ public class Trigger implements Parcelable {
                 break;
             case ACTIVE_SESSION:
                 type = ACTIVE_SESSION;
+                break;
+            case VERSION:
+                type = VERSION;
                 break;
             default:
                 throw new IllegalStateException("Invalid trigger type from parcel.");
@@ -275,6 +285,10 @@ public class Trigger implements Parcelable {
 
             case ACTIVE_SESSION_NAME:
                 type = ACTIVE_SESSION;
+                break;
+
+            case VERSION_NAME:
+                type = VERSION;
                 break;
 
             default:

@@ -38,6 +38,8 @@ public class TriggerTest extends BaseTestCase {
         typeArray.put(Trigger.REGION_EXIT, "region_exit");
         typeArray.put(Trigger.SCREEN_VIEW, "screen");
         typeArray.put(Trigger.LIFE_CYCLE_APP_INIT, "app_init");
+        typeArray.put(Trigger.ACTIVE_SESSION, "active_session");
+        typeArray.put(Trigger.VERSION, "version");
 
         for(int i = 0; i < typeArray.size(); i++) {
             int key = typeArray.keyAt(i);

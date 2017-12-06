@@ -87,6 +87,16 @@ public class Triggers {
     }
 
     /**
+     * Create a new version trigger builder.
+     *
+     * @param versionPredicate The version predicate.
+     * @return The new version trigger builder.
+     */
+    public static VersionTriggerBuilder newVersionTriggerBuilder(JsonPredicate versionPredicate) {
+        return new VersionTriggerBuilder(versionPredicate);
+    }
+
+    /**
      * Lifecycle trigger Builder class.
      */
     public static class LifeCycleTriggerBuilder {
@@ -317,12 +327,42 @@ public class Triggers {
         }
 
         /**
-         * Buildes the trigger instance.
+         * Builds the trigger instance.
          *
          * @return The trigger instance.
          */
         public Trigger build() {
             return new Trigger(Trigger.ACTIVE_SESSION, goal, null);
+        }
+    }
+
+    /**
+     * Version trigger builder class.
+     */
+    public static class VersionTriggerBuilder {
+        private double goal = 1;
+        private JsonPredicate versionPredicate;
+
+        private VersionTriggerBuilder(JsonPredicate versionPredicate) { this.versionPredicate = versionPredicate; }
+
+        /**
+         * Sets the goal for {@link Trigger#VERSION} triggers.
+         *
+         * @param goal The trigger goal.
+         * @return The Builder instance.
+         */
+        public VersionTriggerBuilder setGoal(double goal) {
+            this.goal = goal;
+            return this;
+        }
+
+        /**
+         * Builds the trigger instance.
+         *
+         * @return The trigger instance.
+         */
+        public Trigger build() {
+            return new Trigger(Trigger.VERSION, goal, versionPredicate);
         }
     }
 

@@ -3,6 +3,9 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.ActivityMonitor;
+import com.urbanairship.Predicate;
+import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Function;
@@ -10,11 +13,13 @@ import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Observer;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscription;
+import com.urbanairship.reactive.Supplier;
 
 /**
  * Factory methods for creating compound trigger observables
  */
 class TriggerObservables {
+
     /**
      * Creates a state observable that sends onNext if the app is currently foregrounded,
      * and completes.
@@ -62,5 +67,46 @@ class TriggerObservables {
                 });
             }
         }).subscribeOn(Schedulers.main());
+    }
+
+    /**
+     * Creates a state observable that sends onNext if the app version is currently updated, and then completes.
+     *
+     * The JSON payload contains a key value pair of the device platform (android or amazon) and
+     * the current app version, e.g. <code>{"android" : 123}</code>.
+     *
+     * @return An Observable of JsonSerializable.
+     */
+    public static Observable<JsonSerializable> appVersionUpdated() {
+        return Observable.defer(new Supplier<Observable<JsonSerializable>>() {
+            @Override
+            public Observable<JsonSerializable> apply() {
+                if (UAirship.shared().getApplicationMetrics().getAppVersionUpdated()) {
+                    return Observable.just(getCurrentAppVersionPayload());
+                } else {
+                    return Observable.empty();
+                }
+            }
+        });
+    }
+
+    private static JsonSerializable getCurrentAppVersionPayload() {
+        String platformString;
+        @UAirship.Platform int platform = UAirship.shared().getPlatformType();
+
+        if (platform == UAirship.ANDROID_PLATFORM) {
+            platformString = "android";
+        } else if (platform == UAirship.AMAZON_PLATFORM) {
+            platformString = "amazon";
+        } else {
+            platformString = "unknown";
+        }
+
+        int currentAppVersion = UAirship.shared().getApplicationMetrics().getCurrentAppVersion();
+
+        JsonSerializable serializable = JsonMap.newBuilder().put(platformString, currentAppVersion)
+                                               .build();
+
+        return serializable;
     }
 }
