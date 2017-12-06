@@ -78,16 +78,20 @@ public class InAppViewUtils {
             try {
                 Drawable drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
                 Drawable wrappedDrawable = DrawableCompat.wrap(drawable).mutate();
-
                 wrappedDrawable.setBounds(0, 0, size, size);
                 wrappedDrawable.setColorFilter(textInfo.getColor(), PorterDuff.Mode.MULTIPLY);
 
-                String label = textInfo.getText() == null ? "" : "  " + textInfo.getText();
                 CenteredImageSpan imageSpan = new CenteredImageSpan(wrappedDrawable);
-                SpannableString text = new SpannableString(label);
+                SpannableString text;
 
-                text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                text.setSpan(new RemoveUnderlineSpan(), 1, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (textInfo.getText() == null) {
+                    text = new SpannableString(" ");
+                    text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                } else {
+                    text = new SpannableString( "  " + textInfo.getText());
+                    text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    text.setSpan(new RemoveUnderlineSpan(), 1, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
 
                 textView.setText(text);
             } catch (Resources.NotFoundException e) {
