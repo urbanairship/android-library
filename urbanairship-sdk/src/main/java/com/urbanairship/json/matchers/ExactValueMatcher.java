@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 
@@ -37,11 +36,7 @@ public class ExactValueMatcher extends ValueMatcher {
     }
 
     @Override
-    public boolean apply(JsonSerializable jsonSerializable) {
-        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
-        if (value == null) {
-            value = JsonValue.NULL;
-        }
+    protected boolean apply(@NonNull JsonValue value) {
         return expected.equals(value);
     }
 

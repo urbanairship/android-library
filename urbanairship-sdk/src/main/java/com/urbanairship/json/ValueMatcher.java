@@ -38,7 +38,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     /**
      * Creates a new value matcher.
      *
-     * @param value The value to match as a JsonValue.
+     * @param value The value to apply as a JsonValue.
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newValueMatcher(@NonNull JsonValue value) {
@@ -72,6 +72,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     public static ValueMatcher newVersionMatcher(String constraint) {
         return new VersionMatcher(IvyVersionMatcher.newMatcher(constraint));
     }
+
     /**
      * Parses a JsonValue object into a ValueMatcher.
      *
@@ -111,6 +112,24 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
 
         throw new JsonException("Unknown value matcher: " + jsonValue);
     }
+
+    @Override
+    public boolean apply(JsonSerializable jsonSerializable) {
+        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
+        if (value == null) {
+            value = JsonValue.NULL;
+        }
+
+        return apply(value);
+    }
+
+    /**
+     * Matches a json value.
+     *
+     * @param jsonValue The json value.
+     * @return {@code true} if the value matches, otherwise {@code false}.
+     */
+    protected abstract boolean apply(@NonNull JsonValue jsonValue);
 
 
     @Override
