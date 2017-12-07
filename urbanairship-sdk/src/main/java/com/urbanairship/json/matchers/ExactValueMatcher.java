@@ -18,20 +18,20 @@ import com.urbanairship.json.ValueMatcher;
 public class ExactValueMatcher extends ValueMatcher {
     public static final String EQUALS_VALUE_KEY = "equals";
 
-    private final JsonValue value;
+    private final JsonValue expected;
 
     /**
      * Default constructor.
-     * @param jsonValue The expected value.
+     * @param expected The expected value.
      */
-    public ExactValueMatcher(@NonNull JsonValue jsonValue) {
-        this.value = jsonValue;
+    public ExactValueMatcher(@NonNull JsonValue expected) {
+        this.expected = expected;
     }
 
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                      .putOpt(EQUALS_VALUE_KEY, value)
+                      .putOpt(EQUALS_VALUE_KEY, expected)
                       .build()
                       .toJsonValue();
     }
@@ -42,7 +42,7 @@ public class ExactValueMatcher extends ValueMatcher {
         if (value == null) {
             value = JsonValue.NULL;
         }
-        return value.equals(jsonSerializable);
+        return expected.equals(value);
     }
 
     @Override
@@ -56,11 +56,11 @@ public class ExactValueMatcher extends ValueMatcher {
 
         ExactValueMatcher that = (ExactValueMatcher) o;
 
-        return value.equals(that.value);
+        return expected.equals(that.expected);
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return expected.hashCode();
     }
 }
