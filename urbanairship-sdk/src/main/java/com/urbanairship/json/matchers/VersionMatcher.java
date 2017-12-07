@@ -6,19 +6,26 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.util.IvyVersionMatcher;
 
 /**
  * Version matcher.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class VersionMatcher implements JsonValueMatcher {
+public class VersionMatcher extends ValueMatcher {
 
     public static final String VERSION_KEY = "version";
 
     private IvyVersionMatcher versionMatcher;
 
+    /**
+     * Default constructor.
+     * @param matcher The version matcher.
+     */
     public VersionMatcher(@NonNull IvyVersionMatcher matcher) {
         this.versionMatcher = matcher;
     }
@@ -32,12 +39,13 @@ public class VersionMatcher implements JsonValueMatcher {
     }
 
     @Override
-    public boolean apply(JsonValue value) {
-        if (value == null || !value.isString()) {
-            return false;
+    public boolean apply(JsonSerializable jsonSerializable) {
+        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
+        if (value == null) {
+            value = JsonValue.NULL;
         }
 
-        return versionMatcher.apply(value.getString());
+        return value.isString() && versionMatcher.apply(value.getString());
     }
 
     @Override

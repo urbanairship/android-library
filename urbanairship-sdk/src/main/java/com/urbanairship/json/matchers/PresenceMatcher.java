@@ -5,18 +5,24 @@ package com.urbanairship.json.matchers;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.ValueMatcher;
 
 /**
  * Value presence matcher.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PresenceMatcher implements JsonValueMatcher {
+public class PresenceMatcher extends ValueMatcher {
     public static final String IS_PRESENT_VALUE_KEY = "is_present";
 
     private final boolean isPresent;
 
+    /**
+     * Default constructor.
+     * @param isPresent {@code true} if the value is required, otherwise {@code false}.
+     */
     public PresenceMatcher(boolean isPresent) {
         this.isPresent = isPresent;
     }
@@ -30,11 +36,16 @@ public class PresenceMatcher implements JsonValueMatcher {
     }
 
     @Override
-    public boolean apply(JsonValue object) {
+    public boolean apply(JsonSerializable jsonSerializable) {
+        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
+        if (value == null) {
+            value = JsonValue.NULL;
+        }
+
         if (isPresent) {
-            return object != null && !object.isNull();
+            return !value.isNull();
         } else {
-            return object == null || object.isNull();
+            return value.isNull();
         }
     }
 

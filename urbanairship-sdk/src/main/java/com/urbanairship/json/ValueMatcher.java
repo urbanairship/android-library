@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Predicate;
 import com.urbanairship.json.matchers.ExactValueMatcher;
-import com.urbanairship.json.matchers.JsonValueMatcher;
 import com.urbanairship.json.matchers.NumberRangeMatcher;
 import com.urbanairship.json.matchers.PresenceMatcher;
 import com.urbanairship.json.matchers.VersionMatcher;
@@ -16,13 +15,9 @@ import com.urbanairship.util.IvyVersionMatcher;
 /**
  * Class representing the field matching type and values contained in a JsonMatcher.
  */
-public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializable> {
+public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSerializable> {
 
-    private JsonValueMatcher valueMatcher;
-
-    private ValueMatcher(@NonNull JsonValueMatcher valueMatcher) {
-        this.valueMatcher = valueMatcher;
-    }
+    protected ValueMatcher() {}
 
     /**
      * Creates a new number range value matcher.
@@ -37,7 +32,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
             throw new IllegalArgumentException();
         }
 
-        return new ValueMatcher(new NumberRangeMatcher(min, max));
+        return new NumberRangeMatcher(min, max);
     }
 
     /**
@@ -47,7 +42,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newValueMatcher(@NonNull JsonValue value) {
-        return new ValueMatcher(new ExactValueMatcher(value));
+        return new ExactValueMatcher(value);
     }
 
     /**
@@ -56,7 +51,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newIsPresentMatcher() {
-        return new ValueMatcher(new PresenceMatcher(true));
+        return new PresenceMatcher(true);
     }
 
     /**
@@ -65,7 +60,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newIsAbsentMatcher() {
-        return new ValueMatcher(new PresenceMatcher(false));
+        return new PresenceMatcher(false);
     }
 
     /**
@@ -75,14 +70,8 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @throws IllegalArgumentException If the constraint is not a valid ivy version constraint.
      */
     public static ValueMatcher newVersionMatcher(String constraint) {
-        return new ValueMatcher(new VersionMatcher(IvyVersionMatcher.newMatcher(constraint)));
+        return new VersionMatcher(IvyVersionMatcher.newMatcher(constraint));
     }
-
-    @Override
-    public JsonValue toJsonValue() {
-        return valueMatcher.toJsonValue();
-    }
-
     /**
      * Parses a JsonValue object into a ValueMatcher.
      *
@@ -99,7 +88,11 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
         if (map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) || map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY)) {
             Double min = map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) ? map.get(NumberRangeMatcher.MIN_VALUE_KEY).getDouble(0) : null;
             Double max = map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY) ? map.get(NumberRangeMatcher.MAX_VALUE_KEY).getDouble(0) : null;
-            return newNumberRangeMatcher(min, max);
+            try {
+                return newNumberRangeMatcher(min, max);
+            } catch (IllegalArgumentException e) {
+                throw new JsonException("Invalid range matcher: " + jsonValue, e);
+            }
         }
 
         if (map.containsKey(PresenceMatcher.IS_PRESENT_VALUE_KEY)) {
@@ -119,34 +112,6 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
         throw new JsonException("Unknown value matcher: " + jsonValue);
     }
 
-    @Override
-    public boolean apply(JsonSerializable jsonSerializable) {
-        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
-        if (value == null) {
-            value = JsonValue.NULL;
-        }
-
-        return valueMatcher.apply(value);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        ValueMatcher that = (ValueMatcher) o;
-
-        return valueMatcher != null ? valueMatcher.equals(that.valueMatcher) : that.valueMatcher == null;
-    }
-
-    @Override
-    public int hashCode() {
-        return valueMatcher != null ? valueMatcher.hashCode() : 0;
-    }
 
     @Override
     public String toString() {

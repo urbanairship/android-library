@@ -5,14 +5,16 @@ package com.urbanairship.json.matchers;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.ValueMatcher;
 
 /**
  * Range matcher.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class NumberRangeMatcher implements JsonValueMatcher {
+public class NumberRangeMatcher extends ValueMatcher {
 
     public static final String MIN_VALUE_KEY = "at_least";
     public static final String MAX_VALUE_KEY = "at_most";
@@ -20,6 +22,13 @@ public class NumberRangeMatcher implements JsonValueMatcher {
     private final Double min;
     private final Double max;
 
+    /**
+     * Default constructor.
+     *
+     * @param min The min value.
+     * @param max The max value.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public NumberRangeMatcher(Double min, Double max) {
         this.min = min;
         this.max = max;
@@ -50,8 +59,11 @@ public class NumberRangeMatcher implements JsonValueMatcher {
     }
 
     @Override
-    public boolean apply(JsonValue value) {
-        value = value == null ? JsonValue.NULL : value;
+    public boolean apply(JsonSerializable jsonSerializable) {
+        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
+        if (value == null) {
+            value = JsonValue.NULL;
+        }
 
         if (min != null && (!value.isNumber() || value.getNumber().doubleValue() < min)) {
             return false;

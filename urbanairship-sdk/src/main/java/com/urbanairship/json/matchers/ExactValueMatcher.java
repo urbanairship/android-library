@@ -2,23 +2,30 @@
 
 package com.urbanairship.json.matchers;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.ValueMatcher;
 
 /**
  * Exact value matcher.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class ExactValueMatcher implements JsonValueMatcher {
+public class ExactValueMatcher extends ValueMatcher {
     public static final String EQUALS_VALUE_KEY = "equals";
 
     private final JsonValue value;
 
-    public ExactValueMatcher(JsonValue jsonValue) {
-        this.value = jsonValue == null ? JsonValue.NULL : jsonValue;
+    /**
+     * Default constructor.
+     * @param jsonValue The expected value.
+     */
+    public ExactValueMatcher(@NonNull JsonValue jsonValue) {
+        this.value = jsonValue;
     }
 
     @Override
@@ -30,8 +37,12 @@ public class ExactValueMatcher implements JsonValueMatcher {
     }
 
     @Override
-    public boolean apply(JsonValue object) {
-        return value.equals(object);
+    public boolean apply(JsonSerializable jsonSerializable) {
+        JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
+        if (value == null) {
+            value = JsonValue.NULL;
+        }
+        return value.equals(jsonSerializable);
     }
 
     @Override
@@ -45,11 +56,11 @@ public class ExactValueMatcher implements JsonValueMatcher {
 
         ExactValueMatcher that = (ExactValueMatcher) o;
 
-        return value != null ? value.equals(that.value) : that.value == null;
+        return value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        return value != null ? value.hashCode() : 0;
+        return value.hashCode();
     }
 }
