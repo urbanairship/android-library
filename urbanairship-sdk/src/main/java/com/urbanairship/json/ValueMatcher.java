@@ -6,6 +6,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Predicate;
+import com.urbanairship.json.matchers.ExactValueMatcher;
+import com.urbanairship.json.matchers.JsonValueMatcher;
+import com.urbanairship.json.matchers.NumberRangeMatcher;
+import com.urbanairship.json.matchers.PresenceMatcher;
+import com.urbanairship.json.matchers.VersionMatcher;
 import com.urbanairship.util.IvyVersionMatcher;
 
 /**
@@ -13,36 +18,11 @@ import com.urbanairship.util.IvyVersionMatcher;
  */
 public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializable> {
 
-    private static final String MIN_VALUE_KEY = "at_least";
-    private static final String MAX_VALUE_KEY = "at_most";
-    private static final String EQUALS_VALUE_KEY = "equals";
-    private static final String IS_PRESENT_VALUE_KEY = "is_present";
-    private static final String VERSION_KEY = "version";
+    private JsonValueMatcher valueMatcher;
 
-    private JsonValue equals;
-    private Double min;
-    private Double max;
-    private Boolean isPresent;
-    private IvyVersionMatcher versionMatcher;
-
-    private ValueMatcher(JsonValue equals) {
-        this.equals = equals;
+    private ValueMatcher(@NonNull JsonValueMatcher valueMatcher) {
+        this.valueMatcher = valueMatcher;
     }
-
-    private ValueMatcher(Double min, Double max) {
-        this.min = min;
-        this.max = max;
-    }
-
-    private ValueMatcher(Boolean isPresent) {
-        this.isPresent = isPresent;
-    }
-
-    private ValueMatcher(IvyVersionMatcher versionMatcher) {
-        this.versionMatcher = versionMatcher;
-    }
-
-    private ValueMatcher() {}
 
     /**
      * Creates a new number range value matcher.
@@ -57,7 +37,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
             throw new IllegalArgumentException();
         }
 
-        return new ValueMatcher(min, max);
+        return new ValueMatcher(new NumberRangeMatcher(min, max));
     }
 
     /**
@@ -67,7 +47,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newValueMatcher(@NonNull JsonValue value) {
-        return new ValueMatcher(value);
+        return new ValueMatcher(new ExactValueMatcher(value));
     }
 
     /**
@@ -76,7 +56,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newIsPresentMatcher() {
-        return new ValueMatcher(true);
+        return new ValueMatcher(new PresenceMatcher(true));
     }
 
     /**
@@ -85,7 +65,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @return A new ValueMatcher instance.
      */
     public static ValueMatcher newIsAbsentMatcher() {
-        return new ValueMatcher(false);
+        return new ValueMatcher(new PresenceMatcher(false));
     }
 
     /**
@@ -95,19 +75,12 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
      * @throws IllegalArgumentException If the constraint is not a valid ivy version constraint.
      */
     public static ValueMatcher newVersionMatcher(String constraint) {
-        return new ValueMatcher(IvyVersionMatcher.newMatcher(constraint));
+        return new ValueMatcher(new VersionMatcher(IvyVersionMatcher.newMatcher(constraint)));
     }
 
     @Override
     public JsonValue toJsonValue() {
-        return JsonMap.newBuilder()
-                      .putOpt(EQUALS_VALUE_KEY, equals)
-                      .putOpt(MIN_VALUE_KEY, min)
-                      .putOpt(MAX_VALUE_KEY, max)
-                      .putOpt(IS_PRESENT_VALUE_KEY, isPresent)
-                      .putOpt(VERSION_KEY, versionMatcher)
-                      .build()
-                      .toJsonValue();
+        return valueMatcher.toJsonValue();
     }
 
     /**
@@ -119,26 +92,27 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
     public static ValueMatcher parse(JsonValue jsonValue) throws JsonException {
         JsonMap map = jsonValue == null ? JsonMap.EMPTY_MAP : jsonValue.optMap();
 
-        if (map.containsKey(EQUALS_VALUE_KEY)) {
-            return new ValueMatcher(map.get(EQUALS_VALUE_KEY));
+        if (map.containsKey(ExactValueMatcher.EQUALS_VALUE_KEY)) {
+            return newValueMatcher(map.get(ExactValueMatcher.EQUALS_VALUE_KEY));
         }
 
-        if (map.containsKey(MIN_VALUE_KEY) || map.containsKey(MAX_VALUE_KEY)) {
-            Double min = map.containsKey(MIN_VALUE_KEY) ? map.get(MIN_VALUE_KEY).getDouble(0) : null;
-            Double max = map.containsKey(MAX_VALUE_KEY) ? map.get(MAX_VALUE_KEY).getDouble(0) : null;
-            return new ValueMatcher(min, max);
+        if (map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) || map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY)) {
+            Double min = map.containsKey(NumberRangeMatcher.MIN_VALUE_KEY) ? map.get(NumberRangeMatcher.MIN_VALUE_KEY).getDouble(0) : null;
+            Double max = map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY) ? map.get(NumberRangeMatcher.MAX_VALUE_KEY).getDouble(0) : null;
+            return newNumberRangeMatcher(min, max);
         }
 
-        if (map.containsKey(IS_PRESENT_VALUE_KEY)) {
-            return new ValueMatcher(map.opt(IS_PRESENT_VALUE_KEY).getBoolean(false));
+        if (map.containsKey(PresenceMatcher.IS_PRESENT_VALUE_KEY)) {
+            boolean isPresent = map.opt(PresenceMatcher.IS_PRESENT_VALUE_KEY).getBoolean(false);
+            return isPresent ? newIsPresentMatcher() : newIsAbsentMatcher();
         }
 
-        if (map.containsKey(VERSION_KEY)) {
+        if (map.containsKey(VersionMatcher.VERSION_KEY)) {
             try {
-                String constraint = map.opt(VERSION_KEY).getString();
-                return new ValueMatcher(IvyVersionMatcher.newMatcher(constraint));
+                String constraint = map.opt(VersionMatcher.VERSION_KEY).getString();
+                return newVersionMatcher(constraint);
             } catch (NumberFormatException e) {
-                throw new JsonException("Invalid version constraint: " + map.opt(VERSION_KEY), e);
+                throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.VERSION_KEY), e);
             }
         }
 
@@ -152,27 +126,7 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
             value = JsonValue.NULL;
         }
 
-        if (equals != null) {
-            return equals.equals(value);
-        }
-
-        if (isPresent != null) {
-            return isPresent != value.isNull();
-        }
-
-        if (min != null && (!value.isNumber() || value.getNumber().doubleValue() < min)) {
-            return false;
-        }
-
-        if (max != null && (!value.isNumber() || value.getNumber().doubleValue() > max)) {
-            return false;
-        }
-
-        if (versionMatcher != null && !(value.isString() && versionMatcher.apply(value.getString()))) {
-            return false;
-        }
-
-        return true;
+        return valueMatcher.apply(value);
     }
 
     @Override
@@ -186,25 +140,16 @@ public class ValueMatcher implements JsonSerializable, Predicate<JsonSerializabl
 
         ValueMatcher that = (ValueMatcher) o;
 
-        if (equals != null ? !equals.equals(that.equals) : that.equals != null) {
-            return false;
-        }
-        if (min != null ? !min.equals(that.min) : that.min != null) {
-            return false;
-        }
-        if (max != null ? !max.equals(that.max) : that.max != null) {
-            return false;
-        }
-        return isPresent != null ? isPresent.equals(that.isPresent) : that.isPresent == null;
-
+        return valueMatcher != null ? valueMatcher.equals(that.valueMatcher) : that.valueMatcher == null;
     }
 
     @Override
     public int hashCode() {
-        int result = equals != null ? equals.hashCode() : 0;
-        result = 31 * result + (min != null ? min.hashCode() : 0);
-        result = 31 * result + (max != null ? max.hashCode() : 0);
-        result = 31 * result + (isPresent != null ? isPresent.hashCode() : 0);
-        return result;
+        return valueMatcher != null ? valueMatcher.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return toJsonValue().toString();
     }
 }

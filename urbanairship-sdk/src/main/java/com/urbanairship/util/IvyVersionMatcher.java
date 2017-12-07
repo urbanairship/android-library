@@ -265,4 +265,23 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
             return 0;
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        IvyVersionMatcher that = (IvyVersionMatcher) o;
+
+        return constraint != null ? constraint.equals(that.constraint) : that.constraint == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return constraint != null ? constraint.hashCode() : 0;
+    }
 }
