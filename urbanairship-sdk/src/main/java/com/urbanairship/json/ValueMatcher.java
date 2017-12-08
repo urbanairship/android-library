@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Predicate;
+import com.urbanairship.json.matchers.ArrayContainsMatcher;
 import com.urbanairship.json.matchers.ExactValueMatcher;
 import com.urbanairship.json.matchers.NumberRangeMatcher;
 import com.urbanairship.json.matchers.PresenceMatcher;
@@ -74,6 +75,27 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     }
 
     /**
+     * Creates a new array contains matcher for a specific value in the array.
+     *
+     * @param predicate The predicate to apply to the value at the specified index.
+     * @param index The index of the value.
+     * @return A new ValueMatcher instance.
+     */
+    public static ValueMatcher newArrayContainsMatcher(JsonPredicate predicate, int index) {
+        return new ArrayContainsMatcher(predicate, index);
+    }
+
+    /**
+     * Creates a new array contains matcher that will check the entire array.
+     *
+     * @param predicate The predicate to apply to each value of the array.
+     * @return A new ValueMatcher instance.
+     */
+    public static ValueMatcher newArrayContainsMatcher(JsonPredicate predicate) {
+        return new ArrayContainsMatcher(predicate, null);
+    }
+
+    /**
      * Parses a JsonValue object into a ValueMatcher.
      *
      * @param jsonValue The predicate as a JsonValue.
@@ -110,6 +132,19 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             }
         }
 
+        if (map.containsKey(ArrayContainsMatcher.ARRAY_CONTAINS_KEY)) {
+            JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayContainsMatcher.ARRAY_CONTAINS_KEY));
+            if (map.containsKey(ArrayContainsMatcher.INDEX_KEY)) {
+                int index = map.get(ArrayContainsMatcher.INDEX_KEY).getInt(-1);
+                if (index == -1) {
+                    throw new JsonException("Invalid index for array_contains matcher: " + map.get(ArrayContainsMatcher.INDEX_KEY));
+                }
+                return newArrayContainsMatcher(predicate, index);
+            } else {
+                return newArrayContainsMatcher(predicate);
+            }
+        }
+
         throw new JsonException("Unknown value matcher: " + jsonValue);
     }
 
@@ -130,7 +165,6 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
      * @return {@code true} if the value matches, otherwise {@code false}.
      */
     protected abstract boolean apply(@NonNull JsonValue jsonValue);
-
 
     @Override
     public String toString() {
