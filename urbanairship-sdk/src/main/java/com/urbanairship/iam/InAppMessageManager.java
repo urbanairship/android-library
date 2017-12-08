@@ -33,6 +33,7 @@ import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,6 +85,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final AutomationEngine<InAppMessageSchedule> automationEngine;
     private final Map<String, InAppMessageAdapter.Factory> adapterFactories = new HashMap<>();
     private long displayInterval = DEFAULT_DISPLAY_INTERVAL_MS;
+    private final List<InAppMessageListener> listeners = new ArrayList<>();
 
 
     private final Runnable postDisplayRunnable = new Runnable() {
@@ -423,7 +425,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @param time The display interval.
      * @param timeUnit The time unit.
      */
-    public void setDisplayInterval(@IntRange(from=0) long time, @NonNull TimeUnit timeUnit) {
+    public void setDisplayInterval(@IntRange(from = 0) long time, @NonNull TimeUnit timeUnit) {
         this.displayInterval = timeUnit.toMillis(time);
     }
 
@@ -434,6 +436,28 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     public long getDisplayInterval() {
         return this.displayInterval;
+    }
+
+    /**
+     * Adds a listener.
+     *
+     * @param listener The listener.
+     */
+    public void addListener(@NonNull InAppMessageListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param listener The listener.
+     */
+    public void removeListener(@NonNull InAppMessageListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     /**
@@ -498,6 +522,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message.getId(), resolutionInfo));
+
+        synchronized (listeners) {
+            for (InAppMessageListener listener : new ArrayList<>(listeners)) {
+                listener.onMessageFinished(scheduleId, adapterWrapper.message, resolutionInfo);
+            }
+        }
 
         driver.displayFinished(scheduleId);
         executor.execute(new Runnable() {
@@ -595,6 +625,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             if (!isRedisplay) {
                 analytics.addEvent(new DisplayEvent(adapterWrapper.message.getId()));
                 InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
+
+                synchronized (listeners) {
+                    for (InAppMessageListener listener : new ArrayList<>(listeners)) {
+                        listener.onMessageDisplayed(scheduleId, adapterWrapper.message);
+                    }
+                }
             }
         } else if (!carryOverScheduleIds.contains(scheduleId)) {
             carryOverScheduleIds.push(scheduleId);

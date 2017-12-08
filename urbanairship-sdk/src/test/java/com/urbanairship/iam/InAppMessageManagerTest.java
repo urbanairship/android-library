@@ -63,6 +63,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private InAppMessageAdapter mockAdapter;
     private ShadowLooper mainLooper;
     private ActionRunRequestFactory actionRunRequestFactory;
+    private InAppMessageListener mockListener;
 
     @Before
     public void setup() {
@@ -70,6 +71,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockDriver = mock(InAppMessageDriver.class);
         mockAdapter = mock(InAppMessageAdapter.class);
         mockAnalytics = mock(Analytics.class);
+        mockListener = mock(InAppMessageListener.class);
         mainLooper = Shadows.shadowOf(Looper.getMainLooper());
         actionRunRequestFactory = mock(ActionRunRequestFactory.class);
 
@@ -116,7 +118,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         manager.init();
         manager.onAirshipReady(UAirship.shared());
-
+        manager.addListener(mockListener);
     }
 
     @Test
@@ -154,12 +156,15 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Display the schedule
         when(mockAdapter.onDisplay(eq(activity), eq(false), any(DisplayHandler.class))).thenReturn(InAppMessageAdapter.OK);
         driverCallbacks.onDisplay(schedule.getId());
+        verify(mockListener).onMessageDisplayed(schedule.getId(), schedule.getInfo().getInAppMessage());
 
         // Verify schedules are no longer ready to be displayed
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
 
         // Finish displaying the in-app message
-        manager.messageFinished(schedule.getId(), ResolutionInfo.dismissed(100));
+        ResolutionInfo resolutionInfo = ResolutionInfo.dismissed(100);
+        manager.messageFinished(schedule.getId(), resolutionInfo);
+        verify(mockListener).onMessageFinished(schedule.getId(), schedule.getInfo().getInAppMessage(), resolutionInfo);
         verify(mockAnalytics).addEvent(any(ResolutionEvent.class));
 
         // Verify schedules are still not displayed due to the display interval
