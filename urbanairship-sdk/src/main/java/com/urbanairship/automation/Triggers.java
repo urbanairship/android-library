@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
@@ -362,9 +363,11 @@ public class Triggers {
          * @return The trigger instance.
          */
         public Trigger build() {
+            String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? "amazon" : "android";
+
             JsonPredicate predicate = JsonPredicate.newBuilder()
                                                    .addMatcher(JsonMatcher.newBuilder()
-                                                                          .setKey("android")
+                                                                          .setKey(platform)
                                                                           .setValueMatcher(versionMatcher)
                                                                           .build())
                                                    .build();
