@@ -77,6 +77,7 @@ public class AutomationEngine<T extends Schedule> {
     private Subject<TriggerUpdate> stateObservableUpdates;
     private Subscription compoundTriggerSubscription;
     private Scheduler backgroundScheduler;
+    private long startTime;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -98,7 +99,6 @@ public class AutomationEngine<T extends Schedule> {
             regionId = regionEvent.toJsonValue().getMap().opt("region_id").getString();
             int type = regionEvent.getBoundaryEvent() == RegionEvent.BOUNDARY_EVENT_ENTER ? Trigger.REGION_ENTER : Trigger.REGION_EXIT;
             onEventAdded(regionEvent.toJsonValue(), type, 1.00);
-
             onScheduleConditionsChanged();
         }
 
@@ -160,12 +160,20 @@ public class AutomationEngine<T extends Schedule> {
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
+        this.startTime = System.currentTimeMillis();
 
         activityMonitor.addListener(activityListener);
         analytics.addAnalyticsListener(analyticsListener);
 
-        resetExecutingSchedules();
-        rescheduleDelays();
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                cleanSchedules();
+                resetExecutingSchedules();
+                rescheduleDelays();
+            }
+        });
+
         restoreCompoundTriggers();
         onScheduleConditionsChanged();
         onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
@@ -215,8 +223,10 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                cleanSchedules();
+
                 if (dataManager.getScheduleCount() >= scheduleLimit) {
-                    Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
+                    Logger.error("AutomationEngine - Unable to insert schedule due to schedule exceeded limit.");
                     pendingResult.setResult(null);
                     return;
                 }
@@ -227,7 +237,12 @@ public class AutomationEngine<T extends Schedule> {
                 List<ScheduleEntry> entries = Collections.singletonList(entry);
                 dataManager.saveSchedules(entries);
                 subscribeStateObservables(entries);
-                pendingResult.setResult(convertEntries(entries).get(0));
+
+                List<T> result = convertEntries(entries);
+                Logger.verbose("AutomationEngine - Scheduled entries: " + result);
+                pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
+
+
             }
         });
 
@@ -246,8 +261,10 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                cleanSchedules();
+
                 if (dataManager.getScheduleCount() + scheduleInfos.size() > scheduleLimit) {
-                    Logger.error("AutomationDataManager - unable to insert schedule due to schedule exceeded limit.");
+                    Logger.error("AutomationDataManager - Unable to insert schedule due to schedule exceeded limit.");
                     pendingResult.setResult(Collections.<T>emptyList());
                     return;
                 }
@@ -258,8 +275,12 @@ public class AutomationEngine<T extends Schedule> {
                     entries.add(new ScheduleEntry(scheduleId, info));
                 }
 
+
                 dataManager.saveSchedules(entries);
                 subscribeStateObservables(entries);
+
+                List<T> result = convertEntries(entries);
+                Logger.verbose("AutomationEngine - Scheduled entries: " + result);
                 pendingResult.setResult(convertEntries(entries));
 
             }
@@ -267,6 +288,7 @@ public class AutomationEngine<T extends Schedule> {
 
         return pendingResult;
     }
+
 
     /**
      * Cancels schedules.
@@ -282,6 +304,8 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 dataManager.deleteSchedules(ids);
                 cancelScheduleDelays(ids);
+
+                Logger.verbose("AutomationEngine - Cancelled schedules: " + ids);
                 pendingResult.setResult(null);
 
             }
@@ -289,7 +313,6 @@ public class AutomationEngine<T extends Schedule> {
 
         return pendingResult;
     }
-
 
     /**
      * Cancels a group of schedules.
@@ -304,8 +327,14 @@ public class AutomationEngine<T extends Schedule> {
             @Override
             public void run() {
                 cancelGroupDelays(Collections.singletonList(group));
-                pendingResult.setResult(dataManager.deleteGroup(group));
 
+                if (dataManager.deleteGroup(group)) {
+                    Logger.verbose("AutomationEngine - Cancelled schedule group: " + group);
+                    pendingResult.setResult(true);
+                } else {
+                    Logger.verbose("AutomationEngine - Failed to cancel schedule group: " + group);
+                    pendingResult.setResult(false);
+                }
             }
         });
 
@@ -326,6 +355,7 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 cancelGroupDelays(groups);
                 dataManager.deleteGroups(groups);
+                Logger.verbose("AutomationEngine - Canceled schedule groups: " + groups);
                 pendingResult.setResult(null);
             }
         });
@@ -346,6 +376,7 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 dataManager.deleteAllSchedules();
                 cancelAllDelays();
+                Logger.verbose("AutomationEngine - Canceled all schedules.");
                 pendingResult.setResult(null);
             }
         });
@@ -407,6 +438,52 @@ public class AutomationEngine<T extends Schedule> {
             @Override
             public void run() {
                 pendingResult.setResult(convertEntries(dataManager.getScheduleEntries(group)));
+            }
+        });
+
+        return pendingResult;
+    }
+
+    /**
+     * Edits a schedule.
+     *
+     * @param scheduleId The schedule ID.
+     * @param edits The schedule edits.
+     * @return Pending result with the updated schedule.
+     */
+    public PendingResult<T> editSchedule(@NonNull final String scheduleId, @NonNull final ScheduleEdits edits) {
+        final PendingResult<T> pendingResult = new PendingResult<>();
+
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ScheduleEntry entry = dataManager.getScheduleEntry(scheduleId);
+
+                if (entry == null) {
+                    Logger.error("AutomationEngine - Schedule no longer exists. Unable to edit: " + scheduleId);
+                    pendingResult.setResult(null);
+                    return;
+                }
+
+                List<ScheduleEntry> entries = Collections.singletonList(entry);
+                entry.applyEdits(edits);
+                if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED &&
+                        entry.getCount() < entry.getLimit() &&
+                        (entry.getEnd() < 0 || entry.getEnd() >= System.currentTimeMillis())) {
+
+                    long finishTime = entry.getExecutionStateChangeDate();
+                    entry.setExecutionState(ScheduleEntry.STATE_IDLE);
+
+                    if (finishTime < startTime) {
+                        subscribeStateObservables(entries);
+                    }
+                }
+
+                dataManager.saveSchedules(entries);
+
+                List<T> result = convertEntries(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
+                Logger.error("AutomationEngine - Updated schedule: " + result);
+                pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
         });
 
@@ -484,6 +561,7 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Restores compound triggers for all schedule entries.
      */
+    @WorkerThread
     private void restoreCompoundTriggers() {
         final List<Observable<TriggerUpdate>> eventObservables = new ArrayList<>();
 
@@ -508,12 +586,14 @@ public class AutomationEngine<T extends Schedule> {
                                                              updateTriggers(update.triggerEntries, update.json, update.value);
                                                          }
                                                      });
+
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
                 subscribeStateObservables(dataManager.getScheduleEntries());
             }
         });
+
     }
 
     /**
@@ -582,22 +662,59 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Resets the schedules that were executing back to pending execution.
      */
+    @WorkerThread
     private void resetExecutingSchedules() {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                List<ScheduleEntry> entries = dataManager.getScheduleEntries(ScheduleEntry.STATE_EXECUTING);
-                if (entries.isEmpty()) {
-                    return;
-                }
+        List<ScheduleEntry> entries = dataManager.getScheduleEntries(ScheduleEntry.STATE_EXECUTING);
+        if (entries.isEmpty()) {
+            return;
+        }
 
-                for (ScheduleEntry entry : entries) {
-                    entry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
-                }
+        for (ScheduleEntry entry : entries) {
+            entry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
+        }
 
-                dataManager.saveSchedules(entries);
+        dataManager.saveSchedules(entries);
+        Logger.verbose("AutomationEngine: Schedules reset to pending execution: " + entries);
+    }
+
+    /**
+     * Expires active schedules past their end date and deletes finished schedules past the edit
+     * grace period.
+     */
+    @WorkerThread
+    private void cleanSchedules() {
+        List<ScheduleEntry> expired = dataManager.getActiveExpiredScheduleEntries();
+        List<ScheduleEntry> finished = dataManager.getScheduleEntries(ScheduleEntry.STATE_FINISHED);
+
+        Set<ScheduleEntry> update = new HashSet<>();
+        Set<String> delete = new HashSet<>();
+
+        for (ScheduleEntry entry : expired) {
+            if (entry.getEditGracePeriod() > 0) {
+                entry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+                update.add(entry);
+            } else {
+                delete.add(entry.scheduleId);
             }
-        });
+        }
+
+        notifyExpiredSchedules(expired);
+
+        for (ScheduleEntry entry : finished) {
+            if (System.currentTimeMillis() >= entry.getExecutionStateChangeDate() + entry.getEditGracePeriod()) {
+                delete.add(entry.scheduleId);
+            }
+        }
+
+        if (!update.isEmpty()) {
+            Logger.verbose("AutomationEngine - Updating expired schedules to finished state: " + update);
+            dataManager.saveSchedules(update);
+        }
+
+        if (!delete.isEmpty()) {
+            Logger.verbose("AutomationEngine - Deleting finished schedules: " + delete);
+            dataManager.deleteSchedules(delete);
+        }
     }
 
     /**
@@ -643,42 +760,37 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Reschedule all delay schedule runnables.
      */
+    @WorkerThread
     private void rescheduleDelays() {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
+        List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PENDING_EXECUTION);
+        if (scheduleEntries.isEmpty()) {
+            return;
+        }
 
-                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PENDING_EXECUTION);
-                if (scheduleEntries.isEmpty()) {
-                    return;
-                }
+        List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
 
-                List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
-
-                for (ScheduleEntry scheduleEntry : schedulesToUpdate) {
-                    // No delay, mark it to be executed
-                    if (scheduleEntry.seconds == 0) {
-                        continue;
-                    }
-
-                    long delay = TimeUnit.SECONDS.toMillis(scheduleEntry.seconds);
-                    long remainingDelay = scheduleEntry.getPendingExecutionDate() - System.currentTimeMillis();
-
-                    if (remainingDelay <= 0) {
-                        continue;
-                    }
-
-                    // If remaining delay is greater than the original delay, reset the delay.
-                    if (remainingDelay > delay) {
-                        scheduleEntry.setPendingExecutionDate(System.currentTimeMillis() + delay);
-                        schedulesToUpdate.add(scheduleEntry);
-                        remainingDelay = delay;
-                    }
-
-                    startDelayTimer(scheduleEntry, remainingDelay);
-                }
+        for (ScheduleEntry scheduleEntry : schedulesToUpdate) {
+            // No delay, mark it to be executed
+            if (scheduleEntry.seconds == 0) {
+                continue;
             }
-        });
+
+            long delay = TimeUnit.SECONDS.toMillis(scheduleEntry.seconds);
+            long remainingDelay = scheduleEntry.getPendingExecutionDate() - System.currentTimeMillis();
+
+            if (remainingDelay <= 0) {
+                continue;
+            }
+
+            // If remaining delay is greater than the original delay, reset the delay.
+            if (remainingDelay > delay) {
+                scheduleEntry.setPendingExecutionDate(System.currentTimeMillis() + delay);
+                schedulesToUpdate.add(scheduleEntry);
+                remainingDelay = delay;
+            }
+
+            startDelayTimer(scheduleEntry, remainingDelay);
+        }
     }
 
 
@@ -711,7 +823,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                Logger.debug("Automation - updating triggers with type: " + type);
+                Logger.debug("Automation - Updating triggers with type: " + type);
                 List<TriggerEntry> triggerEntries = dataManager.getActiveTriggerEntries(type);
                 if (triggerEntries.isEmpty()) {
                     return;
@@ -815,20 +927,24 @@ public class AutomationEngine<T extends Schedule> {
         sortSchedulesByPriority(scheduleEntries);
 
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
-            // Delete expired schedules.
+            // Expired schedules
             if (scheduleEntry.end > 0 && scheduleEntry.end < System.currentTimeMillis()) {
                 expiredScheduleEntries.add(scheduleEntry);
-                schedulesToDelete.add(scheduleEntry.scheduleId);
+                scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+
+                if (scheduleEntry.getEditGracePeriod() <= 0) {
+                    schedulesToDelete.add(scheduleEntry.scheduleId);
+                } else {
+                    schedulesToUpdate.add(scheduleEntry);
+                }
+
                 continue;
             }
 
-            // Ignore already triggered schedules
-            if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PENDING_EXECUTION && scheduleEntry.getPendingExecutionDate() > System.currentTimeMillis()) {
-                continue;
-            }
+            // Idle => Pending
+            if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_IDLE) {
+                schedulesToUpdate.add(scheduleEntry);
 
-            // Handle schedules with delays
-            if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_IDLE && scheduleEntry.seconds > 0) {
                 for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
                     if (triggerEntry.isCancellation) {
                         triggerEntry.setProgress(0);
@@ -836,16 +952,15 @@ public class AutomationEngine<T extends Schedule> {
                 }
 
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
-                scheduleEntry.setPendingExecutionDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
-                startDelayTimer(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
-                schedulesToUpdate.add(scheduleEntry);
-                continue;
+                if (scheduleEntry.seconds > 0) {
+                    scheduleEntry.setPendingExecutionDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
+                    startDelayTimer(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
+                    continue;
+                }
             }
 
             final CountDownLatch latch = new CountDownLatch(1);
-
             ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(scheduleEntry.scheduleId, scheduleEntry.group) {
-
                 @Override
                 public void run() {
                     T schedule = null;
@@ -885,17 +1000,9 @@ public class AutomationEngine<T extends Schedule> {
 
             if (runnable.exception != null) {
                 schedulesToDelete.add(scheduleEntry.scheduleId);
+                schedulesToUpdate.remove(scheduleEntry);
             } else if (runnable.result) {
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
-                schedulesToUpdate.add(scheduleEntry);
-            } else if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_IDLE) {
-                for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
-                    if (triggerEntry.isCancellation) {
-                        triggerEntry.setProgress(0);
-                    }
-                }
-
-                scheduleEntry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
                 schedulesToUpdate.add(scheduleEntry);
             }
         }
@@ -949,19 +1056,27 @@ public class AutomationEngine<T extends Schedule> {
                     return;
                 }
 
-                scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId) ;
                 scheduleEntry.setPendingExecutionDate(-1);
                 scheduleEntry.setCount(scheduleEntry.getCount() + 1);
 
                 if (scheduleEntry.getCount() >= scheduleEntry.limit) {
-                    List<String> scheduleIdList = Collections.singletonList(scheduleId);
-                    dataManager.deleteSchedules(scheduleIdList);
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
                 } else {
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                }
+
+                if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_FINISHED || scheduleEntry.getEditGracePeriod() >= 0) {
+                    Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId) ;
                     dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+                } else {
+                    Logger.verbose("AutomationEngine - Deleting schedule: " + scheduleId) ;
+                    dataManager.deleteSchedule(scheduleId);
                 }
             }
         });
     }
+
 
     /**
      * Starts a delay timer for a schedule entry.
@@ -969,16 +1084,14 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleEntry The schedule entry.
      * @param delay The delay in milliseconds.
      */
-    private void startDelayTimer(ScheduleEntry scheduleEntry, long delay) {
+    private void startDelayTimer(final ScheduleEntry scheduleEntry, long delay) {
         ScheduleRunnable runnable = new ScheduleRunnable(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
             public void run() {
-                // Update before execution
-                Set<String> hashSet = new HashSet<>();
-                hashSet.add(scheduleId);
-                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(hashSet);
-
-                handleTriggeredSchedules(scheduleEntries);
+                ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
+                if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PENDING_EXECUTION) {
+                    handleTriggeredSchedules(Collections.singletonList(scheduleEntry));
+                }
             }
         };
 
@@ -1015,7 +1128,6 @@ public class AutomationEngine<T extends Schedule> {
      */
     @MainThread
     private boolean isScheduleConditionsSatisfied(ScheduleEntry scheduleEntry) {
-
         if (scheduleEntry.getPendingExecutionDate() > System.currentTimeMillis()) {
             return false;
         }
@@ -1091,8 +1203,6 @@ public class AutomationEngine<T extends Schedule> {
             this.json = json;
             this.value = value;
         }
-
-
     }
 
     /**

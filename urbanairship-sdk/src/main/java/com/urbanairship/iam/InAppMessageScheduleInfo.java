@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.automation.ScheduleDelay;
@@ -14,9 +15,11 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.DateUtils;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class encapsulating the implementor-set information for an in-app message schedule.
@@ -29,7 +32,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     public static final long TRIGGER_LIMIT = 10;
 
     // JSON key
-    private static String MESSAGE_KEY  = "message";
+    static String MESSAGE_KEY = "message";
 
     private final int limit;
     private final long start;
@@ -38,6 +41,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     private final ScheduleDelay delay;
     private final InAppMessage message;
     private final int priority;
+    private final long editGracePeriod;
 
     /**
      * Default constructor.
@@ -52,6 +56,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         this.delay = builder.delay;
         this.message = builder.message;
         this.priority = builder.priority;
+        this.editGracePeriod = builder.editGracePeriod;
     }
 
     /**
@@ -129,6 +134,14 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getEditGracePeriod() {
+        return editGracePeriod;
+    }
+
+    /**
      * Create a new builder.
      *
      * @return A new builder instance.
@@ -152,12 +165,20 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
                 .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                 .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
 
-        if (jsonMap.containsKey(END_KEY)) {
-            builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(END_KEY).getString(), -1));
+        if (jsonMap.containsKey(InAppMessageScheduleInfo.END_KEY)) {
+            try {
+                builder.setEnd(DateUtils.parseIso8601(jsonMap.opt(InAppMessageScheduleInfo.END_KEY).getString()));
+            } catch (ParseException e) {
+                throw new JsonException("Invalid schedule end time", e);
+            }
         }
 
-        if (jsonMap.containsKey(START_KEY)) {
-            builder.setStart(DateUtils.parseIso8601(jsonMap.opt(START_KEY).getString(), -1));
+        if (jsonMap.containsKey(InAppMessageScheduleInfo.START_KEY)) {
+            try {
+                builder.setStart(DateUtils.parseIso8601(jsonMap.opt(InAppMessageScheduleInfo.START_KEY).getString()));
+            } catch (ParseException e) {
+                throw new JsonException("Invalid schedule start time", e);
+            }
         }
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
@@ -166,6 +187,10 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
 
         if (jsonMap.containsKey(DELAY_KEY)) {
             builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt(DELAY_KEY)));
+        }
+
+        if (jsonMap.containsKey(EDIT_GRACE_PERIOD)) {
+            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getInt(0), TimeUnit.DAYS);
         }
 
         try {
@@ -197,6 +222,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         public ScheduleDelay delay;
         public InAppMessage message;
         public int priority;
+        public long editGracePeriod;
 
         private Builder() {}
 
@@ -287,6 +313,19 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
             this.triggers.addAll(triggers);
             return this;
         }
+
+        /**
+         * Sets the edit grace period after a schedule expires or finishes.
+         *
+         * @param duration The grace period.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.editGracePeriod = timeUnit.toMillis(duration);
+            return this;
+        }
+
 
         /**
          * Builds the in-app message schedule.

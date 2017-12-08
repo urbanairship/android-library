@@ -11,7 +11,7 @@ import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
@@ -22,7 +22,12 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -75,10 +80,9 @@ class InAppRemoteDataObserver {
                                           public void onNext(RemoteDataPayload payload) {
                                               try {
                                                   processPayload(payload, scheduler);
-                                              } catch (ExecutionException e) {
-                                                  e.printStackTrace();
-                                              } catch (InterruptedException e) {
-                                                  e.printStackTrace();
+                                                  Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
+                                              } catch (InterruptedException | ExecutionException e) {
+                                                  Logger.error("InAppRemoteDataObserver - Failed to process payload: ", e);
                                               }
                                           }
                                       });
@@ -95,6 +99,7 @@ class InAppRemoteDataObserver {
 
     /**
      * Processes a payload.
+     *
      * @param payload The remote data payload.
      * @param scheduler The scheduler.
      */
@@ -103,8 +108,8 @@ class InAppRemoteDataObserver {
         long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
 
         List<String> messageIds = new ArrayList<>();
-
         List<InAppMessageScheduleInfo> newSchedules = new ArrayList<>();
+        Map<String, String> scheduleIdMap = getScheduleIdMap();
 
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
             long createdTimeStamp, lastUpdatedTimeStamp;
@@ -125,11 +130,27 @@ class InAppRemoteDataObserver {
 
             messageIds.add(messageId);
 
-            if (createdTimeStamp > lastUpdate) {
-                if (!scheduler.getSchedules(messageId).get().isEmpty()) {
+            // Ignore any messages that have not updated since the last payload
+            if (lastUpdatedTimeStamp <= lastUpdate) {
+                continue;
+            }
+
+            // If we do not have a schedule ID for the message ID, try to look it up first
+            if (!scheduleIdMap.containsKey(messageId)) {
+                Collection<InAppMessageSchedule> schedules = scheduler.getSchedules(messageId).get();
+
+                // Make sure we only have a single schedule for the message ID
+                if (schedules.size() > 1) {
+                    Logger.error("InAppRemoteDataObserver - Duplicate schedules for in-app message: " + messageId);
                     continue;
                 }
 
+                if (!schedules.isEmpty()) {
+                    scheduleIdMap.put(messageId, schedules.iterator().next().getId());
+                }
+            }
+
+            if (createdTimeStamp > lastUpdate) {
                 try {
                     InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson);
                     if (checkSchedule(scheduleInfo, createdTimeStamp)) {
@@ -138,26 +159,62 @@ class InAppRemoteDataObserver {
                 } catch (JsonException e) {
                     Logger.error("Failed to parse in-app message: " + messageJson, e);
                 }
-            } else if (lastUpdatedTimeStamp > lastUpdate) {
-                // TODO: updates
+            } else if (scheduleIdMap.containsKey(messageId)) {
+                String scheduleId = scheduleIdMap.get(messageId);
+                try {
+                    InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.fromJson(messageJson);
+
+                    // If the end time is not defined, clear it by setting it to less than 0 (-1) since
+                    // we set an end time once the message no longer appears in the listing
+                    if (edits.getEnd() == null) {
+                        edits = InAppMessageScheduleEdits.newBuilder(edits)
+                                                         .setEnd(-1)
+                                                         .build();
+                    }
+
+                    InAppMessageSchedule schedule = scheduler.editSchedule(scheduleId, edits).get();
+                    if (schedule != null) {
+                        Logger.debug("Updated in-app message: " + messageId + " with edits: " + edits);
+                    }
+                } catch (JsonException e) {
+                    Logger.error("Failed ot parse in-app message edits: " + messageId, e);
+                }
             }
         }
 
-        List<String> deletedMessageIds = getScheduledMessageIds();
-        deletedMessageIds.removeAll(messageIds);
-
-        if (!deletedMessageIds.isEmpty()) {
-            scheduler.cancelMessages(deletedMessageIds).get();
-        }
-
+        // Schedule new in-app messages
         if (!newSchedules.isEmpty()) {
-            scheduler.schedule(newSchedules).get();
+            List<InAppMessageSchedule> schedules = scheduler.schedule(newSchedules).get();
+            for (InAppMessageSchedule schedule : schedules) {
+                String messageId = schedule.getInfo().getInAppMessage().getId();
+                scheduleIdMap.put(messageId, schedule.getId());
+            }
         }
 
-        setScheduledMessageIds(messageIds);
+        // End any messages that are no longer in the listing
+        Set<String> removedMessageIds = new HashSet<>(scheduleIdMap.keySet());
+        removedMessageIds.removeAll(messageIds);
+
+        if (!removedMessageIds.isEmpty()) {
+            InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder().setEnd(0).build();
+            for (String messageId : removedMessageIds) {
+                String scheduleId = scheduleIdMap.remove(messageId);
+                scheduler.editSchedule(scheduleId, edits).get();
+            }
+        }
+
+        // Store data
+        setScheduleIdMap(scheduleIdMap);
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
     }
 
+    /**
+     * Helper method to check if the message should be scheduled.
+     *
+     * @param scheduleInfo The schedule info.
+     * @param createdTimeStamp The created times stamp.
+     * @return {@code true} if the message should be scheduled, otherwise {@code false}.
+     */
     private boolean checkSchedule(InAppMessageScheduleInfo scheduleInfo, long createdTimeStamp) {
         Context context = UAirship.getApplicationContext();
         Audience audience = scheduleInfo.getInAppMessage().getAudience();
@@ -166,30 +223,33 @@ class InAppRemoteDataObserver {
     }
 
     /**
-     * Gets the stored scheduled message IDs.
+     * Gets the message ID to schedule ID map.
      *
-     * @return The scheduled message IDs.
+     * @return The ID map.
      */
-    private List<String> getScheduledMessageIds() {
-        JsonList jsonList = preferenceDataStore.getJsonValue(SCHEDULED_MESSAGES_KEY).optList();
+    private Map<String, String> getScheduleIdMap() {
+        JsonMap jsonMap = preferenceDataStore.getJsonValue(SCHEDULED_MESSAGES_KEY).optMap();
 
-        List<String> messageIds = new ArrayList<>();
-        for (JsonValue value : jsonList) {
-            if (value.isString()) {
-                messageIds.add(value.getString());
+        Map<String, String> idMap = new HashMap<>();
+        for (Map.Entry<String, JsonValue> entry : jsonMap) {
+            if (!entry.getValue().isString()) {
+                continue;
             }
+
+            idMap.put(entry.getKey(), entry.getValue().getString());
         }
 
-        return messageIds;
+        return idMap;
     }
 
+
     /**
-     * Sets the scheduled message IDs.
+     * Sets the message ID to schedule ID map.
      *
-     * @param messageIds The list of message IDs.
+     * @param idMap The message ID to schedule ID map.
      */
-    private void setScheduledMessageIds(List<String> messageIds) {
-        preferenceDataStore.put(SCHEDULED_MESSAGES_KEY, JsonValue.wrapOpt(messageIds));
+    private void setScheduleIdMap(Map<String, String> idMap) {
+        preferenceDataStore.put(SCHEDULED_MESSAGES_KEY, JsonValue.wrapOpt(idMap));
     }
 
     /**

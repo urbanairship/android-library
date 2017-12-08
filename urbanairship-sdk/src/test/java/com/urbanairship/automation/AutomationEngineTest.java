@@ -11,6 +11,7 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
@@ -97,6 +98,7 @@ public class AutomationEngineTest extends BaseTestCase {
         assertTrue(pendingResult.isDone());
         assertFalse(pendingResult.isCancelled());
         assertNotNull(pendingResult.get());
+        assertNotNull(automationDataManager.getScheduleEntry(pendingResult.get().getId()));
     }
 
     @Test
@@ -343,16 +345,16 @@ public class AutomationEngineTest extends BaseTestCase {
     public void testPriority() throws Exception {
         ArrayList<ActionSchedule> schedules = new ArrayList<>();
 
-        Integer[] addedPriorityLevels = new Integer[]{5, 2, 1, 0, 0, 4, 3, 3, 2};
+        Integer[] addedPriorityLevels = new Integer[] { 5, 2, 1, 0, 0, 4, 3, 3, 2 };
         ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
         Collections.sort(expectedExecutionOrder);
 
         // Add schedules out of order
         for (int priority : addedPriorityLevels) {
             final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
-                                       .setCountGoal(1)
-                                       .setEventName("name")
-                                       .build();
+                                            .setCountGoal(1)
+                                            .setEventName("name")
+                                            .build();
 
             final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                       .addTrigger(trigger)
@@ -386,10 +388,10 @@ public class AutomationEngineTest extends BaseTestCase {
                                         .build();
 
         final ActionScheduleInfo expiredScheduleInfo = ActionScheduleInfo.newBuilder()
-                                                                  .addTrigger(trigger)
-                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
-                                                                  .setEnd(System.currentTimeMillis() - 1)
-                                                                  .build();
+                                                                         .addTrigger(trigger)
+                                                                         .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                         .setEnd(System.currentTimeMillis() - 1)
+                                                                         .build();
 
         AutomationEngine.ScheduleExpiryListener<ActionSchedule> expiryListener = mock(AutomationEngine.ScheduleExpiryListener.class);
         automationEngine.setScheduleExpiryListener(expiryListener);
@@ -408,6 +410,7 @@ public class AutomationEngineTest extends BaseTestCase {
         // Verify the listener was called
         verify(expiryListener).onScheduleExpired(any(ActionSchedule.class));
     }
+
 
     @Test
     public void testPause() throws Exception {
@@ -467,6 +470,63 @@ public class AutomationEngineTest extends BaseTestCase {
         // Schedule should be deleted
         assertNull(automationDataManager.getScheduleEntry(schedule.getId()));
     }
+
+    @Test
+    public void testEditSchedule() throws Exception {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setEditGracePeriod(100, TimeUnit.SECONDS)
+                                                                  .build();
+
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        runLooperTasks();
+        ActionSchedule schedule = future.get();
+
+        // Trigger the schedule
+        new CustomEvent.Builder("event")
+                .create()
+                .track();
+
+        runLooperTasks();
+
+        // Finish executing the schedule
+        driver.callbackMap.get(schedule.getId()).onFinish();
+        runLooperTasks();
+
+        // Verify it's finished
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_FINISHED);
+
+        // Update the schedule
+        long end = System.currentTimeMillis() + 100;
+        final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
+                                                             .setLimit(2)
+                                                             .setStart(10)
+                                                             .setEnd(end)
+                                                             .setActions(JsonMap.newBuilder()
+                                                                                .put("another_action", JsonValue.wrapOpt("COOL")).build().getMap())
+                                                             .setPriority(300)
+                                                             .build();
+
+        future = automationEngine.editSchedule(schedule.getId(), edits);
+        runLooperTasks();
+        ActionSchedule updated = future.get();
+
+
+        // Verify it's now idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+
+        // Verify it was updated
+        assertEquals(edits.getLimit().intValue(), updated.getInfo().getLimit());
+        assertEquals(edits.getStart().longValue(), updated.getInfo().getStart());
+        assertEquals(edits.getEnd().longValue(), updated.getInfo().getEnd());
+        assertEquals(edits.getPriority().intValue(), updated.getInfo().getPriority());
+        assertEquals("COOL", updated.getInfo().getActions().get("another_action").getString());
+    }
+
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()

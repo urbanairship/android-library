@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -67,6 +68,7 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                       .put("priority", 1)
                                       .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
                                       .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
+                                      .put("edit_grace_period", 10)
                                       .build();
 
         InAppMessageScheduleInfo info = InAppMessageScheduleInfo.fromJson(scheduleJson.toJsonValue());
@@ -78,6 +80,7 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
         assertEquals(10000L, info.getStart());
         assertEquals(15000L, info.getEnd());
         assertEquals("some-id", info.getGroup());
+        assertEquals(TimeUnit.DAYS.toMillis(10), info.getEditGracePeriod());
 
         // Triggers
         assertEquals(1, info.getTriggers().size());

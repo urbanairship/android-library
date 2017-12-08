@@ -21,18 +21,20 @@ import java.util.List;
 
 /**
  * Schedule information stored in the schedules table.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ScheduleEntry implements ScheduleInfo {
 
-    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING })
+    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING, STATE_FINISHED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface State {}
 
     static final int STATE_IDLE = 0;
     static final int STATE_PENDING_EXECUTION = 1;
     static final int STATE_EXECUTING = 2;
+    static final int STATE_FINISHED = 4;
 
     static final String TABLE_NAME = "action_schedules";
     // Schedule
@@ -45,6 +47,7 @@ class ScheduleEntry implements ScheduleInfo {
     static final String COLUMN_NAME_GROUP = "s_group";
     static final String COLUMN_NAME_START = "s_start";
     static final String COLUMN_NAME_END = "s_end";
+    static final String COLUMN_EDIT_GRACE_PERIOD = "s_edit_grace_period";
 
     // Delay
     static final String COLUMN_NAME_SECONDS = "d_seconds";
@@ -54,23 +57,25 @@ class ScheduleEntry implements ScheduleInfo {
 
     // State
     static final String COLUMN_NAME_EXECUTION_STATE = "s_execution_state";
+    static final String COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE = "s_execution_state_change_date";
     static final String COLUMN_NAME_PENDING_EXECUTION_DATE = "s_pending_execution_date";
     static final String COLUMN_NAME_COUNT = "s_count";
     static final String COLUMN_NAME_ID = "s_row_id";
 
 
     public final String scheduleId;
-    public final JsonSerializable data;
-    public final int limit;
-    public final int priority;
+    public JsonSerializable data;
+    public int limit;
+    public int priority;
     public final String group;
-    public final long start;
-    public final long end;
+    public long start;
+    public long end;
     public final long seconds;
     public final List<String> screens;
     public final int appState;
     public final String regionId;
     public final List<TriggerEntry> triggerEntries = new ArrayList<>();
+    public long editGracePeriod;
 
     // State
     private long id = -1;
@@ -78,7 +83,9 @@ class ScheduleEntry implements ScheduleInfo {
     private int count;
     private int executionState = STATE_IDLE;
     private long pendingExecutionDate;
+    private long executionStateChangeDate;
     private boolean isDirty;
+    private boolean isEdit;
 
     ScheduleEntry(@NonNull String scheduleId, @NonNull ScheduleInfo scheduleInfo) {
         this.scheduleId = scheduleId;
@@ -88,6 +95,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.group = scheduleInfo.getGroup();
         this.start = scheduleInfo.getStart();
         this.end = scheduleInfo.getEnd();
+        this.editGracePeriod = scheduleInfo.getEditGracePeriod();
 
         if (scheduleInfo.getDelay() != null) {
             this.screens = scheduleInfo.getDelay().getScreens();
@@ -119,6 +127,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.limit = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_LIMIT));
         this.priority = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_PRIORITY));
         this.group = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_GROUP));
+        this.editGracePeriod = cursor.getLong(cursor.getColumnIndex(COLUMN_EDIT_GRACE_PERIOD));
 
         JsonValue parsedData;
         try {
@@ -131,6 +140,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.end = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_END));
         this.start = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_START));
         this.executionState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE));
+        this.executionStateChangeDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE));
         this.pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_PENDING_EXECUTION_DATE));
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
@@ -191,6 +201,7 @@ class ScheduleEntry implements ScheduleInfo {
     void setExecutionState(int executionState) {
         if (this.executionState != executionState) {
             this.executionState = executionState;
+            this.executionStateChangeDate = System.currentTimeMillis();
             this.isDirty = true;
         }
     }
@@ -215,6 +226,29 @@ class ScheduleEntry implements ScheduleInfo {
             this.pendingExecutionDate = date;
             this.isDirty = true;
         }
+    }
+
+    /**
+     * Get the date of the last state change.
+     *
+     * @return State change date.
+     */
+    long getExecutionStateChangeDate() {
+        return this.executionStateChangeDate;
+    }
+
+    /**
+     * Edits the schedule entry.
+     * @param edits The schedule edits.
+     */
+    void applyEdits(@NonNull ScheduleEdits edits) {
+        this.start = edits.getStart() == null ? this.start : edits.getStart();
+        this.end = edits.getEnd() == null ? this.end : edits.getEnd();
+        this.limit = edits.getLimit() == null ? this.limit : edits.getLimit();
+        this.data = edits.getData() == null ? this.data : edits.getData();
+        this.priority = edits.getPriority() == null ? this.priority : edits.getPriority();
+        isDirty = true;
+        isEdit = true;
     }
 
     /**
@@ -245,11 +279,13 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_START, start);
             contentValues.put(COLUMN_NAME_END, end);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
+            contentValues.put(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE, executionStateChangeDate);
             contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
             contentValues.put(COLUMN_NAME_APP_STATE, appState);
             contentValues.put(COLUMN_NAME_REGION_ID, regionId);
             contentValues.put(COLUMN_NAME_SCREEN, JsonValue.wrapOpt(screens).optList().toString());
             contentValues.put(COLUMN_NAME_SECONDS, seconds);
+            contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
             id = database.insert(TABLE_NAME, null, contentValues);
             if (id == -1) {
                 return false;
@@ -258,7 +294,17 @@ class ScheduleEntry implements ScheduleInfo {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_NAME_COUNT, count);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
+            contentValues.put(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE, executionStateChangeDate);
             contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
+
+            if (isEdit) {
+                contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
+                contentValues.put(COLUMN_NAME_LIMIT, limit);
+                contentValues.put(COLUMN_NAME_PRIORITY, priority);
+                contentValues.put(COLUMN_NAME_START, start);
+                contentValues.put(COLUMN_NAME_END, end);
+                contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
+            }
             if (database.updateWithOnConflict(TABLE_NAME, contentValues, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) == 0) {
                 return false;
             }
@@ -271,6 +317,7 @@ class ScheduleEntry implements ScheduleInfo {
         }
 
         isDirty = false;
+        isEdit = false;
         return true;
     }
 
@@ -358,6 +405,11 @@ class ScheduleEntry implements ScheduleInfo {
     }
 
     @Override
+    public long getEditGracePeriod() {
+        return this.editGracePeriod;
+    }
+
+    @Override
     public ScheduleDelay getDelay() {
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
                                                           .setAppState(appState)
@@ -373,5 +425,10 @@ class ScheduleEntry implements ScheduleInfo {
         }
 
         return delayBuilder.build();
+    }
+
+    @Override
+    public String toString() {
+        return scheduleId;
     }
 }
