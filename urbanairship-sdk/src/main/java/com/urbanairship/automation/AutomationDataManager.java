@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
+import com.urbanairship.RichPushTable;
 import com.urbanairship.util.DataManager;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class AutomationDataManager extends DataManager {
     /**
      * The database version
      */
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     /**
      * Appended to the end of schedules GET queries to group rows by schedule ID.
@@ -55,7 +56,9 @@ public class AutomationDataManager extends DataManager {
      */
     private static final String GET_ACTIVE_TRIGGERS = "SELECT * FROM " + TriggerEntry.TABLE_NAME + " t" +
             " LEFT OUTER JOIN " + ScheduleEntry.TABLE_NAME + " a ON a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID +
-            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ? AND (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 OR a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)" +
+            " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ?" +
+            " AND ((t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 1 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)" +
+            " OR (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 0))" +
             " AND t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + " LIKE ?";
 
     /**
@@ -78,6 +81,8 @@ public class AutomationDataManager extends DataManager {
                 + ScheduleEntry.COLUMN_NAME_DATA + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_START + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_END + " INTEGER,"
+                + ScheduleEntry.COLUMN_EDIT_GRACE_PERIOD + " INTEGER,"
+                + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_COUNT + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_PRIORITY + " INTEGER,"
@@ -118,12 +123,17 @@ public class AutomationDataManager extends DataManager {
         //          * is_cancellation column added
         //          * t_start column removed
         //
-        // Upgrade 2 -> 3 changes (SDK 9.0)
+        // Upgrade 2 -> 3 changes (SDK 9.0 alpha)
         //
         //      action_schedules:
         //          * s_is_pending_execution column renamed to s_execution_state
         //          * s_actions column renamed to s_data
+        //          * added s_priority
         //
+        // Upgrade 3 -> 4 changes (SDK 9.0 beta)
+        //
+        //      action_schedules:
+        //          * added s_execution_state_change_date, s_edit_grace_period
 
         String tempScheduleTableName = "temp_schedule_entry_table";
         String tempTriggersTableName = "temp_triggers_entry_table";
@@ -260,6 +270,9 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_COUNT + ", "
                         + ScheduleEntry.COLUMN_NAME_LIMIT + ", "
                         + ScheduleEntry.COLUMN_NAME_PRIORITY + ", "
+                        + ScheduleEntry.COLUMN_EDIT_GRACE_PERIOD + ", "
+                        + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_PRIORITY + ", "
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
                         + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + ", "
                         + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
@@ -294,7 +307,7 @@ public class AutomationDataManager extends DataManager {
                         + TriggerEntry.COLUMN_NAME_PROGRESS + ", "
                         + TriggerEntry.COLUMN_NAME_GOAL + ") " +
                         "SELECT "
-                        + TriggerEntry.COLUMN_NAME_ID  + ", "
+                        + TriggerEntry.COLUMN_NAME_ID + ", "
                         + TriggerEntry.COLUMN_NAME_TYPE + ", "
                         + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + ", "
                         + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + ", "
@@ -307,8 +320,14 @@ public class AutomationDataManager extends DataManager {
                 db.execSQL("DROP TABLE " + tempTriggersTableName + ";");
 
                 db.execSQL("COMMIT;");
-                break;
 
+            case 3:
+                db.execSQL("BEGIN TRANSACTION;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE + " INTEGER;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_EDIT_GRACE_PERIOD + " INTEGER;");
+                db.execSQL("COMMIT;");
+
+                break;
             default:
                 // Kills the table and existing data
                 db.execSQL("DROP TABLE IF EXISTS " + ScheduleEntry.TABLE_NAME);
@@ -503,6 +522,7 @@ public class AutomationDataManager extends DataManager {
 
     /**
      * Gets a schedule entry for the given ID.
+     *
      * @param scheduleId The schedule ID.
      * @return A schedule entry or null if the schedule is unavailable.
      */
@@ -526,7 +546,7 @@ public class AutomationDataManager extends DataManager {
             @Override
             public void perform(List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
-                
+
                 Cursor cursor = rawQuery(query, subset.toArray(new String[subset.size()]));
                 if (cursor != null) {
                     schedules.addAll(generateSchedules(cursor));
@@ -547,7 +567,29 @@ public class AutomationDataManager extends DataManager {
      */
     List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int executionState) {
         String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = ?";
-        Cursor cursor = rawQuery(query, new String[] { String.valueOf(executionState)});
+        Cursor cursor = rawQuery(query, new String[] { String.valueOf(executionState) });
+
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = generateSchedules(cursor);
+        cursor.close();
+        return entries;
+    }
+
+
+    /**
+     * Gets the active schedule entries that are expired.
+     *
+     * @return The list of expired schedules.
+     */
+    List<ScheduleEntry> getActiveExpiredScheduleEntries() {
+        String query = GET_SCHEDULES_QUERY +
+                " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " != " + ScheduleEntry.STATE_FINISHED +
+                " AND a." + ScheduleEntry.COLUMN_NAME_END + " >= 0 AND a." + ScheduleEntry.COLUMN_NAME_END + " >= ?";
+
+        Cursor cursor = rawQuery(query, new String[] { String.valueOf(System.currentTimeMillis()) });
 
         if (cursor == null) {
             return Collections.emptyList();
@@ -560,6 +602,7 @@ public class AutomationDataManager extends DataManager {
 
     /**
      * Gets triggers for a given type.
+     *
      * @param type The trigger type.
      * @return THe list of {@link TriggerEntry} instances.
      */
@@ -576,7 +619,7 @@ public class AutomationDataManager extends DataManager {
      */
     List<TriggerEntry> getActiveTriggerEntries(int type, @NonNull String scheduleId) {
         List<TriggerEntry> triggers = new ArrayList<>();
-        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId});
+        Cursor cursor = rawQuery(GET_ACTIVE_TRIGGERS, new String[] { String.valueOf(type), String.valueOf(System.currentTimeMillis()), scheduleId });
 
         if (cursor == null) {
             return triggers;
@@ -594,7 +637,6 @@ public class AutomationDataManager extends DataManager {
         cursor.close();
         return triggers;
     }
-
 
 
     /**

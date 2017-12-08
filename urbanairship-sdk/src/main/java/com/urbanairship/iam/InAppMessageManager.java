@@ -165,7 +165,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.executor = executor;
         this.actionRunRequestFactory = actionRunRequestFactory;
-
     }
 
     /**
@@ -184,6 +183,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 }
 
                 if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
+                    Logger.debug("InAppMessageManager - Message no longer meets audience conditions, cancelling schedule: " + scheduleId);
                     cancelSchedule(scheduleId);
                     adapterWrappers.remove(scheduleId);
                     return false;
@@ -193,6 +193,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 if (adapterWrapper == null) {
                     InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
                     if (factory == null) {
+                        Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
                         return false;
                     }
 
@@ -338,8 +339,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 int result = adapterWrapper.prepare();
 
                 if (result == InAppMessageAdapter.OK) {
+                    Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
                     automationEngine.checkPendingSchedules();
                 } else {
+                    Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
                     // Retry after a delay
                     mainHandler.postDelayed(new Runnable() {
                         @Override
@@ -403,6 +406,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @Override
     public PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId) {
         return automationEngine.getSchedule(scheduleId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<InAppMessageSchedule> editSchedule(@NonNull String scheduleId, @NonNull InAppMessageScheduleEdits edit) {
+        return automationEngine.editSchedule(scheduleId, edit);
     }
 
     /**
@@ -683,6 +694,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         private int prepare() {
             try {
+                Logger.debug("InAppMessageManager - Preparing schedule: " + scheduleId);
                 int result = adapter.onPrepare(UAirship.getApplicationContext());
                 if (result == InAppMessageAdapter.OK) {
                     isReady = true;
@@ -695,6 +707,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         private int display(Activity activity, boolean isRedisplay) {
+            Logger.debug("InAppMessageManager - Displaying schedule: " + scheduleId);
             try {
                 DisplayHandler displayHandler = new DisplayHandler(scheduleId);
                 return adapter.onDisplay(activity, isRedisplay, displayHandler);
@@ -705,6 +718,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         private void finish() {
+            Logger.debug("InAppMessageManager - Schedule finished: " + scheduleId);
+
             try {
                 adapter.onFinish();
             } catch (Exception e) {

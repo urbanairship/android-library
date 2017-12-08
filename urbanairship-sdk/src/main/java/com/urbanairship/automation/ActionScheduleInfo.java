@@ -4,6 +4,7 @@ package com.urbanairship.automation;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class encapsulating the implementor-set information for an action schedule.
@@ -43,8 +45,10 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      */
     public static final long TRIGGER_LIMIT = 10;
 
-    // JSON KEYS
-    private static final String ACTIONS_KEY = "actions";
+    /**
+     * Actions json key.
+     */
+    public static final String ACTIONS_KEY = "actions";
 
     private final List<Trigger> triggers;
     private final Map<String, JsonValue> actions;
@@ -54,6 +58,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     private final long start;
     private final long end;
     private final ScheduleDelay delay;
+    private final long editGracePeriod;
 
     private ActionScheduleInfo(Builder builder) {
         this.triggers = builder.triggers;
@@ -64,6 +69,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.start = builder.start;
         this.end = builder.end;
         this.delay = builder.delay;
+        this.editGracePeriod = builder.editGracePeriod;
     }
 
     protected ActionScheduleInfo(Parcel in) {
@@ -73,6 +79,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.group = in.readString();
         this.start = in.readLong();
         this.end = in.readLong();
+        this.editGracePeriod = in.readLong();
 
         this.actions = JsonValue.wrapOpt(in.readParcelable(JsonValue.class.getClassLoader()))
                                 .optMap()
@@ -89,6 +96,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         dest.writeString(group);
         dest.writeLong(start);
         dest.writeLong(end);
+        dest.writeLong(editGracePeriod);
         dest.writeParcelable(JsonValue.wrapOpt(actions), flags);
         dest.writeParcelable(JsonValue.wrapOpt(delay), flags);
     }
@@ -178,6 +186,14 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getEditGracePeriod() {
+        return editGracePeriod;
+    }
+
+    /**
      * Parses an ActionScheduleInfo from a JsonValue.
      * </p>
      * The expected JsonValue is a map containing:
@@ -221,6 +237,10 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
             builder.setDelay(ScheduleDelay.parseJson(jsonMap.opt(DELAY_KEY)));
         }
 
+        if (jsonMap.containsKey(EDIT_GRACE_PERIOD)) {
+            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getInt(0), TimeUnit.DAYS);
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -240,6 +260,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         private int limit = 1;
         private int priority = 0;
         private ScheduleDelay delay = null;
+        private long editGracePeriod = -1;
 
         /**
          * Adds a trigger.
@@ -348,6 +369,18 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          */
         public Builder setDelay(ScheduleDelay delay) {
             this.delay = delay;
+            return this;
+        }
+
+        /**
+         * Sets the edit grace period after a schedule expires or finishes.
+         *
+         * @param duration The grace period.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.editGracePeriod = timeUnit.toMillis(duration);
             return this;
         }
 

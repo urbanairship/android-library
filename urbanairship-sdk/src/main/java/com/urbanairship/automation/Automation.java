@@ -4,6 +4,7 @@ package com.urbanairship.automation;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.ActivityMonitor;
@@ -14,6 +15,8 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.iam.InAppMessageSchedule;
+import com.urbanairship.iam.InAppMessageScheduleEdits;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +52,7 @@ public class Automation extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public Automation(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                      @NonNull AirshipConfigOptions configOptions,  @NonNull Analytics analytics,
+                      @NonNull AirshipConfigOptions configOptions, @NonNull Analytics analytics,
                       @NonNull ActivityMonitor activityMonitor) {
         super(preferenceDataStore);
 
@@ -75,6 +78,7 @@ public class Automation extends AirshipComponent {
 
     /**
      * {@inheritDoc}
+     *
      * @hide
      */
     @Override
@@ -244,5 +248,21 @@ public class Automation extends AirshipComponent {
         }
 
         return automationEngine.getSchedules(group);
+    }
+
+    /**
+     * Edits an in-app message schedule.
+     *
+     * @param scheduleId The schedule ID.
+     * @param edits The edits.
+     * @return A pending result with the updated schedule. The schedule will be null if it does not exist.
+     */
+    PendingResult<ActionSchedule> editSchedule(@NonNull String scheduleId, @NonNull ActionScheduleEdits edits) {
+        if (!UAirship.isMainProcess()) {
+            Logger.warn("Automation - Cannot access the Automation API outside of the main process");
+            return null;
+        }
+
+        return automationEngine.editSchedule(scheduleId, edits);
     }
 }

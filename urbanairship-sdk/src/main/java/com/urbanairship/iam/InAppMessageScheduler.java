@@ -2,6 +2,8 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.PendingResult;
 
 import java.util.Collection;
@@ -19,7 +21,7 @@ public interface InAppMessageScheduler {
      * @return A pending result with the {@link InAppMessageSchedule}. The schedule may be nil if
      * the message's audience
      */
-    PendingResult<InAppMessageSchedule> scheduleMessage(InAppMessageScheduleInfo messageScheduleInfo);
+    PendingResult<InAppMessageSchedule> scheduleMessage(@NonNull InAppMessageScheduleInfo messageScheduleInfo);
 
     /**
      * Cancels an in-app message schedule.
@@ -27,7 +29,7 @@ public interface InAppMessageScheduler {
      * @param scheduleId The in-app message's schedule ID.
      * @return A pending result.
      */
-    PendingResult<Void> cancelSchedule(String scheduleId);
+    PendingResult<Void> cancelSchedule(@NonNull String scheduleId);
 
     /**
      * Cancels an in-app message schedule for the given message ID. If more than
@@ -36,7 +38,7 @@ public interface InAppMessageScheduler {
      * @param messageId The in-app message's ID.
      * @return A pending result.
      */
-    PendingResult<Boolean> cancelMessage(String messageId);
+    PendingResult<Boolean> cancelMessage(@NonNull String messageId);
 
     /**
      * Message Ids that need to be cancelled.
@@ -44,7 +46,7 @@ public interface InAppMessageScheduler {
      * @param messageIds The list of message IDs.
      * @return A pending result.
      */
-    PendingResult<Void> cancelMessages(Collection<String> messageIds);
+    PendingResult<Void> cancelMessages(@NonNull Collection<String> messageIds);
 
     /**
      * New schedules that need to be scheduled.
@@ -52,7 +54,7 @@ public interface InAppMessageScheduler {
      * @param scheduleInfos The list of schedule infos.
      * @return A pending result.
      */
-    PendingResult<List<InAppMessageSchedule>> schedule(List<InAppMessageScheduleInfo> scheduleInfos);
+    PendingResult<List<InAppMessageSchedule>> schedule(@NonNull List<InAppMessageScheduleInfo> scheduleInfos);
 
     /**
      * Gets the schedules associated with the message ID.
@@ -68,6 +70,15 @@ public interface InAppMessageScheduler {
      * @param scheduleId The schedule ID.
      * @return A pending result.
      */
-    PendingResult<InAppMessageSchedule> getSchedule(String scheduleId);
+    PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId);
+
+    /**
+     * Edits an in-app message schedule.
+     *
+     * @param scheduleId The schedule ID.
+     * @param edits The edits.
+     * @return A pending result with the updated schedule.
+     */
+    PendingResult<InAppMessageSchedule> editSchedule(@NonNull String scheduleId, @NonNull InAppMessageScheduleEdits edits);
 
 }

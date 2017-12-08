@@ -21,6 +21,7 @@ public interface ScheduleInfo {
     String START_KEY = "start";
     String DELAY_KEY = "delay";
     String TRIGGERS_KEY = "triggers";
+    String EDIT_GRACE_PERIOD = "edit_grace_period";
 
     /**
      * Gets the action triggers.
@@ -78,4 +79,11 @@ public interface ScheduleInfo {
      * @return A ScheduleDelay instance.
      */
     ScheduleDelay getDelay();
+
+    /**
+     * Gets the edit grace period in MS.
+     *
+     * @return The edit grace period in MS.
+     */
+    long getEditGracePeriod();
 }

@@ -31,7 +31,9 @@ import java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.Collections;
 
 import static junit.framework.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -121,9 +123,8 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         }));
     }
 
-
     @Test
-    public void testCancel() {
+    public void testEndMessages() {
         // Schedule messages
         RemoteDataPayload payload = new TestPayloadBuilder()
                 .addScheduleInfo("foo", 100, 100)
@@ -132,8 +133,11 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
 
 
         // Return empty pending results when the message is requested
-        when(scheduler.getSchedules("foo")).thenReturn(createMessagesPendingResult());
-        when(scheduler.getSchedules("bar")).thenReturn(createMessagesPendingResult());
+        PendingResult<Collection<InAppMessageSchedule>> barPendingResult = createMessagesPendingResult("bar");
+        when(scheduler.getSchedules("bar")).thenReturn(barPendingResult);
+
+        // Return empty pending results when the message is requested
+        when(scheduler.getSchedules("foo")).thenReturn(createMessagesPendingResult("foo"));
 
         updates.onNext(payload);
 
@@ -142,16 +146,68 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
                 .addScheduleInfo("foo", 100, 100)
                 .build();
 
+
+        String scheduleId = barPendingResult.getResult().iterator().next().getId();
+        InAppMessage message = barPendingResult.getResult().iterator().next().getInfo().getInAppMessage();
+
+        // Return pending result for the edit
+        PendingResult<InAppMessageSchedule> editPendingResult = createMessagePendingResult(message, scheduleId);
+        when(scheduler.editSchedule(eq(scheduleId), any(InAppMessageScheduleEdits.class)))
+                .thenReturn(editPendingResult);
+
+        updates.onNext(payload);
+
+        // Verify callback is called to end bar
+        verify(scheduler).editSchedule(eq(scheduleId), Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleEdits>() {
+            @Override
+            public boolean matches(InAppMessageScheduleEdits argument) {
+                return argument.getEnd() == 0;
+            }
+        }));
+    }
+
+    @Test
+    public void testEdit() {
+        // Schedule messages
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .addScheduleInfo("foo", TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(1))
+                .setTimeStamp(TimeUnit.DAYS.toMillis(1))
+                .build();
+
+
+        // Return empty pending results when the message is requested
+        PendingResult<Collection<InAppMessageSchedule>> pendingResult = createMessagesPendingResult("foo");
+        String scheduleId = pendingResult.getResult().iterator().next().getId();
+        when(scheduler.getSchedules("foo")).thenReturn(pendingResult);
+
+        // Process payload
+        updates.onNext(payload);
+
+
+        // Update the message with newer foo
+        final InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
+                                           .setId("foo")
+                                           .build();
+
+        payload = new TestPayloadBuilder()
+                .addScheduleInfo(message, TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(2))
+                .setTimeStamp(TimeUnit.DAYS.toMillis(2))
+                .build();
+
+
+        // Return pending result for the edit
+        PendingResult<InAppMessageSchedule> editPendingResult = createMessagePendingResult(message, scheduleId);
+        when(scheduler.editSchedule(eq(scheduleId), any(InAppMessageScheduleEdits.class)))
+                .thenReturn(editPendingResult);
+
         updates.onNext(payload);
 
         // Verify callback is called to cancel bar
-        verify(scheduler).cancelMessages(Mockito.argThat(new ArgumentMatcher<Collection<String>>() {
+        verify(scheduler).editSchedule(eq(scheduleId), Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleEdits>() {
             @Override
-            public boolean matches(Collection<String> argument) {
-                if (argument.size() != 1) {
-                    return false;
-                }
-                return argument.contains("bar");
+            public boolean matches(InAppMessageScheduleEdits argument) {
+                return argument.getMessage().equals(message);
             }
         }));
     }
@@ -160,7 +216,6 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
     public void testDefaultNewUserCutoffTime() {
         assertEquals(-1, observer.getScheduleNewUserCutOffTime());
     }
-
 
     /**
      * Helper class to generate a in-app message remote data payload.
@@ -175,14 +230,12 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             return this;
         }
 
-        public TestPayloadBuilder addScheduleInfo(String messageId, long created, long updated) {
+        public TestPayloadBuilder addScheduleInfo(InAppMessage message, long created, long updated) {
             List<JsonMap> triggersJson = new ArrayList<>();
             triggersJson.add(JsonMap.newBuilder()
                                     .put("type", "foreground")
                                     .put("goal", 20.0)
                                     .build());
-
-            InAppMessage message = createMessage(messageId);
 
 
             JsonMap scheduleJson = JsonMap.newBuilder()
@@ -200,11 +253,29 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
             return this;
         }
 
+        public TestPayloadBuilder addScheduleInfo(String messageId, long created, long updated) {
+            InAppMessage message = createMessage(messageId);
+            return addScheduleInfo(message, created, updated);
+        }
+
         public RemoteDataPayload build() {
             JsonMap data = JsonMap.newBuilder().putOpt("in_app_messages", JsonValue.wrapOpt(schedules)).build();
             return new RemoteDataPayload("in_app_messages", timeStamp, data);
         }
     }
+
+    private static PendingResult<InAppMessageSchedule> createMessagePendingResult(InAppMessage message, String scheduleId) {
+        PendingResult<InAppMessageSchedule> pendingResult = new PendingResult<>();
+
+        InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
+                                                                        .setMessage(message)
+                                                                        .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                        .build();
+
+        pendingResult.setResult(new InAppMessageSchedule(scheduleId, scheduleInfo));
+        return pendingResult;
+    }
+
 
     private static PendingResult<Collection<InAppMessageSchedule>> createMessagesPendingResult(String... ids) {
         PendingResult<Collection<InAppMessageSchedule>> pendingResult = new PendingResult<>();
@@ -214,9 +285,9 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         if (ids != null) {
             for (String id : ids) {
                 InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
-                        .setMessage(createMessage(id))
-                        .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                        .build();
+                                                                                .setMessage(createMessage(id))
+                                                                                .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                .build();
 
                 collection.add(new InAppMessageSchedule(UUID.randomUUID().toString(), scheduleInfo));
             }
