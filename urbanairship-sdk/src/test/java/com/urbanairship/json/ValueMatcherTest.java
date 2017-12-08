@@ -6,6 +6,8 @@ import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -105,22 +107,41 @@ public class ValueMatcherTest extends BaseTestCase {
     }
 
     @Test
+    public void testArrayContainsMatcher() {
+        JsonPredicate predicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                      .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt("bingo")))
+                                                                      .build())
+                                               .build();
+
+        JsonValue elements = JsonValue.wrapOpt(Arrays.asList("that's", "a", "bingo"));
+
+
+        assertTrue(ValueMatcher.newArrayContainsMatcher(predicate).apply(elements));
+        assertTrue(ValueMatcher.newArrayContainsMatcher(predicate, 2).apply(elements));
+
+        assertFalse(ValueMatcher.newArrayContainsMatcher(predicate, 1).apply(elements));
+        assertFalse(ValueMatcher.newArrayContainsMatcher(predicate, 0).apply(elements));
+        assertFalse(ValueMatcher.newArrayContainsMatcher(predicate, -1).apply(elements));
+    }
+
+    @Test
     public void testParse() throws JsonException {
         Double min = 5.0;
         Double max = 7.0;
         JsonValue json = JsonMap.newBuilder()
-                .put("at_least", min)
-                .put("at_most", max)
-                .build()
-                .toJsonValue();
+                                .put("at_least", min)
+                                .put("at_most", max)
+                                .build()
+                                .toJsonValue();
 
         ValueMatcher matcher = ValueMatcher.newNumberRangeMatcher(min, max);
         assertEquals(matcher, ValueMatcher.parse(json));
 
         json = JsonMap.newBuilder()
-                                .put("is_present", true)
-                                .build()
-                                .toJsonValue();
+                      .put("is_present", true)
+                      .build()
+                      .toJsonValue();
 
         matcher = ValueMatcher.newIsPresentMatcher();
         assertEquals(matcher, ValueMatcher.parse(json));
@@ -140,6 +161,36 @@ public class ValueMatcherTest extends BaseTestCase {
                       .toJsonValue();
 
         matcher = ValueMatcher.newVersionMatcher("1.2.4");
+        assertEquals(matcher, ValueMatcher.parse(json));
+    }
+
+    @Test
+    public void testParseArrayContainsMatcher() throws JsonException {
+        JsonPredicate predicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                      .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt("bingo")))
+                                                                      .build())
+                                               .build();
+
+
+        JsonValue json = JsonMap.newBuilder()
+                                .put("array_contains", predicate)
+                                .build()
+                                .toJsonValue();
+
+
+        ValueMatcher matcher = ValueMatcher.newArrayContainsMatcher(predicate);
+        assertEquals(matcher, ValueMatcher.parse(json));
+
+
+        json = JsonMap.newBuilder()
+                      .put("array_contains", predicate)
+                      .put("index", 50)
+                      .build()
+                      .toJsonValue();
+
+
+        matcher = ValueMatcher.newArrayContainsMatcher(predicate, 50);
         assertEquals(matcher, ValueMatcher.parse(json));
     }
 }
