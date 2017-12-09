@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
@@ -89,11 +90,11 @@ public class Triggers {
     /**
      * Create a new version trigger builder.
      *
-     * @param versionPredicate The version predicate.
+     * @param versionMatcher The version matcher.
      * @return The new version trigger builder.
      */
-    public static VersionTriggerBuilder newVersionTriggerBuilder(JsonPredicate versionPredicate) {
-        return new VersionTriggerBuilder(versionPredicate);
+    public static VersionTriggerBuilder newVersionTriggerBuilder(ValueMatcher versionMatcher) {
+        return new VersionTriggerBuilder(versionMatcher);
     }
 
     /**
@@ -341,9 +342,9 @@ public class Triggers {
      */
     public static class VersionTriggerBuilder {
         private double goal = 1;
-        private JsonPredicate versionPredicate;
+        private ValueMatcher versionMatcher;
 
-        private VersionTriggerBuilder(JsonPredicate versionPredicate) { this.versionPredicate = versionPredicate; }
+        private VersionTriggerBuilder(ValueMatcher versionMatcher) { this.versionMatcher = versionMatcher; }
 
         /**
          * Sets the goal for {@link Trigger#VERSION} triggers.
@@ -362,7 +363,16 @@ public class Triggers {
          * @return The trigger instance.
          */
         public Trigger build() {
-            return new Trigger(Trigger.VERSION, goal, versionPredicate);
+            String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? "amazon" : "android";
+
+            JsonPredicate predicate = JsonPredicate.newBuilder()
+                                                   .addMatcher(JsonMatcher.newBuilder()
+                                                                          .setKey(platform)
+                                                                          .setValueMatcher(versionMatcher)
+                                                                          .build())
+                                                   .build();
+
+            return new Trigger(Trigger.VERSION, goal, predicate);
         }
     }
 

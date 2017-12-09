@@ -228,14 +228,7 @@ public class AutomationEngineTest extends BaseTestCase {
         when(mockMetrics.getAppVersionUpdated()).thenReturn(true);
         when(mockMetrics.getCurrentAppVersion()).thenReturn(2);
 
-        JsonPredicate predicate = JsonPredicate.newBuilder()
-                                               .addMatcher(JsonMatcher.newBuilder()
-                                                                      .setKey("android")
-                                                                      .setValueMatcher(ValueMatcher.newNumberRangeMatcher(2.0, 4.0))
-                                                                      .build())
-                                               .build();
-
-        Trigger trigger = Triggers.newVersionTriggerBuilder(predicate)
+        Trigger trigger = Triggers.newVersionTriggerBuilder(ValueMatcher.newNumberRangeMatcher(2.0, 4.0))
                                   .setGoal(1)
                                   .build();
 
