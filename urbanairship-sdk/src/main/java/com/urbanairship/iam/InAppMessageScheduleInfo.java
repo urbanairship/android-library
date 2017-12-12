@@ -42,6 +42,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     private final InAppMessage message;
     private final int priority;
     private final long editGracePeriod;
+    private final long interval;
 
     /**
      * Default constructor.
@@ -57,6 +58,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         this.message = builder.message;
         this.priority = builder.priority;
         this.editGracePeriod = builder.editGracePeriod;
+        this.interval = builder.interval;
     }
 
     /**
@@ -142,6 +144,14 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getInterval() {
+        return interval;
+    }
+
+    /**
      * Create a new builder.
      *
      * @return A new builder instance.
@@ -193,6 +203,10 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
             builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getInt(0), TimeUnit.DAYS);
         }
 
+        if (jsonMap.containsKey(INTERVAL)) {
+            builder.setInterval(jsonMap.opt(INTERVAL).getInt(0), TimeUnit.SECONDS);
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -215,14 +229,15 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      */
     public static class Builder {
 
-        public int limit = 1;
-        public long start = -1;
-        public long end = -1;
-        public final List<Trigger> triggers = new ArrayList<>();
-        public ScheduleDelay delay;
-        public InAppMessage message;
-        public int priority;
-        public long editGracePeriod;
+        private int limit = 1;
+        private long start = -1;
+        private long end = -1;
+        private final List<Trigger> triggers = new ArrayList<>();
+        private ScheduleDelay delay;
+        private InAppMessage message;
+        private int priority;
+        private long editGracePeriod;
+        private long interval;
 
         private Builder() {}
 
@@ -326,6 +341,17 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
             return this;
         }
 
+        /**
+         * Sets the display interval.
+         *
+         * @param duration The interval.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.interval = timeUnit.toMillis(duration);
+            return this;
+        }
 
         /**
          * Builds the in-app message schedule.

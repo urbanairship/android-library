@@ -227,7 +227,7 @@ public class Observable<T> {
 
                     @Override
                     public void onCompleted() {
-                        if (empty.get() == true) {
+                        if (empty.get()) {
                             observer.onNext(defaultValue);
                         }
                         observer.onCompleted();

@@ -5,7 +5,6 @@ package com.urbanairship.automation;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -13,7 +12,9 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.ActivityMonitor;
+import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
+import com.urbanairship.OperationScheduler;
 import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
 import com.urbanairship.analytics.Analytics;
@@ -47,9 +48,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 /**
  * Core automation engine.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationEngine<T extends Schedule> {
@@ -61,6 +63,7 @@ public class AutomationEngine<T extends Schedule> {
     private final AutomationDriver<T> driver;
     private final Analytics analytics;
     private final long scheduleLimit;
+    private final OperationScheduler scheduler;
     private boolean isStarted;
     private Handler backgroundHandler;
     private Handler mainHandler;
@@ -69,7 +72,7 @@ public class AutomationEngine<T extends Schedule> {
 
     @VisibleForTesting
     HandlerThread backgroundThread;
-    private List<ScheduleRunnable> delayedRunnables = new ArrayList<>();
+    private final List<ScheduleOperation> pendingAlarmOperations = new ArrayList<>();
 
     private String screen;
     private String regionId;
@@ -77,7 +80,6 @@ public class AutomationEngine<T extends Schedule> {
     private Subject<TriggerUpdate> stateObservableUpdates;
     private Subscription compoundTriggerSubscription;
     private Scheduler backgroundScheduler;
-    private long startTime;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -120,7 +122,6 @@ public class AutomationEngine<T extends Schedule> {
         }
     };
 
-
     /**
      * Expired schedule listener.
      */
@@ -144,7 +145,7 @@ public class AutomationEngine<T extends Schedule> {
         this.analytics = builder.analytics;
         this.driver = builder.driver;
         this.scheduleLimit = builder.limit;
-
+        this.scheduler = builder.scheduler;
         this.backgroundThread = new HandlerThread("automation");
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
@@ -160,7 +161,6 @@ public class AutomationEngine<T extends Schedule> {
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
-        this.startTime = System.currentTimeMillis();
 
         activityMonitor.addListener(activityListener);
         analytics.addAnalyticsListener(analyticsListener);
@@ -170,7 +170,8 @@ public class AutomationEngine<T extends Schedule> {
             public void run() {
                 cleanSchedules();
                 resetExecutingSchedules();
-                rescheduleDelays();
+                restoreDelayAlarms();
+                restoreIntervalAlarms();
             }
         });
 
@@ -206,7 +207,7 @@ public class AutomationEngine<T extends Schedule> {
         compoundTriggerSubscription.cancel();
         activityMonitor.removeListener(activityListener);
         analytics.removeAnalyticsListener(analyticsListener);
-        cancelAllDelays();
+        cancelAlarms();
         backgroundThread.quit();
         isStarted = false;
     }
@@ -303,7 +304,7 @@ public class AutomationEngine<T extends Schedule> {
             @Override
             public void run() {
                 dataManager.deleteSchedules(ids);
-                cancelScheduleDelays(ids);
+                cancelScheduleAlarms(ids);
 
                 Logger.verbose("AutomationEngine - Cancelled schedules: " + ids);
                 pendingResult.setResult(null);
@@ -326,7 +327,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                cancelGroupDelays(Collections.singletonList(group));
+                cancelGroupAlarms(Collections.singletonList(group));
 
                 if (dataManager.deleteGroup(group)) {
                     Logger.verbose("AutomationEngine - Cancelled schedule group: " + group);
@@ -353,7 +354,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                cancelGroupDelays(groups);
+                cancelGroupAlarms(groups);
                 dataManager.deleteGroups(groups);
                 Logger.verbose("AutomationEngine - Canceled schedule groups: " + groups);
                 pendingResult.setResult(null);
@@ -375,7 +376,7 @@ public class AutomationEngine<T extends Schedule> {
             @Override
             public void run() {
                 dataManager.deleteAllSchedules();
-                cancelAllDelays();
+                cancelAlarms();
                 Logger.verbose("AutomationEngine - Canceled all schedules.");
                 pendingResult.setResult(null);
             }
@@ -465,18 +466,15 @@ public class AutomationEngine<T extends Schedule> {
                     return;
                 }
 
+
                 List<ScheduleEntry> entries = Collections.singletonList(entry);
                 entry.applyEdits(edits);
+
                 if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED &&
                         entry.getCount() < entry.getLimit() &&
                         (entry.getEnd() < 0 || entry.getEnd() >= System.currentTimeMillis())) {
 
-                    long finishTime = entry.getExecutionStateChangeDate();
                     entry.setExecutionState(ScheduleEntry.STATE_IDLE);
-
-                    if (finishTime < startTime) {
-                        subscribeStateObservables(entries);
-                    }
                 }
 
                 dataManager.saveSchedules(entries);
@@ -625,6 +623,11 @@ public class AutomationEngine<T extends Schedule> {
         sortSchedulesByPriority(entries);
 
         for (final ScheduleEntry scheduleEntry : entries) {
+            if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_IDLE &&
+                    scheduleEntry.getExecutionState() != ScheduleEntry.STATE_PENDING_EXECUTION) {
+                continue;
+            }
+
             Observable.from(COMPOUND_TRIGGER_TYPES)
                       .filter(new Predicate<Integer>() {
                           @Override
@@ -723,11 +726,11 @@ public class AutomationEngine<T extends Schedule> {
      * @param scheduleIds A set of identifiers to cancel.
      */
     @WorkerThread
-    private void cancelScheduleDelays(Collection<String> scheduleIds) {
-        for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
-            if (scheduleIds.contains(runnable.scheduleId)) {
-                backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
-                delayedRunnables.remove(runnable);
+    private void cancelScheduleAlarms(Collection<String> scheduleIds) {
+        for (ScheduleOperation alarmOperation : new ArrayList<>(pendingAlarmOperations)) {
+            if (scheduleIds.contains(alarmOperation.scheduleId)) {
+                alarmOperation.cancel();
+                pendingAlarmOperations.remove(alarmOperation);
             }
         }
     }
@@ -737,31 +740,33 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @param groups A schedule identifier.
      */
-    private void cancelGroupDelays(Collection<String> groups) {
-        for (ScheduleRunnable runnable : new ArrayList<>(delayedRunnables)) {
-            if (groups.contains(runnable.group)) {
-                backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
-                delayedRunnables.remove(runnable);
+    @WorkerThread
+    private void cancelGroupAlarms(Collection<String> groups) {
+        for (ScheduleOperation alarmOperation : new ArrayList<>(pendingAlarmOperations)) {
+            if (groups.contains(alarmOperation.group)) {
+                alarmOperation.cancel();
+                pendingAlarmOperations.remove(alarmOperation);
             }
         }
     }
 
     /**
-     * Cancels all delayed schedule runnables.
+     * Cancels all pending alarms.
      */
-    private void cancelAllDelays() {
-        for (ScheduleRunnable runnable : delayedRunnables) {
-            backgroundHandler.removeCallbacksAndMessages(runnable.scheduleId);
+    @WorkerThread
+    private void cancelAlarms() {
+        for (ScheduleOperation operation : pendingAlarmOperations) {
+            operation.cancel();
         }
 
-        delayedRunnables.clear();
+        pendingAlarmOperations.clear();
     }
 
     /**
-     * Reschedule all delay schedule runnables.
+     * Reschedule delays.
      */
     @WorkerThread
-    private void rescheduleDelays() {
+    private void restoreDelayAlarms() {
         List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PENDING_EXECUTION);
         if (scheduleEntries.isEmpty()) {
             return;
@@ -769,7 +774,7 @@ public class AutomationEngine<T extends Schedule> {
 
         List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
 
-        for (ScheduleEntry scheduleEntry : schedulesToUpdate) {
+        for (ScheduleEntry scheduleEntry : scheduleEntries) {
             // No delay, mark it to be executed
             if (scheduleEntry.seconds == 0) {
                 continue;
@@ -789,10 +794,40 @@ public class AutomationEngine<T extends Schedule> {
                 remainingDelay = delay;
             }
 
-            startDelayTimer(scheduleEntry, remainingDelay);
+            scheduleDelayAlarm(scheduleEntry, remainingDelay);
         }
+
+        dataManager.saveSchedules(schedulesToUpdate);
     }
 
+
+    /**
+     * Reschedule interval operations.
+     */
+    @WorkerThread
+    private void restoreIntervalAlarms() {
+        List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PAUSED);
+        if (scheduleEntries.isEmpty()) {
+            return;
+        }
+
+        List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
+
+        for (ScheduleEntry scheduleEntry : scheduleEntries) {
+            long pausedTime = System.currentTimeMillis() - scheduleEntry.getExecutionStateChangeDate();
+
+            if (pausedTime >= scheduleEntry.interval) {
+                scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                schedulesToUpdate.add(scheduleEntry);
+                continue;
+            }
+
+
+            scheduleIntervalAlarm(scheduleEntry, pausedTime - scheduleEntry.interval);
+        }
+
+        dataManager.saveSchedules(schedulesToUpdate);
+    }
 
     /**
      * Called when one of the schedule conditions changes.
@@ -872,7 +907,7 @@ public class AutomationEngine<T extends Schedule> {
 
                         if (trigger.isCancellation) {
                             cancelledSchedules.add(trigger.scheduleId);
-                            cancelScheduleDelays(Collections.singletonList(trigger.scheduleId));
+                            cancelScheduleAlarms(Collections.singletonList(trigger.scheduleId));
                         } else {
                             triggeredSchedules.add(trigger.scheduleId);
                         }
@@ -954,7 +989,7 @@ public class AutomationEngine<T extends Schedule> {
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
                 if (scheduleEntry.seconds > 0) {
                     scheduleEntry.setPendingExecutionDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
-                    startDelayTimer(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
+                    scheduleDelayAlarm(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
                     continue;
                 }
             }
@@ -1056,21 +1091,26 @@ public class AutomationEngine<T extends Schedule> {
                     return;
                 }
 
-                Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId) ;
+                Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId);
                 scheduleEntry.setPendingExecutionDate(-1);
                 scheduleEntry.setCount(scheduleEntry.getCount() + 1);
 
+                boolean keepSchedule = true;
+
                 if (scheduleEntry.getCount() >= scheduleEntry.limit) {
                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+                    keepSchedule = scheduleEntry.getEditGracePeriod() > 0;
+                } else if (scheduleEntry.getInterval() > 0) {
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_PAUSED);
+                    scheduleIntervalAlarm(scheduleEntry, scheduleEntry.getInterval());
                 } else {
                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
-                }
 
-                if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_FINISHED || scheduleEntry.getEditGracePeriod() >= 0) {
-                    Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId) ;
+                }
+                if (keepSchedule) {
                     dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
                 } else {
-                    Logger.verbose("AutomationEngine - Deleting schedule: " + scheduleId) ;
+                    Logger.verbose("AutomationEngine - Deleting schedule: " + scheduleId);
                     dataManager.deleteSchedule(scheduleId);
                 }
             }
@@ -1079,24 +1119,61 @@ public class AutomationEngine<T extends Schedule> {
 
 
     /**
-     * Starts a delay timer for a schedule entry.
+     * Schedules a delay for a schedule entry.
      *
      * @param scheduleEntry The schedule entry.
      * @param delay The delay in milliseconds.
      */
-    private void startDelayTimer(final ScheduleEntry scheduleEntry, long delay) {
-        ScheduleRunnable runnable = new ScheduleRunnable(scheduleEntry.scheduleId, scheduleEntry.group) {
+    private void scheduleDelayAlarm(final ScheduleEntry scheduleEntry, long delay) {
+
+        final ScheduleOperation operation = new ScheduleOperation(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
-            public void run() {
+            protected void onRun() {
                 ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
-                if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PENDING_EXECUTION) {
+                if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PENDING_EXECUTION) {
                     handleTriggeredSchedules(Collections.singletonList(scheduleEntry));
                 }
             }
         };
 
-        this.backgroundHandler.postAtTime(runnable, scheduleEntry.scheduleId, SystemClock.uptimeMillis() + delay);
-        this.delayedRunnables.add(runnable);
+        operation.addOnRun(new Runnable() {
+            @Override
+            public void run() {
+                pendingAlarmOperations.remove(operation);
+            }
+        });
+        pendingAlarmOperations.add(operation);
+        scheduler.schedule(delay, operation);
+    }
+
+    /**
+     * Schedules an interval alarm for a schedule.
+     *
+     * @param scheduleEntry The schedule entry.
+     * @param interval The interval in milliseconds.
+     */
+    @WorkerThread
+    private void scheduleIntervalAlarm(ScheduleEntry scheduleEntry, long interval) {
+        final ScheduleOperation operation = new ScheduleOperation(scheduleEntry.scheduleId, scheduleEntry.group) {
+            @Override
+            protected void onRun() {
+                ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
+                if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PAUSED) {
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                    dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+                }
+            }
+        };
+
+        operation.addOnRun(new Runnable() {
+            @Override
+            public void run() {
+                pendingAlarmOperations.remove(operation);
+            }
+        });
+
+        pendingAlarmOperations.add(operation);
+        scheduler.schedule(interval, operation);
     }
 
     /**
@@ -1164,6 +1241,17 @@ public class AutomationEngine<T extends Schedule> {
         return true;
     }
 
+    private class ScheduleOperation extends CancelableOperation {
+        final String scheduleId;
+        final String group;
+
+        ScheduleOperation(String scheduleId, String group) {
+            super(backgroundHandler.getLooper());
+            this.scheduleId = scheduleId;
+            this.group = group;
+        }
+    }
+
     private abstract class ScheduleRunnable<ReturnType> implements Runnable {
         final String scheduleId;
         final String group;
@@ -1216,6 +1304,7 @@ public class AutomationEngine<T extends Schedule> {
         private AutomationDriver driver;
         private AutomationDataManager dataManager;
         public Analytics analytics;
+        private OperationScheduler scheduler;
 
         /**
          * Sets the schedule limit.
@@ -1262,13 +1351,24 @@ public class AutomationEngine<T extends Schedule> {
         }
 
         /**
-         * Sets the {@link AutomationEngine}.
+         * Sets the {@link AutomationDataManager}.
          *
          * @param dataManager The data manager.
          * @return The builder instance.
          */
         public Builder<T> setDataManager(AutomationDataManager dataManager) {
             this.dataManager = dataManager;
+            return this;
+        }
+
+        /**
+         * Sets the operation scheduler.
+         *
+         * @param scheduler The operation scheduler.
+         * @return The builder instance.
+         */
+        public Builder<T> setOperationScheduler(OperationScheduler scheduler) {
+            this.scheduler = scheduler;
             return this;
         }
 
@@ -1282,6 +1382,7 @@ public class AutomationEngine<T extends Schedule> {
             Checks.checkNotNull(analytics, "Missing analytics");
             Checks.checkNotNull(activityMonitor, "Missing activity monitor");
             Checks.checkNotNull(driver, "Missing driver");
+            Checks.checkNotNull(scheduler, "Missing scheduler");
             Checks.checkArgument(limit > 0, "Missing schedule limit");
 
             return new AutomationEngine<>(this);

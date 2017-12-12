@@ -59,6 +59,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     private final long end;
     private final ScheduleDelay delay;
     private final long editGracePeriod;
+    private final long interval;
 
     private ActionScheduleInfo(Builder builder) {
         this.triggers = builder.triggers;
@@ -70,6 +71,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.end = builder.end;
         this.delay = builder.delay;
         this.editGracePeriod = builder.editGracePeriod;
+        this.interval = builder.interval;
     }
 
     protected ActionScheduleInfo(Parcel in) {
@@ -80,6 +82,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         this.start = in.readLong();
         this.end = in.readLong();
         this.editGracePeriod = in.readLong();
+        this.interval = in.readLong();
 
         this.actions = JsonValue.wrapOpt(in.readParcelable(JsonValue.class.getClassLoader()))
                                 .optMap()
@@ -97,6 +100,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         dest.writeLong(start);
         dest.writeLong(end);
         dest.writeLong(editGracePeriod);
+        dest.writeLong(interval);
         dest.writeParcelable(JsonValue.wrapOpt(actions), flags);
         dest.writeParcelable(JsonValue.wrapOpt(delay), flags);
     }
@@ -194,6 +198,14 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getInterval() {
+        return interval;
+    }
+
+    /**
      * Parses an ActionScheduleInfo from a JsonValue.
      * </p>
      * The expected JsonValue is a map containing:
@@ -241,6 +253,10 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
             builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getInt(0), TimeUnit.DAYS);
         }
 
+        if (jsonMap.containsKey(INTERVAL)) {
+            builder.setInterval(jsonMap.opt(INTERVAL).getInt(0), TimeUnit.SECONDS);
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -261,6 +277,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         private int priority = 0;
         private ScheduleDelay delay = null;
         private long editGracePeriod = -1;
+        private long interval;
 
         /**
          * Adds a trigger.
@@ -381,6 +398,18 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
          */
         public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.editGracePeriod = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the execution interval.
+         *
+         * @param duration The interval.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.interval = timeUnit.toMillis(duration);
             return this;
         }
 

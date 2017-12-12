@@ -108,6 +108,70 @@ public class CancelableOperationTest extends BaseTestCase {
         assertTrue(operation.isCancelled());
     }
 
+    @Test
+    public void testAddRunnable() {
+        TestOperation onRun = new TestOperation(Looper.myLooper());
+        operation.addOnRun(onRun);
+
+        // Run it
+        operation.run();
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        assertTrue(onRun.onRunCalled);
+    }
+
+    @Test
+    public void testAddRunnableAfterRun() {
+        // Run it
+        operation.run();
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        assertTrue(operation.onRunCalled);
+
+        TestOperation onRun = new TestOperation(Looper.myLooper());
+        operation.addOnRun(onRun);
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        assertTrue(operation.onRunCalled);
+    }
+
+    @Test
+    public void testAddOnCancel() {
+        TestOperation onCancel = new TestOperation(Looper.myLooper());
+        operation.addOnCancel(onCancel);
+
+        // Cancel it
+        operation.cancel();
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        assertTrue(onCancel.onCancelCalled);
+    }
+
+    @Test
+    public void testAddOnCancelAfterCancelled() {
+        // Cancel it
+        operation.cancel();
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        TestOperation onCancel = new TestOperation(Looper.myLooper());
+        operation.addOnCancel(onCancel);
+
+        // Process all the messages
+        looper.runToEndOfTasks();
+
+        assertTrue(onCancel.onCancelCalled);
+    }
+
 
     /**
      * Implementation of CancelableOperation for testing.

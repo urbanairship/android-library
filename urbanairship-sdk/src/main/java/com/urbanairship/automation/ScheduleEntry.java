@@ -27,13 +27,14 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ScheduleEntry implements ScheduleInfo {
 
-    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING, STATE_FINISHED })
+    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING, STATE_PAUSED, STATE_FINISHED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface State {}
 
     static final int STATE_IDLE = 0;
     static final int STATE_PENDING_EXECUTION = 1;
     static final int STATE_EXECUTING = 2;
+    static final int STATE_PAUSED = 3;
     static final int STATE_FINISHED = 4;
 
     static final String TABLE_NAME = "action_schedules";
@@ -48,6 +49,7 @@ class ScheduleEntry implements ScheduleInfo {
     static final String COLUMN_NAME_START = "s_start";
     static final String COLUMN_NAME_END = "s_end";
     static final String COLUMN_EDIT_GRACE_PERIOD = "s_edit_grace_period";
+    static final String COLUMN_NAME_INTERVAL = "s_interval";
 
     // Delay
     static final String COLUMN_NAME_SECONDS = "d_seconds";
@@ -76,6 +78,7 @@ class ScheduleEntry implements ScheduleInfo {
     public final String regionId;
     public final List<TriggerEntry> triggerEntries = new ArrayList<>();
     public long editGracePeriod;
+    public final long interval;
 
     // State
     private long id = -1;
@@ -96,6 +99,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.start = scheduleInfo.getStart();
         this.end = scheduleInfo.getEnd();
         this.editGracePeriod = scheduleInfo.getEditGracePeriod();
+        this.interval = scheduleInfo.getInterval();
 
         if (scheduleInfo.getDelay() != null) {
             this.screens = scheduleInfo.getDelay().getScreens();
@@ -144,6 +148,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_PENDING_EXECUTION_DATE));
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
+        this.interval = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_INTERVAL));
 
         JsonValue parsedScreens;
 
@@ -286,6 +291,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_SCREEN, JsonValue.wrapOpt(screens).optList().toString());
             contentValues.put(COLUMN_NAME_SECONDS, seconds);
             contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
+            contentValues.put(COLUMN_NAME_INTERVAL, interval);
             id = database.insert(TABLE_NAME, null, contentValues);
             if (id == -1) {
                 return false;
@@ -407,6 +413,11 @@ class ScheduleEntry implements ScheduleInfo {
     @Override
     public long getEditGracePeriod() {
         return this.editGracePeriod;
+    }
+
+    @Override
+    public long getInterval() {
+        return this.interval;
     }
 
     @Override

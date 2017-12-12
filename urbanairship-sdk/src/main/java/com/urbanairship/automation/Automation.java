@@ -4,7 +4,6 @@ package com.urbanairship.automation;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.ActivityMonitor;
@@ -15,8 +14,7 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.iam.InAppMessageSchedule;
-import com.urbanairship.iam.InAppMessageScheduleEdits;
+import com.urbanairship.AlarmOperationScheduler;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -62,6 +60,7 @@ public class Automation extends AirshipComponent {
                 .setAnalytics(analytics)
                 .setDriver(new ActionAutomationDriver())
                 .setDataManager(new AutomationDataManager(context, configOptions.getAppKey(), DATABASE_NAME))
+                .setOperationScheduler(AlarmOperationScheduler.shared(context))
                 .build();
     }
 

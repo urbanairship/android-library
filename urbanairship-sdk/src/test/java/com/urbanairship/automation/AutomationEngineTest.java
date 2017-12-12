@@ -6,6 +6,8 @@ import android.os.Looper;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.CancelableOperation;
+import com.urbanairship.OperationScheduler;
 import com.urbanairship.PendingResult;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
@@ -60,6 +62,13 @@ public class AutomationEngineTest extends BaseTestCase {
         mockMetrics = mock(ApplicationMetrics.class);
         TestApplication.getApplication().setApplicationMetrics(mockMetrics);
 
+        OperationScheduler scheduler = new OperationScheduler() {
+            @Override
+            public void schedule(long delay, CancelableOperation operation) {
+                operation.getHandler().postDelayed(operation, delay);
+            }
+        };
+
         driver = new TestActionScheduleDriver();
         automationDataManager = new AutomationDataManager(TestApplication.getApplication(), "appKey", "AutomationEngineTest");
         automationEngine = new AutomationEngine.Builder<ActionSchedule>()
@@ -67,6 +76,7 @@ public class AutomationEngineTest extends BaseTestCase {
                 .setDataManager(automationDataManager)
                 .setActivityMonitor(activityMonitor)
                 .setDriver(driver)
+                .setOperationScheduler(scheduler)
                 .setScheduleLimit(100)
                 .build();
 
@@ -520,6 +530,42 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals("COOL", updated.getInfo().getActions().get("another_action").getString());
     }
 
+    @Test
+    public void testInterval() throws Exception {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setInterval(10, TimeUnit.SECONDS)
+                                                                  .setLimit(2)
+                                                                  .build();
+
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        runLooperTasks();
+        ActionSchedule schedule = future.get();
+
+        // Trigger the schedule
+        new CustomEvent.Builder("event")
+                .create()
+                .track();
+
+        runLooperTasks();
+
+        // Finish executing the schedule
+        driver.callbackMap.get(schedule.getId()).onFinish();
+        runLooperTasks();
+
+        // Verify it's paused
+        assertEquals(ScheduleEntry.STATE_PAUSED, automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState());
+
+        // Advance the scheduler
+        advanceAutomationLooperScheduler(TimeUnit.SECONDS.toMillis(10));
+
+        // Verify its now idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+    }
 
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()

@@ -4,6 +4,10 @@ package com.urbanairship;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A cancelable operation that executes its task on a specific looper.
@@ -14,8 +18,10 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     private boolean isRunning = false;
     private boolean isCanceled = false;
     private final Handler handler;
-
     private final Runnable internalRunnable;
+
+    private List<Cancelable> cancelables = new ArrayList<>();
+    private List<Runnable> runnables = new ArrayList<>();
 
     /**
      * CancelableOperation constructor.
@@ -49,6 +55,13 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
 
                     onRun();
                     isFinished = true;
+
+                    for (Runnable runnable : runnables) {
+                        runnable.run();
+                    }
+
+                    cancelables.clear();
+                    runnables.clear();
                 }
             }
         };
@@ -65,13 +78,20 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
             if (!isDone()) {
                 isCanceled = true;
                 handler.removeCallbacks(internalRunnable);
-
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
                         onCancel();
                     }
                 });
+
+                for (Cancelable cancelable : cancelables) {
+                    cancelable.cancel(mayInterruptIfRunning);
+                }
+
+                cancelables.clear();
+                runnables.clear();
+
                 return true;
             }
 
@@ -106,6 +126,44 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     }
 
     /**
+     * Adds a runnable that will be called when operation is finished. If the operation is already
+     * finished the runnable will be called immediately.
+     *
+     * @param runnable A runnable.
+     */
+    public CancelableOperation addOnRun(@NonNull Runnable runnable) {
+        synchronized (this) {
+            if (isFinished) {
+                runnable.run();
+            } else {
+                runnables.add(runnable);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds a {@link Cancelable} that will be called when operation is cancelled.  If the operation
+     * is already canceled the operation will immediately be canceled.
+     *
+     * @param cancelable The instance that implements the {@link Cancelable} interface.
+     */
+    public CancelableOperation addOnCancel(@NonNull Cancelable cancelable) {
+        synchronized (this) {
+            if (isCancelled()) {
+                cancelable.cancel();
+            }
+
+            if (!isDone()) {
+                cancelables.add(cancelable);
+            }
+        }
+
+        return this;
+    }
+
+    /**
      * Called on the handlers callback when the operation is canceled.
      */
     protected void onCancel() {}
@@ -113,6 +171,15 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     /**
      * Called on the handlers callback when the operation is running.
      */
-    protected abstract void onRun();
+    protected void onRun() {}
 
+    /**
+     * Gets the handler for the operation.
+     *
+     * @return The operation's handler.
+     */
+    @NonNull
+    public Handler getHandler() {
+        return handler;
+    }
 }

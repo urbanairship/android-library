@@ -24,6 +24,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
 import com.urbanairship.automation.AutomationEngine;
+import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
@@ -140,6 +141,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 .setDataManager(new AutomationDataManager(context, configOptions.getAppKey(), "in-app"))
                 .setScheduleLimit(200)
                 .setDriver(driver)
+                .setOperationScheduler(AlarmOperationScheduler.shared(context))
                 .build();
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 

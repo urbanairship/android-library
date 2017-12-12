@@ -12,7 +12,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
-import com.urbanairship.RichPushTable;
 import com.urbanairship.util.DataManager;
 
 import java.util.ArrayList;
@@ -92,7 +91,9 @@ public class AutomationDataManager extends DataManager {
                 + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
-                + ScheduleEntry.COLUMN_NAME_SECONDS + " DOUBLE"
+                + ScheduleEntry.COLUMN_NAME_SECONDS + " DOUBLE,"
+                + ScheduleEntry.COLUMN_NAME_INTERVAL + " INTEGER"
+
                 + ");");
 
 
@@ -133,7 +134,7 @@ public class AutomationDataManager extends DataManager {
         // Upgrade 3 -> 4 changes (SDK 9.0 beta)
         //
         //      action_schedules:
-        //          * added s_execution_state_change_date, s_edit_grace_period
+        //          * added s_execution_state_change_date, s_edit_grace_period, s_interval
 
         String tempScheduleTableName = "temp_schedule_entry_table";
         String tempTriggersTableName = "temp_triggers_entry_table";
@@ -325,6 +326,7 @@ public class AutomationDataManager extends DataManager {
                 db.execSQL("BEGIN TRANSACTION;");
                 db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE + " INTEGER;");
                 db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_EDIT_GRACE_PERIOD + " INTEGER;");
+                db.execSQL("ALTER TABLE " + ScheduleEntry.TABLE_NAME + " ADD COLUMN " + ScheduleEntry.COLUMN_NAME_INTERVAL + " INTEGER;");
                 db.execSQL("COMMIT;");
 
                 break;
