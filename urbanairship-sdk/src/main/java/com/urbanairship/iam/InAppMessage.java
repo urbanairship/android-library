@@ -39,7 +39,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String ACTIONS_KEY = "actions";
 
 
-    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULL_SCREEN, TYPE_MODAL, TYPE_HTML })
+    @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULLSCREEN, TYPE_MODAL, TYPE_HTML })
     @Retention(RetentionPolicy.SOURCE)
     @interface DisplayType {}
 
@@ -56,7 +56,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     /**
      * Fullscreen in-app message.
      */
-    public static final String TYPE_FULL_SCREEN = "full_screen";
+    public static final String TYPE_FULLSCREEN = "fullscreen";
 
     /**
      * Modal in-app message.
@@ -364,7 +364,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                     this.setDisplayContent(CustomDisplayContent.parseJson(content));
                     break;
 
-                case TYPE_FULL_SCREEN:
+                case TYPE_FULLSCREEN:
                     this.setDisplayContent(FullScreenDisplayContent.parseJson(content));
                     break;
 
@@ -399,7 +399,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @return The builder.
          */
         public Builder setDisplayContent(FullScreenDisplayContent displayContent) {
-            this.type = TYPE_FULL_SCREEN;
+            this.type = TYPE_FULLSCREEN;
             this.content = displayContent;
             return this;
         }

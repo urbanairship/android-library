@@ -105,7 +105,7 @@ public class InAppMessageTest extends BaseTestCase {
                                            .setId("messageId")
                                            .build();
 
-        assertEquals(InAppMessage.TYPE_FULL_SCREEN, message.getType());
+        assertEquals(InAppMessage.TYPE_FULLSCREEN, message.getType());
         assertEquals(fullScreenDisplayContent, message.getDisplayContent());
 
         verifyParcelable(message);

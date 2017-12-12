@@ -146,7 +146,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.actionRunRequestFactory = new ActionRunRequestFactory();
 
         setAdapterFactory(InAppMessage.TYPE_BANNER, new BannerAdapterFactory());
-        setAdapterFactory(InAppMessage.TYPE_FULL_SCREEN, new FullScreenAdapterFactory());
+        setAdapterFactory(InAppMessage.TYPE_FULLSCREEN, new FullScreenAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_MODAL, new ModalAdapterFactory());
         setAdapterFactory(InAppMessage.TYPE_HTML, new HtmlAdapterFactory());
 
