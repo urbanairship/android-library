@@ -25,6 +25,7 @@ public abstract class AirshipComponent {
 
     /**
      * Default constructor.
+     *
      * @param dataStore The preference data store.
      * @hide
      */
@@ -107,6 +108,7 @@ public abstract class AirshipComponent {
 
     /**
      * Called when the component is enabled or disabled.
+     *
      * @param isEnabled {@code true} if the component is enabled, otherwise {@code false}.
      * @hide
      */
@@ -134,5 +136,16 @@ public abstract class AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isComponentEnabled() {
         return dataStore.getBoolean(enableKey, true);
+    }
+
+    /**
+     * The preference data store.
+     *
+     * @return The preference data store.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    protected PreferenceDataStore getDataStore() {
+        return dataStore;
     }
 }

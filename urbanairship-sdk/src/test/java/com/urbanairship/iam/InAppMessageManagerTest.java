@@ -394,4 +394,18 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Verify the schedule is cancelled.
         verify(mockEngine).cancel(Collections.singletonList("schedule id"));
     }
+
+    @Test
+    public void testEnable() {
+        clearInvocations(mockEngine);
+        manager.setEnabled(true);
+        verify(mockEngine).setPaused(false);
+    }
+
+    @Test
+    public void testDisable() {
+        clearInvocations(mockEngine);
+        manager.setEnabled(false);
+        verify(mockEngine).setPaused(true);
+    }
 }

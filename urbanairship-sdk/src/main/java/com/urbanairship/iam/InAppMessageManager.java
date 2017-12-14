@@ -69,7 +69,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * Metadata an app can use to prevent an in-app message from showing on a specific activity.
      */
     public final static String EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW";
-    private final ActionRunRequestFactory actionRunRequestFactory;
+
+    /**
+     * Preference key for enabling/disabling the in-app message manager.
+     */
+    private final static String ENABLE_KEY = "com.urbanairship.iam.enabled";
 
     // State
     private String currentScheduleId;
@@ -82,6 +86,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final InAppRemoteDataObserver remoteDataSubscriber;
 
     private final Executor executor;
+    private final ActionRunRequestFactory actionRunRequestFactory;
     private final ActivityMonitor activityMonitor;
     private final RemoteData remoteData;
     private final Analytics analytics;
@@ -295,6 +300,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         });
 
         automationEngine.start();
+        updateEnginePauseState();
 
         // New user cut off time
         if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
@@ -327,7 +333,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @Override
     protected void onComponentEnableChange(boolean isEnabled) {
-        automationEngine.setPaused(!isEnabled);
+        updateEnginePauseState();
     }
 
     private void prepareMessage(final String scheduleId) {
@@ -485,6 +491,25 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         synchronized (listeners) {
             listeners.remove(listener);
         }
+    }
+
+    /**
+     * Enables or disables in-app messaging.
+     *
+     * @param enabled {@codee true} to enable in-app messaging, otherwise {@code false}.
+     */
+    public void setEnabled(boolean enabled) {
+        getDataStore().put(ENABLE_KEY, enabled);
+        updateEnginePauseState();
+    }
+
+    /**
+     * Returns {@code true} if in-app messaging is enabled, {@code false} if its disabled.
+     *
+     * @return {@code true} if in-app messaging is enabled, {@code false} if its disabled.
+     */
+    public boolean isEnabled() {
+        return getDataStore().getBoolean(ENABLE_KEY, true);
     }
 
     /**
@@ -694,6 +719,13 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         return false;
+    }
+
+    /**
+     * Updates the automation engine pause state with user enable and component enable flags.
+     */
+    private void updateEnginePauseState() {
+        automationEngine.setPaused(!(isEnabled() && isComponentEnabled()));
     }
 
     /**
