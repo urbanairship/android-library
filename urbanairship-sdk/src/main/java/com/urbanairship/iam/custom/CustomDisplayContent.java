@@ -5,12 +5,15 @@ package com.urbanairship.iam.custom;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayContent;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 /**
  * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_CUSTOM} in-app message.
  */
 public class CustomDisplayContent implements DisplayContent {
+
+    private static final String CUSTOM_KEY = "custom";
 
     private final JsonValue value;
 
@@ -25,7 +28,10 @@ public class CustomDisplayContent implements DisplayContent {
 
     @Override
     public JsonValue toJsonValue() {
-        return value;
+        return JsonMap.newBuilder()
+                .put(CUSTOM_KEY, value)
+                .build()
+                .toJsonValue();
     }
 
     /**
@@ -35,7 +41,7 @@ public class CustomDisplayContent implements DisplayContent {
      * @return A custom display content instance.
      */
     public static CustomDisplayContent parseJson(@NonNull JsonValue jsonValue) {
-        return new CustomDisplayContent(jsonValue);
+        return new CustomDisplayContent(jsonValue.optMap().opt(CUSTOM_KEY));
     }
 
     @Override
