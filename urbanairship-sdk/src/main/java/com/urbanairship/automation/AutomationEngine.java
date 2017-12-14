@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
+import android.util.SparseLongArray;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.CancelableOperation;
@@ -69,6 +70,9 @@ public class AutomationEngine<T extends Schedule> {
     private Handler mainHandler;
     private ScheduleExpiryListener<T> expiryListener;
     private AtomicBoolean isPaused = new AtomicBoolean(false);
+
+    private long startTime;
+    private SparseLongArray stateChangeTimeStamps = new SparseLongArray();
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -158,6 +162,7 @@ public class AutomationEngine<T extends Schedule> {
             return;
         }
 
+        this.startTime = System.currentTimeMillis();
         this.backgroundThread.start();
         this.backgroundHandler = new Handler(this.backgroundThread.getLooper());
         this.backgroundScheduler = Schedulers.looper(backgroundThread.getLooper());
@@ -466,18 +471,25 @@ public class AutomationEngine<T extends Schedule> {
                     return;
                 }
 
-
-                List<ScheduleEntry> entries = Collections.singletonList(entry);
                 entry.applyEdits(edits);
+
+                boolean subscribeForStateChanges = false;
+                long stateChangeTimeStamp = -1;
 
                 if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED &&
                         entry.getCount() < entry.getLimit() &&
                         (entry.getEnd() < 0 || entry.getEnd() >= System.currentTimeMillis())) {
 
+                    subscribeForStateChanges = true;
+                    stateChangeTimeStamp = entry.getExecutionStateChangeDate();
                     entry.setExecutionState(ScheduleEntry.STATE_IDLE);
                 }
 
-                dataManager.saveSchedules(entries);
+                dataManager.saveSchedules(Collections.singletonList(entry));
+
+                if (subscribeForStateChanges) {
+                    subscribeStateObservables(entry, stateChangeTimeStamp);
+                }
 
                 List<T> result = convertEntries(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
                 Logger.error("AutomationEngine - Updated schedule: " + result);
@@ -568,6 +580,7 @@ public class AutomationEngine<T extends Schedule> {
                                                                               .map(new Function<JsonSerializable, TriggerUpdate>() {
                                                                                   @Override
                                                                                   public TriggerUpdate apply(JsonSerializable json) {
+                                                                                      stateChangeTimeStamps.put(type, System.currentTimeMillis());
                                                                                       return new TriggerUpdate(dataManager.getActiveTriggerEntries(type), json, 1.0);
                                                                                   }
                                                                               });
@@ -623,43 +636,59 @@ public class AutomationEngine<T extends Schedule> {
         sortSchedulesByPriority(entries);
 
         for (final ScheduleEntry scheduleEntry : entries) {
-            if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_IDLE &&
-                    scheduleEntry.getExecutionState() != ScheduleEntry.STATE_PENDING_EXECUTION) {
-                continue;
-            }
+            subscribeStateObservables(scheduleEntry, -1);
+        }
+    }
 
-            Observable.from(COMPOUND_TRIGGER_TYPES)
-                      .filter(new Predicate<Integer>() {
-                          @Override
-                          public boolean apply(Integer triggerType) {
-                              for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
-                                  if (triggerEntry.type == triggerType) {
-                                      return true;
-                                  }
-                              }
+    /**
+     * Subscribes a schedule entry for state updates to any compound triggers
+     *
+     * @param entry The schedule entry.
+     * @param lastStateChangeTime A timestamp to filter out state triggers. Only state changes that happened
+     * after the lastStateChangeTime will update the entry's triggers.
+     */
+    @WorkerThread
+    private void subscribeStateObservables(final ScheduleEntry entry, final long lastStateChangeTime) {
+        if (entry.getExecutionState() != ScheduleEntry.STATE_IDLE &&
+                entry.getExecutionState() != ScheduleEntry.STATE_PENDING_EXECUTION) {
+            return;
+        }
+
+        Observable.from(COMPOUND_TRIGGER_TYPES)
+                  .filter(new Predicate<Integer>() {
+                      @Override
+                      public boolean apply(Integer triggerType) {
+                          if (stateChangeTimeStamps.get(triggerType, startTime) <= lastStateChangeTime) {
                               return false;
                           }
-                      })
-                      .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
-                          @Override
-                          public Observable<TriggerUpdate> apply(final Integer type) {
-                              return createStateObservable(type)
-                                      .observeOn(backgroundScheduler)
-                                      .map(new Function<JsonSerializable, TriggerUpdate>() {
-                                          @Override
-                                          public TriggerUpdate apply(JsonSerializable json) {
-                                              return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, scheduleEntry.scheduleId), json, 1.0);
-                                          }
-                                      });
+
+                          for (TriggerEntry triggerEntry : entry.triggerEntries) {
+                              if (triggerEntry.type == triggerType) {
+                                  return true;
+                              }
                           }
-                      })
-                      .subscribe(new Subscriber<TriggerUpdate>() {
-                          @Override
-                          public void onNext(TriggerUpdate value) {
-                              stateObservableUpdates.onNext(value);
-                          }
-                      });
-        }
+                          return false;
+                      }
+                  })
+                  .flatMap(new Function<Integer, Observable<TriggerUpdate>>() {
+                      @Override
+                      public Observable<TriggerUpdate> apply(final Integer type) {
+                          return createStateObservable(type)
+                                  .observeOn(backgroundScheduler)
+                                  .map(new Function<JsonSerializable, TriggerUpdate>() {
+                                      @Override
+                                      public TriggerUpdate apply(JsonSerializable json) {
+                                          return new TriggerUpdate(dataManager.getActiveTriggerEntries(type, entry.scheduleId), json, 1.0);
+                                      }
+                                  });
+                      }
+                  })
+                  .subscribe(new Subscriber<TriggerUpdate>() {
+                      @Override
+                      public void onNext(TriggerUpdate value) {
+                          stateObservableUpdates.onNext(value);
+                      }
+                  });
     }
 
     /**
@@ -1159,8 +1188,12 @@ public class AutomationEngine<T extends Schedule> {
             protected void onRun() {
                 ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
                 if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PAUSED) {
+                    long pauseStartTime = scheduleEntry.getExecutionStateChangeDate();
+
                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                     dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
+
+                    subscribeStateObservables(scheduleEntry, pauseStartTime);
                 }
             }
         };
