@@ -1,6 +1,6 @@
-package com.urbanairship.iam.view;
 /* Copyright 2017 Urban Airship and Contributors */
 
+package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -21,7 +21,6 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -38,6 +37,7 @@ public class InAppViewUtils {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
     private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
+    private static final float DEFAULT_BORDER_RADIUS = 0;
 
     /**
      * Applies button info to a button.
@@ -49,13 +49,16 @@ public class InAppViewUtils {
     public static void applyButtonInfo(@NonNull Button button, @NonNull ButtonInfo buttonInfo, @BorderRadius.BorderRadiusFlag int borderRadiusFlag) {
         applyTextInfo(button, buttonInfo.getLabel());
 
-        int textColor = buttonInfo.getLabel().getColor();
+        int textColor = buttonInfo.getLabel().getColor() == null ? button.getCurrentTextColor() : buttonInfo.getLabel().getColor();
+        int backgroundColor = buttonInfo.getBackgroundColor() == null ? Color.TRANSPARENT : buttonInfo.getBackgroundColor();
         int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
-        int strokeColor = buttonInfo.getBorderColor() == Color.TRANSPARENT ? buttonInfo.getBackgroundColor() : buttonInfo.getBorderColor();
+        int strokeColor = buttonInfo.getBorderColor() == null ? backgroundColor : buttonInfo.getBorderColor();
+
+        float borderRadius = buttonInfo.getBorderRadius() == null ? DEFAULT_BORDER_RADIUS : buttonInfo.getBorderRadius();
 
         Drawable background = BackgroundDrawableBuilder.newBuilder(button.getContext())
-                                                       .setBackgroundColor(buttonInfo.getBackgroundColor())
-                                                       .setBorderRadius(buttonInfo.getBorderRadius(), borderRadiusFlag)
+                                                       .setBackgroundColor(backgroundColor)
+                                                       .setBorderRadius(borderRadius, borderRadiusFlag)
                                                        .setPressedColor(pressedColor)
                                                        .setStrokeColor(strokeColor)
                                                        .setStrokeWidth(DEFAULT_STROKE_WIDTH_DPS)
@@ -72,14 +75,24 @@ public class InAppViewUtils {
      */
     public static void applyTextInfo(@NonNull TextView textView, @NonNull TextInfo textInfo) {
 
+        if (textInfo.getFontSize() != null) {
+            textView.setTextSize(textInfo.getFontSize());
+        }
+
+        if (textInfo.getColor() != null) {
+            textView.setTextColor(textInfo.getColor());
+        }
+
         if (textInfo.getDrawable() != 0) {
-            int size = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textInfo.getFontSize(), textView.getResources().getDisplayMetrics()));
+
+            int size = Math.round(textView.getTextSize());
+            int color = textView.getCurrentTextColor();
 
             try {
                 Drawable drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
                 Drawable wrappedDrawable = DrawableCompat.wrap(drawable).mutate();
                 wrappedDrawable.setBounds(0, 0, size, size);
-                wrappedDrawable.setColorFilter(textInfo.getColor(), PorterDuff.Mode.MULTIPLY);
+                wrappedDrawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
 
                 CenteredImageSpan imageSpan = new CenteredImageSpan(wrappedDrawable);
                 SpannableString text;
@@ -102,8 +115,7 @@ public class InAppViewUtils {
             textView.setText(textInfo.getText());
         }
 
-        textView.setTextSize(textInfo.getFontSize());
-        textView.setTextColor(textInfo.getColor());
+
 
         int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
         int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;

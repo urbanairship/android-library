@@ -67,8 +67,8 @@ public class TextInfo implements JsonSerializable {
 
     private final String text;
     @ColorInt
-    private final int color;
-    private final float size;
+    private final Integer color;
+    private final Float size;
     @Alignment
     private final String alignment;
     @Style
@@ -98,8 +98,8 @@ public class TextInfo implements JsonSerializable {
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
                       .put(TEXT_KEY, text)
-                      .put(COLOR_KEY, ColorUtils.convertToString(color))
-                      .put(SIZE_KEY, size)
+                      .putOpt(COLOR_KEY, color == null ? null : ColorUtils.convertToString(color))
+                      .putOpt(SIZE_KEY, size)
                       .put(ALIGNMENT_KEY, alignment)
                       .put(STYLE_KEY, JsonValue.wrapOpt(styles))
                       .put(FONT_FAMILY_KEY, JsonValue.wrapOpt(fontFamilies))
@@ -223,7 +223,8 @@ public class TextInfo implements JsonSerializable {
      *
      * @return The font size.
      */
-    public float getFontSize() {
+    @Nullable
+    public Float getFontSize() {
         return size;
     }
 
@@ -232,7 +233,8 @@ public class TextInfo implements JsonSerializable {
      *
      * @return The font color.
      */
-    public int getColor() {
+    @Nullable
+    public Integer getColor() {
         return color;
     }
 
@@ -289,16 +291,16 @@ public class TextInfo implements JsonSerializable {
 
         TextInfo textInfo = (TextInfo) o;
 
-        if (color != textInfo.color) {
-            return false;
-        }
-        if (Float.compare(textInfo.size, size) != 0) {
-            return false;
-        }
         if (drawable != textInfo.drawable) {
             return false;
         }
         if (text != null ? !text.equals(textInfo.text) : textInfo.text != null) {
+            return false;
+        }
+        if (color != null ? !color.equals(textInfo.color) : textInfo.color != null) {
+            return false;
+        }
+        if (size != null ? !size.equals(textInfo.size) : textInfo.size != null) {
             return false;
         }
         if (alignment != null ? !alignment.equals(textInfo.alignment) : textInfo.alignment != null) {
@@ -313,8 +315,8 @@ public class TextInfo implements JsonSerializable {
     @Override
     public int hashCode() {
         int result = text != null ? text.hashCode() : 0;
-        result = 31 * result + color;
-        result = 31 * result + (size != +0.0f ? Float.floatToIntBits(size) : 0);
+        result = 31 * result + (color != null ? color.hashCode() : 0);
+        result = 31 * result + (size != null ? size.hashCode() : 0);
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         result = 31 * result + (styles != null ? styles.hashCode() : 0);
         result = 31 * result + (fontFamilies != null ? fontFamilies.hashCode() : 0);
@@ -342,8 +344,8 @@ public class TextInfo implements JsonSerializable {
     public static class Builder {
         private String text;
         @ColorInt
-        private int color = Color.BLACK;
-        private float size = 14;
+        private Integer color;
+        private Float size;
         @DrawableRes
         private int drawable;
 

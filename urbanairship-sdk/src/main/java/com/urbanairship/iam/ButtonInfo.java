@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
@@ -55,9 +56,9 @@ public class ButtonInfo implements JsonSerializable {
     private final String id;
     @Behavior
     private final String behavior;
-    private final float borderRadius;
-    private final int backgroundColor;
-    private final int borderColor;
+    private final Float borderRadius;
+    private final Integer backgroundColor;
+    private final Integer borderColor;
     private final Map<String, JsonValue> actions;
 
 
@@ -82,9 +83,9 @@ public class ButtonInfo implements JsonSerializable {
                       .put(LABEL_KEY, label)
                       .put(ID_KEY, id)
                       .put(BEHAVIOR_KEY, behavior)
-                      .put(BORDER_RADIUS_KEY, borderRadius)
-                      .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
-                      .put(BORDER_COLOR_KEY, ColorUtils.convertToString(borderColor))
+                      .putOpt(BORDER_RADIUS_KEY, borderRadius)
+                      .putOpt(BACKGROUND_COLOR_KEY, backgroundColor == null ? null : ColorUtils.convertToString(backgroundColor))
+                      .putOpt(BORDER_COLOR_KEY, borderColor == null ? null : ColorUtils.convertToString(borderColor))
                       .put(ACTIONS_KEY, JsonValue.wrapOpt(actions))
                       .build()
                       .toJsonValue();
@@ -223,7 +224,8 @@ public class ButtonInfo implements JsonSerializable {
      * @return The button's background color.
      */
     @ColorInt
-    public int getBackgroundColor() {
+    @Nullable
+    public Integer getBackgroundColor() {
         return backgroundColor;
     }
 
@@ -233,7 +235,8 @@ public class ButtonInfo implements JsonSerializable {
      * @return The button's border color.
      */
     @ColorInt
-    public int getBorderColor() {
+    @Nullable
+    public Integer getBorderColor() {
         return borderColor;
     }
 
@@ -242,7 +245,8 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @return Border radius in dps.
      */
-    public float getBorderRadius() {
+    @Nullable
+    public Float getBorderRadius() {
         return borderRadius;
     }
 
@@ -257,7 +261,6 @@ public class ButtonInfo implements JsonSerializable {
         return actions;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -269,16 +272,6 @@ public class ButtonInfo implements JsonSerializable {
 
         ButtonInfo that = (ButtonInfo) o;
 
-        if (Float.compare(that.borderRadius, borderRadius) != 0) {
-            return false;
-        }
-        if (backgroundColor != that.backgroundColor) {
-            return false;
-        }
-        if (borderColor != that.borderColor) {
-            return false;
-        }
-
         if (label != null ? !label.equals(that.label) : that.label != null) {
             return false;
         }
@@ -286,6 +279,15 @@ public class ButtonInfo implements JsonSerializable {
             return false;
         }
         if (behavior != null ? !behavior.equals(that.behavior) : that.behavior != null) {
+            return false;
+        }
+        if (borderRadius != null ? !borderRadius.equals(that.borderRadius) : that.borderRadius != null) {
+            return false;
+        }
+        if (backgroundColor != null ? !backgroundColor.equals(that.backgroundColor) : that.backgroundColor != null) {
+            return false;
+        }
+        if (borderColor != null ? !borderColor.equals(that.borderColor) : that.borderColor != null) {
             return false;
         }
         return actions != null ? actions.equals(that.actions) : that.actions == null;
@@ -296,9 +298,9 @@ public class ButtonInfo implements JsonSerializable {
         int result = label != null ? label.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (behavior != null ? behavior.hashCode() : 0);
-        result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
-        result = 31 * result + backgroundColor;
-        result = 31 * result + borderColor;
+        result = 31 * result + (borderRadius != null ? borderRadius.hashCode() : 0);
+        result = 31 * result + (backgroundColor != null ? backgroundColor.hashCode() : 0);
+        result = 31 * result + (borderColor != null ? borderColor.hashCode() : 0);
         result = 31 * result + (actions != null ? actions.hashCode() : 0);
         return result;
     }
@@ -325,9 +327,9 @@ public class ButtonInfo implements JsonSerializable {
         private String id;
         @Behavior
         private String behavior = BEHAVIOR_DISMISS;
-        private float borderRadius = 0;
-        private int backgroundColor = Color.TRANSPARENT;
-        private int borderColor = Color.TRANSPARENT;
+        private Float borderRadius;
+        private Integer backgroundColor;
+        private Integer borderColor;
         private final Map<String, JsonValue> actions = new HashMap<>();
 
         private Builder() {}
