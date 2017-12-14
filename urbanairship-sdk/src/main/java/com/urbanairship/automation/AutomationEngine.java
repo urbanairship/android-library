@@ -845,14 +845,14 @@ public class AutomationEngine<T extends Schedule> {
         for (ScheduleEntry scheduleEntry : scheduleEntries) {
             long pausedTime = System.currentTimeMillis() - scheduleEntry.getExecutionStateChangeDate();
 
-            if (pausedTime >= scheduleEntry.interval) {
+            if (pausedTime >= scheduleEntry.getInterval()) {
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                 schedulesToUpdate.add(scheduleEntry);
                 continue;
             }
 
 
-            scheduleIntervalAlarm(scheduleEntry, pausedTime - scheduleEntry.interval);
+            scheduleIntervalAlarm(scheduleEntry, pausedTime - scheduleEntry.getInterval());
         }
 
         dataManager.saveSchedules(schedulesToUpdate);
@@ -992,7 +992,7 @@ public class AutomationEngine<T extends Schedule> {
 
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
             // Expired schedules
-            if (scheduleEntry.end > 0 && scheduleEntry.end < System.currentTimeMillis()) {
+            if (scheduleEntry.getEnd() > 0 && scheduleEntry.getEnd() < System.currentTimeMillis()) {
                 expiredScheduleEntries.add(scheduleEntry);
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
 
@@ -1126,7 +1126,7 @@ public class AutomationEngine<T extends Schedule> {
 
                 boolean keepSchedule = true;
 
-                if (scheduleEntry.getCount() >= scheduleEntry.limit) {
+                if (scheduleEntry.getCount() >= scheduleEntry.getLimit()) {
                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
                     keepSchedule = scheduleEntry.getEditGracePeriod() > 0;
                 } else if (scheduleEntry.getInterval() > 0) {

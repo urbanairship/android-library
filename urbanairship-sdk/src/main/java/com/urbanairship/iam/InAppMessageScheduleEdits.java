@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -13,6 +14,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
 import java.text.ParseException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Edits for an in-app message schedule.
@@ -24,6 +26,8 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
     private final Long end;
     private final InAppMessage message;
     private final Integer priority;
+    private final Long editGracePeriod;
+    private final Long interval;
 
     private InAppMessageScheduleEdits(Builder builder) {
         this.limit = builder.limit;
@@ -31,6 +35,8 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         this.end = builder.end;
         this.message = builder.message;
         this.priority = builder.priority;
+        this.interval = builder.interval;
+        this.editGracePeriod = builder.editGracePeriod;
     }
 
     /**
@@ -76,6 +82,24 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
     @Nullable
     public Long getEnd() {
         return end;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public Long getInterval() {
+        return interval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public Long getEditGracePeriod() {
+        return editGracePeriod;
     }
 
     /**
@@ -129,6 +153,15 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
             }
         }
 
+
+        if (jsonMap.containsKey(InAppMessageScheduleInfo.EDIT_GRACE_PERIOD)) {
+            builder.setEditGracePeriod(jsonMap.opt(InAppMessageScheduleInfo.EDIT_GRACE_PERIOD).getLong(0), TimeUnit.DAYS);
+        }
+
+        if (jsonMap.containsKey(InAppMessageScheduleInfo.INTERVAL)) {
+            builder.setInterval(jsonMap.opt(InAppMessageScheduleInfo.INTERVAL).getLong(0), TimeUnit.SECONDS);
+        }
+
         return builder.build();
     }
 
@@ -161,6 +194,8 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         private Long end;
         private InAppMessage message;
         private Integer priority;
+        private Long editGracePeriod;
+        private Long interval;
 
         private Builder() {}
 
@@ -224,6 +259,30 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
          */
         public Builder setPriority(int priority) {
             this.priority = priority;
+            return this;
+        }
+
+        /**
+         * Sets the edit grace period after a schedule expires or finishes.
+         *
+         * @param duration The grace period.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.editGracePeriod = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the display interval.
+         *
+         * @param duration The interval.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.interval = timeUnit.toMillis(duration);
             return this;
         }
 

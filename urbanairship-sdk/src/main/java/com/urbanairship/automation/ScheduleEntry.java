@@ -66,19 +66,20 @@ class ScheduleEntry implements ScheduleInfo {
 
 
     public final String scheduleId;
-    public JsonSerializable data;
-    public int limit;
-    public int priority;
     public final String group;
-    public long start;
-    public long end;
     public final long seconds;
     public final List<String> screens;
     public final int appState;
-    public final String regionId;
     public final List<TriggerEntry> triggerEntries = new ArrayList<>();
-    public long editGracePeriod;
-    public final long interval;
+    public final String regionId;
+
+    private JsonSerializable data;
+    private int limit;
+    private int priority;
+    private long start;
+    private long end;
+    private long editGracePeriod;
+    private long interval;
 
     // State
     private long id = -1;
@@ -252,6 +253,9 @@ class ScheduleEntry implements ScheduleInfo {
         this.limit = edits.getLimit() == null ? this.limit : edits.getLimit();
         this.data = edits.getData() == null ? this.data : edits.getData();
         this.priority = edits.getPriority() == null ? this.priority : edits.getPriority();
+        this.interval = edits.getInterval() == null ? this.interval : edits.getInterval();
+        this.editGracePeriod = edits.getEditGracePeriod() == null ? this.editGracePeriod : edits.getEditGracePeriod();
+
         isDirty = true;
         isEdit = true;
     }
@@ -310,6 +314,7 @@ class ScheduleEntry implements ScheduleInfo {
                 contentValues.put(COLUMN_NAME_START, start);
                 contentValues.put(COLUMN_NAME_END, end);
                 contentValues.put(COLUMN_EDIT_GRACE_PERIOD, editGracePeriod);
+                contentValues.put(COLUMN_NAME_INTERVAL, interval);
             }
             if (database.updateWithOnConflict(TABLE_NAME, contentValues, COLUMN_NAME_ID + " = ?", new String[] { String.valueOf(id) }, SQLiteDatabase.CONFLICT_REPLACE) == 0) {
                 return false;

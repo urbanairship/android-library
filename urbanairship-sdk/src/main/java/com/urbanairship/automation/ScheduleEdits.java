@@ -52,4 +52,21 @@ public interface ScheduleEdits {
      * @return The schedule end time in MS.
      */
     @Nullable
-    Long getEnd();}
+    Long getEnd();
+
+    /**
+     * Gets the schedule interval in MS.
+     *
+     * @return The schedule interval in MS.
+     */
+    @Nullable
+    Long getInterval();
+
+    /**
+     * Gets the schedule edit grace period in MS.
+     *
+     * @return The schedule edit grace period in MS.
+     */
+    @Nullable
+    Long getEditGracePeriod();
+}

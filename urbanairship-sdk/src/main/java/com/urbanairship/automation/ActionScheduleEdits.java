@@ -1,6 +1,7 @@
 /* Copyright 2017 Urban Airship and Contributors */
 package com.urbanairship.automation;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -13,6 +14,7 @@ import com.urbanairship.util.DateUtils;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Edits for an action schedules.
@@ -24,6 +26,8 @@ public class ActionScheduleEdits implements ScheduleEdits {
     private final Long end;
     private final Map<String, JsonValue> actions;
     private final Integer priority;
+    private final Long interval;
+    private final Long editGracePeriod;
 
     private ActionScheduleEdits(Builder builder) {
         this.limit = builder.limit;
@@ -31,6 +35,8 @@ public class ActionScheduleEdits implements ScheduleEdits {
         this.end = builder.end;
         this.actions = builder.actions;
         this.priority = builder.priority;
+        this.editGracePeriod = builder.editGracePeriod;
+        this.interval = builder.interval;
     }
 
     /**
@@ -67,6 +73,24 @@ public class ActionScheduleEdits implements ScheduleEdits {
     @Nullable
     public Long getEnd() {
         return end;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public Long getInterval() {
+        return interval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public Long getEditGracePeriod() {
+        return editGracePeriod;
     }
 
 
@@ -135,6 +159,14 @@ public class ActionScheduleEdits implements ScheduleEdits {
             }
         }
 
+        if (jsonMap.containsKey(ActionScheduleInfo.EDIT_GRACE_PERIOD)) {
+            builder.setEditGracePeriod(jsonMap.opt(ActionScheduleInfo.EDIT_GRACE_PERIOD).getLong(0), TimeUnit.DAYS);
+        }
+
+        if (jsonMap.containsKey(ActionScheduleInfo.INTERVAL)) {
+            builder.setInterval(jsonMap.opt(ActionScheduleInfo.INTERVAL).getLong(0), TimeUnit.SECONDS);
+        }
+
         return builder.build();
     }
 
@@ -147,6 +179,9 @@ public class ActionScheduleEdits implements ScheduleEdits {
         private Long start;
         private Long end;
         private Integer priority;
+        private Long editGracePeriod;
+        private Long interval;
+
         private Map<String, JsonValue> actions;
 
         private Builder() {}
@@ -203,6 +238,30 @@ public class ActionScheduleEdits implements ScheduleEdits {
          */
         public Builder setPriority(int priority) {
             this.priority = priority;
+            return this;
+        }
+
+        /**
+         * Sets the edit grace period after a schedule expires or finishes.
+         *
+         * @param duration The grace period.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setEditGracePeriod(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.editGracePeriod = timeUnit.toMillis(duration);
+            return this;
+        }
+
+        /**
+         * Sets the execution interval.
+         *
+         * @param duration The interval.
+         * @param timeUnit The time unit.
+         * @return The Builder instance.
+         */
+        public Builder setInterval(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
+            this.interval = timeUnit.toMillis(duration);
             return this;
         }
 

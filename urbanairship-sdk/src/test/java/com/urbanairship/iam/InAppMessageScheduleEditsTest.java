@@ -11,6 +11,8 @@ import com.urbanairship.util.DateUtils;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -31,6 +33,8 @@ public class InAppMessageScheduleEditsTest extends BaseTestCase {
                                   .put("priority", 1)
                                   .put("start", JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L)))
                                   .put("end", JsonValue.wrap(DateUtils.createIso8601TimeStamp(15000L)))
+                                  .put("edit_grace_period", 10)
+                                  .put("interval", 20)
                                   .build();
 
 
@@ -42,6 +46,8 @@ public class InAppMessageScheduleEditsTest extends BaseTestCase {
         assertEquals(10000L, edits.getStart().longValue());
         assertEquals(10, edits.getLimit().longValue());
         assertEquals(1, edits.getPriority().intValue());
+        assertEquals(TimeUnit.DAYS.toMillis(10), edits.getEditGracePeriod().longValue());
+        assertEquals(TimeUnit.SECONDS.toMillis(20), edits.getInterval().longValue());
 
     }
 }

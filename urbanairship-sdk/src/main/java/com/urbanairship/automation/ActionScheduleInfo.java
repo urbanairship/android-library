@@ -250,11 +250,11 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         }
 
         if (jsonMap.containsKey(EDIT_GRACE_PERIOD)) {
-            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getInt(0), TimeUnit.DAYS);
+            builder.setEditGracePeriod(jsonMap.opt(EDIT_GRACE_PERIOD).getLong(0), TimeUnit.DAYS);
         }
 
         if (jsonMap.containsKey(INTERVAL)) {
-            builder.setInterval(jsonMap.opt(INTERVAL).getInt(0), TimeUnit.SECONDS);
+            builder.setInterval(jsonMap.opt(INTERVAL).getLong(0), TimeUnit.SECONDS);
         }
 
         try {

@@ -82,11 +82,11 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
         ScheduleEntry retrieved = dataManager.getScheduleEntries(Collections.singleton(dataManager.getScheduleEntries("group 0").get(0).scheduleId)).get(0);
         assertEquals(scheduleEntry.group, retrieved.group);
-        assertEquals(scheduleEntry.data, retrieved.data);
-        assertEquals(scheduleEntry.end, retrieved.end);
-        assertEquals(scheduleEntry.start, retrieved.start);
-        assertEquals(scheduleEntry.limit, retrieved.limit);
-        assertEquals(scheduleEntry.priority, retrieved.priority);
+        assertEquals(scheduleEntry.getData(), retrieved.getData());
+        assertEquals(scheduleEntry.getEnd(), retrieved.getEnd());
+        assertEquals(scheduleEntry.getStart(), retrieved.getStart());
+        assertEquals(scheduleEntry.getLimit(), retrieved.getLimit());
+        assertEquals(scheduleEntry.getPriority(), retrieved.getPriority());
 
         List<TriggerEntry> scheduleTriggers = retrieved.triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
@@ -237,11 +237,11 @@ public class AutomationDataManagerTest extends BaseTestCase {
 
         assertEquals(2, schedules.size());
         assertEquals(firstActionScheduleInfo.getGroup(), schedules.get(0).group);
-        assertEquals(JsonValue.wrap(firstActionScheduleInfo.getActions()), schedules.get(0).data);
-        assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).end);
-        assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).start);
-        assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).limit);
-        assertEquals(firstActionScheduleInfo.getPriority(), schedules.get(0).priority);
+        assertEquals(JsonValue.wrap(firstActionScheduleInfo.getActions()), schedules.get(0).getData());
+        assertEquals(firstActionScheduleInfo.getEnd(), schedules.get(0).getEnd());
+        assertEquals(firstActionScheduleInfo.getStart(), schedules.get(0).getStart());
+        assertEquals(firstActionScheduleInfo.getLimit(), schedules.get(0).getLimit());
+        assertEquals(firstActionScheduleInfo.getPriority(), schedules.get(0).getPriority());
 
         assertEquals(firstTrigger.getGoal(), schedules.get(0).triggerEntries.get(0).goal, 0.0);
         assertEquals(firstTrigger.getPredicate(), schedules.get(0).triggerEntries.get(0).jsonPredicate);
@@ -249,11 +249,11 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(0, schedules.get(0).getCount());
 
         assertEquals(secondActionScheduleInfo.getGroup(), schedules.get(1).group);
-        assertEquals(JsonValue.wrap(secondActionScheduleInfo.getActions()), schedules.get(1).data);
-        assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).end);
-        assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).start);
-        assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).limit);
-        assertEquals(secondActionScheduleInfo.getPriority(), schedules.get(1).priority);
+        assertEquals(JsonValue.wrap(secondActionScheduleInfo.getActions()), schedules.get(1).getData());
+        assertEquals(secondActionScheduleInfo.getEnd(), schedules.get(1).getEnd());
+        assertEquals(secondActionScheduleInfo.getStart(), schedules.get(1).getStart());
+        assertEquals(secondActionScheduleInfo.getLimit(), schedules.get(1).getLimit());
+        assertEquals(secondActionScheduleInfo.getPriority(), schedules.get(1).getPriority());
 
         assertEquals(secondTrigger.getGoal(), schedules.get(1).triggerEntries.get(0).goal, 0.0);
         assertEquals(secondTrigger.getPredicate(), schedules.get(1).triggerEntries.get(0).jsonPredicate);
@@ -282,11 +282,11 @@ public class AutomationDataManagerTest extends BaseTestCase {
         List<ScheduleEntry> schedules = dataManager.getScheduleEntries();
         assertEquals(1, schedules.size());
         assertEquals(actionScheduleInfo.group, schedules.get(0).group);
-        assertEquals(actionScheduleInfo.data, schedules.get(0).data);
-        assertEquals(actionScheduleInfo.end, schedules.get(0).end);
-        assertEquals(actionScheduleInfo.start, schedules.get(0).start);
-        assertEquals(actionScheduleInfo.limit, schedules.get(0).limit);
-        assertEquals(actionScheduleInfo.priority, schedules.get(0).priority);
+        assertEquals(actionScheduleInfo.getData(), schedules.get(0).getData());
+        assertEquals(actionScheduleInfo.getEnd(), schedules.get(0).getEnd());
+        assertEquals(actionScheduleInfo.getStart(), schedules.get(0).getStart());
+        assertEquals(actionScheduleInfo.getLimit(), schedules.get(0).getLimit());
+        assertEquals(actionScheduleInfo.getPriority(), schedules.get(0).getPriority());
 
         List<TriggerEntry> scheduleTriggers = schedules.get(0).triggerEntries;
         Collections.sort(scheduleTriggers, new Comparator<TriggerEntry>() {
