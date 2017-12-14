@@ -11,28 +11,28 @@ import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.urbanairship.R;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.InAppMessageActivity;
-import com.urbanairship.iam.InAppMessageCache;
-import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
-import com.urbanairship.messagecenter.ImageLoader;
+import com.urbanairship.iam.view.MediaView;
+import com.urbanairship.widget.UAWebChromeClient;
 
 /**
  * Full screen in-app message activity.
  */
 public class FullScreenActivity extends InAppMessageActivity implements InAppButtonLayout.ButtonClickListener {
 
+    protected FullScreenDisplayContent displayContent;
+
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
-        final FullScreenDisplayContent displayContent = getMessage().getDisplayContent();
+        displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
             finish();
             return;
@@ -44,7 +44,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         TextView heading = findViewById(R.id.heading);
         TextView body = findViewById(R.id.body);
         InAppButtonLayout buttonLayout = findViewById(R.id.buttons);
-        ImageView imageView = findViewById(R.id.media);
+        MediaView mediaView = findViewById(R.id.media);
         Button footer = findViewById(R.id.footer);
         ImageButton dismiss = findViewById(R.id.dismiss);
 
@@ -63,17 +63,11 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         }
 
         // Media
-        // TODO: Support video and youtube
-        if (displayContent.getMedia() != null && displayContent.getMedia().getType().equals(MediaInfo.TYPE_IMAGE)) {
-            String imageLocation =  displayContent.getMedia().getUrl();
-            if (getCache() != null) {
-                imageLocation = getCache().getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY, imageLocation);
-            }
-
-            ImageLoader.shared(this).load(imageLocation, 0, imageView);
-            imageView.setContentDescription(displayContent.getMedia().getDescription());
+        if (displayContent.getMedia() != null) {
+            mediaView.setChromeClient(new UAWebChromeClient(this));
+            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), getCache());
         } else {
-            imageView.setVisibility(View.GONE);
+            mediaView.setVisibility(View.GONE);
         }
 
         // Button Layout

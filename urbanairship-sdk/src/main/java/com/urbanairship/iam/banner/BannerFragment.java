@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -39,7 +38,7 @@ import com.urbanairship.iam.view.BackgroundDrawableBuilder;
 import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.InAppButtonLayout;
 import com.urbanairship.iam.view.InAppViewUtils;
-import com.urbanairship.messagecenter.ImageLoader;
+import com.urbanairship.iam.view.MediaView;
 import com.urbanairship.util.Checks;
 
 /**
@@ -162,14 +161,13 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
             body.setVisibility(View.GONE);
         }
 
-        // Image
-        ImageView image = view.findViewById(R.id.image);
+        // Media
+        MediaView mediaView = view.findViewById(R.id.media);
         if (displayContent.getMedia() != null) {
-            String imageLocation = cache != null ? cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY, displayContent.getMedia().getUrl()) : displayContent.getMedia().getUrl();
-            ImageLoader.shared(getActivity()).load(imageLocation, 0, image);
-            image.setContentDescription(displayContent.getMedia().getDescription());
+            String cacheLocation = cache != null ? cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY) : null;
+            mediaView.setMediaInfo(displayContent.getMedia(), cacheLocation);
         } else {
-            image.setVisibility(View.GONE);
+            mediaView.setVisibility(View.GONE);
         }
 
         // Button Layout

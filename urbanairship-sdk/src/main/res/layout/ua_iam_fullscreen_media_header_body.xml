@@ -11,11 +11,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageView
+        <com.urbanairship.iam.view.MediaView
             android:layout_alignParentTop="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:id="@+id/media"
-            style="@style/UrbanAirship.InAppFullscreen.Image"
-            tools:src="@drawable/ua_ic_image_placeholder"/>
+            style="@style/UrbanAirship.InAppFullscreen.MediaView"/>
 
         <ImageButton
             android:id="@+id/dismiss"

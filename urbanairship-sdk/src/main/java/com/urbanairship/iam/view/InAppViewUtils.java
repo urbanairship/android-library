@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.graphics.drawable.DrawableCompat;
@@ -22,15 +23,20 @@ import android.text.TextPaint;
 import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.urbanairship.Fonts;
 import com.urbanairship.Logger;
 import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.iam.InAppMessageCache;
+import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.util.UAStringUtil;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 public class InAppViewUtils {
@@ -101,7 +107,7 @@ public class InAppViewUtils {
                     text = new SpannableString(" ");
                     text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 } else {
-                    text = new SpannableString( "  " + textInfo.getText());
+                    text = new SpannableString("  " + textInfo.getText());
                     text.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     text.setSpan(new RemoveUnderlineSpan(), 1, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
@@ -214,6 +220,53 @@ public class InAppViewUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Loads the media info into the media view and scales the media's views height to match the
+     * aspect ratio of the media. If the aspect ratio is unavailable in the cache, 16:9 will be used.
+     *
+     * @param mediaView The media view.
+     * @param mediaInfo The media info.
+     * @param cache THe cache containing the cached image and/or height/width info.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void loadMediaInfo(MediaView mediaView, final MediaInfo mediaInfo, final InAppMessageCache cache) {
+        if (mediaView.getWidth() == 0) {
+            final WeakReference<MediaView> weakReference = new WeakReference<>(mediaView);
+            mediaView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    MediaView mediaView = weakReference.get();
+                    if (mediaView != null) {
+                        loadMediaInfo(mediaView, mediaInfo, cache);
+                        mediaView.getViewTreeObserver().removeOnPreDrawListener(this);
+                    }
+                    return false;
+                }
+            });
+            return;
+        }
+
+        // Default to a 16:9 aspect ratio
+        int width = 16;
+        int height = 9;
+
+        String cachedLocation = null;
+
+        if (cache != null) {
+            width = cache.getBundle().getInt(InAppMessageCache.IMAGE_WIDTH_CACHE_KEY, width);
+            height = cache.getBundle().getInt(InAppMessageCache.IMAGE_HEIGHT_CACHE_KEY, height);
+            cachedLocation = cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY);
+        }
+
+        float scale = (float) mediaView.getWidth() / (float) width;
+        ViewGroup.LayoutParams params = mediaView.getLayoutParams();
+        params.height = Math.round(scale * height);
+        mediaView.setLayoutParams(params);
+
+        mediaView.setMediaInfo(mediaInfo, cachedLocation);
     }
 
 

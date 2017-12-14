@@ -35,11 +35,13 @@
             android:layout_below="@id/heading"
             tools:text="Body text"/>
 
-        <ImageView
+        <com.urbanairship.iam.view.MediaView
             android:id="@+id/media"
-            style="@style/UrbanAirship.InAppFullscreen.Image"
-            android:layout_below="@id/body"
-            tools:src="@drawable/ua_ic_image_placeholder"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            style="@style/UrbanAirship.InAppFullscreen.MediaView"
+            android:layout_below="@id/body" />
 
         <com.urbanairship.iam.view.InAppButtonLayout
             android:id="@+id/buttons"

@@ -22,15 +22,13 @@
         android:layout_height="wrap_content"
         tools:text="Body text"/>
 
-    <ImageView
+    <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
-        style="@style/UrbanAirship.InAppModal.Image"
+        style="@style/UrbanAirship.InAppModal.MediaView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="320dp"
         android:layout_weight="1"
         tools:src="@drawable/ua_ic_image_placeholder"/>
-
-
 
 </LinearLayout>
 

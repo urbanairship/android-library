@@ -11,17 +11,11 @@
         <item name="android:layout_marginLeft">4dp</item>
         <item name="android:layout_marginRight">4dp</item>
         <item name="android:layout_marginTop">4dp</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
         <item name="android:contentDescription">@string/ua_cancel</item>
     </style>
 
-    <style name="UrbanAirship.InAppFullscreen.Image">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+    <style name="UrbanAirship.InAppFullscreen.MediaView">
         <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:adjustViewBounds">true</item>
-        <item name="android:scaleType">fitCenter</item>
     </style>
 
     <style name="UrbanAirship.InAppFullscreen.Heading">

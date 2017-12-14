@@ -27,11 +27,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/dismiss"/>
 
-        <ImageView
+        <com.urbanairship.iam.view.MediaView
             android:id="@+id/media"
-            style="@style/UrbanAirship.InAppFullscreen.Image"
-            android:layout_below="@id/heading"
-            tools:src="@drawable/ua_ic_image_placeholder"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/UrbanAirship.InAppFullscreen.MediaView"
+            android:layout_below="@id/heading"/>
 
         <TextView
             android:id="@+id/body"

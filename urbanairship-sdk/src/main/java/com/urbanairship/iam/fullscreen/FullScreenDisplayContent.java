@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_FULL_SCREEN} in-app message.
+ * Display content for a {@link com.urbanairship.iam.InAppMessage#TYPE_FULLSCREEN} in-app message.
  */
 public class FullScreenDisplayContent implements DisplayContent {
 

@@ -43,10 +43,8 @@
         <item name="android:paddingRight">8dp</item>
     </style>
 
-    <style name="UrbanAirship.InAppModal.Image">
+    <style name="UrbanAirship.InAppModal.MediaView">
         <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:adjustViewBounds">true</item>
-        <item name="android:scaleType">fitCenter</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.Heading">
