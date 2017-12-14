@@ -37,9 +37,9 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
-    public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
         if (!isNetworkAvailable(activity)) {
-            return RETRY;
+            return false;
         }
 
         Intent intent = new Intent(activity, HtmlActivity.class)
@@ -48,7 +48,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
         activity.startActivity(intent);
 
-        return OK;
+        return true;
     }
 
     @Override

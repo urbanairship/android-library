@@ -33,7 +33,7 @@ public class FullScreenAdapter extends CachingDisplayAdapter {
     }
 
     @Override
-    public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
         Intent intent = new Intent(activity, FullScreenActivity.class)
                 .putExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(FullScreenActivity.IN_APP_MESSAGE_KEY, getMessage());
@@ -43,6 +43,6 @@ public class FullScreenAdapter extends CachingDisplayAdapter {
         }
 
         activity.startActivity(intent);
-        return OK;
+        return true;
     }
 }

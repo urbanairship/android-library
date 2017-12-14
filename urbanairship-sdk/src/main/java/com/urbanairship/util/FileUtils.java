@@ -52,15 +52,36 @@ public abstract class FileUtils {
     }
 
     /**
+     * Result for downloading a file.
+     */
+    public static class DownloadResult {
+        /**
+         * The status code if available.
+         */
+        public final int statusCode;
+
+        /**
+         * If file downloaded successfully or not.
+         */
+        public final boolean isSuccess;
+
+        DownloadResult(boolean isSuccess, int statusCode) {
+            this.isSuccess = isSuccess;
+            this.statusCode = statusCode;
+        }
+    }
+
+    /**
      * Downloads a file to disk.
      *
      * @param url The URL image.
      * @param file The file path where the image will be downloaded.
-     * @return <code>true</code> if file was downloaded, <code>false</code> otherwise.
+     * @return The download result.
      * @throws IOException
      */
+    @NonNull
     @WorkerThread
-    public static boolean downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
+    public static DownloadResult downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
         Logger.verbose("Downloading file from: " + url + " to: " + file.getAbsolutePath());
 
         InputStream inputStream = null;
@@ -73,10 +94,16 @@ public abstract class FileUtils {
             conn.setUseCaches(true);
             inputStream = conn.getInputStream();
 
-            if (conn instanceof HttpURLConnection && !UAHttpStatusUtil.inSuccessRange(((HttpURLConnection) conn).getResponseCode())) {
-                Logger.warn("Unable to download file from URL. Received response code: " + ((HttpURLConnection) conn).getResponseCode());
-                return false;
+            int statusCode = 0;
+
+            if (conn instanceof HttpURLConnection) {
+                statusCode = ((HttpURLConnection) conn).getResponseCode();
+
+                if (!UAHttpStatusUtil.inSuccessRange(((HttpURLConnection) conn).getResponseCode())) {
+                    return new DownloadResult(false, statusCode);
+                }
             }
+
 
             if (inputStream != null) {
                 outputStream = new FileOutputStream(file);
@@ -91,8 +118,10 @@ public abstract class FileUtils {
                 outputStream.close();
                 inputStream.close();
 
-                return true;
+                return new DownloadResult(true, statusCode);
             }
+
+            return new DownloadResult(false, statusCode);
         } finally {
             if (outputStream != null) {
                 outputStream.close();
@@ -106,7 +135,5 @@ public abstract class FileUtils {
                 ((HttpURLConnection) conn).disconnect();
             }
         }
-
-        return false;
     }
 }

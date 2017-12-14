@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.FileUtils;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,7 +83,7 @@ public abstract class CachingDisplayAdapter implements InAppMessageAdapter {
      * @return {@link #OK} if the media was null, did not contain a cacheable resource, or if the
      * resource was cached. {@link #RETRY} if it failed to cache the resource.
      */
-    @AdapterResult
+    @PrepareResult
     protected int cacheMedia(Context context, MediaInfo mediaInfo) {
         if (mediaInfo == null || !mediaInfo.getType().equals(MediaInfo.TYPE_IMAGE)) {
             return OK;
@@ -92,10 +93,15 @@ public abstract class CachingDisplayAdapter implements InAppMessageAdapter {
             createCache(context);
 
             File file = cache.file(IMAGE_FILE_NAME);
-            if (!FileUtils.downloadFile(new URL(mediaInfo.getUrl()), file)) {
+            FileUtils.DownloadResult result = FileUtils.downloadFile(new URL(mediaInfo.getUrl()), file);
+
+            if (!result.isSuccess) {
+                if (UAHttpStatusUtil.inClientErrorRange(result.statusCode)) {
+                    return CANCEL;
+                }
+
                 return RETRY;
             }
-
             cache.getBundle().putString(InAppMessageCache.MEDIA_CACHE_KEY, Uri.fromFile(file).toString());
 
             // Cache the width and height for view resizing
@@ -107,9 +113,8 @@ public abstract class CachingDisplayAdapter implements InAppMessageAdapter {
             return OK;
         } catch (IOException e) {
             Logger.error("Failed to cache media.", e);
+            return RETRY;
         }
-
-        return RETRY;
     }
 }
 

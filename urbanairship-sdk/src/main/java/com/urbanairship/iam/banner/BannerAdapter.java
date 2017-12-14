@@ -38,14 +38,13 @@ public class BannerAdapter extends CachingDisplayAdapter {
     }
 
     @Override
-    @AdapterResult
-    public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
         BannerDisplayContent displayContent = getMessage().getDisplayContent();
 
         int id = getContainerId(activity);
         if (id == 0 || activity.findViewById(id) == null) {
             Logger.info("BannerAdapter - Unable to display in-app message. Missing view with id: " + id);
-            return RETRY;
+            return false;
         }
 
         int enter, exit;
@@ -75,7 +74,7 @@ public class BannerAdapter extends CachingDisplayAdapter {
                 .add(id, fragment)
                 .commit();
 
-        return OK;
+        return true;
     }
 
     /**

@@ -32,9 +32,9 @@ public interface InAppMessageAdapter {
         InAppMessageAdapter createAdapter(InAppMessage message);
     }
 
-    @IntDef({ RETRY, OK })
+    @IntDef({ RETRY, OK, CANCEL })
     @Retention(RetentionPolicy.SOURCE)
-    @interface AdapterResult {}
+    @interface PrepareResult {}
 
     /**
      * Indicates a successful result.
@@ -46,15 +46,22 @@ public interface InAppMessageAdapter {
      */
     int RETRY = 1;
 
+    /***
+     * Indicates a failure result and the schedule should be cancelled.
+     */
+    int CANCEL = 2;
+
 
     /**
      * Called before {@link #onDisplay(Activity, boolean, DisplayHandler)} to prepare the message to be displayed.
      *
      * @param context The application context.
-     * @return {@link #OK} if the in-app message is ready to be displayed, otherwise {@code false}.
+     * @return {@link #OK} if the in-app message is ready to be displayed, {@link #RETRY} if the message
+     * was unable to be prepared and needs to be retried, or {@link #CANCEL} if the message was unable to
+     * be prepared and should be canceled.
      */
     @WorkerThread
-    @AdapterResult
+    @PrepareResult
     int onPrepare(@NonNull Context context);
 
     /**
@@ -66,12 +73,11 @@ public interface InAppMessageAdapter {
      * @param activity The current resumed activity.
      * @param isRedisplay {@code true} If the in-app message is being redisplayed, otherwise {@code false}.
      * @param displayHandler The display handler.
-     * @return {@link #OK} if the in-app message was able to be displayed, otherwise {@link #RETRY} to
+     * @return {@code true} if the in-app message was able to be displayed, otherwise {@code false} to
      * try again later.
      */
     @MainThread
-    @AdapterResult
-    int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler);
+    boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler);
 
     /**
      * Called after the in-app message is finished displaying.

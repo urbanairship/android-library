@@ -51,9 +51,14 @@ import java.util.concurrent.TimeUnit;
 public class InAppMessageManager extends AirshipComponent implements InAppMessageScheduler {
 
     /**
-     * Fetch retry delay.
+     * Prepare retry delay.
      */
-    private static final long FETCH_RETRY_DELAY_MS = 30000;
+    private static final long PREPARE_RETRY_DELAY_MS = 30000;
+
+    /**
+     * Display retry delay.
+     */
+    private static final long RETRY_DISPLAY_DELAY_MS = 30000;
 
     /**
      * Default delay between displaying in-app messages.
@@ -101,7 +106,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             if (!carryOverScheduleIds.isEmpty()) {
                 Activity activity = getResumedActivity();
                 if (activity != null) {
-                    display(activity, carryOverScheduleIds.pop(), true);
+                    display(activity, carryOverScheduleIds.pop());
                 }
             }
 
@@ -232,7 +237,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
             @Override
             public void onDisplay(@NonNull String scheduleId) {
-                display(getResumedActivity(), scheduleId, false);
+                display(getResumedActivity(), scheduleId);
             }
         });
 
@@ -260,7 +265,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                     Activity resumedActivity = getResumedActivity();
                     if (!carryOverScheduleIds.isEmpty() && resumedActivity != null) {
-                        display(resumedActivity, carryOverScheduleIds.pop(), true);
+                        display(resumedActivity, carryOverScheduleIds.pop());
                     } else {
                         mainHandler.postDelayed(postDisplayRunnable, displayInterval);
                     }
@@ -284,7 +289,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 // Try to display any carry over schedule Ids if we do not have a
                 // current schedule Id
                 if (currentScheduleId == null && !carryOverScheduleIds.isEmpty()) {
-                    display(activity, carryOverScheduleIds.pop(), true);
+                    display(activity, carryOverScheduleIds.pop());
                 }
             }
         });
@@ -338,20 +343,29 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return;
                 }
 
+                @InAppMessageAdapter.PrepareResult
                 int result = adapterWrapper.prepare();
 
-                if (result == InAppMessageAdapter.OK) {
-                    Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
-                    automationEngine.checkPendingSchedules();
-                } else {
-                    Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
-                    // Retry after a delay
-                    mainHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            prepareMessage(scheduleId);
-                        }
-                    }, FETCH_RETRY_DELAY_MS);
+                switch (result) {
+                    case InAppMessageAdapter.OK:
+                        Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
+                        automationEngine.checkPendingSchedules();
+                        break;
+
+                    case InAppMessageAdapter.RETRY:
+                        Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
+                        // Retry after a delay
+                        mainHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                prepareMessage(scheduleId);
+                            }
+                        }, PREPARE_RETRY_DELAY_MS);
+                        break;
+                    case InAppMessageAdapter.CANCEL:
+                        cancelSchedule(scheduleId);
+                        adapterWrappers.remove(scheduleId);
+                        break;
                 }
             }
         });
@@ -500,7 +514,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         Activity activity = getResumedActivity();
         if (currentScheduleId == null && activity != null && previousActivity != activity) {
-            display(activity, scheduleId, true);
+            display(activity, scheduleId);
         } else if (!carryOverScheduleIds.contains(scheduleId)) {
             carryOverScheduleIds.push(scheduleId);
         }
@@ -617,23 +631,25 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      *
      * @param activity The resumed activity.
      * @param scheduleId The schedule ID to display.
-     * @param isRedisplay {@code true} if the schedule is being redisplayed, otherwise {@code false}.
      */
     @MainThread
-    private void display(Activity activity, @NonNull String scheduleId, boolean isRedisplay) {
+    private void display(Activity activity, @NonNull String scheduleId) {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
 
         if (adapterWrapper == null) {
             return;
         }
 
-        if (activity != null && adapterWrapper.display(activity, isRedisplay) == InAppMessageAdapter.OK) {
+        carryOverScheduleIds.remove(scheduleId);
+        mainHandler.removeCallbacks(postDisplayRunnable);
+
+        boolean isRedisplay = adapterWrapper.displayed;
+
+        if (activity != null && adapterWrapper.display(activity)) {
             Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: " + scheduleId);
             this.currentScheduleId = scheduleId;
             this.isDisplayedLocked = true;
             this.currentActivity = new WeakReference<>(activity);
-            mainHandler.removeCallbacks(postDisplayRunnable);
-            carryOverScheduleIds.remove(scheduleId);
 
             if (!isRedisplay) {
                 analytics.addEvent(new DisplayEvent(adapterWrapper.message.getId()));
@@ -645,8 +661,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     }
                 }
             }
-        } else if (!carryOverScheduleIds.contains(scheduleId)) {
+        } else {
             carryOverScheduleIds.push(scheduleId);
+            mainHandler.postDelayed(postDisplayRunnable, RETRY_DISPLAY_DELAY_MS);
         }
     }
 
@@ -687,6 +704,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         private final InAppMessage message;
         public volatile boolean isReady;
         public InAppMessageAdapter adapter;
+        private boolean displayed = false;
 
         public AdapterWrapper(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull InAppMessageAdapter adapter) {
             this.scheduleId = scheduleId;
@@ -694,10 +712,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             this.adapter = adapter;
         }
 
+        @InAppMessageAdapter.PrepareResult
         private int prepare() {
             try {
                 Logger.debug("InAppMessageManager - Preparing schedule: " + scheduleId);
+
+                @InAppMessageAdapter.PrepareResult
                 int result = adapter.onPrepare(UAirship.getApplicationContext());
+
                 if (result == InAppMessageAdapter.OK) {
                     isReady = true;
                 }
@@ -708,14 +730,19 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         }
 
-        private int display(Activity activity, boolean isRedisplay) {
+        private boolean display(Activity activity) {
             Logger.debug("InAppMessageManager - Displaying schedule: " + scheduleId);
             try {
                 DisplayHandler displayHandler = new DisplayHandler(scheduleId);
-                return adapter.onDisplay(activity, isRedisplay, displayHandler);
+                if (adapter.onDisplay(activity, displayed, displayHandler)) {
+                    displayed = true;
+                    return true;
+                }
+
+                return false;
             } catch (Exception e) {
                 Logger.error("InAppMessageManager - Failed to display in-app message.", e);
-                return InAppMessageAdapter.RETRY;
+                return false;
             }
         }
 

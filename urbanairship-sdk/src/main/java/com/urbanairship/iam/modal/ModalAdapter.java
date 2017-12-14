@@ -33,7 +33,7 @@ public class ModalAdapter extends CachingDisplayAdapter {
     }
 
     @Override
-    public int onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
         Intent intent = new Intent(activity, ModalActivity.class)
                 .putExtra(ModalActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
                 .putExtra(ModalActivity.IN_APP_MESSAGE_KEY, getMessage());
@@ -43,6 +43,6 @@ public class ModalAdapter extends CachingDisplayAdapter {
         }
 
         activity.startActivity(intent);
-        return OK;
+        return true;
     }
 }

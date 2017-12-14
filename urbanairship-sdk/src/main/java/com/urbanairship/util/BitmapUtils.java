@@ -52,7 +52,7 @@ public class BitmapUtils {
             deleteFile = true;
             Logger.verbose("BitmapUtils - Created temp file: " + imageFile);
 
-            if (!FileUtils.downloadFile(url, imageFile)) {
+            if (!FileUtils.downloadFile(url, imageFile).isSuccess) {
                 Logger.verbose("BitmapUtils - Failed to fetch image from: " + url);
                 return null;
             }
