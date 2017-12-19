@@ -390,9 +390,11 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                    .build());
 
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+        assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+        driverCallbacks.onDisplay(schedule.getId());
 
-        // Verify the schedule is cancelled.
-        verify(mockEngine).cancel(Collections.singletonList("schedule id"));
+        // Verify the schedule is finished
+        verify(mockDriver).displayFinished("schedule id");
     }
 
     @Test

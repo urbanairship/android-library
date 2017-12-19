@@ -68,7 +68,7 @@ public abstract class AudienceChecks {
 
 
         // Location opt-in
-        if (audience.getLocationOptIn() != null && audience.getLocationOptIn() != locationManager.isLocationUpdatesEnabled()) {
+        if (audience.getLocationOptIn() != null && audience.getLocationOptIn() != locationManager.isOptIn()) {
             return false;
         }
 

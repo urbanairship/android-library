@@ -100,7 +100,7 @@ public class AudienceChecksTest extends BaseTestCase {
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedOut));
 
-        when(locationManager.isLocationUpdatesEnabled()).thenReturn(true);
+        when(locationManager.isOptIn()).thenReturn(true);
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedOut));
     }
@@ -155,14 +155,14 @@ public class AudienceChecksTest extends BaseTestCase {
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
         audience = Audience.newBuilder()
-                                    .addLanguageTag("en")
-                                    .build();
+                           .addLanguageTag("en")
+                           .build();
 
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
         audience = Audience.newBuilder()
-                                    .addLanguageTag("fr")
-                                    .build();
+                           .addLanguageTag("fr")
+                           .build();
 
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
@@ -170,8 +170,8 @@ public class AudienceChecksTest extends BaseTestCase {
     @Test
     public void testAppVersion() {
         Audience audience = Audience.newBuilder()
-                .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
-                .build();
+                                    .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
+                                    .build();
 
 
         packageInfo.versionCode = 1;

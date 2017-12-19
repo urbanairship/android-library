@@ -194,13 +194,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return false;
                 }
 
-                if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
-                    Logger.debug("InAppMessageManager - Message no longer meets audience conditions, cancelling schedule: " + scheduleId);
-                    cancelSchedule(scheduleId);
-                    adapterWrappers.remove(scheduleId);
-                    return false;
-                }
-
                 AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
                 if (adapterWrapper == null) {
                     InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
@@ -669,6 +662,15 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         mainHandler.removeCallbacks(postDisplayRunnable);
 
         boolean isRedisplay = adapterWrapper.displayed;
+
+        if (!isRedisplay && !AudienceChecks.checkAudience(UAirship.getApplicationContext(), adapterWrapper.message.getAudience())) {
+            Logger.debug("InAppMessageManager - Message audience conditions not met, skipping display for schedule: " + scheduleId);
+            adapterWrappers.remove(scheduleId);
+            adapterWrapper.finish();
+            driver.displayFinished(scheduleId);
+            mainHandler.post(postDisplayRunnable);
+            return;
+        }
 
         if (activity != null && adapterWrapper.display(activity)) {
             Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: " + scheduleId);

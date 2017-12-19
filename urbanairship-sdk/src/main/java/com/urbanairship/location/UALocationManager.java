@@ -433,4 +433,15 @@ public class UALocationManager extends AirshipComponent {
             }
         });
     }
+
+
+
+    /**
+     * Returns {@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
+     *
+     * @return <{@code true} if location is permitted and the location manager updates are enabled, otherwise {@code false}.
+     */
+    public boolean isOptIn() {
+        return isLocationPermitted() && isLocationUpdatesEnabled();
+    }
 }

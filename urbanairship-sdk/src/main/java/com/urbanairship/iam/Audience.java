@@ -27,7 +27,7 @@ public class Audience implements JsonSerializable {
 
     // JSON keys
     private static final String NEW_USER_KEY = "new_user";
-    private static final String NOTIFICATION_OPT_IN_KEY = "notifications_opt_in";
+    private static final String NOTIFICATION_OPT_IN_KEY = "notification_opt_in";
     private static final String LOCATION_OPT_IN_KEY = "location_opt_in";
     private static final String LOCALE_KEY = "locale";
     private static final String APP_VERSION_KEY = "app_version";
