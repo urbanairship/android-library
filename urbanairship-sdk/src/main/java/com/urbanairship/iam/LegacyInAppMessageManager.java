@@ -38,8 +38,8 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     // New ID key
     private final static String PENDING_MESSAGE_ID = KEY_PREFIX + "PENDING_MESSAGE_ID";
 
-    public static final int DEFAULT_PRIMARY_COLOR = Color.BLACK;
-    public static final int DEFAULT_SECONDARY_COLOR = Color.WHITE;
+    public static final int DEFAULT_PRIMARY_COLOR = Color.WHITE;
+    public static final int DEFAULT_SECONDARY_COLOR = Color.BLACK;
 
 
     private final InAppMessageManager inAppMessageManager;
@@ -228,15 +228,15 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             int secondaryColor = inAppMessage.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : inAppMessage.getSecondaryColor();
 
             BannerDisplayContent.Builder displayContentBuilder = BannerDisplayContent.newBuilder()
-                                                                                     .setBackgroundColor(secondaryColor)
-                                                                                     .setDismissButtonColor(primaryColor)
+                                                                                     .setBackgroundColor(primaryColor)
+                                                                                     .setDismissButtonColor(secondaryColor)
                                                                                      .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
                                                                                      .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
                                                                                      .setPlacement(inAppMessage.getPlacement())
                                                                                      .setActions(inAppMessage.getClickActionValues())
                                                                                      .setBody(TextInfo.newBuilder()
                                                                                                       .setText(inAppMessage.getAlert())
-                                                                                                      .setColor(primaryColor)
+                                                                                                      .setColor(secondaryColor)
                                                                                                       .build());
 
             if (inAppMessage.getDuration() != null) {
@@ -257,7 +257,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
                         TextInfo.Builder labelBuilder = TextInfo.newBuilder()
                                                                 .setDrawable(button.getIcon())
-                                                                .setColor(secondaryColor)
+                                                                .setColor(primaryColor)
                                                                 .setAlignment(TextInfo.ALIGNMENT_CENTER);
 
                         if (button.getLabel() != 0) {
@@ -267,7 +267,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
                                                                          .setActions(inAppMessage.getButtonActionValues(button.getId()))
                                                                          .setId(button.getId())
-                                                                         .setBackgroundColor(primaryColor)
+                                                                         .setBackgroundColor(secondaryColor)
                                                                          .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
                                                                          .setLabel(labelBuilder.build());
 
