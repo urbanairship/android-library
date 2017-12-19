@@ -152,9 +152,10 @@ class InAppRemoteDataObserver {
 
             if (createdTimeStamp > lastUpdate) {
                 try {
-                    InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson);
+                    InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.fromJson(messageJson, InAppMessage.SOURCE_REMOTE_DATA);
                     if (checkSchedule(scheduleInfo, createdTimeStamp)) {
                         newSchedules.add(scheduleInfo);
+                        Logger.debug("New in-app message: " + scheduleInfo);
                     }
                 } catch (JsonException e) {
                     Logger.error("Failed to parse in-app message: " + messageJson, e);

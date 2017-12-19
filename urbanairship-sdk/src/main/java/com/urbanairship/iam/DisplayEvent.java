@@ -3,28 +3,25 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
-import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Event;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.util.UAStringUtil;
+/**
+ * Display in-app message event.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+class DisplayEvent extends InAppMessageEvent {
 
-class DisplayEvent extends Event {
     private static final String TYPE = "in_app_display";
-
-    private static final String ID = "id";
-    private static final String CONVERSION_SEND_ID = "conversion_send_id";
-    private static final String CONVERSION_METADATA = "conversion_metadata";
-
-    private final String id;
 
     /**
      * Default constructor.
      *
-     * @param messageId The in-app message ID.
+     * @param message The in-app message.
      */
-    DisplayEvent(@NonNull String messageId) {
-        this.id = messageId;
+    DisplayEvent(@NonNull InAppMessage message) {
+        super(createEventId(message), message.getSource());
     }
 
     @Override
@@ -32,17 +29,4 @@ class DisplayEvent extends Event {
         return TYPE;
     }
 
-    @Override
-    protected final JsonMap getEventData() {
-        return JsonMap.newBuilder()
-                .put(ID, id)
-                .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
-                .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
-                .build();
-    }
-
-    @Override
-    public boolean isValid() {
-        return !UAStringUtil.isEmpty(id);
-    }
 }

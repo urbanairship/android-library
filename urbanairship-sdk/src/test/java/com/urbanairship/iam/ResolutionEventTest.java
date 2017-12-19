@@ -3,8 +3,11 @@
 package com.urbanairship.iam;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.UAirship;
+import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.EventTestUtils;
+import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
 import org.json.JSONException;
@@ -15,10 +18,14 @@ import static junit.framework.Assert.assertEquals;
 
 public class ResolutionEventTest extends BaseTestCase {
 
+    InAppMessage message;
+
     @Before
     public void before() {
-        UAirship.shared().getAnalytics().setConversionSendId("send id");
-        UAirship.shared().getAnalytics().setConversionMetadata("metadata");
+        message = InAppMessage.newBuilder()
+                              .setId("message id")
+                              .setDisplayContent(new CustomDisplayContent(JsonValue.wrapOpt("COOL")))
+                              .build();
     }
 
     /**
@@ -34,32 +41,32 @@ public class ResolutionEventTest extends BaseTestCase {
                                           .build();
 
 
-        ResolutionEvent event = ResolutionEvent.messageResolution("iam id", ResolutionInfo.buttonPressed(buttonInfo , 3500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo, 3500));
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "button_click");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "button_id", "button id");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "button_description", "hi");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 3.5);
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "button_click")
+                                                .put("button_id", "button id")
+                                                .put("button_description", "hi")
+                                                .put("display_time", Event.millisecondsToSecondsString(3500))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
-
 
     /**
      * Test on click resolution event.
      */
     @Test
     public void testClickedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("iam id", ResolutionInfo.messageClicked(5500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.messageClicked(5500));
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "message_click");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 5.5);
-        assertEquals("in_app_resolution", event.getType());
+
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "message_click")
+                                                .put("display_time", Event.millisecondsToSecondsString(5500))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
     /**
@@ -67,14 +74,14 @@ public class ResolutionEventTest extends BaseTestCase {
      */
     @Test
     public void testUserDismissedResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("iam id", ResolutionInfo.dismissed(3500));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.dismissed(3500));
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "user_dismissed");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 3.5);
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "user_dismissed")
+                                                .put("display_time", Event.millisecondsToSecondsString(3500))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
     /**
@@ -82,14 +89,14 @@ public class ResolutionEventTest extends BaseTestCase {
      */
     @Test
     public void testTimedOutResolutionEvent() throws JSONException {
-        ResolutionEvent event = ResolutionEvent.messageResolution("iam id", ResolutionInfo.timedOut(15000));
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.timedOut(15000));
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "timed_out");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "display_time", 15.0);
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "timed_out")
+                                                .put("display_time", Event.millisecondsToSecondsString(15000))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
 
@@ -100,12 +107,12 @@ public class ResolutionEventTest extends BaseTestCase {
     public void testReplacedResolutionEvent() throws JSONException {
         ResolutionEvent event = ResolutionEvent.legacyMessageReplaced("iam id", "replacement id");
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "replaced");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "replacement_id", "replacement id");
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "replaced")
+                                                .put("replacement_id", "replacement id")
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
     /**
@@ -115,9 +122,11 @@ public class ResolutionEventTest extends BaseTestCase {
     public void testDirectOpenResolutionEvent() throws JSONException {
         ResolutionEvent event = ResolutionEvent.legacyMessagePushOpened("iam id");
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "direct_open");
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "direct_open")
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
     /**
@@ -127,15 +136,18 @@ public class ResolutionEventTest extends BaseTestCase {
     public void testExpiredResolutionEvent() throws JSONException {
         long expiry = System.currentTimeMillis();
 
-        ResolutionEvent event = ResolutionEvent.messageExpired("iam id", expiry);
+        ResolutionEvent event = ResolutionEvent.messageExpired(message, expiry);
 
-        EventTestUtils.validateEventValue(event, "id", "iam id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "type", "expired");
-        EventTestUtils.validateNestedEventValue(event, "resolution", "expiry", DateUtils.createIso8601TimeStamp(expiry));
-        assertEquals("in_app_resolution", event.getType());
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "expired")
+                                                .put("expiry", DateUtils.createIso8601TimeStamp(expiry))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
     }
 
-
+    private void verifyEvent(JsonMap expectedResolutionInfo, ResolutionEvent event) {
+        assertEquals(expectedResolutionInfo, EventTestUtils.getEventData(event).get("resolution"));
+        assertEquals("in_app_resolution", event.getType());
+    }
 }

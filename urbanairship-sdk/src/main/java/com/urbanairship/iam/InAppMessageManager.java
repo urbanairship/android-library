@@ -242,7 +242,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.automationEngine.setScheduleExpiryListener(new AutomationEngine.ScheduleExpiryListener<InAppMessageSchedule>() {
             @Override
             public void onScheduleExpired(InAppMessageSchedule schedule) {
-                analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage().getId(), schedule.getInfo().getEnd()));
+                analytics.addEvent(ResolutionEvent.messageExpired(schedule.getInfo().getInAppMessage(), schedule.getInfo().getEnd()));
             }
         });
 
@@ -566,7 +566,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return;
         }
 
-        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message.getId(), resolutionInfo));
+        analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo));
 
         synchronized (listeners) {
             for (InAppMessageListener listener : new ArrayList<>(listeners)) {
@@ -679,7 +679,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             this.currentActivity = new WeakReference<>(activity);
 
             if (!isRedisplay) {
-                analytics.addEvent(new DisplayEvent(adapterWrapper.message.getId()));
+                analytics.addEvent(new DisplayEvent(adapterWrapper.message));
                 InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
 
                 synchronized (listeners) {

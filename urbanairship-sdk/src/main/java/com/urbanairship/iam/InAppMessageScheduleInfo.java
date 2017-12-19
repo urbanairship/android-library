@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.urbanairship.automation.ScheduleDelay;
 import com.urbanairship.automation.ScheduleInfo;
@@ -164,14 +165,17 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
      * Creates a schedule info from a json value.
      *
      * @param value The json value.
+     * @param defaultSource The default source if not set in the JSON.
      * @return A schedule info.
      * @throws JsonException If the json value contains an invalid schedule info.
+     * @hide
      */
-    public static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value, @InAppMessage.Source String defaultSource) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         InAppMessageScheduleInfo.Builder builder = newBuilder()
-                .setMessage(InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY)))
+                .setMessage(InAppMessage.fromJson(jsonMap.opt(MESSAGE_KEY), defaultSource))
                 .setLimit(jsonMap.opt(LIMIT_KEY).getInt(1))
                 .setPriority(jsonMap.opt(PRIORITY_KEY).getInt(0));
 
@@ -212,6 +216,17 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         } catch (IllegalArgumentException e) {
             throw new JsonException("Invalid schedule info", e);
         }
+    }
+
+    /**
+     * Creates a schedule info from a json value.
+     *
+     * @param value The json value.
+     * @return A schedule info.
+     * @throws JsonException If the json value contains an invalid schedule info.
+     */
+    public static InAppMessageScheduleInfo fromJson(@NonNull JsonValue value) throws JsonException {
+        return fromJson(value, null);
     }
 
     /**

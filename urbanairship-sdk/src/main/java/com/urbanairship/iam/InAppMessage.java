@@ -6,6 +6,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
+import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.Logger;
@@ -30,6 +32,11 @@ import java.util.Map;
  */
 public class InAppMessage implements Parcelable, JsonSerializable {
 
+    /**
+     * Max message ID length.
+     */
+    public static final int MAX_ID_LENGTH = 64;
+
     // JSON keys
     static final String MESSAGE_ID_KEY = "message_id";
     private static final String DISPLAY_TYPE_KEY = "display_type";
@@ -37,11 +44,31 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private static final String EXTRA_KEY = "extra";
     private static final String AUDIENCE_KEY = "audience";
     private static final String ACTIONS_KEY = "actions";
+    private static final String SOURCE_KEY = "source";
+    private static final String CAMPAIGNS_KEY = "campaigns";
 
+    @StringDef({ SOURCE_LEGACY_PUSH, SOURCE_REMOTE_DATA, SOURCE_APP_DEFINED })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Source {}
+
+    /**
+     * In-app message was generated from a push in the legacy in-app message manager.
+     */
+    static final String SOURCE_LEGACY_PUSH = "legacy-push";
+
+    /**
+     * In-app message from the remote-data service.
+     */
+    static final String SOURCE_REMOTE_DATA = "remote-data";
+
+    /**
+     * In-app message created programmatically by the application.
+     */
+    static final String SOURCE_APP_DEFINED = "app-defined";
 
     @StringDef({ TYPE_BANNER, TYPE_CUSTOM, TYPE_FULLSCREEN, TYPE_MODAL, TYPE_HTML })
     @Retention(RetentionPolicy.SOURCE)
-    @interface DisplayType {}
+    public @interface DisplayType {}
 
     /**
      * Banner in-app message.
@@ -76,6 +103,11 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final JsonSerializable content;
     private final Audience audience;
     private final Map<String, JsonValue> actions;
+    private JsonValue campaigns;
+
+    @Source
+    private final String source;
+
 
     /**
      * Default constructor.
@@ -89,6 +121,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         this.extras = builder.extras == null ? JsonMap.EMPTY_MAP : builder.extras;
         this.audience = builder.audience;
         this.actions = builder.actions;
+        this.source = builder.source;
+        this.campaigns = builder.campaigns;
     }
 
     /**
@@ -107,7 +141,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * The return type depends on the in-app message type:
      * {@link #TYPE_BANNER}: a {@link com.urbanairship.iam.banner.BannerDisplayContent},
      * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent},
-     * {@link #TYPE_FULL_SCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent}
+     * {@link #TYPE_FULLSCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent}
      *
      * @param <T> The expected content type.
      * @return The display content.
@@ -117,6 +151,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return null;
         }
         try {
+            //noinspection unchecked
             return (T) content;
         } catch (ClassCastException e) {
             return null;
@@ -161,6 +196,30 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         return actions;
     }
 
+    /**
+     * The in-app message source.
+     *
+     * @return The in-app message source.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Source
+    String getSource() {
+        return source;
+    }
+
+    /**
+     * The in-app message campaigns info.
+     *
+     * @return The in-app message campaigns info.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    JsonValue getCampaigns() {
+        return campaigns;
+    }
+
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
@@ -170,27 +229,43 @@ public class InAppMessage implements Parcelable, JsonSerializable {
                       .putOpt(DISPLAY_TYPE_KEY, type)
                       .putOpt(AUDIENCE_KEY, audience)
                       .putOpt(ACTIONS_KEY, actions)
+                      .putOpt(SOURCE_KEY, source)
+                      .putOpt(CAMPAIGNS_KEY, campaigns)
                       .build().toJsonValue();
     }
-
 
     /**
      * Parses a json value.
      *
      * @param jsonValue The json value.
+     * @param defaultSource The default source if its not set in the JSON.
      * @return The parsed InAppMessage.
      * @throws JsonException If the json is invalid.
+     * @hide
      */
-    static InAppMessage fromJson(JsonValue jsonValue) throws JsonException {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    static InAppMessage fromJson(JsonValue jsonValue, @Source String defaultSource) throws JsonException {
         String type = jsonValue.optMap().opt(DISPLAY_TYPE_KEY).getString("");
         JsonValue content = jsonValue.optMap().opt(DISPLAY_CONTENT_KEY);
 
 
+        String messageId = jsonValue.optMap().opt(MESSAGE_ID_KEY).getString();
+        if (messageId == null || messageId.length() > MAX_ID_LENGTH) {
+            throw new JsonException("Invalid message ID. Must be nonnull and less than or equal to " + MAX_ID_LENGTH + " characters.");
+        }
+
+
         InAppMessage.Builder builder = InAppMessage.newBuilder()
-                                                   .setId(jsonValue.optMap().opt(MESSAGE_ID_KEY).getString())
+                                                   .setId(messageId)
                                                    .setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
                                                    .setDisplayContent(type, content);
 
+
+        // Source
+        @Source String source = jsonValue.optMap().opt(SOURCE_KEY).getString(defaultSource);
+        if (source != null) {
+            builder.setSource(source);
+        }
 
         // Actions
         if (jsonValue.optMap().containsKey(ACTIONS_KEY)) {
@@ -202,9 +277,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             builder.setActions(jsonMap.getMap());
         }
 
-
+        // Audience
         if (jsonValue.optMap().containsKey(AUDIENCE_KEY)) {
             builder.setAudience(Audience.parseJson(jsonValue.optMap().opt(AUDIENCE_KEY)));
+        }
+
+        // Campaigns
+        if (jsonValue.optMap().containsKey(CAMPAIGNS_KEY)) {
+            builder.setCampaigns(jsonValue.optMap().opt(CAMPAIGNS_KEY));
         }
 
         try {
@@ -213,6 +293,19 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             throw new JsonException("Invalid InAppMessage json.", e);
         }
     }
+
+
+    /**
+     * Parses a json value.
+     *
+     * @param jsonValue The json value.
+     * @return The parsed InAppMessage.
+     * @throws JsonException If the json is invalid.
+     */
+    static InAppMessage fromJson(JsonValue jsonValue) throws JsonException {
+        return fromJson(jsonValue, null);
+    }
+
 
     /**
      * Creates a new builder.
@@ -231,40 +324,14 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     public static final Creator<InAppMessage> CREATOR = new Creator<InAppMessage>() {
         @Override
         public InAppMessage createFromParcel(Parcel in) {
-            String id = in.readString();
-            String type = in.readString();
-            String contentPayload = in.readString();
-            String extraPayload = in.readString();
-            String actionsPayload = in.readString();
-            String audiencePayload = in.readString();
-
-
-            InAppMessage.Builder builder = InAppMessage.newBuilder()
-                                                       .setId(id);
+            String payload = in.readString();
 
             try {
-                builder.setExtras(JsonValue.parseString(extraPayload).optMap())
-                       .setActions(JsonValue.parseString(actionsPayload).optMap().getMap());
-
+                return fromJson(JsonValue.parseString(payload));
             } catch (JsonException e) {
-                Logger.error("InAppMessage - Invalid extras from parcel: " + extraPayload);
+                Logger.error("InAppMessage - Invalid parcel: " + e);
+                return null;
             }
-
-            if (audiencePayload != null) {
-                try {
-                    builder.setAudience(Audience.parseJson(JsonValue.parseString(audiencePayload)));
-                } catch (JsonException e) {
-                    Logger.error("InAppMessage - Invalid audience from parcel: " + extraPayload);
-                }
-            }
-
-            try {
-                builder.setDisplayContent(type, JsonValue.parseString(contentPayload));
-            } catch (JsonException e) {
-                Logger.error("InAppMessage - Invalid extras from parcel: " + extraPayload);
-            }
-
-            return builder.build();
         }
 
         @Override
@@ -275,12 +342,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(type);
-        dest.writeString(content.toJsonValue().toString());
-        dest.writeString(extras.toString());
-        dest.writeString(JsonValue.wrapOpt(actions).toString());
-        dest.writeString(audience == null ? null : audience.toJsonValue().toString());
+        dest.writeString(toJsonValue().toString());
     }
 
     @Override
@@ -302,24 +364,30 @@ public class InAppMessage implements Parcelable, JsonSerializable {
             return false;
         }
 
-        InAppMessage that = (InAppMessage) o;
+        InAppMessage message = (InAppMessage) o;
 
-        if (type != null ? !type.equals(that.type) : that.type != null) {
+        if (type != null ? !type.equals(message.type) : message.type != null) {
             return false;
         }
-        if (extras != null ? !extras.equals(that.extras) : that.extras != null) {
+        if (extras != null ? !extras.equals(message.extras) : message.extras != null) {
             return false;
         }
-        if (id != null ? !id.equals(that.id) : that.id != null) {
+        if (id != null ? !id.equals(message.id) : message.id != null) {
             return false;
         }
-        if (content != null ? !content.equals(that.content) : that.content != null) {
+        if (content != null ? !content.equals(message.content) : message.content != null) {
             return false;
         }
-        if (audience != null ? !audience.equals(that.audience) : that.audience != null) {
+        if (audience != null ? !audience.equals(message.audience) : message.audience != null) {
             return false;
         }
-        return actions != null ? actions.equals(that.actions) : that.actions == null;
+        if (actions != null ? !actions.equals(message.actions) : message.actions != null) {
+            return false;
+        }
+        if (campaigns != null ? !campaigns.equals(message.campaigns) : message.campaigns != null) {
+            return false;
+        }
+        return source != null ? source.equals(message.source) : message.source == null;
     }
 
     @Override
@@ -330,6 +398,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         result = 31 * result + (content != null ? content.hashCode() : 0);
         result = 31 * result + (audience != null ? audience.hashCode() : 0);
         result = 31 * result + (actions != null ? actions.hashCode() : 0);
+        result = 31 * result + (campaigns != null ? campaigns.hashCode() : 0);
+        result = 31 * result + (source != null ? source.hashCode() : 0);
         return result;
     }
 
@@ -344,6 +414,10 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private JsonSerializable content;
         private Audience audience;
         private Map<String, JsonValue> actions = new HashMap<>();
+
+        @Source
+        private String source = SOURCE_APP_DEFINED;
+        private JsonValue campaigns;
 
         private Builder() {}
 
@@ -429,6 +503,32 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         }
 
         /**
+         * Sets the source of the in-app message.
+         *
+         * @param source The in-app message source.
+         * @return The builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        Builder setSource(@NonNull @Source String source) {
+            this.source = source;
+            return this;
+        }
+
+        /**
+         * Sets the campaigns info for the in-app message.
+         *
+         * @param campaigns The in-app message campaigns info.
+         * @return The builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        Builder setCampaigns(JsonValue campaigns) {
+            this.campaigns = campaigns;
+            return this;
+        }
+
+        /**
          * Sets the custom display content and type.
          *
          * @param displayContent The custom display content.
@@ -457,7 +557,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * @param id The message ID.
          * @return The builder.
          */
-        public Builder setId(String id) {
+        public Builder setId(@NonNull @Size(min = 1, max = MAX_ID_LENGTH) String id) {
             this.id = id;
             return this;
         }

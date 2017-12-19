@@ -283,6 +283,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                                                                    .setDisplayContent(displayContentBuilder.build())
                                                                    .setExtras(inAppMessage.getExtras())
                                                                    .setId(inAppMessage.getId())
+                                                                   .setSource(InAppMessage.SOURCE_LEGACY_PUSH)
                                                                    .build())
                                            .build();
         }

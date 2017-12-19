@@ -274,7 +274,8 @@ public abstract class Event {
      * @return Seconds as a string containing a double.
      * @hide
      */
-    protected static String millisecondsToSecondsString(long milliseconds) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static String millisecondsToSecondsString(long milliseconds) {
         return String.format(Locale.US, "%.3f", milliseconds / 1000.0);
     }
 

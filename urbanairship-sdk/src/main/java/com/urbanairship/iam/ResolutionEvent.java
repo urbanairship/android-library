@@ -3,25 +3,22 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
-import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
 
 /**
  * Resolution event.
+ * @hide
  */
-class ResolutionEvent extends Event {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+class ResolutionEvent extends InAppMessageEvent {
 
     private static final String TYPE = "in_app_resolution";
 
-    // Top level keys
-    private static final String ID = "id";
     private static final String RESOLUTION = "resolution";
-    private static final String CONVERSION_SEND_ID = "conversion_send_id";
-    private static final String CONVERSION_METADATA = "conversion_metadata";
 
     // Resolution types
     private static final String RESOLUTION_TYPE = "type";
@@ -40,34 +37,32 @@ class ResolutionEvent extends Event {
     private static final String REPLACEMENT_ID = "replacement_id";
     private static final String EXPIRY = "expiry";
 
-    private final String id;
     private final JsonMap resolutionData;
 
-    /**
-     * Creates a ResolutionEvent.
-     *
-     * @param id The in-app message ID.
-     * @param resolutionData The resolution data.
-     */
-    private ResolutionEvent(@Nullable String id, @NonNull JsonMap resolutionData) {
-        this.id = id;
+    ResolutionEvent(@NonNull InAppMessage message, @NonNull JsonMap resolutionData) {
+        super(message);
+        this.resolutionData = resolutionData;
+    }
+
+    ResolutionEvent(@NonNull JsonValue eventId, @NonNull String source, @NonNull JsonMap resolutionData) {
+        super(eventId, source);
         this.resolutionData = resolutionData;
     }
 
     /**
      * Creates a resolution event for when a legacy in-app message is replaced.
      *
-     * @param oldId The replaced in-app message.
-     * @param newId The new in-app message.
+     * @param messageId The message ID.
+     * @param newId The new in-app message ID.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent legacyMessageReplaced(@NonNull String oldId, @NonNull String newId) {
+    static ResolutionEvent legacyMessageReplaced(@NonNull String messageId, @NonNull String newId) {
         JsonMap resolutionData = JsonMap.newBuilder()
                                         .put(RESOLUTION_TYPE, RESOLUTION_REPLACED)
                                         .put(REPLACEMENT_ID, newId)
                                         .build();
 
-        return new ResolutionEvent(oldId, resolutionData);
+        return new ResolutionEvent(JsonValue.wrap(messageId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
     }
 
     /**
@@ -81,33 +76,35 @@ class ResolutionEvent extends Event {
         JsonMap resolutionData = JsonMap.newBuilder()
                                         .put(RESOLUTION_TYPE, RESOLUTION_DIRECT_OPEN)
                                         .build();
-        return new ResolutionEvent(messageId, resolutionData);
+
+        return new ResolutionEvent(JsonValue.wrap(messageId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
     }
 
     /**
      * Creates a resolution event for when an in-app message expires.
      *
-     * @param messageId The in-app message ID.
+     * @param message The in-app message.
      * @param expiry The message expiration.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent messageExpired(@NonNull String messageId, long expiry) {
+    static ResolutionEvent messageExpired(@NonNull InAppMessage message, long expiry) {
         JsonMap resolutionData = JsonMap.newBuilder()
                                         .put(RESOLUTION_TYPE, RESOLUTION_EXPIRED)
                                         .put(EXPIRY, DateUtils.createIso8601TimeStamp(expiry))
                                         .build();
 
-        return new ResolutionEvent(messageId, resolutionData);
+
+        return new ResolutionEvent(message, resolutionData);
     }
 
     /**
      * Creates a resolution event from a {@link ResolutionInfo}.
      *
-     * @param messageId The in-app message ID.
+     * @param message The in-app message ].
      * @param resolutionInfo The resolution info.
      * @return The ResolutionEvent.
      */
-    static ResolutionEvent messageResolution(@NonNull String messageId, ResolutionInfo resolutionInfo) {
+    static ResolutionEvent messageResolution(@NonNull InAppMessage message, ResolutionInfo resolutionInfo) {
         JsonMap.Builder resolutionDataBuilder = JsonMap.newBuilder()
                                                        .put(RESOLUTION_TYPE, resolutionInfo.type)
                                                        .put(DISPLAY_TIME, millisecondsToSecondsString(resolutionInfo.displayMilliseconds));
@@ -118,7 +115,7 @@ class ResolutionEvent extends Event {
                                  .put(BUTTON_DESCRIPTION, resolutionInfo.buttonInfo.getLabel().getText());
         }
 
-        return new ResolutionEvent(messageId, resolutionDataBuilder.build());
+        return new ResolutionEvent(message, resolutionDataBuilder.build());
     }
 
 
@@ -128,12 +125,10 @@ class ResolutionEvent extends Event {
     }
 
     @Override
-    protected final JsonMap getEventData() {
+    protected JsonMap getEventData() {
         return JsonMap.newBuilder()
-                      .put(ID, id)
-                      .putOpt(RESOLUTION, resolutionData)
-                      .put(CONVERSION_SEND_ID, UAirship.shared().getAnalytics().getConversionSendId())
-                      .put(CONVERSION_METADATA, UAirship.shared().getAnalytics().getConversionMetadata())
+                      .putAll(super.getEventData())
+                      .put(RESOLUTION, resolutionData)
                       .build();
     }
 }
