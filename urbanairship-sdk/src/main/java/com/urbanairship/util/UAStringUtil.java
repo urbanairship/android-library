@@ -2,6 +2,13 @@
 
 package com.urbanairship.util;
 
+import android.support.annotation.NonNull;
+
+import com.urbanairship.Logger;
+
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -70,5 +77,39 @@ public abstract class UAStringUtil {
             }
         }
         return builder.toString();
+    }
+
+    /**
+     * Returns the sha256 hex string for a given string.
+     *
+     * @param value The value.
+     * @return The sha256 hex string or null if the value is null or it failed encode the string.
+     */
+    public static String sha256(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes("UTF-8"));
+            return byteToHex(hash);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            Logger.error("Failed to encode string: " + value, e);
+            return null;
+        }
+    }
+
+    /**
+     * Converts the bytes into a hex string.
+     * @param bytes The byte array.
+     * @return A hex string.
+     */
+    public static String byteToHex(@NonNull byte[] bytes) {
+        StringBuilder hexHash = new StringBuilder();
+        for (byte b : bytes) {
+            hexHash.append(String.format("%02x", b));
+        }
+        return hexHash.toString();
     }
 }

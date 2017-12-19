@@ -20,8 +20,7 @@ import java.util.List;
 
 /**
  * Audience conditions for an in-app message. Audiences are normally only validated at display time,
- * and if the audience is not met, the in-app message will be canceled. Messages from Urban Airship
- * will check the audience before scheduling.
+ * and if the audience is not met, the in-app message will be canceled.
  */
 public class Audience implements JsonSerializable {
 
@@ -32,6 +31,8 @@ public class Audience implements JsonSerializable {
     private static final String LOCALE_KEY = "locale";
     private static final String APP_VERSION_KEY = "app_version";
     private static final String TAGS_KEY = "tags";
+    private static final String TEST_DEVICES_KEY = "test_devices";
+
 
     // Platform keys for app version
     static final String AMAZON_VERSION_KEY = "amazon";
@@ -41,6 +42,7 @@ public class Audience implements JsonSerializable {
     private final Boolean notificationsOptIn;
     private final Boolean locationOptIn;
     private final List<String> languageTags;
+    private final List<String> testDevices;
     private final TagSelector tagSelector;
     private final JsonPredicate versionPredicate;
 
@@ -55,6 +57,7 @@ public class Audience implements JsonSerializable {
         this.languageTags = builder.languageTags;
         this.tagSelector = builder.tagSelector;
         this.versionPredicate = builder.versionPredicate;
+        this.testDevices = builder.testDevices;
     }
 
     @Override
@@ -63,7 +66,8 @@ public class Audience implements JsonSerializable {
                       .putOpt(NEW_USER_KEY, newUser)
                       .putOpt(NOTIFICATION_OPT_IN_KEY, notificationsOptIn)
                       .putOpt(LOCATION_OPT_IN_KEY, locationOptIn)
-                      .put(LOCALE_KEY, languageTags.isEmpty() ? null :  JsonValue.wrapOpt(languageTags))
+                      .put(LOCALE_KEY, languageTags.isEmpty() ? null : JsonValue.wrapOpt(languageTags))
+                      .put(TEST_DEVICES_KEY, testDevices.isEmpty() ? null : JsonValue.wrapOpt(testDevices))
                       .put(TAGS_KEY, tagSelector)
                       .put(APP_VERSION_KEY, versionPredicate)
                       .build().toJsonValue();
@@ -130,6 +134,21 @@ public class Audience implements JsonSerializable {
             builder.setTagSelector(TagSelector.parseJson(content.get(TAGS_KEY)));
         }
 
+        // Test devices
+        if (content.containsKey(TEST_DEVICES_KEY)) {
+            if (!content.get(TEST_DEVICES_KEY).isJsonList()) {
+                throw new JsonException("test devices must be an array: " + content.get(LOCALE_KEY));
+            }
+
+            for (JsonValue value : content.opt(TEST_DEVICES_KEY).optList()) {
+                if (!value.isString()) {
+                    throw new JsonException("Invalid test device: " + value);
+                }
+
+                builder.addTestDevice(value.getString());
+            }
+        }
+
         return builder.build();
     }
 
@@ -137,10 +156,24 @@ public class Audience implements JsonSerializable {
      * Gets the list of language tags.
      *
      * @return A list of language tags.
+     * @hide
      */
     @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     List<String> getLanguageTags() {
         return languageTags;
+    }
+
+    /**
+     * Gets the list of test devices.
+     *
+     * @return A list of test devices.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    List<String> getTestDevices() {
+        return testDevices;
     }
 
     /**
@@ -251,6 +284,8 @@ public class Audience implements JsonSerializable {
         private Boolean notificationsOptIn;
         private Boolean locationOptIn;
         private final List<String> languageTags = new ArrayList<>();
+        private final List<String> testDevices = new ArrayList<>();
+
         private TagSelector tagSelector;
         private JsonPredicate versionPredicate;
 
@@ -269,6 +304,17 @@ public class Audience implements JsonSerializable {
             return this;
         }
 
+        /**
+         * Adds a test device.
+         * @param hash The hashed channel.
+         * @return THe builder.
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        Builder addTestDevice(String hash) {
+            this.testDevices.add(hash);
+            return this;
+        }
 
         /**
          * Sets the location opt-in audience condition for the in-app message.

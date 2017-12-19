@@ -34,7 +34,7 @@ public abstract class AudienceChecks {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static boolean checkAudience(Context context, @Nullable Audience audience, boolean isNewUser) {
+    static boolean checkAudienceForScheduling(Context context, @Nullable Audience audience, boolean isNewUser) {
         if (audience == null) {
             return true;
         }
@@ -44,7 +44,12 @@ public abstract class AudienceChecks {
             return false;
         }
 
-        checkAudience(context, audience);
+        if (!audience.getTestDevices().isEmpty()) {
+            String hash = UAStringUtil.sha256(UAirship.shared().getPushManager().getChannelId());
+            if (hash == null || !audience.getTestDevices().contains(hash)) {
+                return false;
+            }
+        }
 
         return true;
     }

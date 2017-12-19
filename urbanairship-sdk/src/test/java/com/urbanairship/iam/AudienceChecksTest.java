@@ -12,6 +12,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
+import com.urbanairship.util.UAStringUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -115,11 +116,29 @@ public class AudienceChecksTest extends BaseTestCase {
                                                 .setNewUser(false)
                                                 .build();
 
-        assertFalse(AudienceChecks.checkAudience(context, requiresNewUser, false));
-        assertTrue(AudienceChecks.checkAudience(context, requiresExistingUser, false));
-        assertTrue(AudienceChecks.checkAudience(context, requiresNewUser, true));
-        assertFalse(AudienceChecks.checkAudience(context, requiresExistingUser, true));
+        assertFalse(AudienceChecks.checkAudienceForScheduling(context, requiresNewUser, false));
+        assertTrue(AudienceChecks.checkAudienceForScheduling(context, requiresExistingUser, false));
+        assertTrue(AudienceChecks.checkAudienceForScheduling(context, requiresNewUser, true));
+        assertFalse(AudienceChecks.checkAudienceForScheduling(context, requiresExistingUser, true));
     }
+
+    @Test
+    public void testTestDevices() {
+        Audience testDeviceAudience = Audience.newBuilder()
+                                           .addTestDevice(UAStringUtil.sha256("test channel"))
+                                           .build();
+
+        Audience someOtherTestDeviceAudience = Audience.newBuilder()
+                                              .addTestDevice(UAStringUtil.sha256("some other channel"))
+                                              .build();
+
+        when(pushManager.getChannelId()).thenReturn("test channel");
+
+
+        assertTrue(AudienceChecks.checkAudienceForScheduling(context, testDeviceAudience, false));
+        assertFalse(AudienceChecks.checkAudienceForScheduling(context, someOtherTestDeviceAudience, false));
+    }
+
 
     @Test
     public void testTagSelector() {

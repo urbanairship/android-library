@@ -219,7 +219,7 @@ class InAppRemoteDataObserver {
         Context context = UAirship.getApplicationContext();
         Audience audience = scheduleInfo.getInAppMessage().getAudience();
         boolean allowNewUser = createdTimeStamp <= getScheduleNewUserCutOffTime();
-        return AudienceChecks.checkAudience(context, audience, allowNewUser);
+        return AudienceChecks.checkAudienceForScheduling(context, audience, allowNewUser);
     }
 
     /**

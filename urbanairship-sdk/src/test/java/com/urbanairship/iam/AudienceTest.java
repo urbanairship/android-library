@@ -29,6 +29,7 @@ public class AudienceTest extends BaseTestCase {
                                     .setNotificationsOptIn(true)
                                     .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                                     .setTagSelector(TagSelector.tag("some tag"))
+                                    .addTestDevice("cool story")
                                     .build();
 
         Audience fromJson = Audience.parseJson(original.toJsonValue());
