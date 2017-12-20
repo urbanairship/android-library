@@ -123,6 +123,28 @@ public class BaseTagsActionTest extends BaseTestCase {
         assertTrue(action.applyTags.isEmpty());
     }
 
+    @Test
+    public void testApplyTagsAndTagGroups() {
+        Set<String> tags = new HashSet<>(Arrays.asList("tag1", "tag2", "tag3"));
+        HashMap<String, JsonValue> argument = new HashMap<>();
+        argument.put("channel", JsonMap.newBuilder().put("group1", JsonValue.wrapOpt(tags)).build().toJsonValue());
+        argument.put("named_user", JsonMap.newBuilder().put("group2", JsonValue.wrapOpt(tags)).build().toJsonValue());
+        argument.put("device", JsonValue.wrapOpt(Arrays.asList("device tag 1", "device tag 2")));
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, argument);
+        action.perform(args);
+
+        assertEquals(1, action.applyChannelTags.size());
+        assertEquals(tags, action.applyChannelTags.get("group1"));
+
+        assertEquals(1, action.applyNamedUserTags.size());
+        assertEquals(tags, action.applyNamedUserTags.get("group2"));
+
+        assertEquals(2, action.applyTags.get(0).size());
+        assertTrue(action.applyTags.get(0).contains("device tag 1"));
+        assertTrue(action.applyTags.get(0).contains("device tag 2"));
+    }
+
     private static class TestBaseTagsAction extends BaseTagsAction {
 
         List<Set<String>> applyTags = new ArrayList<>();

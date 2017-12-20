@@ -33,6 +33,11 @@ abstract class BaseTagsAction extends Action {
     private static final String NAMED_USER_KEY = "named_user";
 
     /**
+     * JSON key for device tags.
+     */
+    private static final String DEVICE_KEY = "device";
+
+    /**
      * Gets the push manager
      *
      * @return A push manager instance
@@ -84,6 +89,8 @@ abstract class BaseTagsAction extends Action {
         }
 
         if (arguments.getValue().getMap() != null) {
+
+            // Channel Tag Groups
             Map<String, Set<String>> tagsMap = new HashMap<>();
             for (Map.Entry<String, JsonValue> entry : arguments.getValue().getMap().opt(CHANNEL_KEY).optMap().getMap().entrySet()) {
                 String group = entry.getKey();
@@ -101,6 +108,7 @@ abstract class BaseTagsAction extends Action {
                 applyChannelTagGroups(tagsMap);
             }
 
+            // Named User Tag Groups
             tagsMap = new HashMap<>();
             for (Map.Entry<String, JsonValue> entry :  arguments.getValue().getMap().opt(NAMED_USER_KEY).optMap().getMap().entrySet()) {
                 String group = entry.getKey();
@@ -116,6 +124,18 @@ abstract class BaseTagsAction extends Action {
 
             if (!tagsMap.isEmpty()) {
                 applyNamedUserTagGroups(tagsMap);
+            }
+
+            // Device Tags
+            Set<String> tags = new HashSet<>();
+            for (JsonValue tag : arguments.getValue().getMap().opt(DEVICE_KEY).optList()) {
+                if (tag.getString() != null) {
+                    tags.add(tag.getString());
+                }
+            }
+
+            if (!tags.isEmpty()) {
+                applyChannelTags(tags);
             }
         }
 
