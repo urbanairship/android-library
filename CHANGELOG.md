@@ -3,6 +3,11 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 9.0.0-beta - January 2, 2018
+====================================
+
+In-app messaging v2 beta release. The APIs are not yet final and may contain bugs.
+
 
 Version 8.9.6 - November 21, 2017
 =================================
