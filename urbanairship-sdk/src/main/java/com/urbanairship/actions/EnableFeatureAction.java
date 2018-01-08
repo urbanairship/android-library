@@ -3,10 +3,17 @@
 package com.urbanairship.actions;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.HelperActivity;
 import com.urbanairship.util.PermissionsRequester;
@@ -125,6 +132,9 @@ public class EnableFeatureAction extends Action {
                 return ActionResult.newResult(ActionValue.wrap(false));
             case FEATURE_USER_NOTIFICATIONS:
                 UAirship.shared().getPushManager().setUserNotificationsEnabled(true);
+                if (!NotificationManagerCompat.from(UAirship.getApplicationContext()).areNotificationsEnabled()) {
+                    navigateToNotificationSettings();
+                }
                 return ActionResult.newResult(ActionValue.wrap(true));
         }
 
@@ -139,5 +149,54 @@ public class EnableFeatureAction extends Action {
             }
         }
         return false;
+    }
+
+    /**
+     * Navigates to the app notification settings screen.
+     */
+    private static void navigateToNotificationSettings() {
+        Context context = UAirship.getApplicationContext();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, UAirship.getPackageName())
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            try {
+                context.startActivity(intent);
+                return;
+            } catch (ActivityNotFoundException e) {
+                Logger.debug("Failed to launch notification settings.", e);
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS")
+                    .putExtra("app_package", UAirship.getPackageName())
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra("app_uid", UAirship.getAppInfo().uid);
+
+            try {
+                context.startActivity(intent);
+                return;
+            } catch (ActivityNotFoundException e) {
+                Logger.debug("Failed to launch notification settings.", e);
+            }
+        }
+
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                .addCategory(Intent.CATEGORY_DEFAULT)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .setData(Uri.parse("package:" + UAirship.getPackageName()));
+
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Logger.error("Unable to launch settings activity. ", ex);
+        }
+    }
+
+    @Override
+    public boolean shouldRunOnMainThread() {
+        return true;
     }
 }
