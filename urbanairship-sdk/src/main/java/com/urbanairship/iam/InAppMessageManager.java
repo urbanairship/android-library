@@ -199,14 +199,21 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
                     if (factory == null) {
                         Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
+                        cancelSchedule(scheduleId);
                         return false;
                     }
 
                     try {
                         InAppMessageAdapter adapter = factory.createAdapter(message);
+                        if (adapter == null) {
+                            Logger.error("InAppMessageManager - Failed to create in-app message adapter.");
+                            cancelSchedule(scheduleId);
+                            return false;
+                        }
                         adapterWrappers.put(scheduleId, new AdapterWrapper(scheduleId, message, adapter));
                     } catch (Exception e) {
                         Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
+                        cancelSchedule(scheduleId);
                         return false;
                     }
 

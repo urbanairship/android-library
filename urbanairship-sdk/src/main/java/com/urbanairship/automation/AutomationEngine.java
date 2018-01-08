@@ -10,7 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
-import android.util.SparseLongArray;
+import android.util.SparseArray;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.CancelableOperation;
@@ -72,7 +72,7 @@ public class AutomationEngine<T extends Schedule> {
     private AtomicBoolean isPaused = new AtomicBoolean(false);
 
     private long startTime;
-    private SparseLongArray stateChangeTimeStamps = new SparseLongArray();
+    private SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
 
     @VisibleForTesting
     HandlerThread backgroundThread;
@@ -143,7 +143,7 @@ public class AutomationEngine<T extends Schedule> {
      *
      * @param builder The builder instance.
      */
-    private AutomationEngine(Builder builder) {
+    private AutomationEngine(Builder<T> builder) {
         this.dataManager = builder.dataManager;
         this.activityMonitor = builder.activityMonitor;
         this.analytics = builder.analytics;
@@ -476,13 +476,16 @@ public class AutomationEngine<T extends Schedule> {
                 boolean subscribeForStateChanges = false;
                 long stateChangeTimeStamp = -1;
 
-                if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED &&
-                        entry.getCount() < entry.getLimit() &&
-                        (entry.getEnd() < 0 || entry.getEnd() >= System.currentTimeMillis())) {
+                boolean isOverLimit = entry.getLimit() > 0 && entry.getCount() >= entry.getLimit();
+                boolean isExpired = entry.getEnd() > 0 && entry.getEnd() > System.currentTimeMillis();
 
+                // Check if the schedule needs to be rehabilitated or finished due to the edits
+                if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED && !isOverLimit && isExpired) {
                     subscribeForStateChanges = true;
                     stateChangeTimeStamp = entry.getExecutionStateChangeDate();
                     entry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                } else if (entry.getExecutionState() != ScheduleEntry.STATE_FINISHED && (isOverLimit || isExpired)) {
+                    entry.setExecutionState(ScheduleEntry.STATE_FINISHED);
                 }
 
                 dataManager.saveSchedules(Collections.singletonList(entry));
@@ -1124,23 +1127,25 @@ public class AutomationEngine<T extends Schedule> {
                 scheduleEntry.setPendingExecutionDate(-1);
                 scheduleEntry.setCount(scheduleEntry.getCount() + 1);
 
-                boolean keepSchedule = true;
+                boolean deleteSchedule = false;
 
-                if (scheduleEntry.getCount() >= scheduleEntry.getLimit()) {
+                if (scheduleEntry.getLimit() > 0 && scheduleEntry.getCount() >= scheduleEntry.getLimit()) {
                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
-                    keepSchedule = scheduleEntry.getEditGracePeriod() > 0;
-                } else if (scheduleEntry.getInterval() > 0) {
-                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_PAUSED);
-                    scheduleIntervalAlarm(scheduleEntry, scheduleEntry.getInterval());
-                } else {
-                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
-
+                    deleteSchedule = scheduleEntry.getEditGracePeriod() <= 0;
+                } else if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_FINISHED) {
+                    if (scheduleEntry.getInterval() > 0) {
+                        scheduleEntry.setExecutionState(ScheduleEntry.STATE_PAUSED);
+                        scheduleIntervalAlarm(scheduleEntry, scheduleEntry.getInterval());
+                    } else {
+                        scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                    }
                 }
-                if (keepSchedule) {
-                    dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
-                } else {
+
+                if (deleteSchedule) {
                     Logger.verbose("AutomationEngine - Deleting schedule: " + scheduleId);
                     dataManager.deleteSchedule(scheduleId);
+                } else {
+                    dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
                 }
             }
         });
@@ -1257,14 +1262,12 @@ public class AutomationEngine<T extends Schedule> {
                 if (!activityMonitor.isAppForegrounded()) {
                     return false;
                 }
-
                 break;
 
             case ScheduleDelay.APP_STATE_BACKGROUND:
                 if (activityMonitor.isAppForegrounded()) {
                     return false;
                 }
-
                 break;
 
             case ScheduleDelay.APP_STATE_ANY:
@@ -1301,7 +1304,7 @@ public class AutomationEngine<T extends Schedule> {
 
         private final String scheduleId;
 
-        public ScheduleExecutorCallback(String scheduleId) {
+        ScheduleExecutorCallback(String scheduleId) {
             this.scheduleId = scheduleId;
         }
 
@@ -1334,7 +1337,7 @@ public class AutomationEngine<T extends Schedule> {
     public static class Builder<T extends Schedule> {
         private long limit;
         private ActivityMonitor activityMonitor;
-        private AutomationDriver driver;
+        private AutomationDriver<T> driver;
         private AutomationDataManager dataManager;
         public Analytics analytics;
         private OperationScheduler scheduler;
