@@ -82,7 +82,7 @@ public class AudienceChecksTest extends BaseTestCase {
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedOut));
 
-        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.areNotificationsOptedIn()).thenReturn(true);
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedIn));
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedOut));
     }

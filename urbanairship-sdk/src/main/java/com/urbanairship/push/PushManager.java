@@ -357,6 +357,7 @@ public class PushManager extends AirshipComponent {
 
     /**
      * {@inheritDoc}
+     *
      * @hide
      */
     @Override
@@ -511,7 +512,6 @@ public class PushManager extends AirshipComponent {
      * @param tags The desired set of tags, must be non-null
      * @see #setAlias(String)
      * @see #setTags(Set)
-     *
      * @deprecated Alias is now deprecated and will be removed in SDK 10.0.0. Please use {@link NamedUser} instead.
      */
     @Deprecated
@@ -541,7 +541,16 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if opted in for push.
      */
     public boolean isOptIn() {
-        return isPushEnabled() && isPushAvailable() && getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled();
+        return isPushEnabled() && isPushAvailable() && areNotificationsOptedIn();
+    }
+
+    /**
+     * Checks if notifications are enabled for the app and in the push manager.
+     *
+     * @return {@code true} if notifications are opted in, otherwise {@code false}.
+     */
+    public boolean areNotificationsOptedIn() {
+        return getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled();
     }
 
     /**
@@ -587,7 +596,6 @@ public class PushManager extends AirshipComponent {
 
         return builder.build();
     }
-
 
     /**
      * Update registration.

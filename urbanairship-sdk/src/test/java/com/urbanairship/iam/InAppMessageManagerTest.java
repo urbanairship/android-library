@@ -145,6 +145,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testMessageFinished() {
+        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
+        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
+
         // Resume an activity
         Activity activity = new Activity();
         activityMonitor.startActivity(activity);
@@ -178,6 +181,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Verify in-app message is ready to be displayed
         assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+
+        // Verify the display actions ran
+        verify(actionRunRequest).run();
     }
 
     @Test
@@ -190,9 +196,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testOnDisplay() {
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
-
         // Resume an activity
         Activity activity = new Activity();
         activityMonitor.startActivity(activity);
@@ -212,9 +215,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Verify the adapter onDisplay was called
         verify(mockAdapter).onDisplay(eq(activity), eq(false), any(DisplayHandler.class));
-
-        // Verify the display actions ran
-        verify(actionRunRequest).run();
     }
 
     @Test

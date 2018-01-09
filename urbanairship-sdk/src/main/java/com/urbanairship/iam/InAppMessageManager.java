@@ -573,7 +573,11 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return;
         }
 
+        // Add resolution event
         analytics.addEvent(ResolutionEvent.messageResolution(adapterWrapper.message, resolutionInfo));
+
+        // Run Actions
+        InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
 
         synchronized (listeners) {
             for (InAppMessageListener listener : new ArrayList<>(listeners)) {
@@ -687,7 +691,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
             if (!isRedisplay) {
                 analytics.addEvent(new DisplayEvent(adapterWrapper.message));
-                InAppActionUtils.runActions(adapterWrapper.message.getActions(), actionRunRequestFactory);
 
                 synchronized (listeners) {
                     for (InAppMessageListener listener : new ArrayList<>(listeners)) {
