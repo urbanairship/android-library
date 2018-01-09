@@ -9,7 +9,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
 
@@ -133,7 +136,12 @@ public class EnableFeatureAction extends Action {
             case FEATURE_USER_NOTIFICATIONS:
                 UAirship.shared().getPushManager().setUserNotificationsEnabled(true);
                 if (!NotificationManagerCompat.from(UAirship.getApplicationContext()).areNotificationsEnabled()) {
-                    navigateToNotificationSettings();
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            navigateToNotificationSettings();
+                        }
+                    });
                 }
                 return ActionResult.newResult(ActionValue.wrap(true));
         }
@@ -154,6 +162,7 @@ public class EnableFeatureAction extends Action {
     /**
      * Navigates to the app notification settings screen.
      */
+    @MainThread
     private static void navigateToNotificationSettings() {
         Context context = UAirship.getApplicationContext();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -193,10 +202,5 @@ public class EnableFeatureAction extends Action {
         } catch (ActivityNotFoundException ex) {
             Logger.error("Unable to launch settings activity. ", ex);
         }
-    }
-
-    @Override
-    public boolean shouldRunOnMainThread() {
-        return true;
     }
 }
