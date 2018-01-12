@@ -496,7 +496,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     /**
      * Enables or disables in-app messaging.
      *
-     * @param enabled {@codee true} to enable in-app messaging, otherwise {@code false}.
+     * @param enabled {@code true} to enable in-app messaging, otherwise {@code false}.
      */
     public void setEnabled(boolean enabled) {
         getDataStore().put(ENABLE_KEY, enabled);

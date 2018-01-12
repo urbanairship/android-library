@@ -4,12 +4,14 @@ package com.urbanairship.sample;
 
 import android.content.Context;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
+import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.espresso.contrib.NavigationViewActions;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
@@ -20,6 +22,17 @@ import android.view.Gravity;
 
 import com.urbanairship.AirshipReceiver;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.Triggers;
+import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.iam.DisplayContent;
+import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.InAppMessageScheduleInfo;
+import com.urbanairship.iam.MediaInfo;
+import com.urbanairship.iam.TextInfo;
+import com.urbanairship.iam.banner.BannerDisplayContent;
+import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
+import com.urbanairship.iam.modal.ModalDisplayContent;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.sample.utils.ActionsPayload;
 import com.urbanairship.sample.utils.InAppMessagePayload;
@@ -68,7 +81,7 @@ import static org.junit.Assert.fail;
 /**
  * Test basic pushes, message center and in-app messages using Espresso.
  * <p/>
- * To run the test suite on emulator or device with API 21+:
+ * To run the test suite on emulator or device with API 19+:
  * Turn off animations on your test device via Settings by opening Developer options and turning all the following options off:
  * Window animation scale, Transition animation scale and Animator duration scale.
  * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.appKey="APP_KEY" -Pandroid.testInstrumentationRunnerArguments.masterSecret="MASTER_SECRET"
@@ -268,7 +281,7 @@ public class SampleTest {
     }
 
     /**
-     * Test for an in-app message with landing page and interactive buttons.
+     * Test an in-app message with landing page and interactive buttons.
      *
      * @throws Exception
      */
@@ -311,11 +324,7 @@ public class SampleTest {
         // Wait for in-app message to be displayed
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 
-        // Click YES button
-        onView(withText(containsString("Yes")))
-                .perform(click());
-
-        assertTrue(UAirship.shared().getPushManager().getTags().contains("YES_INTERACTIVE_BUTTON_TAG"));
+        clickAndVerifyTagAdded("Yes","YES_INTERACTIVE_BUTTON_TAG");
 
         // Test in-app message with interactive buttons
         pushSender.send(pushPayload);
@@ -335,6 +344,397 @@ public class SampleTest {
 
         // Close the landing page
         Espresso.pressBack();
+    }
+
+    /**
+     * Test a banner in-app message V2 with media image and two buttons.
+     */
+    @Test
+    public void testBannerInAppMessageV2() throws Exception {
+
+        // Create the actions map
+        Map<String, JsonValue> actions = new HashMap<>();
+        actions.put("add_tags_action", JsonValue.wrap("clicked_banner"));
+
+        // Create the banner in-app message
+        BannerDisplayContent displayContent = BannerDisplayContent.newBuilder()
+                                                                  .setHeading(TextInfo.newBuilder()
+                                                                                      .setText("Banner heading is bold")
+                                                                                      .addStyle(TextInfo.STYLE_BOLD)
+                                                                                      .setColor(Color.BLUE)
+                                                                                      .setDrawable(R.drawable.ic_menu_home)
+                                                                                      .build())
+                                                                  .setMedia(MediaInfo.newBuilder()
+                                                                                     .setUrl("https://media.giphy.com/media/JYsWwF82EGnpC/giphy.gif")
+                                                                                     .setType(MediaInfo.TYPE_IMAGE)
+                                                                                     .setDescription("mustache man")
+                                                                                     .build())
+                                                                  .setBody(TextInfo.newBuilder()
+                                                                                   .setText("Banner body text is so cool its italic")
+                                                                                   .addStyle(TextInfo.STYLE_ITALIC)
+                                                                                   .setColor(Color.GREEN)
+                                                                                   .build())
+                                                                  .setButtonLayout(DisplayContent.BUTTON_LAYOUT_JOINED)
+                                                                  .addButton(ButtonInfo.newBuilder()
+                                                                                       .setId("button-one")
+                                                                                       .setBackgroundColor(Color.BLUE)
+                                                                                       .setId("button id 1")
+                                                                                       .setBorderRadius(10)
+                                                                                       .setBorderColor(Color.MAGENTA)
+                                                                                       .setLabel(TextInfo.newBuilder()
+                                                                                                         .setText("Button One")
+                                                                                                         .build())
+                                                                                       .addAction("add_tags_action", JsonValue.wrap("button_one"))
+                                                                                       .build())
+                                                                  .addButton(ButtonInfo.newBuilder()
+                                                                                       .setBackgroundColor(Color.GRAY)
+                                                                                       .setBorderRadius(2)
+                                                                                       .setId("button-two")
+                                                                                       .setLabel(TextInfo.newBuilder()
+                                                                                                         .setText("Button Two")
+                                                                                                         .setAlignment(TextInfo.ALIGNMENT_RIGHT)
+                                                                                                         .build())
+                                                                                       .addAction("add_tags_action", JsonValue.wrap("button_two"))
+                                                                                       .build())
+                                                                  .setDuration(10, TimeUnit.SECONDS)
+                                                                  .setDismissButtonColor(Color.RED)
+                                                                  .setActions(actions)
+                                                                  .build();
+
+        // Schedule banner in-app message
+        scheduleInAppMessageV2Banner(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Banner heading is bold", "clicked_banner");
+
+        // Schedule banner in-app message
+        scheduleInAppMessageV2Banner(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Button One", "button_one");
+
+        // Schedule banner in-app message
+        scheduleInAppMessageV2Banner(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Button Two", "button_two");
+    }
+
+    /**
+     * Test a fullscreen in-app message V2 with media image and five buttons.
+     */
+    @Test
+    public void testFullScreenInAppMessageV2() throws Exception {
+
+        // Create the fullscreen in-app message
+        FullScreenDisplayContent displayContent = FullScreenDisplayContent.newBuilder()
+                                                                          .setHeading(TextInfo.newBuilder()
+                                                                                              .setText("Banner heading is bold")
+                                                                                              .addStyle(TextInfo.STYLE_BOLD)
+                                                                                              .setColor(Color.BLUE)
+                                                                                              .setDrawable(R.drawable.ic_menu_home)
+                                                                                              .build())
+                                                                          .setMedia(MediaInfo.newBuilder()
+                                                                                             .setUrl("https://media.giphy.com/media/JYsWwF82EGnpC/giphy.gif")
+                                                                                             .setType(MediaInfo.TYPE_IMAGE)
+                                                                                             .setDescription("so cool")
+                                                                                             .build())
+                                                                          .setBody(TextInfo.newBuilder()
+                                                                                           .setText("What's in a name? that which we call a rose By any other name would smell as sweet; So Romeo would, were he not Romeo call'd, Retain that dear perfection which he owes Without that title. Romeo, doff thy name, And for that name which is no part of thee Take all myself.")
+                                                                                           .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                                                                                           .addStyle(TextInfo.STYLE_ITALIC)
+                                                                                           .setColor(Color.GREEN)
+                                                                                           .addFontFamily("cursive")
+                                                                                           .setFontSize(10)
+                                                                                           .build())
+                                                                          .setFooter(ButtonInfo.newBuilder()
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Footer is lukewarm.")
+                                                                                                                 .setColor(Color.RED)
+                                                                                                                 .addStyle(TextInfo.STYLE_UNDERLINE)
+                                                                                                                 .build())
+                                                                                               .build())
+                                                                          .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
+                                                                          .addButton(ButtonInfo.newBuilder()
+                                                                                               .setId("button-one")
+                                                                                               .setBackgroundColor(Color.BLUE)
+                                                                                               .setBorderRadius(2)
+                                                                                               .setId("button id 1")
+                                                                                               .setBehavior(ButtonInfo.BEHAVIOR_DISMISS)
+                                                                                               .setBorderRadius(10)
+                                                                                               .setBorderColor(Color.MAGENTA)
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Button One!")
+                                                                                                                 .build())
+                                                                                               .addAction("add_tags_action", JsonValue.wrap("button_one!"))
+                                                                                               .build())
+                                                                          .addButton(ButtonInfo.newBuilder()
+                                                                                               .setBackgroundColor(Color.GRAY)
+                                                                                               .setBorderRadius(2)
+                                                                                               .setId("button-two")
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Button Two!")
+                                                                                                                 .setAlignment(TextInfo.ALIGNMENT_RIGHT)
+                                                                                                                 .build())
+                                                                                               .addAction("add_tags_action", JsonValue.wrap("button_two!"))
+                                                                                               .build())
+                                                                          .addButton(ButtonInfo.newBuilder()
+                                                                                               .setId("button-three")
+                                                                                               .setBackgroundColor(Color.BLUE)
+                                                                                               .setBorderRadius(2)
+                                                                                               .setId("button id 3")
+                                                                                               .setBehavior(ButtonInfo.BEHAVIOR_DISMISS)
+                                                                                               .setBorderRadius(10)
+                                                                                               .setBorderColor(Color.MAGENTA)
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Button Three!")
+                                                                                                                 .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                                                                                                                 .build())
+                                                                                               .addAction("add_tags_action", JsonValue.wrap("button_three!"))
+                                                                                               .build())
+                                                                          .addButton(ButtonInfo.newBuilder()
+                                                                                               .setBackgroundColor(Color.GRAY)
+                                                                                               .setBorderRadius(2)
+                                                                                               .setId("button-four")
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Button Four!")
+                                                                                                                 .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                                                                                                                 .build())
+                                                                                               .addAction("add_tags_action", JsonValue.wrap("button_four!"))
+                                                                                               .build())
+                                                                          .addButton(ButtonInfo.newBuilder()
+                                                                                               .setBackgroundColor(Color.GRAY)
+                                                                                               .setBorderRadius(2)
+                                                                                               .setId("button-five")
+                                                                                               .setLabel(TextInfo.newBuilder()
+                                                                                                                 .setText("Button Five!")
+                                                                                                                 .setAlignment(TextInfo.ALIGNMENT_CENTER)
+                                                                                                                 .build())
+                                                                                               .addAction("add_tags_action", JsonValue.wrap("button_five!"))
+                                                                                               .build())
+                                                                          .setDismissButtonColor(Color.GREEN)
+                                                                          .setTemplate(FullScreenDisplayContent.TEMPLATE_MEDIA_HEADER_BODY)
+                                                                          .setBackgroundColor(Color.YELLOW)
+                                                                          .build();
+
+        // Schedule fullscreen in-app message
+        scheduleInAppMessageV2FullScreen(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Button One!", "button_one!");
+
+        // Schedule fullscreen in-app message
+        scheduleInAppMessageV2FullScreen(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Button Two!", "button_two!");
+
+        // Schedule fullscreen in-app message
+        scheduleInAppMessageV2FullScreen(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        // scroll down
+        onView(withText(containsString("Button Three!"))).perform(ViewActions.scrollTo());
+
+        clickAndVerifyTagAdded("Button Three!", "button_three!");
+
+        // Schedule fullscreen in-app message
+        scheduleInAppMessageV2FullScreen(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        // scroll down
+        onView(withText(containsString("Button Four!"))).perform(ViewActions.scrollTo());
+
+        clickAndVerifyTagAdded("Button Four!", "button_four!");
+
+        // Schedule fullscreen in-app message
+        scheduleInAppMessageV2FullScreen(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        // scroll down
+        onView(withText(containsString("Button Five!"))).perform(ViewActions.scrollTo());
+
+        clickAndVerifyTagAdded("Button Five!", "button_five!");
+    }
+
+    /**
+     * Test a modal in-app message V2 with two buttons.
+     */
+    @Test
+    public void testModalInAppMessageV2() throws Exception {
+
+        // Create the modal in-app message
+        ModalDisplayContent displayContent = ModalDisplayContent.newBuilder()
+                                                                .setHeading(TextInfo.newBuilder()
+                                                                                    .setText("Blue Heading aligned left")
+                                                                                    .addFontFamily("arizonia")
+                                                                                    .setAlignment(TextInfo.ALIGNMENT_LEFT)
+                                                                                    .setColor(Color.BLUE)
+                                                                                    .setFontSize(15)
+                                                                                    .setDrawable(R.drawable.ic_menu_home)
+                                                                                    .build())
+                                                                .setBackgroundColor(Color.YELLOW)
+                                                                .setBody(TextInfo.newBuilder()
+                                                                                 .setText("What's in a name? that which we call a rose By any other name would smell as sweet; So Romeo would, were he not Romeo call'd, Retain that dear perfection which he owes Without that title. Romeo, doff thy name, And for that name which is no part of thee Take all myself.")
+                                                                                 .setColor(Color.GREEN)
+                                                                                 .addFontFamily("cursive")
+                                                                                 .setFontSize(11)
+                                                                                 .build())
+                                                                .setMedia(MediaInfo.newBuilder()
+                                                                                   .setUrl("https://media.giphy.com/media/JYsWwF82EGnpC/giphy.gif")
+                                                                                   .setType(MediaInfo.TYPE_IMAGE)
+                                                                                   .setDescription("mustache man")
+                                                                                   .build())
+                                                                .setBorderRadius(20)
+                                                                .setDismissButtonColor(Color.MAGENTA)
+                                                                .setFooter(ButtonInfo.newBuilder()
+                                                                                     .setLabel(TextInfo.newBuilder()
+                                                                                                       .setText("Footer is lukewarm.")
+                                                                                                       .setColor(Color.RED)
+                                                                                                       .addStyle(TextInfo.STYLE_UNDERLINE)
+                                                                                                       .setAlignment(TextInfo.ALIGNMENT_RIGHT)
+                                                                                                       .build())
+                                                                                     .addAction("share_action", JsonValue.wrap("Sharing this awesome app!"))
+                                                                                     .build())
+                                                                .setTemplate(ModalDisplayContent.TEMPLATE_HEADER_BODY_MEDIA)
+                                                                .setButtonLayout(DisplayContent.BUTTON_LAYOUT_STACKED)
+                                                                .addButton(ButtonInfo.newBuilder()
+                                                                                     .setId("button-one")
+                                                                                     .setBackgroundColor(Color.BLUE)
+                                                                                     .setBorderRadius(2)
+                                                                                     .setId("button id 1")
+                                                                                     .setBehavior(ButtonInfo.BEHAVIOR_DISMISS)
+                                                                                     .setBorderRadius(10)
+                                                                                     .setBorderColor(Color.MAGENTA)
+                                                                                     .setLabel(TextInfo.newBuilder()
+                                                                                                       .setText("Modal One!")
+                                                                                                       .setAlignment(TextInfo.ALIGNMENT_LEFT)
+                                                                                                       .setColor(Color.WHITE)
+                                                                                                       .build())
+                                                                                     .addAction("add_tags_action", JsonValue.wrap("modal_one"))
+                                                                                     .build())
+                                                                .addButton(ButtonInfo.newBuilder()
+                                                                                     .setBackgroundColor(Color.GRAY)
+                                                                                     .setBorderRadius(2)
+                                                                                     .setId("button-two")
+                                                                                     .setLabel(TextInfo.newBuilder()
+                                                                                                       .setText("Modal Two!")
+                                                                                                       .setAlignment(TextInfo.ALIGNMENT_RIGHT)
+                                                                                                       .setColor(Color.BLUE)
+                                                                                                       .build())
+                                                                                     .addAction("add_tags_action", JsonValue.wrap("modal_two"))
+                                                                                     .build())
+                                                                .build();
+
+        // Schedule modal in-app message
+        scheduleInAppMessageV2Modal(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Modal One!", "modal_one");
+
+        // Schedule modal in-app message
+        scheduleInAppMessageV2Modal(displayContent);
+
+        // Wait for in-app message to be displayed
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+
+        clickAndVerifyTagAdded("Modal Two!", "modal_two");
+
+    }
+
+    /**
+     * Clicks the view with textString and verify tag added.
+     *
+     * @param textString The text string.
+     * @param tagAdded The tag to be added.
+     */
+    private void clickAndVerifyTagAdded(String textString, String tagAdded) {
+
+        onView(withText(containsString(textString))).perform(click());
+        assertTrue(UAirship.shared().getPushManager().getTags().contains(tagAdded));
+    }
+
+    /**
+     * Schedules a modal in-app message.
+     *
+     * @param displayContent The modal display content.
+     */
+    private void scheduleInAppMessageV2Modal(ModalDisplayContent displayContent) {
+        UAirship.shared().getInAppMessagingManager().cancelMessage("someId");
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setId("someId")
+                                           .setDisplayContent(displayContent)
+                                           .build();
+
+        InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
+                                                                        .setMessage(message)
+                                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                                        .build();
+
+        UAirship.shared().getInAppMessagingManager().scheduleMessage(scheduleInfo);
+    }
+
+    /**
+     * Schedules a banner in-app message.
+     *
+     * @param displayContent The banner display content.
+     */
+    private void scheduleInAppMessageV2Banner(BannerDisplayContent displayContent) {
+
+        UAirship.shared().getInAppMessagingManager().cancelMessage("someId");
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setId("someId")
+                                           .setDisplayContent(displayContent)
+                                           .build();
+
+        InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
+                                                                        .setMessage(message)
+                                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                                        .build();
+
+        UAirship.shared().getInAppMessagingManager().scheduleMessage(scheduleInfo);
+    }
+
+    /**
+     * Schedules a fullscreen in-app message.
+     *
+     * @param displayContent The fullscreen display content.
+     */
+    private void scheduleInAppMessageV2FullScreen(FullScreenDisplayContent displayContent) {
+
+        UAirship.shared().getInAppMessagingManager().cancelMessage("someId");
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setId("someId")
+                                           .setDisplayContent(displayContent)
+                                           .build();
+
+        InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
+                                                                        .setMessage(message)
+                                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
+                                                                        .build();
+
+        UAirship.shared().getInAppMessagingManager().scheduleMessage(scheduleInfo);
     }
 
     public static class TestAirshipReceiver extends AirshipReceiver {
