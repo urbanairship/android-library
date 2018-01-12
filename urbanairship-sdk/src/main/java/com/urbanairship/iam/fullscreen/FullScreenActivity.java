@@ -29,6 +29,7 @@ import com.urbanairship.widget.UAWebChromeClient;
 public class FullScreenActivity extends InAppMessageActivity implements InAppButtonLayout.ButtonClickListener {
 
     protected FullScreenDisplayContent displayContent;
+    private MediaView mediaView;
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
@@ -44,7 +45,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         TextView heading = findViewById(R.id.heading);
         TextView body = findViewById(R.id.body);
         InAppButtonLayout buttonLayout = findViewById(R.id.buttons);
-        MediaView mediaView = findViewById(R.id.media);
+        this.mediaView = findViewById(R.id.media);
         Button footer = findViewById(R.id.footer);
         ImageButton dismiss = findViewById(R.id.dismiss);
 
@@ -117,6 +118,18 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
 
         getDisplayHandler().finished(ResolutionInfo.buttonPressed(buttonInfo, getDisplayTime()));
         finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        this.mediaView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        this.mediaView.onPause();
     }
 
     /**

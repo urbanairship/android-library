@@ -6,14 +6,13 @@ package com.urbanairship.iam.html;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.fullscreen.FullScreenActivity;
+import com.urbanairship.util.Network;
 
 /**
  * Html display adapter.
@@ -27,18 +26,32 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
      *
      * @param message The HTML in-app message.
      */
-    public HtmlDisplayAdapter(InAppMessage message) {
+    protected HtmlDisplayAdapter(InAppMessage message) {
         this.message = message;
+    }
+
+    /**
+     * Creates a new modal adapter.
+     * @param message The in-app message.
+     * @return The modal adapter.
+     */
+    public static HtmlDisplayAdapter newAdapter(InAppMessage message) {
+        HtmlDisplayAdapter displayContent = message.getDisplayContent();
+        if (displayContent == null) {
+            throw new IllegalArgumentException("Invalid message for adapter: " + message);
+        }
+
+        return new HtmlDisplayAdapter(message);
     }
 
     @Override
     public int onPrepare(@NonNull Context context) {
-        return isNetworkAvailable(context) ? OK : RETRY;
+        return Network.isConnected() ? OK : RETRY;
     }
 
     @Override
     public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
-        if (!isNetworkAvailable(activity)) {
+        if (!Network.isConnected()) {
             return false;
         }
 
@@ -53,20 +66,4 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     public void onFinish() {}
-
-    /**
-     * Helper method to check for network connectivity.
-     *
-     * @param context The application context.
-     * @return {@code true} if network connectivity is available, otherwise {@code false}.
-     */
-    private static boolean isNetworkAvailable(Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager == null) {
-            return false;
-        }
-
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-    }
 }

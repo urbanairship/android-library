@@ -1,45 +1,58 @@
 package com.urbanairship.iam.banner;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.iam.CachingDisplayAdapter;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
+import com.urbanairship.iam.MediaDisplayAdapter;
 import com.urbanairship.util.ManifestUtils;
 
 /**
  * Banner display adapter.
  */
-public class BannerAdapter extends CachingDisplayAdapter {
+public class BannerAdapter extends MediaDisplayAdapter {
 
     /**
      * Metadata an app can use to specify the banner's container ID per activity.
      */
     public final static String BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID";
+    private final BannerDisplayContent displayContent;
 
     /**
      * Default constructor.
      *
+     * @param displayContent The display content.
      * @param message The in-app message.
      */
-    protected BannerAdapter(InAppMessage message) {
-        super(message);
+    protected BannerAdapter(InAppMessage message, BannerDisplayContent displayContent) {
+        super(message, displayContent.getMedia());
+        this.displayContent = displayContent;
     }
 
-    @Override
-    public int onPrepare(@NonNull Context context) {
-        BannerDisplayContent displayContent = getMessage().getDisplayContent();
-        return cacheMedia(context, displayContent.getMedia());
+    /**
+     * Creates a new banner adapter.
+     * @param message The in-app message.
+     * @return The banner adapter.
+     */
+    public static BannerAdapter newAdapter(InAppMessage message) {
+        BannerDisplayContent displayContent = message.getDisplayContent();
+        if (displayContent == null) {
+            throw new IllegalArgumentException("Invalid message for adapter: " + message);
+        }
+
+        return new BannerAdapter(message, displayContent);
     }
+
 
     @Override
     public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
-        BannerDisplayContent displayContent = getMessage().getDisplayContent();
+        if (!super.onDisplay(activity, isRedisplay, displayHandler)) {
+            return false;
+        }
 
         int id = getContainerId(activity);
         if (id == 0 || activity.findViewById(id) == null) {

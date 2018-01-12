@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
 import com.urbanairship.util.FileUtils;
+import com.urbanairship.util.Network;
 import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.io.File;
@@ -20,19 +22,45 @@ import java.net.URL;
 /**
  * Display adapter that handles caching in-app message.
  */
-public abstract class CachingDisplayAdapter implements InAppMessageAdapter {
+public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
+
+    private final static String IMAGE_FILE_NAME = "image";
 
     private final InAppMessage message;
+    private final MediaInfo mediaInfo;
     private InAppMessageCache cache;
-    private final static String IMAGE_FILE_NAME = "image";
 
     /**
      * Default constructor.
      *
      * @param message The in-app message.
+     * @param mediaInfo The media info.
      */
-    protected CachingDisplayAdapter(InAppMessage message) {
+    protected MediaDisplayAdapter(InAppMessage message, MediaInfo mediaInfo) {
         this.message = message;
+        this.mediaInfo = mediaInfo;
+    }
+
+    @Override
+    public int onPrepare(@NonNull Context context) {
+        if (mediaInfo == null) {
+            return OK;
+        }
+
+        if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
+            return cacheMedia(context, mediaInfo);
+        } else {
+            return Network.isConnected() ? OK : RETRY;
+        }
+    }
+
+    @Override
+    public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
+        if (mediaInfo == null || MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
+            return true;
+        } else {
+            return Network.isConnected();
+        }
     }
 
     @Override

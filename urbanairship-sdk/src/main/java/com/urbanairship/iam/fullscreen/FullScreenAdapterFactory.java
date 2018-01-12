@@ -11,6 +11,6 @@ import com.urbanairship.iam.InAppMessageAdapter;
 public class FullScreenAdapterFactory implements InAppMessageAdapter.Factory {
     @Override
     public InAppMessageAdapter createAdapter(InAppMessage message) {
-        return new FullScreenAdapter(message);
+        return FullScreenAdapter.newAdapter(message);
     }
 }

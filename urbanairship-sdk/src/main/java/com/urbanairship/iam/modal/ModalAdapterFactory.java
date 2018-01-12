@@ -11,6 +11,6 @@ import com.urbanairship.iam.InAppMessageAdapter;
 public class ModalAdapterFactory implements InAppMessageAdapter.Factory {
     @Override
     public InAppMessageAdapter createAdapter(InAppMessage message) {
-        return new ModalAdapter(message);
+        return ModalAdapter.newAdapter(message);
     }
 }

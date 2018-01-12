@@ -33,6 +33,7 @@ import com.urbanairship.widget.UAWebChromeClient;
  */
 public class ModalActivity extends InAppMessageActivity implements InAppButtonLayout.ButtonClickListener {
 
+    private MediaView mediaView;
 
     @Override
     protected void onCreateMessage(@Nullable Bundle savedInstanceState) {
@@ -53,7 +54,7 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         TextView heading = findViewById(R.id.heading);
         TextView body = findViewById(R.id.body);
         InAppButtonLayout buttonLayout = findViewById(R.id.buttons);
-        MediaView mediaView = findViewById(R.id.media);
+        this.mediaView = findViewById(R.id.media);
         Button footer = findViewById(R.id.footer);
         ImageButton dismiss = findViewById(R.id.dismiss);
 
@@ -136,6 +137,17 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         finish();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        this.mediaView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        this.mediaView.onPause();
+    }
 
     /**
      * Gets the layout for the given template.

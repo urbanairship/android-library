@@ -4,36 +4,34 @@ package com.urbanairship.iam.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewTreeObserver;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
-import com.urbanairship.Logger;
-import com.urbanairship.R;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.messagecenter.ImageLoader;
+
+import java.lang.ref.WeakReference;
 
 /**
  * Media view.
  */
 public class MediaView extends FrameLayout {
-    private static final int FALLBACK_VIDEO_HEIGHT = 320;
-
     private WebView webView;
     private WebChromeClient chromeClient;
+
 
     /**
      * Default constructor.
@@ -93,6 +91,24 @@ public class MediaView extends FrameLayout {
     }
 
     /**
+     * Call during activity pause to pause the media.
+     */
+    public void onPause() {
+        if (this.webView != null) {
+            this.webView.onPause();
+        }
+    }
+
+    /**
+     * Call during activity resume to resume the media.
+     */
+    public void onResume() {
+        if (this.webView != null) {
+            this.webView.onResume();
+        }
+    }
+
+    /**
      * Sets the media info.
      *
      * @param mediaInfo The media info.
@@ -103,7 +119,10 @@ public class MediaView extends FrameLayout {
 
         // If we had a web view previously clear it
         if (this.webView != null) {
+            this.webView.stopLoading();
             this.webView.setWebChromeClient(null);
+            this.webView.setWebViewClient(null);
+            this.webView.destroy();
             this.webView = null;
         }
 
@@ -120,51 +139,11 @@ public class MediaView extends FrameLayout {
                 break;
 
             case MediaInfo.TYPE_VIDEO:
-                loadWebView(mediaInfo, new VideoLoadCallback() {
-                    @Override
-                    public void loadVideo(WebView webView, String url, int height) {
-                        String html = "<body style=\"margin:0\"><video style=\"display:block;padding:0;margin:0 auto;border:0;width:100%;height:" +
-                                height + "px;\" " +
-                                "src=\"" + url + "\" " +
-                                "controls autobuffer></video></body>";
-
-                        webView.loadData(html, "text/html", "utf-8");
-                    }
-                });
-
+                loadWebView(mediaInfo);
                 break;
 
             case MediaInfo.TYPE_YOUTUBE:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    loadWebView(mediaInfo, new VideoLoadCallback() {
-
-                        @Override
-                        public void loadVideo(WebView webView, String url, int height) {
-                            String html = "<body style=\"margin:0\"><iframe " +
-                                    "style=\"display:block;padding:0;margin:0 auto;border:0;width:100%;" +
-                                    "height:" + height + "px;\" " +
-                                    "src=\"" + url + "\" " +
-                                    "frameborder=\"0\" allow=\"encrypted-media\" allowfullscreen></iframe>" +
-                                    "</body>";
-
-                            webView.loadData(html, "text/html", "utf-8");
-                        }
-                    });
-                } else {
-                    View placeholder = LayoutInflater.from(getContext()).inflate(R.layout.ua_iam_video_placeholder, this, false);
-                    addView(placeholder);
-                    placeholder.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mediaInfo.getUrl()));
-                            try {
-                                view.getContext().startActivity(intent);
-                            } catch (Exception e) {
-                                Logger.error("Unable to start activity", e);
-                            }
-                        }
-                    });
-                }
+                loadWebView(mediaInfo);
                 break;
         }
     }
@@ -173,45 +152,81 @@ public class MediaView extends FrameLayout {
      * Helper method to load video in the webview.
      *
      * @param mediaInfo The media info.
-     * @param callback Load callback.
      */
     @SuppressLint("SetJavaScriptEnabled")
-    private void loadWebView(@NonNull final MediaInfo mediaInfo, @NonNull final VideoLoadCallback callback) {
+    private void loadWebView(@NonNull final MediaInfo mediaInfo) {
         this.webView = new WebView(getContext());
+
+        FrameLayout frameLayout = new FrameLayout(getContext());
+        FrameLayout.LayoutParams webViewLayoutParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        webViewLayoutParams.gravity = Gravity.CENTER;
+
+        frameLayout.addView(webView, webViewLayoutParams);
+
+        final ProgressBar progressBar = new ProgressBar(getContext());
+        progressBar.setIndeterminate(true);
+        progressBar.setId(android.R.id.progress);
+
+        FrameLayout.LayoutParams progressBarLayoutParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        progressBarLayoutParams.gravity = Gravity.CENTER;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            webView.getSettings().setMediaPlaybackRequiresUserGesture(true);
+        }
+
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebChromeClient(chromeClient);
-        webView.setBackgroundColor(Color.BLACK);
         webView.setContentDescription(mediaInfo.getDescription());
-
-        addView(webView);
-
-        webView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+        webView.setWebViewClient(new MediaWebViewClient() {
             @Override
-            public boolean onPreDraw() {
-                int height = FALLBACK_VIDEO_HEIGHT;
-                if (getHeight() > 0) {
-                    DisplayMetrics metrics = getResources().getDisplayMetrics();
-                    height = Math.round(getLayoutParams().height / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
-                }
-
-                webView.getViewTreeObserver().removeOnPreDrawListener(this);
-                callback.loadVideo(webView, mediaInfo.getUrl(), height);
-                return false;
+            protected void onPageFinished(WebView webView) {
+                progressBar.setVisibility(GONE);
             }
         });
+
+        webView.loadUrl(mediaInfo.getUrl());
+
+        addView(frameLayout);
     }
 
-    /**
-     * Video load callback.
-     */
-    private interface VideoLoadCallback {
+    private static abstract class MediaWebViewClient extends WebViewClient {
+        static final long START_RETRY_DELAY = 1000;
 
-        /***
-         * Called when the web view is created and the video html needs to be loaded.
-         * @param webView The web view.
-         * @param url The URL.
-         * @param height The video's height.
-         */
-        void loadVideo(WebView webView, String url, int height);
+        boolean error = false;
+        long retry = START_RETRY_DELAY;
+
+        @Override
+        public void onPageFinished(WebView view, final String url) {
+            super.onPageFinished(view, url);
+            if (error) {
+                final WeakReference<WebView> weakReference = new WeakReference<WebView>(view);
+                view.getHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        WebView webView = weakReference.get();
+                        if (webView != null) {
+                            webView.loadUrl(url);
+                        }
+                    }
+                }, retry);
+                retry = retry * 2;
+            } else {
+                onPageFinished(view);
+            }
+
+            error = false;
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            this.error = true;
+        }
+
+        protected abstract void onPageFinished(WebView webView);
     }
+
+
 }

@@ -10,6 +10,6 @@ public class BannerAdapterFactory implements InAppMessageAdapter.Factory {
 
     @Override
     public InAppMessageAdapter createAdapter(InAppMessage message) {
-        return new BannerAdapter(message);
+        return BannerAdapter.newAdapter(message);
     }
 }

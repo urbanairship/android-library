@@ -8,8 +8,7 @@ import android.content.Intent;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
-import com.urbanairship.iam.custom.CustomDisplayContent;
-import com.urbanairship.json.JsonValue;
+import com.urbanairship.iam.TextInfo;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,14 +30,21 @@ public class FullScreenAdapterTest extends BaseTestCase {
 
     @Before
     public void setup() {
+
+        FullScreenDisplayContent displayContent = FullScreenDisplayContent.newBuilder()
+                .setBody(TextInfo.newBuilder()
+                        .setText("oh hi")
+                        .build())
+                .build();
+
         message = InAppMessage.newBuilder()
-                              .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                              .setDisplayContent(displayContent)
                               .setId("id")
                               .build();
 
         displayHandler = new DisplayHandler("schedule ID");
 
-        adapter = new FullScreenAdapter(message);
+        adapter = FullScreenAdapter.newAdapter(message);
     }
 
     @Test

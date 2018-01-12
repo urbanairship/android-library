@@ -6,11 +6,11 @@ import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 
 /**
- * Full screen adapter factory.
+ * HTML adapter factory.
  */
 public class HtmlAdapterFactory implements InAppMessageAdapter.Factory {
     @Override
     public InAppMessageAdapter createAdapter(InAppMessage message) {
-        return new HtmlDisplayAdapter(message);
+        return HtmlDisplayAdapter.newAdapter(message);
     }
 }
