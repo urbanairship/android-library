@@ -29,9 +29,9 @@ public class CustomDisplayContent implements DisplayContent {
     @Override
     public JsonValue toJsonValue() {
         return JsonMap.newBuilder()
-                .put(CUSTOM_KEY, value)
-                .build()
-                .toJsonValue();
+                      .put(CUSTOM_KEY, value)
+                      .build()
+                      .toJsonValue();
     }
 
     /**
@@ -42,6 +42,15 @@ public class CustomDisplayContent implements DisplayContent {
      */
     public static CustomDisplayContent parseJson(@NonNull JsonValue jsonValue) {
         return new CustomDisplayContent(jsonValue.optMap().opt(CUSTOM_KEY));
+    }
+
+    /**
+     * Gets the custom value.
+     *
+     * @return The custom value.
+     */
+    public JsonValue getValue() {
+        return value;
     }
 
     @Override
