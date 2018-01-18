@@ -3,9 +3,7 @@
 package com.urbanairship.automation;
 
 import com.urbanairship.ActivityMonitor;
-import com.urbanairship.Predicate;
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Function;
@@ -73,7 +71,7 @@ class TriggerObservables {
      * Creates a state observable that sends onNext if the app version is currently updated, and then completes.
      *
      * The JSON payload contains a key value pair of the device platform (android or amazon) and
-     * the current app version, e.g. <code>{"android" : 123}</code>.
+     * the current app version, e.g. <code>{"android": {"version": 123}}</code>.
      *
      * @return An Observable of JsonSerializable.
      */
@@ -82,31 +80,11 @@ class TriggerObservables {
             @Override
             public Observable<JsonSerializable> apply() {
                 if (UAirship.shared().getApplicationMetrics().getAppVersionUpdated()) {
-                    return Observable.just(getCurrentAppVersionPayload());
+                    return Observable.just(AutomationUtils.createVersionObject());
                 } else {
                     return Observable.empty();
                 }
             }
         });
-    }
-
-    private static JsonSerializable getCurrentAppVersionPayload() {
-        String platformString;
-        @UAirship.Platform int platform = UAirship.shared().getPlatformType();
-
-        if (platform == UAirship.ANDROID_PLATFORM) {
-            platformString = "android";
-        } else if (platform == UAirship.AMAZON_PLATFORM) {
-            platformString = "amazon";
-        } else {
-            platformString = "unknown";
-        }
-
-        int currentAppVersion = UAirship.shared().getApplicationMetrics().getCurrentAppVersion();
-
-        JsonSerializable serializable = JsonMap.newBuilder().put(platformString, currentAppVersion)
-                                               .build();
-
-        return serializable;
     }
 }

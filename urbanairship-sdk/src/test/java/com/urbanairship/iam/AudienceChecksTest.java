@@ -4,9 +4,8 @@ package com.urbanairship.iam;
 
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.json.ValueMatcher;
@@ -18,9 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowPackageManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +26,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 /**
  * {@link AudienceChecks} tests.
@@ -39,26 +35,18 @@ public class AudienceChecksTest extends BaseTestCase {
     private PushManager pushManager;
     private UALocationManager locationManager;
     private Context context;
-    private PackageInfo packageInfo;
+    private ApplicationMetrics applicationMetrics;
 
     @Before
     public void setup() {
         pushManager = mock(PushManager.class);
         locationManager = mock(UALocationManager.class);
+        applicationMetrics = mock(ApplicationMetrics.class);
         context = TestApplication.getApplication();
 
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setLocationManager(locationManager);
-
-        packageInfo = new PackageInfo();
-        packageInfo.packageName = "com.urbanairship";
-        packageInfo.versionName = "2.0";
-        packageInfo.applicationInfo = new ApplicationInfo();
-        packageInfo.applicationInfo.packageName = "com.urbanairship";
-        packageInfo.applicationInfo.name = "com.urbanairship";
-
-        ShadowPackageManager shadowPackageManager = shadowOf(RuntimeEnvironment.application.getPackageManager());
-        shadowPackageManager.addPackage(packageInfo);
+        TestApplication.getApplication().setApplicationMetrics(applicationMetrics);
     }
 
     @Test
@@ -193,13 +181,13 @@ public class AudienceChecksTest extends BaseTestCase {
                                     .build();
 
 
-        packageInfo.versionCode = 1;
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(1);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
-        packageInfo.versionCode = 2;
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(2);
         assertTrue(AudienceChecks.checkAudience(context, audience));
 
-        packageInfo.versionCode = 3;
+        when(applicationMetrics.getCurrentAppVersion()).thenReturn(3);
         assertFalse(AudienceChecks.checkAudience(context, audience));
     }
 }

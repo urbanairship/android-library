@@ -3,6 +3,7 @@
 package com.urbanairship.iam;
 
 
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -11,14 +12,24 @@ import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.ValueMatcher;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
  * {@link Audience} tests.
  */
 public class AudienceTest extends BaseTestCase {
+
+    private ApplicationMetrics mockMetrics;
+
+    @Before
+    public void setup() {
+        mockMetrics = mock(ApplicationMetrics.class);
+        TestApplication.getApplication().setApplicationMetrics(mockMetrics);
+    }
 
     @Test
     public void testJson() throws JsonException {
@@ -46,7 +57,8 @@ public class AudienceTest extends BaseTestCase {
 
         JsonPredicate predicate = JsonPredicate.newBuilder()
                                                .addMatcher(JsonMatcher.newBuilder()
-                                                                      .setKey("android")
+                                                                      .setKey("version")
+                                                                      .setScope("android")
                                                                       .setValueMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                                                                       .build())
                                                .build();
@@ -63,7 +75,8 @@ public class AudienceTest extends BaseTestCase {
 
         JsonPredicate predicate = JsonPredicate.newBuilder()
                                                .addMatcher(JsonMatcher.newBuilder()
-                                                                      .setKey("amazon")
+                                                                      .setKey("version")
+                                                                      .setScope("amazon")
                                                                       .setValueMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                                                                       .build())
                                                .build();

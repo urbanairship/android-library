@@ -3,16 +3,13 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.v4.os.ConfigurationCompat;
 import android.support.v4.os.LocaleListCompat;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
+import com.urbanairship.automation.AutomationUtils;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
@@ -94,7 +91,7 @@ public abstract class AudienceChecks {
         }
 
         // Version
-        if (!isAppVersionConditionMet(context, audience)) {
+        if (!isAppVersionConditionMet(audience)) {
             return false;
         }
 
@@ -104,44 +101,16 @@ public abstract class AudienceChecks {
     /**
      * Helper method to check the app version.
      *
-     * @param context The application context.
      * @param audience The audience.
      * @return {@code true} if the app version conditions are met or are not defined, otherwise {@code false}.
      */
-    private static boolean isAppVersionConditionMet(Context context, Audience audience) {
+    private static boolean isAppVersionConditionMet(Audience audience) {
         if (audience.getVersionPredicate() == null) {
             return true;
         }
 
-        // Get the version code
-        int versionCode;
-        try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            versionCode = packageInfo.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-
-        String platform;
-        switch (UAirship.shared().getPlatformType()) {
-            case UAirship.AMAZON_PLATFORM:
-                platform = Audience.AMAZON_VERSION_KEY;
-                break;
-            case UAirship.ANDROID_PLATFORM:
-            default:
-                platform = Audience.ANDROID_VERSION_KEY;
-                break;
-        }
-
-        // Construct the version json value
-        JsonValue value = JsonMap.newBuilder()
-                .put(platform, versionCode)
-                .build()
-                .toJsonValue();
-
-
         // Apply the predicate
-        return audience.getVersionPredicate().apply(value);
+        return audience.getVersionPredicate().apply(AutomationUtils.createVersionObject());
     }
 
     /**

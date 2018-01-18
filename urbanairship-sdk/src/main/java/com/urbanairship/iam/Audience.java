@@ -6,10 +6,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.UAirship;
+import com.urbanairship.automation.AutomationUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -33,10 +32,6 @@ public class Audience implements JsonSerializable {
     private static final String TAGS_KEY = "tags";
     private static final String TEST_DEVICES_KEY = "test_devices";
 
-
-    // Platform keys for app version
-    static final String AMAZON_VERSION_KEY = "amazon";
-    static final String ANDROID_VERSION_KEY = "android";
 
     private final Boolean newUser;
     private final Boolean notificationsOptIn;
@@ -370,26 +365,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          */
         public Builder setVersionMatcher(ValueMatcher valueMatcher) {
-
-            String platform;
-            switch (UAirship.shared().getPlatformType()) {
-                case UAirship.AMAZON_PLATFORM:
-                    platform = AMAZON_VERSION_KEY;
-                    break;
-                case UAirship.ANDROID_PLATFORM:
-                default:
-                    platform = ANDROID_VERSION_KEY;
-                    break;
-            }
-
-            JsonPredicate predicate = JsonPredicate.newBuilder()
-                                                   .addMatcher(JsonMatcher.newBuilder()
-                                                                          .setKey(platform)
-                                                                          .setValueMatcher(valueMatcher)
-                                                                          .build())
-                                                   .build();
-
-            return setVersionPredicate(predicate);
+            return setVersionPredicate(AutomationUtils.createVersionPredicate(valueMatcher));
         }
 
         /**
