@@ -8,6 +8,15 @@ Version 9.0.0-beta - January 2, 2018
 
 In-app messaging v2 beta release. The APIs are not yet final and may contain bugs.
 
+Version 8.9.7 - January 22, 2018
+================================
+
+Fixes a bug with location updates not generating events that was introduced in 8.6. Applications that
+make use of this feature should update.
+
+Changes
+-------
+- Fixed location updates not generating analytic events.
 
 Version 8.9.6 - November 21, 2017
 =================================
