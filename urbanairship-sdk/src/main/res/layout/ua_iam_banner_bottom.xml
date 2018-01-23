@@ -8,7 +8,7 @@
 
     <com.urbanairship.iam.view.BoundedLinearLayout
         android:id="@+id/banner"
-        style="@style/UrbanAirship.InAppBanner.Layout"
+        style="@style/UrbanAirship.InAppBanner.Layout.Bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
@@ -16,7 +16,7 @@
 
         <View
             android:id="@+id/banner_pull"
-            style="@style/UrbanAirship.InAppBanner.Pull"/>
+            style="@style/UrbanAirship.InAppBanner.Pull.Bottom"/>
 
         <ViewStub
             android:id="@+id/banner_content"

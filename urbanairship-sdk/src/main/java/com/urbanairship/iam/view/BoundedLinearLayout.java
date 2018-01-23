@@ -1,12 +1,20 @@
-package com.urbanairship.iam.view;
 /* Copyright 2017 Urban Airship and Contributors */
 
+package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Outline;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.os.Build;
+import android.support.annotation.MainThread;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 
 import com.urbanairship.R;
@@ -18,6 +26,11 @@ public class BoundedLinearLayout extends LinearLayout {
 
     private int maxWidth;
     private int maxHeight;
+
+    // Used for fallback clipping
+    private float borderRadius;
+    private RectF rect;
+    private Path clipPath;
 
     /**
      * Default constructor.
@@ -83,6 +96,11 @@ public class BoundedLinearLayout extends LinearLayout {
             maxHeight = attributes.getDimensionPixelSize(R.styleable.UrbanAirshipLayout_urbanAirshipMaxHeight, 0);
             attributes.recycle();
         }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            clipPath = new Path();
+            rect = new RectF();
+        }
     }
 
     @Override
@@ -101,4 +119,57 @@ public class BoundedLinearLayout extends LinearLayout {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+
+        if (changed && borderRadius > 0 && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            clipPath.reset();
+            rect.set(0, 0, (r - l), (b - t));
+            float[] radii = { borderRadius, borderRadius, borderRadius, borderRadius, borderRadius, borderRadius, borderRadius, borderRadius };
+            clipPath.addRoundRect(rect, radii, Path.Direction.CW);
+        }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && borderRadius != 0) {
+            canvas.clipPath(this.clipPath);
+        }
+
+        super.onDraw(canvas);
+    }
+
+    /**
+     * Clips the view to the border radius.
+     *
+     * @param borderRadius The border radius.
+     */
+    @MainThread
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void setClipPathBorderRadius(final float borderRadius) {
+        final float borderRadiusPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, borderRadius, getResources().getDisplayMetrics());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (borderRadiusPixels == 0) {
+                this.setClipToOutline(false);
+                this.setOutlineProvider(ViewOutlineProvider.BOUNDS);
+            } else {
+                this.setClipToOutline(true);
+                setOutlineProvider(new ViewOutlineProvider() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void getOutline(View view, Outline outline) {
+                        outline.setRoundRect(0,
+                                0,
+                                view.getRight() - view.getLeft(),
+                                view.getBottom() - view.getTop(),
+                                borderRadiusPixels);
+                    }
+                });
+            }
+        } else {
+            this.borderRadius = borderRadiusPixels;
+        }
+    }
 }

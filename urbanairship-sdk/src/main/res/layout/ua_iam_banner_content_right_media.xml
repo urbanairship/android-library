@@ -9,10 +9,9 @@
 
     <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
-        style="@style/UrbanAirship.InAppBanner.MediaView"
+        style="@style/UrbanAirship.InAppBanner.MediaView.Right"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        tools:src="@drawable/ua_ic_image_placeholder"/>
+        android:layout_alignParentRight="true"/>
 
 
     <TextView

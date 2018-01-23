@@ -9,6 +9,16 @@
     style="@style/UrbanAirship.InAppModal.Content"
     android:orientation="vertical">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageButton
+            android:id="@+id/dismiss"
+            style="@style/UrbanAirship.InAppModal.DismissButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </FrameLayout>
+
     <TextView
         android:id="@+id/heading"
         style="@style/UrbanAirship.InAppModal.Heading"
@@ -26,7 +36,7 @@
         android:id="@+id/media"
         style="@style/UrbanAirship.InAppModal.MediaView"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         tools:src="@drawable/ua_ic_image_placeholder"/>
 

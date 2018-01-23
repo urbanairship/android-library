@@ -164,8 +164,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         // Media
         MediaView mediaView = view.findViewById(R.id.media);
         if (displayContent.getMedia() != null) {
-            String cacheLocation = cache != null ? cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY) : null;
-            mediaView.setMediaInfo(displayContent.getMedia(), cacheLocation);
+            InAppViewUtils.loadMediaInfo(mediaView, displayContent.getMedia(), cache);
         } else {
             mediaView.setVisibility(View.GONE);
         }

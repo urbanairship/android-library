@@ -3,6 +3,7 @@
 package com.urbanairship.iam.modal;
 
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -101,15 +102,18 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             footer.setVisibility(View.GONE);
         }
 
-
         final Drawable background = BackgroundDrawableBuilder.newBuilder(this)
                                                              .setBackgroundColor(displayContent.getBackgroundColor())
                                                              .setBorderRadius(displayContent.getBorderRadius(), BorderRadius.ALL)
                                                              .build();
 
         ViewCompat.setBackground(modal, background);
-        if (displayContent.getBorderRadius() > 0) {
-            BorderRadius.applyBorderRadiusPadding(modal, displayContent.getBorderRadius(), BorderRadius.ALL);
+
+        // Devices older than kitkat require software rendering, but video requires hardware
+        // acceleration. Instead of clipping the media, older devices use a view that does not
+        // require clipping.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            modal.setClipPathBorderRadius(displayContent.getBorderRadius());
         }
 
         // DismissButton
@@ -123,7 +127,6 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
                 finish();
             }
         });
-
     }
 
     @Override

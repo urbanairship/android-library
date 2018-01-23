@@ -9,7 +9,7 @@
 
     <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
-        style="@style/UrbanAirship.InAppBanner.MediaView"
+        style="@style/UrbanAirship.InAppBanner.MediaView.Left"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         tools:src="@drawable/ua_ic_image_placeholder"/>

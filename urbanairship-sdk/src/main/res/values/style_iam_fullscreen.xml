@@ -3,7 +3,7 @@
 
     <style name="UrbanAirship.InAppFullscreen"/>
 
-    <style name="UrbanAirship.InAppFullscreen.Layout" />
+    <style name="UrbanAirship.InAppFullscreen.Layout"/>
 
     <style name="UrbanAirship.InAppFullscreen.DismissButton">
         <item name="android:background">@null</item>
@@ -17,6 +17,8 @@
     </style>
 
     <style name="UrbanAirship.InAppFullscreen.Heading">
+        <item name="android:padding">0dp</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:layout_marginBottom">16dp</item>
         <item name="android:layout_marginLeft">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
@@ -24,6 +26,8 @@
     </style>
 
     <style name="UrbanAirship.InAppFullscreen.Body">
+        <item name="android:padding">0dp</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:layout_marginBottom">16dp</item>
         <item name="android:layout_marginLeft">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
@@ -31,7 +35,6 @@
     </style>
 
     <style name="UrbanAirship.InAppFullscreen.ButtonLayout">
-        <item name="android:minHeight">32dp</item>
         <item name="android:layout_marginBottom">16dp</item>
         <item name="android:layout_marginLeft">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
@@ -41,6 +44,7 @@
     </style>
 
     <style name="UrbanAirship.InAppFullscreen.Button">
+        <item name="android:minHeight">32dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:paddingLeft">4dp</item>
@@ -50,7 +54,8 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:layout_marginLeft">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="android:layout_marginTop">-8dp</item>
         <item name="android:layout_gravity">bottom|center_horizontal</item>
     </style>
 </resources>

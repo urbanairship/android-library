@@ -15,13 +15,15 @@
     <style name="UrbanAirship.InAppModal.Layout">
         <item name="android:elevation">24dp</item>
         <item name="urbanAirshipMaxWidth">420dp</item>
-        <item name="android:layout_margin">24dp</item>
+        <item name="android:layout_margin">32dp</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.DismissButton">
         <item name="android:background">@null</item>
         <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
         <item name="android:padding">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">top|end</item>
@@ -31,14 +33,10 @@
     <style name="UrbanAirship.InAppModal.ScrollView">
         <item name="android:fadeScrollbars">false</item>
         <item name="android:fillViewport">true</item>
-        <item name="android:paddingLeft">4dp</item>
-        <item name="android:paddingRight">4dp</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.Content">
-        <item name="android:minHeight">200dp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
+        <item name="android:minHeight">50dp</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.MediaView">
@@ -47,35 +45,38 @@
 
     <style name="UrbanAirship.InAppModal.Heading">
         <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
         <item name="android:ellipsize">end</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.Body">
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
         <item name="android:ellipsize">end</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.ButtonLayout">
-        <item name="android:paddingLeft">24dp</item>
-        <item name="android:paddingRight">24dp</item>
+        <item name="android:layout_marginTop">8dp</item>
         <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:minHeight">36dp</item>
         <item name="urbanAirshipStackedSpaceHeight">8dp</item>
         <item name="urbanAirshipSeparatedSpaceWidth">8dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
         <item name="urbanAirshipButtonLayoutResourceId">@layout/ua_iam_modal_button</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.Button">
+        <item name="android:minHeight">32dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:paddingLeft">4dp</item>
     </style>
 
     <style name="UrbanAirship.InAppModal.Footer">
-        <item name="android:paddingLeft">24dp</item>
-        <item name="android:paddingRight">24dp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginTop">-8dp</item>
+        <item name="android:minHeight">32dp</item>
         <item name="android:layout_gravity">bottom|center_horizontal</item>
     </style>
 </resources>

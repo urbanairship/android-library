@@ -5,6 +5,7 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
+
              android:fitsSystemWindows="true"
              tools:context="com.urbanairship.iam.modal.ModalActivity">
 
@@ -15,16 +16,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageButton
-                android:id="@+id/dismiss"
-                style="@style/UrbanAirship.InAppModal.DismissButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </FrameLayout>
 
         <ScrollView
             style="@style/UrbanAirship.InAppModal.ScrollView"

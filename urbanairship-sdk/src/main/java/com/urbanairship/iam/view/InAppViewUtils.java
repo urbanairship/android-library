@@ -17,6 +17,7 @@ import android.support.annotation.RestrictTo;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextPaint;
@@ -70,7 +71,7 @@ public class InAppViewUtils {
                                                        .setStrokeWidth(DEFAULT_STROKE_WIDTH_DPS)
                                                        .build();
 
-        button.setBackground(background);
+        ViewCompat.setBackground(button, background);
     }
 
     /**
@@ -261,13 +262,27 @@ public class InAppViewUtils {
             cachedLocation = cache.getBundle().getString(InAppMessageCache.MEDIA_CACHE_KEY);
         }
 
-        float scale = (float) mediaView.getWidth() / (float) width;
         ViewGroup.LayoutParams params = mediaView.getLayoutParams();
-        params.height = Math.round(scale * height);
-        mediaView.setLayoutParams(params);
 
+
+        // Check if we can grow the image horizontally to fit the width
+        if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+            float scale = (float) mediaView.getWidth() / (float) width;
+            params.height = Math.round(scale * height);
+        } else {
+            float imageRatio = (float) width/ (float) height;
+            float viewRatio = (float) mediaView.getWidth()/ mediaView.getHeight();
+
+            if (imageRatio >= viewRatio) {
+                // Image is wider than the view
+                params.height = Math.round(mediaView.getWidth() / imageRatio);
+            } else {
+                // View is wider than the image
+                params.width = Math.round(mediaView.getHeight() * imageRatio);
+            }
+        }
+
+        mediaView.setLayoutParams(params);
         mediaView.setMediaInfo(mediaInfo, cachedLocation);
     }
-
-
 }

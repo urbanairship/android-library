@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
@@ -327,7 +328,7 @@ public class ButtonInfo implements JsonSerializable {
         private String id;
         @Behavior
         private String behavior = BEHAVIOR_DISMISS;
-        private Float borderRadius;
+        private float borderRadius = 0;
         private Integer backgroundColor;
         private Integer borderColor;
         private final Map<String, JsonValue> actions = new HashMap<>();
@@ -373,7 +374,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param borderRadius The border radius.
          * @return The builder instance.
          */
-        public Builder setBorderRadius(float borderRadius) {
+        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
         }

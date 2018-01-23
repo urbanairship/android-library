@@ -4,6 +4,8 @@ package com.urbanairship.iam.banner;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.FloatRange;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Size;
@@ -630,7 +632,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setBorderRadius(float borderRadius) {
+        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
             this.borderRadius = borderRadius;
             return this;
         }
@@ -643,7 +645,7 @@ public class BannerDisplayContent implements DisplayContent {
          * @return The builder instance.
          */
         @NonNull
-        public Builder setDuration(@Size(min = 0) long duration, @NonNull TimeUnit timeUnit) {
+        public Builder setDuration(@IntRange(from = 0) long duration, @NonNull TimeUnit timeUnit) {
             this.duration = timeUnit.toMillis(duration);
             return this;
         }
@@ -685,6 +687,7 @@ public class BannerDisplayContent implements DisplayContent {
          */
         @NonNull
         public BannerDisplayContent build() {
+            Checks.checkArgument(borderRadius >= 0 && borderRadius <= 20.0, "Border radius must be between 0 and 20.");
             Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
