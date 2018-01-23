@@ -383,7 +383,7 @@ public class UALocationManager extends AirshipComponent {
      * otherwise <code>false</code>.
      */
     boolean isContinuousLocationUpdatesAllowed() {
-        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || UAirship.shared().getAnalytics().isAppInForeground());
+        return isLocationUpdatesEnabled() && (isBackgroundLocationAllowed() || activityMonitor.isAppForegrounded());
     }
 
     /**
@@ -426,6 +426,11 @@ public class UALocationManager extends AirshipComponent {
                 }
             });
         }
+
+        // Record the location
+        UAirship.shared()
+                .getAnalytics()
+                .recordLocation(location, getLocationRequestOptions(), LocationEvent.UPDATE_TYPE_CONTINUOUS);
     }
 
     /**
