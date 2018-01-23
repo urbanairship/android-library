@@ -782,7 +782,8 @@ public class UAirship {
     }
 
     /**
-     * The URL whiteList used to determine when to inject the Urban Airship Javascript Interface.
+     * The URL whitelist is used to determine if a URL is allowed to be used for various features, including:
+     * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages, and landing pages.
      *
      * @return The url whitelist.
      */

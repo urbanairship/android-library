@@ -65,13 +65,16 @@ public class OpenExternalUrlAction extends Action {
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_AUTOMATION:
-                return UriUtils.parse(arguments.getValue().getString()) != null;
+                if (UriUtils.parse(arguments.getValue().getString()) == null) {
+                    return false;
+                }
+
+                return UAirship.shared().getWhitelist().isWhitelisted(arguments.getValue().getString());
 
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             case Action.SITUATION_PUSH_RECEIVED:
             default:
                 return false;
-
         }
     }
 

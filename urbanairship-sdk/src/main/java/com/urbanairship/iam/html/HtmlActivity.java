@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
+import com.urbanairship.UAirship;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.widget.UAWebView;
@@ -63,6 +64,12 @@ public class HtmlActivity extends InAppMessageActivity {
         this.webView = findViewById(R.id.web_view);
         this.handler = new Handler(Looper.getMainLooper());
         this.url = displayContent.getUrl();
+
+        if (!UAirship.shared().getWhitelist().isWhitelisted(url)) {
+            Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
+            finish();
+            return;
+        }
 
         // Workaround render issue with older android devices
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {

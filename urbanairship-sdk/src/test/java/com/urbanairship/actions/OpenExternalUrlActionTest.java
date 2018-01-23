@@ -5,6 +5,8 @@ package com.urbanairship.actions;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -19,23 +21,24 @@ import static junit.framework.Assert.assertTrue;
 public class OpenExternalUrlActionTest extends BaseTestCase {
 
     private OpenExternalUrlAction action;
+    private Whitelist whitelist;
 
 
     @Before
     public void setup() {
         action = new OpenExternalUrlAction();
+        whitelist = UAirship.shared().getWhitelist();
     }
+
 
     /**
      * Test accepts arguments
      */
     @Test
     public void testAcceptsArguments() throws MalformedURLException {
+        whitelist.addEntry("*");
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "http://example.com");
         assertTrue("Should accept valid url string", action.acceptsArguments(args));
-
-        args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "adfadfafdsaf adfa dsfadfsa example");
-        assertTrue("Should accept any string", action.acceptsArguments(args));
 
         args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "http://example.com");
         assertTrue("Should accept valid url", action.acceptsArguments(args));
@@ -45,6 +48,17 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
 
         args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, "http://example.com");
         assertFalse("Should not accept Action.SITUATION_PUSH_RECEIVED", action.acceptsArguments(args));
+    }
+
+    /**
+     * Test accepts arguments for URLs that are whitelisted.
+     */
+    @Test
+    public void testWhiteList() {
+        whitelist.addEntry("https://yep.example.com");
+
+        assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://yep.example.com")));
+        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com")));
     }
 
     /**

@@ -8,10 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
-import com.urbanairship.iam.fullscreen.FullScreenActivity;
 import com.urbanairship.util.Network;
 
 /**
@@ -46,6 +47,12 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
 
     @Override
     public int onPrepare(@NonNull Context context) {
+        HtmlDisplayContent displayContent = message.getDisplayContent();
+        if (displayContent == null || !UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl())) {
+            Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
+            return CANCEL;
+        }
+
         return Network.isConnected() ? OK : RETRY;
     }
 
@@ -56,8 +63,8 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
         }
 
         Intent intent = new Intent(activity, HtmlActivity.class)
-                .putExtra(FullScreenActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
-                .putExtra(FullScreenActivity.IN_APP_MESSAGE_KEY, message);
+                .putExtra(HtmlActivity.DISPLAY_HANDLER_EXTRA_KEY, displayHandler)
+                .putExtra(HtmlActivity.IN_APP_MESSAGE_KEY, message);
 
         activity.startActivity(intent);
 

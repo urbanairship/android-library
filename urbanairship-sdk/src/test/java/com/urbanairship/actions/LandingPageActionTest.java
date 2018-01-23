@@ -5,6 +5,8 @@ package com.urbanairship.actions;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,10 +22,12 @@ import static junit.framework.Assert.assertTrue;
 public class LandingPageActionTest extends BaseTestCase {
 
     private LandingPageAction action;
+    private Whitelist whitelist;
 
     @Before
     public void setup() {
         action = new LandingPageAction();
+        whitelist = UAirship.shared().getWhitelist();
     }
 
     /**
@@ -32,14 +36,14 @@ public class LandingPageActionTest extends BaseTestCase {
     @Test
     public void testAcceptsArguments() {
         // Basic URIs
-        verifyAcceptsArgumentValue("www.urbanairship.com", true);
+        verifyAcceptsArgumentValue("https://www.urbanairship.com", true);
 
         // Content URIs
         verifyAcceptsArgumentValue("u:<~@rH7,ASuTABk.~>", true);
 
         // Payload
         Map<String, Object> payload = new HashMap<>();
-        payload.put("url", "http://example.com");
+        payload.put("url", "https://www.urbanairship.com");
         payload.put("cache_on_receive", true);
         verifyAcceptsArgumentValue(payload, true);
     }
@@ -50,12 +54,35 @@ public class LandingPageActionTest extends BaseTestCase {
      */
     @Test
     public void testRejectsArguments() {
+        whitelist.addEntry("*");
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
         verifyAcceptsArgumentValue("u:", true);
 
         // Empty payload
         Map<String, Object> payload = new HashMap<>();
+        verifyAcceptsArgumentValue(payload, false);
+    }
+
+    /**
+     * Test accepts arguments for URLs that are whitelisted.
+     */
+    @Test
+    public void testWhiteList() {
+        whitelist.addEntry("https://yep.example.com");
+
+        // Basic URIs
+        verifyAcceptsArgumentValue("https://yep.example.com", true);
+        verifyAcceptsArgumentValue("https://nope.example.com", false);
+
+
+        // Payload
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("url", "https://yep.example.com");
+        payload.put("cache_on_receive", true);
+        verifyAcceptsArgumentValue(payload, true);
+
+        payload.put("url", "https://nope.example.com");
         verifyAcceptsArgumentValue(payload, false);
     }
 

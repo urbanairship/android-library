@@ -189,7 +189,17 @@ public class LandingPageAction extends Action {
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON:
             case SITUATION_AUTOMATION:
-                return parseUri(arguments) != null;
+                Uri uri = parseUri(arguments);
+                if (uri == null) {
+                    return false;
+                }
+
+                if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString())) {
+                    Logger.error("Unable to show landing page, url is not whitelisted: " + uri);
+                    return false;
+                }
+
+                return true;
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             default:
                 return false;

@@ -134,9 +134,11 @@ public class AirshipConfigOptions {
 
 
     /**
-     * List of additional url patterns that will be allowed access to the Urban Airship Javascript
-     * Interface (Urban Airship https URLs are included by default). See {@link com.urbanairship.js.Whitelist#addEntry(String)}
-     * for valid url patterns.
+     * List of URLs that are allowed to be used for various features, including:
+     * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages,
+     * and landing pages. Urban Airship https URLs are included by default.
+     * <p>
+     * See {@link com.urbanairship.js.Whitelist#addEntry(String)} for valid url patterns.
      * <p/>
      * Defaults null.
      */
@@ -815,9 +817,9 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the list of additional url patterns that will be allowed access to the Urban Airship Javascript
-         * Interface (Urban Airship https URLs are included by default). See {@link com.urbanairship.js.Whitelist#addEntry(String)}
-         * for valid url patterns.
+         * Set the list of additional URLs that are allowed to be used for various features, including:
+         * Urban Airship JS interface, open external URL action, wallet action, HTML in-app messages,
+         * and landing pages. Urban Airship https URLs are included by default.
          *
          * @param whitelist The whitelist.
          * @return The config options builder.

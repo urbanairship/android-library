@@ -453,7 +453,12 @@ public class LandingPageActivity extends Activity {
 
             }
         } else {
-            webView.loadUrl(uri.toString());
+            if (UAirship.shared().getWhitelist().isWhitelisted(uri.toString())) {
+                webView.loadUrl(uri.toString());
+            } else {
+                Logger.error("URL is not whitelisted. Unable to load landing landing page: " + uri);
+                finish();
+            }
         }
     }
 

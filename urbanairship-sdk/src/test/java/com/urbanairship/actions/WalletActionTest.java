@@ -5,6 +5,7 @@ package com.urbanairship.actions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -19,11 +20,15 @@ public class WalletActionTest extends BaseTestCase {
 
     private WalletAction action;
     private ActionArguments testArgs;
-
+    private Whitelist whitelist;
     @Before
     public void setup() {
+
         action = new WalletAction();
-        testArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "http://example.com");
+        testArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://yep.example.com");
+
+        whitelist = UAirship.shared().getWhitelist();
+        whitelist.addEntry("https://yep.example.com");
 
         // Default the platform to Android
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);
@@ -54,6 +59,15 @@ public class WalletActionTest extends BaseTestCase {
         TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM);
 
         assertFalse(action.acceptsArguments(testArgs));
+    }
+
+    /**
+     * Test rejects arguments for URLs that are not whitelisted.
+     */
+    @Test
+    public void testWhiteList() {
+        testArgs = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com");
+        assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com")));
     }
 
 }
