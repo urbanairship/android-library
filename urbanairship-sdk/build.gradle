@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 27
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""
