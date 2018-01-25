@@ -58,7 +58,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
         setContentView(R.layout.ua_iam_html);
         hideActionBar();
-
+        
         final ProgressBar progressBar = findViewById(R.id.progress);
         final ImageButton dismiss = findViewById(R.id.dismiss);
         this.webView = findViewById(R.id.web_view);

@@ -20,6 +20,7 @@ public class HtmlDisplayContent implements DisplayContent {
 
     private final String url;
     private final int dismissButtonColor;
+    private final int backgroundColor;
 
     /**
      * Default factory method.
@@ -29,6 +30,7 @@ public class HtmlDisplayContent implements DisplayContent {
     private HtmlDisplayContent(Builder builder) {
         this.url = builder.url;
         this.dismissButtonColor = builder.dismissButtonColor;
+        this.backgroundColor = builder.backgroundColor;
     }
 
     /**
@@ -58,6 +60,15 @@ public class HtmlDisplayContent implements DisplayContent {
             builder.setUrl(content.opt(URL_KEY).getString());
         }
 
+        // Background color
+        if (content.containsKey(BACKGROUND_COLOR_KEY)) {
+            try {
+                builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
+            } catch (IllegalArgumentException e) {
+                throw new JsonException("Invalid background color: " + content.opt(BACKGROUND_COLOR_KEY), e);
+            }
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -70,6 +81,7 @@ public class HtmlDisplayContent implements DisplayContent {
         return JsonMap.newBuilder()
                       .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
                       .put(URL_KEY, url)
+                      .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
                       .build()
                       .toJsonValue();
     }
@@ -95,6 +107,16 @@ public class HtmlDisplayContent implements DisplayContent {
         return dismissButtonColor;
     }
 
+    /**
+     * Returns the background color.
+     *
+     * @return The background color.
+     */
+    @ColorInt
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
     @Override
     public String toString() {
         return toJsonValue().toString();
@@ -115,6 +137,11 @@ public class HtmlDisplayContent implements DisplayContent {
         if (dismissButtonColor != that.dismissButtonColor) {
             return false;
         }
+
+        if (backgroundColor != that.backgroundColor) {
+            return false;
+        }
+
         return url != null ? url.equals(that.url) : that.url == null;
     }
 
@@ -122,6 +149,7 @@ public class HtmlDisplayContent implements DisplayContent {
     public int hashCode() {
         int result = url != null ? url.hashCode() : 0;
         result = 31 * result + dismissButtonColor;
+        result = 31 * result + backgroundColor;
         return result;
     }
 
@@ -141,6 +169,7 @@ public class HtmlDisplayContent implements DisplayContent {
 
         private String url;
         private int dismissButtonColor = Color.BLACK;
+        private int backgroundColor = Color.WHITE;;
 
         /**
          * Default constructor.
@@ -168,6 +197,18 @@ public class HtmlDisplayContent implements DisplayContent {
         @NonNull
         public Builder setDismissButtonColor(@ColorInt int color) {
             this.dismissButtonColor = color;
+            return this;
+        }
+
+        /**
+         * Sets the background color. Defaults to white.
+         *
+         * @param color The background color.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setBackgroundColor(@ColorInt int color) {
+            this.backgroundColor = color;
             return this;
         }
 

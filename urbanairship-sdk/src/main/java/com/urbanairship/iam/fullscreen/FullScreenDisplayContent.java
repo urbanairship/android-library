@@ -167,7 +167,7 @@ public class FullScreenDisplayContent implements DisplayContent {
             try {
                 builder.setBackgroundColor(Color.parseColor(content.opt(BACKGROUND_COLOR_KEY).getString("")));
             } catch (IllegalArgumentException e) {
-                throw new JsonException("Invalid background button color: " + content.opt(BACKGROUND_COLOR_KEY), e);
+                throw new JsonException("Invalid background color: " + content.opt(BACKGROUND_COLOR_KEY), e);
             }
         }
 

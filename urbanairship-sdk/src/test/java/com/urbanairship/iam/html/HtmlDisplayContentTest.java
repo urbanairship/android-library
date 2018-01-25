@@ -22,6 +22,7 @@ public class HtmlDisplayContentTest extends BaseTestCase {
         HtmlDisplayContent content = HtmlDisplayContent.newBuilder()
                                                        .setUrl("www.cool.story")
                                                        .setDismissButtonColor(Color.BLUE)
+                                                       .setBackgroundColor(Color.RED)
                                                        .build();
 
         HtmlDisplayContent fromJson = HtmlDisplayContent.parseJson(content.toJsonValue());
