@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 
 import android.content.Context;
+import android.util.Base64;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
@@ -19,6 +20,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -112,8 +114,11 @@ public class AudienceChecksTest extends BaseTestCase {
 
     @Test
     public void testTestDevices() {
+        byte[] bytes = Arrays.copyOf(UAStringUtil.sha256Digest("test channel"), 16);
+        String testDevice = Base64.encodeToString(bytes, Base64.DEFAULT);
+
         Audience testDeviceAudience = Audience.newBuilder()
-                                           .addTestDevice(UAStringUtil.sha256("test channel"))
+                                           .addTestDevice(testDevice)
                                            .build();
 
         Audience someOtherTestDeviceAudience = Audience.newBuilder()

@@ -3,6 +3,7 @@
 package com.urbanairship.util;
 
 import android.support.annotation.NonNull;
+import android.util.Base64;
 
 import com.urbanairship.Logger;
 
@@ -101,7 +102,29 @@ public abstract class UAStringUtil {
     }
 
     /**
+     * Generates the sha256 digest for a given string.
+     *
+     * @param value The string.
+     * @return The sha256 digest for the string, or null if it failed
+     * to create the digest.
+     */
+    public static byte[] sha256Digest(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(value.getBytes("UTF-8"));
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            Logger.error("Failed to encode string: " + value, e);
+            return null;
+        }
+    }
+
+    /**
      * Converts the bytes into a hex string.
+     *
      * @param bytes The byte array.
      * @return A hex string.
      */
@@ -111,5 +134,45 @@ public abstract class UAStringUtil {
             hexHash.append(String.format("%02x", b));
         }
         return hexHash.toString();
+    }
+
+    /**
+     * Base64 decodes a string.
+     *
+     * @param encoded The base64 encoded string.
+     * @return The decoded bytes or null if it failed to be decoded.
+     */
+    public static byte[] base64Decode(String encoded) {
+        if (UAStringUtil.isEmpty(encoded)) {
+            return null;
+        }
+
+        // Decode it
+        try {
+            return Base64.decode(encoded, Base64.DEFAULT);
+        } catch (IllegalArgumentException e) {
+            Logger.verbose("Failed to decode string: " + encoded);
+            return null;
+        }
+    }
+
+    /**
+     * Generates a base 64 decoded string.
+     *
+     * @param encoded The encoded value.
+     * @return The decoded string or null if it failed to be decoded.
+     */
+    public static String base64DecodedString(String encoded) {
+        byte[] decoded = base64Decode(encoded);
+        if (decoded == null) {
+            return null;
+        }
+
+        try {
+            return new String(decoded, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Logger.error("Failed to create string", e);
+            return null;
+        }
     }
 }

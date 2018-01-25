@@ -14,6 +14,7 @@ import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -41,11 +42,23 @@ public abstract class AudienceChecks {
             return false;
         }
 
+        // Test devices
         if (!audience.getTestDevices().isEmpty()) {
-            String hash = UAStringUtil.sha256(UAirship.shared().getPushManager().getChannelId());
-            if (hash == null || !audience.getTestDevices().contains(hash)) {
+            byte[] digest = UAStringUtil.sha256Digest(UAirship.shared().getPushManager().getChannelId());
+            if (digest == null || digest.length < 16) {
                 return false;
             }
+
+            digest = Arrays.copyOf(digest, 16);
+
+            for (String testDevice : audience.getTestDevices()) {
+                byte[] decoded = UAStringUtil.base64Decode(testDevice);
+                if (Arrays.equals(digest, decoded)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         return true;
@@ -62,7 +75,6 @@ public abstract class AudienceChecks {
         if (audience == null) {
             return true;
         }
-
 
         UAirship airship = UAirship.shared();
         UALocationManager locationManager = airship.getLocationManager();

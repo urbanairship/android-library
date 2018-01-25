@@ -10,12 +10,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Base64;
 
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -166,7 +164,7 @@ public class ChannelCapture extends AirshipComponent {
             return;
         }
 
-        String decodedClipboardString = base64Decode(clipboardText);
+        String decodedClipboardString = UAStringUtil.base64DecodedString(clipboardText);
         String superSecretCode = generateToken();
         if (UAStringUtil.isEmpty(decodedClipboardString) || !decodedClipboardString.startsWith(superSecretCode)) {
             return;
@@ -203,29 +201,7 @@ public class ChannelCapture extends AirshipComponent {
         context.startActivity(intent);
     }
 
-    /**
-     * Base64 decodes a string.
-     *
-     * @param encoded The base64 encoded string.
-     * @return The decoded string or null if it failed to be decoded.
-     */
-    private String base64Decode(String encoded) {
-        if (UAStringUtil.isEmpty(encoded)) {
-            return null;
-        }
 
-        // Decode it
-        try {
-            byte[] data = Base64.decode(encoded, Base64.DEFAULT);
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Logger.verbose("ClipBoardMagic - Unsupported encoding.");
-            return null;
-        } catch (IllegalArgumentException e) {
-            Logger.verbose("ClipBoardMagic - Failed to decode string.");
-            return null;
-        }
-    }
 
     /**
      * Generates the expected clipboard token.
