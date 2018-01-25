@@ -28,6 +28,7 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
     public void setup() {
         action = new OpenExternalUrlAction();
         whitelist = UAirship.shared().getWhitelist();
+        whitelist.setOpenUrlWhitelistingEnabled(true);
     }
 
 

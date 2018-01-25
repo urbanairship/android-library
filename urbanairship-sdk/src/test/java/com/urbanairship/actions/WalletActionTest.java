@@ -29,6 +29,7 @@ public class WalletActionTest extends BaseTestCase {
 
         whitelist = UAirship.shared().getWhitelist();
         whitelist.addEntry("https://yep.example.com");
+        whitelist.setOpenUrlWhitelistingEnabled(true);
 
         // Default the platform to Android
         TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM);

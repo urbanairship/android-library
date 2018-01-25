@@ -3,6 +3,7 @@
 package com.urbanairship.js;
 
 import android.net.Uri;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -10,15 +11,36 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
  * Defines a set of URL patterns to match a URL.
  */
 public class Whitelist {
+
+    /**
+     * Whitelist entry applies to JS interface.
+     */
+    public static final int SCOPE_JAVASCRIPT_INTERFACE = 1;
+
+    /**
+     * Whitelist entry applies to any url handling.
+     */
+    public static final int SCOPE_OPEN_URL = 1 << 1;
+
+    /**
+     * Whitelist entry applies to both url and JS interface.
+     */
+    public static final int SCOPE_ALL = SCOPE_JAVASCRIPT_INTERFACE | SCOPE_OPEN_URL;
+
+    @IntDef(flag = true, value = { SCOPE_JAVASCRIPT_INTERFACE, SCOPE_OPEN_URL, SCOPE_ALL })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Scope {}
 
     /**
      * Regular expression to match the scheme.
@@ -55,7 +77,8 @@ public class Whitelist {
      */
     private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
-    private final List<UriPattern> uriPatterns = new ArrayList<>();
+    private final Map<UriPattern, Entry> entries = new HashMap<>();
+    private boolean isOpenUrlWhitelistingEnabled = true;
 
     /**
      * Adds an entry to the whitelist for URL matching. Patterns must be defined with the following
@@ -78,8 +101,8 @@ public class Whitelist {
      *  and the path starts with /foo/.
      *
      * </pre>
-     *
-     * Note: International domains should add an entry for both the ASCII and the unicode versions of
+     * <p>
+     * Note: International domains should add entries for both the ASCII and the unicode versions of
      * the domain.
      *
      * @param pattern The URL pattern to add as a whitelist matcher.
@@ -87,6 +110,40 @@ public class Whitelist {
      * was unable to be added because it was either null or did not match the url-pattern syntax.
      */
     public boolean addEntry(@NonNull String pattern) {
+        return addEntry(pattern, SCOPE_ALL);
+    }
+
+    /**
+     * Adds an entry to the whitelist for URL matching. Patterns must be defined with the following
+     * syntax:
+     * <pre>
+     * {@code
+     * <pattern> := '*' | <scheme>'://'<host><path> | <scheme>'://'<host> | 'file://'<path>
+     * <scheme> := '*' | 'http' | 'https'
+     * <host> := '*' | '*.'<any char except '/' and '*'>+ | <any char except '/' and '*'>+
+     * <path> := '/'<any char>
+     * }
+     *
+     * Examples:
+     *
+     *  '*' will match any file, http, or https URL.
+     *  '*://www.urbanairship.com' will match any file, http, or https URL from www.urbanairship.com
+     *  'https://*.urbanairship.com' will match any https URL from urbanairship.com and any of its subdomains.
+     *  'file:///android_asset/*' will match any file in the android assets directory.
+     *  'http://urbanairship.com/foo/*.html' will match any url from urbanairship.com that ends in .html
+     *  and the path starts with /foo/.
+     *
+     * </pre>
+     * <p>
+     * Note: International domains should add entries for both the ASCII and the unicode versions of
+     * the domain.
+     *
+     * @param pattern The URL pattern to add as a whitelist matcher.
+     * @param scope The scope that entry applies to.
+     * @return <code>true</code> if the pattern was added successfully, <code>false</code> if the pattern
+     * was unable to be added because it was either null or did not match the url-pattern syntax.
+     */
+    public boolean addEntry(@NonNull String pattern, @Scope int scope) {
         //noinspection ConstantConditions
         if (pattern == null || !VALID_PATTERN.matcher(pattern).matches()) {
             Logger.warn("Invalid whitelist pattern " + pattern);
@@ -96,8 +153,8 @@ public class Whitelist {
         // If we have just a wild card, we need to add a special pattern for both file and https/http
         // URIs.
         if (pattern.equals("*")) {
-            uriPatterns.add(new UriPattern(Pattern.compile("(http)|(https)"), null, null));
-            uriPatterns.add(new UriPattern(Pattern.compile("file"), null, Pattern.compile("/.*")));
+            addEntry(new UriPattern(Pattern.compile("(http)|(https)"), null, null), scope);
+            addEntry(new UriPattern(Pattern.compile("file"), null, Pattern.compile("/.*")), scope);
             return true;
         }
 
@@ -129,31 +186,64 @@ public class Whitelist {
             pathPattern = Pattern.compile(escapeRegEx(path, false));
         }
 
-        uriPatterns.add(new UriPattern(schemePattern, hostPattern, pathPattern));
+        addEntry(new UriPattern(schemePattern, hostPattern, pathPattern), scope);
         return true;
     }
 
+    /**
+     * Adds an entry.
+     *
+     * @param pattern The pattern.
+     * @param scope The scope.
+     */
+    private void addEntry(UriPattern pattern, @Scope int scope) {
+        synchronized (entries) {
+            if (entries.containsKey(pattern)) {
+                entries.get(pattern).scope |= scope;
+            } else {
+                entries.put(pattern, new Entry(pattern, scope));
+            }
+        }
+    }
 
     /**
      * Checks if a given URL is whitelisted or not.
      *
      * @param url The URL.
+     * @param scope The scope.
      * @return <code>true</code> If the URL matches any entries in the whitelist.
      */
-    public boolean isWhitelisted(String url) {
+    public boolean isWhitelisted(String url, @Scope int scope) {
         if (url == null) {
             return false;
         }
 
+        if (scope == SCOPE_OPEN_URL && !isOpenUrlWhitelistingEnabled) {
+            return true;
+        }
+
         Uri uri = Uri.parse(url);
 
-        for (UriPattern pattern : uriPatterns) {
-            if (pattern.matches(uri)) {
-                return true;
+        synchronized (entries) {
+            for (Entry entry : entries.values()) {
+                if (entry.matches(uri, scope)) {
+                    return true;
+                }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Enables/disbales {@link #SCOPE_OPEN_URL} checking. If disabled, all URL checks for the open
+     * url scope will be allowed.
+     *
+     * @param isOpenUrlWhitelistingEnabled {@code true} to enable whitelist checking for {@link #SCOPE_OPEN_URL},
+     * otherwise {@code false}.
+     */
+    public void setOpenUrlWhitelistingEnabled(boolean isOpenUrlWhitelistingEnabled) {
+        this.isOpenUrlWhitelistingEnabled = isOpenUrlWhitelistingEnabled;
     }
 
     /**
@@ -200,6 +290,8 @@ public class Whitelist {
             }
         }
 
+        whitelist.setOpenUrlWhitelistingEnabled(airshipConfigOptions.enableUrlWhitelisting);
+
         return whitelist;
     }
 
@@ -245,6 +337,78 @@ public class Whitelist {
             }
 
             return true;
+        }
+
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            UriPattern that = (UriPattern) o;
+
+            if (scheme != null ? !scheme.equals(that.scheme) : that.scheme != null) {
+                return false;
+            }
+            if (host != null ? !host.equals(that.host) : that.host != null) {
+                return false;
+            }
+            return path != null ? path.equals(that.path) : that.path == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = scheme != null ? scheme.hashCode() : 0;
+            result = 31 * result + (host != null ? host.hashCode() : 0);
+            result = 31 * result + (path != null ? path.hashCode() : 0);
+            return result;
+        }
+    }
+
+    private static class Entry {
+        private int scope;
+        private UriPattern pattern;
+
+
+        private Entry(UriPattern pattern, @Scope int scope) {
+            this.scope = scope;
+            this.pattern = pattern;
+        }
+
+        private boolean matches(Uri uri, int scope) {
+            if ((scope & this.scope) == scope && pattern.matches(uri)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            Entry entry = (Entry) o;
+
+            if (scope != entry.scope) {
+                return false;
+            }
+            return pattern != null ? pattern.equals(entry.pattern) : entry.pattern == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = scope;
+            result = 31 * result + (pattern != null ? pattern.hashCode() : 0);
+            return result;
         }
     }
 }

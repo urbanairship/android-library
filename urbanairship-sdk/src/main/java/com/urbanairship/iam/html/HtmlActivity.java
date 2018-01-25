@@ -25,6 +25,7 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
@@ -65,7 +66,7 @@ public class HtmlActivity extends InAppMessageActivity {
         this.handler = new Handler(Looper.getMainLooper());
         this.url = displayContent.getUrl();
 
-        if (!UAirship.shared().getWhitelist().isWhitelisted(url)) {
+        if (!UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_OPEN_URL)) {
             Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
             finish();
             return;

@@ -14,6 +14,7 @@ import android.util.TypedValue;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.UAStringUtil;
@@ -194,7 +195,7 @@ public class LandingPageAction extends Action {
                     return false;
                 }
 
-                if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString())) {
+                if (!UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
                     Logger.error("Unable to show landing page, url is not whitelisted: " + uri);
                     return false;
                 }

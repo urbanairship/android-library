@@ -28,6 +28,7 @@ public class LandingPageActionTest extends BaseTestCase {
     public void setup() {
         action = new LandingPageAction();
         whitelist = UAirship.shared().getWhitelist();
+        whitelist.setOpenUrlWhitelistingEnabled(true);
     }
 
     /**

@@ -146,6 +146,16 @@ public class AirshipConfigOptions {
     public final String[] whitelist;
 
     /**
+     * Enables/disables whitelist checks for {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL}.
+     * If disabled, any URL checks with scope {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL} will
+     * be allowed even if the URL is not in the whitelist.
+     * <p>
+     * Defaults to false.
+     */
+    @Nullable
+    public boolean enableUrlWhitelisting;
+
+    /**
      * Flag indicating whether the application is in production or development.
      * <p/>
      * Defaults to <code>false</code>.
@@ -383,6 +393,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_FCM_SENDER_ID = "fcmSenderId";
         private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
+        private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -411,6 +422,7 @@ public class AirshipConfigOptions {
         private int notificationAccentColor;
         private String walletUrl = "https://wallet-api.urbanairship.com";
         private String notificationChannel;
+        private boolean enableUrlWhitelisting;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -619,6 +631,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
                             this.setProductionFcmSenderId(configParser.getString(i));
+                            break;
+
+                        case FIELD_ENABLE_URL_WHITELISTING:
+                            this.setEnableUrlWhitelisting(configParser.getBoolean(i));
                             break;
                     }
                 } catch (Exception e) {
@@ -956,6 +972,18 @@ public class AirshipConfigOptions {
          */
         public Builder setWalletUrl(String walletUrl) {
             this.walletUrl = walletUrl;
+            return this;
+        }
+
+        /**
+         * Enables/disables whitelist checks for {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL}.
+         * If disabled, any URL checks with scope {@link com.urbanairship.js.Whitelist#SCOPE_OPEN_URL} will
+         * be allowed even if the URL is not in the whitelist.
+         *
+         * @return The config options builder.
+         */
+        public Builder setEnableUrlWhitelisting(boolean enableUrlWhitelisting) {
+            this.enableUrlWhitelisting = enableUrlWhitelisting;
             return this;
         }
 

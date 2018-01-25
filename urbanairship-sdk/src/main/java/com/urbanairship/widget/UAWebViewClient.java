@@ -26,6 +26,7 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.richpush.RichPushMessage;
@@ -453,7 +454,7 @@ public class UAWebViewClient extends WebViewClient {
      * @return <code>true</code> if the URL is white listed, otherwise <code>false</code>.
      */
     private boolean isWhiteListed(String url) {
-        return UAirship.shared().getWhitelist().isWhitelisted(url);
+        return UAirship.shared().getWhitelist().isWhitelisted(url, Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
     }
 
     @CallSuper

@@ -13,6 +13,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.Network;
 
 /**
@@ -48,7 +49,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     @Override
     public int onPrepare(@NonNull Context context) {
         HtmlDisplayContent displayContent = message.getDisplayContent();
-        if (displayContent == null || !UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl())) {
+        if (displayContent == null || !UAirship.shared().getWhitelist().isWhitelisted(displayContent.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
             Logger.error("HTML in-app message URL is not whitelisted. Unable to display message.");
             return CANCEL;
         }

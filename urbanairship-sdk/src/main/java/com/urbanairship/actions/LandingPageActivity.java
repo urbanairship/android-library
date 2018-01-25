@@ -31,6 +31,7 @@ import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
@@ -453,10 +454,10 @@ public class LandingPageActivity extends Activity {
 
             }
         } else {
-            if (UAirship.shared().getWhitelist().isWhitelisted(uri.toString())) {
+            if (UAirship.shared().getWhitelist().isWhitelisted(uri.toString(), Whitelist.SCOPE_OPEN_URL)) {
                 webView.loadUrl(uri.toString());
             } else {
-                Logger.error("URL is not whitelisted. Unable to load landing landing page: " + uri);
+                Logger.error("URL is not whitelisted. Unable to load landing page: " + uri);
                 finish();
             }
         }

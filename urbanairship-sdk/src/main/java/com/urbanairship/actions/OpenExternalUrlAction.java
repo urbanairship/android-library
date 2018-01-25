@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.UriUtils;
 
 /**
@@ -69,7 +70,7 @@ public class OpenExternalUrlAction extends Action {
                     return false;
                 }
 
-                return UAirship.shared().getWhitelist().isWhitelisted(arguments.getValue().getString());
+                return UAirship.shared().getWhitelist().isWhitelisted(arguments.getValue().getString(), Whitelist.SCOPE_OPEN_URL);
 
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             case Action.SITUATION_PUSH_RECEIVED:
