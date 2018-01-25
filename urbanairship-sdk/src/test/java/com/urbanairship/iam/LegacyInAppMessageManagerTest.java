@@ -4,7 +4,7 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -162,40 +162,13 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
         verify(analytics, never()).addEvent(any(ResolutionEvent.class));
     }
 
-    @Test
-    public void testMissingFactory() {
-        legacyInAppMessageManager.setFactory(null);
-
-        // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
-
-        // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppMessageManager);
-    }
 
     @Test
-    public void testNullSchedule() {
-        legacyInAppMessageManager.setFactory(new LegacyInAppMessageManager.Factory() {
-            @Nullable
+    public void testMessageExtenderException() {
+        legacyInAppMessageManager.setMessageBuilderExtender(new LegacyInAppMessageManager.MessageBuilderExtender() {
+            @NonNull
             @Override
-            public InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage inAppMessage) {
-                return null;
-            }
-        });
-
-        // Receive the push
-        legacyInAppMessageManager.onPushReceived(pushMessage);
-
-        // Verify we did not try to schedule an in-app message
-        verifyZeroInteractions(inAppMessageManager);
-    }
-
-    @Test
-    public void testFactoryException() {
-        legacyInAppMessageManager.setFactory(new LegacyInAppMessageManager.Factory() {
-            @Nullable
-            @Override
-            public InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage inAppMessage) {
+            public InAppMessage.Builder extend(Context context, InAppMessage.Builder builder, LegacyInAppMessage legacyMessage) {
                 throw new RuntimeException("exception!");
             }
         });
@@ -208,6 +181,22 @@ public class LegacyInAppMessageManagerTest extends BaseTestCase {
     }
 
 
+    @Test
+    public void testScheduleExtenderException() {
+        legacyInAppMessageManager.setScheduleBuilderExtender(new LegacyInAppMessageManager.ScheduleInfoBuilderExtender() {
+            @NonNull
+            @Override
+            public InAppMessageScheduleInfo.Builder extend(Context context, InAppMessageScheduleInfo.Builder builder, LegacyInAppMessage legacyMessage) {
+                throw new RuntimeException("exception!");
+            }
+        });
+
+        // Receive the push
+        legacyInAppMessageManager.onPushReceived(pushMessage);
+
+        // Verify we did not try to schedule an in-app message
+        verifyZeroInteractions(inAppMessageManager);
+    }
 
 
 }

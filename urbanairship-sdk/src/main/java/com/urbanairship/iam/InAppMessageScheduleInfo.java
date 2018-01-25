@@ -345,6 +345,18 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         }
 
         /**
+         * Sets the list of triggers.
+         *
+         * @param triggers A list of trigger instances.
+         * @return The Builder instance.
+         */
+        public Builder setTriggers(List<Trigger> triggers) {
+            this.triggers.clear();
+            this.triggers.addAll(triggers);
+            return this;
+        }
+
+        /**
          * Sets the edit grace period after a schedule expires or finishes.
          *
          * @param duration The grace period.

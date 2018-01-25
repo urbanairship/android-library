@@ -38,31 +38,61 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     // New ID key
     private final static String PENDING_MESSAGE_ID = KEY_PREFIX + "PENDING_MESSAGE_ID";
 
+    /**
+     * Default primary color.
+     */
     public static final int DEFAULT_PRIMARY_COLOR = Color.WHITE;
+
+    /**
+     * Default secondary color.
+     */
     public static final int DEFAULT_SECONDARY_COLOR = Color.BLACK;
 
+    /**
+     * Default border radius.
+     */
+    public static final float DEFAULT_BORDER_RADIUS_DP = 2;
 
     private final InAppMessageManager inAppMessageManager;
     private final PreferenceDataStore preferenceDataStore;
     private final Analytics analytics;
-    private Factory factory;
+    private MessageBuilderExtender messageBuilderExtender;
+    private ScheduleInfoBuilderExtender scheduleBuilderExtender;
 
     /**
-     * Factory to generate an {@link InAppMessageScheduleInfo} from a {@link LegacyInAppMessage}.
+     * Interface to extend the {@link InAppMessage.Builder} that generates the message from a
+     * legacy in-app message.
      */
-    interface Factory {
+    public interface MessageBuilderExtender {
 
         /**
-         * Creates a {@link InAppMessageScheduleInfo} from a {@link LegacyInAppMessage}.
+         * Extends the {@link InAppMessage.Builder}.
          *
          * @param context The application context.
-         * @param inAppMessage The legacy in-app message.
-         * @return An in-app message schedule info.
+         * @param legacyMessage The legacy in-app message.
+         * @return The builder.
          */
-        @Nullable
-        InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage inAppMessage);
-
+        @NonNull
+        InAppMessage.Builder extend(Context context, InAppMessage.Builder builder, LegacyInAppMessage legacyMessage);
     }
+
+    /**
+     * Interface to extend the {@link InAppMessageScheduleInfo.Builder} that generates the in-app
+     * schedule info from a legacy in-app message.
+     */
+    public interface ScheduleInfoBuilderExtender {
+
+        /**
+         * Extends the {@link InAppMessageScheduleInfo.Builder}.
+         *
+         * @param context The application context.
+         * @param legacyMessage The legacy in-app message.
+         * @return The builder.
+         */
+        @NonNull
+        InAppMessageScheduleInfo.Builder extend(Context context, InAppMessageScheduleInfo.Builder builder, LegacyInAppMessage legacyMessage);
+    }
+
 
     /**
      * Default constructor.
@@ -77,7 +107,6 @@ public class LegacyInAppMessageManager extends AirshipComponent {
         this.preferenceDataStore = preferenceDataStore;
         this.inAppMessageManager = inAppMessageManager;
         this.analytics = analytics;
-        this.factory = new DefaultFactory();
     }
 
     @Override
@@ -91,13 +120,21 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     }
 
     /**
-     * Sets the factory that generates the {@link InAppMessageScheduleInfo} from
-     * a {@link LegacyInAppMessage}.
+     * Sets the in-app message builder extender.
      *
-     * @param factory The factory.
+     * @param messageBuilderExtender The extender.
      */
-    public void setFactory(Factory factory) {
-        this.factory = factory;
+    public void setMessageBuilderExtender(MessageBuilderExtender messageBuilderExtender) {
+        this.messageBuilderExtender = messageBuilderExtender;
+    }
+
+    /**
+     * Sets the in-app schedule info builder extender.
+     *
+     * @param scheduleBuilderExtender The extender.
+     */
+    public void setScheduleBuilderExtender(ScheduleInfoBuilderExtender scheduleBuilderExtender) {
+        this.scheduleBuilderExtender = scheduleBuilderExtender;
     }
 
     /**
@@ -185,108 +222,101 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      * @return The schedule info, or {@code null} if the factory is unable to create a schedule info.
      */
     private InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage legacyInAppMessage) {
-        Factory factory = this.factory;
-        if (factory == null) {
-            Logger.error("Unable to convert legacy in-app message. Missing factory.");
-            return null;
-        }
-
-        InAppMessageScheduleInfo scheduleInfo;
         try {
-            scheduleInfo = factory.createScheduleInfo(context, legacyInAppMessage);
+            InAppMessageScheduleInfo.Builder builder = InAppMessageScheduleInfo.newBuilder()
+                                                                               .addTrigger(Triggers.newActiveSessionTriggerBuilder().build())
+                                                                               .setEnd(legacyInAppMessage.getExpiry());
+
+
+            ScheduleInfoBuilderExtender builderExtender = this.scheduleBuilderExtender;
+            if (builderExtender != null) {
+                builderExtender.extend(context, builder, legacyInAppMessage);
+            }
+
+            return builder.setMessage(createMessage(context, legacyInAppMessage))
+                          .build();
+
         } catch (Exception e) {
             Logger.error("Error during factory method to convert legacy in-app message.", e);
             return null;
         }
-
-        if (scheduleInfo == null) {
-            Logger.error("Failed to convert legacy in-app message.");
-            return null;
-        }
-
-        if (!legacyInAppMessage.getId().equals(scheduleInfo.getInAppMessage().getId())) {
-            Logger.error("Legacy in-app message ID does not match generated message.");
-        }
-
-        return scheduleInfo;
     }
 
     /**
-     * The default {@link Factory}.
+     * Creates the in-app message.
+     *
+     * @param context The application context.
+     * @param legacyMessage The legacy in-app message.
+     * @return
      */
-    public static class DefaultFactory implements Factory {
+    private InAppMessage createMessage(Context context, LegacyInAppMessage legacyMessage) {
+        @ColorInt
+        int primaryColor = legacyMessage.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : legacyMessage.getPrimaryColor();
 
-        private static final float DEFAULT_BORDER_RADIUS_DP = 2;
+        @ColorInt
+        int secondaryColor = legacyMessage.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : legacyMessage.getSecondaryColor();
 
-        @Override
-        @Nullable
-        public InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage inAppMessage) {
-            @ColorInt
-            int primaryColor = inAppMessage.getPrimaryColor() == null ? DEFAULT_PRIMARY_COLOR : inAppMessage.getPrimaryColor();
+        BannerDisplayContent.Builder displayContentBuilder = BannerDisplayContent.newBuilder()
+                                                                                 .setBackgroundColor(primaryColor)
+                                                                                 .setDismissButtonColor(secondaryColor)
+                                                                                 .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
+                                                                                 .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
+                                                                                 .setPlacement(legacyMessage.getPlacement())
+                                                                                 .setActions(legacyMessage.getClickActionValues())
+                                                                                 .setBody(TextInfo.newBuilder()
+                                                                                                  .setText(legacyMessage.getAlert())
+                                                                                                  .setColor(secondaryColor)
+                                                                                                  .build());
 
-            @ColorInt
-            int secondaryColor = inAppMessage.getSecondaryColor() == null ? DEFAULT_SECONDARY_COLOR : inAppMessage.getSecondaryColor();
+        if (legacyMessage.getDuration() != null) {
+            displayContentBuilder.setDuration(legacyMessage.getDuration(), TimeUnit.MILLISECONDS);
+        }
 
-            BannerDisplayContent.Builder displayContentBuilder = BannerDisplayContent.newBuilder()
-                                                                                     .setBackgroundColor(primaryColor)
-                                                                                     .setDismissButtonColor(secondaryColor)
-                                                                                     .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
-                                                                                     .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
-                                                                                     .setPlacement(inAppMessage.getPlacement())
-                                                                                     .setActions(inAppMessage.getClickActionValues())
-                                                                                     .setBody(TextInfo.newBuilder()
-                                                                                                      .setText(inAppMessage.getAlert())
-                                                                                                      .setColor(secondaryColor)
-                                                                                                      .build());
+        // Buttons
+        if (legacyMessage.getButtonGroupId() != null) {
+            NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(legacyMessage.getButtonGroupId());
 
-            if (inAppMessage.getDuration() != null) {
-                displayContentBuilder.setDuration(inAppMessage.getDuration(), TimeUnit.MILLISECONDS);
-            }
-
-            // Buttons
-            if (inAppMessage.getButtonGroupId() != null) {
-                NotificationActionButtonGroup group = UAirship.shared().getPushManager().getNotificationActionGroup(inAppMessage.getButtonGroupId());
-
-                if (group != null) {
-                    for (int i = 0; i < group.getNotificationActionButtons().size(); i++) {
-                        if (i >= BannerDisplayContent.MAX_BUTTONS) {
-                            break;
-                        }
-
-                        NotificationActionButton button = group.getNotificationActionButtons().get(i);
-
-                        TextInfo.Builder labelBuilder = TextInfo.newBuilder()
-                                                                .setDrawable(button.getIcon())
-                                                                .setColor(primaryColor)
-                                                                .setAlignment(TextInfo.ALIGNMENT_CENTER);
-
-                        if (button.getLabel() != 0) {
-                            labelBuilder.setText(context.getString(button.getLabel()));
-                        }
-
-                        ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
-                                                                         .setActions(inAppMessage.getButtonActionValues(button.getId()))
-                                                                         .setId(button.getId())
-                                                                         .setBackgroundColor(secondaryColor)
-                                                                         .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
-                                                                         .setLabel(labelBuilder.build());
-
-                        displayContentBuilder.addButton(buttonInfoBuilder.build());
+            if (group != null) {
+                for (int i = 0; i < group.getNotificationActionButtons().size(); i++) {
+                    if (i >= BannerDisplayContent.MAX_BUTTONS) {
+                        break;
                     }
+
+                    NotificationActionButton button = group.getNotificationActionButtons().get(i);
+
+                    TextInfo.Builder labelBuilder = TextInfo.newBuilder()
+                                                            .setDrawable(button.getIcon())
+                                                            .setColor(primaryColor)
+                                                            .setAlignment(TextInfo.ALIGNMENT_CENTER);
+
+                    if (button.getLabel() != 0) {
+                        labelBuilder.setText(context.getString(button.getLabel()));
+                    }
+
+                    ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
+                                                                     .setActions(legacyMessage.getButtonActionValues(button.getId()))
+                                                                     .setId(button.getId())
+                                                                     .setBackgroundColor(secondaryColor)
+                                                                     .setBorderRadius(DEFAULT_BORDER_RADIUS_DP)
+                                                                     .setLabel(labelBuilder.build());
+
+                    displayContentBuilder.addButton(buttonInfoBuilder.build());
                 }
             }
-
-            return InAppMessageScheduleInfo.newBuilder()
-                                           .addTrigger(Triggers.newActiveSessionTriggerBuilder().build())
-                                           .setEnd(inAppMessage.getExpiry())
-                                           .setMessage(InAppMessage.newBuilder()
-                                                                   .setDisplayContent(displayContentBuilder.build())
-                                                                   .setExtras(inAppMessage.getExtras())
-                                                                   .setId(inAppMessage.getId())
-                                                                   .setSource(InAppMessage.SOURCE_LEGACY_PUSH)
-                                                                   .build())
-                                           .build();
         }
-    }
 
+        InAppMessage.Builder builder = InAppMessage.newBuilder()
+                                                   .setDisplayContent(displayContentBuilder.build())
+                                                   .setExtras(legacyMessage.getExtras());
+
+        MessageBuilderExtender builderExtender = this.messageBuilderExtender;
+        if (builderExtender != null) {
+            builderExtender.extend(context, builder, legacyMessage);
+        }
+
+        // Set ID and source after building the message
+        return builder.setSource(InAppMessage.SOURCE_LEGACY_PUSH)
+                      .setId(legacyMessage.getId())
+                      .build();
+    }
 }
