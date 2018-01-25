@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.push.gcm;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -14,7 +14,8 @@ import android.util.Base64;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.push.gcm.GcmPushProvider;
+import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.PushProviderBridge;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.

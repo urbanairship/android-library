@@ -94,7 +94,7 @@
                  android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name="com.urbanairship.push.UAInstanceIDListenerService"
+            android:name="com.urbanairship.push.gcm.UAInstanceIDListenerService"
             android:exported="false">
 
             <intent-filter android:priority="-999">
@@ -111,7 +111,7 @@
         </receiver>
 
         <receiver
-            android:name="com.urbanairship.push.GcmPushReceiver"
+            android:name="com.urbanairship.push.gcm.GcmPushReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
 
             <intent-filter android:priority="-999">
@@ -122,7 +122,7 @@
         </receiver>
 
         <receiver
-            android:name="com.urbanairship.push.AdmPushReceiver"
+            android:name="com.urbanairship.push.adm.AdmPushReceiver"
             android:permission="com.amazon.device.messaging.permission.SEND">
 
             <intent-filter>

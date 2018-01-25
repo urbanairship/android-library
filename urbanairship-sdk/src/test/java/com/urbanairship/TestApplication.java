@@ -23,6 +23,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
+import com.urbanairship.util.PlatformUtils;
 
 import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
@@ -89,7 +90,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.pushManager, preferenceDataStore, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
-        UAirship.sharedAirship.actionRegistry.registerDefaultActions();
+        UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.messageCenter = new MessageCenter(preferenceDataStore);
         UAirship.sharedAirship.namedUser = new NamedUser(this, preferenceDataStore);
         UAirship.sharedAirship.automation = new Automation(this, preferenceDataStore, airshipConfigOptions, UAirship.sharedAirship.analytics,  ActivityMonitor.shared(getApplicationContext()));

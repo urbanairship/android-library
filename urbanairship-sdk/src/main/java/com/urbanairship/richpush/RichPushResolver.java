@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
-import com.urbanairship.RichPushTable;
 import com.urbanairship.UrbanAirshipProvider;
 import com.urbanairship.UrbanAirshipResolver;
 import com.urbanairship.json.JsonException;

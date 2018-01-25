@@ -236,18 +236,6 @@ public class PassRequest {
         private String externalId;
         public String userName;
 
-        /**
-         * Sets the API key.
-         *
-         * @param apiKey The API key.
-         * @return Builder object.
-         * @deprecated Use {@link #setAuth(String, String)}  instead.
-         */
-        @Deprecated
-        public Builder setApiKey(@NonNull String apiKey) {
-            this.apiKey = apiKey;
-            return this;
-        }
 
         /**
          * Sets the request auth.

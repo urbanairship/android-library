@@ -10,8 +10,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'jacoco'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 27
 
     lintOptions {
         abortOnError false
@@ -20,7 +19,7 @@ android {
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 26
+        targetSdkVersion 27
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""
         consumerProguardFiles 'consumer-proguard.txt'

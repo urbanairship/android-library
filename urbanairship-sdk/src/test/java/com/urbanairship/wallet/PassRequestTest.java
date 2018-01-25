@@ -47,16 +47,6 @@ public class PassRequestTest extends BaseTestCase {
     }
 
     @Test
-    public void testDeprecatedUrl() throws MalformedURLException {
-        PassRequest request = PassRequest.newBuilder()
-                                         .setApiKey("test_api_key")
-                                         .setTemplateId("test_template_id")
-                                         .build();
-
-        assertEquals("https://wallet-api.urbanairship.com/v1/pass/test_template_id?api_key=test_api_key", request.getPassUrl().toString());
-    }
-
-    @Test
     public void testDefaultUrl() throws MalformedURLException {
         PassRequest request = PassRequest.newBuilder()
                                          .setAuth("test_user_name", "test_api_key")

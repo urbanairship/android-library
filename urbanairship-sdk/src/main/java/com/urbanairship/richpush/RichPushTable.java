@@ -1,11 +1,14 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.richpush;
+
+import android.support.annotation.RestrictTo;
 
 /**
  * Rich Push Message table definition
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class RichPushTable {
     public static final String COLUMN_NAME_MESSAGE_ID = "message_id";
     public static final String COLUMN_NAME_MESSAGE_URL = "message_url";

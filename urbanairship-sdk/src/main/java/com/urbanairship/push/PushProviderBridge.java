@@ -63,11 +63,13 @@ public abstract class PushProviderBridge {
                     .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
 
             try {
+                //noinspection deprecation
                 WakefulBroadcastReceiver.startWakefulService(context, intent);
                 callback.run();
                 return;
             } catch (SecurityException | IllegalStateException e) {
                 Logger.error("Unable to run push in the push service.", e);
+                //noinspection deprecation
                 WakefulBroadcastReceiver.completeWakefulIntent(intent);
             }
         }

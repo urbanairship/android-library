@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.push.gcm;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 import com.urbanairship.Logger;

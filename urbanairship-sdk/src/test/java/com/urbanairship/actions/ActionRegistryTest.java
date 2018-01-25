@@ -37,7 +37,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testDefaultActions() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
         assertEquals("Default entries changed", 18, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^p"), "^p", "landing_page_action");
@@ -93,7 +93,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testLandingPageDefaultPredicateReject() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("^p");
         assertNotNull("Landing Page should have a default predicate", entry.getPredicate());
@@ -111,7 +111,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testLandingPageDefaultPredicateAccepts() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("^p");
         assertNotNull("Landing Page should have a default predicate", entry.getPredicate());
@@ -128,7 +128,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testAddCustomEventDefaultPredicateReject() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("add_custom_event_action");
         assertNotNull("Add custom event should have a default predicate", entry.getPredicate());
@@ -143,7 +143,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testFetchDeviceInfoDefaultPredicateReject() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("fetch_device_info");
         assertNotNull("Fetch device info should have a default predicate", entry.getPredicate());
@@ -161,7 +161,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testFetchDeviceInfoDefaultPredicateAccepts() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("fetch_device_info");
         assertNotNull("Fetch device info should have a default predicate", entry.getPredicate());
@@ -180,7 +180,7 @@ public class ActionRegistryTest extends BaseTestCase {
      */
     @Test
     public void testLandingPagePredicateAppNeverOpened() {
-        registry.registerDefaultActions();
+        registry.registerDefaultActions(TestApplication.getApplication());
 
         ActionRegistry.Entry entry = registry.getEntry("^p");
         assertNotNull("Landing Page should have a default predicate", entry.getPredicate());

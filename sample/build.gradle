@@ -2,15 +2,11 @@ apply plugin: 'com.android.application'
 
 repositories {
     jcenter()
-
-    maven {
-        url  "https://urbanairship.bintray.com/android"
-    }
+    google()
 }
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 27
 
     lintOptions {
         disable 'MissingTranslation', 'AppCompatResource'
@@ -20,7 +16,7 @@ android {
     defaultConfig {
         applicationId "com.urbanairship.sample"
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -44,7 +40,7 @@ dependencies {
     implementation project(':urbanairship-sdk')
 
     // Normally apps will use the AAR artifact from jcenter:
-    // compile 'com.urbanairship.android:urbanairship-sdk:8.9.+'
+    // compile 'com.urbanairship.android:urbanairship-sdk:9.0.+'
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"

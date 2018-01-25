@@ -1,6 +1,6 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship.push;
+package com.urbanairship.push.adm;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -11,7 +11,8 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.push.adm.AdmPushProvider;
+import com.urbanairship.push.PushMessage;
+import com.urbanairship.push.PushProviderBridge;
 
 /**
  * AdmPushReceiver listens for incoming ADM registration responses and messages.

@@ -53,6 +53,7 @@ public class PushService extends Service {
                                 stopSelf(lastStartId);
                             }
 
+                            //noinspection deprecation
                             WakefulBroadcastReceiver.completeWakefulIntent(intent);
                         }
                     })
@@ -67,6 +68,7 @@ public class PushService extends Service {
             }
 
             if (intent != null && intent.getExtras() != null) {
+                //noinspection deprecation
                 WakefulBroadcastReceiver.completeWakefulIntent(intent);
             }
         }

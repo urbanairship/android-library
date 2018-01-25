@@ -1,14 +1,21 @@
 /* Copyright 2017 Urban Airship and Contributors */
 
-package com.urbanairship;
+package com.urbanairship.util;
+
+import android.support.annotation.RestrictTo;
+
+import com.urbanairship.UAirship;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 import static com.urbanairship.UAirship.ANDROID_PLATFORM;
 
 /**
  * Platform utilities.
+ *
+ * @hide
  */
-class PlatformUtils {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class PlatformUtils {
 
     /**
      * Checks if the platform is valid.
@@ -16,7 +23,7 @@ class PlatformUtils {
      * @param platform A platform int.
      * @return {@code true} If the integer matches the platform, otherwise {@code false}.
      */
-    static boolean isPlatformValid(int platform) {
+    public static boolean isPlatformValid(int platform) {
         switch (platform) {
             case AMAZON_PLATFORM:
             case ANDROID_PLATFORM:
@@ -34,7 +41,7 @@ class PlatformUtils {
      * does not match any platforms.
      */
     @UAirship.Platform
-    static int parsePlatform(int platform) {
+    public static int parsePlatform(int platform) {
         switch (platform) {
             case UAirship.AMAZON_PLATFORM:
                 return AMAZON_PLATFORM;
@@ -51,7 +58,7 @@ class PlatformUtils {
      * @param platform The platform.
      * @return The string representing the platform.
      */
-    static String asString(@UAirship.Platform int platform) {
+    public static String asString(@UAirship.Platform int platform) {
         switch (platform) {
             case UAirship.AMAZON_PLATFORM:
                 return "amazon";

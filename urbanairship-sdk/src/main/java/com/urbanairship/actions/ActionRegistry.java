@@ -10,7 +10,6 @@ import android.util.SparseArray;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -268,15 +267,6 @@ public final class ActionRegistry {
         }
     }
 
-    /**
-     * Registers default actions.
-     *
-     * @deprecated Will be removed in 9.0.0.
-     */
-    @Deprecated
-    public void registerDefaultActions() {
-        registerDefaultActions(UAirship.getApplicationContext());
-    }
 
     /**
      * An entry in the action registry.

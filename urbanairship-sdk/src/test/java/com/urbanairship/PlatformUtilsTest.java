@@ -2,6 +2,8 @@
 
 package com.urbanairship;
 
+import com.urbanairship.util.PlatformUtils;
+
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
