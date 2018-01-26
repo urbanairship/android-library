@@ -279,27 +279,29 @@ public class WhitelistTest extends BaseTestCase {
     /**
      * Test scope.
      */
+    @Test
     public void testScope() {
         whitelist.addEntry("*://*.urbanairship.com/accept-js.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
         whitelist.addEntry("*://*.urbanairship.com/accept-url.html", Whitelist.SCOPE_OPEN_URL);
         whitelist.addEntry("*://*.urbanairship.com/accept-all.html", Whitelist.SCOPE_ALL);
 
-        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/accept-js.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
-        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/what/accept-js.html", Whitelist.SCOPE_ALL));
-        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/what/accept-js.html", Whitelist.SCOPE_OPEN_URL));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/accept-js.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
+        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/accept-js.html", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/accept-js.html", Whitelist.SCOPE_OPEN_URL));
 
-        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/accept-url.html", Whitelist.SCOPE_OPEN_URL));
-        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/what/accept-url.html", Whitelist.SCOPE_ALL));
-        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/what/accept-url.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/accept-url.html", Whitelist.SCOPE_OPEN_URL));
+        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/accept-url.html", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("https://urbanairship.com/accept-url.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
 
-        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/accept-all.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
-        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/accept-all.html", Whitelist.SCOPE_ALL));
-        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/accept-all.html", Whitelist.SCOPE_OPEN_URL));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/accept-all.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/accept-all.html", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/accept-all.html", Whitelist.SCOPE_OPEN_URL));
     }
 
     /**
      * Test disabling url scope whitelisting.
      */
+    @Test
     public void testDisableUrlScopeWhitelisting() {
         assertFalse(whitelist.isWhitelisted("https://someurl.com", Whitelist.SCOPE_OPEN_URL));
 
@@ -312,6 +314,7 @@ public class WhitelistTest extends BaseTestCase {
     /**
      * Test SCOPE_ALL whitelist check if two separate entries match for both types of scope.
      */
+    @Test
     public void testScopeAll() {
         whitelist.addEntry("*", Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
         whitelist.addEntry("*://*.urbanairship.com/all.html", Whitelist.SCOPE_OPEN_URL);
