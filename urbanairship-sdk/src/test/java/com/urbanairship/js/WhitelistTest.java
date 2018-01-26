@@ -310,11 +310,10 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test registering the same entry for SCOPE_JAVASCRIPT_INTERFACE and SCOPE_OPEN_URL will match
-     * requesting SCOPE_ALL.
+     * Test SCOPE_ALL whitelist check if two separate entries match for both types of scope.
      */
-    public void testAddAllScopesSeparately() {
-        whitelist.addEntry("*://*.urbanairship.com/all.html", Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
+    public void testScopeAll() {
+        whitelist.addEntry("*", Whitelist.SCOPE_JAVASCRIPT_INTERFACE);
         whitelist.addEntry("*://*.urbanairship.com/all.html", Whitelist.SCOPE_OPEN_URL);
 
         assertTrue(whitelist.isWhitelisted("https://urbanairship.com/all.html", Whitelist.SCOPE_ALL));
