@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -172,6 +173,8 @@ public class MediaView extends FrameLayout {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         progressBarLayoutParams.gravity = Gravity.CENTER;
 
+        frameLayout.addView(progressBar, progressBarLayoutParams);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             webView.getSettings().setMediaPlaybackRequiresUserGesture(true);
         }
@@ -179,9 +182,11 @@ public class MediaView extends FrameLayout {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebChromeClient(chromeClient);
         webView.setContentDescription(mediaInfo.getDescription());
+        webView.setVisibility(View.INVISIBLE);
         webView.setWebViewClient(new MediaWebViewClient() {
             @Override
             protected void onPageFinished(WebView webView) {
+                webView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(GONE);
             }
         });
