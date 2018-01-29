@@ -13,9 +13,9 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -77,7 +77,7 @@ public class Whitelist {
      */
     private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
-    private final Map<UriPattern, Entry> entries = new HashMap<>();
+    private final List<Entry> entries = new ArrayList<>();
     private boolean isOpenUrlWhitelistingEnabled = true;
 
     /**
@@ -198,12 +198,18 @@ public class Whitelist {
      */
     private void addEntry(UriPattern pattern, @Scope int scope) {
         synchronized (entries) {
-            if (entries.containsKey(pattern)) {
-                entries.get(pattern).scope |= scope;
-            } else {
-                entries.put(pattern, new Entry(pattern, scope));
-            }
+            entries.add(new Entry(pattern, scope));
         }
+    }
+
+    /**
+     * Checks if a given URL is whitelisted or not with scope {@link #SCOPE_ALL}.
+     *
+     * @param url The URL.
+     * @return <code>true</code> If the URL matches any entries in the whitelist.
+     */
+    public boolean isWhitelisted(String url) {
+        return isWhitelisted(url, SCOPE_ALL);
     }
 
     /**
@@ -223,16 +229,18 @@ public class Whitelist {
         }
 
         Uri uri = Uri.parse(url);
+        int matchedScope = 0;
+
 
         synchronized (entries) {
-            for (Entry entry : entries.values()) {
-                if (entry.matches(uri, scope)) {
-                    return true;
+            for (Entry entry : entries) {
+                if (entry.pattern.matches(uri)) {
+                    matchedScope |= entry.scope;
                 }
             }
         }
 
-        return false;
+        return ((matchedScope & scope) == scope);
     }
 
     /**
@@ -370,45 +378,13 @@ public class Whitelist {
     }
 
     private static class Entry {
-        private int scope;
-        private UriPattern pattern;
+        private final int scope;
+        private final UriPattern pattern;
 
 
         private Entry(UriPattern pattern, @Scope int scope) {
             this.scope = scope;
             this.pattern = pattern;
-        }
-
-        private boolean matches(Uri uri, int scope) {
-            if ((scope & this.scope) == scope && pattern.matches(uri)) {
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            Entry entry = (Entry) o;
-
-            if (scope != entry.scope) {
-                return false;
-            }
-            return pattern != null ? pattern.equals(entry.pattern) : entry.pattern == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = scope;
-            result = 31 * result + (pattern != null ? pattern.hashCode() : 0);
-            return result;
         }
     }
 }
