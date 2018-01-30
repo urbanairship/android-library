@@ -114,7 +114,7 @@
             android:name="com.urbanairship.push.gcm.GcmPushReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
 
-            <intent-filter android:priority="-999">
+            <intent-filter android:priority="100">
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
                 <category android:name="${applicationId}" />
