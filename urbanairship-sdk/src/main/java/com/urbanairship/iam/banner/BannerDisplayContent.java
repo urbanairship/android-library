@@ -565,8 +565,7 @@ public class BannerDisplayContent implements DisplayContent {
         }
 
         /**
-         * Sets the button layout. Only {@link #BUTTON_LAYOUT_SEPARATE} and {@link #BUTTON_LAYOUT_JOINED}
-         * are allowed. Defaults to {@link #BUTTON_LAYOUT_SEPARATE}.
+         * Sets the button layout. Defaults to {@link #BUTTON_LAYOUT_SEPARATE}.
          *
          * @param buttonLayout The button layout.
          * @return The builder instance.
@@ -682,13 +681,12 @@ public class BannerDisplayContent implements DisplayContent {
          * Builds the banner display content.
          *
          * @return The banner display content.
-         * @throws IllegalArgumentException If the button layout is stacked, if more than 2 button
-         * are defined, if the supplied media is not an image, or if the banner does not define at least a heading, body, or buttons.
+         * @throws IllegalArgumentException If more than 2 button are defined, if the supplied media
+         * is not an image, or if the banner does not define at least a heading, body, or buttons.
          */
         @NonNull
         public BannerDisplayContent build() {
             Checks.checkArgument(borderRadius >= 0 && borderRadius <= 20.0, "Border radius must be between 0 and 20.");
-            Checks.checkArgument(buttonLayout != BUTTON_LAYOUT_STACKED, "Banner style does not support stacked button layouts");
             Checks.checkArgument(heading != null || body != null, "Either the body or heading must be defined.");
             Checks.checkArgument(buttons.size() <= MAX_BUTTONS, "Banner allows a max of " + MAX_BUTTONS + " buttons");
             Checks.checkArgument(media == null || media.getType().equals(MediaInfo.TYPE_IMAGE), "Banner only supports image media");

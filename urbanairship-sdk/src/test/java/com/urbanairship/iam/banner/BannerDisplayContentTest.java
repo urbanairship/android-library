@@ -4,7 +4,6 @@ package com.urbanairship.iam.banner;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.iam.ButtonInfo;
-import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.json.JsonException;
@@ -87,29 +86,7 @@ public class BannerDisplayContentTest extends BaseTestCase {
                                                  .build())
                             .build();
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testStackedButtonLayout() {
-        BannerDisplayContent.newBuilder()
-                            .setBody(TextInfo.newBuilder()
-                                             .setText("oh hi")
-                                             .build())
-                            .setButtonLayout(DisplayContent.BUTTON_LAYOUT_STACKED)
-                            .addButton(ButtonInfo.newBuilder()
-                                                 .setLabel(TextInfo.newBuilder()
-                                                                   .setText("Oh hi")
-                                                                   .build())
-                                                 .setId("id")
-                                                 .build())
-                            .addButton(ButtonInfo.newBuilder()
-                                                 .setLabel(TextInfo.newBuilder()
-                                                                   .setText("Oh hi")
-                                                                   .build())
-                                                 .setId("id")
-                                                 .build())
-                            .build();
-    }
-
+    
     @Test
     public void testMedia() {
         BannerDisplayContent.newBuilder()
