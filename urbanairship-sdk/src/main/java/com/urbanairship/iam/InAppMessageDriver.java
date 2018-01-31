@@ -7,7 +7,6 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.ParseScheduleException;
 import com.urbanairship.automation.ScheduleInfo;
-import com.urbanairship.json.JsonException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,8 +86,8 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
                                                                             .build();
 
             return new InAppMessageSchedule(scheduleId, scheduleInfo);
-        } catch (JsonException e) {
-            throw new ParseScheduleException("Unable to parse in-app message", e);
+        } catch (Exception e) {
+            throw new ParseScheduleException("Unable to parse in-app message for schedule: " + scheduleId + "info data: " + info.getData(), e);
         }
     }
 
