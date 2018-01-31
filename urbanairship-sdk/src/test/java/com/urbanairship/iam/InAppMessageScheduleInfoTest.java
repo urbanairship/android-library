@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * {@link InAppMessageScheduleInfo} tests
@@ -42,9 +43,9 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
 
 
         delay = ScheduleDelay.newBuilder()
-                .setScreen("screen")
-                .setSeconds(100)
-                .build();
+                             .setScreen("screen")
+                             .setSeconds(100)
+                             .build();
     }
 
     @Test
@@ -56,9 +57,9 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                 .build());
 
         InAppMessage message = InAppMessage.newBuilder()
-                .setId("some-id")
-                .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                .build();
+                                           .setId("some-id")
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
 
 
         JsonMap scheduleJson = JsonMap.newBuilder()
@@ -148,6 +149,28 @@ public class InAppMessageScheduleInfoTest extends BaseTestCase {
                                 .setStart(1000)
                                 .setMessage(message)
                                 .build();
+    }
+
+    @Test
+    public void testStartNoEnd() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(trigger)
+                                                                .setStart(1000)
+                                                                .setMessage(message)
+                                                                .build();
+
+        assertNotNull(info);
+    }
+
+    @Test
+    public void testEndNoStart() {
+        InAppMessageScheduleInfo info = InAppMessageScheduleInfo.newBuilder()
+                                                                .addTrigger(trigger)
+                                                                .setEnd(1000)
+                                                                .setMessage(message)
+                                                                .build();
+
+        assertNotNull(info);
     }
 
     @Test(expected = IllegalArgumentException.class)
