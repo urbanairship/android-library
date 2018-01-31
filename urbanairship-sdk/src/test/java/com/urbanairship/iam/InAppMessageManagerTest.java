@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -374,8 +375,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         activityMonitor.startActivity(activity);
         activityMonitor.resumeActivity(activity);
 
-        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-
 
         // Schedule that requires notification opt-in to be true
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
@@ -389,12 +388,12 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                                            .build())
                                                                                    .build());
 
-        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         driverCallbacks.onDisplay(schedule.getId());
 
         // Verify the schedule is finished
         verify(mockDriver).displayFinished("schedule id");
+        verifyZeroInteractions(mockAdapter);
     }
 
     @Test

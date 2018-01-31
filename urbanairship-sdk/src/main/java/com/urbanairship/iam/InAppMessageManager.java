@@ -196,6 +196,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                 AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
                 if (adapterWrapper == null) {
+
+                    if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
+                        Logger.debug("InAppMessageManager - Message audience conditions not met, skipping schedule: " + scheduleId);
+                        return true;
+                    }
+
                     InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
                     if (factory == null) {
                         Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
@@ -221,6 +227,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return false;
                 }
 
+                if (adapterWrapper.skipDisplay) {
+                    return true;
+                }
+
                 if (!adapterWrapper.isReady) {
                     return false;
                 }
@@ -235,6 +245,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 if (isDisplayedLocked) {
                     return false;
                 }
+
 
                 // A resumed activity is required
                 return getResumedActivity() != null;
@@ -663,9 +674,20 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     @MainThread
     private void display(Activity activity, @NonNull String scheduleId) {
-        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
 
-        if (adapterWrapper == null) {
+        if (adapterWrapper == null || adapterWrapper.skipDisplay) {
+            if (adapterWrapper != null) {
+                adapterWrappers.remove(scheduleId);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapterWrapper.finish();
+                    }
+                });
+            }
+
+            driver.displayFinished(scheduleId);
             return;
         }
 
@@ -673,15 +695,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         mainHandler.removeCallbacks(postDisplayRunnable);
 
         boolean isRedisplay = adapterWrapper.displayed;
-
-        if (!isRedisplay && !AudienceChecks.checkAudience(UAirship.getApplicationContext(), adapterWrapper.message.getAudience())) {
-            Logger.debug("InAppMessageManager - Message audience conditions not met, skipping display for schedule: " + scheduleId);
-            adapterWrappers.remove(scheduleId);
-            adapterWrapper.finish();
-            driver.displayFinished(scheduleId);
-            mainHandler.post(postDisplayRunnable);
-            return;
-        }
 
         if (activity != null && adapterWrapper.display(activity)) {
             Logger.verbose("InAppMessagingManager - Message displayed with scheduleId: " + scheduleId);
@@ -747,8 +760,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         private final String scheduleId;
         private final InAppMessage message;
         public volatile boolean isReady;
+        public volatile boolean skipDisplay;
         public InAppMessageAdapter adapter;
         private boolean displayed = false;
+        private boolean prepareCalled = false;
 
         public AdapterWrapper(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull InAppMessageAdapter adapter) {
             this.scheduleId = scheduleId;
@@ -758,11 +773,19 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
         @InAppMessageAdapter.PrepareResult
         private int prepare() {
+
+            if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
+                skipDisplay = true;
+                Logger.debug("InAppMessageManager - Message audience conditions not met, skipping schedule: " + scheduleId);
+                return InAppMessageAdapter.OK;
+            }
+
             try {
                 Logger.debug("InAppMessageManager - Preparing schedule: " + scheduleId);
 
                 @InAppMessageAdapter.PrepareResult
                 int result = adapter.onPrepare(UAirship.getApplicationContext());
+                prepareCalled = true;
 
                 if (result == InAppMessageAdapter.OK) {
                     isReady = true;
@@ -794,7 +817,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             Logger.debug("InAppMessageManager - Schedule finished: " + scheduleId);
 
             try {
-                adapter.onFinish();
+                if (prepareCalled) {
+                    adapter.onFinish();
+                }
             } catch (Exception e) {
                 Logger.error("InAppMessageManager - Exception during onFinish().", e);
             }
