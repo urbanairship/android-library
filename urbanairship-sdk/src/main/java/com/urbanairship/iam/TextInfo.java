@@ -243,7 +243,7 @@ public class TextInfo implements JsonSerializable {
      *
      * @return The text alignment.
      */
-    @NonNull
+    @Nullable
     @Alignment
     public String getAlignment() {
         return alignment;
@@ -350,7 +350,7 @@ public class TextInfo implements JsonSerializable {
         private int drawable;
 
         @Alignment
-        private String alignment = ALIGNMENT_LEFT;
+        private String alignment;
         private List<String> styles = new ArrayList<>();
         private List<String> fontFamilies = new ArrayList<>();
 

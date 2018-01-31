@@ -40,6 +40,9 @@ import com.urbanairship.util.UAStringUtil;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+/**
+ * In-app view utils.
+ */
 public class InAppViewUtils {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
@@ -73,6 +76,7 @@ public class InAppViewUtils {
 
         ViewCompat.setBackground(button, background);
     }
+
 
     /**
      * Applies text info to a text view.
@@ -123,7 +127,6 @@ public class InAppViewUtils {
         }
 
 
-
         int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
         int paintFlags = textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
@@ -141,7 +144,7 @@ public class InAppViewUtils {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        if (textInfo.getAlignment() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             switch (textInfo.getAlignment()) {
                 case TextInfo.ALIGNMENT_CENTER:
                     textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -156,7 +159,6 @@ public class InAppViewUtils {
                     break;
             }
         }
-
 
         Typeface typeface = getTypeFace(textView.getContext(), textInfo.getFontFamilies());
         if (typeface == null) {
@@ -270,8 +272,8 @@ public class InAppViewUtils {
             float scale = (float) mediaView.getWidth() / (float) width;
             params.height = Math.round(scale * height);
         } else {
-            float imageRatio = (float) width/ (float) height;
-            float viewRatio = (float) mediaView.getWidth()/ mediaView.getHeight();
+            float imageRatio = (float) width / (float) height;
+            float viewRatio = (float) mediaView.getWidth() / mediaView.getHeight();
 
             if (imageRatio >= viewRatio) {
                 // Image is wider than the view
