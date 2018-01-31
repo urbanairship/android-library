@@ -35,7 +35,7 @@ import android.util.Log;
  * <pre>{@code
  *  <meta-data android:name="com.urbanairship.autopilot"
  *           android:value="com.urbanairship.AutoPilot" /> }</pre>
- *
+ * <p>
  * <p/>
  * Autopilot can be customized in order to load config from a different source or to customize the Airship
  * instance when it is ready. To customize Autopilot, extend the class and override either {@link #allowEarlyTakeOff(Context)},
@@ -46,7 +46,6 @@ import android.util.Log;
  * <pre>{@code
  *  <meta-data android:name="com.urbanairship.autopilot"
  *           android:value="com.urbanairship.push.sample.SampleAutopilot" /> }</pre>
- *
  */
 public class Autopilot implements UAirship.OnReadyCallback {
 
@@ -106,6 +105,11 @@ public class Autopilot implements UAirship.OnReadyCallback {
 
         if (earlyTakeoff && !instance.allowEarlyTakeOff(application)) {
             Log.i(TAG, "Skipping early takeoff.");
+            return;
+        }
+
+        if (!instance.isReady(application)) {
+            Log.i(TAG, "Autopilot not ready.");
             return;
         }
 
@@ -191,8 +195,22 @@ public class Autopilot implements UAirship.OnReadyCallback {
         return true;
     }
 
+    /**
+     * Called before {@link #automaticTakeOff(Context)} to make sure Autopilot is ready to takeOff.
+     * <p>
+     * Warning: If {@code false}, takeOff will not be called. Any synchronous access to UAirship
+     * will throw an exception.
+     *
+     * @param context The application context.
+     * @return {@code true} to allow takeOff, otherwise {@code false}.
+     */
+    public boolean isReady(@NonNull Context context) {
+        return true;
+    }
+
     @Override
     public void onAirshipReady(UAirship airship) {
         Logger.info("Autopilot - Airship ready!");
     }
+
 }
