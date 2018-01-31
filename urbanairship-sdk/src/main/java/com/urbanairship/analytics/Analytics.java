@@ -104,6 +104,7 @@ public class Analytics extends AirshipComponent {
         this.activityMonitor = builder.activityMonitor;
         this.eventManager = builder.eventManager;
         this.executor = builder.executor == null ? Executors.newSingleThreadExecutor() : builder.executor;
+        this.sessionId = UUID.randomUUID().toString();
 
         this.listener = new ActivityMonitor.SimpleListener() {
             @Override
@@ -122,7 +123,6 @@ public class Analytics extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        startNewSession();
 
         activityMonitor.addListener(listener);
 
@@ -274,7 +274,8 @@ public class Analytics extends AirshipComponent {
      *
      * @return A environment Id String.
      */
-    String getSessionId() {
+    @NonNull
+    public String getSessionId() {
         return sessionId;
     }
 
@@ -285,7 +286,8 @@ public class Analytics extends AirshipComponent {
      */
     void onForeground(long timeMS) {
         // Start a new environment when the app enters the foreground
-        startNewSession();
+        sessionId = UUID.randomUUID().toString();
+        Logger.debug("Analytics - New session: " + sessionId);
 
         // If the app backgrounded, there should be no current screen
         if (currentScreen == null) {
@@ -316,14 +318,6 @@ public class Analytics extends AirshipComponent {
         addEvent(new AppBackgroundEvent(timeMS));
         setConversionSendId(null);
         setConversionMetadata(null);
-    }
-
-    /**
-     * Starts a new session.
-     */
-    void startNewSession() {
-        sessionId = UUID.randomUUID().toString();
-        Logger.debug("Analytics - New session: " + sessionId);
     }
 
     /**
