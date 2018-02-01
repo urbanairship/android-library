@@ -5,7 +5,7 @@ Urban Airship SDK for Android.
 ## Resources
 
 - [Getting started guide](http://docs.urbanairship.com/platform/android/)
-- [Javadocs](https://docs.urbanairship.com/android-lib/reference/packages.html)
+- [Javadocs](https://docs.urbanairship.com/reference/libraries/android/latest/reference/packages.html)
 - [Migration Guides](documentation/migration)
 
 ## Contributing Code
@@ -14,9 +14,9 @@ We accept pull requests! If you would like to submit a pull request, please fill
 Code Contribution Agreement (http://docs.urbanairship.com/contribution-agreement.html).
 
 ## Requirements
-- minSdkVersion 15+
-- compileSdkVersion 26
-- Google Play Services 11.4.0+
+- minSdkVersion 16+
+- compileSdkVersion 27
+- Google Play Services 11.8.0+
 
 ## Quickstart
 
@@ -27,14 +27,11 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:8.9.+'
-     compile 'com.google.android.gms:play-services-gcm:11.4.0'
-
-     // Recommended for in-app messaging
-     compile 'com.android.support:cardview-v7:26.0.2'
+     compile 'com.urbanairship.android:urbanairship-sdk:9.0.0'
+     compile 'com.google.android.gms:play-services-gcm:11.8.0'
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:11.4.0'
+     compile 'com.google.android.gms:play-services-location:11.8.0'
    }
 ```
 
