@@ -161,7 +161,7 @@ public class InAppRemoteDataObserverTest extends BaseTestCase {
         verify(scheduler).editSchedule(eq(scheduleId), Mockito.argThat(new ArgumentMatcher<InAppMessageScheduleEdits>() {
             @Override
             public boolean matches(InAppMessageScheduleEdits argument) {
-                return argument.getEnd() == 0;
+                return argument.getEnd() == 0 && argument.getStart() == -1;
             }
         }));
     }

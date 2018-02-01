@@ -165,8 +165,8 @@ class InAppRemoteDataObserver {
                 try {
                     InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.fromJson(messageJson);
 
-                    // If the end time is not defined, clear it by setting it to less than 0 (-1) since
-                    // we set an end time once the message no longer appears in the listing
+                    // Since we cancel a schedule by setting the end time to 0 (1970), we need to clear
+                    // it (-1) if the edits/schedule does not define an end time.
                     if (edits.getEnd() == null) {
                         edits = InAppMessageScheduleEdits.newBuilder(edits)
                                                          .setEnd(-1)
@@ -197,7 +197,15 @@ class InAppRemoteDataObserver {
         removedMessageIds.removeAll(messageIds);
 
         if (!removedMessageIds.isEmpty()) {
-            InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder().setEnd(0).build();
+
+            // To cancel, we need to set the end time to 0 (1970). To avoid validation error where
+            // start needs to be before end if they are both set, we also need to clear the start.
+            // If the schedule comes back, the edits will reapply the start time from the schedule
+            // if it is set.
+            InAppMessageScheduleEdits edits = InAppMessageScheduleEdits.newBuilder()
+                                                                       .setStart(-1)
+                                                                       .setEnd(0)
+                                                                       .build();
             for (String messageId : removedMessageIds) {
                 String scheduleId = scheduleIdMap.remove(messageId);
                 scheduler.editSchedule(scheduleId, edits).get();
