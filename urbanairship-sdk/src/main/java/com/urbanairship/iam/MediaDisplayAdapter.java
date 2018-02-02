@@ -11,6 +11,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.util.FileUtils;
 import com.urbanairship.util.Network;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -49,9 +51,17 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 
         if (MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
             return cacheMedia(context, mediaInfo);
-        } else {
-            return Network.isConnected() ? OK : RETRY;
         }
+
+        // Video URLs, check whitelist
+        if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
+            Logger.error("URL not whitelisted. Unable to load: " + mediaInfo.getUrl());
+            return CANCEL;
+        }
+
+        // Videos require network
+        return Network.isConnected() ? OK : RETRY;
+
     }
 
     @Override

@@ -292,6 +292,7 @@ public class Whitelist {
     public static Whitelist createDefaultWhitelist(@NonNull AirshipConfigOptions airshipConfigOptions) {
         Whitelist whitelist = new Whitelist();
         whitelist.addEntry("https://*.urbanairship.com");
+        whitelist.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
         if (airshipConfigOptions.whitelist != null) {
             for (String entry : airshipConfigOptions.whitelist) {
                 whitelist.addEntry(entry);

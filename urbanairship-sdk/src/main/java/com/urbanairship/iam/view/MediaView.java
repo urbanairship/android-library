@@ -21,7 +21,10 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.iam.MediaInfo;
+import com.urbanairship.js.Whitelist;
 import com.urbanairship.messagecenter.ImageLoader;
 
 import java.lang.ref.WeakReference;
@@ -191,7 +194,11 @@ public class MediaView extends FrameLayout {
             }
         });
 
-        webView.loadUrl(mediaInfo.getUrl());
+        if (UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
+            webView.loadUrl(mediaInfo.getUrl());
+        } else {
+            Logger.error("URL not whitelisted. Unable to load: " + mediaInfo.getUrl());
+        }
 
         addView(frameLayout);
     }

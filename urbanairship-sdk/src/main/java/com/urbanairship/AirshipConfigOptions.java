@@ -286,6 +286,7 @@ public class AirshipConfigOptions {
         this.notificationAccentColor = builder.notificationAccentColor;
         this.walletUrl = builder.walletUrl;
         this.notificationChannel = builder.notificationChannel;
+        this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
     }
 
     /**
