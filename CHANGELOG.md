@@ -3,10 +3,31 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
-Version 9.0.0-beta - January 2, 2018
-====================================
+Version 9.0.0 - January 31, 2018
+================================
 
-In-app messaging v2 beta release. The APIs are not yet final and may contain bugs.
+Major release required for new in-app messaging capabilities.
+
+New features
+------------
+- In-app messaging v2. The new in-app messaging module includes several different
+  view types that are fully configurable, including modal, banner, and fullscreen. An
+  in-app message is able to be triggered using the same rules as the Action automation
+  module.
+- A rate app action to prompt the user to rate the application.
+- Automation schedule priority: Used to determine the execution order of schedules
+  if multiple schedules are triggered by the same event.
+- Support for editing automation schedules.
+- New active session automation trigger. The trigger will increment its count
+  if it has been scheduled during an active session instead of waiting for the next
+  foreground.
+- New app version automation trigger.
+- Extended whitelist URL checking for URL loading instead of just JS bridge
+  injection. By default these checks are disabled, but you can enable them
+  with the AirshipConfigOptions field `enableUrlWhitelisting`.
+- Updated localizations.
+- Updated to Google Play Services 11.8.0 and Support Library 27.0.2.
+
 
 Version 8.9.7 - January 22, 2018
 ================================
@@ -124,7 +145,7 @@ Bug Fixes
 Version 8.8.2 - August 14, 2017
 ===============================
 
-Patch release for a rare crash involving GCM push handling. Any apps using 
+Patch release for a rare crash involving GCM push handling. Any apps using
 GCM and experiencing NPEs in GCMPushReceiver should update.
 
 Bug Fixes

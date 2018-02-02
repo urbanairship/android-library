@@ -17,7 +17,7 @@ you have manually added the `AdmPushReceiver` in your manifest, please update th
 
 Urban Airship's banner-only In-App Messaging feature has been replaced with a more
 functional In-App Messaging feature that includes banner, modal and full screen
-messages. Please refer to [In-App Messaging for Android](https://docs.urbanairship.com/guides/android-iam)
+messages. Please refer to [In-App Messaging for Android](https://docs.urbanairship.com/guides/android-in-app-messaging)
 for more information.
 
 ### Automation

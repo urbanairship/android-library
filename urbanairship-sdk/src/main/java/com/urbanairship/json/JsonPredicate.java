@@ -24,10 +24,10 @@ import java.util.List;
  * <selector>          := <scope>, "key": string | "key": string | <scope>
  * <scope>             := "scope": string | "scope": [string, string, …]
  * <p/>
- * <value_matcher>     := <numeric_matcher> | <string_matcher> | <presence_matcher> | <version_matcher> | <array_matcher>
+ * <value_matcher>     := <numeric_matcher> | <equals_matcher> | <presence_matcher> | <version_matcher> | <array_matcher>
  * <array_matcher>     := "array_contains": <predicate> | "array_contains": <predicate>, "index": number
- * <numeric_matcher>   := "equals": number | "at_least": number | "at_most": number | "at_least": number, "at_most": number
- * <string_matcher>    := "equals": string
+ * <numeric_matcher>   := "at_least": number | "at_most": number | "at_least": number, "at_most": number
+ * <equals_matcher>    := "equals": number | string | boolean | object | array
  * <presence_matcher>  := "is_present": boolean
  * <version_matcher>   := "version": version matcher
  */
