@@ -213,7 +213,7 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * - "group": Optional. Group identifier. Useful to cancel schedules for a specific campaign.
      * - "start": Optional. Start time as an ISO 8601 timestamp. Time before the schedule starts listening for events.
      * - "end": Optional. End time as an ISO 8601 timestamp. After the schedule is past the end time it will automatically be canceled.
-     * - "triggers": Required. An array of triggers. Trigger payload as defined by {@link Trigger#predicate}.
+     * - "triggers": Required. An array of triggers.
      * - "limit": Optional, defaults to 1. Number of times to trigger the actions payload before cancelling the schedule.
      * - "priority": Optional, defaults to 0. In case of conflict, schedules will be executed by priority in ascending order.
      * - "actions": Required. Actions payload to run when one or more of the triggers meets its goal.
@@ -357,9 +357,9 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         }
 
         /**
-         * Sets the start time in MS.
+         * Sets the start time in ms.
          *
-         * @param start The start time in MS.
+         * @param start The start time in ms.
          * @return The Builder instance.
          */
         public Builder setStart(long start) {
@@ -368,9 +368,9 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
         }
 
         /**
-         * Sets the end time in MS.
+         * Sets the end time in ms.
          *
-         * @param end The end time in MS.
+         * @param end The end time in ms.
          * @return The Builder instance.
          */
         public Builder setEnd(long end) {

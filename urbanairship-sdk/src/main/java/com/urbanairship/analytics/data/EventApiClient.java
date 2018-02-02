@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
@@ -32,7 +33,10 @@ import java.util.TimeZone;
 
 /**
  * A client that handles uploading analytic events
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventApiClient {
 
     static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";

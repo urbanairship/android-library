@@ -39,33 +39,33 @@ public interface ScheduleEdits {
     Integer getPriority();
 
     /**
-     * Gets the schedule start time in MS.
+     * Gets the schedule start time in ms.
      *
-     * @return The schedule start time in MS.
+     * @return The schedule start time in ms.
      */
     @Nullable
     Long getStart();
 
     /**
-     * Gets the schedule end time in MS.
+     * Gets the schedule end time in ms.
      *
-     * @return The schedule end time in MS.
+     * @return The schedule end time in ms.
      */
     @Nullable
     Long getEnd();
 
     /**
-     * Gets the schedule interval in MS.
+     * Gets the schedule interval in ms.
      *
-     * @return The schedule interval in MS.
+     * @return The schedule interval in ms.
      */
     @Nullable
     Long getInterval();
 
     /**
-     * Gets the schedule edit grace period in MS.
+     * Gets the schedule edit grace period in ms.
      *
-     * @return The schedule edit grace period in MS.
+     * @return The schedule edit grace period in ms.
      */
     @Nullable
     Long getEditGracePeriod();

@@ -42,6 +42,8 @@ import java.util.List;
 
 /**
  * In-app view utils.
+ *
+ * @hide
  */
 public class InAppViewUtils {
 

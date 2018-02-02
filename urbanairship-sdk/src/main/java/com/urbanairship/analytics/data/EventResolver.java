@@ -21,6 +21,8 @@ import java.util.Set;
 
 /**
  * Performs event database operations.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventResolver extends UrbanAirshipResolver {

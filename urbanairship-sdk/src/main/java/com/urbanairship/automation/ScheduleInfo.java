@@ -32,9 +32,9 @@ public interface ScheduleInfo {
     List<Trigger> getTriggers();
 
     /**
-     * Gets the schedules data.
+     * Gets the schedule data.
      *
-     * @return Schedules data.
+     * @return Schedule data.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     JsonSerializable getData();
@@ -61,16 +61,16 @@ public interface ScheduleInfo {
     String getGroup();
 
     /**
-     * Gets the schedule start time in MS.
+     * Gets the schedule start time in ms.
      *
-     * @return The schedule start time in MS.
+     * @return The schedule start time in ms.
      */
     long getStart();
 
     /**
-     * Gets the schedule end time in MS.
+     * Gets the schedule end time in ms.
      *
-     * @return The schedule end time in MS.
+     * @return The schedule end time in ms.
      */
     long getEnd();
 
@@ -82,16 +82,16 @@ public interface ScheduleInfo {
     ScheduleDelay getDelay();
 
     /**
-     * Gets the edit grace period in MS.
+     * Gets the edit grace period in ms.
      *
-     * @return The edit grace period in MS.
+     * @return The edit grace period in ms.
      */
     long getEditGracePeriod();
 
     /**
-     * Gets the schedule execution interval in MS.
+     * Gets the schedule execution interval in ms.
      *
-     * @return The interval in MS.
+     * @return The interval in ms.
      */
     long getInterval();
 }

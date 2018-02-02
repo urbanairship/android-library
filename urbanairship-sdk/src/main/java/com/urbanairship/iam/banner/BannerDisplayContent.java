@@ -70,7 +70,7 @@ public class BannerDisplayContent implements DisplayContent {
     public static final long DEFAULT_DURATION_MS = 15000;
 
     /**
-     * Maximum number of button supported by a banner.
+     * Maximum number of buttons supported by a banner.
      */
     public static final int MAX_BUTTONS = 2;
 

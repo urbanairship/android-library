@@ -19,6 +19,7 @@ public interface InAppMessageListener {
 
     /**
      * Called when an in-app message finished displaying.
+     *
      * @param scheduleId The schedule ID.
      * @param message The in-app message.
      * @param resolutionInfo The resolution info.

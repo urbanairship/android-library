@@ -114,7 +114,7 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
 
 
     /**
-     * Parses a json value for an in-app message edits.
+     * Parses a json value for in-app message edits.
      *
      * @param value The json value.
      * @return The edit info.
@@ -230,9 +230,9 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         }
 
         /**
-         * Sets the start time in MS.
+         * Sets the start time in ms.
          *
-         * @param start The start time in MS.
+         * @param start The start time in ms.
          * @return The Builder instance.
          */
         public Builder setStart(long start) {
@@ -241,9 +241,9 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         }
 
         /**
-         * Sets the end time in MS.
+         * Sets the end time in ms.
          *
-         * @param end The end time in MS.
+         * @param end The end time in ms.
          * @return The Builder instance.
          */
         public Builder setEnd(long end) {
@@ -287,9 +287,9 @@ public class InAppMessageScheduleEdits implements ScheduleEdits {
         }
 
         /**
-         * Builds the in-app message schedule edit.
+         * Builds the in-app message schedule edits.
          *
-         * @return The schedule edit.
+         * @return The schedule edits.
          */
         public InAppMessageScheduleEdits build() {
             return new InAppMessageScheduleEdits(this);

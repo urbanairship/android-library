@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
- * Display adapter that handles caching in-app message.
+ * Display adapter that handles caching an in-app message.
  */
 public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
 

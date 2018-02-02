@@ -15,6 +15,8 @@ import com.urbanairship.reactive.Supplier;
 
 /**
  * Factory methods for creating compound trigger observables
+ *
+ * @hide
  */
 class TriggerObservables {
 

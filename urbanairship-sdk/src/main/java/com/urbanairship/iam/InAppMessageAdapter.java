@@ -42,12 +42,12 @@ public interface InAppMessageAdapter {
     int OK = 0;
 
     /***
-     * Indicates a failure result that needs to be retried.
+     * Indicates that the the prepare step should be retried.
      */
     int RETRY = 1;
 
     /***
-     * Indicates a failure result and the schedule should be cancelled.
+     * Indicates that the prepare step failed and the schedule should be canceled.
      */
     int CANCEL = 2;
 

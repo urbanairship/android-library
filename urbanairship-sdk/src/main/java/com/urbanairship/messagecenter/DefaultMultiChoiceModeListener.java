@@ -18,6 +18,8 @@ import java.util.Set;
 /**
  * The default {@link android.widget.AbsListView.MultiChoiceModeListener} for the {@link MessageListFragment}
  * to handle multiple selection.
+ *
+ * @hide
  */
 public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
 

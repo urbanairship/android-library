@@ -32,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.
+ *
+ * @hide
  */
 class InAppRemoteDataObserver {
 

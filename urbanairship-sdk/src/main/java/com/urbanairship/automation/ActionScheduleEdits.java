@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Edits for an action schedules.
+ * Edits for an action schedule.
  */
 public class ActionScheduleEdits implements ScheduleEdits {
 
@@ -111,7 +111,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
 
 
     /**
-     * Create a new builder.
+     * Creates a new builder.
      *
      * @return A new builder instance.
      */

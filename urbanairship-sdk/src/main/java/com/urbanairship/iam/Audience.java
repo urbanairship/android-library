@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * Audience conditions for an in-app message. Audiences are normally only validated at display time,
- * and if the audience is not met, the in-app message will be canceled.
+ * and if the audience is not met, the in-app message will not be displayed.
  */
 public class Audience implements JsonSerializable {
 

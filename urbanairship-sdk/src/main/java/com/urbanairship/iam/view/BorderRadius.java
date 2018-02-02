@@ -3,6 +3,7 @@
 package com.urbanairship.iam.view;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.RestrictTo;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -13,7 +14,10 @@ import java.lang.ref.WeakReference;
 
 /**
  * Utils class to generate a border radius array.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class BorderRadius {
 
     @IntDef(flag = true,

@@ -5,13 +5,17 @@ package com.urbanairship.remotedata;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.json.JsonMap;
 
 /**
  * Helper class for reading and writing RemoteDataPayloads to the data store.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RemoteDataPayloadEntry {
 
     static final String TABLE_NAME = "payloads";

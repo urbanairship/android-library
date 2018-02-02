@@ -143,7 +143,6 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent},
      * {@link #TYPE_FULLSCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent}
      *
-     * @param <T> The expected content type.
      * @return The display content.
      */
     public <T extends DisplayContent> T getDisplayContent() {

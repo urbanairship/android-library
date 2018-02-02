@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * ChannelCapture checks the device clipboard for a String that is prefixed by
- * {@link #generateToken()} on app foreground and posts a notification
+ * an expected token on app foreground and posts a notification
  * that allows the user to copy the Channel or optionally open a url with the channel as
  * an argument.
  */

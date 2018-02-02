@@ -25,6 +25,8 @@ import static com.urbanairship.util.UAStringUtil.repeat;
 
 /**
  * {@link DataManager} class for automation schedules.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationDataManager extends DataManager {

@@ -21,6 +21,8 @@ import java.util.List;
 
 /**
  * In-app button layout. Supports stacked, separated, and joined button layouts.
+ *
+ * @hide
  */
 public class InAppButtonLayout extends BoundedLinearLayout {
 

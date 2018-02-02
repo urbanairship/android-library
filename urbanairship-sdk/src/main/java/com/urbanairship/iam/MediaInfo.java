@@ -16,7 +16,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Image display info.
+ * Media display info.
  */
 public class MediaInfo implements JsonSerializable {
 
@@ -51,7 +51,7 @@ public class MediaInfo implements JsonSerializable {
     /**
      * Default constructor.
      *
-     * @param builder The image info builder.
+     * @param builder The media info builder.
      */
     private MediaInfo(Builder builder) {
         this.url = builder.url;
@@ -70,11 +70,11 @@ public class MediaInfo implements JsonSerializable {
     }
 
     /**
-     * Parses an {@link MediaInfo} from a {@link JsonValue}.
+     * Parses a {@link MediaInfo} from a {@link JsonValue}.
      *
      * @param jsonValue The json value.
      * @return The parsed media info.
-     * @throws JsonException If the image info was unable to be parsed.
+     * @throws JsonException If the media info was unable to be parsed.
      */
     public static MediaInfo parseJson(JsonValue jsonValue) throws JsonException {
         try {
@@ -162,7 +162,7 @@ public class MediaInfo implements JsonSerializable {
     }
 
     /**
-     * Image info builder.
+     * Media info builder.
      */
     public static class Builder {
         private String url;

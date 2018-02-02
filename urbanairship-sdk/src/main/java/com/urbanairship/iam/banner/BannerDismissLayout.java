@@ -25,13 +25,13 @@ import android.widget.FrameLayout;
 public class BannerDismissLayout extends FrameLayout {
 
     /**
-     * The percent of a view's width it must be dragged before its considered dismissible when the velocity
+     * The percent of a view's width it must be dragged before it is considered dismissible when the velocity
      * is less then the {@link #getMinFlingVelocity()}.
      */
     private static final float IDLE_MIN_DRAG_PERCENT = .4f;
 
     /**
-     * The percent of a view's width it must be dragged before its considered dismissible when the velocity
+     * The percent of a view's width it must be dragged before it is considered dismissible when the velocity
      * is greater then the {@link #getMinFlingVelocity()}.
      */
     private static final float FLING_MIN_DRAG_PERCENT = .1f;
@@ -83,7 +83,7 @@ public class BannerDismissLayout extends FrameLayout {
      * BannerDismissLayout Constructor
      *
      * @param context A Context object used to access application assets.
-     * @param attrs An AttributeSet passed to our parent.
+     * @param attrs An AttributeSet passed to the parent.
      * @param defStyle The default style resource ID.
      */
     public BannerDismissLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
@@ -95,7 +95,7 @@ public class BannerDismissLayout extends FrameLayout {
      * BannerDismissLayout Constructor
      *
      * @param context A Context object used to access application assets.
-     * @param attrs An AttributeSet passed to our parent.
+     * @param attrs An AttributeSet passed to the parent.
      * @param defStyle The default style resource ID.
      * @param defResStyle A resource identifier of a style resource that supplies default values for
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not

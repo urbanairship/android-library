@@ -21,6 +21,8 @@ import com.urbanairship.R;
 
 /**
  * LinearLayout that supports max width.
+ *
+ * @hide
  */
 public class BoundedLinearLayout extends LinearLayout {
 

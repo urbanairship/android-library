@@ -99,7 +99,7 @@ public class Trigger implements Parcelable {
 
     /**
      * Trigger type for version. Version triggers can be create with
-     * {@link Triggers#newVersionTriggerBuilder(JsonPredicate)}
+     * {@link Triggers#newVersionTriggerBuilder(com.urbanairship.json.ValueMatcher)}
      */
     public static final int VERSION = 10;
 

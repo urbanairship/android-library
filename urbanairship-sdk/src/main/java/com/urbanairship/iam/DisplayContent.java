@@ -19,7 +19,7 @@ public interface DisplayContent extends JsonSerializable {
     @interface ButtonLayout {}
 
     /**
-     * Buttons are displays with a space between them.
+     * Buttons are displayed with a space between them.
      */
     String BUTTON_LAYOUT_SEPARATE = "separate";
 

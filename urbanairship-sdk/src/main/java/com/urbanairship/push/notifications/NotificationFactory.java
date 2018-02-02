@@ -357,7 +357,7 @@ public class NotificationFactory {
      * <p>
      * The default behavior returns {@link #TAG_NOTIFICATION_ID} if the push message contains a tag
      * (see {@link PushMessage#getNotificationTag()}). Otherwise it will either return {@link #getConstantNotificationId()}
-     * if the constant notification id > 0, or it will return a random ID generated from {@link NotificationIdGenerator#nextID()}.
+     * if the constant notification id > 0, or it will return a randomly generated ID}.
      *
      * @param pushMessage The push message.
      * @return An integer ID for the next notification.

@@ -174,7 +174,7 @@ public class ButtonInfo implements JsonSerializable {
      *
      * @param jsonList The json list..
      * @return The list of parsed button info.
-     * @throws JsonException If list was unable to be parsed.
+     * @throws JsonException If the list was unable to be parsed.
      */
     public static List<ButtonInfo> parseJson(JsonList jsonList) throws JsonException {
         if (jsonList == null || jsonList.isEmpty()) {

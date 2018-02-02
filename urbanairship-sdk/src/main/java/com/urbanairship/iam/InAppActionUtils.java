@@ -11,7 +11,7 @@ import com.urbanairship.json.JsonValue;
 import java.util.Map;
 
 /**
- * Actions utils for in-app messaging.
+ * Action utils for in-app messaging.
  */
 public abstract class InAppActionUtils {
 

@@ -8,11 +8,15 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.RestrictTo;
 
 /**
- * An ContentResolver wrapper used to access data from the
+ * A ContentResolver wrapper used to access data from the
  * {@link com.urbanairship.UrbanAirshipProvider}.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class UrbanAirshipResolver {
 
     private final Context context;

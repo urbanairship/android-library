@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 /**
- * Display in-app message event.
+ * In-app message display event.
  *
  * @hide
  */

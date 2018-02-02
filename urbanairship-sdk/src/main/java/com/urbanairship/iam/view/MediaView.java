@@ -31,6 +31,8 @@ import java.lang.ref.WeakReference;
 
 /**
  * Media view.
+ *
+ * @hide
  */
 public class MediaView extends FrameLayout {
     private WebView webView;

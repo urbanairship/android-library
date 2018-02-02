@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Defines a conditions that might delay the execution of a schedule.
+ * Defines conditions that might delay the execution of a schedule.
  */
 public class ScheduleDelay implements Parcelable {
 

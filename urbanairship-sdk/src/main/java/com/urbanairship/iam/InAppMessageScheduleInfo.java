@@ -279,9 +279,9 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         }
 
         /**
-         * Sets the start time in MS.
+         * Sets the start time in ms.
          *
-         * @param start The start time in MS.
+         * @param start The start time in ms.
          * @return The Builder instance.
          */
         public Builder setStart(long start) {
@@ -290,9 +290,9 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
         }
 
         /**
-         * Sets the end time in MS.
+         * Sets the end time in ms.
          *
-         * @param end The end time in MS.
+         * @param end The end time in ms.
          * @return The Builder instance.
          */
         public Builder setEnd(long end) {

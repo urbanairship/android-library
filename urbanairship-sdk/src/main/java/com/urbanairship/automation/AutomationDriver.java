@@ -6,7 +6,7 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 
 /**
- * Driver for AutomationEngine. Handles executing, and converting generic ScheduleInfo into the proper
+ * Driver for AutomationEngine. Handles executing and converting generic ScheduleInfo into the proper
  * Schedule class.
  *
  * @param <T> The schedule type.
