@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 9.0.1 - February 13, 2018
+=================================
+
+Patch release to fix a minor display issue and data validation for in-app messaging.
+
+Changes
+-------
+- Fixed in-app message displays when using the EXCLUDE_FROM_AUTO_SHOW flag in the manifest.
+- Added missing checks for identifier lengths for both in-app messages and message buttons.
+
+
 Version 9.0.0 - January 31, 2018
 ================================
 
