@@ -21,6 +21,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -35,7 +36,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     /**
      * Max message ID length.
      */
-    public static final int MAX_ID_LENGTH = 64;
+    public static final int MAX_ID_LENGTH = 100;
 
     // JSON keys
     static final String MESSAGE_ID_KEY = "message_id";
@@ -604,9 +605,12 @@ public class InAppMessage implements Parcelable, JsonSerializable {
          * Builds the in-app message.
          *
          * @return The built in-app message.
+         * @throws IllegalArgumentException If the ID is missing, ID length is greater than the {@link #MAX_ID_LENGTH},
+         * or if the content is missing.
          */
         public InAppMessage build() {
-            Checks.checkNotNull(id, "Missing ID.");
+            Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
+            Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkNotNull(type, "Missing type.");
             Checks.checkNotNull(content, "Missing content.");
             return new InAppMessage(this);

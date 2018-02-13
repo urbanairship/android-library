@@ -16,6 +16,11 @@ import com.urbanairship.util.DateUtils;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ResolutionEvent extends InAppMessageEvent {
 
+    /**
+     * Max button description length.
+     */
+    private static final int MAX_BUTTON_DESCRIPTION_LENGTH = 30;
+
     private static final String TYPE = "in_app_resolution";
 
     private static final String RESOLUTION = "resolution";
@@ -111,8 +116,12 @@ class ResolutionEvent extends InAppMessageEvent {
 
 
         if (RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.type) && resolutionInfo.buttonInfo != null) {
+            String description = resolutionInfo.buttonInfo.getLabel().getText();
+            if (description != null && description.length() > MAX_BUTTON_DESCRIPTION_LENGTH) {
+                description = description.substring(0, MAX_BUTTON_DESCRIPTION_LENGTH);
+            }
             resolutionDataBuilder.put(BUTTON_ID, resolutionInfo.buttonInfo.getId())
-                                 .put(BUTTON_DESCRIPTION, resolutionInfo.buttonInfo.getLabel().getText());
+                                 .put(BUTTON_DESCRIPTION, description);
         }
 
         return new ResolutionEvent(message, resolutionDataBuilder.build());

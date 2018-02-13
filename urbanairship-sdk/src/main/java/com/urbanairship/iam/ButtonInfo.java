@@ -7,6 +7,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
 import com.urbanairship.json.JsonException;
@@ -16,6 +17,7 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ColorUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,6 +31,11 @@ import java.util.Map;
  * In-app button display info.
  */
 public class ButtonInfo implements JsonSerializable {
+
+    /**
+     * Max button ID length.
+     */
+    public static final int MAX_ID_LENGTH = 100;
 
     // JSON Keys
     private static final String LABEL_KEY = "label";
@@ -352,7 +359,7 @@ public class ButtonInfo implements JsonSerializable {
          * @param id The button's ID.
          * @return The builder instance.
          */
-        public Builder setId(String id) {
+        public Builder setId(@NonNull @Size(min = 1, max = MAX_ID_LENGTH) String id) {
             this.id = id;
             return this;
         }
@@ -433,9 +440,12 @@ public class ButtonInfo implements JsonSerializable {
          * Builds the button info.
          *
          * @return The button info.
-         * @throws IllegalArgumentException If the label is missing.
+         * @throws IllegalArgumentException If the label is missing, ID is missing, or if the ID length
+         * is greater than the  {@link #MAX_ID_LENGTH}.
          */
         public ButtonInfo build() {
+            Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
+            Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
             Checks.checkArgument(label != null, "Missing label.");
             return new ButtonInfo(this);
         }

@@ -9,6 +9,7 @@ import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DateUtils;
+import com.urbanairship.util.UAStringUtil;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -47,6 +48,33 @@ public class ResolutionEventTest extends BaseTestCase {
                                                 .put("type", "button_click")
                                                 .put("button_id", "button id")
                                                 .put("button_description", "hi")
+                                                .put("display_time", Event.millisecondsToSecondsString(3500))
+                                                .build();
+
+        verifyEvent(expectedResolutionInfo, event);
+    }
+
+    /**
+     * Test button click resolution event with a large label description only takes the first 30
+     * characters.
+     */
+    @Test
+    public void testButtonClickResolutionEventLargeLabel() throws JSONException {
+        String largeLabel = UAStringUtil.repeat("a", 100, "");
+        ButtonInfo buttonInfo = ButtonInfo.newBuilder()
+                                          .setId("button id")
+                                          .setLabel(TextInfo.newBuilder()
+                                                            .setText(largeLabel)
+                                                            .build())
+                                          .build();
+
+
+        ResolutionEvent event = ResolutionEvent.messageResolution(message, ResolutionInfo.buttonPressed(buttonInfo, 3500));
+
+        JsonMap expectedResolutionInfo = JsonMap.newBuilder()
+                                                .put("type", "button_click")
+                                                .put("button_id", "button id")
+                                                .put("button_description", largeLabel.substring(0, 30))
                                                 .put("display_time", Event.millisecondsToSecondsString(3500))
                                                 .build();
 

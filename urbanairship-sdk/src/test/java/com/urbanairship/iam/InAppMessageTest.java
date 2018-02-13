@@ -11,6 +11,7 @@ import com.urbanairship.iam.fullscreen.FullScreenDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAStringUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +62,15 @@ public class InAppMessageTest extends BaseTestCase {
                     .setDisplayContent(customDisplayContent)
                     .build();
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidId() {
+        InAppMessage.newBuilder()
+                    .setId(UAStringUtil.repeat("a", 101, ""))
+                    .setDisplayContent(customDisplayContent)
+                    .build();
+    }
+
 
     @Test(expected = IllegalArgumentException.class)
     public void testMissingDisplayContent() {
