@@ -307,6 +307,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 if (currentScheduleId == null && !carryOverScheduleIds.isEmpty()) {
                     display(activity, carryOverScheduleIds.pop());
                 }
+
+                automationEngine.checkPendingSchedules();
             }
         });
 
