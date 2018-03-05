@@ -7,16 +7,28 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionService;
+import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -24,9 +36,20 @@ import com.urbanairship.util.UAStringUtil;
  */
 public class CoreReceiver extends BroadcastReceiver {
 
+    private Executor executor;
+
+    public CoreReceiver() {
+        this(Executors.newSingleThreadExecutor());
+    }
+
+    @VisibleForTesting
+    public CoreReceiver(@NonNull Executor executor) {
+        super();
+        this.executor = executor;
+    }
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, final Intent intent) {
         Autopilot.automaticTakeOff(context);
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
@@ -52,7 +75,9 @@ public class CoreReceiver extends BroadcastReceiver {
                 break;
             case PushManager.ACTION_NOTIFICATION_OPENED:
                 onNotificationOpened(context, intent);
+                break;
         }
+
     }
 
     /**
@@ -83,6 +108,7 @@ public class CoreReceiver extends BroadcastReceiver {
 
         Intent openIntent = new Intent(PushManager.ACTION_NOTIFICATION_OPENED)
                 .putExtras(intent.getExtras())
+                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
@@ -137,6 +163,10 @@ public class CoreReceiver extends BroadcastReceiver {
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
+        if (isForegroundAction) {
+            openIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        }
+
         if (remoteInput != null && remoteInput.size() != 0) {
             openIntent.putExtra(AirshipReceiver.EXTRA_REMOTE_INPUT, remoteInput);
         }
@@ -190,67 +220,75 @@ public class CoreReceiver extends BroadcastReceiver {
         AirshipConfigOptions options = UAirship.shared().getAirshipConfigOptions();
 
         PushMessage message = PushMessage.fromIntent(intent);
+
         if (message == null) {
             Logger.error("CoreReceiver - Intent is missing push message for: " + intent.getAction());
             return;
         }
 
+        boolean shouldLaunchApplication = false;
+        Map<String, ActionValue> actionMap = null;
+        @Action.Situation int actionSituation = 0;
+        Bundle actionMetadata = new Bundle();
+
         if (intent.hasExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID)) {
             boolean isForeground = intent.getBooleanExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_FOREGROUND, false);
-            String actionPayload = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD);
 
             if (isForeground && getResultCode() != AirshipReceiver.RESULT_ACTIVITY_LAUNCHED && options.autoLaunchApplication) {
-                // Set the result if its an ordered broadcast
-                if (launchApplication(context) && isOrderedBroadcast()) {
-                    setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
-                }
+                shouldLaunchApplication = true;
             }
 
+            if (intent.hasExtra(AirshipReceiver.EXTRA_REMOTE_INPUT)) {
+                actionMetadata.putBundle(ActionArguments.REMOTE_INPUT_METADATA, intent.getBundleExtra(AirshipReceiver.EXTRA_REMOTE_INPUT));
+            }
+
+            String actionPayload = intent.getStringExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ACTIONS_PAYLOAD);
             if (!UAStringUtil.isEmpty(actionPayload)) {
-                // Run UA actions for the notification action
-                Logger.debug("Running actions for notification action: " + actionPayload);
-
-                @Action.Situation
-                int situation = isForeground ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON : Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
-
-                Bundle metadata = new Bundle();
-                metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-
-                if (intent.hasExtra(AirshipReceiver.EXTRA_REMOTE_INPUT)) {
-                    metadata.putBundle(ActionArguments.REMOTE_INPUT_METADATA, intent.getBundleExtra(AirshipReceiver.EXTRA_REMOTE_INPUT));
-                }
-
-                ActionService.runActions(context, actionPayload, situation, metadata);
+                actionMap = parseActionValues(actionPayload);
             }
-
         } else {
+            actionMap = message.getActions();
+            actionSituation = Action.SITUATION_PUSH_OPENED;
 
             if (getResultCode() != AirshipReceiver.RESULT_ACTIVITY_LAUNCHED) {
                 PendingIntent contentIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT);
                 if (contentIntent != null) {
                     try {
                         contentIntent.send();
-                        if (isOrderedBroadcast()) {
-                            setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
-                        }
                     } catch (PendingIntent.CanceledException e) {
                         Logger.debug("Failed to send notification's contentIntent, already canceled.");
                     }
                 } else if (options.autoLaunchApplication) {
-                    // Set the result if its an ordered broadcast
-                    if (launchApplication(context) && isOrderedBroadcast()) {
-                        setResultCode(AirshipReceiver.RESULT_ACTIVITY_LAUNCHED);
-                    }
+                    shouldLaunchApplication = true;
                 }
             }
-
-            // Run any actions for the push
-            Bundle metadata = new Bundle();
-            metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-
-            ActionService.runActions(context, message.getActions(), Action.SITUATION_PUSH_OPENED, metadata);
         }
+
+        actionMetadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+
+        final int result;
+        if (shouldLaunchApplication && launchApplication(context)) {
+            result = AirshipReceiver.RESULT_ACTIVITY_LAUNCHED;
+        } else {
+            result = AirshipReceiver.RESULT_ACTIVITY_NOT_LAUNCHED;
+        }
+
+        final boolean isOrderedBroadcast = isOrderedBroadcast();
+        final PendingResult pendingResult = goAsync();
+        if (isOrderedBroadcast && pendingResult != null) {
+            pendingResult.setResultCode(result);
+        }
+
+        runActions(context, actionMap, actionSituation, actionMetadata, new Runnable() {
+            @Override
+            public void run() {
+                if (pendingResult != null) {
+                    pendingResult.finish();
+                }
+            }
+        });
     }
+
 
     /**
      * Helper method that attempts to launch the application's launch intent.
@@ -268,5 +306,66 @@ public class CoreReceiver extends BroadcastReceiver {
             Logger.info("Unable to launch application. Launch intent is unavailable.");
             return false;
         }
+    }
+
+    /**
+     * Helper method to run the actions.
+     *
+     * @param context The context.
+     * @param actions The actions payload.
+     * @param situation The situation.
+     * @param metadata The metadata.
+     * @param callback Callback when finished.
+     */
+    private void runActions(Context context, final Map<String, ActionValue> actions, final int situation, final Bundle metadata, final Runnable callback) {
+        if (ActivityMonitor.shared(context).isAppForegrounded() || situation == Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON || situation == Action.SITUATION_PUSH_OPENED) {
+            try {
+                ActionService.runActions(context, actions, situation, metadata);
+                callback.run();
+                return;
+            } catch (SecurityException | IllegalStateException e) {
+                Logger.error("Unable to start action service.", e);
+            }
+        }
+
+        // Fallback to running actions in the executor
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                for (Map.Entry<String, ActionValue> entry : actions.entrySet()) {
+                    ActionRunRequest.createRequest(entry.getKey())
+                            .setMetadata(metadata)
+                            .setSituation(situation)
+                            .setValue(entry.getValue())
+                            .runSync();
+                }
+
+                callback.run();
+            }
+        });
+    }
+
+    /**
+     * Parses an action payload.
+     *
+     * @param payload The payload.
+     * @return The parsed actions.
+     */
+    private Map<String, ActionValue> parseActionValues(String payload) {
+        Map<String, ActionValue> actionValueMap = new HashMap<>();
+
+        try {
+            JsonMap actionsJson = JsonValue.parseString(payload).getMap();
+            if (actionsJson != null) {
+                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                    actionValueMap.put(entry.getKey(), new ActionValue(entry.getValue()));
+                }
+            }
+        } catch (JsonException e) {
+            Logger.error("Failed to parse actions for push.", e);
+        }
+
+
+        return actionValueMap;
     }
 }

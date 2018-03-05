@@ -277,6 +277,7 @@ class IncomingPushRunnable implements Runnable {
                 .setAction(PushManager.ACTION_NOTIFICATION_OPENED_PROXY)
                 .addCategory(UUID.randomUUID().toString())
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
+                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId);
 
         // If the notification already has an intent, add it to the extras to be sent later

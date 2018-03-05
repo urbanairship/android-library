@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
@@ -18,6 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+
+import java.util.concurrent.Executor;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
@@ -36,7 +39,13 @@ public class CoreReceiverTest extends BaseTestCase {
 
     @Before
     public void before() {
-        receiver = new CoreReceiver();
+        receiver = new CoreReceiver(new Executor() {
+            @Override
+            public void execute(@NonNull Runnable runnable) {
+                runnable.run();
+            }
+        });
+
         context = mock(Context.class);
         notificationManager = mock(NotificationManager.class);
         analytics = mock(Analytics.class);

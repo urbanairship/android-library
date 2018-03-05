@@ -64,6 +64,11 @@ public class AirshipReceiver extends BroadcastReceiver {
             return;
         }
 
+        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+            Logger.error(this.getClass().getSimpleName() + " - unable to receive intent, takeOff not called.");
+            return;
+        }
+
         String action = intent.getAction();
         Logger.debug(this.getClass().getSimpleName() + " - Received intent with action: " + action);
 
