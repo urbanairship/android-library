@@ -41,6 +41,8 @@ import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
  */
 class IncomingPushRunnable implements Runnable {
 
+    private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
+
     private final Context context;
     private final PushMessage message;
     private final String providerClass;
@@ -64,7 +66,7 @@ class IncomingPushRunnable implements Runnable {
 
     @Override
     public void run() {
-        UAirship airship = UAirship.waitForTakeOff(5000);
+        UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
 
         if (airship == null) {
             Logger.error("Unable to process push, Airship is not ready. Make sure takeOff is called by either using autopilot or by calling takeOff in the application's onCreate method.");

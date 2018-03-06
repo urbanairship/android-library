@@ -208,6 +208,13 @@ public class Autopilot implements UAirship.OnReadyCallback {
         return true;
     }
 
+    /**
+     * Called before the airship instance is returned in {@link UAirship#shared()}. Use this method
+     * to perform any Airship customizations. This method is called on a background thread, but if airship
+     * takes longer than 5 seconds to be ready it could cause ANRs within the application.
+     *
+     * @param airship The UAirship instance.
+     */
     @Override
     public void onAirshipReady(UAirship airship) {
         Logger.info("Autopilot - Airship ready!");

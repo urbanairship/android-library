@@ -9,12 +9,15 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.CancelableOperation;
+import com.urbanairship.UAirship;
 
 
 /**
  * Service to process incoming push notifications.
  */
 public class PushService extends Service {
+
+    private static final long AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
 
     static String ACTION_PROCESS_PUSH = "ACTION_PROCESS_PUSH";
 
@@ -23,6 +26,8 @@ public class PushService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, int flag, int startId) {
+        // Wait for airship to be ready. Since we are in a service we can wait a little longer here.
+        UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
 
         this.lastStartId = startId;
 

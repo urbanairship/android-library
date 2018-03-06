@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
@@ -150,6 +151,7 @@ public class UAirship {
                 throw new IllegalStateException("Take off must be called before shared()");
             }
 
+            //noinspection ConstantConditions
             return waitForTakeOff(0);
         }
     }
@@ -169,24 +171,39 @@ public class UAirship {
                 return sharedAirship;
             }
 
-            boolean interrupted = false;
+              /*
+                 From https://developer.android.com/reference/java/lang/Object.html#wait(long)
+
+                 A thread can also wake up without being notified, interrupted, or timing out, a
+                 so-called spurious wakeup. While this will rarely occur in practice, applications must
+                 guard against it by testing for the condition that should have caused the thread to be
+                 awakened, and continuing to wait if the condition is not satisfied.
+             */
 
             try {
-                while (!isFlying) {
-                    try {
-                        airshipLock.wait(millis);
-                    } catch (InterruptedException ignored) {
-                        interrupted = true;
+                if (millis > 0) {
+                    long remainingTime = millis;
+                    long startTime = SystemClock.elapsedRealtime();
+                    while (!isFlying && remainingTime > 0) {
+                        airshipLock.wait(remainingTime);
+                        long elapsedTime = SystemClock.elapsedRealtime() - startTime;
+                        remainingTime = millis - elapsedTime;
+                    }
+                } else {
+                    while (!isFlying) {
+                        airshipLock.wait();
                     }
                 }
 
-                return sharedAirship;
-            } finally {
-                if (interrupted) {
-                    // Restore the interrupted status
-                    Thread.currentThread().interrupt();
+                if (isFlying) {
+                    return sharedAirship;
                 }
+            } catch (InterruptedException ignored) {
+                // Restore the interrupted status
+                Thread.currentThread().interrupt();
             }
+
+            return null;
         }
     }
 
@@ -258,7 +275,8 @@ public class UAirship {
      *
      * @param application The application (required)
      * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
-     * that performs {@code takeOff}.
+     * that performs {@code takeOff}. If the callback takes longer than ~5 seconds it could cause ANRs within
+     * the application.
      */
     @MainThread
     public static void takeOff(@NonNull Application application, @Nullable OnReadyCallback readyCallback) {
@@ -288,7 +306,8 @@ public class UAirship {
      * will override the options loaded from the <code>.properties</code> file. This parameter
      * is useful for specifying options at runtime.
      * @param readyCallback Optional ready callback. The callback will be triggered on a background thread
-     * that performs {@code takeOff}.
+     * that performs {@code takeOff}. If the callback takes longer than ~5 seconds it could cause ANRs within
+     * the application.
      */
     @MainThread
     public static void takeOff(@NonNull final Application application, @Nullable final AirshipConfigOptions options, @Nullable final OnReadyCallback readyCallback) {
