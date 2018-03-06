@@ -6,12 +6,12 @@ Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.htm
 Version 9.0.2 - March 5, 2018
 =============================
 
- Patch release to fix an issue with background services in Android O and a background ANR
- when delaying takeOff. Applications that are targeting Android O and take advantage of
- push notification actions should update.
+Patch release to fix an issue with background services in Android O and a background ANR
+when delaying takeOff. Applications that are targeting Android O and take advantage of
+push notification actions should update.
 
- Changes
- -------
+Changes
+-------
  - Fixed ANR when takeOff is delayed.
  - Fixed IllegalStateException when opening a push notification with actions.
 
