@@ -3,6 +3,17 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 9.0.3 - March 14, 2018
+==============================
+
+Patch release to fix a NPE introduced in 9.0.2 when sending a
+notification with a button without any actions.
+
+Changes
+-------
+- Fixed NPE in core receiver.
+- Allow custom schemes when whitelisting urls.
+
 Version 9.0.2 - March 5, 2018
 =============================
 
