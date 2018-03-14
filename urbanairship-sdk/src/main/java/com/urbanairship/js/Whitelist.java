@@ -44,28 +44,29 @@ public class Whitelist {
 
     /**
      * Regular expression to match the scheme.
-     * <scheme> := '*' | 'http' | 'https'
+     * <scheme> := '*' | <valid scheme characters, `*` will match 0 or more characters>
      */
-    private static final String SCHEME_REGEX = "((\\*)|(http)|(https))";
+    private static final String SCHEME_REGEX = "([^\\s]+)";
 
     /**
      * Regular expression to match the host.
-     * <host> := '*' | '*.'<any char except '/' and '*'> | <any char except '/' and '*'>
+     * <host> := '*' | *.<valid host characters> | <valid host characters>
      */
     private static final String HOST_REGEX = "((\\*)|(\\*\\.[^/\\*]+)|([^/\\*]+))";
 
     /**
      * Regular expression to match the path.
-     * <path> := '/' <any chars>
+     * <path> := <any chars, `*` will match 0 or more characters>
      */
-    private static final String PATH_REGEX = "(/.*)";
+    private static final String PATH_REGEX = "(.*)";
 
     /**
      * Regular expression to match the pattern.
-     * <pattern> := '*' | <scheme>://<host><path> | <scheme>://<host> | file://<path>
+     * <pattern> := '*' | <scheme>://<host>/<path> | <scheme>://<host> | <scheme>:///<path> | <scheme>:/<path> | <scheme>:/
+     *
      */
-    private static final String PATTERN_REGEX = String.format(Locale.US, "^((\\*)|((%s://%s%s)|(%s://%s)|(file://%s)))",
-            SCHEME_REGEX, HOST_REGEX, PATH_REGEX, SCHEME_REGEX, HOST_REGEX, PATH_REGEX);
+    private static final String PATTERN_REGEX = String.format(Locale.US, "^((\\*)|((%s://%s/%s)|(%s://%s)|(%s:/[^/]%s)|(%s:/)|(%s:///%s)))",
+            SCHEME_REGEX, HOST_REGEX, PATH_REGEX, SCHEME_REGEX, HOST_REGEX, SCHEME_REGEX, PATH_REGEX, SCHEME_REGEX, SCHEME_REGEX, PATH_REGEX);
 
     /**
      * Regular expression characters. Used to escape any regular expression from the path and host.
@@ -85,16 +86,16 @@ public class Whitelist {
      * syntax:
      * <pre>
      * {@code
-     * <pattern> := '*' | <scheme>'://'<host><path> | <scheme>'://'<host> | 'file://'<path>
-     * <scheme> := '*' | 'http' | 'https'
-     * <host> := '*' | '*.'<any char except '/' and '*'>+ | <any char except '/' and '*'>+
-     * <path> := '/'<any char>
+     * <pattern> := '*' | <scheme>'://'<host>/<path> | <scheme>'://'<host> | <scheme>':/'<path> | <scheme>':///'<path>
+     * <scheme> := <any char combination, '*' are treated as wild cards>
+     * <host> := '*' | '*.'<any char combination except '/' and '*'> | <any char combination except '/' and '*'>
+     * <path> := <any char combination, '*' are treated as wild cards>
      * }
      *
      * Examples:
      *
-     *  '*' will match any file, http, or https URL.
-     *  '*://www.urbanairship.com' will match any file, http, or https URL from www.urbanairship.com
+     *  '*' will match any URI
+     *  '*://www.urbanairship.com' will match any schema from www.urbanairship.com
      *  'https://*.urbanairship.com' will match any https URL from urbanairship.com and any of its subdomains.
      *  'file:///android_asset/*' will match any file in the android assets directory.
      *  'http://urbanairship.com/foo/*.html' will match any url from urbanairship.com that ends in .html
@@ -118,16 +119,16 @@ public class Whitelist {
      * syntax:
      * <pre>
      * {@code
-     * <pattern> := '*' | <scheme>'://'<host><path> | <scheme>'://'<host> | 'file://'<path>
-     * <scheme> := '*' | 'http' | 'https'
-     * <host> := '*' | '*.'<any char except '/' and '*'>+ | <any char except '/' and '*'>+
-     * <path> := '/'<any char>
+     * <pattern> := '*' | <scheme>'://'<host>/<path> | <scheme>'://'<host> | <scheme>':/'<path> | <scheme>':///'<path>
+     * <scheme> := <any char combination, '*' are treated as wild cards>
+     * <host> := '*' | '*.'<any char combination except '/' and '*'> | <any char combination except '/' and '*'>
+     * <path> := <any char combination, '*' are treated as wild cards>
      * }
      *
      * Examples:
      *
-     *  '*' will match any file, http, or https URL.
-     *  '*://www.urbanairship.com' will match any file, http, or https URL from www.urbanairship.com
+     *  '*' will match any URI
+     *  '*://www.urbanairship.com' will match any schema from www.urbanairship.com
      *  'https://*.urbanairship.com' will match any https URL from urbanairship.com and any of its subdomains.
      *  'file:///android_asset/*' will match any file in the android assets directory.
      *  'http://urbanairship.com/foo/*.html' will match any url from urbanairship.com that ends in .html
@@ -150,14 +151,6 @@ public class Whitelist {
             return false;
         }
 
-        // If we have just a wild card, we need to add a special pattern for both file and https/http
-        // URIs.
-        if (pattern.equals("*")) {
-            addEntry(new UriPattern(Pattern.compile("(http)|(https)"), null, null), scope);
-            addEntry(new UriPattern(Pattern.compile("file"), null, Pattern.compile("/.*")), scope);
-            return true;
-        }
-
         Uri uri = Uri.parse(pattern);
         String scheme = uri.getScheme();
         String host = uri.getEncodedAuthority();
@@ -165,9 +158,9 @@ public class Whitelist {
 
         Pattern schemePattern;
         if (UAStringUtil.isEmpty(scheme) || scheme.equals("*")) {
-            schemePattern = Pattern.compile("(http)|(https)");
+            schemePattern = null;
         } else {
-            schemePattern = Pattern.compile(scheme);
+            schemePattern = Pattern.compile(escapeRegEx(scheme, false));
         }
 
         Pattern hostPattern;
@@ -180,7 +173,7 @@ public class Whitelist {
         }
 
         Pattern pathPattern;
-        if (UAStringUtil.isEmpty(path)) {
+        if (UAStringUtil.isEmpty(path) || path.equals("/*")) {
             pathPattern = null;
         } else {
             pathPattern = Pattern.compile(escapeRegEx(path, false));
@@ -230,7 +223,6 @@ public class Whitelist {
 
         Uri uri = Uri.parse(url);
         int matchedScope = 0;
-
 
         synchronized (entries) {
             for (Entry entry : entries) {

@@ -78,14 +78,12 @@ public class WhitelistTest extends BaseTestCase {
         assertFalse(whitelist.addEntry("not a url"));
         assertFalse(whitelist.addEntry(null));
 
+        // Missing /
+        assertFalse(whitelist.addEntry("*:*"));
+
         // Missing schemes
         assertFalse(whitelist.addEntry("www.urbanairship.com"));
         assertFalse(whitelist.addEntry("://www.urbanairship.com"));
-
-        // Invalid schemes
-        assertFalse(whitelist.addEntry("what://*"));
-        assertFalse(whitelist.addEntry("ftp://*"));
-        assertFalse(whitelist.addEntry("sftp://*"));
 
         // White space in scheme
         assertFalse(whitelist.addEntry(" file://*"));
@@ -99,10 +97,9 @@ public class WhitelistTest extends BaseTestCase {
 
         // Missing file path
         assertFalse(whitelist.addEntry("file://"));
-
-        // Invalid file path
-        assertFalse(whitelist.addEntry("file://*"));
     }
+
+
 
     /**
      * Test international URLs.
@@ -117,23 +114,27 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test wild card scheme accepts all http and https schemes.
+     * Test wild card scheme with wild cards.
      */
     @Test
     public void testSchemeWildCard() {
-        whitelist.addEntry("*://www.urbanairship.com");
+        assertTrue(whitelist.addEntry("*://www.urbanairship.com"));
+        assertTrue(whitelist.addEntry("cool*story://rad"));
 
         // Reject
         assertFalse(whitelist.isWhitelisted(null, Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("", Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("urbanairship.com", Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("www.urbanairship.com", Whitelist.SCOPE_ALL));
-        assertFalse(whitelist.isWhitelisted("notvalid://www.urbanairship.com", Whitelist.SCOPE_ALL));
-        assertFalse(whitelist.isWhitelisted("file://www.urbanairship.com", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("cool://rad", Whitelist.SCOPE_ALL));
 
         // Accept
         assertTrue(whitelist.isWhitelisted("https://www.urbanairship.com", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("http://www.urbanairship.com", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("file://www.urbanairship.com", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("valid://www.urbanairship.com", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("cool----story://rad", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("coolstory://rad", Whitelist.SCOPE_ALL));
     }
 
     /**
@@ -153,16 +154,16 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test regular expression on the host are treated as literals.
+     * Test regular expression on the host and schema are treated as literals.
      */
     @Test
-    public void testRegExInHost() {
-        assertTrue(whitelist.addEntry("*://[a-z,A-Z]+"));
+    public void testRegExEscaped() {
+        assertTrue(whitelist.addEntry("w+.+://[a-z,A-Z]+"));
 
-        assertFalse(whitelist.isWhitelisted("https://urbanairship", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("wwww://urbanairship", Whitelist.SCOPE_ALL));
 
         // It should match on a host that is equal to [a-z,A-Z]+
-        assertTrue(whitelist.isWhitelisted("https://[a-z,A-Z]%2B", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("w+.+://[a-z,A-Z]%2B", Whitelist.SCOPE_ALL));
     }
 
     /**
@@ -184,20 +185,30 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test wild card the host accepts any host.
+     * Test wild card in the host.
      */
     @Test
     public void testHostWildCard() {
         assertTrue(whitelist.addEntry("http://*", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.addEntry("https://*.coolstory", Whitelist.SCOPE_ALL));
+
+        // * is only available at the beginning
+        assertFalse(whitelist.addEntry("https://*.coolstory.*", Whitelist.SCOPE_ALL));
 
         // Reject
         assertFalse(whitelist.isWhitelisted(null, Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("https://cool", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("https://story", Whitelist.SCOPE_ALL));
 
         // Accept
         assertTrue(whitelist.isWhitelisted("http://what.urbanairship.com", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("http:///android-asset/test.html", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("http://www.anything.com", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("https://coolstory", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("https://what.coolstory", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("https://what.what.coolstory", Whitelist.SCOPE_ALL));
+
     }
 
     /**
@@ -217,7 +228,7 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test wild card matcher matches any url that has a valid file path or http/https url.
+     * Test wild card matcher matches any url.
      */
     @Test
     public void testWildCardMatcher() {
@@ -226,6 +237,7 @@ public class WhitelistTest extends BaseTestCase {
         assertTrue(whitelist.isWhitelisted("file:///what/oh/hi", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("https://hi.urbanairship.com/path", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("http://urbanairship.com", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("cool.story://urbanairship.com", Whitelist.SCOPE_ALL));
     }
 
     /**
@@ -261,24 +273,32 @@ public class WhitelistTest extends BaseTestCase {
     }
 
     /**
-     * Test paths in http/https URLs.
+     * Test paths paths.
      */
     @Test
     public void testURLPaths() {
         whitelist.addEntry("*://*.urbanairship.com/accept.html");
         whitelist.addEntry("*://*.urbanairship.com/anythingHTML/*.html");
         whitelist.addEntry("https://urbanairship.com/what/index.html");
+        whitelist.addEntry("wild://cool/*");
 
 
         // Reject
         assertFalse(whitelist.isWhitelisted("https://what.urbanairship.com/reject.html", Whitelist.SCOPE_ALL));
         assertFalse(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/image.png", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("wile:///whatever", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("wile:///cool", Whitelist.SCOPE_ALL));
 
         // Accept
         assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/index.html", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/test.html", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("https://what.urbanairship.com/anythingHTML/foo/bar/index.html", Whitelist.SCOPE_ALL));
         assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/index.html", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("https://urbanairship.com/what/index.html", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("wild://cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("wild://cool/", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("wild://cool/path", Whitelist.SCOPE_ALL));
+
     }
 
 
@@ -326,6 +346,52 @@ public class WhitelistTest extends BaseTestCase {
         whitelist.addEntry("*://*.urbanairship.com/all.html", Whitelist.SCOPE_OPEN_URL);
 
         assertTrue(whitelist.isWhitelisted("https://urbanairship.com/all.html", Whitelist.SCOPE_ALL));
+    }
+
+    /**
+     * Test deep links.
+     */
+    @Test
+    public void testDeepLinks() {
+        // Test any path and undefined host
+        assertTrue(whitelist.addEntry("com.urbanairship.one:/*"));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.one://cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.one:cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.one:/cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.one:///cool", Whitelist.SCOPE_ALL));
+
+        // Test any host and undefined path
+        assertTrue(whitelist.addEntry("com.urbanairship.two://*"));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.two:cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.two://cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.two:/cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.two:///cool", Whitelist.SCOPE_ALL));
+
+        // Test any host and any path
+        assertTrue(whitelist.addEntry("com.urbanairship.three://*/*"));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.three:cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.three://cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.three:/cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.three:///cool", Whitelist.SCOPE_ALL));
+
+        // Test specific host and path
+        assertTrue(whitelist.addEntry("com.urbanairship.four://*.cool/whatever/*"));
+        assertFalse(whitelist.isWhitelisted("com.urbanairship.four:cool", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("com.urbanairship.four://cool", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("com.urbanairship.four:/cool", Whitelist.SCOPE_ALL));
+        assertFalse(whitelist.isWhitelisted("com.urbanairship.four:///cool", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.four://whatever.cool/whatever/", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.four://cool/whatever/indeed", Whitelist.SCOPE_ALL));
+    }
+
+    @Test
+    public void testRootPath() {
+        assertTrue(whitelist.addEntry("com.urbanairship.five:/"));
+
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.five:/", Whitelist.SCOPE_ALL));
+        assertTrue(whitelist.isWhitelisted("com.urbanairship.five:///", Whitelist.SCOPE_ALL));
+
+        assertFalse(whitelist.isWhitelisted("com.urbanairship.five:/cool", Whitelist.SCOPE_ALL));
     }
 }
 
