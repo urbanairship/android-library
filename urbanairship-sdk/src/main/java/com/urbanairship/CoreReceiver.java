@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
@@ -317,7 +318,14 @@ public class CoreReceiver extends BroadcastReceiver {
      * @param metadata The metadata.
      * @param callback Callback when finished.
      */
-    private void runActions(Context context, final Map<String, ActionValue> actions, final int situation, final Bundle metadata, final Runnable callback) {
+    private void runActions(@NonNull Context context, @Nullable final Map<String, ActionValue> actions,
+                            final int situation, @Nullable final Bundle metadata, @NonNull final Runnable callback) {
+
+        if (actions == null || actions.isEmpty()) {
+            callback.run();
+            return;
+        }
+
         if (ActivityMonitor.shared(context).isAppForegrounded() || situation == Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON || situation == Action.SITUATION_PUSH_OPENED) {
             try {
                 ActionService.runActions(context, actions, situation, metadata);
