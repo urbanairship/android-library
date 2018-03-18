@@ -7,6 +7,7 @@
 -dontwarn com.amazon.device.messaging.**
 
 ## Autopilot
+-keep class com.urbanairship.Autopilot
 -keep public class * extends com.urbanairship.Autopilot
 
 ## Actions
