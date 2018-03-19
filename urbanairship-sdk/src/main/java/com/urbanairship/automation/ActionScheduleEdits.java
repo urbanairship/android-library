@@ -97,7 +97,7 @@ public class ActionScheduleEdits implements ScheduleEdits {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JsonValue getData() {
-        return JsonValue.wrapOpt(actions);
+        return actions == null ? null : JsonValue.wrapOpt(actions);
     }
 
     /**

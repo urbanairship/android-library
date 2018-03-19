@@ -14,8 +14,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonMatcher;
-import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.RegionEvent;
@@ -528,6 +526,42 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(edits.getEnd().longValue(), updated.getInfo().getEnd());
         assertEquals(edits.getPriority().intValue(), updated.getInfo().getPriority());
         assertEquals("COOL", updated.getInfo().getActions().get("another_action").getString());
+    }
+
+    @Test
+    public void testEditScheduleEndZero() throws Exception {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setEditGracePeriod(100, TimeUnit.SECONDS)
+                                                                  .build();
+
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        runLooperTasks();
+        ActionSchedule schedule = future.get();
+
+        // Verify its idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+
+
+        // Update the schedule
+        final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
+                                                             .setEnd(0)
+                                                             .build();
+
+        future = automationEngine.editSchedule(schedule.getId(), edits);
+        runLooperTasks();
+        ActionSchedule updated = future.get();
+
+
+        // Verify it's finished
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_FINISHED);
+
+        // Verify it was updated
+        assertEquals(edits.getEnd().longValue(), updated.getInfo().getEnd());
     }
 
     @Test

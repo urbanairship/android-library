@@ -477,7 +477,7 @@ public class AutomationEngine<T extends Schedule> {
                 long stateChangeTimeStamp = -1;
 
                 boolean isOverLimit = entry.getLimit() > 0 && entry.getCount() >= entry.getLimit();
-                boolean isExpired = entry.getEnd() > 0 && entry.getEnd() > System.currentTimeMillis();
+                boolean isExpired = entry.getEnd() >= 0 && entry.getEnd() < System.currentTimeMillis();
 
                 // Check if the schedule needs to be rehabilitated or finished due to the edits
                 if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED && !isOverLimit && isExpired) {
@@ -995,7 +995,7 @@ public class AutomationEngine<T extends Schedule> {
 
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
             // Expired schedules
-            if (scheduleEntry.getEnd() > 0 && scheduleEntry.getEnd() < System.currentTimeMillis()) {
+            if (scheduleEntry.getEnd() >= 0 && scheduleEntry.getEnd() < System.currentTimeMillis()) {
                 expiredScheduleEntries.add(scheduleEntry);
                 scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
 
