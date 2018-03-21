@@ -3,6 +3,18 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 9.0.4 - March 21, 2018
+==============================
+
+Patch release to fix a NPE due to a race condition in the in-app messaging manager and fixes an issue with
+cancelling in-app automation messages. Applications running older versions of SDK 9.0 should update.
+
+Changes
+-------
+- Added proguard rule to keep Autopilot class
+- Fixed crash in the in-app automation manager.
+- Fixed issue with cancelling in-app automation messages.
+
 Version 9.0.3 - March 14, 2018
 ==============================
 
