@@ -264,11 +264,37 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         });
 
+
+        automationEngine.start();
+        updateEnginePauseState();
+
+        // New user cut off time
+        if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
+            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? System.currentTimeMillis() : 0);
+        }
+
+        // Finish init on the main thread
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                finishInit();
+            }
+        });
+    }
+
+    /**
+     * Called during {@link #init()} to finish any initialization
+     * that needs to happen on the main thread.
+     */
+    @MainThread
+    private void finishInit() {
+        // Get the current resumed activity
         Activity activity = activityMonitor.getResumedActivity();
         if (activity != null && !shouldIgnoreActivity(activity)) {
             resumedActivity = new WeakReference<>(activity);
         }
 
+        // Add the activity listener
         activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
             @Override
             public void onActivityStopped(Activity activity) {
@@ -312,12 +338,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         });
 
-        automationEngine.start();
-        updateEnginePauseState();
-
-        // New user cut off time
-        if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-            remoteDataSubscriber.setScheduleNewUserCutOffTime(pushManager.getChannelId() == null ? System.currentTimeMillis() : 0);
+        // If we are already in the foreground check pending schedules.
+        if (activityMonitor.isAppForegrounded()) {
+            automationEngine.checkPendingSchedules();
         }
     }
 

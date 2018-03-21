@@ -601,6 +601,30 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
     }
 
+    @Test
+    public void testOnScheduleChangeBeforeEngineStarts() {
+        OperationScheduler scheduler = new OperationScheduler() {
+            @Override
+            public void schedule(long delay, CancelableOperation operation) {
+                operation.getHandler().postDelayed(operation, delay);
+            }
+        };
+
+        driver = new TestActionScheduleDriver();
+        automationDataManager = new AutomationDataManager(TestApplication.getApplication(), "appKey", "AutomationEngineTest");
+        automationEngine = new AutomationEngine.Builder<ActionSchedule>()
+                .setAnalytics(UAirship.shared().getAnalytics())
+                .setDataManager(automationDataManager)
+                .setActivityMonitor(activityMonitor)
+                .setDriver(driver)
+                .setOperationScheduler(scheduler)
+                .setScheduleLimit(100)
+                .build();
+
+        // Should not crash
+        automationEngine.checkPendingSchedules();
+    }
+
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(Triggers.newCustomEventTriggerBuilder()

@@ -507,7 +507,9 @@ public class AutomationEngine<T extends Schedule> {
      * Triggers the engine to recheck all pending schedules.
      */
     public void checkPendingSchedules() {
-        onScheduleConditionsChanged();
+        if (isStarted) {
+            onScheduleConditionsChanged();
+        }
     }
 
     /**

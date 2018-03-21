@@ -121,6 +121,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
         manager.init();
         manager.onAirshipReady(UAirship.shared());
         manager.addListener(mockListener);
+
+        // Finish init on the main thread
+        mainLooper.runToEndOfTasks();
     }
 
 
