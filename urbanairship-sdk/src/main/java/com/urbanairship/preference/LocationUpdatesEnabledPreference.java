@@ -3,6 +3,7 @@
 package com.urbanairship.preference;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -78,12 +79,13 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
     private static class RequestPermissionsTask extends AsyncTask<String[], Void, Boolean> {
 
+        @SuppressLint("StaticFieldLeak")
         private final Context context;
         private WeakReference<LocationUpdatesEnabledPreference> weakReference;
 
         RequestPermissionsTask(Context context, LocationUpdatesEnabledPreference preference) {
-            this.context = context;
-            this.weakReference = new WeakReference<LocationUpdatesEnabledPreference>(preference);
+            this.context = context.getApplicationContext();
+            this.weakReference = new WeakReference<>(preference);
         }
 
         @Override

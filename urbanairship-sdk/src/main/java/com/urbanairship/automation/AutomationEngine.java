@@ -551,6 +551,15 @@ public class AutomationEngine<T extends Schedule> {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
                 return TriggerObservables.newSession(activityMonitor);
+            case Trigger.CUSTOM_EVENT_COUNT:
+            case Trigger.CUSTOM_EVENT_VALUE:
+            case Trigger.LIFE_CYCLE_APP_INIT:
+            case Trigger.LIFE_CYCLE_BACKGROUND:
+            case Trigger.LIFE_CYCLE_FOREGROUND:
+            case Trigger.REGION_ENTER:
+            case Trigger.REGION_EXIT:
+            case Trigger.SCREEN_VIEW:
+            case Trigger.VERSION:
             default:
                 return Observable.empty();
         }
@@ -568,6 +577,14 @@ public class AutomationEngine<T extends Schedule> {
                 return TriggerObservables.foregrounded(activityMonitor);
             case Trigger.VERSION:
                 return TriggerObservables.appVersionUpdated();
+            case Trigger.CUSTOM_EVENT_COUNT:
+            case Trigger.CUSTOM_EVENT_VALUE:
+            case Trigger.LIFE_CYCLE_APP_INIT:
+            case Trigger.LIFE_CYCLE_BACKGROUND:
+            case Trigger.LIFE_CYCLE_FOREGROUND:
+            case Trigger.REGION_ENTER:
+            case Trigger.REGION_EXIT:
+            case Trigger.SCREEN_VIEW:
             default:
                 return Observable.empty();
         }

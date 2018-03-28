@@ -2,13 +2,16 @@
 
 package com.urbanairship.job;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
@@ -201,6 +204,7 @@ public class JobInfo {
      *
      * @return A persistable bundle representing the job.
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     public PersistableBundle toPersistableBundle() {
         PersistableBundle bundle = new PersistableBundle();
         bundle.putString(EXTRA_AIRSHIP_COMPONENT, airshipComponentName);
@@ -252,6 +256,7 @@ public class JobInfo {
      * @param persistableBundle The job bundle.
      * @return JobInfo builder.
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Nullable
     static JobInfo fromPersistableBundle(PersistableBundle persistableBundle) {
         if (persistableBundle == null) {
@@ -265,7 +270,7 @@ public class JobInfo {
                     .setExtras(JsonValue.parseString(persistableBundle.getString(EXTRA_JOB_EXTRAS)).optMap())
                     .setAirshipComponent(persistableBundle.getString(EXTRA_AIRSHIP_COMPONENT))
                     .setNetworkAccessRequired(persistableBundle.getBoolean(EXTRA_IS_NETWORK_ACCESS_REQUIRED))
-                    .setPersistent(persistableBundle.getBoolean(EXTRA_PERSISTENT));
+                    .setPersistent(persistableBundle.getBoolean(EXTRA_PERSISTENT, false));
 
             //noinspection WrongConstant
             builder.setId(persistableBundle.getInt(EXTRA_JOB_ID, 0));

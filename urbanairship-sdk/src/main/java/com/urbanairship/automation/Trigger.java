@@ -15,6 +15,7 @@ import com.urbanairship.json.JsonValue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
 
 /**
  * Trigger defines a condition to execute an {@link ScheduleInfo}. Use {@link Triggers} to build
@@ -249,7 +250,7 @@ public class Trigger implements Parcelable {
             throw new JsonException("Trigger goal must be defined and greater than 0.");
         }
 
-        String typeString = jsonMap.opt(TYPE_KEY).getString("").toLowerCase();
+        String typeString = jsonMap.opt(TYPE_KEY).getString("").toLowerCase(Locale.ROOT);
         switch (typeString) {
             case CUSTOM_EVENT_COUNT_NAME:
                 type = CUSTOM_EVENT_COUNT;

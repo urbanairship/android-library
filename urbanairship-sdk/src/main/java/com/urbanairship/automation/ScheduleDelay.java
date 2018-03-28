@@ -15,6 +15,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Defines conditions that might delay the execution of a schedule.
@@ -196,7 +197,7 @@ public class ScheduleDelay implements Parcelable {
                 .setSeconds(jsonMap.opt(SECONDS_KEY).getLong(0));
 
         @AppState int appState;
-        String appStateString = jsonMap.opt(APP_STATE_KEY).getString(APP_STATE_ANY_NAME).toLowerCase();
+        String appStateString = jsonMap.opt(APP_STATE_KEY).getString(APP_STATE_ANY_NAME).toLowerCase(Locale.ROOT);
         switch (appStateString) {
             case APP_STATE_ANY_NAME:
                 appState = APP_STATE_ANY;

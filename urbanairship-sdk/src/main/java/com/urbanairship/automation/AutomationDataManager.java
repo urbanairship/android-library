@@ -357,13 +357,6 @@ public class AutomationDataManager extends DataManager {
         db.setForeignKeyConstraintsEnabled(true);
     }
 
-    @Override
-    protected void onOpen(SQLiteDatabase db) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && !db.isReadOnly()) {
-            db.execSQL("PRAGMA foreign_keys=ON;");
-        }
-    }
-
     /**
      * Deletes a schedule given an ID.
      *

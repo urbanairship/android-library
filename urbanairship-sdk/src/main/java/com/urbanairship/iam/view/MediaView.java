@@ -38,7 +38,6 @@ public class MediaView extends FrameLayout {
     private WebView webView;
     private WebChromeClient chromeClient;
 
-
     /**
      * Default constructor.
      *

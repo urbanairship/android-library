@@ -3,6 +3,7 @@
 package com.urbanairship.job;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -52,6 +53,7 @@ class GcmScheduler implements Scheduler {
      * @param secondsDelay Minimum amount of time in seconds to delay the jobInfo.
      * @throws SchedulerException if the schedule fails.
      */
+    @SuppressLint("MissingPermission")
     private void scheduleJob(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long secondsDelay) throws SchedulerException {
         OneoffTask.Builder builder = new OneoffTask.Builder()
                 .setService(AirshipGcmTaskService.class)

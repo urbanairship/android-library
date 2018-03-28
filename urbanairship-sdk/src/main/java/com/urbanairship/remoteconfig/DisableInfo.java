@@ -92,6 +92,7 @@ class DisableInfo {
         Set<String> constraints = new HashSet<>();
         long remoteDataInterval = 0;
 
+
         for (DisableInfo info : disableInfos) {
             boolean isMatch = false;
             if (info.sdkVersionConstraints.isEmpty()) {
@@ -138,12 +139,12 @@ class DisableInfo {
             } else {
                 JsonList modulesList = jsonMap.opt(MODULES_KEY).getList();
                 if (modulesList == null) {
-                    throw new IllegalArgumentException("Modules must be an array of strings: " + jsonMap.opt(MODULES_KEY));
+                    throw new JsonException("Modules must be an array of strings: " + jsonMap.opt(MODULES_KEY));
                 }
 
                 for (JsonValue moduleValue : modulesList) {
                     if (!moduleValue.isString()) {
-                        throw new IllegalArgumentException("Modules must be an array of strings: " + jsonMap.opt(MODULES_KEY));
+                        throw new JsonException("Modules must be an array of strings: " + jsonMap.opt(MODULES_KEY));
                     }
 
                     String module = moduleValue.getString();
@@ -160,12 +161,12 @@ class DisableInfo {
         if (jsonMap.containsKey(SDK_VERSIONS_KEY)) {
             JsonList constraintList = jsonMap.opt(SDK_VERSIONS_KEY).getList();
             if (constraintList == null) {
-                throw new IllegalArgumentException("SDK Versions must be an array of strings: " + jsonMap.opt(SDK_VERSIONS_KEY));
+                throw new JsonException("SDK Versions must be an array of strings: " + jsonMap.opt(SDK_VERSIONS_KEY));
             }
 
             for (JsonValue constraintValue : constraintList) {
                 if (!constraintValue.isString()) {
-                    throw new IllegalArgumentException("SDK Versions must be an array of strings: " + jsonMap.opt(SDK_VERSIONS_KEY));
+                    throw new JsonException("SDK Versions must be an array of strings: " + jsonMap.opt(SDK_VERSIONS_KEY));
                 }
 
                 sdkConstraints.add(constraintValue.getString());

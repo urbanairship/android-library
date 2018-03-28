@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Locale;
+
 /**
  * Shared logging wrapper for all Urban Airship log entries.
  * This class serves to consolidate the tag and log level in a
@@ -171,7 +173,7 @@ public class Logger {
             return defaultValue;
         }
 
-        switch (value.toUpperCase()) {
+        switch (value.toUpperCase(Locale.ROOT)) {
             case "ASSERT":
             case "NONE":
                 return Log.ASSERT;
