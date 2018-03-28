@@ -29,7 +29,7 @@ Include Urban Airship into the build.gradle file:
      ...
 
      // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-sdk:9.0.0'
+     compile 'com.urbanairship.android:urbanairship-sdk:9.0.5'
      compile 'com.google.android.gms:play-services-gcm:11.8.0'
 
      // Recommended for location services
