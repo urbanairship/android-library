@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:app="http://schemas.android.com/apk/res-auto"
-      xmlns:tools="http://schemas.android.com/tools"
+<menu xmlns:tools="http://schemas.android.com/tools"
       xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/mark_read"
         android:title="@string/ua_mark_read"
         android:showAsAction="ifRoom"
-        app:showAsAction="ifRoom"
         tools:ignore="AppCompatResource"/>
 
 
@@ -15,7 +13,6 @@
         android:id="@+id/delete"
         android:title="@string/ua_delete"
         android:showAsAction="ifRoom"
-        app:showAsAction="ifRoom"
         tools:ignore="AppCompatResource"/>
 
 
@@ -23,7 +20,6 @@
         android:id="@+id/select_all"
         android:title="@string/ua_select_all"
         android:showAsAction="ifRoom"
-        app:showAsAction="ifRoom"
         tools:ignore="AppCompatResource"/>
 
 
