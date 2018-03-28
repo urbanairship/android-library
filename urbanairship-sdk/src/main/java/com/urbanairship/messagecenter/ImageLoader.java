@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -61,6 +62,8 @@ public class ImageLoader {
     private final Context context;
     private final Map<ImageView, Request> requestMap;
     private final LruCache<String, BitmapDrawable> memoryCache;
+
+    @SuppressLint("StaticFieldLeak")
     private static ImageLoader sharedInstance;
 
     /**
@@ -225,7 +228,7 @@ public class ImageLoader {
                     imageView.setImageDrawable(null);
                 }
 
-                this.task = new BitmapAsyncTask(this);
+                this.task = new BitmapAsyncTask(context, memoryCache, this);
                 task.executeOnExecutor(executor);
             }
         }
@@ -260,11 +263,16 @@ public class ImageLoader {
     /**
      * Bitmap task to fetch the bitmap.
      */
-    private class BitmapAsyncTask extends AsyncTask<Void, Void, BitmapDrawable> {
+    private static class BitmapAsyncTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private final Request request;
+        @SuppressLint("StaticFieldLeak")
+        private final Context context;
+        private final LruCache<String, BitmapDrawable> memoryCache;
 
-        BitmapAsyncTask(Request request) {
+        BitmapAsyncTask(Context context, LruCache<String, BitmapDrawable> memoryCache, Request request) {
             this.request = request;
+            this.memoryCache = memoryCache;
+            this.context = context.getApplicationContext();
         }
 
         @Override

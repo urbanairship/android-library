@@ -2,6 +2,7 @@
 
 package com.urbanairship.job;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -52,7 +53,10 @@ public class JobDispatcher {
     private static final int DEFAULT_JOB_ID_START = 3000000;
 
     private final Context context;
+
+    @SuppressLint("StaticFieldLeak")
     private static JobDispatcher instance;
+
     private final SchedulerFactory schedulerFactory;
     private final ActivityMonitor activityMonitor;
 

@@ -1,6 +1,7 @@
 package com.urbanairship.job;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,7 +16,7 @@ import com.urbanairship.util.ManifestUtils;
 /**
  * Job scheduler using the Android Job's API.
  */
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
 public class AndroidJobScheduler implements Scheduler {
 
     private static final long INITIAL_RETRY_MS = 30000; // 30 seconds.
@@ -53,6 +54,7 @@ public class AndroidJobScheduler implements Scheduler {
      * @param millisecondsDelay Minimum amount of time in milliseconds to delay the jobInfo.
      * @throws SchedulerException if the schedule fails.
      */
+    @SuppressLint("MissingPermission")
     private void scheduleJob(@NonNull Context context, @NonNull JobInfo jobInfo, int scheduleId, long millisecondsDelay) throws SchedulerException {
         JobScheduler scheduler = getScheduler(context);
         if (scheduler == null) {

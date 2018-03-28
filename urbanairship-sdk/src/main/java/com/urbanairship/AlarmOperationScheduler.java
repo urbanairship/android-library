@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.RestrictTo;
 import android.util.SparseArray;
 
@@ -24,6 +26,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
 
     private final Context context;
     private InternalScheduler scheduler;
+    @SuppressLint("StaticFieldLeak")
     private static AlarmOperationScheduler shared;
 
     /**
@@ -139,6 +142,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
     /**
      * Nougat+ scheduler.
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private static class NougatScheduler implements InternalScheduler {
 
         @Override

@@ -1,4 +1,4 @@
-version = airshipProperties.version
+version = getMavenVersion()
 group = "com.urbanairship.android"
 description = "Urban Airship Android SDK"
 
@@ -8,6 +8,7 @@ apply plugin: 'com.jfrog.bintray'
 
 // For test coverage reports
 apply plugin: 'jacoco'
+
 
 android {
     compileSdkVersion 27
@@ -21,7 +22,9 @@ android {
         minSdkVersion 16
         targetSdkVersion 27
 
-        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${project.version}\""
+        buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${getMavenVersion()}\""
+        buildConfigField "String", "SDK_VERSION", "\"${getSdkVersionString()}\""
+
         consumerProguardFiles 'consumer-proguard.txt'
     }
 
@@ -52,37 +55,10 @@ dependencies {
     testImplementation 'org.robolectric:shadows-supportv4:3.5.1'
     testImplementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
     doclava("com.google.doclava:doclava:1.0.6")
+
 }
 
-android.libraryVariants.all { variant ->
 
-    // Add a javadoc task for each variant
-    task("javadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        title = null
-        source = variant.javaCompile.source
-
-        // The classpaths are not fully available until after assemble task
-        doFirst {
-            classpath += variant.javaCompile.classpath
-            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        }
-
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
-
-        options {
-            docletpath = configurations.doclava.files.asType(List)
-            doclet "com.google.doclava.Doclava"
-            bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
-            addStringOption "hdf project.name", "Urban Airship Android Library"
-            addStringOption "hdf project.version", project.version
-            addStringOption "apiversion", "v2"
-            addStringOption "federate android", "http://developer.android.com/reference"
-            addStringOption "federationxml android", "docs/android-22.xml"
-            addStringOption "templatedir", "docs/template"
-        }
-    }
-}
 
 install {
     repositories.mavenInstaller {
@@ -91,7 +67,7 @@ install {
             project {
                 packaging 'aar'
                 groupId project.group
-                artifactId 'urbanairship-sdk'
+                artifactId project.name
 
                 // Add your description here
                 name project.name
@@ -116,6 +92,34 @@ install {
                         name 'Urban Airship'
                     }
                 }
+            }
+        }
+    }
+}
+
+android.libraryVariants.all { variant ->
+    // Add a javadoc task for each variant
+    task("javadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+        title = null
+        source = android.sourceSets.main.java.sourceFiles
+
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+
+        doFirst {
+            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+            classpath += variant.javaCompiler.classpath
+
+            options {
+                docletpath = configurations.doclava.files as List
+                doclet "com.google.doclava.Doclava"
+                bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+                addStringOption "hdf project.name", "Urban Airship Android Library"
+                addStringOption "hdf project.version", project.version
+                addStringOption "apiversion", "v2"
+                addStringOption "federate android", "http://developer.android.com/reference"
+                addStringOption "federationxml android", "docs/android-22.xml"
+                addStringOption "templatedir", "docs/template"
             }
         }
     }
@@ -162,6 +166,23 @@ task bintrayUploadInternal {
 }
 
 task javadoc(dependsOn: 'javadocRelease')
+
+def getSdkVersionString() {
+    def result = "!SDK-VERSION-STRING!:" + project.group + ":" + project.name + ":"
+    if (airshipProperties['versionQualifier']) {
+        result += airshipProperties.versionQualifier + ":"
+    }
+    result += airshipProperties.version
+    return result
+}
+
+def getMavenVersion() {
+    def result = airshipProperties.version
+    if (airshipProperties['versionQualifier']) {
+        result += "-" + airshipProperties.versionQualifier
+    }
+    return result
+}
 
 def getDexMethodCount() {
     try {

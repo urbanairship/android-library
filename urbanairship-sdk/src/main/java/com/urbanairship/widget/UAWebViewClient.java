@@ -526,13 +526,14 @@ public class UAWebViewClient extends WebViewClient {
     /**
      * Async task to inject the Javascript bridge.
      */
+    @SuppressLint("StaticFieldLeak")
     private class InjectJsBridgeTask extends AsyncTask<Void, Void, String> {
 
         private final WeakReference<WebView> webViewWeakReference;
         private final Context context;
 
         private InjectJsBridgeTask(Context context, WebView webView) {
-            this.context  = context.getApplicationContext();
+            this.context = context.getApplicationContext();
             this.webViewWeakReference = new WeakReference<>(webView);
         }
 
@@ -550,11 +551,11 @@ public class UAWebViewClient extends WebViewClient {
                 dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
             }
 
-        /*
-         * The native bridge will prototype _UAirship, so inject any additional
-         * functionality under _UAirship and the final UAirship object will have
-         * access to it.
-         */
+            /*
+             * The native bridge will prototype _UAirship, so inject any additional
+             * functionality under _UAirship and the final UAirship object will have
+             * access to it.
+             */
             StringBuilder sb = new StringBuilder().append("var _UAirship = {};");
 
             // Getters

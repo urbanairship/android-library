@@ -34,7 +34,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
     private static final String VERSION_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)";
 
-    private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^(?<start>%s(%s)?)%s(?<end>(%s)?%s)", START_PATTERN, VERSION_PATTERN, RANGE_SEPARATOR, VERSION_PATTERN, END_PATTERN);
+    private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^(%s(%s)?)%s((%s)?%s)", START_PATTERN, VERSION_PATTERN, RANGE_SEPARATOR, VERSION_PATTERN, END_PATTERN);
     private static final String SUB_VERSION_PATTERN = "^(.*)\\+$";
     private static final String EXACT_VERSION_PATTERN = "^" + VERSION_PATTERN + "$";
 
@@ -109,10 +109,14 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
             };
         }
 
-        final String number = matcher.group(1);
+        final String number = matcher.groupCount() >= 1 ? matcher.group(1) : null;
         return new Predicate<String>() {
             @Override
             public boolean apply(String version) {
+                if (number == null) {
+                    return false;
+                }
+
                 return version.startsWith(number);
             }
         };
@@ -136,7 +140,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         final String startToken;
         final Version startVersion;
 
-        String end = matcher.group("end");
+        String end = matcher.groupCount() >= 7 ? matcher.group(7) : null;
         if (!UAStringUtil.isEmpty(end)) {
             endToken = end.substring(end.length() - 1);
             endVersion = end.length() > 1 ? new Version(end.substring(0, end.length() - 1)) : null;
@@ -145,7 +149,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
             endVersion = null;
         }
 
-        final String start = matcher.group("start");
+        final String start = matcher.groupCount() >= 1 ? matcher.group(1) : null;
         if (!UAStringUtil.isEmpty(start)) {
             startToken = start.substring(0, 1);
             startVersion = start.length() > 1 ? new Version(start.substring(1)) : null;
@@ -256,9 +260,9 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         @Override
         public int compareTo(@NonNull Version version) {
             for (int i = 0; i < 3; i++) {
-                int result = Integer.compare(this.versionComponent[i], version.versionComponent[i]);
+                int result = this.versionComponent[i] - version.versionComponent[i];
                 if (result != 0) {
-                    return result;
+                    return result > 0 ? 1 : -1;
                 }
             }
 
@@ -279,6 +283,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
         return constraint != null ? constraint.equals(that.constraint) : that.constraint == null;
     }
+
 
     @Override
     public int hashCode() {

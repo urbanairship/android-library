@@ -41,18 +41,10 @@ public final class ViewUtils {
 
         // Called after setting the text appearance so we can keep style defined in the text appearance
         if (typeface != null) {
-            int style = -1;
-            if (textView.getTypeface() != null) {
-                style = textView.getTypeface().getStyle();
-            }
+            int typefaceFlags = textView.getTypeface() == null ? Typeface.NORMAL : textView.getTypeface().getStyle();
 
             textView.setPaintFlags(textView.getPaintFlags() | Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
-
-            if (style >= 0) {
-                textView.setTypeface(typeface, style);
-            } else {
-                textView.setTypeface(typeface);
-            }
+            textView.setTypeface(typeface, typefaceFlags);
         }
     }
 

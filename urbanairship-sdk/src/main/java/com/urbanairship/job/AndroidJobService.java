@@ -2,6 +2,8 @@ package com.urbanairship.job;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import com.urbanairship.Logger;
 
@@ -11,6 +13,7 @@ import com.urbanairship.Logger;
  *
  * @hide
  */
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
 public class AndroidJobService extends JobService {
 
     @Override

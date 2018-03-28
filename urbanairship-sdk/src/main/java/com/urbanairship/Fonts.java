@@ -2,6 +2,7 @@
 
 package com.urbanairship;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Typeface;
@@ -29,6 +30,7 @@ public class Fonts {
     private final Map<String, Typeface> fontCache = new HashMap<>();
     private final Context context;
 
+    @SuppressLint("StaticFieldLeak")
     private static Fonts instance;
 
     private Fonts(Context context) {

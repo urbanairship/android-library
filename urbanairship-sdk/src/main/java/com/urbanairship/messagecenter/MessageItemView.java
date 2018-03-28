@@ -103,7 +103,9 @@ public class MessageItemView extends FrameLayout {
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, titleFont);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
-            titleTypeface = Typeface.create(titleView.getTypeface(), titleView.getTypeface().getStyle() | Typeface.BOLD);
+            int style = titleView.getTypeface().getStyle();
+            style |= Typeface.BOLD;
+            titleTypeface = Typeface.create(titleView.getTypeface(), style);
         } else {
             titleReadTypeface = Typeface.DEFAULT;
             titleTypeface = Typeface.DEFAULT_BOLD;

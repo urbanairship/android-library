@@ -48,7 +48,7 @@
     <string name="ua_connection_error">Erro de conexão</string>
     <string name="ua_mark_read">Marcar como lido</string>
     <string name="ua_delete">Excluir</string>
-    <string name="ua_mc_no_longer_available">A mensagem selecionada não está mais disponivel.</string>
+    <string name="ua_mc_no_longer_available">A mensagem selecionada não está mais disponível.</string>
     <string name="ua_content_error">Erro de conteúdo</string>
 
     <!-- Label describing the number of selected items -->

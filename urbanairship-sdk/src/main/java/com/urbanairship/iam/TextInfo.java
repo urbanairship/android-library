@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Text display info.
@@ -166,7 +167,7 @@ public class TextInfo implements JsonSerializable {
             }
 
             for (JsonValue value : content.opt(STYLE_KEY).optList()) {
-                switch (value.getString("").toLowerCase()) {
+                switch (value.getString("").toLowerCase(Locale.ROOT)) {
                     case STYLE_BOLD:
                         builder.addStyle(STYLE_BOLD);
                         break;

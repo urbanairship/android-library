@@ -235,11 +235,9 @@ public class NotificationFactory {
 
         if (getTitleId() == 0) {
             return getContext().getPackageManager().getApplicationLabel(getContext().getApplicationInfo()).toString();
-        } else if (getTitleId() > 0) {
+        } else  {
             return getContext().getString(getTitleId());
         }
-
-        return "";
     }
 
     /**
@@ -315,7 +313,7 @@ public class NotificationFactory {
         }
 
 
-        if (getLargeIcon() > 0) {
+        if (getLargeIcon() != 0) {
             builder.setLargeIcon(BitmapFactory.decodeResource(getContext().getResources(), getLargeIcon()));
         }
 
