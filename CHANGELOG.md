@@ -3,6 +3,19 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+
+Version 9.0.5 - March 28, 2018
+==============================
+
+Patch release to fix a BadParcelableException when accessing the PushMessage from an intent's bundle
+on some devices.
+
+Changes
+-------
+- Fixed BadParcelableException when handling push messages from intents.
+- Fixed lint warnings/errors.
+
+
 Version 9.0.4 - March 21, 2018
 ==============================
 

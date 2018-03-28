@@ -62,20 +62,33 @@ public class RemoteConfigManager extends AirshipComponent {
                                  .subscribe(new Subscriber<Collection<RemoteDataPayload>>() {
                                      @Override
                                      public void onNext(Collection<RemoteDataPayload> remoteDataPayloads) {
-                                         List<DisableInfo> disableInfos = new ArrayList<>();
-                                         for (RemoteDataPayload payload : remoteDataPayloads) {
-                                             for (JsonValue value : payload.getData().opt(DISABLE_INFO_KEY).optList()) {
-                                                 try {
-                                                     disableInfos.add(DisableInfo.parseJson(value));
-                                                 } catch (JsonException e) {
-                                                     Logger.error("Failed to parse remote config: " + payload, e);
-                                                 }
-                                             }
+                                         try {
+                                             processRemoteData(remoteDataPayloads);
+                                         } catch (Exception e) {
+                                             Logger.error("Failed process remote data", e);
                                          }
-
-                                         apply(DisableInfo.collapse(disableInfos, UAirship.getVersion()));
                                      }
                                  });
+    }
+
+    /**
+     * Processes the remote data payloads.
+     *
+     * @param remoteDataPayloads The remote data payloads.
+     */
+    private void processRemoteData(Collection<RemoteDataPayload> remoteDataPayloads) {
+        List<DisableInfo> disableInfos = new ArrayList<>();
+        for (RemoteDataPayload payload : remoteDataPayloads) {
+            for (JsonValue value : payload.getData().opt(DISABLE_INFO_KEY).optList()) {
+                try {
+                    disableInfos.add(DisableInfo.parseJson(value));
+                } catch (JsonException e) {
+                    Logger.error("Failed to parse remote config: " + payload, e);
+                }
+            }
+        }
+
+        apply(DisableInfo.collapse(disableInfos, UAirship.getVersion()));
     }
 
     @Override

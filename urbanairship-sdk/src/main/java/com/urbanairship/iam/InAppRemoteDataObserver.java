@@ -83,7 +83,7 @@ class InAppRemoteDataObserver {
                                               try {
                                                   processPayload(payload, scheduler);
                                                   Logger.debug("InAppRemoteDataObserver - Finished processing messages.");
-                                              } catch (InterruptedException | ExecutionException e) {
+                                              } catch (Exception e) {
                                                   Logger.error("InAppRemoteDataObserver - Failed to process payload: ", e);
                                               }
                                           }
