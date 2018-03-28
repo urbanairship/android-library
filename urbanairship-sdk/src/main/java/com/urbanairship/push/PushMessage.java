@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -657,12 +658,17 @@ public class PushMessage implements Parcelable, JsonSerializable {
             return null;
         }
 
-        Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE);
-        if (pushBundle == null) {
+        try {
+            Bundle pushBundle = intent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE);
+            if (pushBundle == null) {
+                return null;
+            }
+
+            return new PushMessage(pushBundle);
+        } catch (BadParcelableException e) {
+            Logger.error("Failed to parse push message from intent.", e);
             return null;
         }
-
-        return new PushMessage(pushBundle);
     }
 
     @Override
