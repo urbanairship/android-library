@@ -305,7 +305,7 @@ public class RetailEventTemplate {
      * @return The custom retail event.
      */
     public CustomEvent createEvent() {
-        CustomEvent.Builder builder = new CustomEvent.Builder(this.eventName);
+        CustomEvent.Builder builder = CustomEvent.newBuilder(this.eventName);
 
         if (this.value != null) {
             builder.setEventValue(this.value);

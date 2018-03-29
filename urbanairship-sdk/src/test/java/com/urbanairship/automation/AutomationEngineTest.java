@@ -119,9 +119,9 @@ public class AutomationEngineTest extends BaseTestCase {
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                new CustomEvent.Builder("name")
-                        .create()
-                        .track();
+                CustomEvent.newBuilder("name")
+                           .create()
+                           .track();
             }
         });
     }
@@ -137,10 +137,10 @@ public class AutomationEngineTest extends BaseTestCase {
         verifyTrigger(trigger, new Runnable() {
             @Override
             public void run() {
-                new CustomEvent.Builder("some name")
-                        .setEventValue(2.0)
-                        .create()
-                        .track();
+                CustomEvent.newBuilder("some name")
+                           .setEventValue(2.0)
+                           .create()
+                           .track();
             }
         });
     }
@@ -371,9 +371,9 @@ public class AutomationEngineTest extends BaseTestCase {
         }
 
         // Trigger the schedules
-        new CustomEvent.Builder("name")
-                .create()
-                .track();
+        CustomEvent.newBuilder("name")
+                   .create()
+                   .track();
 
         runLooperTasks();
 
@@ -402,9 +402,9 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Trigger the schedules
-        new CustomEvent.Builder("name")
-                .create()
-                .track();
+        CustomEvent.newBuilder("name")
+                   .create()
+                   .track();
 
         runLooperTasks();
 
@@ -436,9 +436,9 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(entry.scheduleId, schedule.getId());
 
         // Try to trigger the schedule
-        new CustomEvent.Builder("event")
-                .create()
-                .track();
+        CustomEvent.newBuilder("event")
+                   .create()
+                   .track();
 
         runLooperTasks();
 
@@ -455,9 +455,9 @@ public class AutomationEngineTest extends BaseTestCase {
         assertFalse(driver.callbackMap.containsKey(schedule.getId()));
 
         // Actually trigger the schedule
-        new CustomEvent.Builder("event")
-                .create()
-                .track();
+        CustomEvent.newBuilder("event")
+                   .create()
+                   .track();
         runLooperTasks();
 
         // Verify it started executing the schedule
@@ -488,9 +488,9 @@ public class AutomationEngineTest extends BaseTestCase {
         ActionSchedule schedule = future.get();
 
         // Trigger the schedule
-        new CustomEvent.Builder("event")
-                .create()
-                .track();
+        CustomEvent.newBuilder("event")
+                   .create()
+                   .track();
 
         runLooperTasks();
 
@@ -581,9 +581,9 @@ public class AutomationEngineTest extends BaseTestCase {
         ActionSchedule schedule = future.get();
 
         // Trigger the schedule
-        new CustomEvent.Builder("event")
-                .create()
-                .track();
+        CustomEvent.newBuilder("event")
+                   .create()
+                   .track();
 
         runLooperTasks();
 
@@ -645,9 +645,9 @@ public class AutomationEngineTest extends BaseTestCase {
         assertEquals(entry.scheduleId, schedule.getId());
 
         // Trigger the schedule
-        new CustomEvent.Builder("event")
-                .create()
-                .track();
+        CustomEvent.newBuilder("event")
+                   .create()
+                   .track();
 
         runLooperTasks();
 

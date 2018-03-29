@@ -135,7 +135,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testAddEvent() {
-        CustomEvent event = new CustomEvent.Builder("cool").create();
+        CustomEvent event = CustomEvent.newBuilder("cool").build();
 
         analytics.addEvent(event);
 
