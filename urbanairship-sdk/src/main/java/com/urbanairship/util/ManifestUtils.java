@@ -4,6 +4,7 @@ package com.urbanairship.util;
 
 import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 
@@ -41,6 +42,15 @@ public class ManifestUtils {
             return UAirship.getPackageManager().getActivityInfo(componentName,
                     PackageManager.GET_META_DATA);
 
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static ApplicationInfo getApplicationInfo() {
+        try {
+            return UAirship.getPackageManager().getApplicationInfo(UAirship.getPackageName(),
+                    PackageManager.GET_META_DATA);
         } catch (Exception ex) {
             return null;
         }
