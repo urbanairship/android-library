@@ -57,7 +57,8 @@ public class Autopilot implements UAirship.OnReadyCallback {
 
     private static final String TAG = "Urban Airship Autopilot";
 
-    private static boolean instanceCreated;
+    private static boolean instanceCreationAttempted;
+
     private static Autopilot instance;
 
     /**
@@ -93,9 +94,21 @@ public class Autopilot implements UAirship.OnReadyCallback {
             return;
         }
 
-        if (!instanceCreated && instance == null) {
-            instance = createAutopilotInstance(application);
-            instanceCreated = true;
+        if (!instanceCreationAttempted) {
+            ApplicationInfo ai;
+            try {
+                ai = application.getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
+                if (ai == null || ai.metaData == null) {
+                    Log.e(TAG, "Unable to load app info.");
+                    return;
+                }
+            } catch (NameNotFoundException e) {
+                Log.e(TAG, "Failed to get app info.", e);
+                return;
+            }
+
+            instance = createAutopilotInstance(ai);
+            instanceCreationAttempted = true;
         }
 
         if (instance == null) {
@@ -127,26 +140,13 @@ public class Autopilot implements UAirship.OnReadyCallback {
     /**
      * Creates the app's auto pilot instance.
      *
-     * @param context The application context.
+     * @param applicationInfo The application info.
      * @return An autopilot instance, or {@code null} if the app is not configured to use auto pilot
      * or if the class is unable to be created.
      */
     @Nullable
-    private static Autopilot createAutopilotInstance(@NonNull Context context) {
-        String classname;
-
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai == null || ai.metaData == null) {
-                Log.e(TAG, "Unable to load app bundle.");
-                return null;
-            }
-
-            classname = ai.metaData.getString(AUTOPILOT_MANIFEST_KEY);
-        } catch (NameNotFoundException e) {
-            Log.e(TAG, "Failed to get app' metadata.", e);
-            return null;
-        }
+    private static Autopilot createAutopilotInstance(@NonNull ApplicationInfo applicationInfo) {
+        String classname = applicationInfo.metaData.getString(AUTOPILOT_MANIFEST_KEY);
 
         if (classname == null) {
             return null;
