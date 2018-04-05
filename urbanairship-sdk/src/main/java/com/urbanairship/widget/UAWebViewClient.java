@@ -68,8 +68,8 @@ import java.util.WeakHashMap;
  * </p>
  * <p/>
  * <p>
- * Example: uairship://run-actions?&add_tags=%5B%22one%22%2C%22two%22%5D
- * will run the "add_tags" with value "["one", "two"]".
+ * Example: uairship://run-actions?&add_tags_action=%5B%22one%22%2C%22two%22%5D
+ * will run the "add_tags_action" with value "["one", "two"]".
  * </p>
  * <p/>
  * <p>
@@ -78,8 +78,8 @@ import java.util.WeakHashMap;
  * </p>
  * <p/>
  * <p>
- * Example: uairship://run-basic-actions?add_tags=one&remove_tags=two will run
- * the "add_tags" with the value "one", and perform the "remove_tags" action with
+ * Example: uairship://run-basic-actions?add_tags_action=one&remove_tags_action=two will run
+ * the "add_tags_action" with the value "one", and perform the "remove_tags_action" action with
  * value "two".
  * </p>
  * <p/>
