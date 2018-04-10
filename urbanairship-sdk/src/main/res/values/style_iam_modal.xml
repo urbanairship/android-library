@@ -1,89 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Parent Style -->
     <style name="UrbanAirship.InAppModal"/>
 
+    <!-- Default Activity -->
     <style name="UrbanAirship.InAppModal.Activity">
         <item name="android:windowBackground">@android:drawable/screen_background_dark_transparent</item>
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
     </style>
 
-    <style name="UrbanAirship.InAppModal.Layout">
-        <item name="android:elevation">24dp</item>
-        <item name="urbanAirshipMaxWidth">420dp</item>
-        <item name="android:layout_margin">32dp</item>
-    </style>
-
+    <!-- Dismiss button, laid out on top of the layout above -->
     <style name="UrbanAirship.InAppModal.DismissButton">
-        <item name="android:background">@null</item>
+        <!-- Match elevation of the rest of the layout -->
+        <item name="android:elevation" tools:targetApi="lollipop">24dp</item>
+        <item name="android:background">@drawable/ua_iam_dismiss_background</item>
         <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
-        <item name="android:padding">8dp</item>
-        <item name="android:layout_marginRight">4dp</item>
-        <item name="android:layout_marginLeft">4dp</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
         <item name="android:layout_gravity">top|end</item>
-        <item name="android:contentDescription">@string/ua_cancel</item>
     </style>
 
+    <!-- Main Layout, contains the content, buttons, and footer-->
+    <style name="UrbanAirship.InAppModal.Layout">
+        <item name="android:elevation" tools:ignore="NewApi">24dp</item>
+        <item name="urbanAirshipMaxWidth">420dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">24dp</item>
+        <item name="android:layout_marginTop">48dp</item>
+        <item name="android:layout_marginBottom">48dp</item>
+        <item name="android:layout_centerInParent">true</item>
+    </style>
+
+    <!-- Contains the content -->
     <style name="UrbanAirship.InAppModal.ScrollView">
         <item name="android:fadeScrollbars">false</item>
         <item name="android:fillViewport">true</item>
     </style>
 
+    <!-- Contains header, body, and media -->
     <style name="UrbanAirship.InAppModal.Content">
         <item name="android:minHeight">50dp</item>
+        <item name="android:paddingTop">24dp</item>
     </style>
 
+    <!-- Content overrides for HEADER_MEDIA_BODY template -->
+    <style name="UrbanAirship.InAppModal.Content.HeaderMediaBody" />
+
+    <!-- Content overrides for HEADER_BODY_MEDIA template -->
+    <style name="UrbanAirship.InAppModal.Content.HeaderBodyMedia" />
+
+    <!-- Content overrides for MEDIA_HEADER_BODY template -->
+    <style name="UrbanAirship.InAppModal.Content.MediaHeaderBody">
+        <!-- Remove the top padding for media -->
+        <item name="android:paddingTop">0dp</item>
+    </style>
+
+    <!-- Media -->
     <style name="UrbanAirship.InAppModal.MediaView">
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginTop">24dp</item>
     </style>
 
+    <!-- Media overrides for HEADER_MEDIA_BODY template -->
+    <style name="UrbanAirship.InAppModal.MediaView.HeaderMediaBody" />
+
+    <!-- Media overrides for HEADER_BODY_MEDIA template -->
+    <style name="UrbanAirship.InAppModal.MediaView.HeaderBodyMedia" />
+
+    <!-- Media overrides for MEDIA_HEADER_BODY template -->
+    <style name="UrbanAirship.InAppModal.MediaView.MediaHeaderBody">
+        <!-- Remove the top margin -->
+        <item name="android:layout_marginTop">0dp</item>
+    </style>
+
+    <!-- Heading -->
     <style name="UrbanAirship.InAppModal.Heading">
-        <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">48dp</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:includeFontPadding">false</item>
     </style>
 
+    <!-- Heading overrides for HEADER_MEDIA_BODY template -->
+    <style name="UrbanAirship.InAppModal.Heading.HeaderMediaBody" />
+
+    <!-- Heading overrides for HEADER_BODY_MEDIA template -->
+    <style name="UrbanAirship.InAppModal.Heading.HeaderBodyMedia" />
+
+
+    <!-- Heading overrides for MEDIA_HEADER_BODY template -->
+    <style name="UrbanAirship.InAppModal.Heading.MediaHeaderBody">
+        <!-- Remove right margin since its no longer at the top -->
+        <item name="android:layout_marginRight">0dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+    </style>
+
+    <!-- Body -->
     <style name="UrbanAirship.InAppModal.Body">
-        <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:includeFontPadding">false</item>
     </style>
 
+    <!-- Body overrides for HEADER_MEDIA_BODY templates -->
+    <style name="UrbanAirship.InAppModal.Body.HeaderMediaBody">
+        <item name="android:layout_marginTop">24dp</item>
+    </style>
+
+    <!-- Body overrides for HEADER_BODY_MEDIA templates -->
+    <style name="UrbanAirship.InAppModal.Body.HeaderBodyMedia" />
+
+    <!-- Body overrides for MEDIA_HEADER_BODY templates -->
+    <style name="UrbanAirship.InAppModal.Body.MediaHeaderBody" />
+
+    <!-- Button layout -->
     <style name="UrbanAirship.InAppModal.ButtonLayout">
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="urbanAirshipStackedSpaceHeight">8dp</item>
-        <item name="urbanAirshipSeparatedSpaceWidth">8dp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+        <item name="urbanAirshipStackedSpaceHeight">24dp</item>
+        <item name="urbanAirshipSeparatedSpaceWidth">16dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
         <item name="urbanAirshipButtonLayoutResourceId">@layout/ua_iam_modal_button</item>
     </style>
 
+    <!-- Button -->
     <style name="UrbanAirship.InAppModal.Button">
-        <item name="android:minHeight">32dp</item>
+        <item name="android:minHeight">48dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:paddingLeft">4dp</item>
     </style>
 
+    <!-- Footer Holder -->
+    <style name="UrbanAirship.InAppModal.FooterHolder">
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">12dp</item>
+    </style>
+
+    <!-- Footer -->
     <style name="UrbanAirship.InAppModal.Footer">
-        <item name="android:layout_marginBottom">8dp</item>
-        <item name="android:layout_marginTop">-8dp</item>
+        <item name="android:minHeight">32dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:paddingLeft">4dp</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
-        <item name="android:minHeight">32dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">24dp</item>
         <item name="android:layout_gravity">bottom|center_horizontal</item>
     </style>
+
+
 </resources>

@@ -22,6 +22,7 @@
         android:id="@+id/dismiss"
         style="@style/UrbanAirship.InAppHtml.DismissButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/ua_cancel"/>
 
 </FrameLayout>

@@ -1,61 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Parent Style -->
     <style name="UrbanAirship.InAppFullscreen"/>
 
-    <style name="UrbanAirship.InAppFullscreen.Layout"/>
+    <!-- Scroll View - wraps the main layout -->
+    <style name="UrbanAirship.InAppFullscreen.ScrollView">
+        <item name="android:fadeScrollbars">false</item>
+        <item name="android:fillViewport">true</item>
+    </style>
 
+    <!-- Main layout - contains the message content -->
+    <style name="UrbanAirship.InAppFullscreen.Layout">
+        <item name="android:paddingTop">24dp</item>
+    </style>
+
+    <!-- Layout overrides for HEADER_MEDIA_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Layout.HeaderMediaBody"/>
+
+    <!-- Layout overrides for HEADER_BODY_MEDIA templates -->
+    <style name="UrbanAirship.InAppFullscreen.Layout.HeaderBodyMedia" />
+
+    <!-- Layout overrides for MEDIA_HEADER_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Layout.MediaHeaderBody">
+        <!-- Remove the top padding -->
+        <item name="android:paddingTop">0dp</item>
+    </style>
+
+    <!-- Dismiss button, sits outside of the scroll view -->
     <style name="UrbanAirship.InAppFullscreen.DismissButton">
-        <item name="android:background">@null</item>
+        <item name="android:background">@drawable/ua_iam_dismiss_background</item>
         <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
-        <item name="android:padding">8dp</item>
-        <item name="android:contentDescription">@string/ua_cancel</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_gravity">top|end</item>
     </style>
 
+    <!-- Media -->
     <style name="UrbanAirship.InAppFullscreen.MediaView">
-        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:layout_marginTop">24dp</item>
     </style>
 
+    <!-- Media overrides for HEADER_MEDIA_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.MediaView.HeaderMediaBody"/>
+
+    <!-- Media overrides for HEADER_BODY_MEDIA templates -->
+    <style name="UrbanAirship.InAppFullscreen.MediaView.HeaderBodyMedia" />
+
+    <!-- Media overrides for MEDIA_HEADER_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.MediaView.MediaHeaderBody">
+        <!-- Remove the top margin -->
+        <item name="android:layout_marginTop">0dp</item>
+    </style>
+
+    <!-- Heading -->
     <style name="UrbanAirship.InAppFullscreen.Heading">
-        <item name="android:padding">0dp</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">48dp</item>
         <item name="android:ellipsize">end</item>
     </style>
 
+    <!-- Heading overrides for HEADER_MEDIA_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderMediaBody"/>
+
+    <!-- Heading overrides for HEADER_BODY_MEDIA templates -->
+    <style name="UrbanAirship.InAppFullscreen.Heading.HeaderBodyMedia"/>
+
+    <!-- Heading overrides for MEDIA_HEADER_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Heading.MediaHeaderBody">
+        <!-- Remove right margin since its no longer at the top -->
+        <item name="android:layout_marginRight">0dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+    </style>
+
+    <!-- Body -->
     <style name="UrbanAirship.InAppFullscreen.Body">
-        <item name="android:padding">0dp</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
         <item name="android:ellipsize">end</item>
     </style>
 
+    <!-- Body overrides for HEADER_MEDIA_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Body.HeaderMediaBody">
+        <item name="android:layout_marginTop">24dp</item>
+    </style>
+
+    <!-- Body overrides for HEADER_BODY_MEDIA templates -->
+    <style name="UrbanAirship.InAppFullscreen.Body.HeaderBodyMedia"/>
+
+    <!-- Body overrides for MEDIA_HEADER_BODY templates -->
+    <style name="UrbanAirship.InAppFullscreen.Body.MediaHeaderBody"/>
+
+    <!-- Button Layout -->
     <style name="UrbanAirship.InAppFullscreen.ButtonLayout">
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
-        <item name="urbanAirshipStackedSpaceHeight">8dp</item>
-        <item name="urbanAirshipSeparatedSpaceWidth">8dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+        <item name="urbanAirshipStackedSpaceHeight">24dp</item>
+        <item name="urbanAirshipSeparatedSpaceWidth">16dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
         <item name="urbanAirshipButtonLayoutResourceId">@layout/ua_iam_fullscreen_button</item>
     </style>
 
+    <!-- Button -->
     <style name="UrbanAirship.InAppFullscreen.Button">
-        <item name="android:minHeight">32dp</item>
+        <item name="android:minHeight">48dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:paddingLeft">4dp</item>
     </style>
 
+    <!-- Footer Holder -->
+    <style name="UrbanAirship.InAppFullscreen.FooterHolder">
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">12dp</item>
+    </style>
+
+    <!-- Footer -->
     <style name="UrbanAirship.InAppFullscreen.Footer">
-        <item name="android:textAllCaps">false</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
         <item name="android:minHeight">32dp</item>
-        <item name="android:layout_marginTop">-8dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">24dp</item>
         <item name="android:layout_gravity">bottom|center_horizontal</item>
     </style>
 </resources>

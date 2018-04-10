@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-
-             android:fitsSystemWindows="true"
-             tools:context="com.urbanairship.iam.modal.ModalActivity">
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="com.urbanairship.iam.modal.ModalActivity">
 
     <com.urbanairship.iam.view.BoundedLinearLayout
         android:id="@+id/modal"
@@ -38,11 +38,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <Button
-            android:id="@+id/footer"
-            style="@style/UrbanAirship.InAppModal.Footer"
+
+        <FrameLayout
+            android:id="@+id/footer_holder"
+            style="@style/UrbanAirship.InAppModal.FooterHolder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@id/buttons">
+
+            <Button
+                android:id="@+id/footer"
+                style="@style/UrbanAirship.InAppModal.Footer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </FrameLayout>
+
 
     </com.urbanairship.iam.view.BoundedLinearLayout>
-</FrameLayout>
+
+    <ImageButton
+        android:id="@+id/dismiss"
+        style="@style/UrbanAirship.InAppModal.DismissButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/modal"
+        android:layout_alignRight="@+id/modal"
+        android:layout_alignTop="@+id/modal"
+        android:contentDescription="@string/ua_cancel"/>
+
+</RelativeLayout>
+

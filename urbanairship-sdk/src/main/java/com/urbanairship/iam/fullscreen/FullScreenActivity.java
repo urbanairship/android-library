@@ -39,7 +39,10 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
             return;
         }
 
-        setContentView(getTemplate(displayContent.getTemplate()));
+        @FullScreenDisplayContent.Template
+        String template = normalizeTemplate(displayContent);
+
+        setContentView(getTemplate(template));
         hideActionBar();
 
         TextView heading = findViewById(R.id.heading);
@@ -151,5 +154,31 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
             default:
                 return R.layout.ua_iam_fullscreen_media_header_body;
         }
+    }
+
+    /**
+     * Gets the normalized template from the display content. The template may differ from the
+     * display content's template to facilitate theming.
+     *
+     * @param displayContent The display content.
+     * @return The full screen template.
+     */
+    @NonNull
+    @FullScreenDisplayContent.Template
+    protected String normalizeTemplate(FullScreenDisplayContent displayContent) {
+        String template = displayContent.getTemplate();
+
+        // If we do not have media use TEMPLATE_HEADER_BODY_MEDIA
+        if (displayContent.getMedia() == null) {
+            return FullScreenDisplayContent.TEMPLATE_HEADER_BODY_MEDIA;
+        }
+
+        // If we do not have a header for template TEMPLATE_HEADER_MEDIA_BODY, but we have media,
+        // fallback to TEMPLATE_MEDIA_HEADER_BODY to avoid missing padding at the top modal
+        if (template.equals(FullScreenDisplayContent.TEMPLATE_HEADER_MEDIA_BODY) && displayContent.getHeading() == null && displayContent.getMedia() != null) {
+            return FullScreenDisplayContent.TEMPLATE_MEDIA_HEADER_BODY;
+        }
+
+        return template;
     }
 }

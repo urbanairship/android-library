@@ -4,24 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    style="@style/UrbanAirship.InAppModal.Content"
+    style="@style/UrbanAirship.InAppModal.Content.MediaHeaderBody"
     android:orientation="vertical">
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageButton
-            android:id="@+id/dismiss"
-            style="@style/UrbanAirship.InAppModal.DismissButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-    </FrameLayout>
 
     <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
-        style="@style/UrbanAirship.InAppModal.MediaView"
+        style="@style/UrbanAirship.InAppModal.MediaView.MediaHeaderBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:src="@drawable/ua_ic_image_placeholder"/>
@@ -29,14 +17,14 @@
 
     <TextView
         android:id="@+id/heading"
-        style="@style/UrbanAirship.InAppModal.Heading"
+        style="@style/UrbanAirship.InAppModal.Heading.MediaHeaderBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
 
     <TextView
         android:id="@+id/body"
-        style="@style/UrbanAirship.InAppModal.Body"
+        style="@style/UrbanAirship.InAppModal.Body.MediaHeaderBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:text="Body text"/>

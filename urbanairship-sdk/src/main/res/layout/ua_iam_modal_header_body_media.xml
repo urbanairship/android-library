@@ -6,38 +6,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    style="@style/UrbanAirship.InAppModal.Content"
+    style="@style/UrbanAirship.InAppModal.Content.HeaderBodyMedia"
     android:orientation="vertical">
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ImageButton
-            android:id="@+id/dismiss"
-            style="@style/UrbanAirship.InAppModal.DismissButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-    </FrameLayout>
 
     <TextView
         android:id="@+id/heading"
-        style="@style/UrbanAirship.InAppModal.Heading"
+        style="@style/UrbanAirship.InAppModal.Heading.HeaderBodyMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
     <TextView
         android:id="@+id/body"
-        style="@style/UrbanAirship.InAppModal.Body"
+        style="@style/UrbanAirship.InAppModal.Body.HeaderBodyMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:text="Body text"/>
 
     <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
-        style="@style/UrbanAirship.InAppModal.MediaView"
+        style="@style/UrbanAirship.InAppModal.MediaView.HeaderBodyMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         tools:src="@drawable/ua_ic_image_placeholder"/>
 
 </LinearLayout>

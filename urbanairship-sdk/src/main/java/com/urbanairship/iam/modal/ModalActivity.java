@@ -44,11 +44,15 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             return;
         }
 
+        @ModalDisplayContent.Template
+        String template = normalizeTemplate(displayContent);
+
         setContentView(R.layout.ua_iam_modal);
 
         // Inflate the content before finding other views
         ViewStub content = findViewById(R.id.modal_content);
-        content.setLayoutResource(getTemplate(displayContent.getTemplate()));
+
+        content.setLayoutResource(getTemplate(template));
         content.inflate();
 
         BoundedLinearLayout modal = findViewById(R.id.modal);
@@ -173,4 +177,29 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         }
     }
 
+    /**
+     * Gets the normalized template from the display content. The template may differ from the
+     * display content's template to facilitate theming.
+     *
+     * @param displayContent The display content.
+     * @return The modal template.
+     */
+    @NonNull
+    @ModalDisplayContent.Template
+    protected String normalizeTemplate(ModalDisplayContent displayContent) {
+        String template = displayContent.getTemplate();
+
+        // If we do not have media use TEMPLATE_HEADER_BODY_MEDIA
+        if (displayContent.getMedia() == null) {
+            return ModalDisplayContent.TEMPLATE_HEADER_BODY_MEDIA;
+        }
+
+        // If we do not have a header for template TEMPLATE_HEADER_MEDIA_BODY, but we have media,
+        // fallback to TEMPLATE_MEDIA_HEADER_BODY to avoid missing padding at the top modal
+        if (template.equals(ModalDisplayContent.TEMPLATE_HEADER_MEDIA_BODY) && displayContent.getHeading() == null && displayContent.getMedia() != null) {
+            return ModalDisplayContent.TEMPLATE_MEDIA_HEADER_BODY;
+        }
+
+        return template;
+    }
 }

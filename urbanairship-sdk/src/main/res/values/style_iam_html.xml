@@ -6,14 +6,12 @@
     <style name="UrbanAirship.InAppHtml.Layout"/>
 
     <style name="UrbanAirship.InAppHtml.DismissButton">
-        <item name="android:background">@null</item>
+        <item name="android:background">@drawable/ua_iam_dismiss_background</item>
         <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
-        <item name="android:layout_marginLeft">4dp</item>
-        <item name="android:layout_marginRight">4dp</item>
-        <item name="android:layout_marginTop">4dp</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:contentDescription">@string/ua_cancel</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
         <item name="android:layout_gravity">top|end</item>
     </style>
 
