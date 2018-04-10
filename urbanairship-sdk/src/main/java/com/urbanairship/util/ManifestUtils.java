@@ -47,6 +47,10 @@ public class ManifestUtils {
         }
     }
 
+    /**
+     * Gets the ApplicationInfo for the application.
+     * @return An instance of ApplicationInfo, or null if the info is unavailable.
+     */
     public static ApplicationInfo getApplicationInfo() {
         try {
             return UAirship.getPackageManager().getApplicationInfo(UAirship.getPackageName(),
