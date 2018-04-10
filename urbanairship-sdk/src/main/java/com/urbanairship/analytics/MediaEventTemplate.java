@@ -365,6 +365,6 @@ public class MediaEventTemplate {
 
         builder.setTemplateType(MEDIA_EVENT_TEMPLATE);
 
-        return builder.create();
+        return builder.build();
     }
 }

@@ -110,7 +110,7 @@ public class AddCustomEventAction extends Action {
             }
         }
 
-        CustomEvent event = eventBuilder.create();
+        CustomEvent event = eventBuilder.build();
         event.track();
         if (event.isValid()) {
             return ActionResult.newEmptyResult();

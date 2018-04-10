@@ -120,7 +120,7 @@ public class AutomationEngineTest extends BaseTestCase {
             @Override
             public void run() {
                 CustomEvent.newBuilder("name")
-                           .create()
+                           .build()
                            .track();
             }
         });
@@ -139,7 +139,7 @@ public class AutomationEngineTest extends BaseTestCase {
             public void run() {
                 CustomEvent.newBuilder("some name")
                            .setEventValue(2.0)
-                           .create()
+                           .build()
                            .track();
             }
         });
@@ -372,7 +372,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Trigger the schedules
         CustomEvent.newBuilder("name")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();
@@ -403,7 +403,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Trigger the schedules
         CustomEvent.newBuilder("name")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();
@@ -437,7 +437,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Try to trigger the schedule
         CustomEvent.newBuilder("event")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();
@@ -456,7 +456,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Actually trigger the schedule
         CustomEvent.newBuilder("event")
-                   .create()
+                   .build()
                    .track();
         runLooperTasks();
 
@@ -489,7 +489,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();
@@ -582,7 +582,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();
@@ -646,7 +646,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
-                   .create()
+                   .build()
                    .track();
 
         runLooperTasks();

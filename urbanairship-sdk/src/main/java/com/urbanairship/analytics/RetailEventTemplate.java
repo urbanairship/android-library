@@ -351,6 +351,6 @@ public class RetailEventTemplate {
 
         builder.setTemplateType(RETAIL_EVENT_TEMPLATE);
 
-        return builder.create();
+        return builder.build();
     }
 }

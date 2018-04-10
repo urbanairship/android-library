@@ -158,6 +158,6 @@ public class AccountEventTemplate {
 
         builder.setTemplateType(ACCOUNT_EVENT_TEMPLATE);
 
-        return builder.create();
+        return builder.build();
     }
 }
