@@ -37,15 +37,8 @@ public class UAWebView extends WebView {
 
     private static final String CACHE_DIRECTORY = "urbanairship";
 
-    /**
-     * Metadata an app can use to enable local storage.
-     */
-    public final static String ENABLE_LOCAL_STORAGE = "com.urbanairship.webview.ENABLE_LOCAL_STORAGE";
-
     private String currentClientAuthRequestUrl;
     private RichPushMessage currentMessage;
-
-
 
     /**
      * UAWebView Constructor
@@ -135,12 +128,12 @@ public class UAWebView extends WebView {
         settings.setJavaScriptEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        if (shouldEnableLocalStorage()) {
+        if (ManifestUtils.shouldEnableLocalStorage()) {
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
 
             if (Build.VERSION.SDK_INT < 19) {
-                String dir = "com.urbanairship.webview.localstorage";
+                String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
                 String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
                 settings.setDatabasePath(path);
             }
@@ -357,20 +350,5 @@ public class UAWebView extends WebView {
     private String createBasicAuth(String userName, String password) {
         String credentials = userName + ":" + password;
         return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
-    }
-
-    /**
-     * Helper method to check if local storage should be used.
-     *
-     * @return {@code true} if local storage should be used, otherwise {@code false}.
-     */
-    private boolean shouldEnableLocalStorage() {
-        ApplicationInfo info = ManifestUtils.getApplicationInfo();
-        if (info != null && info.metaData != null && info.metaData.getBoolean(ENABLE_LOCAL_STORAGE, false)) {
-            Logger.verbose("UAWebView - Application contains metadata to enable local storage");
-            return true;
-        }
-
-        return false;
     }
 }

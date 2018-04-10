@@ -18,6 +18,16 @@ import com.urbanairship.UAirship;
 public class ManifestUtils {
 
     /**
+     * Metadata an app can use to enable local storage.
+     */
+    public final static String ENABLE_LOCAL_STORAGE = "com.urbanairship.webview.ENABLE_LOCAL_STORAGE";
+
+    /**
+     * Database directory for local storage on Android version prior to API 19.
+     */
+    public final static String LOCAL_STORAGE_DATABASE_DIRECTORY = "com.urbanairship.webview.localstorage";
+
+    /**
      * Returns whether the specified permission is granted for the application or not.
      *
      * @param permission Permission to check.
@@ -58,6 +68,21 @@ public class ManifestUtils {
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    /**
+     * Helper method to check if local storage should be used.
+     *
+     * @return {@code true} if local storage should be used, otherwise {@code false}.
+     */
+    public static boolean shouldEnableLocalStorage() {
+        ApplicationInfo info = ManifestUtils.getApplicationInfo();
+        if (info != null && info.metaData != null && info.metaData.getBoolean(ENABLE_LOCAL_STORAGE, false)) {
+            Logger.verbose("UAWebView - Application contains metadata to enable local storage");
+            return true;
+        }
+
+        return false;
     }
 
     /**
