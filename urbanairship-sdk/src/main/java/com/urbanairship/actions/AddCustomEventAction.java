@@ -63,7 +63,7 @@ public class AddCustomEventAction extends Action {
         String interactionId = customEventMap.opt(CustomEvent.INTERACTION_ID).getString();
         JsonMap properties = customEventMap.opt(CustomEvent.PROPERTIES).getMap();
 
-        CustomEvent.Builder eventBuilder = new CustomEvent.Builder(eventName)
+        CustomEvent.Builder eventBuilder = CustomEvent.newBuilder(eventName)
                 .setTransactionId(transactionId)
                 .setInteraction(interactionType, interactionId)
                 .setAttribution((PushMessage) arguments.getMetadata().getParcelable(ActionArguments.PUSH_MESSAGE_METADATA));
@@ -110,7 +110,7 @@ public class AddCustomEventAction extends Action {
             }
         }
 
-        CustomEvent event = eventBuilder.create();
+        CustomEvent event = eventBuilder.build();
         event.track();
         if (event.isValid()) {
             return ActionResult.newEmptyResult();

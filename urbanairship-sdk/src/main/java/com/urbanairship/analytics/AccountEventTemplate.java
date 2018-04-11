@@ -139,7 +139,7 @@ public class AccountEventTemplate {
      * @return The custom account event.
      */
     public CustomEvent createEvent() {
-        CustomEvent.Builder builder = new CustomEvent.Builder(REGISTERED_ACCOUNT_EVENT);
+        CustomEvent.Builder builder = CustomEvent.newBuilder(REGISTERED_ACCOUNT_EVENT);
 
         if (this.value != null) {
             builder.setEventValue(this.value);
@@ -158,6 +158,6 @@ public class AccountEventTemplate {
 
         builder.setTemplateType(ACCOUNT_EVENT_TEMPLATE);
 
-        return builder.create();
+        return builder.build();
     }
 }

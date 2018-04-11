@@ -135,6 +135,15 @@ public class CustomEvent extends Event implements JsonSerializable {
     }
 
     /**
+     * Creates a new CustomEvent builder.
+     * @param name The event name
+     * @return The CustomEvent builder.
+     */
+    public static CustomEvent.Builder newBuilder(String name) {
+        return new CustomEvent.Builder(name);
+    }
+
+    /**
      * Gets the event name.
      *
      * @return The event name.
@@ -607,12 +616,21 @@ public class CustomEvent extends Event implements JsonSerializable {
         }
 
         /**
+         * Builds the custom event.
+         *
+         * @return The built custom event.
+         */
+        public CustomEvent build() { return new CustomEvent(this); }
+
+        /**
          * Creates the custom event.
          *
          * @return The created custom event.
+         * @deprecated Use `build` instead.
          */
+        @Deprecated
         public CustomEvent create() {
-            return new CustomEvent(this);
+            return build();
         }
     }
 }

@@ -318,7 +318,7 @@ public class MediaEventTemplate {
      * @return The custom media event.
      */
     public CustomEvent createEvent() {
-        CustomEvent.Builder builder = new CustomEvent.Builder(this.eventName);
+        CustomEvent.Builder builder = CustomEvent.newBuilder(this.eventName);
 
         if (this.value != null) {
             builder.setEventValue(this.value);
@@ -365,6 +365,6 @@ public class MediaEventTemplate {
 
         builder.setTemplateType(MEDIA_EVENT_TEMPLATE);
 
-        return builder.create();
+        return builder.build();
     }
 }
