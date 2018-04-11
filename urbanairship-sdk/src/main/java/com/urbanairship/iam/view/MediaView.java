@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -26,6 +27,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.messagecenter.ImageLoader;
+import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
 
@@ -179,11 +181,25 @@ public class MediaView extends FrameLayout {
 
         frameLayout.addView(progressBar, progressBarLayoutParams);
 
+        WebSettings settings = webView.getSettings();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            webView.getSettings().setMediaPlaybackRequiresUserGesture(true);
+            settings.setMediaPlaybackRequiresUserGesture(true);
         }
 
-        webView.getSettings().setJavaScriptEnabled(true);
+        settings.setJavaScriptEnabled(true);
+
+        if (ManifestUtils.shouldEnableLocalStorage()) {
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+
+            if (Build.VERSION.SDK_INT < 19) {
+                String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
+                String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
+                settings.setDatabasePath(path);
+            }
+        }
+
         webView.setWebChromeClient(chromeClient);
         webView.setContentDescription(mediaInfo.getDescription());
         webView.setVisibility(View.INVISIBLE);

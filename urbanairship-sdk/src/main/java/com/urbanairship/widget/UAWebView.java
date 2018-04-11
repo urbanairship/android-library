@@ -5,6 +5,7 @@ package com.urbanairship.widget;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
@@ -21,6 +22,7 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.richpush.RichPushUser;
+import com.urbanairship.util.ManifestUtils;
 
 import java.io.File;
 import java.util.HashMap;
@@ -125,6 +127,17 @@ public class UAWebView extends WebView {
         settings.setAllowFileAccess(true);
         settings.setJavaScriptEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+        if (ManifestUtils.shouldEnableLocalStorage()) {
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+
+            if (Build.VERSION.SDK_INT < 19) {
+                String dir = ManifestUtils.LOCAL_STORAGE_DATABASE_DIRECTORY;
+                String path = UAirship.getApplicationContext().getDir(dir, Context.MODE_PRIVATE).getPath();
+                settings.setDatabasePath(path);
+            }
+        }
 
         initializeView();
         populateCustomJavascriptInterfaces();
