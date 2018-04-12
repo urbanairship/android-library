@@ -13,6 +13,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.automation.Trigger;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.json.JsonException;
@@ -58,6 +59,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
     private final Analytics analytics;
     private MessageBuilderExtender messageBuilderExtender;
     private ScheduleInfoBuilderExtender scheduleBuilderExtender;
+    private boolean displayAsapEnabled = true;
 
     /**
      * Interface to extend the {@link InAppMessage.Builder} that generates the message from a
@@ -135,6 +137,24 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      */
     public void setScheduleBuilderExtender(ScheduleInfoBuilderExtender scheduleBuilderExtender) {
         this.scheduleBuilderExtender = scheduleBuilderExtender;
+    }
+
+    /**
+     * Sets whether legacy messages will display immediately upon arrival, instead of waiting
+     * until the following foreground. Defaults to <code>true</code>.
+     * @param enabled Whether immediate display is enabled.
+     */
+    public void setDisplayAsapEnabled(boolean enabled) {
+        displayAsapEnabled = enabled;
+    }
+
+    /**
+     * Determines whether legacy messages will display immediately upon arrival, instead of waiting
+     * until the following foreground.
+     * @return <code>true</code> if immediate display is enabled, otherwise <code>false</code>.
+     */
+    public boolean getDisplayAsapEnabled() {
+        return displayAsapEnabled;
     }
 
     /**
@@ -223,8 +243,18 @@ public class LegacyInAppMessageManager extends AirshipComponent {
      */
     private InAppMessageScheduleInfo createScheduleInfo(Context context, LegacyInAppMessage legacyInAppMessage) {
         try {
+            Trigger trigger;
+
+            // In terms of the scheduled message model, displayAsap means using an active session trigger.
+            // Otherwise the closest analog to the v1 behavior is the foreground trigger.
+            if (displayAsapEnabled) {
+                trigger = Triggers.newActiveSessionTriggerBuilder().build();
+            } else {
+                trigger = Triggers.newForegroundTriggerBuilder().build();
+            }
+
             InAppMessageScheduleInfo.Builder builder = InAppMessageScheduleInfo.newBuilder()
-                                                                               .addTrigger(Triggers.newActiveSessionTriggerBuilder().build())
+                                                                               .addTrigger(trigger)
                                                                                .setEnd(legacyInAppMessage.getExpiry());
 
 
