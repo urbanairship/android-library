@@ -62,7 +62,7 @@ public class EventManagerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventAfterNextSendTime() {
-        CustomEvent customEvent = new CustomEvent.Builder("event name").create();
+        CustomEvent customEvent = CustomEvent.newBuilder("event name").build();
         eventManager.addEvent(customEvent, "session");
 
         // Verify we add an event.
@@ -88,7 +88,7 @@ public class EventManagerTest extends BaseTestCase {
         // Set the minBatchInterval to 20 seconds
         dataStore.put(MIN_BATCH_INTERVAL_KEY, 20000);
 
-        CustomEvent customEvent = new CustomEvent.Builder("event name").create();
+        CustomEvent customEvent = CustomEvent.newBuilder("event name").build();
         eventManager.addEvent(customEvent, "session");
 
         // Check it schedules an upload with a time greater than 10 seconds

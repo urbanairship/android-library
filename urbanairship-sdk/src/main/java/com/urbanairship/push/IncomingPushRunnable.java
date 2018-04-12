@@ -43,6 +43,9 @@ class IncomingPushRunnable implements Runnable {
 
     private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
 
+    private static final long LONG_AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
+
+
     private final Context context;
     private final PushMessage message;
     private final String providerClass;
@@ -66,7 +69,8 @@ class IncomingPushRunnable implements Runnable {
 
     @Override
     public void run() {
-        UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
+        long airshipWaitTime = isLongRunning ? LONG_AIRSHIP_WAIT_TIME_MS : AIRSHIP_WAIT_TIME_MS;
+        UAirship airship = UAirship.waitForTakeOff(airshipWaitTime);
 
         if (airship == null) {
             Logger.error("Unable to process push, Airship is not ready. Make sure takeOff is called by either using autopilot or by calling takeOff in the application's onCreate method.");

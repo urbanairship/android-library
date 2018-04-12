@@ -3,6 +3,16 @@ Android ChangeLog
 
 Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
 
+Version 9.0.6 - April 5, 2018
+=============================
+
+Patch release to fix an issue with delaying takeOff. Applications that make use of the isReady method
+may want to update.
+
+Changes
+-------
+- Remove wait for takeOff in the PushService
+- Allow autopilot creation to be retried if the app info is unavailable
 
 Version 9.0.5 - March 28, 2018
 ==============================

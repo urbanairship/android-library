@@ -25,6 +25,11 @@
             android:name="com.urbanairship.job.PREFER_ANDROID_JOB_SCHEDULER"
             android:value="true" />
 
+        <!-- Optional: Enable local storage on UAWebView -->
+        <meta-data
+            android:name="com.urbanairship.webview.ENABLE_LOCAL_STORAGE"
+            android:value="true" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

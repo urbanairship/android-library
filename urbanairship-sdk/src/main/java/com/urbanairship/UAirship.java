@@ -431,7 +431,9 @@ public class UAirship {
 
     /**
      * Cleans up and closes any connections or other resources.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void land() {
         synchronized (airshipLock) {
             if (!isTakingOff && !isFlying) {
