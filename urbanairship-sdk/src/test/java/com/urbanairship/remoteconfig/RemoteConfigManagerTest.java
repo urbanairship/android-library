@@ -107,7 +107,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
                                  .build();
 
         JsonMap data = JsonMap.newBuilder()
-                              .put("disable", JsonValue.wrapOpt(Collections.singletonList(disable)))
+                              .put("disable_features", JsonValue.wrapOpt(Collections.singletonList(disable)))
                               .build();
 
         return new RemoteDataPayload(type, System.currentTimeMillis(), data);

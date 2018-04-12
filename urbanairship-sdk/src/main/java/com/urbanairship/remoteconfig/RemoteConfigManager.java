@@ -35,7 +35,7 @@ public class RemoteConfigManager extends AirshipComponent {
     private static final String CONFIG_TYPE_AMAZON = "app_config:amazon";
 
     // Disable config key
-    private static final String DISABLE_INFO_KEY = "disable";
+    private static final String DISABLE_INFO_KEY = "disable_features";
 
     private final RemoteData remoteData;
     private Subscription subscription;
