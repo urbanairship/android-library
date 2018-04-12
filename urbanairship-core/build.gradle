@@ -1,0 +1,55 @@
+description = "Urban Airship Android Core SDK"
+
+apply from: "../common-build.gradle"
+
+configurations {
+    doclava
+}
+
+dependencies {
+    // Required
+    api "com.android.support:support-v4:${airshipProperties.supportLibVersion}"
+    api "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
+
+    // Optional
+    compileOnly "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"
+    compileOnly "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.7.22'
+    testImplementation 'org.robolectric:robolectric:3.5.1'
+    testImplementation 'org.robolectric:shadows-supportv4:3.5.1'
+    testImplementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
+    testImplementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"
+    doclava("com.google.doclava:doclava:1.0.6")
+}
+
+android.libraryVariants.all { variant ->
+    // Add a javadoc task for each variant
+    task("javadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+        title = null
+        source = android.sourceSets.main.java.sourceFiles
+
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+
+        doFirst {
+            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+            classpath += variant.javaCompiler.classpath
+
+            options {
+                docletpath = configurations.doclava.files as List
+                doclet "com.google.doclava.Doclava"
+                bootClasspath new File(System.getenv('JAVA_HOME') + "/jre/lib/rt.jar")
+                addStringOption "hdf project.name", "Urban Airship Android Library"
+                addStringOption "hdf project.version", project.version
+                addStringOption "apiversion", "v2"
+                addStringOption "federate android", "http://developer.android.com/reference"
+                addStringOption "federationxml android", "docs/android-22.xml"
+                addStringOption "templatedir", "docs/template"
+            }
+        }
+    }
+}
+
+task javadoc(dependsOn: 'javadocRelease')

@@ -124,7 +124,9 @@ public class PlayServicesUtils {
      * Checks if Google Play services dependency is available for GCM.
      *
      * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @deprecated Marked to be removed in SDK 10.0
      */
+    @Deprecated
     public static boolean isGoogleCloudMessagingDependencyAvailable() {
         if (isGoogleCloudMessagingDependencyAvailable == null) {
             if (!isGooglePlayServicesDependencyAvailable()) {

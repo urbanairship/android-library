@@ -56,7 +56,6 @@ public abstract class PushProviderBridge {
 
         // If older than Android O or a high priority message try to start the push service
         if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
-
             Intent intent = new Intent(context, PushService.class)
                     .setAction(PushService.ACTION_PROCESS_PUSH)
                     .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())

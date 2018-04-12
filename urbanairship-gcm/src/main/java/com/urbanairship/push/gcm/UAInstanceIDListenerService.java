@@ -7,7 +7,10 @@ import com.urbanairship.Logger;
 
 /**
  * Listens for GCM Security token refresh.
+ *
+ * @deprecated Marked to be removed in SDK 10.
  */
+@Deprecated
 public class UAInstanceIDListenerService extends InstanceIDListenerService {
 
     @Override

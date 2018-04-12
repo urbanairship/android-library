@@ -1,0 +1,8 @@
+description = "Urban Airship Android SDK GCM plugin"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+    implementation "com.google.android.gms:play-services-gcm:${airshipProperties.playServicesVersion}"
+}

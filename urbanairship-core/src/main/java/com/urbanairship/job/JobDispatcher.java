@@ -15,11 +15,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.google.PlayServicesUtils;
 
 /**
  * Dispatches jobs. When a job is dispatched with a delay or specifies that it requires network activity,
@@ -31,16 +29,6 @@ import com.urbanairship.google.PlayServicesUtils;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobDispatcher {
-
-    /**
-     * Manifest metadata to prefer the standard Android Job scheduler over GcmNetworkManager.
-     */
-    private static final String PREFER_ANDROID_JOB_SCHEDULER = "com.urbanairship.job.PREFER_ANDROID_JOB_SCHEDULER";
-
-    /**
-     * Manifest metadata to disable the GCM Scheduler.
-     */
-    private static final String DISABLE_GCM_SCHEDULER = "com.urbanairship.job.DISABLE_GCM_SCHEDULER";
 
     /**
      * Manifest metadata to offset the JOB IDs.
@@ -269,34 +257,6 @@ public class JobDispatcher {
         @NonNull
         @Override
         public Scheduler createScheduler(Context context) {
-            boolean preferAndroidScheduler = false;
-            boolean disableGcmScheduler = false;
-
-            try {
-                ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-
-                if (ai != null && ai.metaData != null) {
-                    preferAndroidScheduler = ai.metaData.getBoolean(PREFER_ANDROID_JOB_SCHEDULER);
-                    disableGcmScheduler = ai.metaData.getBoolean(DISABLE_GCM_SCHEDULER);
-                }
-            } catch (PackageManager.NameNotFoundException e) {
-                Logger.error("Failed get application info.", e);
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && preferAndroidScheduler) {
-                return new AndroidJobScheduler();
-            }
-
-            if (!disableGcmScheduler) {
-                try {
-                    if (PlayServicesUtils.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
-                        return new GcmScheduler();
-                    }
-                } catch (IllegalStateException e) {
-                    Logger.error("Unable to check google play services version");
-                }
-            }
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                 return new AndroidJobScheduler();
             }

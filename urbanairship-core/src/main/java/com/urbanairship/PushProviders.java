@@ -7,8 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.urbanairship.push.PushProvider;
-import com.urbanairship.push.adm.AdmPushProvider;
-import com.urbanairship.push.gcm.GcmPushProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +16,10 @@ import java.util.List;
  * Loads push providers.
  */
 class PushProviders {
+
+    private static final String GCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.gcm.GcmPushProvider";
+    private static final String FCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.fcm.FcmPushProvider";
+    private static final String ADM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.adm.AdmPushProvider";
 
     private List<PushProvider> supportedProviders = new ArrayList<>();
     private List<PushProvider> availableProviders = new ArrayList<>();
@@ -41,7 +43,16 @@ class PushProviders {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init(Context context, AirshipConfigOptions configOptions) {
-        for (PushProvider provider : Arrays.asList(new GcmPushProvider(), new AdmPushProvider())) {
+        boolean pushProviderFound = false;
+
+        for (String className : Arrays.asList(FCM_PUSH_PROVIDER_CLASS, GCM_PUSH_PROVIDER_CLASS, ADM_PUSH_PROVIDER_CLASS)) {
+            PushProvider provider = createProvider(className);
+            if (provider == null) {
+                continue;
+            }
+
+            pushProviderFound = true;
+
             if (!provider.isSupported(context, configOptions)) {
                 continue;
             }
@@ -51,6 +62,33 @@ class PushProviders {
                 availableProviders.add(provider);
             }
         }
+
+        if (!pushProviderFound) {
+            Logger.error("No push providers found!");
+        }
+    }
+
+
+    /**
+     * Creates a provider from a class name.
+     *
+     * @param className The class name.
+     * @return The push provider or null if the provider does not exist.
+     */
+    @Nullable
+    private PushProvider createProvider(@NonNull String className) {
+        try {
+            Class providerClass = Class.forName(className);
+            return (PushProvider) providerClass.newInstance();
+        } catch (InstantiationException e) {
+            Logger.error("Unable to create provider " + className, e);
+        } catch (IllegalAccessException e) {
+            Logger.error("Unable to create provider " + className, e);
+        } catch (ClassNotFoundException e) {
+            // Normal
+        }
+
+        return null;
     }
 
     /**

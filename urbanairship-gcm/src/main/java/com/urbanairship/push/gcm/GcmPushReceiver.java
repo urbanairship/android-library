@@ -19,7 +19,9 @@ import com.urbanairship.push.PushProviderBridge;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.
+ * @deprecated Marked to be removed in SDK 10.
  */
+@Deprecated
 public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
     /**

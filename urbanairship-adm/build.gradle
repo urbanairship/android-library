@@ -1,0 +1,8 @@
+description = "Urban Airship Android SDK ADM plugin"
+
+apply from: "../common-build.gradle"
+
+dependencies {
+    api project(':urbanairship-core')
+    compileOnly files('libs/amazon-device-messaging-1.0.1.jar')
+}

@@ -37,7 +37,9 @@ dependencies {
     implementation "com.android.support:cardview-v7:${airshipProperties.supportLibVersion}"
 
     // Use the Urban Airship SDK project.
-    implementation project(':urbanairship-sdk')
+    implementation project(':urbanairship-core')
+    implementation project(':urbanairship-gcm')
+
 
     // Normally apps will use the AAR artifact from jcenter:
     // compile 'com.urbanairship.android:urbanairship-sdk:9.0.+'

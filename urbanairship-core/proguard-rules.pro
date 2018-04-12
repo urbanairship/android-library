@@ -3,12 +3,15 @@
   public static final android.os.Parcelable$Creator CREATOR;
 }
 
-## Required even for GCM only apps
--dontwarn com.amazon.device.messaging.**
-
 ## Autopilot
 -keep class com.urbanairship.Autopilot
 -keep public class * extends com.urbanairship.Autopilot
+
+## Push Providers
+-keepclassmembernames class * extends com.urbanairship.push.PushProvider {
+    public <methods>;
+    public <fields>;
+}
 
 ## Actions
 -keep public class * extends com.urbanairship.actions.Action

@@ -21,8 +21,3 @@ allprojects {
         google()
     }
 }
-
-
-task continuousIntegration
-continuousIntegration.dependsOn(':sample:build', 'urbanairship-sdk:assembleRelease',
-        'urbanairship-sdk:testReleaseUnitTest', 'urbanairship-sdk:javadoc')
