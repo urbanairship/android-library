@@ -17,7 +17,8 @@ import com.urbanairship.util.IvyVersionMatcher;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class VersionMatcher extends ValueMatcher {
 
-    public static final String VERSION_KEY = "version";
+    public static final String VERSION_KEY = "version_matches";
+    public static final String ALTERNATE_VERSION_KEY = "version";
 
     private IvyVersionMatcher versionMatcher;
 

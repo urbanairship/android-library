@@ -65,7 +65,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     }
 
     /**
-     * Creates a new value matcher for when a field should be absent.
+     * Creates a new value matcher for a semantic version string
      *
      * @return A new ValueMatcher instance.
      * @throws IllegalArgumentException If the constraint is not a valid ivy version constraint.
@@ -129,6 +129,15 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
                 return newVersionMatcher(constraint);
             } catch (NumberFormatException e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.VERSION_KEY), e);
+            }
+        }
+
+        if (map.containsKey(VersionMatcher.ALTERNATE_VERSION_KEY)) {
+            try {
+                String constraint = map.opt(VersionMatcher.ALTERNATE_VERSION_KEY).getString();
+                return newVersionMatcher(constraint);
+            } catch (NumberFormatException e) {
+                throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.ALTERNATE_VERSION_KEY), e);
             }
         }
 

@@ -156,6 +156,14 @@ public class ValueMatcherTest extends BaseTestCase {
         assertEquals(matcher, ValueMatcher.parse(json));
 
         json = JsonMap.newBuilder()
+                      .put("version_matches", "1.2.4")
+                      .build()
+                      .toJsonValue();
+
+        matcher = ValueMatcher.newVersionMatcher("1.2.4");
+        assertEquals(matcher, ValueMatcher.parse(json));
+
+        json = JsonMap.newBuilder()
                       .put("version", "1.2.4")
                       .build()
                       .toJsonValue();

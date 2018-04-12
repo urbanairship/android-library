@@ -29,7 +29,7 @@ import java.util.List;
  * <numeric_matcher>   := "at_least": number | "at_most": number | "at_least": number, "at_most": number
  * <equals_matcher>    := "equals": number | string | boolean | object | array
  * <presence_matcher>  := "is_present": boolean
- * <version_matcher>   := "version": version matcher
+ * <version_matcher>   := "version_matches": version matcher
  */
 public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializable> {
 
