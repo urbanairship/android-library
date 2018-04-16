@@ -2,4 +2,5 @@ include ':urbanairship-sdk',
         ':urbanairship-core',
         ':urbanairship-adm',
         ':urbanairship-gcm',
+        ':urbanairship-fcm',
         ":sample"

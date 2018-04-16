@@ -29,20 +29,18 @@ android {
 }
 
 dependencies {
-
     implementation "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
     implementation "com.android.support:design:${airshipProperties.supportLibVersion}"
 
     // Recommended for in-app messages
     implementation "com.android.support:cardview-v7:${airshipProperties.supportLibVersion}"
 
-    // Use the Urban Airship SDK project.
-    implementation project(':urbanairship-core')
-    implementation project(':urbanairship-gcm')
+    // Urban Airship - ADM
+    implementation project(':urbanairship-adm')
 
-
-    // Normally apps will use the AAR artifact from jcenter:
-    // compile 'com.urbanairship.android:urbanairship-sdk:9.0.+'
+    // Urban Airship - FCM
+    implementation project(':urbanairship-fcm')
+    implementation "com.google.firebase:firebase-messaging:${airshipProperties.playServicesVersion}"
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"

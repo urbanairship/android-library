@@ -43,7 +43,7 @@ class PushProviders {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init(Context context, AirshipConfigOptions configOptions) {
-        boolean pushProviderFound = false;
+        List<String> loadedProviders = new ArrayList<>();
 
         for (String className : Arrays.asList(FCM_PUSH_PROVIDER_CLASS, GCM_PUSH_PROVIDER_CLASS, ADM_PUSH_PROVIDER_CLASS)) {
             PushProvider provider = createProvider(className);
@@ -51,7 +51,7 @@ class PushProviders {
                 continue;
             }
 
-            pushProviderFound = true;
+            loadedProviders.add(className);
 
             if (!provider.isSupported(context, configOptions)) {
                 continue;
@@ -63,11 +63,14 @@ class PushProviders {
             }
         }
 
-        if (!pushProviderFound) {
-            Logger.error("No push providers found!");
+        if (loadedProviders.isEmpty()) {
+            Logger.warn("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
+        }
+
+        if (loadedProviders.contains(FCM_PUSH_PROVIDER_CLASS) && loadedProviders.contains(GCM_PUSH_PROVIDER_CLASS)) {
+            Logger.error("Both urbanairship-gcm and urbanairship-fcm packages detected. Having both installed is not supported.");
         }
     }
-
 
     /**
      * Creates a provider from a class name.
@@ -85,7 +88,7 @@ class PushProviders {
         } catch (IllegalAccessException e) {
             Logger.error("Unable to create provider " + className, e);
         } catch (ClassNotFoundException e) {
-            // Normal
+            Logger.verbose("Push provider: " + className + " unavailable.");
         }
 
         return null;

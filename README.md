@@ -28,18 +28,28 @@ Include Urban Airship into the build.gradle file:
    dependencies {
      ...
 
-     // Urban Airship SDK
-     compile 'com.urbanairship.android:urbanairship-core:9.1.0'
-
-     // GCM
-     compile 'com.urbanairship.android:urbanairship-gcm:9.1.0'
-     compile 'com.google.android.gms:play-services-gcm:11.8.0'
+     // Urban Airship SDK - FCM
+     implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
+     implementation "com.google.firebase:firebase-messaging:${airshipProperties.playServicesVersion}"
 
      // Recommended for location services
-     compile 'com.google.android.gms:play-services-location:11.8.0'
+     implementation 'com.google.android.gms:play-services-location:11.8.0'
    }
 ```
 
+Add a google-services.json file to your project. This can be done in one of two ways:
+
+* Use the [Firebase Assistant](https://developer.android.com/studio/write/firebase.html) tool in Android Studio
+
+or:
+ 
+* [Download the google-services.json file](https://support.google.com/firebase/answer/7015592)) from the [Firebase Console](https://console.firebase.google.com) and then copy it into your project's module folder, typically `app/`
+
+Add the google-services plugin to your app-level build.gradle:
+
+```
+apply plugin: 'com.google.gms.google-services'
+```
 
 Create a new `airshipconfig.properties` file with your application’s settings:
 
