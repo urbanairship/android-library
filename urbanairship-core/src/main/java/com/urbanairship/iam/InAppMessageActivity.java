@@ -5,7 +5,9 @@ package com.urbanairship.iam;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.messagecenter.ThemedActivity;
 
 /**
@@ -42,7 +44,10 @@ public abstract class InAppMessageActivity extends ThemedActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Autopilot.automaticTakeOff(this.getApplicationContext());
+
         super.onCreate(savedInstanceState);
+
 
         if (getIntent() == null || getIntent().getExtras() == null) {
             finish();

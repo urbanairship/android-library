@@ -6,8 +6,11 @@ import android.app.Activity;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
+import com.urbanairship.Autopilot;
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 /**
@@ -70,7 +73,13 @@ public class DisplayHandler implements Parcelable {
      * method, the in-app message should immediately dismiss its view.
      */
     public void continueOnNextActivity() {
-        UAirship.shared().getInAppMessagingManager().continueOnNextActivity(scheduleId);
+        InAppMessageManager manager = getInAppMessagingManager();
+        if (manager == null) {
+            Logger.error("Takeoff not called. Unable to continue message on next activity: " + scheduleId);
+            return;
+        }
+
+        manager.continueOnNextActivity(scheduleId);
     }
 
     /**
@@ -81,14 +90,26 @@ public class DisplayHandler implements Parcelable {
      * @param resolutionInfo Info on why the message has finished.
      */
     public void finished(@NonNull ResolutionInfo resolutionInfo) {
-        UAirship.shared().getInAppMessagingManager().messageFinished(scheduleId, resolutionInfo);
+        InAppMessageManager manager = getInAppMessagingManager();
+        if (manager == null) {
+            Logger.error("Takeoff not called. Unable to finish display for schedule: " + scheduleId);
+            return;
+        }
+
+        manager.messageFinished(scheduleId, resolutionInfo);
     }
 
     /**
      * Prevents the message from displaying again.
      */
     public void cancelFutureDisplays() {
-        UAirship.shared().getInAppMessagingManager().cancelSchedule(scheduleId);
+        InAppMessageManager manager = getInAppMessagingManager();
+        if (manager == null) {
+            Logger.error("Takeoff not called. Unable to cancel displays for schedule: " + scheduleId);
+            return;
+        }
+
+        manager.cancelSchedule(scheduleId);
     }
 
     /**
@@ -102,7 +123,23 @@ public class DisplayHandler implements Parcelable {
      * the lock. Otherwise {@code false}.
      */
     public boolean requestDisplayLock(Activity activity) {
-        return UAirship.shared().getInAppMessagingManager().requestDisplayLock(activity, scheduleId);
+        Autopilot.automaticTakeOff(activity.getApplication());
+
+        InAppMessageManager manager = getInAppMessagingManager();
+        if (manager == null) {
+            Logger.error("Takeoff not called. Unable to request display lock.");
+            return false;
+        }
+
+        return manager.requestDisplayLock(activity, scheduleId);
+    }
+
+    @Nullable
+    private InAppMessageManager getInAppMessagingManager() {
+        if (UAirship.isTakingOff() || UAirship.isFlying()) {
+            return UAirship.shared().getInAppMessagingManager();
+        }
+        return null;
     }
 }
 

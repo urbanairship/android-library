@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.urbanairship.ActivityMonitor;
+import com.urbanairship.Autopilot;
 import com.urbanairship.R;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayHandler;
@@ -86,6 +87,8 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
         this.setRetainInstance(true);
+
+        Autopilot.automaticTakeOff(this.getActivity().getApplication());
 
         this.displayHandler = getArguments().getParcelable(DISPLAY_HANDLER);
         this.inAppMessage = getArguments().getParcelable(IN_APP_MESSAGE);
