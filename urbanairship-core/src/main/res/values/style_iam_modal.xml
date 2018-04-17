@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+
     <!-- Parent Style -->
     <style name="UrbanAirship.InAppModal"/>
 
@@ -12,6 +13,10 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
         <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+    </style>
+
+    <style name="UrbanAirship.InAppModal.Activity.Fullscreen">
+        <item name="android:windowIsTranslucent">false</item>
     </style>
 
     <!-- Dismiss button, laid out on top of the layout above -->
@@ -27,6 +32,11 @@
         <item name="android:layout_gravity">top|end</item>
     </style>
 
+    <style name="UrbanAirship.InAppModal.DismissButton.Fullscreen">
+        <!-- Match elevation of the rest of the layout -->
+        <item name="android:elevation" tools:targetApi="lollipop">0dp</item>
+    </style>
+
     <!-- Main Layout, contains the content, buttons, and footer-->
     <style name="UrbanAirship.InAppModal.Layout">
         <item name="android:elevation" tools:ignore="NewApi">24dp</item>
@@ -36,6 +46,13 @@
         <item name="android:layout_marginTop">48dp</item>
         <item name="android:layout_marginBottom">48dp</item>
         <item name="android:layout_centerInParent">true</item>
+    </style>
+
+    <!-- Main Layout, contains the content, buttons, and footer-->
+    <style name="UrbanAirship.InAppModal.Layout.Fullscreen">
+        <item name="android:elevation" tools:targetApi="lollipop">0dp</item>
+        <item name="urbanAirshipMaxWidth">0dp</item>
+        <item name="android:layout_margin">0dp</item>
     </style>
 
     <!-- Contains the content -->

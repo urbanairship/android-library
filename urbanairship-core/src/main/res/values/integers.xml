@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- In-app message banner enter and exit animation time -->
-    <integer name="ua_iam_animation_duration">300</integer>
-</resources>

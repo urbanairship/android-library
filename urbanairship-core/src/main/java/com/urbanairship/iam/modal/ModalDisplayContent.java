@@ -51,6 +51,11 @@ public class ModalDisplayContent implements DisplayContent {
      */
     public static final String TEMPLATE_HEADER_BODY_MEDIA = "header_body_media";
 
+    /**
+     * JSON key for flag to allow the modal dialog to display fullscreen.
+     */
+    public static String ALLOW_FULLSCREEN_DISPLAY_KEY = "allow_fullscreen_display";
+
     private final TextInfo heading;
     private final TextInfo body;
     private final MediaInfo media;
@@ -63,6 +68,7 @@ public class ModalDisplayContent implements DisplayContent {
     private final int dismissButtonColor;
     private final ButtonInfo footer;
     private final float borderRadius;
+    private final boolean isFullscreenDisplayAllowed;
 
     /**
      * Maximum number of button supported by a modal.
@@ -85,6 +91,7 @@ public class ModalDisplayContent implements DisplayContent {
         this.dismissButtonColor = builder.dismissButtonColor;
         this.footer = builder.footer;
         this.borderRadius = builder.borderRadius;
+        this.isFullscreenDisplayAllowed = builder.isFullscreenDisplayAllowed;
     }
 
     /**
@@ -193,6 +200,15 @@ public class ModalDisplayContent implements DisplayContent {
             builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
         }
 
+        // Allow Fullscreen display
+        if (content.containsKey(ALLOW_FULLSCREEN_DISPLAY_KEY)) {
+            if (!content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY).isBoolean()) {
+                throw new JsonException("Allow fullscreen display must be a boolean " + content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY));
+            }
+
+            builder.setAllowFullscreenDisplay(content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY).getBoolean(false));
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -213,10 +229,20 @@ public class ModalDisplayContent implements DisplayContent {
                       .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
                       .put(FOOTER_KEY, footer)
                       .put(BORDER_RADIUS_KEY, borderRadius)
+                      .put(ALLOW_FULLSCREEN_DISPLAY_KEY, isFullscreenDisplayAllowed)
                       .build()
                       .toJsonValue();
     }
 
+    /**
+     * Returns {@code true} if the modal dialog is allowed to be displayed as fullscreen, otherwise
+     * {@code false}. See {@link Builder#setAllowFullscreenDisplay(boolean)}} for more details.
+     *
+     * @return {@code true} to allow the modal dialog to display as full screen, otherwise {@code false}.
+     */
+    public boolean isFullscreenDisplayAllowed() {
+        return isFullscreenDisplayAllowed;
+    }
 
     /**
      * Returns the optional heading {@link TextInfo}.
@@ -346,6 +372,9 @@ public class ModalDisplayContent implements DisplayContent {
         if (Float.compare(that.borderRadius, borderRadius) != 0) {
             return false;
         }
+        if (isFullscreenDisplayAllowed != that.isFullscreenDisplayAllowed) {
+            return false;
+        }
         if (heading != null ? !heading.equals(that.heading) : that.heading != null) {
             return false;
         }
@@ -358,10 +387,10 @@ public class ModalDisplayContent implements DisplayContent {
         if (buttons != null ? !buttons.equals(that.buttons) : that.buttons != null) {
             return false;
         }
-        if (buttonLayout != null ? !buttonLayout.equals(that.buttonLayout) : that.buttonLayout != null) {
+        if (!buttonLayout.equals(that.buttonLayout)) {
             return false;
         }
-        if (template != null ? !template.equals(that.template) : that.template != null) {
+        if (!template.equals(that.template)) {
             return false;
         }
         return footer != null ? footer.equals(that.footer) : that.footer == null;
@@ -373,12 +402,13 @@ public class ModalDisplayContent implements DisplayContent {
         result = 31 * result + (body != null ? body.hashCode() : 0);
         result = 31 * result + (media != null ? media.hashCode() : 0);
         result = 31 * result + (buttons != null ? buttons.hashCode() : 0);
-        result = 31 * result + (buttonLayout != null ? buttonLayout.hashCode() : 0);
-        result = 31 * result + (template != null ? template.hashCode() : 0);
+        result = 31 * result + buttonLayout.hashCode();
+        result = 31 * result + template.hashCode();
         result = 31 * result + backgroundColor;
         result = 31 * result + dismissButtonColor;
         result = 31 * result + (footer != null ? footer.hashCode() : 0);
         result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
+        result = 31 * result + (isFullscreenDisplayAllowed ? 1 : 0);
         return result;
     }
 
@@ -410,6 +440,7 @@ public class ModalDisplayContent implements DisplayContent {
         private int dismissButtonColor = Color.BLACK;
         private ButtonInfo footer;
         private float borderRadius;
+        private boolean isFullscreenDisplayAllowed;
 
         /**
          * Default constructor.
@@ -535,6 +566,7 @@ public class ModalDisplayContent implements DisplayContent {
          * @param footer The footer button info.
          * @return The builder instance.
          */
+        @NonNull
         public Builder setFooter(ButtonInfo footer) {
             this.footer = footer;
             return this;
@@ -549,6 +581,21 @@ public class ModalDisplayContent implements DisplayContent {
         @NonNull
         public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
             this.borderRadius = borderRadius;
+            return this;
+        }
+
+        /**
+         * Enables the modal dialog to display as fullscreen. The modal will display as fullscreen if
+         * enabled and and the bool resource `ua_iam_modal_allow_fullscreen_display` is true.
+         * `ua_iam_modal_allow_fullscreen_display` defaults to true  when the screen width is less than 480dps.
+         *
+         * @param isFullscreenDisplayAllowed {@code true} to allow displaying the iam as fullscreen,
+         * otherwise {@code false}.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setAllowFullscreenDisplay(boolean isFullscreenDisplayAllowed) {
+            this.isFullscreenDisplayAllowed = isFullscreenDisplayAllowed;
             return this;
         }
 

@@ -44,10 +44,20 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             return;
         }
 
+
+        float borderRadius;
+        if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_modal_allow_fullscreen_display)) {
+            borderRadius = 0;
+            setTheme(R.style.UrbanAirship_InAppModal_Activity_Fullscreen);
+            setContentView(R.layout.ua_iam_modal_fullscreen);
+        } else {
+            borderRadius = displayContent.getBorderRadius();
+            setContentView(R.layout.ua_iam_modal);
+        }
+
+
         @ModalDisplayContent.Template
         String template = normalizeTemplate(displayContent);
-
-        setContentView(R.layout.ua_iam_modal);
 
         // Inflate the content before finding other views
         ViewStub content = findViewById(R.id.modal_content);
@@ -106,9 +116,10 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             footer.setVisibility(View.GONE);
         }
 
+
         final Drawable background = BackgroundDrawableBuilder.newBuilder(this)
                                                              .setBackgroundColor(displayContent.getBackgroundColor())
-                                                             .setBorderRadius(displayContent.getBorderRadius(), BorderRadius.ALL)
+                                                             .setBorderRadius(borderRadius, BorderRadius.ALL)
                                                              .build();
 
         ViewCompat.setBackground(modal, background);
@@ -116,8 +127,8 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
         // Devices older than kitkat require software rendering, but video requires hardware
         // acceleration. Instead of clipping the media, older devices use a view that does not
         // require clipping.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            modal.setClipPathBorderRadius(displayContent.getBorderRadius());
+        if (borderRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            modal.setClipPathBorderRadius(borderRadius);
         }
 
         // DismissButton
