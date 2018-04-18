@@ -15,3 +15,5 @@ build.properties
 airshipconfig.properties
 .gradle
 .idea
+
+google-services.json

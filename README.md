@@ -18,7 +18,7 @@ One of our engineers will verify receipt of the agreement before approving your 
 ## Requirements
 - minSdkVersion 16+
 - compileSdkVersion 27
-- Google Play Services 11.8.0+
+- Google Play Services 12.0.1+
 
 ## Quickstart
 
@@ -30,10 +30,10 @@ Include Urban Airship into the build.gradle file:
 
      // Urban Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
-     implementation "com.google.firebase:firebase-messaging:${airshipProperties.playServicesVersion}"
+     implementation "com.google.firebase:firebase-messaging:12.0.1"
 
      // Recommended for location services
-     implementation 'com.google.android.gms:play-services-location:11.8.0'
+     implementation 'com.google.android.gms:play-services-location:12.0.1'
    }
 ```
 
