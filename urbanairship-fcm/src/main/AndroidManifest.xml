@@ -8,14 +8,14 @@
 
         <service
             android:name="com.urbanairship.push.fcm.AirshipFirebaseMessagingService">
-            <intent-filter>
+            <intent-filter android:priority="-1" >
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
         <service
             android:name="com.urbanairship.push.fcm.AirshipFirebaseInstanceIdService">
-            <intent-filter>
+            <intent-filter android:priority="-1" >
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
