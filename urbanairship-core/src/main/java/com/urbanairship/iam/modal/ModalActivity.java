@@ -44,17 +44,22 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
             return;
         }
 
-
         float borderRadius;
         if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_modal_allow_fullscreen_display)) {
             borderRadius = 0;
             setTheme(R.style.UrbanAirship_InAppModal_Activity_Fullscreen);
             setContentView(R.layout.ua_iam_modal_fullscreen);
         } else {
-            borderRadius = displayContent.getBorderRadius();
+            // Drop the border radius on pre-kitkat devices since in order to do clipping, we need to use
+            // software rendering, but media require hardware acceleration.
+            if (displayContent.getMedia() == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                borderRadius = displayContent.getBorderRadius();
+            } else {
+                borderRadius = 0;
+            }
+
             setContentView(R.layout.ua_iam_modal);
         }
-
 
         @ModalDisplayContent.Template
         String template = normalizeTemplate(displayContent);
@@ -124,9 +129,6 @@ public class ModalActivity extends InAppMessageActivity implements InAppButtonLa
 
         ViewCompat.setBackground(modal, background);
 
-        // Devices older than kitkat require software rendering, but video requires hardware
-        // acceleration. Instead of clipping the media, older devices use a view that does not
-        // require clipping.
         if (borderRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             modal.setClipPathBorderRadius(borderRadius);
         }
