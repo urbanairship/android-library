@@ -85,7 +85,7 @@ public class GcmPushProvider implements PushProvider, AirshipVersionInfo {
         }
 
         if (configOptions.getFcmSenderId() == null) {
-            Logger.info("The GCM/FCM sender ID is not set. Unable to register for Android push notifications.");
+            Logger.info("The GCM/FCM sender ID is not set. Unable to register for GCM.");
             return false;
         }
 

@@ -34,6 +34,11 @@ public class AirshipConfigOptions {
      */
     public static final String GCM_TRANSPORT = "GCM";
 
+    /**
+     * The FCM transport type for Push.
+     */
+    public static final String FCM_TRANSPORT = "FCM";
+
     // Logs a warning message if the backgroundReportingIntervalSeconds is below this minimum value
     private final static int MIN_BG_REPORTING_INTERVAL_MS = 60 * 1000; // 1 minute
 
@@ -110,25 +115,34 @@ public class AirshipConfigOptions {
      * The FCM sender ID for push registration. Used as a fallback
      * if the production or development FCM sender ID is not set.
      * This is your Google API project number.
+     * <p>
+     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * main Firebase application's sender ID.
      */
     public final String fcmSenderId;
 
     /**
      * The FCM sender ID used for push registration in development mode.
      * This is your Google API project number.
+     * <p>
+     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * main Firebase application's sender ID.
      */
     public final String developmentFcmSenderId;
 
     /**
      * The FCM sender ID used for push registration in production mode.
      * This is your Google API project number.
+     * <p>
+     * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+     * main Firebase application's sender ID.
      */
     public final String productionFcmSenderId;
 
     /**
      * The transport types allowed for Push.
      * <p/>
-     * Defaults to ADM, GCM.
+     * Defaults to ADM, GCM, FCM.
      */
     @Nullable
     public final String[] allowedTransports;
@@ -419,7 +433,7 @@ public class AirshipConfigOptions {
         private String fcmSenderId;
         private String productionFcmSenderId;
         private String developmentFcmSenderId;
-        private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT };
+        private String[] allowedTransports = new String[] { ADM_TRANSPORT, GCM_TRANSPORT, FCM_TRANSPORT };
         private String[] whitelist = null;
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
@@ -809,6 +823,9 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the production FCM sender ID.
+         * <p>
+         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * main Firebase application's sender ID.
          *
          * @param senderId The production FCM sender ID.
          * @return The config options builder.
@@ -820,6 +837,9 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the development FCM sender ID.
+         * <p>
+         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * main Firebase application's sender ID.
          *
          * @param senderId The development FCM sender ID.
          * @return The config options builder.
@@ -831,6 +851,9 @@ public class AirshipConfigOptions {
 
         /**
          * Sets the default FCM sender ID.
+         * <p>
+         * Optional if you are using `urbanairship-fcm` package and want Urban Airship to use the
+         * main Firebase application's sender ID.
          *
          * @param senderId The FCM sender ID.
          * @return The config options builder.

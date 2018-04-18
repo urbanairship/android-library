@@ -3,7 +3,6 @@ developmentAppSecret = Your Development App Secret
 productionAppKey = Your Production App Key
 productionAppSecret = Your Production Secret
 
-fcmSenderId = Your FCM sender ID is your Google API project number (required for GCM)
 inProduction = false
 
 # LogLevel is "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR" or "ASSERT"

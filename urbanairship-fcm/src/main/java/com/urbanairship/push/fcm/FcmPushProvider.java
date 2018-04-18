@@ -4,6 +4,7 @@ package com.urbanairship.push.fcm;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.firebase.FirebaseApp;
@@ -38,10 +39,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
-        String senderId = UAirship.shared().getAirshipConfigOptions().getFcmSenderId();
-        if (senderId == null) {
-            return null;
-        }
 
         String token;
         try {
@@ -49,6 +46,12 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
             FirebaseApp app = FirebaseApp.getInstance();
             if (app == null) {
                 throw new RegistrationException("FCM registration failed. FirebaseApp not initialized.", false);
+            }
+
+            String senderId = getSenderId(app);
+            if (senderId == null) {
+                Logger.error("The FCM sender ID is not set. Unable to register for FCM.");
+                return null;
             }
 
             FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance(app);
@@ -74,7 +77,16 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
                 Logger.error("Google Play services is currently unavailable.");
                 return false;
             }
-            if (!isFcmAvailable(context)) {
+
+            FirebaseApp app = FirebaseApp.getInstance();
+            if (app == null) {
+                Logger.error("Firebase not initialized.");
+                return false;
+            }
+
+            String senderId = getSenderId(app);
+            if (senderId == null) {
+                Logger.error("The FCM sender ID is not set. Unable to register for FCM.");
                 return false;
             }
         } catch (IllegalStateException e) {
@@ -87,12 +99,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Override
     public boolean isSupported(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
-        if (!configOptions.isTransportAllowed(AirshipConfigOptions.GCM_TRANSPORT)) {
-            return false;
-        }
-
-        if (configOptions.getFcmSenderId() == null) {
-            Logger.info("The FCM sender ID is not set. Unable to register for Android push notifications.");
+        if (!configOptions.isTransportAllowed(AirshipConfigOptions.FCM_TRANSPORT)) {
             return false;
         }
 
@@ -111,39 +118,24 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return isValidSender && message.containsAirshipKeys();
     }
 
+    @Nullable
+    private String getSenderId(FirebaseApp app) {
+        String senderId = UAirship.shared().getAirshipConfigOptions().getFcmSenderId();
+        if (senderId != null) {
+            return senderId;
+        }
+
+        return app.getOptions().getGcmSenderId();
+    }
+
     @Override
     public String toString() {
         return "FCM Push Provider";
     }
 
-    /**
-     * Checks if FirebaseApp is set up.
-     *
-     * Returns true if it is set up. The FirebaseApp must be initialized in the app in order for
-     * this to return true.
-     *
-     * Returns false if it is not set up and makes Firebase unavailable.
-     *
-     * @param context The application context.
-     * @return Boolean
-     */
-    private boolean isFcmAvailable(Context context) {
-        try {
-            for (FirebaseApp app : FirebaseApp.getApps(context)) {
-                if (app.getName().equals(FirebaseApp.DEFAULT_APP_NAME)) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            Logger.debug("Unable to get FCM Apps.", e);
-        }
-        return false;
-    }
-
     @Override
     public String getAirshipVersion() {
         return BuildConfig.URBAN_AIRSHIP_VERSION;
-
     }
 
     @Override
