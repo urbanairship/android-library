@@ -7,11 +7,11 @@ import android.support.annotation.Nullable;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @hide
  */
-public class FcmPushProvider implements PushProvider {
+public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static final List<String> INVALID_TOKENS = Arrays.asList("MESSENGER", "AP", "null");
 
@@ -138,5 +138,16 @@ public class FcmPushProvider implements PushProvider {
             Logger.debug("Unable to get FCM Apps.", e);
         }
         return false;
+    }
+
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.URBAN_AIRSHIP_VERSION;
+
+    }
+
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
     }
 }

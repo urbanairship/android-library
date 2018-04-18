@@ -11,6 +11,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipVersionInfo;
+import com.urbanairship.BuildConfig;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
@@ -26,7 +28,7 @@ import java.util.List;
  *
  * @hide
  */
-public class GcmPushProvider implements PushProvider {
+public class GcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static final List<String> INVALID_TOKENS = Arrays.asList("MESSENGER", "AP", "null");
     @Override
@@ -104,6 +106,16 @@ public class GcmPushProvider implements PushProvider {
 
     @Override
     public String toString() {
-        return "Gcm Push Provider";
+        return "GCM Push Provider";
+    }
+
+    @Override
+    public String getAirshipVersion() {
+        return com.urbanairship.BuildConfig.URBAN_AIRSHIP_VERSION;
+    }
+
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
     }
 }

@@ -13,7 +13,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.amazon.device.messaging.ADMConstants;
+import com.example.urbanairship.push.adm.BuildConfig;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
@@ -24,7 +26,7 @@ import com.urbanairship.push.PushProvider;
  *
  * @hide
  */
-public class AdmPushProvider implements PushProvider {
+public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
 
     private static final String AMAZON_SEND_PERMISSION = "com.amazon.device.messaging.permission.SEND";
     private static final long REGISTRATION_TIMEOUT_MS = 10000; // 10 seconds
@@ -107,6 +109,16 @@ public class AdmPushProvider implements PushProvider {
     @Override
     public String toString() {
         return "Adm Push Provider";
+    }
+
+    @Override
+    public String getAirshipVersion() {
+        return BuildConfig.URBAN_AIRSHIP_VERSION;
+    }
+
+    @Override
+    public String getPackageVersion() {
+        return BuildConfig.SDK_VERSION;
     }
 
     private static class RegistrationReceiver extends BroadcastReceiver {

@@ -619,6 +619,10 @@ public class UAirship {
         this.platform = determinePlatform(providers);
         PushProvider pushProvider = determinePushProvider(platform, providers);
 
+        if (pushProvider != null) {
+            Logger.info("Using push provider: " + pushProvider);
+        }
+
         this.whitelist = Whitelist.createDefaultWhitelist(airshipConfigOptions);
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());

@@ -8,9 +8,17 @@
 -keep public class * extends com.urbanairship.Autopilot
 
 ## Push Providers
+-keep public class * extends com.urbanairship.push.PushProvider
 -keepclassmembernames class * extends com.urbanairship.push.PushProvider {
-    public <methods>;
-    public <fields>;
+  <public methods>;
+  <public fields>;
+}
+
+## Airship Version Info
+-keep public class * extends com.urbanairship.AirshipVersionInfo
+-keepclassmembers class * extends com.urbanairship.AirshipVersionInfo {
+  <public methods>;
+  <public fields>;
 }
 
 ## Actions

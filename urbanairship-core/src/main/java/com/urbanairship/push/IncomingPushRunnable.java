@@ -96,6 +96,8 @@ class IncomingPushRunnable implements Runnable {
      * @param airship The airship instance.
      */
     private void processPush(UAirship airship) {
+        Logger.info("Processing push: " + message);
+
         if (!airship.getPushManager().isPushEnabled()) {
             Logger.info("Push disabled, ignoring message");
             return;

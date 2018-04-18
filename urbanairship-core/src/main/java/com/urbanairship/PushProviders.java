@@ -86,11 +86,21 @@ class PushProviders {
             } catch (IllegalAccessException e) {
                 Logger.error("Unable to create provider " + className, e);
             } catch (ClassNotFoundException e) {
-                Logger.verbose("Push provider: " + className + " unavailable.");
+                continue;
             }
 
             if (pushProvider == null) {
                 continue;
+            }
+
+            if (pushProvider instanceof AirshipVersionInfo) {
+                AirshipVersionInfo versionInfo =  (AirshipVersionInfo)pushProvider;
+                Logger.verbose("Found provider: " + pushProvider + " version: " + versionInfo.getPackageVersion());
+
+                if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
+                    Logger.error("Provider: " + pushProvider + " version " + versionInfo.getAirshipVersion() + " does not match the SDK version " + UAirship.getVersion() + ". Make sure all Urban Airship dependencies are the exact same version.");
+                    continue;
+                }
             }
 
             providers.add(pushProvider);
