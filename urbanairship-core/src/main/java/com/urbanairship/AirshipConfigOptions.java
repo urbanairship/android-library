@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.XmlRes;
 import android.util.Log;
 
+import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.reflect.Field;
@@ -131,6 +132,14 @@ public class AirshipConfigOptions {
      */
     @Nullable
     public final String[] allowedTransports;
+
+    /**
+     * Custom push provider.
+     *
+     * @hide
+     */
+    @Nullable
+    public final PushProvider customPushProvider;
 
 
     /**
@@ -287,6 +296,7 @@ public class AirshipConfigOptions {
         this.walletUrl = builder.walletUrl;
         this.notificationChannel = builder.notificationChannel;
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
+        this.customPushProvider = builder.customPushProvider;
     }
 
     /**
@@ -395,6 +405,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
         private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
+        private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -424,6 +435,7 @@ public class AirshipConfigOptions {
         private String walletUrl = "https://wallet-api.urbanairship.com";
         private String notificationChannel;
         private boolean enableUrlWhitelisting;
+        private PushProvider customPushProvider;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -636,6 +648,12 @@ public class AirshipConfigOptions {
 
                         case FIELD_ENABLE_URL_WHITELISTING:
                             this.setEnableUrlWhitelisting(configParser.getBoolean(i));
+                            break;
+
+                        case FIELD_CUSTOM_PUSH_PROVIDER:
+                            String className = configParser.getString(i);
+                            Class<? extends PushProvider> providerClass = Class.forName(className).asSubclass(PushProvider.class);
+                            this.setCustomPushProvider(providerClass.newInstance());
                             break;
                     }
                 } catch (Exception e) {
@@ -985,6 +1003,18 @@ public class AirshipConfigOptions {
          */
         public Builder setEnableUrlWhitelisting(boolean enableUrlWhitelisting) {
             this.enableUrlWhitelisting = enableUrlWhitelisting;
+            return this;
+        }
+
+        /**
+         * Used to set a custom push provider for push registration.
+         *
+         * @param customPushProvider Push provider.
+         * @return The config options builder.
+         * @hide
+         */
+        public Builder setCustomPushProvider(PushProvider customPushProvider) {
+            this.customPushProvider = customPushProvider;
             return this;
         }
 

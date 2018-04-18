@@ -11,6 +11,7 @@ import com.urbanairship.push.PushProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Loads push providers.
@@ -43,16 +44,17 @@ class PushProviders {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init(Context context, AirshipConfigOptions configOptions) {
-        List<String> loadedProviders = new ArrayList<>();
+        List<PushProvider> providers = createProviders();
+        if (configOptions.customPushProvider != null) {
+            providers.add(0, configOptions.customPushProvider);
+        }
 
-        for (String className : Arrays.asList(FCM_PUSH_PROVIDER_CLASS, GCM_PUSH_PROVIDER_CLASS, ADM_PUSH_PROVIDER_CLASS)) {
-            PushProvider provider = createProvider(className);
-            if (provider == null) {
-                continue;
-            }
+        if (providers.isEmpty()) {
+            Logger.warn("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
+            return;
+        }
 
-            loadedProviders.add(className);
-
+        for (PushProvider provider : providers) {
             if (!provider.isSupported(context, configOptions)) {
                 continue;
             }
@@ -62,36 +64,44 @@ class PushProviders {
                 availableProviders.add(provider);
             }
         }
-
-        if (loadedProviders.isEmpty()) {
-            Logger.warn("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
-        }
-
-        if (loadedProviders.contains(FCM_PUSH_PROVIDER_CLASS) && loadedProviders.contains(GCM_PUSH_PROVIDER_CLASS)) {
-            Logger.error("Both urbanairship-gcm and urbanairship-fcm packages detected. Having both installed is not supported.");
-        }
     }
 
     /**
-     * Creates a provider from a class name.
+     * Creates the list of push providers.
      *
-     * @param className The class name.
-     * @return The push provider or null if the provider does not exist.
+     * @return The list of push providers.
      */
-    @Nullable
-    private PushProvider createProvider(@NonNull String className) {
-        try {
-            Class providerClass = Class.forName(className);
-            return (PushProvider) providerClass.newInstance();
-        } catch (InstantiationException e) {
-            Logger.error("Unable to create provider " + className, e);
-        } catch (IllegalAccessException e) {
-            Logger.error("Unable to create provider " + className, e);
-        } catch (ClassNotFoundException e) {
-            Logger.verbose("Push provider: " + className + " unavailable.");
+    @NonNull
+    private List<PushProvider> createProviders() {
+        List<PushProvider> providers = new ArrayList<>();
+        List<String> providerClasses = new ArrayList<>();
+
+        for (String className : Arrays.asList(FCM_PUSH_PROVIDER_CLASS, GCM_PUSH_PROVIDER_CLASS, ADM_PUSH_PROVIDER_CLASS)) {
+            PushProvider pushProvider = null;
+            try {
+                Class providerClass = Class.forName(className);
+                pushProvider = (PushProvider) providerClass.newInstance();
+            } catch (InstantiationException e) {
+                Logger.error("Unable to create provider " + className, e);
+            } catch (IllegalAccessException e) {
+                Logger.error("Unable to create provider " + className, e);
+            } catch (ClassNotFoundException e) {
+                Logger.verbose("Push provider: " + className + " unavailable.");
+            }
+
+            if (pushProvider == null) {
+                continue;
+            }
+
+            providers.add(pushProvider);
+            providerClasses.add(className);
         }
 
-        return null;
+        if (providerClasses.contains(FCM_PUSH_PROVIDER_CLASS) && providerClasses.contains(GCM_PUSH_PROVIDER_CLASS)) {
+            Logger.error("Both urbanairship-gcm and urbanairship-fcm packages detected. Having both installed is not supported.");
+        }
+
+        return providers;
     }
 
     /**
