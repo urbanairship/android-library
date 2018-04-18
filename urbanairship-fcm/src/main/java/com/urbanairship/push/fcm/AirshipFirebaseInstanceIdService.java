@@ -14,7 +14,7 @@ public class AirshipFirebaseInstanceIdService extends FirebaseInstanceIdService 
     @Override
     public void onTokenRefresh() {
         super.onTokenRefresh();
-        handleTokenRefresh(getApplicationContext());
+        processTokenRefresh(getApplicationContext());
     }
 
     /**
@@ -22,7 +22,7 @@ public class AirshipFirebaseInstanceIdService extends FirebaseInstanceIdService 
      *
      * @param context The application context.
      */
-    public static void handleTokenRefresh(Context context) {
+    public static void processTokenRefresh(Context context) {
         PushProviderBridge.requestRegistrationUpdate(context);
     }
 }

@@ -37,18 +37,20 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
         Logger.verbose("AdmPushReceiver - Received push.");
 
-        PushProviderBridge.receivedPush(context, AdmPushProvider.class, message, new Runnable() {
-            @Override
-            public void run() {
-                if (result == null) {
-                    return;
-                }
+        PushProviderBridge.processPush(AdmPushProvider.class, message)
+                          .allowWakeLocks(true)
+                          .execute(context, new Runnable() {
+                              @Override
+                              public void run() {
+                                  if (result == null) {
+                                      return;
+                                  }
 
-                if (isOrderedBroadcast) {
-                    result.setResultCode(Activity.RESULT_OK);
-                }
-                result.finish();
-            }
-        });
+                                  if (isOrderedBroadcast) {
+                                      result.setResultCode(Activity.RESULT_OK);
+                                  }
+                                  result.finish();
+                              }
+                          });
     }
 }

@@ -19,6 +19,7 @@ import com.urbanairship.push.PushProviderBridge;
 
 /**
  * WakefulBroadcastReceiver that receives GCM messages for Urban Airship.
+ *
  * @deprecated Marked to be removed in SDK 10.
  */
 @Deprecated
@@ -70,22 +71,22 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 }
 
                 final PendingResult result = goAsync();
-                PushProviderBridge.receivedPush(context, GcmPushProvider.class, new PushMessage(intent.getExtras()), new Runnable() {
-                    @Override
-                    public void run() {
-                        if (result == null) {
-                            return;
-                        }
+                PushProviderBridge.processPush(GcmPushProvider.class, new PushMessage(intent.getExtras()))
+                                  .allowWakeLocks(true)
+                                  .execute(context, new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          if (result == null) {
+                                              return;
+                                          }
 
-                        if (isOrderedBroadcast) {
-                            result.setResultCode(Activity.RESULT_OK);
-                        }
+                                          if (isOrderedBroadcast) {
+                                              result.setResultCode(Activity.RESULT_OK);
+                                          }
 
-                        result.finish();
-                    }
-                });
-
-
+                                          result.finish();
+                                      }
+                                  });
                 break;
 
             case ACTION_INSTANCE_ID:

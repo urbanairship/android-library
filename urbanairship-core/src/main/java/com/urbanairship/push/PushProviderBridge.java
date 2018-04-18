@@ -42,45 +42,97 @@ public abstract class PushProviderBridge {
         JobDispatcher.shared(context).dispatch(jobInfo);
     }
 
+
     /**
-     * Utility method to notify the Urban Airship SDK of a new push message.
+     * Creates a new request to process an incoming push message.
      *
-     * @param context The application context.
      * @param provider The provider's class.
      * @param pushMessage The push message.
-     * @param callback A runnable to be called when the push is finished processing.
      */
     @WorkerThread
-    public static void receivedPush(@NonNull Context context, @NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage, @NonNull final Runnable callback) {
-        Logger.info("Received push: "  + pushMessage);
+    public static ProcessPushRequest processPush(@NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage) {
+        return new ProcessPushRequest(provider, pushMessage);
+    }
 
-        // If older than Android O or a high priority message try to start the push service
-        if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
-            Intent intent = new Intent(context, PushService.class)
-                    .setAction(PushService.ACTION_PROCESS_PUSH)
-                    .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
-                    .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
+    /**
+     * Process push request.
+     */
+    public static class ProcessPushRequest {
 
-            try {
-                //noinspection deprecation
-                WakefulBroadcastReceiver.startWakefulService(context, intent);
-                callback.run();
-                return;
-            } catch (SecurityException | IllegalStateException e) {
-                Logger.error("Unable to run push in the push service.", e);
-                //noinspection deprecation
-                WakefulBroadcastReceiver.completeWakefulIntent(intent);
-            }
+        private final Class<? extends PushProvider> provider;
+        private final PushMessage pushMessage;
+        private boolean allowWakeLocks;
+
+
+        private ProcessPushRequest(@NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage) {
+            this.provider = provider;
+            this.pushMessage = pushMessage;
         }
 
-        // Otherwise fallback to running push in th executor
-        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(context)
-                .setLongRunning(false)
-                .setMessage(pushMessage)
-                .setProviderClass(provider.toString())
-                .setOnFinish(callback)
-                .build();
+        /**
+         * Enables or disables the use of wakelocks. Defaults to {@code false}.
+         *
+         * @param allowWakeLocks {@code true} to allow wakelocks, otherwise {@code false}.
+         * @return The process push request.
+         */
+        public ProcessPushRequest allowWakeLocks(boolean allowWakeLocks) {
+            this.allowWakeLocks = allowWakeLocks;
+            return this;
+        }
 
-        PushManager.PUSH_EXECUTOR.execute(pushRunnable);
+        /**
+         * Executes the request.
+         *
+         * @param context The application context.
+         */
+        public void execute(@NonNull Context context) {
+            execute(context, null);
+        }
+
+        /**
+         * Executes the request.
+         *
+         * @param context The application context.
+         * @param callback The callback.
+         */
+        public void execute(@NonNull Context context, final Runnable callback) {
+            // If older than Android O or a high priority message try to start the push service
+            if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
+                Intent intent = new Intent(context, PushService.class)
+                        .setAction(PushService.ACTION_PROCESS_PUSH)
+                        .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
+                        .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
+
+                try {
+                    if (allowWakeLocks) {
+                        //noinspection deprecation
+                        WakefulBroadcastReceiver.startWakefulService(context, intent);
+                    } else {
+                        context.startService(intent);
+                    }
+                    callback.run();
+                    return;
+                } catch (SecurityException | IllegalStateException e) {
+                    Logger.error("Unable to run push in the push service.", e);
+
+                    if (allowWakeLocks) {
+                        //noinspection deprecation
+                        WakefulBroadcastReceiver.completeWakefulIntent(intent);
+                    }
+                }
+            }
+
+            // Otherwise fallback to running push in the executor
+            IncomingPushRunnable.Builder pushRunnableBuilder = new IncomingPushRunnable.Builder(context)
+                    .setMessage(pushMessage)
+                    .setProviderClass(provider.toString());
+
+            if (callback != null) {
+                pushRunnableBuilder.setOnFinish(callback);
+            }
+
+            PushManager.PUSH_EXECUTOR.execute(pushRunnableBuilder.build());
+        }
     }
+
 }
