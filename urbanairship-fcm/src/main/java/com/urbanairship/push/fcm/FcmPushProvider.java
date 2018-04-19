@@ -109,13 +109,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @Nullable
     @Override
     public boolean isUrbanAirshipMessage(@NonNull Context context, @NonNull UAirship airship, @NonNull PushMessage message) {
-        String sender = message.getExtra("from", null);
-        boolean isValidSender = false;
-        if (sender != null) {
-            isValidSender = sender.equals(UAirship.shared().getAirshipConfigOptions().getFcmSenderId());
-        }
-
-        return isValidSender && message.containsAirshipKeys();
+        return message.containsAirshipKeys();
     }
 
     @Nullable

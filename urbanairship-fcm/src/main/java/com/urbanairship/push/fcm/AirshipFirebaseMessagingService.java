@@ -22,11 +22,7 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage message) {
-        try {
-            processMessage(getApplicationContext(), message).get();
-        } catch (Exception e) {
-            Logger.error("Message received exception.", e);
-        }
+        processMessageSync(getApplicationContext(), message);
     }
 
     /**
@@ -39,17 +35,8 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
      * @return A future.
      */
     public static Future<Void> processMessage(Context context, RemoteMessage message) {
-        /* Creating a map of data that includes the From value so message will be read as
-         * Urban Airship Message
-         */
-        Map<String, String> messageData = message.getData();
-        String fromKey = "from";
-        messageData.put(fromKey, message.getFrom());
-
-        final PushMessage pushMessage = new PushMessage(messageData);
         final PendingResult<Void> pendingResult = new PendingResult<>();
-
-        PushProviderBridge.processPush(FcmPushProvider.class, pushMessage)
+        PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
                           .execute(context, new Runnable() {
                               @Override
                               public void run() {
@@ -60,4 +47,14 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
         return pendingResult;
     }
 
+    /**
+     * Called to handle {@link #onMessageReceived(RemoteMessage)} synchronously.
+     *
+     * @param context The application context.
+     * @param message The message.
+     */
+    public static void processMessageSync(Context context, RemoteMessage message) {
+        PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
+                          .executeSync(context);
+    }
 }

@@ -14,6 +14,8 @@ import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
+import java.util.concurrent.CountDownLatch;
+
 
 /**
  * {@link PushProvider} callback methods.
@@ -132,6 +134,28 @@ public abstract class PushProviderBridge {
             }
 
             PushManager.PUSH_EXECUTOR.execute(pushRunnableBuilder.build());
+        }
+
+        /**
+         * Executes the request synchronously.
+         *
+         * @param context The application context.
+         */
+        @WorkerThread
+        public void executeSync(@NonNull Context context) {
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            execute(context, new Runnable() {
+                @Override
+                public void run() {
+                    countDownLatch.countDown();
+                }
+            });
+
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                Logger.error("Failed to wait for push.", e);
+            }
         }
     }
 
