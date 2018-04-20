@@ -4,12 +4,19 @@ package com.urbanairship.sample.utils;
 
 import android.util.Log;
 
-import com.urbanairship.http.RequestFactory;
-import com.urbanairship.http.Response;
+import com.google.gson.Gson;
+import com.urbanairship.sample.data.model.PushPayload;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
+
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Helper class to send push notifications.
@@ -18,10 +25,13 @@ public class PushSender {
     private final String masterSecret;
     private final String appKey;
     private final String pushUrl;
-    private final RequestFactory requestFactory;
+    private final OkHttpClient client;
+    private final Retrofit retrofit;
+    private final PushService service;
+    HttpLoggingInterceptor interceptor;
 
     protected static String TAG = "PushSender";
-    protected static final String PUSH_URL = "https://go.urbanairship.com/api/push/";
+    protected static final String PUSH_URL = "https://go.urbanairship.com/api/";
 
     /**
      * Constructor for PushSender
@@ -33,70 +43,45 @@ public class PushSender {
         this.masterSecret = masterSecret;
         this.appKey = appKey;
         this.pushUrl = PUSH_URL;
-        this.requestFactory = new RequestFactory();
+
+        this.interceptor = new HttpLoggingInterceptor();
+        this.interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        this.client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
+        this.retrofit = new Retrofit.Builder()
+                                    .baseUrl(this.pushUrl)
+                                    .addConverterFactory(GsonConverterFactory.create())
+                                    .client(client)
+                                    .build();
+        this.service = retrofit.create(PushService.class);
     }
 
     /**
      * Sends the push message.
      *
      * @param payload The PushPayload
-     * @throws InterruptedException
      */
-    public void send(PushPayload payload) throws InterruptedException {
-        int sendMesgRetryCount = 0;
-        int MAX_SEND_MESG_RETRIES = 3;
-        URL url;
+    public void send(com.urbanairship.sample.utils.PushPayload payload) {
+
+        Gson gson = new Gson();
+        PushPayload gsonPayload = gson.fromJson(payload.toString(), PushPayload.class);
+        Call<ResponseBody> call = service.send(Credentials.basic(appKey, masterSecret), gsonPayload);
 
         try {
-            url = new URL(pushUrl);
-        } catch (MalformedURLException e) {
-            Log.e(TAG, "Failed to send message with an invalid push URL.");
-            return;
-        }
-
-        while (sendMesgRetryCount < MAX_SEND_MESG_RETRIES) {
-            Log.i(TAG, "Created message to send: " + payload.toJsonValue().toString());
-            boolean retry = request(payload.toString(), url);
-
-            if (retry) {
-                int SEND_MESG_RETRY_DELAY = 3000;
-                Thread.sleep(SEND_MESG_RETRY_DELAY);
-                sendMesgRetryCount++;
-            } else {
-                sendMesgRetryCount = MAX_SEND_MESG_RETRIES;
+            retrofit2.Response response = call.execute();
+            // 5xx
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.code())) {
+                Log.e(TAG, "Failed to receive a response. Will retry");
             }
+            // 4xx
+            if (UAHttpStatusUtil.inClientErrorRange(response.code())) {
+                Log.e(TAG, "Failed to send message: " + payload.toString() + ". Received a response: " + response);
+            }
+            // 2xx
+            if (UAHttpStatusUtil.inSuccessRange(response.code())) {
+                Log.d(TAG, "Received a response: " + response);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }
-
-    /**
-     * Actually sends the push message
-     *
-     * @param message The json formatted message to be sent
-     * @param url The push URL
-     * @return <code>true</code> to retry the request at a later time, otherwise <code>false</code>.
-     */
-    private boolean request(String message, URL url) {
-
-        Response response = requestFactory.createRequest("POST", url)
-                                          .setCredentials(appKey, masterSecret)
-                                          .setRequestBody(message, "application/json")
-                                          .setHeader("Accept", "application/vnd.urbanairship+json; version=3;")
-                                          .execute();
-        // 5xx
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
-            Log.e(TAG, "Failed to receive a response. Will retry");
-            return true;
-        }
-        // 4xx
-        if (UAHttpStatusUtil.inClientErrorRange(response.getStatus())) {
-            Log.e(TAG, "Failed to send message: " + message + ". Received a response: " + response);
-            return false;
-        }
-        // 2xx
-        if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
-            Log.d(TAG, "Received a response: " + response);
-            return false;
-        }
-        return false;
     }
 }

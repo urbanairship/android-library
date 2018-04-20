@@ -56,6 +56,16 @@ dependencies {
     androidTestImplementation "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
     androidTestImplementation "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
     androidTestImplementation "com.android.support:design:${airshipProperties.supportLibVersion}"
+
+    // Retrofit
+    androidTestImplementation "com.squareup.retrofit2:retrofit:2.3.0"
+
+    // Retrofit JSON Parsing
+    androidTestImplementation 'com.google.code.gson:gson:2.8.0'
+    androidTestImplementation 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+    // Retrofit logging
+    androidTestImplementation 'com.squareup.okhttp3:logging-interceptor:3.9.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

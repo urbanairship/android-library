@@ -205,7 +205,7 @@ public class SampleTest {
 
         for (int i = 0; i < 2; i++) {
             String postedAlert = airshipReceiver.postedAlerts.poll(15, TimeUnit.SECONDS);
-            if (postedAlert == null && !postedAlert.startsWith("message")) {
+            if (postedAlert == null || !postedAlert.startsWith("message")) {
                 fail("Unable to receive rich push message.");
                 return;
             }
@@ -459,13 +459,13 @@ public class SampleTest {
                                                                                                                  .setColor(Color.RED)
                                                                                                                  .addStyle(TextInfo.STYLE_UNDERLINE)
                                                                                                                  .build())
+                                                                                               .setId("footerId")
                                                                                                .build())
                                                                           .setButtonLayout(DisplayContent.BUTTON_LAYOUT_SEPARATE)
                                                                           .addButton(ButtonInfo.newBuilder()
                                                                                                .setId("button-one")
                                                                                                .setBackgroundColor(Color.BLUE)
                                                                                                .setBorderRadius(2)
-                                                                                               .setId("button id 1")
                                                                                                .setBehavior(ButtonInfo.BEHAVIOR_DISMISS)
                                                                                                .setBorderRadius(10)
                                                                                                .setBorderColor(Color.MAGENTA)
@@ -488,7 +488,6 @@ public class SampleTest {
                                                                                                .setId("button-three")
                                                                                                .setBackgroundColor(Color.BLUE)
                                                                                                .setBorderRadius(2)
-                                                                                               .setId("button id 3")
                                                                                                .setBehavior(ButtonInfo.BEHAVIOR_DISMISS)
                                                                                                .setBorderRadius(10)
                                                                                                .setBorderColor(Color.MAGENTA)
@@ -611,6 +610,7 @@ public class SampleTest {
                                                                                                        .setAlignment(TextInfo.ALIGNMENT_RIGHT)
                                                                                                        .build())
                                                                                      .addAction("share_action", JsonValue.wrap("Sharing this awesome app!"))
+                                                                                     .setId("footerId")
                                                                                      .build())
                                                                 .setTemplate(ModalDisplayContent.TEMPLATE_HEADER_BODY_MEDIA)
                                                                 .setButtonLayout(DisplayContent.BUTTON_LAYOUT_STACKED)
