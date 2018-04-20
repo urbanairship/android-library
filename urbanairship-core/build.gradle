@@ -12,6 +12,7 @@ dependencies {
     api "com.android.support:support-annotations:${airshipProperties.supportLibVersion}"
 
     // Optional
+    compileOnly "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesVersion}"
     compileOnly "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"
     compileOnly "com.android.support:appcompat-v7:${airshipProperties.supportLibVersion}"
 

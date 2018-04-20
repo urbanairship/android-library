@@ -1,7 +1,34 @@
 Android ChangeLog
 =================
 
-Migration Guide: http://docs.urbanairship.com/topic_guides/android_migration.html.
+[Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
+
+Version 9.1.0 - April 18, 2018
+==============================
+
+Minor release that introduces support for FCM apis, modular packages, and in-app message design
+updates. For FCM migration, please follow the [FCM Migration Guide](https://github.com/urbanairship/android-library/blob/master/documentation/migration/migration-guide-fcm.md).
+
+Changes
+-------
+- Added support for FCM Google Play Services dependency.
+- When using `urbanairship-fcm`, setting the FCM sender ID in the airship config options is now optional.
+- Moved push providers into own packages - `urbanairship-fcm`, `urbanairship-gcm`, `urbanairship-adm`,
+  and `urbanairship-core`. The package `urbanairship-sdk` still exists and is now just a wrapper package
+  that depends on gcm, adm, and core to prevent breaking apps.
+- Deprecated `urbanairship-sdk` and `urbanairship-gcm` packages. They will be dropped in SDK release 10.0.
+- Updated in-app message designs.
+- Added support to display an in-app modal message as fullscreen on smaller screen devices.
+- Normalized the custom event builder APIs.
+- Added metadata option to enable local storage in Urban Airship webviews.
+- Updated to Play Services version 15.0.0 and Support Library 27.1.1. Tracking
+  Advertising IDs now require the `play-services-ads-identifier` dependency.
+
+Bug Fixes
+---------
+- Added calls to takeOff autopilot when in-app message activities are being restored when the app is suspended.
+- Fixed packages not declaring the proper dependencies in the pom file.
+
 
 Version 9.0.6 - April 5, 2018
 =============================

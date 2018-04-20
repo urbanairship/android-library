@@ -18,11 +18,11 @@ One of our engineers will verify receipt of the agreement before approving your 
 ## Requirements
 - minSdkVersion 16+
 - compileSdkVersion 27
-- Google Play Services 12.0.1+
+- Google Play Services 15.0.0+
 
 ## Quickstart
 
-Include Urban Airship into the build.gradle file:
+1) Include Urban Airship into the build.gradle file:
 
 ```
    dependencies {
@@ -31,27 +31,12 @@ Include Urban Airship into the build.gradle file:
      // Urban Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
      implementation "com.google.firebase:firebase-messaging:12.0.1"
-
-     // Recommended for location services
-     implementation 'com.google.android.gms:play-services-location:12.0.1'
    }
 ```
 
-Add a google-services.json file to your project. This can be done in one of two ways:
+2) [Add Firebase to your app](https://firebase.google.com/docs/android/setup#add_firebase_to_your_app).
 
-* Use the [Firebase Assistant](https://developer.android.com/studio/write/firebase.html) tool in Android Studio
-
-or:
- 
-* [Download the google-services.json file](https://support.google.com/firebase/answer/7015592)) from the [Firebase Console](https://console.firebase.google.com) and then copy it into your project's module folder, typically `app/`
-
-Add the google-services plugin to your app-level build.gradle:
-
-```
-apply plugin: 'com.google.gms.google-services'
-```
-
-Create a new `airshipconfig.properties` file with your application’s settings:
+3) Create a new `airshipconfig.properties` file with your application’s settings:
 
 ```
    developmentAppKey = Your Development App Key
@@ -68,9 +53,6 @@ Create a new `airshipconfig.properties` file with your application’s settings:
    developmentLogLevel = DEBUG
    productionLogLevel = ERROR
 
-   # FCM Sender ID
-   fcmSenderId = Your Google API Project Number
-
    # Notification customization
    notificationIcon = ic_notification
    notificationAccentColor = #ff0000
@@ -79,7 +61,7 @@ Create a new `airshipconfig.properties` file with your application’s settings:
    notificationChannel = "customChannel"
 ```
 
-Set the Autopilot meta-data in the AndroidManifest.xml file:
+4) Set the Autopilot meta-data in the AndroidManifest.xml file:
 
 ```
       <meta-data android:name="com.urbanairship.autopilot"

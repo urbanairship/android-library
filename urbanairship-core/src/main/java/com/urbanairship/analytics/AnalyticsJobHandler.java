@@ -91,6 +91,7 @@ class AnalyticsJobHandler {
 
             case UAirship.ANDROID_PLATFORM:
                 if (!PlayServicesUtils.isGoogleAdsDependencyAvailable()) {
+                    Logger.error("Unable to track Advertising ID. Dependency `play-services-ads-identifier` not found.");
                     break;
                 }
 
