@@ -52,7 +52,7 @@ public class ArrayContainsMatcher extends ValueMatcher {
     }
 
     @Override
-    protected boolean apply(@NonNull JsonValue jsonValue) {
+    protected boolean apply(@NonNull JsonValue jsonValue, boolean ignoreCase) {
         if (!jsonValue.isJsonList()) {
             return false;
         }

@@ -159,21 +159,34 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
 
     @Override
     public boolean apply(JsonSerializable jsonSerializable) {
+        return apply(jsonSerializable,false);
+    }
+
+    /**
+     * Applies the value matcher to a JSON value.
+     * @param jsonSerializable The JSON value.
+     * @param ignoreCase {@code true} to ignore case when checking String values, {@code false} to check case.
+     * @return {@code true} if the value matcher matches the JSON value, {@code false} if they do not match.
+     *
+     * @hide
+     */
+    boolean apply(JsonSerializable jsonSerializable, boolean ignoreCase) {
         JsonValue value = jsonSerializable == null ? JsonValue.NULL : jsonSerializable.toJsonValue();
         if (value == null) {
             value = JsonValue.NULL;
         }
 
-        return apply(value);
+        return apply(value, ignoreCase);
     }
 
     /**
      * Matches a json value.
      *
      * @param jsonValue The json value.
+     * @param ignoreCase {@code true} to ignore case when checking String values, {@code false} to check case.
      * @return {@code true} if the value matches, otherwise {@code false}.
      */
-    protected abstract boolean apply(@NonNull JsonValue jsonValue);
+    protected abstract boolean apply(@NonNull JsonValue jsonValue, boolean ignoreCase);
 
     @Override
     public String toString() {

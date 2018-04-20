@@ -2,6 +2,10 @@
 
 package com.urbanairship.json;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
+
 import com.urbanairship.Predicate;
 
 import java.util.ArrayList;
@@ -15,15 +19,25 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
     private static final String VALUE_KEY = "value";
     private static final String FIELD_KEY = "key";
     private static final String SCOPE_KEY = "scope";
+    private static final String IGNORE_CASE_KEY = "ignore_case";
 
+    @Nullable
     private final String key;
+
+    @NonNull
     private final List<String> scopeList;
+
+    @NonNull
     private final ValueMatcher value;
+
+    @Nullable
+    private final Boolean ignoreCase;
 
     private JsonMatcher(Builder builder) {
         this.key = builder.key;
         this.scopeList = builder.scope;
         this.value = builder.valueMatcher == null ? ValueMatcher.newIsPresentMatcher() : builder.valueMatcher;
+        this.ignoreCase = builder.ignoreCase;
     }
 
     @Override
@@ -32,6 +46,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
                 .putOpt(FIELD_KEY, key)
                 .putOpt(SCOPE_KEY, scopeList)
                 .put(VALUE_KEY, value)
+                .putOpt(IGNORE_CASE_KEY, ignoreCase)
                 .build()
                 .toJsonValue();
     }
@@ -54,7 +69,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
             jsonValue = jsonValue.optMap().opt(key);
         }
 
-        return value.apply(jsonValue);
+        return value.apply(jsonValue, (ignoreCase != null) && ignoreCase);
     }
 
     /**
@@ -88,6 +103,10 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
             }
         }
 
+        if (map.containsKey(IGNORE_CASE_KEY)) {
+            builder.setIgnoreCase(map.opt(IGNORE_CASE_KEY).getBoolean(false));
+        }
+
         return builder.build();
     }
 
@@ -106,8 +125,15 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
     public static class Builder {
 
         private ValueMatcher valueMatcher;
+
+        @NonNull
         private List<String> scope = new ArrayList<>(1);
+
+        @Nullable
         private String key;
+
+        @Nullable
+        private Boolean ignoreCase;
 
         private Builder() {
 
@@ -160,6 +186,20 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         }
 
         /**
+         * Sets ignoreCase.
+         *
+         * @param ignoreCase The ignoreCase flag.
+         * @return The Builder instance.
+         *
+         * @hide
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        Builder setIgnoreCase(boolean ignoreCase) {
+            this.ignoreCase = ignoreCase;
+            return this;
+        }
+
+        /**
          * Builds the JsonMatcher instance.
          *
          * @return The JsonMatcher instance.
@@ -186,8 +226,11 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         if (scopeList != null ? !scopeList.equals(matcher.scopeList) : matcher.scopeList != null) {
             return false;
         }
-        return value != null ? value.equals(matcher.value) : matcher.value == null;
+        if (ignoreCase != null ? !ignoreCase.equals(matcher.scopeList) : matcher.ignoreCase != null) {
+            return false;
+        }
 
+        return value != null ? value.equals(matcher.value) : matcher.value == null;
     }
 
     @Override

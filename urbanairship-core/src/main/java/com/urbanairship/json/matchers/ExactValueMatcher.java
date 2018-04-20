@@ -3,11 +3,15 @@
 package com.urbanairship.json.matchers;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
+
+import java.util.Map;
 
 /**
  * Exact value matcher.
@@ -36,8 +40,75 @@ public class ExactValueMatcher extends ValueMatcher {
     }
 
     @Override
-    protected boolean apply(@NonNull JsonValue value) {
-        return expected.equals(value);
+    protected boolean apply(@NonNull JsonValue value, boolean ignoreCase) {
+        return isEquals(expected, value, ignoreCase);
+    }
+
+    public boolean isEquals(@Nullable JsonValue valueOne, @Nullable JsonValue valueTwo, boolean ignoreCase) {
+        valueOne = valueOne == null ? JsonValue.NULL : valueOne;
+        valueTwo = valueTwo == null ? JsonValue.NULL : valueTwo;
+
+        if (!ignoreCase) {
+            return valueOne.equals(valueTwo);
+        }
+
+        if (valueOne.isString()) {
+            if (!valueTwo.isString()) {
+                return false;
+            }
+
+            return valueOne.getString().equalsIgnoreCase(valueTwo.getString());
+        }
+
+        if (valueOne.isJsonList()) {
+            if (!valueTwo.isJsonList()) {
+                return false;
+            }
+
+            JsonList listOne = valueOne.getList();
+            JsonList listTwo = valueTwo.getList();
+
+            if (listOne.size() != listTwo.size()) {
+                return false;
+            }
+
+            // iterate over both lists
+            for(int i = 0; i< listOne.size(); i++) {
+                if (!isEquals(listOne.get(i), listTwo.get(i), ignoreCase)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if (valueOne.isJsonMap()) {
+            if (!valueTwo.isJsonMap()) {
+                return false;
+            }
+
+            JsonMap mapOne = valueOne.getMap();
+            JsonMap mapTwo = valueTwo.getMap();
+
+            if (mapOne.size() != mapTwo.size()) {
+                return false;
+            }
+
+            // iterate over both maps
+            for (Map.Entry<String, JsonValue> entry : mapOne) {
+                if (!mapTwo.containsKey(entry.getKey())) {
+                    return false;
+                }
+
+                if (!isEquals(mapTwo.get(entry.getKey()), entry.getValue(), ignoreCase)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return valueOne.equals(valueTwo);
     }
 
     @Override

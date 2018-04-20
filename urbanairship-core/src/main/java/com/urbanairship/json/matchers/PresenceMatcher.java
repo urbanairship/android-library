@@ -36,7 +36,7 @@ public class PresenceMatcher extends ValueMatcher {
     }
 
     @Override
-    protected boolean apply(@NonNull JsonValue value) {
+    protected boolean apply(@NonNull JsonValue value, boolean ignoreCase) {
         if (isPresent) {
             return !value.isNull();
         } else {

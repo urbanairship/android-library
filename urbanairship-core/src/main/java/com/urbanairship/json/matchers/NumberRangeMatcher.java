@@ -59,7 +59,7 @@ public class NumberRangeMatcher extends ValueMatcher {
     }
 
     @Override
-    protected boolean apply(@NonNull JsonValue value) {
+    protected boolean apply(@NonNull JsonValue value, boolean ignoreCase) {
         if (min != null && (!value.isNumber() || value.getNumber().doubleValue() < min)) {
             return false;
         }

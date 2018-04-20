@@ -39,7 +39,7 @@ public class VersionMatcher extends ValueMatcher {
     }
 
     @Override
-    protected boolean apply(@NonNull JsonValue value) {
+    protected boolean apply(@NonNull JsonValue value, boolean ignoreCase) {
         return value.isString() && versionMatcher.apply(value.getString());
     }
 

@@ -23,12 +23,27 @@ public class JsonMatcherTest extends BaseTestCase {
                                          .setValueMatcher(valueMatcher)
                                          .build();
 
+        JsonMatcher ignoreCaseMatcher = JsonMatcher.newBuilder()
+                                                   .setKey("key")
+                                                   .setValueMatcher(valueMatcher)
+                                                   .setIgnoreCase(true)
+                                                   .build();
+
         JsonValue value = JsonMap.newBuilder()
                                  .put("key", "value")
                                  .build()
                                  .toJsonValue();
 
         assertTrue(matcher.apply(value));
+        assertTrue(ignoreCaseMatcher.apply(value));
+
+        value = JsonMap.newBuilder()
+                       .put("key", "VALUE")
+                       .build()
+                       .toJsonValue();
+
+        assertFalse(matcher.apply(value));
+        assertTrue(ignoreCaseMatcher.apply(value));
 
         matcher = JsonMatcher.newBuilder()
                              .setKey("key")
@@ -36,6 +51,14 @@ public class JsonMatcherTest extends BaseTestCase {
                              .setValueMatcher(valueMatcher)
                              .build();
 
+        ignoreCaseMatcher = JsonMatcher.newBuilder()
+                                       .setKey("key")
+                                       .setScope("properties")
+                                       .setValueMatcher(valueMatcher)
+                                       .setIgnoreCase(true)
+                                       .build();
+
+        assertFalse(ignoreCaseMatcher.apply(value));
         assertFalse(matcher.apply(value));
 
         value = JsonMap.newBuilder()
@@ -55,6 +78,8 @@ public class JsonMatcherTest extends BaseTestCase {
 
     @Test
     public void testParse() throws JsonException {
+        ValueMatcher valueMatcher = ValueMatcher.newValueMatcher(JsonValue.wrap("string"));
+
         JsonValue valueJson = JsonMap.newBuilder()
                                      .put("equals", "string")
                                      .build()
@@ -67,7 +92,6 @@ public class JsonMatcherTest extends BaseTestCase {
                                        .build()
                                        .toJsonValue();
 
-        ValueMatcher valueMatcher = ValueMatcher.newValueMatcher(JsonValue.wrap("string"));
         JsonMatcher matcher = JsonMatcher.newBuilder()
                                          .setKey("key")
                                          .setScope("properties")
@@ -75,6 +99,25 @@ public class JsonMatcherTest extends BaseTestCase {
                                          .build();
 
         assertEquals(matcher, JsonMatcher.parse(matcherJson));
+
+        JsonValue ignoreCaseMatcherJson = JsonMap.newBuilder()
+                                                 .put("key", "key")
+                                                 .put("value", valueJson)
+                                                 .put("scope", new JsonList(Collections.singletonList(JsonValue.wrap("properties"))))
+                                                 .put("ignore_case", true)
+                                                 .build()
+                                                 .toJsonValue();
+
+        JsonMatcher ignoreCaseMatcher = JsonMatcher.newBuilder()
+                                                    .setKey("key")
+                                                    .setScope("properties")
+                                                    .setValueMatcher(valueMatcher)
+                                                    .setIgnoreCase(true)
+                                                    .build();
+
+        assertEquals(ignoreCaseMatcher, JsonMatcher.parse(ignoreCaseMatcherJson));
+
+
     }
 
     /**
