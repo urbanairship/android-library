@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -23,6 +24,9 @@ import com.urbanairship.R;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.NotificationIdGenerator;
 import com.urbanairship.util.UAStringUtil;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 
 /**
@@ -48,6 +52,93 @@ public class NotificationFactory {
      * Default Notification ID when the {@link PushMessage} defines a notification tag.
      */
     public static final int TAG_NOTIFICATION_ID = 100;
+
+    /**
+     * A container for a NotificationFactory result, containing a nullable
+     * Notification instance and a status code.
+     */
+    public static class Result {
+
+        @IntDef({OK, RETRY, CANCEL})
+        @Retention(RetentionPolicy.SOURCE)
+        public @interface Status {}
+
+        /**
+         * Indicates that a Notification was successfully created.
+         */
+        public static final int OK = 0;
+
+        /**
+         * Indicates that a Notification was not successfully created and that a job should be
+         * scheduled to retry later.
+         */
+        public static final int RETRY = 1;
+
+        /**
+         * Indicates that a Notification was not successfully created and no work should be scheduled
+         * to retry.
+         */
+        public static final int CANCEL = 2;
+
+        private Notification notification;
+        private @Status int status;
+
+        /**
+         * NotificationFactory.Result constructor.
+         *
+         * @param notification The Notification.
+         * @param status The status.
+         */
+        private Result(Notification notification, @Status int status) {
+            this.notification = notification;
+
+            if (notification == null && status == OK) {
+                this.status = CANCEL;
+            } else {
+                this.status = status;
+            }
+        }
+
+        /**
+         * Creates a new result containing a notification.
+         *
+         * @param notification The notification.
+         * @return An instance of NotificationFactory.Result.
+         */
+        public static Result notification(@NonNull Notification notification) {
+            return new Result(notification, OK);
+        }
+
+        /**
+         * Creates a new result with a <code>CANCEL</code> status code.
+         *
+         * @return An instance of NotificationFactory.Result.
+         */
+        public static Result cancel() {
+            return new Result(null, CANCEL);
+        }
+
+        /**
+         * Creates a new result with a <code>RETRY</code> status code.
+         *
+         * @return An instance of NotificationFactory.Result.
+         */
+        public static Result retry() {
+            return new Result(null, RETRY);
+        }
+
+        /**
+         * Gets the Notification.
+         * @return The Notification.
+         */
+        public Notification getNotification() { return notification; }
+
+        /**
+         * Gets the status.
+         * @return The status.
+         */
+        public @Status int getStatus() { return status; }
+    }
 
     private final Context context;
     private String notificationChannel;
@@ -272,6 +363,16 @@ public class NotificationFactory {
 
         NotificationCompat.Builder builder = createNotificationBuilder(message, notificationId, null);
         return builder.build();
+    }
+
+    @NonNull
+    public Result createNotificationResult(@NonNull final PushMessage message, final int notificationId) {
+        Notification notification = createNotification(message, notificationId);
+        if (notification == null) {
+            return Result.cancel();
+        } else {
+            return Result.notification(notification);
+        }
     }
 
     /**

@@ -40,6 +40,11 @@ class PushManagerJobHandler {
     static final String ACTION_PROCESS_PUSH = "ACTION_PROCESS_PUSH";
 
     /**
+     * Action to display a notification.
+     */
+    static final String ACTION_DISPLAY_NOTIFICATION = "ACTION_DISPLAY_NOTIFICATION";
+
+    /**
      * Action to update channel registration.
      */
     static final String ACTION_UPDATE_PUSH_REGISTRATION = "ACTION_UPDATE_PUSH_REGISTRATION";
@@ -125,6 +130,9 @@ class PushManagerJobHandler {
 
             case ACTION_PROCESS_PUSH:
                 return onProcessPush(jobInfo);
+
+            case ACTION_DISPLAY_NOTIFICATION:
+                return onDisplayNotification(jobInfo);
         }
 
         return JobInfo.JOB_FINISHED;
@@ -152,6 +160,26 @@ class PushManagerJobHandler {
         return JobInfo.JOB_FINISHED;
     }
 
+    @JobInfo.JobResult
+    private int onDisplayNotification(JobInfo jobInfo) {
+        PushMessage message = PushMessage.fromJsonValue(jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PUSH));
+        String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
+
+        if (message == null || providerClass == null) {
+            return JobInfo.JOB_FINISHED;
+        }
+
+        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getApplicationContext())
+                .setLongRunning(true)
+                .setProcessed(true)
+                .setMessage(message)
+                .setProviderClass(providerClass)
+                .build();
+
+        pushRunnable.run();
+
+        return JobInfo.JOB_FINISHED;
+    }
 
     /**
      * Updates the push registration.

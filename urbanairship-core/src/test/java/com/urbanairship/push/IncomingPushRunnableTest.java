@@ -17,6 +17,8 @@ import com.urbanairship.TestPushProvider;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.iam.LegacyInAppMessageManager;
+import com.urbanairship.job.JobDispatcher;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.NotificationFactory;
 
 import org.junit.Before;
@@ -58,7 +60,10 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     private NotificationFactory notificationFactory;
 
     private IncomingPushRunnable pushRunnable;
+    private IncomingPushRunnable displayRunnable;
     private TestPushProvider testPushProvider;
+
+    private JobDispatcher jobDispatcher;
 
     @Before
     public void setup() {
@@ -110,11 +115,23 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         TestApplication.getApplication().setPushManager(pushManager);
         TestApplication.getApplication().setAnalytics(analytics);
 
+        jobDispatcher = mock(JobDispatcher.class);
+
         pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
                 .setProviderClass(testPushProvider.getClass().toString())
                 .setMessage(new PushMessage(pushBundle))
                 .setNotificationManager(notificationManager)
                 .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .build();
+
+        displayRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(new PushMessage(pushBundle))
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .setProcessed(true)
                 .build();
     }
 
@@ -233,7 +250,123 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         pushRunnable.run();
 
-        verify(notificationManager, Mockito.never()).notify(Mockito.anyInt(), any(Notification.class));
+        verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
+    }
+
+    @Test
+    public void testNotificationFactorySuccess() {
+        final int notificationId = 0;
+        final Notification notification = notificationFactory.createNotification(new PushMessage(pushBundle), notificationId);
+
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @Override
+            public Notification createNotification(@NonNull PushMessage pushMessage, int notificationId) {
+                return notification;
+            }
+
+            @Override
+            public int getNextId(@NonNull PushMessage pushMessage) {
+                return notificationId;
+            }
+        };
+
+        pushRunnable.run();
+
+        verify(notificationManager).notify(Mockito.anyString(), Mockito.eq(notificationId), Mockito.eq(notification));
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
+    }
+
+    /**
+     * Test that when the factory returns a cancel status, no notification is posted and no jobs are scheduled
+     */
+    @Test
+    public void testNotificationFactoryResultCancel() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @Override
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+                return NotificationFactory.Result.cancel();
+            }
+
+            @Override
+            public int getNextId(@NonNull PushMessage pushMessage) {
+                return 0;
+            }
+        };
+
+        displayRunnable.run();
+
+        verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
+    }
+
+    /**
+     * Test that when the factory returns a retry status, no notification is posted and a retry job is scheduled
+     */
+    @Test
+    public void testNotificationFactoryResultRetry() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @Override
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+                return NotificationFactory.Result.retry();
+            }
+
+            @Override
+            public int getNextId(@NonNull PushMessage pushMessage) {
+                return 0;
+            }
+        };
+
+        displayRunnable.run();
+
+        verify(notificationManager, Mockito.never()).notify(Mockito.anyString(), Mockito.anyInt(), any(Notification.class));
+        verify(jobDispatcher).dispatch(any(JobInfo.class));
+    }
+
+    /**
+     * Test that when the factory returns a successful result, a notification is posted and no jobs are scheduled.
+     */
+    @Test
+    public void testNotificationFactoryResultOK() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+
+        final int notificationId = 0;
+        final Notification notification = notificationFactory.createNotification(new PushMessage(pushBundle), notificationId);
+
+        notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @Override
+            public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
+                return NotificationFactory.Result.notification(notification);
+            }
+
+            @Override
+            public int getNextId(@NonNull PushMessage pushMessage) {
+                return notificationId;
+            }
+        };
+
+        displayRunnable.run();
+
+        verify(notificationManager).notify(Mockito.anyString(), Mockito.eq(notificationId), Mockito.eq(notification));
+        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
     }
 
     /**

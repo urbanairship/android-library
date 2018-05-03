@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
+import android.util.Log;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.CoreReceiver;
@@ -51,7 +52,9 @@ class IncomingPushRunnable implements Runnable {
     private final String providerClass;
     private final NotificationManagerCompat notificationManager;
     private boolean isLongRunning;
+    private boolean isProcessed;
     private final Runnable onFinish;
+    private final JobDispatcher jobDispatcher;
 
     /**
      * Default constructor.
@@ -63,8 +66,10 @@ class IncomingPushRunnable implements Runnable {
         this.message = builder.message;
         this.providerClass = builder.providerClass;
         this.isLongRunning = builder.isLongRunning;
+        this.isProcessed = builder.isProcessed;
         this.onFinish = builder.onFinish;
         this.notificationManager = builder.notificationManager == null ? NotificationManagerCompat.from(context) : builder.notificationManager;
+        this.jobDispatcher = builder.jobDispatcher == null ? JobDispatcher.shared(context) : builder.jobDispatcher;
     }
 
     @Override
@@ -81,8 +86,13 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        if (checkProvider(airship, providerClass, message)) {
-            processPush(airship);
+        if (checkProvider(airship, providerClass)) {
+            // If we've already processed the push, proceed to notification display
+            if (isProcessed) {
+                postProcessPush(airship);
+            } else {
+                processPush(airship);
+            }
         }
 
         if (onFinish != null) {
@@ -91,7 +101,7 @@ class IncomingPushRunnable implements Runnable {
     }
 
     /**
-     * Processes the push notification.
+     * Starts processing the push.
      *
      * @param airship The airship instance.
      */
@@ -103,44 +113,8 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        // Process any remote data background push before we decide ot drop the push on the ground
-        if (message.isRemoteData()) {
-            airship.getRemoteData().refresh();
-        }
-
         if (!airship.getPushManager().isComponentEnabled()) {
             Logger.info("PushManager component is disabled, ignoring message.");
-            return;
-        }
-
-        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
-            Logger.debug("PushJobHandler - Received a Rich Push.");
-            airship.getInbox().fetchMessages();
-        }
-
-
-        NotificationFactory factory = airship.getPushManager().getNotificationFactory();
-
-        if (factory != null && !isLongRunning && factory.requiresLongRunningTask(message)) {
-            Logger.info("Push requires a long running task. Scheduled for a later time: " + message);
-
-            if (!ManifestUtils.isPermissionGranted(Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
-                Logger.error("Notification factory requested long running task but the application does not define RECEIVE_BOOT_COMPLETED in the manifest. Notification will be lost if the device reboots before the notification is processed.");
-            }
-
-            JobInfo jobInfo = JobInfo.newBuilder()
-                                     .setAction(PushManagerJobHandler.ACTION_PROCESS_PUSH)
-                                     .generateUniqueId(context)
-                                     .setAirshipComponent(PushManager.class)
-                                     .setPersistent(true)
-                                     .setExtras(JsonMap.newBuilder()
-                                               .putOpt(EXTRA_PUSH, message)
-                                               .put(EXTRA_PROVIDER_CLASS, providerClass)
-                                               .build())
-                                     .build();
-
-            JobDispatcher.shared(context).dispatch(jobInfo);
-
             return;
         }
 
@@ -148,10 +122,6 @@ class IncomingPushRunnable implements Runnable {
             Logger.info("Received a duplicate push with canonical ID: " + message.getCanonicalPushId());
             return;
         }
-
-        airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
-        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
-
         if (message.isExpired()) {
             Logger.debug("Received expired push message, ignoring.");
             return;
@@ -162,110 +132,91 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
+        // Refresh remote data
+        if (message.isRemoteData()) {
+            airship.getRemoteData().refresh();
+        }
+
+        // Refresh inbox
+        if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && airship.getInbox().getMessage(message.getRichPushMessageId()) == null) {
+            Logger.debug("PushJobHandler - Received a Rich Push.");
+            airship.getInbox().fetchMessages();
+        }
+
         // Run the push actions
         runActions();
 
-        // Notify the legacy in-app message manager about the received push
+        // Notify components of the push
         airship.getLegacyInAppMessageManager().onPushReceived(message);
+        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+        airship.getPushManager().setLastReceivedMetadata(message.getMetadata());
 
-        Integer notificationId = null;
+        // Finish processing the push
+        postProcessPush(airship);
+    }
+
+    /**
+     * Finishes processing the push. This step builds the notification if applicable and
+     * notifies the airship receiver if the notification was posted or cancelled.
+     *
+     * @param airship The airship instance.
+     */
+    private void postProcessPush(UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
             Logger.info("User notifications opted out. Unable to display notification for message: " + message);
-        } else {
-            notificationId = displayNotification(airship, message);
+            sendPushResultBroadcast(null);
+            return;
         }
 
-        sendPushReceivedBroadcast(message, notificationId);
-    }
-
-    /**
-     * Runs all the push actions for message.
-     */
-    private void runActions() {
-        Bundle metadata = new Bundle();
-        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-
-        if (Build.VERSION.SDK_INT <= 25 || ActivityMonitor.shared(context).isAppForegrounded()) {
-            try {
-                ActionService.runActions(context, message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
-                return;
-            } catch (IllegalStateException e) {
-                Logger.verbose("Unable to push actions in a service.");
-            }
-        }
-
-        for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
-
-            ActionRunRequest.createRequest(action.getKey())
-                            .setMetadata(metadata)
-                            .setValue(action.getValue())
-                            .setSituation(Action.SITUATION_PUSH_RECEIVED)
-                            .run();
-        }
-    }
-
-    /**
-     * Checks if the message should be processed for the given provider.
-     *
-     * @param airship The airship instance.
-     * @param providerClass The provider class.
-     * @param message The push message.
-     * @return {@code true} if the message should be processed, otherwise {@code false}.
-     */
-    private boolean checkProvider(UAirship airship, String providerClass, PushMessage message) {
-        PushProvider provider = airship.getPushManager().getPushProvider();
-
-        if (provider == null || !provider.getClass().toString().equals(providerClass)) {
-            Logger.error("Received message callback from unexpected provider " + providerClass + ". Ignoring.");
-            return false;
-        }
-
-        if (!provider.isAvailable(context)) {
-            Logger.error("Received message callback when provider is unavailable. Ignoring.");
-            return false;
-        }
-
-        if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
-            Logger.error("Received message when push is disabled. Ignoring.");
-            return false;
-        }
-
-        if (!airship.getPushManager().getPushProvider().isUrbanAirshipMessage(context, airship, message)) {
-            Logger.debug("Ignoring push: " + message);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Displays the notification.
-     *
-     * @param airship The airship instance.
-     * @param message The push message.
-     * @return The resulting notification Id.
-     */
-    private Integer displayNotification(UAirship airship, @NonNull PushMessage message) {
-        int notificationId;
-        Notification notification;
         NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory == null) {
             Logger.info("NotificationFactory is null. Unable to display notification for message: " + message);
-            return null;
+            sendPushResultBroadcast(null);
+            return;
         }
 
+        if (!isLongRunning && factory.requiresLongRunningTask(message)) {
+            Logger.info("Push requires a long running task. Scheduled for a later time: " + message);
+            reschedulePush(message);
+            return;
+        }
+
+        int notificationId = 0;
+        NotificationFactory.Result result;
         try {
             notificationId = factory.getNextId(message);
-            notification = factory.createNotification(message, notificationId);
+            result = factory.createNotificationResult(message, notificationId);
         } catch (Exception e) {
-            Logger.error("Unable to create and display notification.", e);
-            return null;
+            Logger.error("Cancelling notification display to create and display notification.", e);
+            result = NotificationFactory.Result.cancel();
         }
 
-        if (notification == null) {
-            return null;
+        Logger.debug("IncomingPushRunnable - Received result status " + result.getStatus() + " for push message: " + message);
+
+        switch (result.getStatus()) {
+            case NotificationFactory.Result.OK:
+                postNotification(airship, result.getNotification(), notificationId);
+                sendPushResultBroadcast(notificationId);
+                break;
+            case NotificationFactory.Result.CANCEL:
+                sendPushResultBroadcast(null);
+                break;
+            case NotificationFactory.Result.RETRY:
+                Logger.info("Scheduling notification to be retried for a later time: " + message);
+                reschedulePush(message);
+                break;
         }
+    }
+
+    /**
+     * Posts the notification
+     *
+     * @param airship The airship instance.
+     * @param notification The notification.
+     * @param notificationId The notification ID.
+     */
+    private void postNotification(UAirship airship, Notification notification, int notificationId) {
 
         if (Build.VERSION.SDK_INT < 26) {
             if (!airship.getPushManager().isVibrateEnabled() || airship.getPushManager().isInQuietTime()) {
@@ -308,17 +259,15 @@ class IncomingPushRunnable implements Runnable {
 
         Logger.info("Posting notification: " + notification + " id: " + notificationId + " tag: " + message.getNotificationTag());
         notificationManager.notify(message.getNotificationTag(), notificationId, notification);
-        return notificationId;
     }
 
+
     /**
-     * Broadcasts an intent to notify the host application of a push message received, but
-     * only if a receiver is set to get the user-defined intent receiver.
+     * Sends the push broadcast with the notification result.
      *
-     * @param message The message that created the notification
-     * @param notificationId The ID of the messages created notification
+     * @param notificationId The notification ID if a notification was posted.
      */
-    private void sendPushReceivedBroadcast(@NonNull PushMessage message, @Nullable Integer notificationId) {
+    private void sendPushResultBroadcast(@Nullable Integer notificationId) {
         Intent intent = new Intent(PushManager.ACTION_PUSH_RECEIVED)
                 .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .addCategory(UAirship.getPackageName())
@@ -331,6 +280,88 @@ class IncomingPushRunnable implements Runnable {
         context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
     }
 
+    /**
+     * Runs all the push actions for message.
+     */
+    private void runActions() {
+        Bundle metadata = new Bundle();
+        metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
+
+        if (Build.VERSION.SDK_INT <= 25 || ActivityMonitor.shared(context).isAppForegrounded()) {
+            try {
+                ActionService.runActions(context, message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
+                return;
+            } catch (IllegalStateException e) {
+                Logger.verbose("Unable to push actions in a service.");
+            }
+        }
+
+        for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
+
+            ActionRunRequest.createRequest(action.getKey())
+                            .setMetadata(metadata)
+                            .setValue(action.getValue())
+                            .setSituation(Action.SITUATION_PUSH_RECEIVED)
+                            .run();
+        }
+    }
+
+    /**
+     * Checks if the message should be processed for the given provider.
+     *
+     * @param airship The airship instance.
+     * @param providerClass The provider class.
+     * @return {@code true} if the message should be processed, otherwise {@code false}.
+     */
+    private boolean checkProvider(UAirship airship, String providerClass) {
+        PushProvider provider = airship.getPushManager().getPushProvider();
+
+        if (provider == null || !provider.getClass().toString().equals(providerClass)) {
+            Logger.error("Received message callback from unexpected provider " + providerClass + ". Ignoring.");
+            return false;
+        }
+
+        if (!provider.isAvailable(context)) {
+            Logger.error("Received message callback when provider is unavailable. Ignoring.");
+            return false;
+        }
+
+        if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
+            Logger.error("Received message when push is disabled. Ignoring.");
+            return false;
+        }
+
+        if (!airship.getPushManager().getPushProvider().isUrbanAirshipMessage(context, airship, message)) {
+            Logger.debug("Ignoring push: " + message);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Reschedules the push to finish processing at a later time.
+     *
+     * @param message The push message.
+     */
+    private void reschedulePush(@NonNull PushMessage message) {
+        if (!ManifestUtils.isPermissionGranted(Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
+            Logger.error("Notification factory requested long running task but the application does not define RECEIVE_BOOT_COMPLETED in the manifest. Notification will be lost if the device reboots before the notification is processed.");
+        }
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(PushManagerJobHandler.ACTION_DISPLAY_NOTIFICATION)
+                                 .generateUniqueId(context)
+                                 .setAirshipComponent(PushManager.class)
+                                 .setPersistent(true)
+                                 .setExtras(JsonMap.newBuilder()
+                                                   .putOpt(EXTRA_PUSH, message)
+                                                   .put(EXTRA_PROVIDER_CLASS, providerClass)
+                                                   .build())
+                                 .build();
+
+        jobDispatcher.dispatch(jobInfo);
+    }
 
     /**
      * IncomingPushRunnable builder.
@@ -340,8 +371,10 @@ class IncomingPushRunnable implements Runnable {
         private PushMessage message;
         private String providerClass;
         private boolean isLongRunning;
+        private boolean isProcessed;
         private Runnable onFinish;
         private NotificationManagerCompat notificationManager;
+        private JobDispatcher jobDispatcher;
 
         /**
          * Default constructor.
@@ -386,6 +419,19 @@ class IncomingPushRunnable implements Runnable {
         }
 
         /**
+         * Sets if the push has been processed. If so, the runnable
+         * will proceed directly to notification display.
+         *
+         * @param processed <code>true </code>If the push has been processed, otherwise
+         * <code>false</code>.
+         * @return The builder instance.
+         */
+        Builder setProcessed(boolean processed) {
+            isProcessed = processed;
+            return this;
+        }
+
+        /**
          * Sets a callback when the runnable is finished.
          *
          * @param runnable A runnable.
@@ -397,7 +443,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         /**
-         * Sets the notification manage.
+         * Sets the notification manager.
          *
          * @param notificationManager The notification manager.
          * @return The builder instance.
@@ -408,10 +454,20 @@ class IncomingPushRunnable implements Runnable {
         }
 
         /**
+         * Sets the job dispatcher.
+         *
+         * @param jobDispatcher The job dispatcher.
+         * @return The builder instance.
+         */
+        Builder setJobDispatcher(@NonNull JobDispatcher jobDispatcher) {
+            this.jobDispatcher = jobDispatcher;
+            return this;
+        }
+
+        /**
          * Builds the runnable.
          *
          * @return A {@link IncomingPushRunnable}.
-         *
          * @throws IllegalArgumentException if provider and/or push message is missing.
          */
         IncomingPushRunnable build() {
@@ -420,7 +476,6 @@ class IncomingPushRunnable implements Runnable {
 
             return new IncomingPushRunnable(this);
         }
-
     }
 
 
