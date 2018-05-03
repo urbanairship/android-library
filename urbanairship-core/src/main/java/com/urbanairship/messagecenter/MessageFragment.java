@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.IntDef;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
@@ -20,19 +22,45 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.widget.UAWebChromeClient;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Fragment that displays a {@link RichPushMessage}.
  */
 public class MessageFragment extends Fragment {
 
+    @IntDef({ ERROR_DISPLAYING_MESSAGE, ERROR_FETCHING_MESSAGES, ERROR_MESSAGE_UNAVAILABLE })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Error {}
+
+    /**
+     * Unable to fetch messages.
+     */
+    protected static final int ERROR_FETCHING_MESSAGES = 1;
+
+    /**
+     * Error displaying the message.
+     */
+    protected static final int ERROR_DISPLAYING_MESSAGE = 2;
+
+    /**
+     * Message has been deleted or expired.
+     */
+    protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
+
     private static final String MESSAGE_ID_KEY = "com.urbanairship.richpush.URL_KEY";
     private UAWebView webView;
     private View progressBar;
     private RichPushMessage message;
     private View errorPage;
+    private Button retryButton;
+    private TextView errorMessage;
+
 
     private Integer error = null;
     private Cancelable fetchMessageRequest;
@@ -96,7 +124,7 @@ public class MessageFragment extends Fragment {
             throw new RuntimeException("Your content must have a progress View whose id attribute is 'android.R.id.progress'");
         }
 
-        webView = (UAWebView) view.findViewById(android.R.id.message);
+        webView = view.findViewById(android.R.id.message);
         if (webView == null) {
             throw new RuntimeException("Your content must have a UAWebView whose id attribute is 'android.R.id.message'");
         }
@@ -115,7 +143,7 @@ public class MessageFragment extends Fragment {
                 super.onPageFinished(view, url);
 
                 if (error != null) {
-                    showErrorPage();
+                    showErrorPage(ERROR_DISPLAYING_MESSAGE);
                 } else if (message != null) {
                     message.markRead();
                     showMessage();
@@ -130,7 +158,7 @@ public class MessageFragment extends Fragment {
             }
         });
 
-        webView.setWebChromeClient(new WebChromeClient() {
+        webView.setWebChromeClient(new UAWebChromeClient(getActivity()) {
             @Override
             public Bitmap getDefaultVideoPoster() {
 
@@ -148,7 +176,8 @@ public class MessageFragment extends Fragment {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        Button retryButton = (Button) view.findViewById(R.id.retry_button);
+
+        retryButton = view.findViewById(R.id.retry_button);
         if (retryButton != null) {
             retryButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -157,6 +186,8 @@ public class MessageFragment extends Fragment {
                 }
             });
         }
+
+        errorMessage = view.findViewById(R.id.error_message);
     }
 
     @Override
@@ -250,9 +281,47 @@ public class MessageFragment extends Fragment {
 
     /**
      * Shows the error page.
+     *
+     * @deprecated Use {@link #showErrorPage(int)} instead.
      */
+    @Deprecated
     protected void showErrorPage() {
+        showErrorPage(ERROR_DISPLAYING_MESSAGE);
+    }
+
+    /**
+     * Shows the error page.
+     *
+     * @param error The error.
+     */
+    protected void showErrorPage(@Error int error) {
         if (errorPage != null) {
+
+            switch (error) {
+                case ERROR_MESSAGE_UNAVAILABLE:
+                    if (retryButton != null) {
+                        retryButton.setVisibility(View.GONE);
+                    }
+
+                    if (errorMessage != null) {
+                        errorMessage.setText(R.string.ua_mc_no_longer_available);
+                    }
+
+                    break;
+
+                case ERROR_FETCHING_MESSAGES:
+                case ERROR_DISPLAYING_MESSAGE:
+                    if (retryButton != null) {
+                        retryButton.setVisibility(View.VISIBLE);
+                    }
+
+                    if (errorMessage != null) {
+                        errorMessage.setText(R.string.ua_mc_failed_to_load);
+                    }
+
+                    break;
+            }
+
             if (errorPage.getVisibility() == View.GONE) {
                 errorPage.setAlpha(0);
                 errorPage.setVisibility(View.VISIBLE);
@@ -295,7 +364,7 @@ public class MessageFragment extends Fragment {
                     message = UAirship.shared().getInbox().getMessage(getMessageId());
 
                     if (message == null) {
-                        showErrorPage();
+                        showErrorPage(success ? ERROR_MESSAGE_UNAVAILABLE : ERROR_FETCHING_MESSAGES);
                     } else {
                         Logger.info("Loading message: " + message.getMessageId());
                         webView.loadRichPushMessage(message);

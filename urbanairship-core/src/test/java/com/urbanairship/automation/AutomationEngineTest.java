@@ -501,8 +501,8 @@ public class AutomationEngineTest extends BaseTestCase {
         // Verify it's finished
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_FINISHED);
 
-        // Update the schedule
-        long end = System.currentTimeMillis() + 100;
+        // Update the schedule with a end time set to the next day
+        long end = System.currentTimeMillis() + 1000 * 60 * 60 * 24;
         final ActionScheduleEdits edits = ActionScheduleEdits.newBuilder()
                                                              .setLimit(2)
                                                              .setStart(10)

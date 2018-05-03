@@ -116,8 +116,6 @@ public class JsonMatcherTest extends BaseTestCase {
                                                     .build();
 
         assertEquals(ignoreCaseMatcher, JsonMatcher.parse(ignoreCaseMatcherJson));
-
-
     }
 
     /**
