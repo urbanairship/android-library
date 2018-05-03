@@ -37,7 +37,7 @@ dependencies {
 
     // Urban Airship - FCM
     implementation project(':urbanairship-fcm')
-    implementation "com.google.firebase:firebase-messaging:${airshipProperties.playServicesVersion}"
+    implementation "com.google.firebase:firebase-messaging:${airshipProperties.fcmVersion}"
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"

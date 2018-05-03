@@ -22,6 +22,7 @@ dependencies {
     testImplementation 'org.robolectric:shadows-supportv4:3.5.1'
     testImplementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
     testImplementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesVersion}"
+    testImplementation "com.google.android.gms:play-services-ads-identifier:${airshipProperties.playServicesVersion}"
     doclava("com.google.doclava:doclava:1.0.6")
 }
 

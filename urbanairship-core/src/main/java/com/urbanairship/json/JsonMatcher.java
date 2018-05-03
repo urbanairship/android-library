@@ -226,7 +226,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         if (scopeList != null ? !scopeList.equals(matcher.scopeList) : matcher.scopeList != null) {
             return false;
         }
-        if (ignoreCase != null ? !ignoreCase.equals(matcher.scopeList) : matcher.ignoreCase != null) {
+        if (ignoreCase != null ? !ignoreCase.equals(matcher.ignoreCase) : matcher.ignoreCase != null) {
             return false;
         }
 
@@ -238,6 +238,7 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         int result = key != null ? key.hashCode() : 0;
         result = 31 * result + (scopeList != null ? scopeList.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (ignoreCase != null ? ignoreCase.hashCode() : 0);
         return result;
     }
 }
