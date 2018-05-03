@@ -20,6 +20,7 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
+import com.urbanairship.widget.UAWebChromeClient;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
@@ -96,7 +97,7 @@ public class MessageFragment extends Fragment {
             throw new RuntimeException("Your content must have a progress View whose id attribute is 'android.R.id.progress'");
         }
 
-        webView = (UAWebView) view.findViewById(android.R.id.message);
+        webView = view.findViewById(android.R.id.message);
         if (webView == null) {
             throw new RuntimeException("Your content must have a UAWebView whose id attribute is 'android.R.id.message'");
         }
@@ -130,7 +131,7 @@ public class MessageFragment extends Fragment {
             }
         });
 
-        webView.setWebChromeClient(new WebChromeClient() {
+        webView.setWebChromeClient(new UAWebChromeClient(getActivity()) {
             @Override
             public Bitmap getDefaultVideoPoster() {
 
@@ -148,7 +149,7 @@ public class MessageFragment extends Fragment {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        Button retryButton = (Button) view.findViewById(R.id.retry_button);
+        Button retryButton = view.findViewById(R.id.retry_button);
         if (retryButton != null) {
             retryButton.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -35,6 +35,7 @@ import com.urbanairship.js.Whitelist;
 import com.urbanairship.richpush.RichPushInbox;
 import com.urbanairship.richpush.RichPushMessage;
 import com.urbanairship.util.ManifestUtils;
+import com.urbanairship.widget.UAWebChromeClient;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
 
@@ -155,8 +156,8 @@ public class LandingPageActivity extends Activity {
                     ActionBar.DISPLAY_HOME_AS_UP, ActionBar.DISPLAY_HOME_AS_UP);
         }
 
-        webView = (UAWebView) findViewById(android.R.id.primary);
-        final ProgressBar progressBar = (ProgressBar) findViewById(android.R.id.progress);
+        webView = findViewById(android.R.id.primary);
+        final ProgressBar progressBar = findViewById(android.R.id.progress);
 
         if (webView == null) {
             Logger.error("LandingPageActivity - A UAWebView with id android.R.id.primary is not defined" +
@@ -164,6 +165,7 @@ public class LandingPageActivity extends Activity {
             finish();
             return;
         }
+
 
         // Workaround render issue with older android devices
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -206,7 +208,7 @@ public class LandingPageActivity extends Activity {
             }
         });
 
-        webView.setWebChromeClient(new WebChromeClient() {
+        webView.setWebChromeClient(new UAWebChromeClient(this) {
             @Override
             public Bitmap getDefaultVideoPoster() {
 
