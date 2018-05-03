@@ -86,6 +86,9 @@ publishing {
 
 
 bintray {
+    user = "$System.env.BINTRAY_USER"
+    key = "$System.env.BINTRAY_API_KEY"
+
     if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayApiKey')) {
         // Credentials should be stored in ~/.gradle/gradle.properties
         user = bintrayUser
@@ -109,6 +112,9 @@ bintray {
             released = new Date()
 
             mavenCentralSync {
+                user = "$System.env.MAVEN_USER"
+                password = "$System.env.MAVEN_PASSWORD"
+
                 if (project.hasProperty('mavenUser') && project.hasProperty('mavenPassword')) {
                     // Credentials should be stored in ~/.gradle/gradle.properties
                     user = mavenUser
