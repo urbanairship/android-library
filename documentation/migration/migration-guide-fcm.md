@@ -19,7 +19,7 @@ Migration Steps:
 
      // Urban Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
-     implementation "com.google.firebase:firebase-messaging:12.0.1"
+     implementation 'com.google.firebase:firebase-messaging:15.0.0'
 
      // Urban Airship SDK - ADM (Optional - if you support ADM)
      implementation 'com.urbanairship.android:urbanairship-adm:9.1.0'
