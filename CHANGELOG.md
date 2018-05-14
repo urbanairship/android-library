@@ -3,6 +3,18 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.1.1 - May 14, 2018
+=============================
+
+Patch release to fix issues with proguard as well as enables fullscreen video for landing pages and
+message center.
+
+Changes
+-------
+- Enable fullscreen video for landing pages and message center.
+- Added new error message when trying to display a message center message that is no longer available.
+- Fixed proguard issue.
+
 Version 9.1.0 - April 18, 2018
 ==============================
 
