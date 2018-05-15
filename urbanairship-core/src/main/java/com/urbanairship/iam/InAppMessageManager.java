@@ -643,7 +643,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         }
 
-        if (resolutionInfo.buttonInfo != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.buttonInfo.getBehavior())) {
+        if (resolutionInfo.getButtonInfo() != null && ButtonInfo.BEHAVIOR_CANCEL.equals(resolutionInfo.getButtonInfo().getBehavior())) {
             cancelSchedule(scheduleId);
         }
     }
