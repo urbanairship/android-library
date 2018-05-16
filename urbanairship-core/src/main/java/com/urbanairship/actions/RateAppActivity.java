@@ -9,6 +9,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -91,53 +93,54 @@ public class RateAppActivity extends ThemedActivity {
         }
 
         Intent intent = getIntent();
-        final Uri storeUri;
-        intent.getDataString();
         if (intent == null) {
             Logger.warn("RateAppActivity - Started activity with null intent.");
             finish();
             return;
         }
 
+        final Uri storeUri = intent.getParcelableExtra(RateAppAction.STORE_URI_KEY);
+
+        if (storeUri == null) {
+            Logger.warn("RateAppActivity - Missing store URI.");
+            finish();
+            return;
+        }
+
+
+
         AlertDialog.Builder builder;
         Context context = this;
         builder = new AlertDialog.Builder(context);
 
-        // Store Uri is required
-        if (intent.getStringExtra(RateAppAction.STORE_URI_KEY) == null) {
-            return;
-        }
-
         if (intent.getStringExtra(RateAppAction.TITLE_KEY) != null) {
             builder.setTitle(intent.getStringExtra(RateAppAction.TITLE_KEY));
+        } else {
+            String title = context.getString(R.string.ua_rate_app_action_default_title, getAppName());
+            builder.setTitle(title);
         }
 
         if (intent.getStringExtra(RateAppAction.BODY_KEY) != null) {
             builder.setMessage(intent.getStringExtra(RateAppAction.BODY_KEY));
+        } else {
+            String positiveButtonTitle = context.getString(R.string.ua_rate_app_action_default_rate_positive_button);
+            String body = context.getString(R.string.ua_rate_app_action_default_body, positiveButtonTitle);
+            builder.setMessage(body);
         }
-
-        storeUri = Uri.parse(intent.getStringExtra(RateAppAction.STORE_URI_KEY));
 
         builder.setPositiveButton(
                 context.getString(R.string.ua_rate_app_action_default_rate_positive_button),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        try {
+                            Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, storeUri);
+                            startActivity(openLinkIntent);
+                        } catch (ActivityNotFoundException e) {
+                            Logger.error("No web browser available to handle request to open the store link.", e);
+                        }
+
                         dialog.cancel();
                         finish();
-
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                final Uri uri = storeUri;
-                                try {
-                                    Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, uri);
-                                    UAirship.getApplicationContext().startActivity(openLinkIntent);
-                                } catch (ActivityNotFoundException e) {
-                                    Logger.error("No web browser available to handle request to open the store link.");
-                                }
-                            }
-                        });
                     }
                 });
 
@@ -185,5 +188,18 @@ public class RateAppActivity extends ThemedActivity {
         }
 
         this.startActivity(restartIntent);
+    }
+
+    private String getAppName() {
+        String packageName = UAirship.getApplicationContext().getPackageName();
+        PackageManager packageManager = UAirship.getApplicationContext().getPackageManager();
+
+        try {
+            ApplicationInfo info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+            String appName = (String)packageManager.getApplicationLabel(info);
+            return appName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return "";
+        }
     }
 }

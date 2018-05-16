@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -281,6 +282,14 @@ public class AirshipConfigOptions {
      */
     public final String notificationChannel;
 
+    /**
+     * Optional app store link when using the rate app action. If not set,
+     * the action will generate it using hte app's current package name.
+     * <p>
+     * Example: "market://details?id=com.example.android"
+     */
+    public final Uri appStoreUri;
+
     private AirshipConfigOptions(Builder builder) {
         this.productionAppKey = builder.productionAppKey;
         this.productionAppSecret = builder.productionAppSecret;
@@ -311,6 +320,7 @@ public class AirshipConfigOptions {
         this.notificationChannel = builder.notificationChannel;
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
+        this.appStoreUri = builder.appStoreUri;
     }
 
     /**
@@ -420,6 +430,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
         private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
+        private static final String FIELD_APP_STORE_URI = "appStoreUri";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -450,6 +461,7 @@ public class AirshipConfigOptions {
         private String notificationChannel;
         private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
+        private Uri appStoreUri;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -668,6 +680,10 @@ public class AirshipConfigOptions {
                             String className = configParser.getString(i);
                             Class<? extends PushProvider> providerClass = Class.forName(className).asSubclass(PushProvider.class);
                             this.setCustomPushProvider(providerClass.newInstance());
+                            break;
+
+                        case FIELD_APP_STORE_URI:
+                            this.setAppStoreUri(Uri.parse(configParser.getString(i)));
                             break;
                     }
                 } catch (Exception e) {
@@ -1038,6 +1054,21 @@ public class AirshipConfigOptions {
          */
         public Builder setCustomPushProvider(PushProvider customPushProvider) {
             this.customPushProvider = customPushProvider;
+            return this;
+        }
+
+
+        /**
+         * Sets the app store URI for the rate-app action. If not set,
+         * the action will generate it using the app's current package name.
+         *
+         * <p>
+         * Example: "market://details?id=com.example.android"
+         * @param appStoreUri The app store URI.
+         * @return The config options builder.
+         */
+        public Builder setAppStoreUri(Uri appStoreUri) {
+            this.appStoreUri = appStoreUri;
             return this;
         }
 
