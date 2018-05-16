@@ -3,6 +3,24 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.2.0 - May 16, 2018
+============================
+
+Minor release that includes new APIs to allow extending in-app messages before they are displayed to
+the user, exposes information on the ResolutionInfo, and adds a new NotificationFactory create method
+that allows retrying a failed notification at a later time. This release also includes fixes to the
+Rate App Action crashing on Marshmallow and older devices. Applications that use the rate
+app action should update.
+
+Changes
+-------
+- Added message extenders to the InAppMessageManager.
+- Added a new optional createNotification method that returns status.
+- Expose type, duration, and button info on the ResolutionInfo class.
+- Fixed BuildConfig conflicts with the urbanairship-sdk module.
+- Fixed Rate App Action crashes.
+
+
 Version 9.1.1 - May 14, 2018
 =============================
 
