@@ -124,6 +124,12 @@ class NamedUserJobHandler {
             return JobInfo.JOB_RETRY;
         }
 
+        // 429
+        if (response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
+            Logger.info("Update named user failed. Too many requests. Will retry.");
+            return JobInfo.JOB_RETRY;
+        }
+
         // 2xx
         if (UAHttpStatusUtil.inSuccessRange(response.getStatus())) {
             Logger.info("Update named user succeeded with status: " + response.getStatus());
@@ -161,8 +167,8 @@ class NamedUserJobHandler {
         while ((mutation = namedUser.getTagGroupStore().pop()) != null) {
             Response response = client.updateTagGroups(namedUserId, mutation);
 
-            // 5xx or no response
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // No response, 5xx, or 429
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
                 Logger.info("NamedUserJobHandler - Failed to update tag groups, will retry later.");
                 namedUser.getTagGroupStore().push(mutation);
                 return JobInfo.JOB_RETRY;
