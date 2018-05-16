@@ -317,6 +317,16 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Creates a new builder from an existing message.
+     *
+     * @param message The in-app message.
+     * @return A new in-app message builder.
+     */
+    public static Builder newBuilder(InAppMessage message) {
+        return new Builder(message);
+    }
+
+    /**
      * Creator for parcelable interface.
      *
      * @hide
@@ -420,6 +430,17 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         private JsonValue campaigns;
 
         private Builder() {}
+
+        public Builder(InAppMessage message) {
+            this.type = message.type;
+            this.content = message.content;
+            this.id = message.id;
+            this.extras = message.extras;
+            this.audience = message.audience;
+            this.actions = message.actions;
+            this.source = message.source;
+            this.campaigns = message.campaigns;
+        }
 
         /**
          * Sets the display content to the parsed type.

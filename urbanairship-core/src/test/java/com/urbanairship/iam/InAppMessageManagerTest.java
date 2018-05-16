@@ -23,6 +23,7 @@ import com.urbanairship.remotedata.RemoteDataPayload;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -36,6 +37,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -391,12 +393,44 @@ public class InAppMessageManagerTest extends BaseTestCase {
                                                                                                            .build())
                                                                                    .build());
 
+        // Prepare the schedule
+        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
         driverCallbacks.onDisplay(schedule.getId());
 
         // Verify the schedule is finished
         verify(mockDriver).displayFinished("schedule id");
         verifyZeroInteractions(mockAdapter);
+    }
+
+    @Test
+    public void testMessageExtending() {
+        manager.setMessageExtender(new InAppMessageExtender() {
+            @NonNull
+            @Override
+            public InAppMessage extend(@NonNull InAppMessage message) {
+                return InAppMessage.newBuilder(message).setId("some other id").build();
+            }
+        });
+
+        InAppMessageAdapter.Factory factory = mock(InAppMessageAdapter.Factory.class);
+        manager.setAdapterFactory(schedule.getInfo().getInAppMessage().getType(), factory);
+
+        // Resume an activity
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+        // Prepare the message
+        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+
+        verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
+            @Override
+            public boolean matches(InAppMessage argument) {
+                return argument.getId().equals("some other id");
+            }
+        }));
     }
 
     @Test

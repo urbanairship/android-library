@@ -365,6 +365,16 @@ public class FullScreenDisplayContent implements DisplayContent {
     }
 
     /**
+     * Creates a builder from existing display content.
+     *
+     * @param displayContent The display content.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull FullScreenDisplayContent displayContent) {
+        return new Builder(displayContent);
+    }
+
+    /**
      * Display Content Builder.
      */
     public static class Builder {
@@ -383,10 +393,20 @@ public class FullScreenDisplayContent implements DisplayContent {
         private int dismissButtonColor = Color.BLACK;
         private ButtonInfo footer;
 
-        /**
-         * Default constructor.
-         */
+
         private Builder() {}
+
+        private Builder(FullScreenDisplayContent displayContent) {
+            this.heading = displayContent.heading;
+            this.body = displayContent.body;
+            this.media = displayContent.media;
+            this.buttonLayout = displayContent.buttonLayout;
+            this.buttons = displayContent.buttons;
+            this.template = displayContent.template;
+            this.backgroundColor = displayContent.backgroundColor;
+            this.dismissButtonColor = displayContent.dismissButtonColor;
+            this.footer = displayContent.footer;
+        }
 
         /**
          * Sets the message's heading.

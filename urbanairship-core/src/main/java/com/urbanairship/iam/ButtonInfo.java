@@ -328,6 +328,16 @@ public class ButtonInfo implements JsonSerializable {
     }
 
     /**
+     * Creates a builder from existing button info.
+     *
+     * @param buttonInfo The button info.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull ButtonInfo buttonInfo) {
+        return new Builder(buttonInfo);
+    }
+
+    /**
      * Button info builder class.
      */
     public static class Builder {
@@ -341,6 +351,16 @@ public class ButtonInfo implements JsonSerializable {
         private final Map<String, JsonValue> actions = new HashMap<>();
 
         private Builder() {}
+
+        private Builder(ButtonInfo buttonInfo) {
+            this.label = buttonInfo.label;
+            this.id = buttonInfo.id;
+            this.behavior = buttonInfo.behavior;
+            this.borderRadius = buttonInfo.borderRadius;
+            this.backgroundColor = buttonInfo.backgroundColor;
+            this.borderColor = buttonInfo.borderColor;
+            this.actions.putAll(buttonInfo.actions);
+        }
 
         /**
          * Sets the button's label text info.

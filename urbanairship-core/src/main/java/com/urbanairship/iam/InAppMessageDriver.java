@@ -31,6 +31,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
          * @param message The in-app message.
          * @return {@code true} if the schedule's message should be displayed, otherwise {@code false}.
          */
+        @MainThread
         boolean isMessageReady(@NonNull String scheduleId, @NonNull InAppMessage message);
 
         /**
@@ -38,6 +39,7 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
          *
          * @param scheduleId The in-app message's schedule ID.
          */
+        @MainThread
         void onDisplay(@NonNull String scheduleId);
     }
 

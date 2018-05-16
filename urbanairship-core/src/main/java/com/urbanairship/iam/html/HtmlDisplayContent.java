@@ -163,6 +163,16 @@ public class HtmlDisplayContent implements DisplayContent {
     }
 
     /**
+     * Creates a builder from existing display content.
+     *
+     * @param displayContent The display content.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull HtmlDisplayContent displayContent) {
+        return new Builder(displayContent);
+    }
+
+    /**
      * Display Content Builder.
      */
     public static class Builder {
@@ -171,10 +181,13 @@ public class HtmlDisplayContent implements DisplayContent {
         private int dismissButtonColor = Color.BLACK;
         private int backgroundColor = Color.WHITE;;
 
-        /**
-         * Default constructor.
-         */
         private Builder() {}
+
+        private Builder(HtmlDisplayContent displayContent) {
+            this.url = displayContent.url;
+            this.dismissButtonColor = displayContent.dismissButtonColor;
+            this.backgroundColor = displayContent.backgroundColor;
+        }
 
         /**
          * Sets the message's URL.

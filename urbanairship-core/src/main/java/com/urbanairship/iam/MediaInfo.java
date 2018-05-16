@@ -162,6 +162,16 @@ public class MediaInfo implements JsonSerializable {
     }
 
     /**
+     * Creates a builder from existing media info.
+     *
+     * @param mediaInfo The media info.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull MediaInfo mediaInfo) {
+        return new Builder(mediaInfo);
+    }
+
+    /**
      * Media info builder.
      */
     public static class Builder {
@@ -170,6 +180,12 @@ public class MediaInfo implements JsonSerializable {
         private String description;
 
         private Builder() {}
+
+        private Builder(MediaInfo mediaInfo) {
+            this.url = mediaInfo.url;
+            this.description = mediaInfo.description;
+            this.type = mediaInfo.type;
+        }
 
         /**
          * Sets the media URL.

@@ -474,6 +474,17 @@ public class BannerDisplayContent implements DisplayContent {
         return new Builder();
     }
 
+
+    /**
+     * Creates a builder from existing display content.
+     *
+     * @param displayContent The display content.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull BannerDisplayContent displayContent) {
+        return new Builder(displayContent);
+    }
+
     /**
      * Banner Display Content Builder.
      */
@@ -495,10 +506,22 @@ public class BannerDisplayContent implements DisplayContent {
         private float borderRadius = 0;
         private final Map<String, JsonValue> actions = new HashMap<>();
 
-        /**
-         * Default constructor.
-         */
         private Builder() {}
+
+        private Builder(BannerDisplayContent displayContent) {
+            this.heading = displayContent.heading;
+            this.body = displayContent.body;
+            this.media = displayContent.media;
+            this.buttonLayout = displayContent.buttonLayout;
+            this.buttons = displayContent.buttons;
+            this.placement = displayContent.placement;
+            this.template = displayContent.template;
+            this.duration = displayContent.duration;
+            this.backgroundColor = displayContent.backgroundColor;
+            this.dismissButtonColor = displayContent.dismissButtonColor;
+            this.borderRadius = displayContent.borderRadius;
+            this.actions.putAll(displayContent.actions);
+        }
 
         /**
          * Sets the banner's heading.

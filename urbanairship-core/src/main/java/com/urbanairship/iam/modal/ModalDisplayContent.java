@@ -422,6 +422,17 @@ public class ModalDisplayContent implements DisplayContent {
     }
 
     /**
+     * Creates a builder from existing display content.
+     *
+     * @param displayContent The display content.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull ModalDisplayContent displayContent) {
+        return new Builder(displayContent);
+    }
+
+
+    /**
      * Display Content Builder.
      */
     public static class Builder {
@@ -442,10 +453,21 @@ public class ModalDisplayContent implements DisplayContent {
         private float borderRadius;
         private boolean isFullscreenDisplayAllowed;
 
-        /**
-         * Default constructor.
-         */
         private Builder() {}
+
+        private Builder(ModalDisplayContent displayContent) {
+            this.heading = displayContent.heading;
+            this.body = displayContent.body;
+            this.media = displayContent.media;
+            this.buttonLayout = displayContent.buttonLayout;
+            this.buttons = displayContent.buttons;
+            this.template = displayContent.template;
+            this.backgroundColor = displayContent.backgroundColor;
+            this.dismissButtonColor = displayContent.dismissButtonColor;
+            this.footer = displayContent.footer;
+            this.borderRadius = displayContent.borderRadius;
+            this.isFullscreenDisplayAllowed = displayContent.isFullscreenDisplayAllowed;
+        }
 
         /**
          * Sets the message's heading.

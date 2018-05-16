@@ -340,6 +340,16 @@ public class TextInfo implements JsonSerializable {
     }
 
     /**
+     * Creates a builder from existing text info.
+     *
+     * @param textInfo The text info.
+     * @return A builder instance.
+     */
+    public static Builder newBuilder(@NonNull TextInfo textInfo) {
+        return new Builder(textInfo);
+    }
+
+    /**
      * Text info builder.
      */
     public static class Builder {
@@ -356,6 +366,16 @@ public class TextInfo implements JsonSerializable {
         private List<String> fontFamilies = new ArrayList<>();
 
         private Builder() {}
+
+        private Builder(TextInfo textInfo) {
+            this.text = textInfo.text;
+            this.color = textInfo.color;
+            this.size = textInfo.size;
+            this.alignment = textInfo.alignment;
+            this.styles = textInfo.styles;
+            this.drawable = textInfo.drawable;
+            this.fontFamilies = textInfo.fontFamilies;
+        }
 
         /**
          * Sets the text.
