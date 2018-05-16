@@ -13,6 +13,11 @@ import java.util.Map;
  */
 public class Response {
 
+    /**
+     * Status code for 429 - too many requests.
+     */
+    public static final int HTTP_TOO_MANY_REQUESTS = 429;
+
     private String responseBody;
     private Map<String, List<String>> responseHeaders;
     private int status;

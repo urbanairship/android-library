@@ -166,6 +166,24 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
 
 
     /**
+     * Test creating channel returns a retry when the status code is 429.
+     */
+    @Test
+    public void testCreateChannelTooManyRequests() {
+        // Set up channel response
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+
+        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
+
+        // Return the response
+        when(client.createChannelWithPayload(payload)).thenReturn(response);
+
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
+    }
+
+    /**
      * Test update registration fail to create a channel when channel response code is not successful
      */
     @Test
@@ -193,6 +211,28 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Verify channel creation failed
         assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
         assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
+    }
+
+    /**
+     * Test update registration returns a retry when the status is 429.
+     */
+    @Test
+    public void testUpdateRegistrationTooManyRequests() {
+        // Verify channel doesn't exist in preferences
+        assertNull("Channel ID should be null in preferences", pushManager.getChannelId());
+        assertNull("Channel location should be null in preferences", pushManager.getChannelLocation());
+
+        // Set up channel response
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+
+        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
+
+        // Return the response
+        when(client.createChannelWithPayload(payload)).thenReturn(response);
+
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_CHANNEL_REGISTRATION).build();
+        assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
     }
 
     /**
@@ -356,6 +396,38 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         Response response = Mockito.mock(Response.class);
         when(client.updateTagGroups(fakeChannelId, mutation)).thenReturn(response);
         when(response.getStatus()).thenReturn(500);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
+
+        // Verify update tag groups is called
+        Mockito.verify(client).updateTagGroups(fakeChannelId, mutation);
+
+        // Verify pending tags persist
+        assertEquals(1, tagGroupStore.getMutations().size());
+        assertEquals(mutation, tagGroupStore.getMutations().get(0));
+    }
+
+    /**
+     * Test update tag groups retries if the status is 429.
+     */
+    @Test
+    public void testUpdateTagGroupsTooManyRequests() throws JsonException {
+        // Return a named user ID
+        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
+
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+
+        // Provide pending changes
+        TagGroupMutationStore tagGroupStore = pushManager.getTagGroupStore();
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(client.updateTagGroups(fakeChannelId, mutation)).thenReturn(response);
+        when(response.getStatus()).thenReturn(429);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS).build();

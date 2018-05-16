@@ -258,8 +258,8 @@ class PushManagerJobHandler {
 
         Response response = channelClient.updateChannelWithPayload(channelLocation, payload);
 
-        // 5xx
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+        // No response, 5xx, or 429
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, false);
@@ -310,8 +310,8 @@ class PushManagerJobHandler {
 
         Response response = channelClient.createChannelWithPayload(payload);
 
-        // 5xx
-        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+        // No response, 5xx, or 429
+        if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
             // Server error occurred, so retry later.
             Logger.error("Channel registration failed, will retry.");
             sendRegistrationFinishedBroadcast(false, true);
@@ -507,8 +507,8 @@ class PushManagerJobHandler {
         while ((mutation = pushManager.getTagGroupStore().pop()) != null) {
             Response response = channelClient.updateTagGroups(channelId, mutation);
 
-            // 5xx or no response
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus())) {
+            // No response, 5xx, or 429
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
                 Logger.info("PushManagerJobHandler - Failed to update tag groups, will retry later.");
                 pushManager.getTagGroupStore().push(mutation);
                 return JobInfo.JOB_RETRY;

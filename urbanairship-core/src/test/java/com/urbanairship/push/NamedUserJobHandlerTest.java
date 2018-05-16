@@ -150,6 +150,30 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
     }
 
     /**
+     * Test associate named user retries if the status is 429
+     */
+    @Test
+    public void testAssociateNamedUserTooManyRequests() {
+        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(namedUser.getId()).thenReturn("namedUserID");
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
+        when(namedUserClient.associate("namedUserID", "channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
+
+        // Verify the update was performed
+        verify(namedUserClient).associate("namedUserID", "channelID");
+
+        // Verify the last change token was not updated
+        assertNotEquals(changeToken, dataStore.getString(NamedUserJobHandler.LAST_UPDATED_TOKEN_KEY, null));
+    }
+
+    /**
      * Test disassociate named user succeeds if the status is 2xx.
      */
     @Test
@@ -216,6 +240,30 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
         when(response.getStatus()).thenReturn(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        when(namedUserClient.disassociate("channelID")).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_NAMED_USER).build();
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
+
+        // Verify the update was performed
+        verify(namedUserClient).disassociate("channelID");
+
+        // Verify the last change token was not updated
+        assertNotEquals(changeToken, dataStore.getString(NamedUserJobHandler.LAST_UPDATED_TOKEN_KEY, null));
+    }
+
+    /**
+     * Test associate named user retries if the status is 429
+     */
+    @Test
+    public void testDisassociateNamedUserTooManyRequests() {
+        when(pushManager.getChannelId()).thenReturn("channelID");
+        when(namedUser.getId()).thenReturn(null);
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
         when(namedUserClient.disassociate("channelID")).thenReturn(response);
 
         // Perform the update
@@ -339,6 +387,38 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         Response response = Mockito.mock(Response.class);
         when(namedUserClient.updateTagGroups("namedUserId", mutation)).thenReturn(response);
         when(response.getStatus()).thenReturn(500);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
+        Assert.assertEquals(JobInfo.JOB_RETRY, jobHandler.performJob(jobInfo));
+
+        // Verify updateNamedUserTags called
+        Mockito.verify(namedUserClient).updateTagGroups("namedUserId", mutation);
+
+        // Verify pending tags persist
+        assertEquals(1, tagGroupStore.getMutations().size());
+        assertEquals(mutation, tagGroupStore.getMutations().get(0));
+    }
+
+    /**
+     * Test update named user tags retries if the status is 429.
+     */
+    @Test
+    public void testUpdateNamedUserTagsTooManyRequests() throws JsonException {
+        // Return a named user ID
+        when(namedUser.getId()).thenReturn("namedUserId");
+
+        // Provide pending changes
+        TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
+        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
+
+        tagGroupStore.clear();
+        tagGroupStore.push(mutation);
+
+        // Set up a 429 response
+        Response response = Mockito.mock(Response.class);
+        when(namedUserClient.updateTagGroups("namedUserId", mutation)).thenReturn(response);
+        when(response.getStatus()).thenReturn(Response.HTTP_TOO_MANY_REQUESTS);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();

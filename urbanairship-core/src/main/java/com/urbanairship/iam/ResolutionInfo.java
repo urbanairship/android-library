@@ -14,18 +14,35 @@ import java.lang.annotation.RetentionPolicy;
  */
 public final class ResolutionInfo {
 
-    @StringDef({ ResolutionEvent.RESOLUTION_BUTTON_CLICK, ResolutionEvent.RESOLUTION_MESSAGE_CLICK, ResolutionEvent.RESOLUTION_USER_DISMISSED, ResolutionEvent.RESOLUTION_TIMED_OUT })
+    @StringDef({ RESOLUTION_BUTTON_CLICK, RESOLUTION_MESSAGE_CLICK, RESOLUTION_USER_DISMISSED, RESOLUTION_TIMED_OUT })
     @Retention(RetentionPolicy.SOURCE)
-    @interface Type {}
+    public @interface Type {}
+
+    /**
+     * Button click resolution.
+     */
+    public static final String RESOLUTION_BUTTON_CLICK = "button_click";
+
+    /**
+     * Message click resolution
+     */
+    public static final String RESOLUTION_MESSAGE_CLICK = "message_click";
+
+    /**
+     * User dismissed resolution.
+     */
+    public static final String RESOLUTION_USER_DISMISSED = "user_dismissed";
+
+    /**
+     * Timed out resolution.
+     */
+    public static final String RESOLUTION_TIMED_OUT = "timed_out";
 
     @NonNull
-    final String type;
-
+    private final String type;
     @Nullable
-    final ButtonInfo buttonInfo;
-
-    final long displayMilliseconds;
-
+    private final ButtonInfo buttonInfo;
+    private final long displayMilliseconds;
 
     /**
      * Default constructor.
@@ -60,7 +77,7 @@ public final class ResolutionInfo {
      * @return The resolution info.
      */
     public static ResolutionInfo buttonPressed(ButtonInfo buttonInfo, long displayMilliseconds) {
-        return new ResolutionInfo(ResolutionEvent.RESOLUTION_BUTTON_CLICK, displayMilliseconds, buttonInfo);
+        return new ResolutionInfo(RESOLUTION_BUTTON_CLICK, displayMilliseconds, buttonInfo);
     }
 
     /**
@@ -70,7 +87,7 @@ public final class ResolutionInfo {
      * @return The resolution info.
      */
     public static ResolutionInfo messageClicked(long displayMilliseconds) {
-        return new ResolutionInfo(ResolutionEvent.RESOLUTION_MESSAGE_CLICK, displayMilliseconds);
+        return new ResolutionInfo(RESOLUTION_MESSAGE_CLICK, displayMilliseconds);
     }
 
     /**
@@ -80,7 +97,7 @@ public final class ResolutionInfo {
      * @return The resolution info.
      */
     public static ResolutionInfo dismissed(long displayMilliseconds) {
-        return new ResolutionInfo(ResolutionEvent.RESOLUTION_USER_DISMISSED, displayMilliseconds);
+        return new ResolutionInfo(RESOLUTION_USER_DISMISSED, displayMilliseconds);
     }
 
     /**
@@ -90,6 +107,36 @@ public final class ResolutionInfo {
      * @return The resolution info.
      */
     public static ResolutionInfo timedOut(long displayMilliseconds) {
-        return new ResolutionInfo(ResolutionEvent.RESOLUTION_TIMED_OUT, displayMilliseconds);
+        return new ResolutionInfo(RESOLUTION_TIMED_OUT, displayMilliseconds);
+    }
+
+    /**
+     * The resolution type.
+     *
+     * @return The resolution type.
+     */
+    @NonNull
+    @Type
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * The button info. Only available if the type is {@link #RESOLUTION_BUTTON_CLICK}.
+     *
+     * @return The button info.
+     */
+    @Nullable
+    public ButtonInfo getButtonInfo() {
+        return buttonInfo;
+    }
+
+    /**
+     * The elapsed time the message was displayed in milliseconds.
+     *
+     * @return The display time in milliseconds.
+     */
+    public long getDisplayMilliseconds() {
+        return displayMilliseconds;
     }
 }

@@ -27,13 +27,10 @@ class ResolutionEvent extends InAppMessageEvent {
 
     // Resolution types
     private static final String RESOLUTION_TYPE = "type";
-    static final String RESOLUTION_BUTTON_CLICK = "button_click";
-    static final String RESOLUTION_REPLACED = "replaced";
-    static final String RESOLUTION_MESSAGE_CLICK = "message_click";
-    static final String RESOLUTION_DIRECT_OPEN = "direct_open";
-    static final String RESOLUTION_EXPIRED = "expired";
-    static final String RESOLUTION_USER_DISMISSED = "user_dismissed";
-    static final String RESOLUTION_TIMED_OUT = "timed_out";
+
+    private static final String LEGACY_MESSAGE_REPLACED = "replaced";
+    private static final String LEGACY_MESSAGE_DIRECT_OPEN = "direct_open";
+    private static final String MESSAGE_EXPIRED = "expired";
 
     // Resolution fields
     private static final String DISPLAY_TIME = "display_time";
@@ -63,7 +60,7 @@ class ResolutionEvent extends InAppMessageEvent {
      */
     static ResolutionEvent legacyMessageReplaced(@NonNull String messageId, @NonNull String newId) {
         JsonMap resolutionData = JsonMap.newBuilder()
-                                        .put(RESOLUTION_TYPE, RESOLUTION_REPLACED)
+                                        .put(RESOLUTION_TYPE, LEGACY_MESSAGE_REPLACED)
                                         .put(REPLACEMENT_ID, newId)
                                         .build();
 
@@ -79,7 +76,7 @@ class ResolutionEvent extends InAppMessageEvent {
      */
     static ResolutionEvent legacyMessagePushOpened(@NonNull String messageId) {
         JsonMap resolutionData = JsonMap.newBuilder()
-                                        .put(RESOLUTION_TYPE, RESOLUTION_DIRECT_OPEN)
+                                        .put(RESOLUTION_TYPE, LEGACY_MESSAGE_DIRECT_OPEN)
                                         .build();
 
         return new ResolutionEvent(JsonValue.wrap(messageId), InAppMessage.SOURCE_LEGACY_PUSH, resolutionData);
@@ -94,7 +91,7 @@ class ResolutionEvent extends InAppMessageEvent {
      */
     static ResolutionEvent messageExpired(@NonNull InAppMessage message, long expiry) {
         JsonMap resolutionData = JsonMap.newBuilder()
-                                        .put(RESOLUTION_TYPE, RESOLUTION_EXPIRED)
+                                        .put(RESOLUTION_TYPE, MESSAGE_EXPIRED)
                                         .put(EXPIRY, DateUtils.createIso8601TimeStamp(expiry))
                                         .build();
 
@@ -111,16 +108,16 @@ class ResolutionEvent extends InAppMessageEvent {
      */
     static ResolutionEvent messageResolution(@NonNull InAppMessage message, ResolutionInfo resolutionInfo) {
         JsonMap.Builder resolutionDataBuilder = JsonMap.newBuilder()
-                                                       .put(RESOLUTION_TYPE, resolutionInfo.type)
-                                                       .put(DISPLAY_TIME, millisecondsToSecondsString(resolutionInfo.displayMilliseconds));
+                                                       .put(RESOLUTION_TYPE, resolutionInfo.getType())
+                                                       .put(DISPLAY_TIME, millisecondsToSecondsString(resolutionInfo.getDisplayMilliseconds()));
 
 
-        if (RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.type) && resolutionInfo.buttonInfo != null) {
-            String description = resolutionInfo.buttonInfo.getLabel().getText();
+        if (ResolutionInfo.RESOLUTION_BUTTON_CLICK.equals(resolutionInfo.getType()) && resolutionInfo.getButtonInfo() != null) {
+            String description = resolutionInfo.getButtonInfo().getLabel().getText();
             if (description != null && description.length() > MAX_BUTTON_DESCRIPTION_LENGTH) {
                 description = description.substring(0, MAX_BUTTON_DESCRIPTION_LENGTH);
             }
-            resolutionDataBuilder.put(BUTTON_ID, resolutionInfo.buttonInfo.getId())
+            resolutionDataBuilder.put(BUTTON_ID, resolutionInfo.getButtonInfo().getId())
                                  .put(BUTTON_DESCRIPTION, description);
         }
 
