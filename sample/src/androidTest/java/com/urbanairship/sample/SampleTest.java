@@ -769,7 +769,7 @@ public class SampleTest {
             filter.addAction("com.urbanairship.push.RECEIVED");
             filter.addCategory(UAirship.getPackageName());
 
-            UAirship.getApplicationContext().registerReceiver(this, filter, UAirship.getUrbanAirshipPermission(), new Handler(Looper.getMainLooper()));
+            UAirship.getApplicationContext().registerReceiver(this, filter, null, new Handler(Looper.getMainLooper()));
         }
 
         public void unregister() {

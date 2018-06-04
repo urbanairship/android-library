@@ -113,7 +113,7 @@ public class CoreReceiver extends BroadcastReceiver {
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
-        context.sendOrderedBroadcast(openIntent, UAirship.getUrbanAirshipPermission());
+        context.sendOrderedBroadcast(openIntent, null);
     }
 
     /**
@@ -172,7 +172,7 @@ public class CoreReceiver extends BroadcastReceiver {
             openIntent.putExtra(AirshipReceiver.EXTRA_REMOTE_INPUT, remoteInput);
         }
 
-        context.sendOrderedBroadcast(openIntent, UAirship.getUrbanAirshipPermission());
+        context.sendOrderedBroadcast(openIntent, null);
     }
 
 
@@ -208,7 +208,7 @@ public class CoreReceiver extends BroadcastReceiver {
                 .setPackage(UAirship.getPackageName())
                 .addCategory(UAirship.getPackageName());
 
-        context.sendOrderedBroadcast(dismissIntent, UAirship.getUrbanAirshipPermission());
+        context.sendOrderedBroadcast(dismissIntent, null);
     }
 
     /**

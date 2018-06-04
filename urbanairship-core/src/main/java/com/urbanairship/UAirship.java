@@ -422,7 +422,7 @@ public class UAirship {
                     .setPackage(UAirship.getPackageName())
                     .addCategory(UAirship.getPackageName());
 
-            application.sendBroadcast(readyIntent, UAirship.getUrbanAirshipPermission());
+            application.sendBroadcast(readyIntent);
 
             // Notify any blocking shared
             airshipLock.notifyAll();
@@ -460,16 +460,6 @@ public class UAirship {
      */
     public static String getPackageName() {
         return getApplicationContext().getPackageName();
-    }
-
-    /**
-     * Returns the permission for sending Urban Airship push and registration broadcasts.
-     *
-     * @return The Urban Airship broadcast permission.
-     * @throws java.lang.IllegalStateException if takeOff has not been called.
-     */
-    public static String getUrbanAirshipPermission() {
-        return getApplicationContext().getPackageName() + ".permission.UA_DATA";
     }
 
     /**
