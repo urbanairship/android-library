@@ -78,6 +78,12 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     private final static String ENABLE_KEY = "com.urbanairship.iam.enabled";
 
+    /**
+     * Preference key for pausing/unpausing the in-app message manager.
+     */
+    private final static String PAUSE_KEY = "com.urbanairship.iam.paused";
+
+
     // State
     private String currentScheduleId;
     private WeakReference<Activity> resumedActivity;
@@ -229,6 +235,10 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return false;
                 }
 
+                // Prevent display on pause.
+                if (isPaused()) {
+                    return false;
+                }
 
                 // A resumed activity is required
                 return getResumedActivity() != null;
@@ -430,7 +440,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -557,6 +566,31 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.messageExtender = extender;
     }
 
+    /**
+     * Pauses or unpauses in-app messaging.
+     *
+     * @param paused {@code true} to pause in-app message display, otherwise {@code false}.
+     */
+    public void setPaused(boolean paused) {
+        boolean storedPausedState = getDataStore().getBoolean(PAUSE_KEY, paused);
+
+        // Only update when paused state transitions from paused to unpaused
+        if (storedPausedState == true && storedPausedState != paused) {
+            automationEngine.checkPendingSchedules();
+        }
+
+        getDataStore().put(PAUSE_KEY, paused);
+    }
+
+    /**
+     * Returns {@code true} if in-app message display is paused, otherwise {@code false}.
+     *
+     * @return {@code true} if in-app message display is paused, otherwise {@code false}.
+     */
+    public boolean isPaused() {
+        return getDataStore().getBoolean(PAUSE_KEY, true);
+    }
+
 
     /**
      * Enables or disables in-app messaging.
@@ -603,7 +637,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
 
         Activity activity = getResumedActivity();
-        if (currentScheduleId == null && activity != null && previousActivity != activity) {
+        if (!isPaused() && currentScheduleId == null && activity != null && previousActivity != activity) {
             display(activity, scheduleId);
         } else if (!carryOverScheduleIds.contains(scheduleId)) {
             carryOverScheduleIds.push(scheduleId);
