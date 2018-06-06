@@ -113,7 +113,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
                     intentFilter.addAction(ACTION);
                     intentFilter.addCategory(toString());
 
-                    context.registerReceiver(receiver, intentFilter, UAirship.getUrbanAirshipPermission(), null);
+                    context.registerReceiver(receiver, intentFilter, null, null);
                     isRegistered = true;
                 }
             }

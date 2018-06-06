@@ -25,6 +25,7 @@ import java.util.concurrent.Executor;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,7 +87,7 @@ public class CoreReceiverTest extends BaseTestCase {
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }
-        }), eq(UAirship.getUrbanAirshipPermission()));
+        }), isNull(String.class));
     }
 
     /**
@@ -146,7 +147,7 @@ public class CoreReceiverTest extends BaseTestCase {
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }
-        }), eq(UAirship.getUrbanAirshipPermission()));
+        }), isNull(String.class));
     }
 
     /**
@@ -208,6 +209,6 @@ public class CoreReceiverTest extends BaseTestCase {
                         UAirship.getPackageName().equals(other.getPackage()) &&
                         other.getCategories().contains(UAirship.getPackageName());
             }
-        }), eq(UAirship.getUrbanAirshipPermission()));
+        }), isNull(String.class));
     }
 }

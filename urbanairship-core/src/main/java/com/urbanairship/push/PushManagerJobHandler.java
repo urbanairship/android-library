@@ -486,7 +486,7 @@ class PushManagerJobHandler {
             intent.putExtra(PushManager.EXTRA_ERROR, true);
         }
 
-        context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
+        context.sendBroadcast(intent);
     }
 
 

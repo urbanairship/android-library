@@ -277,7 +277,7 @@ class IncomingPushRunnable implements Runnable {
             intent.putExtra(PushManager.EXTRA_NOTIFICATION_ID, notificationId.intValue());
         }
 
-        context.sendBroadcast(intent, UAirship.getUrbanAirshipPermission());
+        context.sendBroadcast(intent);
     }
 
     /**
