@@ -9,8 +9,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <permission android:name="${applicationId}.permission.UA_DATA" android:protectionLevel="signature" />
-    <uses-permission android:name="${applicationId}.permission.UA_DATA" />
     <application>
 
         <activity android:name="com.urbanairship.iam.html.HtmlActivity" />
@@ -97,9 +95,7 @@
 
         <provider
             android:name="com.urbanairship.UrbanAirshipProvider"
-            android:authorities="${applicationId}.urbanairship.provider"
-            android:permission="${applicationId}.permission.UA_DATA"
-            android:exported="true" />
+            android:authorities="${applicationId}.urbanairship.provider" />
 
     </application>
 </manifest>

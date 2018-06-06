@@ -123,17 +123,14 @@ public class ManifestUtils {
                             Logger.error("Receiver " + info.name + " is exported. This might " +
                                     "allow outside applications to message the receiver. Make sure the intent is protected by a " +
                                     "permission or prevent the receiver from being exported.");
+                            throw new IllegalStateException("Receiver cannot be exported. Exporting the receiver allows other " +
+                                    "apps to send fake broadcasts to this app.");
                         }
                     }
                 } catch (ClassNotFoundException e) {
                     Logger.debug("ManifestUtils - Unable to find class: " + info.name, e);
                 }
             }
-        }
-
-        if (!ManifestUtils.isPermissionKnown(UAirship.getUrbanAirshipPermission())) {
-            throw new IllegalStateException("Missing required permission: " + UAirship.getUrbanAirshipPermission() + ". Verify the applicationId is set" +
-                    "in application's build.gradle file.");
         }
     }
 }
