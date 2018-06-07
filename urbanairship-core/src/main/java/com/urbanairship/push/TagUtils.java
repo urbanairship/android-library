@@ -93,11 +93,16 @@ class TagUtils {
      * @return {@code true} if all tag groups are updated, otherwise {@code false}.
      */
     static boolean updateTagGroups(@NonNull TagGroupMutationStore store, @NonNull BaseApiClient client, @NonNull String audience) {
-        // Collapse mutations before we try to send any updates
-        store.collapseMutations();
 
-        TagGroupsMutation mutation;
-        while ((mutation = store.peek()) != null) {
+        while (true) {
+            // Collapse mutations before we try to send any updates
+            store.collapseMutations();
+
+            TagGroupsMutation mutation = store.peek();
+            if (mutation == null) {
+                break;
+            }
+
             Response response = client.updateTagGroups(audience, mutation);
 
             // No response, 5xx, or 429
