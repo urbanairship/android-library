@@ -10,8 +10,6 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.R;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
-import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.Event;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
@@ -31,21 +29,18 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 public class PushManagerTest extends BaseTestCase {
 
@@ -57,7 +52,6 @@ public class PushManagerTest extends BaseTestCase {
     private PreferenceDataStore preferenceDataStore;
     private PushManager pushManager;
     private AirshipConfigOptions options;
-    private Analytics mockAnalytics;
     private JobDispatcher mockDispatcher;
 
     @Rule
@@ -66,10 +60,6 @@ public class PushManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         mockDispatcher = mock(JobDispatcher.class);
-
-        mockAnalytics = mock(Analytics.class);
-        Mockito.doNothing().when(mockAnalytics).addEvent(any(Event.class));
-        TestApplication.getApplication().setAnalytics(mockAnalytics);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
 
@@ -603,43 +593,6 @@ public class PushManagerTest extends BaseTestCase {
         assertEquals("OptIn should be false", false, pushManager.isOptIn());
     }
 
-    /**
-     * Test testGetNextChannelRegistrationPayloadAnalyticsEnabled returns a payload with a top
-     * level timezone, language and country when analytics is enabled
-     */
-    @Test
-    public void testGetNextChannelRegistrationPayloadAnalyticsEnabled() throws JSONException {
-        when(mockAnalytics.isEnabled()).thenReturn(true);
-
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-        pushManager.setRegistrationToken("GCM_TOKEN");
-        pushManager.setPushTokenRegistrationEnabled(true);
-
-        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
-        assertNotNull("The payload should not be null.", payload);
-        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("timezone").getString(), TimeZone.getDefault().getID());
-        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
-        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
-    }
-
-    /**
-     * Test testGetNextChannelRegistrationPayloadAnalyticsDisabled returns a payload without a top
-     * level timezone, language and country when analytics is disabled
-     */
-    @Test
-    public void testGetNextChannelRegistrationPayloadAnalyticsDisabled() throws JSONException {
-        when(mockAnalytics.isEnabled()).thenReturn(false);
-
-        pushManager.setChannel(fakeChannelId, fakeChannelLocation);
-        pushManager.setRegistrationToken("GCM_TOKEN");
-        pushManager.setPushTokenRegistrationEnabled(true);
-
-        ChannelRegistrationPayload payload = pushManager.getNextChannelRegistrationPayload();
-        assertNotNull("The payload should not be null.", payload);
-        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("timezone"));
-        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language"));
-        assertNull(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country"));
-    }
 
     /**
      * Test getNextChannelRegistrationPayload returns a payload with android device and GCM ID
@@ -656,6 +609,8 @@ public class PushManagerTest extends BaseTestCase {
         assertNotNull("The payload should not be null.", payload);
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "android");
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "GCM_TOKEN");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
     }
 
     /**
@@ -673,6 +628,8 @@ public class PushManagerTest extends BaseTestCase {
         assertNotNull("The payload should not be null.", payload);
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("device_type").getString(), "amazon");
         assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("push_address").getString(), "ADM_ID");
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_language").getString(),  Locale.getDefault().getLanguage());
+        assertEquals(payload.toJsonValue().getMap().get("channel").getMap().get("locale_country").getString(), Locale.getDefault().getCountry());
     }
 
     /**

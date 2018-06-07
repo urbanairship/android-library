@@ -503,21 +503,10 @@ class PushManagerJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        TagGroupsMutation mutation;
-        while ((mutation = pushManager.getTagGroupStore().pop()) != null) {
-            Response response = channelClient.updateTagGroups(channelId, mutation);
-
-            // No response, 5xx, or 429
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-                Logger.info("PushManagerJobHandler - Failed to update tag groups, will retry later.");
-                pushManager.getTagGroupStore().push(mutation);
-                return JobInfo.JOB_RETRY;
-            }
-
-            int status = response.getStatus();
-            Logger.info("PushManagerJobHandler - Update tag groups finished with status: " + status);
+        if (TagUtils.updateTagGroups(pushManager.getTagGroupStore(), channelClient, channelId)) {
+            return JobInfo.JOB_FINISHED;
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobInfo.JOB_RETRY;
     }
 }

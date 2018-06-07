@@ -20,6 +20,7 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static junit.framework.Assert.assertEquals;
@@ -67,7 +68,7 @@ public class NamedUserTest extends BaseTestCase {
     public void testSetIDValid() {
         // Make sure we have a pending tag group change
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        namedUser.getTagGroupStore().push(mutation);
+        namedUser.getTagGroupStore().add(Collections.singletonList(mutation));
 
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();
@@ -105,7 +106,7 @@ public class NamedUserTest extends BaseTestCase {
     public void testSetIDNull() {
         // Make sure we have a pending tag group change
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        namedUser.getTagGroupStore().push(mutation);
+        namedUser.getTagGroupStore().add(Collections.singletonList(mutation));
 
         ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
         application.clearStartedServices();

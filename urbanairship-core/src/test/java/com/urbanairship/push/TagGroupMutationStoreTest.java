@@ -37,17 +37,14 @@ public class TagGroupMutationStoreTest extends BaseTestCase {
 
         store.add(mutations);
 
-        // Verify the collapsed mutations are available
-        assertEquals(TagGroupsMutation.collapseMutations(mutations), store.getMutations());
+        assertEquals(mutations, store.getMutations());
     }
 
     @Test
     public void testPop() {
         List<TagGroupsMutation> mutations = new ArrayList<>();
-
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-two", createTagSet("whatever")));
-        mutations = TagGroupsMutation.collapseMutations(mutations);
 
         store.add(mutations);
 
@@ -57,21 +54,16 @@ public class TagGroupMutationStoreTest extends BaseTestCase {
     }
 
     @Test
-    public void testPush() {
+    public void testPeek() {
         List<TagGroupsMutation> mutations = new ArrayList<>();
         mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
         mutations.add(TagGroupsMutation.newSetTagsMutation("group-two", createTagSet("whatever")));
-        mutations = TagGroupsMutation.collapseMutations(mutations);
 
         store.add(mutations);
 
-        TagGroupsMutation mutation = store.pop();
 
-        assertEquals(mutations.get(0), mutation);
-
-        store.push(mutation);
-
-        assertEquals(mutation, store.pop());
+        assertEquals(mutations.get(0), store.peek());
+        assertEquals(mutations.get(0), store.peek());
     }
 
     @Test
@@ -84,6 +76,19 @@ public class TagGroupMutationStoreTest extends BaseTestCase {
         store.clear();
 
         assertTrue(store.getMutations().isEmpty());
+    }
+
+    @Test
+    public void testCollapse() {
+        List<TagGroupsMutation> mutations = new ArrayList<>();
+        mutations.add(TagGroupsMutation.newAddTagsMutation("group-one", createTagSet("cool")));
+        mutations.add(TagGroupsMutation.newAddTagsMutation("group-two", createTagSet("whatever")));
+        store.add(mutations);
+
+        store.collapseMutations();
+
+        List<TagGroupsMutation> collapseMutations = TagGroupsMutation.collapseMutations(mutations);
+        assertEquals(collapseMutations.get(0), store.peek());
     }
 
     private Set<String> createTagSet(String... tags) {

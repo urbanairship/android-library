@@ -40,7 +40,7 @@ class TagGroupMutationStore {
     }
 
     /**
-     * Adds new tag group mutations to the end of the store. Mutations will be collapsed automatically.
+     * Adds new tag group mutations to the end of the store.
      *
      * @param tagGroupsMutations A list of tag group mutations.
      */
@@ -48,7 +48,6 @@ class TagGroupMutationStore {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();
             mutations.addAll(tagGroupsMutations);
-            mutations = TagGroupsMutation.collapseMutations(mutations);
             dataStore.put(storeKey, JsonValue.wrapOpt(mutations));
         }
     }
@@ -72,14 +71,30 @@ class TagGroupMutationStore {
     }
 
     /**
-     * Pushes a tag group mutation on top of the store. Mutations will be collapsed automatically.
+     * Peeks the top mutation.
      *
-     * @param mutation Tag group mutation.
+     * @return The top tag group mutation or {@code null} if no mutations exist.
      */
-    void push(TagGroupsMutation mutation) {
+    TagGroupsMutation peek() {
         synchronized (this) {
             List<TagGroupsMutation> mutations = getMutations();
-            mutations.add(0, mutation);
+            if (mutations.isEmpty()) {
+                return null;
+            }
+            return mutations.get(0);
+        }
+    }
+
+    /**
+     * Collapses mutations down to a minimum set of mutations.
+     */
+    void collapseMutations() {
+        synchronized (this) {
+            List<TagGroupsMutation> mutations = getMutations();
+            if (mutations.isEmpty()) {
+                return;
+            }
+
             mutations = TagGroupsMutation.collapseMutations(mutations);
             dataStore.put(storeKey, JsonValue.wrapOpt(mutations));
         }

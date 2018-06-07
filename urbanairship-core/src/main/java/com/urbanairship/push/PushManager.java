@@ -577,18 +577,16 @@ public class PushManager extends AirshipComponent {
                 break;
         }
 
-        if (UAirship.shared().getAnalytics().isEnabled()) {
-            builder.setTimezone(TimeZone.getDefault().getID());
+        builder.setTimezone(TimeZone.getDefault().getID());
 
-            Locale locale = Locale.getDefault();
+        Locale locale = Locale.getDefault();
 
-            if (!UAStringUtil.isEmpty(locale.getCountry())) {
-                builder.setCountry(locale.getCountry());
-            }
+        if (!UAStringUtil.isEmpty(locale.getCountry())) {
+            builder.setCountry(locale.getCountry());
+        }
 
-            if (!UAStringUtil.isEmpty(locale.getLanguage())) {
-                builder.setLanguage(locale.getLanguage());
-            }
+        if (!UAStringUtil.isEmpty(locale.getLanguage())) {
+            builder.setLanguage(locale.getLanguage());
         }
 
         if (getPushTokenRegistrationEnabled()) {

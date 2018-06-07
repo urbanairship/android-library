@@ -21,7 +21,9 @@ import org.mockito.Mockito;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
+
 
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -335,7 +337,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Provide pending changes
         TagGroupMutationStore tagGroupStore = pushManager.getTagGroupStore();
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
@@ -366,8 +368,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Provide pending changes
         TagGroupMutationStore tagGroupStore = pushManager.getTagGroupStore();
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
-
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(PushManagerJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
@@ -390,7 +391,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Provide pending changes
         TagGroupMutationStore tagGroupStore = pushManager.getTagGroupStore();
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
@@ -422,7 +423,7 @@ public class PushManagerJobHandlerTest extends BaseTestCase {
         // Provide pending changes
         TagGroupMutationStore tagGroupStore = pushManager.getTagGroupStore();
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 429 response
         Response response = Mockito.mock(Response.class);
