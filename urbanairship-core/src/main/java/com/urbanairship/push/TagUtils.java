@@ -5,7 +5,10 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
+import com.urbanairship.http.Response;
+import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,5 +82,35 @@ class TagUtils {
         }
 
         return tagGroups;
+    }
+
+    /**
+     * Helper method to upload tag group changes.
+     *
+     * @param store The tag group mutation store.
+     * @param client The api client.
+     * @param audience The audience.
+     * @return {@code true} if all tag groups are updated, otherwise {@code false}.
+     */
+    static boolean updateTagGroups(@NonNull TagGroupMutationStore store, @NonNull BaseApiClient client, @NonNull String audience) {
+        // Collapse mutations before we try to send any updates
+        store.collapseMutations();
+
+        TagGroupsMutation mutation;
+        while ((mutation = store.peek()) != null) {
+            Response response = client.updateTagGroups(audience, mutation);
+
+            // No response, 5xx, or 429
+            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
+                Logger.info("Failed to update tag groups, will retry later.");
+                return false;
+            }
+
+            store.pop();
+            int status = response.getStatus();
+            Logger.info("Update tag groups finished with status: " + status);
+        }
+
+        return true;
     }
 }

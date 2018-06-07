@@ -21,6 +21,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 
 import java.net.HttpURLConnection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -328,7 +329,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
 
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 200 response
         Response response = Mockito.mock(Response.class);
@@ -358,7 +359,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         TagGroupMutationStore tagGroupStore = namedUser.getTagGroupStore();
 
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(NamedUserJobHandler.ACTION_UPDATE_TAG_GROUPS).build();
@@ -381,7 +382,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
 
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 500 response
         Response response = Mockito.mock(Response.class);
@@ -413,7 +414,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
 
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 429 response
         Response response = Mockito.mock(Response.class);
@@ -464,7 +465,7 @@ public class NamedUserJobHandlerTest extends BaseTestCase {
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
 
         tagGroupStore.clear();
-        tagGroupStore.push(mutation);
+        tagGroupStore.add(Collections.singletonList(mutation));
 
         // Set up a 400 response
         Response response = Mockito.mock(Response.class);

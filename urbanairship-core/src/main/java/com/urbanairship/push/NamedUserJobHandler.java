@@ -163,21 +163,10 @@ class NamedUserJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        TagGroupsMutation mutation;
-        while ((mutation = namedUser.getTagGroupStore().pop()) != null) {
-            Response response = client.updateTagGroups(namedUserId, mutation);
-
-            // No response, 5xx, or 429
-            if (response == null || UAHttpStatusUtil.inServerErrorRange(response.getStatus()) || response.getStatus() == Response.HTTP_TOO_MANY_REQUESTS) {
-                Logger.info("NamedUserJobHandler - Failed to update tag groups, will retry later.");
-                namedUser.getTagGroupStore().push(mutation);
-                return JobInfo.JOB_RETRY;
-            }
-
-            int status = response.getStatus();
-            Logger.info("NamedUserJobHandler - Update tag groups finished with status: " + status);
+        if (TagUtils.updateTagGroups(namedUser.getTagGroupStore(), client, namedUserId)) {
+            return JobInfo.JOB_FINISHED;
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobInfo.JOB_RETRY;
     }
 }
