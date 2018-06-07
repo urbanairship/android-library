@@ -28,19 +28,21 @@ public class NotificationActionButton {
     private final Bundle extras;
     private final String id;
     private final int labelId;
+    private final String label;
     private final boolean isForegroundAction;
     private final int iconId;
     private final String description;
     private final List<LocalizableRemoteInput> remoteInputs;
 
-    private NotificationActionButton(String id, int iconId, int labelId, String description, Bundle extras, boolean isForegroundAction, List<LocalizableRemoteInput> remoteInputs) {
-        this.id = id;
-        this.labelId = labelId;
-        this.iconId = iconId;
+    private NotificationActionButton(Builder builder, Bundle extras) {
+        this.id = builder.buttonId;
+        this.labelId = builder.labelId;
+        this.label = builder.label;
+        this.iconId = builder.iconId;
+        this.description = builder.description;
+        this.isForegroundAction = builder.isForegroundAction;
+        this.remoteInputs = builder.remoteInputs;
         this.extras = extras;
-        this.description = description;
-        this.isForegroundAction = isForegroundAction;
-        this.remoteInputs = remoteInputs;
     }
 
     /**
@@ -65,10 +67,27 @@ public class NotificationActionButton {
      * Gets the button's label ID.
      *
      * @return The button's label ID as an int.
+     * @deprecated Use {@link #getLabel(Context)} instead.
      */
+    @Deprecated
     @StringRes
     public int getLabel() {
         return labelId;
+    }
+
+    /**
+     * Gets the button's label.
+     *
+     * @return The button's label.
+     */
+    public String getLabel(Context context) {
+        if (label != null) {
+            return label;
+        }
+        if (labelId != 0) {
+            return context.getString(labelId);
+        }
+        return null;
     }
 
     /**
@@ -123,7 +142,11 @@ public class NotificationActionButton {
      * @return The action as a NotificationCompat.Action
      */
     NotificationCompat.Action createAndroidNotificationAction(Context context, String actionsPayload, PushMessage message, int notificationId) {
-        String label = labelId > 0 ? context.getString(labelId) : "";
+        String label = getLabel(context);
+        if (label == null) {
+            label = "";
+        }
+
         String actionDescription = description == null ? label : description;
 
         PendingIntent actionPendingIntent;
@@ -168,6 +191,7 @@ public class NotificationActionButton {
         private List<LocalizableRemoteInput> remoteInputs;
         private List<NotificationCompat.Action.Extender> extenders;
         private String description;
+        private String label;
 
         /**
          * Set the buttonId.
@@ -179,14 +203,28 @@ public class NotificationActionButton {
         }
 
         /**
-         * Set the labelId.
+         * Set the label from a string resource.
          *
          * @param labelId An int value.
-         * @return The builder with the labelId value set.
+         * @return The builder instance.
          */
         @NonNull
         public Builder setLabel(@StringRes int labelId) {
             this.labelId = labelId;
+            this.label = null;
+            return this;
+        }
+
+        /**
+         * Set the label.
+         *
+         * @param label The label.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setLabel(String label) {
+            this.labelId = 0;
+            this.label = label;
             return this;
         }
 
@@ -265,16 +303,19 @@ public class NotificationActionButton {
          */
         @NonNull
         public NotificationActionButton build() {
-            NotificationCompat.Action.Builder builder = new NotificationCompat.Action.Builder(iconId, null, null);
+            Bundle extras;
             if (extenders != null) {
+                NotificationCompat.Action.Builder builder = new NotificationCompat.Action.Builder(iconId, null, null);
+
                 for (NotificationCompat.Action.Extender extender : extenders) {
                     builder.extend(extender);
                 }
+                extras = builder.build().getExtras();
+            } else {
+                extras = new Bundle();
             }
 
-            NotificationCompat.Action action = builder.build();
-
-            return new NotificationActionButton(buttonId, action.icon, labelId, description, action.getExtras(), isForegroundAction, remoteInputs);
+            return new NotificationActionButton(this, extras);
         }
     }
 }

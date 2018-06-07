@@ -319,9 +319,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                                                             .setColor(primaryColor)
                                                             .setAlignment(TextInfo.ALIGNMENT_CENTER);
 
-                    if (button.getLabel() != 0) {
-                        labelBuilder.setText(context.getString(button.getLabel()));
-                    }
+                    labelBuilder.setText(button.getLabel(context));
 
                     ButtonInfo.Builder buttonInfoBuilder = ButtonInfo.newBuilder()
                                                                      .setActions(legacyMessage.getButtonActionValues(button.getId()))

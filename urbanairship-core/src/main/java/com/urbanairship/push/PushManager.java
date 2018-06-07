@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
+import android.support.annotation.XmlRes;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
@@ -952,6 +953,33 @@ public class PushManager extends AirshipComponent {
         }
 
         actionGroupMap.put(id, group);
+    }
+
+    /**
+     * Adds notification action button groups from an xml file.
+     * Example entry:
+     * <pre>{@code
+     * <UrbanAirshipActionButtonGroup id="custom_group">
+     *  <UrbanAirshipActionButton
+     *      foreground="true"
+     *      id="yes"
+     *      android:icon="@drawable/ua_ic_notification_button_accept"
+     *      android:label="@string/ua_notification_button_yes"/>
+     *  <UrbanAirshipActionButton
+     *      foreground="false"
+     *      id="no"
+     *      android:icon="@drawable/ua_ic_notification_button_decline"
+     *      android:label="@string/ua_notification_button_no"/>
+     * </UrbanAirshipActionButtonGroup> }</pre>
+     *
+     * @param context The application context.
+     * @param resId The xml resource ID.
+     */
+    public void addNotificationActionButtonGroups(@NonNull Context context, @XmlRes int resId) {
+        Map<String, NotificationActionButtonGroup> groups = ActionButtonGroupsParser.fromXml(context, resId);
+        for (Map.Entry<String, NotificationActionButtonGroup> entry : groups.entrySet()) {
+            addNotificationActionButtonGroup(entry.getKey(), entry.getValue());
+        }
     }
 
     /**
