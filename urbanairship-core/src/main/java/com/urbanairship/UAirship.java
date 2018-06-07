@@ -463,6 +463,18 @@ public class UAirship {
     }
 
     /**
+     * Returns the permission for sending Urban Airship push and registration broadcasts.
+     *
+     * @return The Urban Airship broadcast permission.
+     * @throws java.lang.IllegalStateException if takeOff has not been called.
+     * @deprecated No longer used.
+     */
+    @Deprecated
+    public static String getUrbanAirshipPermission() {
+        return getApplicationContext().getPackageName() + ".permission.UA_DATA";
+    }
+
+    /**
      * Returns the Application's package manager.
      *
      * @return The package manager.

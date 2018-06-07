@@ -18,7 +18,6 @@ One of our engineers will verify receipt of the agreement before approving your 
 ## Requirements
 - minSdkVersion 16+
 - compileSdkVersion 27
-- Google Play Services 15.0.0+
 
 ## Quickstart
 
@@ -29,8 +28,7 @@ One of our engineers will verify receipt of the agreement before approving your 
      ...
 
      // Urban Airship SDK - FCM
-     implementation 'com.urbanairship.android:urbanairship-fcm:9.1.0'
-     implementation 'com.google.firebase:firebase-messaging:15.0.0'
+     implementation 'com.urbanairship.android:urbanairship-fcm:9.3.0'
    }
 ```
 

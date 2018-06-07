@@ -3,6 +3,18 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.3.0 - June 7, 2018
+============================
+
+Changes
+-------
+- Added support to add custom notification action buttons from xml.
+- Added missing `play-services-base` dependency to `urbanairship-fcm`.
+- Added method to InAppMessageManager to pause display of in-app messages.
+- Locale and Timezone info is now sent up with the channel registration even if analytics are disabled.
+- Removed use of custom permissions in the manifest.
+
+
 Version 9.2.0 - May 16, 2018
 ============================
 

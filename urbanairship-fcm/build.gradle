@@ -4,5 +4,6 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "com.google.firebase:firebase-messaging:${airshipProperties.fcmVersion}"
+    implementation "com.google.firebase:firebase-messaging:${airshipProperties.firebaseFcmVersion}"
+    implementation "com.google.android.gms:play-services-base:${airshipProperties.playServicesBaseVersion}"
 }

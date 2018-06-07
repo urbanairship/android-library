@@ -4,5 +4,5 @@ apply from: "../common-build.gradle"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "com.google.android.gms:play-services-gcm:${airshipProperties.playServicesVersion}"
+    implementation "com.google.android.gms:play-services-gcm:${airshipProperties.playServicesGcmVersion}"
 }
