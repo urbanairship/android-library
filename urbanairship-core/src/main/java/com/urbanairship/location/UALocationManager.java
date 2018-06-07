@@ -129,7 +129,6 @@ public class UALocationManager extends AirshipComponent {
     protected void tearDown() {
         activityMonitor.removeListener(listener);
         backgroundThread.quit();
-        locationProvider.disconnect();
     }
 
     /**

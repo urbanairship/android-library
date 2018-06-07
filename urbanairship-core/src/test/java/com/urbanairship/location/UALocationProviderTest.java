@@ -59,32 +59,13 @@ public class UALocationProviderTest extends BaseTestCase {
 
 
     /**
-     * Test onDestroy disconnects from any location adapters
-     */
-    @Test
-    public void testOnDestroy() {
-        when(mockAdapterOne.connect(context)).thenReturn(false);
-        when(mockAdapterTwo.connect(context)).thenReturn(true);
-
-        // Call any method to force a connection to the adapter
-        provider.areUpdatesRequested();
-
-        // Call onDestroy()
-        provider.disconnect();
-
-        // Verify we only disconnected from the connected provider (mockAdapterTwo)
-        verify(mockAdapterOne, times(0)).disconnect(context);
-        verify(mockAdapterTwo, times(1)).disconnect(context);
-    }
-
-    /**
      * Test canceling location updates tries to cancel updates
      * on all of the adapters.
      */
     @Test
     public void testCancelRequests() {
-        when(mockAdapterOne.connect(context)).thenReturn(false);
-        when(mockAdapterTwo.connect(context)).thenReturn(true);
+        when(mockAdapterOne.isAvailable(context)).thenReturn(false);
+        when(mockAdapterTwo.isAvailable(context)).thenReturn(true);
 
         // Request options
         provider.requestLocationUpdates(options);
@@ -92,22 +73,22 @@ public class UALocationProviderTest extends BaseTestCase {
         // Cancel requests
         provider.cancelRequests();
 
-        // Verify we attempted to connect to both adapters
-        verify(mockAdapterOne, times(1)).connect(context);
-        verify(mockAdapterTwo, times(1)).connect(context);
+        // Verify we attempted to check both adapters
+        verify(mockAdapterOne, times(1)).isAvailable(context);
+        verify(mockAdapterTwo, times(1)).isAvailable(context);
 
-        // Verify we only canceled requests on the adapter that was connected
+        // Verify we only canceled requests on the adapter that are available
         verify(mockAdapterOne, times(0)).cancelLocationUpdates(eq(context), any(PendingIntent.class));
         verify(mockAdapterTwo, times(1)).cancelLocationUpdates(eq(context), any(PendingIntent.class));
     }
 
     /**
-     * Test requesting location updates only requests from the connected
+     * Test requesting location updates only requests from the first available
      * adapter.
      */
     @Test
     public void testRequestLocationUpdates() {
-        when(mockAdapterTwo.connect(context)).thenReturn(true);
+        when(mockAdapterTwo.isAvailable(context)).thenReturn(true);
 
         provider.requestLocationUpdates(options);
 
@@ -116,11 +97,11 @@ public class UALocationProviderTest extends BaseTestCase {
     }
 
     /**
-     * Test single location updates only requests from the connected adapter.
+     * Test single location updates only requests from the first available adapter.
      */
     @Test
     public void testSingleLocationRequest() {
-        when(mockAdapterTwo.connect(context)).thenReturn(true);
+        when(mockAdapterTwo.isAvailable(context)).thenReturn(true);
 
 
         provider.requestSingleLocation(options, locationCallback);
@@ -134,7 +115,7 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testSingleLocationNoPermissions() {
-        when(mockAdapterOne.connect(context)).thenReturn(true);
+        when(mockAdapterOne.isAvailable(context)).thenReturn(true);
         doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestSingleLocation(context, options, locationCallback);
     }
 
@@ -143,7 +124,7 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testRequestLocationUpdatesNoPermissions() {
-        when(mockAdapterOne.connect(context)).thenReturn(true);
+        when(mockAdapterOne.isAvailable(context)).thenReturn(true);
         doThrow(new SecurityException("Nope")).when(mockAdapterOne).requestLocationUpdates(eq(context), eq(options), any(PendingIntent.class));
 
         provider.requestLocationUpdates(options);
@@ -154,7 +135,7 @@ public class UALocationProviderTest extends BaseTestCase {
      */
     @Test
     public void testCancelLocationUpdatesNoPermissions() {
-        when(mockAdapterOne.connect(context)).thenReturn(true);
+        when(mockAdapterOne.isAvailable(context)).thenReturn(true);
         doThrow(new SecurityException("Nope")).when(mockAdapterOne).cancelLocationUpdates(eq(context), any(PendingIntent.class));
 
         provider.cancelRequests();

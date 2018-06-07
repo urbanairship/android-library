@@ -156,9 +156,8 @@ public class PlayServicesUtils {
                 isFusedLocationDependencyAvailable = false;
             } else {
                 try {
-                    Class.forName("com.google.android.gms.location.LocationServices");
-                    Class googleApiClientClass = Class.forName("com.google.android.gms.common.api.GoogleApiClient");
-                    isFusedLocationDependencyAvailable = !Modifier.isInterface(googleApiClientClass.getModifiers());
+                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient");
+                    isFusedLocationDependencyAvailable = true;
                 } catch (ClassNotFoundException e) {
                     isFusedLocationDependencyAvailable = false;
                 }

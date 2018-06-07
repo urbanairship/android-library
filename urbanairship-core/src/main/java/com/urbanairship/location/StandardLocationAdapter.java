@@ -2,6 +2,7 @@
 
 package com.urbanairship.location;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Criteria;
@@ -31,6 +32,7 @@ class StandardLocationAdapter implements LocationAdapter {
 
     private static String currentProvider;
 
+    @SuppressLint("MissingPermission")
     @Override
     public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
         Criteria criteria = createCriteria(options);
@@ -63,7 +65,7 @@ class StandardLocationAdapter implements LocationAdapter {
     }
 
     @Override
-    public boolean connect(@NonNull Context context) {
+    public boolean isAvailable(@NonNull Context context) {
         return true;
     }
 
@@ -84,10 +86,6 @@ class StandardLocationAdapter implements LocationAdapter {
     @Override
     public int getRequestCode() {
         return REQUEST_CODE;
-    }
-
-    @Override
-    public void disconnect(@NonNull Context context) {
     }
 
 

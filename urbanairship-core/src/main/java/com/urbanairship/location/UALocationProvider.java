@@ -29,7 +29,7 @@ import static android.app.PendingIntent.getService;
 class UALocationProvider {
 
     @Nullable
-    private LocationAdapter connectedAdapter;
+    private LocationAdapter availableAdapter;
     private boolean isConnected = false;
 
     private final List<LocationAdapter> adapters = new ArrayList<>();
@@ -48,7 +48,7 @@ class UALocationProvider {
 
         // This is to prevent a log message saying Google Play Services is unavailable on amazon devices.
         if (PlayServicesUtils.isGooglePlayStoreAvailable(context) && PlayServicesUtils.isFusedLocationDependencyAvailable()) {
-            adapters.add(new FusedLocationAdapter());
+            adapters.add(new FusedLocationAdapter(context));
         }
 
         adapters.add(new StandardLocationAdapter());
@@ -69,15 +69,15 @@ class UALocationProvider {
         Logger.verbose("UALocationProvider - Canceling location requests.");
         connect();
 
-        if (connectedAdapter == null) {
+        if (availableAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
             return;
         }
 
         try {
-            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
+            PendingIntent pendingIntent = PendingIntent.getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
             if (pendingIntent != null) {
-                connectedAdapter.cancelLocationUpdates(context, pendingIntent);
+                availableAdapter.cancelLocationUpdates(context, pendingIntent);
             }
         } catch (Exception ex) {
             Logger.error("Unable to cancel location updates: " + ex.getMessage());
@@ -94,15 +94,15 @@ class UALocationProvider {
     void requestLocationUpdates(@NonNull LocationRequestOptions options) {
         connect();
 
-        if (connectedAdapter == null) {
+        if (availableAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
             return;
         }
 
         Logger.verbose("UALocationProvider - Requesting location updates: " + options);
         try {
-            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            connectedAdapter.requestLocationUpdates(context, options, pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            availableAdapter.requestLocationUpdates(context, options, pendingIntent);
         } catch (Exception ex) {
             Logger.error("Unable to request location updates: " + ex.getMessage());
         }
@@ -118,14 +118,14 @@ class UALocationProvider {
     Cancelable requestSingleLocation(@NonNull LocationRequestOptions options, ResultCallback<Location> resultCallback) {
         connect();
 
-        if (connectedAdapter == null) {
+        if (availableAdapter == null) {
             Logger.debug("UALocationProvider - Ignoring request, connected adapter unavailable.");
         }
 
         Logger.verbose("UALocationProvider - Requesting single location update: " + options);
 
         try {
-            return connectedAdapter.requestSingleLocation(context, options, resultCallback);
+            return availableAdapter.requestSingleLocation(context, options, resultCallback);
         } catch (Exception ex) {
             Logger.error("Unable to request location: " + ex.getMessage());
         }
@@ -145,55 +145,34 @@ class UALocationProvider {
         for (LocationAdapter adapter : adapters) {
             Logger.verbose("UALocationProvider - Attempting to connect to location adapter: " + adapter);
 
-            if (adapter.connect(context)) {
-                Logger.verbose("UALocationProvider - Connected to location adapter: " + adapter);
+            if (adapter.isAvailable(context)) {
 
-                if (connectedAdapter == null) {
-                    connectedAdapter = adapter;
-                } else {
+                if (availableAdapter == null) {
+                    Logger.verbose("UALocationProvider - Using adapter: " + adapter);
+                    availableAdapter = adapter;
+                }
 
-                    /*
-                     * Need to cancel requests on all providers regardless of the current
-                     * connected provider because pending intents persist between app starts
-                     * and there is no way to determine what provider was used previously.
-                     */
-
-                    try {
-                        PendingIntent pendingIntent = PendingIntent.getService(context, adapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
-                        if (pendingIntent != null) {
-                            adapter.cancelLocationUpdates(context, pendingIntent);
-                        }
-                    } catch (Exception ex) {
-                        Logger.error("Unable to cancel location updates: " + ex.getMessage());
+                /*
+                 * Need to cancel requests on all providers regardless of the current
+                 * connected provider because pending intents persist between app starts
+                 * and there is no way to determine what provider was used previously.
+                 */
+                try {
+                    PendingIntent pendingIntent = PendingIntent.getService(context, adapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE);
+                    if (pendingIntent != null) {
+                        adapter.cancelLocationUpdates(context, pendingIntent);
                     }
-
-                    adapter.disconnect(context);
+                } catch (Exception ex) {
+                    Logger.error("Unable to cancel location updates: " + ex.getMessage());
                 }
             } else {
-                Logger.verbose("UALocationProvider - Failed to connect to location adapter: " + adapter);
+                Logger.verbose("UALocationProvider - Adapter unavailable: " + adapter);
             }
         }
 
         isConnected = true;
     }
 
-    /**
-     * Disconnects the provider and cancel any location requests.
-     */
-    void disconnect() {
-        if (!isConnected) {
-            return;
-        }
-
-        Logger.verbose("UALocationProvider - Disconnecting from location provider.");
-
-        if (connectedAdapter != null) {
-            connectedAdapter.disconnect(context);
-            connectedAdapter = null;
-        }
-
-        isConnected = false;
-    }
 
     /**
      * Called when a system location provider availability changes.
@@ -206,9 +185,9 @@ class UALocationProvider {
 
         connect();
 
-        if (connectedAdapter != null) {
-            PendingIntent pendingIntent = PendingIntent.getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            connectedAdapter.onSystemLocationProvidersChanged(context, options, pendingIntent);
+        if (availableAdapter != null) {
+            PendingIntent pendingIntent = PendingIntent.getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            availableAdapter.onSystemLocationProvidersChanged(context, options, pendingIntent);
         }
     }
 
@@ -221,10 +200,10 @@ class UALocationProvider {
     boolean areUpdatesRequested() {
         connect();
 
-        if (connectedAdapter == null) {
+        if (availableAdapter == null) {
             return false;
         }
 
-        return getService(context, connectedAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE) != null;
+        return getService(context, availableAdapter.getRequestCode(), this.locationUpdateIntent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 }

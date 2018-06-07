@@ -1,15 +1,17 @@
 package com.urbanairship.location;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
-import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
@@ -17,7 +19,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 
-import java.util.concurrent.Semaphore;
 
 /**
  * Location adapter for Google's fused location provider.
@@ -27,14 +28,15 @@ import java.util.concurrent.Semaphore;
 class FusedLocationAdapter implements LocationAdapter {
 
     private static final int REQUEST_CODE = 1;
-    private GoogleApiClient client;
+    private FusedLocationProviderClient client;
+
+
+    public FusedLocationAdapter(Context context) {
+        this.client = LocationServices.getFusedLocationProviderClient(context);
+    }
 
     @Override
     public Cancelable requestSingleLocation(final @NonNull Context context, final @NonNull LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
-        if (client == null || !client.isConnected()) {
-            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request single location.");
-        }
-
         CancelableOperation cancelableOperation = new SingleLocationRequest(options, resultCallback);
         cancelableOperation.run();
         return cancelableOperation;
@@ -42,34 +44,22 @@ class FusedLocationAdapter implements LocationAdapter {
 
     @Override
     public void cancelLocationUpdates(@NonNull Context context, @NonNull PendingIntent pendingIntent) {
-        if (client == null || !client.isConnected()) {
-            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to cancel location updates.");
-            return;
-        }
-
         Logger.verbose("FusedLocationAdapter - Canceling updates.");
-        LocationServices.FusedLocationApi.removeLocationUpdates(client, pendingIntent);
+        client.removeLocationUpdates(pendingIntent);
         pendingIntent.cancel();
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent) {
-        if (client == null || !client.isConnected()) {
-            Logger.debug("FusedLocationAdapter - Adapter is not connected. Unable to request location updates.");
-            return;
-        }
-
         Logger.verbose("FusedLocationAdapter - Requesting updates: " + options);
         LocationRequest locationRequest = createLocationRequest(options);
 
-        //noinspection MissingPermission
-        LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, pendingIntent);
+        client.requestLocationUpdates(locationRequest, pendingIntent);
     }
 
     @Override
-    public boolean connect(@NonNull Context context) {
-        final Semaphore semaphore = new Semaphore(0);
-
+    public boolean isAvailable(@NonNull Context context) {
         try {
             int playServicesStatus = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
@@ -82,51 +72,7 @@ class FusedLocationAdapter implements LocationAdapter {
             return false;
         }
 
-        client = new GoogleApiClient.Builder(context)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(Bundle bundle) {
-                        Logger.verbose("FusedLocationAdapter - Google Play services connected for fused location.");
-                        semaphore.release();
-                    }
-
-                    @Override
-                    public void onConnectionSuspended(int i) {
-                        Logger.verbose("FusedLocationAdapter - Google Play services connection suspended for fused location.");
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Logger.verbose("FusedLocationAdapter - Google Play services failed to connect for fused location.");
-                        semaphore.release();
-                    }
-                })
-                .build();
-
-        client.connect();
-
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException ex) {
-            Logger.error("FusedLocationAdapter - Exception while connecting to fused location", ex);
-            disconnect(context);
-            return false;
-        }
-
-        return client.isConnected();
-    }
-
-    @Override
-    public void disconnect(@NonNull Context context) {
-        if (client != null && client.isConnected()) {
-            client.disconnect();
-        }
-
-        // Clear the client so we don't only rely on `isConnected`, which seems to not immediately
-        // be updated by disconnect().
-        client = null;
+        return true;
     }
 
     @Override
@@ -178,7 +124,7 @@ class FusedLocationAdapter implements LocationAdapter {
     private class SingleLocationRequest extends CancelableOperation {
 
         private final LocationRequest locationRequest;
-        private final com.google.android.gms.location.LocationListener fusedLocationListener;
+        private final LocationCallback locationCallback;
 
         /**
          * FusedLocationRequest constructor.
@@ -188,10 +134,10 @@ class FusedLocationAdapter implements LocationAdapter {
          */
         SingleLocationRequest(LocationRequestOptions options, final ResultCallback<Location> resultCallback) {
             super(Looper.getMainLooper());
-            this.fusedLocationListener = new com.google.android.gms.location.LocationListener() {
+            this.locationCallback = new LocationCallback() {
                 @Override
-                public void onLocationChanged(Location location) {
-                    resultCallback.onResult(location);
+                public void onLocationResult(LocationResult locationResult) {
+                    resultCallback.onResult(locationResult.getLastLocation());
                 }
             };
 
@@ -202,14 +148,15 @@ class FusedLocationAdapter implements LocationAdapter {
         @Override
         protected void onCancel() {
             Logger.verbose("FusedLocationAdapter - Canceling single location request.");
-            LocationServices.FusedLocationApi.removeLocationUpdates(client, fusedLocationListener);
+            client.removeLocationUpdates(locationCallback);
+
         }
 
+        @SuppressLint("MissingPermission")
         @Override
         protected void onRun() {
             Logger.verbose("FusedLocationAdapter - Starting single location request.");
-            //noinspection MissingPermission
-            LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, fusedLocationListener, Looper.getMainLooper());
+            client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         }
     }
 }

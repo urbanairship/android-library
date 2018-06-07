@@ -46,20 +46,13 @@ public interface LocationAdapter {
     void requestLocationUpdates(@NonNull Context context, @NonNull LocationRequestOptions options, @NonNull PendingIntent pendingIntent);
 
     /**
-     * Connects the adapter.
+     * Checks if the adapter is available.
      *
      * @param context The application context.
-     * @return <code>true</code> if the adapter connected,
+     * @return <code>true</code> if the adapter is available,
      * <code>false</code> otherwise.
      */
-    boolean connect(@NonNull Context context);
-
-    /**
-     * Disconnects the adapter.
-     *
-     * @param context The application context.
-     */
-    void disconnect(@NonNull Context context);
+    boolean isAvailable(@NonNull Context context);
 
     /**
      * Called when a system location provider availability changes.
