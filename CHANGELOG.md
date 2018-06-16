@@ -3,6 +3,17 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.3.1 - June 15, 2018
+=============================
+
+Fixed issues with in-app automation not displaying due to the display being paused by default. App's
+that use in-app automation should update.
+
+Changes
+-------
+- Fixed In-app automation display being paused by default.
+- Fixed CoreActivity having a visible theme.
+
 Version 9.3.0 - June 7, 2018
 ============================
 

@@ -588,9 +588,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @return {@code true} if in-app message display is paused, otherwise {@code false}.
      */
     public boolean isPaused() {
-        return getDataStore().getBoolean(PAUSE_KEY, true);
+        return getDataStore().getBoolean(PAUSE_KEY, false);
     }
-
 
     /**
      * Enables or disables in-app messaging.

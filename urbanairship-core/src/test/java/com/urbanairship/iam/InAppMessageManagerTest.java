@@ -151,6 +151,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
     @Test
     public void testIsPaused() {
+        // Pause display
+        manager.setPaused(true);
+
         // Resume an activity
         Activity activity = new Activity();
         activityMonitor.startActivity(activity);
@@ -159,20 +162,9 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the message
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
         assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
-        assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
 
-        // Pause display
-        manager.setPaused(true);
-
-        // Attempt to display while paused
-        when(mockAdapter.onDisplay(any(Activity.class), anyBoolean(), any(DisplayHandler.class))).thenReturn(true);
-        driverCallbacks.onDisplay(schedule.getId());
-
-        // Verify no display event gets added
-        verifyNoMoreInteractions(mockAnalytics);
-
-        // Verify the adapter is not called to display
-        verifyNoMoreInteractions(mockAdapter);
+        // Paused = message is unable to be ready
+        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
     }
 
     @Test

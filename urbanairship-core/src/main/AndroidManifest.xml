@@ -16,7 +16,7 @@
         <activity android:name="com.urbanairship.iam.modal.ModalActivity" android:theme="@style/UrbanAirship.InAppModal.Activity"/>
 
 
-        <activity android:name="com.urbanairship.CoreActivity" />
+        <activity android:name="com.urbanairship.CoreActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity android:name="com.urbanairship.messagecenter.MessageActivity" />
         <activity android:name="com.urbanairship.messagecenter.MessageCenterActivity" android:label="@string/ua_message_center_title" />
