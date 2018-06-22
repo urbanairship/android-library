@@ -24,6 +24,8 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.push.badges.BadgeManager;
+import com.urbanairship.push.badges.BadgeStorage;
 import com.urbanairship.push.notifications.DefaultNotificationFactory;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationFactory;
@@ -279,6 +281,7 @@ public class PushManager extends AirshipComponent {
     private boolean channelCreationDelayEnabled;
     private final NotificationManagerCompat notificationManagerCompat;
 
+    private BadgeManager badgeManager;
     private final JobDispatcher jobDispatcher;
     private PushManagerJobHandler jobHandler;
     private final PushProvider pushProvider;
@@ -415,6 +418,27 @@ public class PushManager extends AirshipComponent {
             channelCreationDelayEnabled = false;
             updateRegistration();
         }
+    }
+
+    /**
+     * Enables experimental feature that increments/decrements badge counter near app icon
+     * depending on provided extra key.
+     * @param extraKey key in extras of push payload that should be handled as badge counter
+     */
+    public void enableExperimentalBadgeCounterSupport(Context context, BadgeStorage badgeStorage, String extraKey) {
+        badgeManager = new BadgeManager(context, badgeStorage);
+        if (extraKey != null) {
+            // If key is provided it will override default value
+            badgeManager.setBadgeExtraKey(extraKey);
+        }
+    }
+
+    /**
+     * @return {@link BadgeManager} instance if experimental badge counter support was enabled.
+     */
+    @Nullable
+    public BadgeManager getBadgeManager() {
+        return badgeManager;
     }
 
     /**

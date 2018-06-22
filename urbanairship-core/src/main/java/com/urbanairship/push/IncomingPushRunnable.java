@@ -25,6 +25,7 @@ import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.push.badges.BadgeManager;
 import com.urbanairship.push.notifications.NotificationFactory;
 import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
@@ -198,6 +199,10 @@ class IncomingPushRunnable implements Runnable {
             case NotificationFactory.Result.OK:
                 postNotification(airship, result.getNotification(), notificationId);
                 sendPushResultBroadcast(notificationId);
+                BadgeManager badgeManager = airship.getPushManager().getBadgeManager();
+                if (badgeManager != null) {
+                    badgeManager.handlePushReceived(message);
+                }
                 break;
             case NotificationFactory.Result.CANCEL:
                 sendPushResultBroadcast(null);
