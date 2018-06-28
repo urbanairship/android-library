@@ -3,6 +3,17 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.3.2 - June 29, 2018
+=============================
+
+Fixed an issue where if you define an end time on a automation schedule (action or in-app messages),
+it would mark it as expired during the next app init, even if the schedule was not still current. Any app
+using either action automation or in-app messages should update.
+
+Changes
+-------
+- Fixed marking current schedules with an end time as expired.
+
 Version 9.3.1 - June 15, 2018
 =============================
 
