@@ -3,7 +3,7 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
-Version 9.3.2 - June 29, 2018
+Version 9.3.2 - June 28, 2018
 =============================
 
 Fixed an issue where if you define an end time on a automation schedule (action or in-app messages),
