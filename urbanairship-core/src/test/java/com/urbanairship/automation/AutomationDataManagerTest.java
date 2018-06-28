@@ -312,33 +312,52 @@ public class AutomationDataManagerTest extends BaseTestCase {
         assertEquals(trigger.type, triggers.get(0).type);
     }
 
+    @Test
+    public void testGetActiveExpiredSchedules() {
+        ScheduleEntry expired = createEntry("expired_entry", "expired_group", 0, 1);
+        ScheduleEntry current = createEntry("current_entry", "expired_group", 0, System.currentTimeMillis() + 100000);
+
+        dataManager.saveSchedules(Arrays.asList(expired, current));
+        List<ScheduleEntry> retrieved = dataManager.getActiveExpiredScheduleEntries();
+        assertEquals(1, retrieved.size());
+        assertEquals("expired_entry", retrieved.get(0).scheduleId);
+
+    }
+
+
     private List<ScheduleEntry> createSchedules(int amount) {
         List<ScheduleEntry> scheduleEntries = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
-            Trigger foreground = Triggers.newForegroundTriggerBuilder()
-                                         .setGoal(10)
-                                         .build();
-
-            Trigger background = Triggers.newBackgroundTriggerBuilder()
-                                         .setGoal(3)
-                                         .build();
-
-            ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
-                                                            .setGroup("group " + i)
-                                                            .setStart(System.currentTimeMillis())
-                                                            .setEnd(System.currentTimeMillis() + 100000)
-                                                            .setLimit(100)
-                                                            .setPriority(2)
-                                                            .addAction("test_action", JsonValue.wrap("action_value"))
-                                                            .addTrigger(foreground)
-                                                            .addTrigger(background)
-                                                            .build();
-
-            ScheduleEntry scheduleEntry = new ScheduleEntry("schedule_id_" + i, schedule);
-            scheduleEntries.add(scheduleEntry);
+            scheduleEntries.add(createEntry("schedule_id_" + i, "group " + i, System.currentTimeMillis(), System.currentTimeMillis() + 100000 ));
         }
 
         return scheduleEntries;
     }
+
+    private ScheduleEntry createEntry(String id, String group, long start, long end) {
+
+        Trigger foreground = Triggers.newForegroundTriggerBuilder()
+                                     .setGoal(10)
+                                     .build();
+
+        Trigger background = Triggers.newBackgroundTriggerBuilder()
+                                     .setGoal(3)
+                                     .build();
+
+        ActionScheduleInfo schedule = ActionScheduleInfo.newBuilder()
+                                                        .setGroup(group)
+                                                        .setStart(start)
+                                                        .setEnd(end)
+                                                        .setLimit(100)
+                                                        .setPriority(2)
+                                                        .addAction("test_action", JsonValue.wrap("action_value"))
+                                                        .addTrigger(foreground)
+                                                        .addTrigger(background)
+                                                        .build();
+
+        return new ScheduleEntry(id, schedule);
+
+    }
+
 
 }

@@ -581,7 +581,7 @@ public class AutomationDataManager extends DataManager {
     List<ScheduleEntry> getActiveExpiredScheduleEntries() {
         String query = GET_SCHEDULES_QUERY +
                 " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " != " + ScheduleEntry.STATE_FINISHED +
-                " AND a." + ScheduleEntry.COLUMN_NAME_END + " >= 0 AND a." + ScheduleEntry.COLUMN_NAME_END + " >= ?";
+                " AND a." + ScheduleEntry.COLUMN_NAME_END + " >= 0 AND a." + ScheduleEntry.COLUMN_NAME_END + " <= ?";
 
         Cursor cursor = rawQuery(query, new String[] { String.valueOf(System.currentTimeMillis()) });
 
