@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.automation.AutomationUtils;
+import com.urbanairship.util.VersionUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonPredicate;
@@ -365,7 +365,7 @@ public class Audience implements JsonSerializable {
          * @return The builder.
          */
         public Builder setVersionMatcher(ValueMatcher valueMatcher) {
-            return setVersionPredicate(AutomationUtils.createVersionPredicate(valueMatcher));
+            return setVersionPredicate(VersionUtils.createVersionPredicate(valueMatcher));
         }
 
         /**

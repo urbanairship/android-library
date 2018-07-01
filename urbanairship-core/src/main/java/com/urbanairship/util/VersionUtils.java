@@ -1,5 +1,5 @@
 /* Copyright 2018 Urban Airship and Contributors */
-package com.urbanairship.automation;
+package com.urbanairship.util;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -18,7 +18,7 @@ import com.urbanairship.json.ValueMatcher;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AutomationUtils {
+public class VersionUtils {
 
     static final String AMAZON_VERSION_KEY = "amazon";
     static final String ANDROID_VERSION_KEY = "android";
@@ -30,17 +30,28 @@ public class AutomationUtils {
      * @return The version object.
      */
     public static JsonSerializable createVersionObject() {
+        return createVersionObject(UAirship.shared().getApplicationMetrics().getCurrentAppVersion());
+    }
+
+    /**
+     * Generates the version object.
+     *
+     * @param appVersion The app version.
+     *
+     * @return The version object.
+     */
+    public static JsonSerializable createVersionObject(int appVersion) {
         // Get the version code
-        int currentAppVersion = UAirship.shared().getApplicationMetrics().getCurrentAppVersion();
-        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AutomationUtils.AMAZON_VERSION_KEY : AutomationUtils.ANDROID_VERSION_KEY;
+        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 
         return JsonMap.newBuilder()
                       .put(platform, JsonMap.newBuilder()
-                                            .put(VERSION_KEY, currentAppVersion)
+                                            .put(VERSION_KEY, appVersion)
                                             .build())
                       .build()
                       .toJsonValue();
     }
+
 
     /**
      * Creates the version predicate.
@@ -48,12 +59,12 @@ public class AutomationUtils {
      * @return The version predicate.
      */
     public static JsonPredicate createVersionPredicate(@NonNull ValueMatcher versionMatcher) {
-        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? AutomationUtils.AMAZON_VERSION_KEY : AutomationUtils.ANDROID_VERSION_KEY;
+        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 
         return JsonPredicate.newBuilder()
                             .addMatcher(JsonMatcher.newBuilder()
                                                    .setScope(platform)
-                                                   .setKey(AutomationUtils.VERSION_KEY)
+                                                   .setKey(VersionUtils.VERSION_KEY)
                                                    .setValueMatcher(versionMatcher)
                                                    .build())
                             .build();

@@ -1,7 +1,8 @@
-package com.urbanairship.remoteconfig;
 /* Copyright 2018 Urban Airship and Contributors */
 
+package com.urbanairship.remoteconfig;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.AirshipComponent;
@@ -19,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Remote config manager.
@@ -49,8 +52,6 @@ public class RemoteConfigManager extends AirshipComponent {
     public RemoteConfigManager(PreferenceDataStore dataStore, RemoteData remoteData) {
         super(dataStore);
         this.remoteData = remoteData;
-
-
     }
 
     @Override
@@ -88,7 +89,7 @@ public class RemoteConfigManager extends AirshipComponent {
             }
         }
 
-        apply(DisableInfo.collapse(disableInfos, UAirship.getVersion()));
+        apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()));
     }
 
     @Override
@@ -103,23 +104,38 @@ public class RemoteConfigManager extends AirshipComponent {
     /**
      * Disables and enables airship components.
      *
-     * @param disableInfo The disable info.
+     * @param disableInfos The list of disable infos.
      */
 
-    private void apply(DisableInfo disableInfo) {
-        for (String module : disableInfo.getDisabledModules()) {
+    private void apply(@NonNull List<DisableInfo> disableInfos) {
+        Set<String> disableModules = new HashSet<>();
+        Set<String> enabledModules = new HashSet<>(DisableInfo.ALL_MODULES);
+
+        long remoteDataInterval = 0;
+
+        // Combine the disable modules and remote data interval
+        for (DisableInfo info : disableInfos) {
+            disableModules.addAll(info.getDisabledModules());
+            enabledModules.removeAll(info.getDisabledModules());
+            remoteDataInterval = Math.max(remoteDataInterval, info.getRemoteDataRefreshInterval());
+        }
+
+        // Disable
+        for (String module : disableModules) {
             for (AirshipComponent component : findAirshipComponents(module)) {
                 component.setComponentEnabled(false);
             }
         }
 
-        for (String module : disableInfo.getEnabledModules()) {
+        // Enable
+        for (String module : enabledModules) {
             for (AirshipComponent component : findAirshipComponents(module)) {
                 component.setComponentEnabled(true);
             }
         }
 
-        remoteData.setForegroundRefreshInterval(disableInfo.getRemoteDataRefreshInterval());
+        // Remote data refresh interval
+        remoteData.setForegroundRefreshInterval(remoteDataInterval);
     }
 
     /**

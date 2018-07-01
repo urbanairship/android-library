@@ -9,7 +9,7 @@ import android.support.v4.os.ConfigurationCompat;
 import android.support.v4.os.LocaleListCompat;
 
 import com.urbanairship.UAirship;
-import com.urbanairship.automation.AutomationUtils;
+import com.urbanairship.util.VersionUtils;
 import com.urbanairship.location.UALocationManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
@@ -122,7 +122,7 @@ public abstract class AudienceChecks {
         }
 
         // Apply the predicate
-        return audience.getVersionPredicate().apply(AutomationUtils.createVersionObject());
+        return audience.getVersionPredicate().apply(VersionUtils.createVersionObject());
     }
 
     /**

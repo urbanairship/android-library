@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 import com.urbanairship.location.RegionEvent;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.VersionUtils;
 
 /**
  * Class providing factory methods and builder classes for {@link Trigger}.
@@ -362,7 +363,7 @@ public class Triggers {
          * @return The trigger instance.
          */
         public Trigger build() {
-            JsonPredicate predicate = AutomationUtils.createVersionPredicate(versionMatcher);
+            JsonPredicate predicate = VersionUtils.createVersionPredicate(versionMatcher);
             return new Trigger(Trigger.VERSION, goal, predicate);
         }
     }

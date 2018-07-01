@@ -12,6 +12,7 @@ import com.urbanairship.reactive.Observer;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.reactive.Supplier;
+import com.urbanairship.util.VersionUtils;
 
 /**
  * Factory methods for creating compound trigger observables
@@ -82,7 +83,7 @@ class TriggerObservables {
             @Override
             public Observable<JsonSerializable> apply() {
                 if (UAirship.shared().getApplicationMetrics().getAppVersionUpdated()) {
-                    return Observable.just(AutomationUtils.createVersionObject());
+                    return Observable.just(VersionUtils.createVersionObject());
                 } else {
                     return Observable.empty();
                 }

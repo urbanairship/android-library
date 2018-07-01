@@ -2,22 +2,41 @@
 
 package com.urbanairship.remoteconfig;
 
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestApplication;
+import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.JsonMatcher;
+import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.ValueMatcher;
+import com.urbanairship.util.VersionUtils;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DisableInfoTest extends BaseTestCase {
+    private ApplicationMetrics mockMetrics;
+
+    @Before
+    public void setup() {
+        mockMetrics = mock(ApplicationMetrics.class);
+        TestApplication.getApplication().setApplicationMetrics(mockMetrics);
+    }
 
     @Test
     public void testParseJson() throws JsonException {
@@ -25,22 +44,27 @@ public class DisableInfoTest extends BaseTestCase {
         modules.add("push");
         modules.add("message_center");
 
-        HashSet<String> versions = new HashSet<>();
-        versions.add("+");
+        HashSet<String> sdkVersions = new HashSet<>();
+        sdkVersions.add("+");
 
-        JsonMap jsonMap = JsonMap.newBuilder()
-                                 .put("modules", JsonValue.wrapOpt(new ArrayList<>(modules)))
-                                 .put("sdk_versions", JsonValue.wrapOpt(new ArrayList<>(versions)))
-                                 .put("remote_data_refresh_interval", 10)
-                                 .build();
+        DisableInfo original = DisableInfo.newBuilder()
+                                          .setDisabledModules(modules)
+                                          .setRemoteDataInterval(10)
+                                          .setSDKVersionConstraints(sdkVersions)
+                                          .setAppVersionPredicate(VersionUtils.createVersionPredicate(ValueMatcher.newNumberRangeMatcher(1.0, 1.0)))
+                                          .build();
 
-        DisableInfo disableInfo = DisableInfo.parseJson(jsonMap.toJsonValue());
 
+        DisableInfo fromJson = DisableInfo.parseJson(original.toJsonValue());
 
-        assertEquals(disableInfo.getDisabledModules(), modules);
-        assertEquals(disableInfo.getSdkVersionConstraints(), versions);
-        assertEquals(disableInfo.getRemoteDataRefreshInterval(), 10000);
+        assertEquals(original.getDisabledModules(), modules);
+        assertEquals(original.getSdkVersionConstraints(), sdkVersions);
+
+        assertEquals(original.getRemoteDataRefreshInterval(), 10);
+        // Parsing from json will result in conversion from seconds to milliseconds
+        assertEquals(fromJson.getRemoteDataRefreshInterval(), 10000);
     }
+
 
     @Test
     public void testParseJsonAllModules() throws JsonException {
@@ -54,31 +78,51 @@ public class DisableInfoTest extends BaseTestCase {
         assertEquals(disableInfo.getRemoteDataRefreshInterval(), 0);
     }
 
+
     @Test
-    public void testCollapse() {
-        DisableInfo pushModule = new DisableInfo(Collections.singleton("push"), 100, Collections.<String>emptySet());
-        DisableInfo messageCenter = new DisableInfo(Collections.singleton("message_center"), 100, Collections.singleton("6.0.0"));
-        DisableInfo allModules = new DisableInfo(new HashSet<String>(DisableInfo.ALL_MODULES), 50000, Collections.singleton("5.0.+"));
+    public void testFilter() {
+        DisableInfo pushModule = DisableInfo.newBuilder()
+                                            .setDisabledModules(Collections.singleton("push"))
+                                            .build();
+
+        DisableInfo messageCenter = DisableInfo.newBuilder()
+                                               .setDisabledModules(Collections.singleton("message_center"))
+                                               .setRemoteDataInterval(100)
+                                               .setSDKVersionConstraints(Collections.singleton("6.0.0"))
+                                               .build();
+
+        DisableInfo allModules = DisableInfo.newBuilder()
+                                            .setDisabledModules(DisableInfo.ALL_MODULES)
+                                            .setRemoteDataInterval(50000)
+                                            .setSDKVersionConstraints(Collections.singleton("5.0.+"))
+                                            .build();
+
+        DisableInfo sdkVersion = DisableInfo.newBuilder()
+                                            .setDisabledModules(DisableInfo.ALL_MODULES)
+                                            .setAppVersionPredicate(VersionUtils.createVersionPredicate(ValueMatcher.newNumberRangeMatcher(5.0, 6.0)))
+                                            .build();
 
 
         // Should match push
-        DisableInfo result = DisableInfo.collapse(Arrays.asList(pushModule, messageCenter, allModules), "8.0.0");
-        assertEquals(result.getDisabledModules(), pushModule.getDisabledModules());
-        assertEquals(result.getRemoteDataRefreshInterval(), pushModule.getRemoteDataRefreshInterval());
+        List<DisableInfo> result = DisableInfo.filter(Arrays.asList(pushModule, messageCenter, allModules, sdkVersion), "8.0.0", 1);
+        assertTrue(result.contains(pushModule));
 
         // Should match push and message center
-        result = DisableInfo.collapse(Arrays.asList(pushModule, messageCenter, allModules), "6.0.0");
-        assertEquals(result.getDisabledModules(), new HashSet<>(Arrays.asList("push", "message_center")));
-        assertEquals(result.getRemoteDataRefreshInterval(), messageCenter.getRemoteDataRefreshInterval());
+        result = DisableInfo.filter(Arrays.asList(pushModule, messageCenter, allModules, sdkVersion), "6.0.0", 1);
+        assertTrue(result.contains(pushModule));
+        assertTrue(result.contains(messageCenter));
 
         // Should match push and all
-        result = DisableInfo.collapse(Arrays.asList(pushModule, messageCenter, allModules), "5.0.4");
-        assertEquals(result.getDisabledModules(), new HashSet<>(DisableInfo.ALL_MODULES));
-        assertEquals(result.getRemoteDataRefreshInterval(), allModules.getRemoteDataRefreshInterval());
+        result = DisableInfo.filter(Arrays.asList(pushModule, messageCenter, allModules, sdkVersion), "5.0.4", 1);
+        assertTrue(result.contains(pushModule));
+        assertTrue(result.contains(allModules));
 
         // No match
-        result = DisableInfo.collapse(Arrays.asList(messageCenter, allModules), "9.0.4");
-        assertTrue(result.getDisabledModules().isEmpty());
-        assertEquals(0, result.getRemoteDataRefreshInterval());
+        result = DisableInfo.filter(Arrays.asList(messageCenter, allModules, sdkVersion), "9.0.4", 1);
+        assertTrue(result.isEmpty());
+
+        // SDK Version 5
+        result = DisableInfo.filter(Arrays.asList(messageCenter, allModules, sdkVersion), "9.0.4", 5);
+        assertTrue(result.contains(sdkVersion));
     }
 }
