@@ -38,7 +38,7 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
      * @return The modal adapter.
      */
     public static HtmlDisplayAdapter newAdapter(InAppMessage message) {
-        HtmlDisplayAdapter displayContent = message.getDisplayContent();
+        HtmlDisplayContent displayContent = message.getDisplayContent();
         if (displayContent == null) {
             throw new IllegalArgumentException("Invalid message for adapter: " + message);
         }
