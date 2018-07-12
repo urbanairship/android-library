@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
@@ -74,7 +75,8 @@ public class JobInfo {
     private static final int GENERATED_RANGE = 50;
     private static final int GENERATED_ID_OFFSET = 49;
 
-    private static SharedPreferences sharedPreferences;
+    @VisibleForTesting
+    static SharedPreferences sharedPreferences;
     private static final Object preferenceLock = new Object();
 
     private final JsonMap extras;
@@ -114,6 +116,17 @@ public class JobInfo {
         this.initialDelay = builder.initialDelay;
         this.persistent = builder.persistent;
         this.id = builder.jobId;
+    }
+
+    @VisibleForTesting
+    static void resetGeneratedIds(Context context) {
+        synchronized (preferenceLock) {
+            if (sharedPreferences == null) {
+                sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
+            }
+
+            sharedPreferences.edit().remove(NEXT_GENERATED_ID_KEY).apply();
+        }
     }
 
     /**

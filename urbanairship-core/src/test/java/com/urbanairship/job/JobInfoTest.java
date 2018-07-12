@@ -1,15 +1,26 @@
 package com.urbanairship.job;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.push.PushManager;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 
 import static junit.framework.Assert.assertEquals;
 
 
 public class JobInfoTest extends BaseTestCase {
+
+    @Before
+    public void setup() {
+        JobInfo.resetGeneratedIds(RuntimeEnvironment.application);
+    }
 
     @Test
     public void testGenerateUniqueId() {

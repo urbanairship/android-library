@@ -142,7 +142,8 @@ public class InAppMessage implements Parcelable, JsonSerializable {
      * The return type depends on the in-app message type:
      * {@link #TYPE_BANNER}: a {@link com.urbanairship.iam.banner.BannerDisplayContent},
      * {@link #TYPE_CUSTOM}: a {@link com.urbanairship.iam.custom.CustomDisplayContent},
-     * {@link #TYPE_FULLSCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent}
+     * {@link #TYPE_FULLSCREEN}: a {@link com.urbanairship.iam.fullscreen.FullScreenDisplayContent},
+     * {@link #TYPE_HTML}: a {@link com.urbanairship.iam.html.HtmlDisplayContent}
      *
      * @return The display content.
      */

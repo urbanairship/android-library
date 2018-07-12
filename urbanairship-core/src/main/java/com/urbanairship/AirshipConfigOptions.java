@@ -15,6 +15,7 @@ import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.reflect.Field;
+import java.util.Properties;
 
 /**
  * This class holds the set of options necessary to properly initialize
@@ -510,7 +511,26 @@ public class AirshipConfigOptions {
          */
         public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
-                ConfigParser configParser = new PropertiesConfigParser(context, propertiesFile);
+                ConfigParser configParser = PropertiesConfigParser.fromAssets(context, propertiesFile);
+                applyConfigParser(context, configParser);
+            } catch (Exception e) {
+                Logger.error("AirshipConfigOptions - Unable to apply config.", e);
+            }
+
+            return this;
+        }
+
+
+        /**
+         * Applies properties from a given Properties object.
+         *
+         * @param context The application context.
+         * @param properties The properties
+         * @return The config option builder.
+         */
+        public Builder applyProperties(@NonNull Context context, @NonNull Properties properties) {
+            try {
+                ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
                 Logger.error("AirshipConfigOptions - Unable to apply config.", e);

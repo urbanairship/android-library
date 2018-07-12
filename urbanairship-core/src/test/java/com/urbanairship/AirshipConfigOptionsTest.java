@@ -11,6 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +30,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
     static final String INVALID_PROPERTIES_FILE = "invalid.properties";
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         Application app = RuntimeEnvironment.application;
         this.uaContext = app.getApplicationContext();
     }
@@ -35,8 +39,8 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
      * This test verifies the applyProperties method can parse different types
      */
     @Test
-    public void testLoadFromProperties() {
-        AirshipConfigOptions aco = new AirshipConfigOptions.Builder().applyProperties(uaContext, TEST_PROPERTIES_FILE).build();
+    public void testLoadFromProperties() throws IOException {
+        AirshipConfigOptions aco = new AirshipConfigOptions.Builder().applyProperties(uaContext, getProperties(TEST_PROPERTIES_FILE)).build();
 
         assertEquals("prodAppKey", aco.productionAppKey);
         assertEquals("prodAppSecret", aco.productionAppSecret);
@@ -74,9 +78,9 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
      * This test loads invalid values and verify the property value is set to default
      */
     @Test
-    public void testInvalidOptions() {
+    public void testInvalidOptions() throws IOException {
         AirshipConfigOptions aco = new AirshipConfigOptions.Builder()
-                .applyProperties(uaContext, INVALID_PROPERTIES_FILE)
+                .applyProperties(uaContext, getProperties(INVALID_PROPERTIES_FILE))
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
                 .setProductionAppSecret("appSecret")
@@ -155,5 +159,19 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
                 .build();
 
         assertEquals("deprecated gcm sender ID", aco.getFcmSenderId());
+    }
+
+    Properties getProperties(String file) throws IOException {
+        InputStream stream = null;
+        try {
+            stream = getClass().getClassLoader().getResourceAsStream(file);
+            Properties properties = new Properties();
+            properties.load(stream);
+            return properties;
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
     }
 }
