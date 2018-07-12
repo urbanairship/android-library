@@ -28,6 +28,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPendingIntent;
 
@@ -434,6 +435,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      * is set to null.
      */
     @Test
+    @Config(sdk = 25)
     public void testDeliverPushSoundDisabled() {
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
@@ -458,6 +460,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      * is set to null.
      */
     @Test
+    @Config(sdk = 25)
     public void testDeliverPushVibrateDisabled() {
         when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);

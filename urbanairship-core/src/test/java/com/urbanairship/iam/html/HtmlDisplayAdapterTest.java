@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.html;
 
+import com.urbanairship.BaseTestCase;
 import com.urbanairship.iam.InAppMessage;
 
 import junit.framework.Assert;
@@ -9,7 +10,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class HtmlDisplayAdapterTest {
+public class HtmlDisplayAdapterTest extends BaseTestCase {
 
     private InAppMessage htmlMessage;
 

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.util.UAStringUtil;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -22,12 +24,24 @@ import java.util.Properties;
  */
 class PropertiesConfigParser implements ConfigParser {
 
-    private final List<String> propertyNames = new ArrayList<>();
-    private final List<String> propertyValues = new ArrayList<>();
+    private final List<String> propertyNames;
+    private final List<String> propertyValues;
     private final Context context;
 
-    public PropertiesConfigParser(Context context, String propertiesFile) throws IOException {
+    private PropertiesConfigParser(@NonNull Context context, @NonNull List<String> propertyNames, @NonNull List<String> propertyValues) {
         this.context = context;
+        this.propertyNames = propertyNames;
+        this.propertyValues = propertyValues;
+    }
+
+    /**
+     * Factory method to create a config parser from a file in the assets directory.
+     * @param context The application context.
+     * @param propertiesFile The properties file.
+     * @return A PropertiesConfigParser instance.
+     * @throws IOException
+     */
+    public static PropertiesConfigParser fromAssets(Context context, String propertiesFile) throws IOException {
         Resources resources = context.getResources();
         AssetManager assetManager = resources.getAssets();
 
@@ -42,21 +56,7 @@ class PropertiesConfigParser implements ConfigParser {
         try {
             inStream = assetManager.open(propertiesFile);
             properties.load(inStream);
-
-            for (String name : properties.stringPropertyNames()) {
-
-                String value = properties.getProperty(name);
-                if (value != null) {
-                    value = value.trim();
-                }
-
-                if (UAStringUtil.isEmpty(value)) {
-                    continue;
-                }
-
-                propertyNames.add(name);
-                propertyValues.add(value);
-            }
+            return fromProperties(context, properties);
         } finally {
             if (inStream != null) {
                 try {
@@ -66,6 +66,33 @@ class PropertiesConfigParser implements ConfigParser {
                 }
             }
         }
+    }
+
+    /**
+     * Factory method to create a config parser.
+     * @param context The application context.
+     * @param properties The properties.
+     * @return A PropertiesConfigParser instance.
+     */
+    public static PropertiesConfigParser fromProperties(@NonNull Context context, @NonNull Properties properties) {
+        List<String> propertyNames = new ArrayList<>();
+        List<String> propertyValues = new ArrayList<>();
+
+        for (String name : properties.stringPropertyNames()) {
+            String value = properties.getProperty(name);
+            if (value != null) {
+                value = value.trim();
+            }
+
+            if (UAStringUtil.isEmpty(value)) {
+                continue;
+            }
+
+            propertyNames.add(name);
+            propertyValues.add(value);
+        }
+
+        return new PropertiesConfigParser(context, propertyNames, propertyValues);
     }
 
     @Override
