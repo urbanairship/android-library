@@ -30,8 +30,14 @@ import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
+import java.sql.Time;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
@@ -46,6 +52,8 @@ class IncomingPushRunnable implements Runnable {
 
     private static final long LONG_AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
 
+    private static final long SHORT_TASK_RESULT_WAIT_TIME = 9500; // 9.5 seconds. Gives us a little extra time to post process notification
+
 
     private final Context context;
     private final PushMessage message;
@@ -55,6 +63,8 @@ class IncomingPushRunnable implements Runnable {
     private boolean isProcessed;
     private final Runnable onFinish;
     private final JobDispatcher jobDispatcher;
+
+    private long startTime = 0;
 
     /**
      * Default constructor.
@@ -74,6 +84,7 @@ class IncomingPushRunnable implements Runnable {
 
     @Override
     public void run() {
+        startTime = System.currentTimeMillis();
         long airshipWaitTime = isLongRunning ? LONG_AIRSHIP_WAIT_TIME_MS : AIRSHIP_WAIT_TIME_MS;
         UAirship airship = UAirship.waitForTakeOff(airshipWaitTime);
 
@@ -168,7 +179,7 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        NotificationFactory factory = airship.getPushManager().getNotificationFactory();
+        final NotificationFactory factory = airship.getPushManager().getNotificationFactory();
 
         if (factory == null) {
             Logger.info("NotificationFactory is null. Unable to display notification for message: " + message);
@@ -182,13 +193,37 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        int notificationId = 0;
+        Future<FactoryResult> resultFuture = NotificationFactory.EXECUTOR.submit(new Callable<FactoryResult>() {
+            @Override
+            public FactoryResult call() {
+                int notificationId = factory.getNextId(message);
+                NotificationFactory.Result result = factory.createNotificationResult(message, notificationId, isLongRunning);
+                return new FactoryResult(notificationId, result);
+            }
+        });
+
         NotificationFactory.Result result;
+        int notificationId = 0;
+
         try {
-            notificationId = factory.getNextId(message);
-            result = factory.createNotificationResult(message, notificationId);
-        } catch (Exception e) {
+            FactoryResult factoryResult;
+            if (isLongRunning || !airship.getAirshipConfigOptions().autoRetrySlowNotificationFactoryBuilds) {
+                factoryResult = resultFuture.get();
+            } else {
+                long remainingTime = SHORT_TASK_RESULT_WAIT_TIME - (System.currentTimeMillis() - startTime);
+                factoryResult = resultFuture.get(remainingTime, TimeUnit.MILLISECONDS);
+            }
+            result = factoryResult.notificationResult;
+            notificationId = factoryResult.notificationId;
+        } catch (TimeoutException e) {
+            Logger.error("Notification took too long to build, rescheduling for a later time.");
+            result = NotificationFactory.Result.retry();
+            resultFuture.cancel(true);
+        } catch (ExecutionException e) {
             Logger.error("Cancelling notification display to create and display notification.", e);
+            result = NotificationFactory.Result.cancel();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             result = NotificationFactory.Result.cancel();
         }
 
@@ -475,6 +510,16 @@ class IncomingPushRunnable implements Runnable {
             Checks.checkNotNull(message, "Push Message missing");
 
             return new IncomingPushRunnable(this);
+        }
+    }
+
+    private static class FactoryResult {
+        private final int notificationId;
+        private final NotificationFactory.Result notificationResult;
+
+        public FactoryResult(int notificationId, NotificationFactory.Result result) {
+            this.notificationId = notificationId;
+            this.notificationResult = result;
         }
     }
 

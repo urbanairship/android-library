@@ -2,6 +2,7 @@
 
 package com.urbanairship.push.notifications;
 
+import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class StyleNotificationExtender implements NotificationCompat.Extender {
 
-    private final static long BIG_PICTURE_TIMEOUT_SECONDS = 10;
+    private final static long BIG_PICTURE_TIMEOUT_SECONDS = 7;
 
     private final static int BIG_IMAGE_HEIGHT_DP = 240;
     private final static double BIG_IMAGE_SCREEN_WIDTH_PERCENT = .75;
@@ -257,7 +258,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         // Big images have a max height of 240dp
         final int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
 
-        Future<Bitmap> future = Executors.newSingleThreadExecutor().submit(new Callable<Bitmap>() {
+        Future<Bitmap> future = NotificationFactory.EXECUTOR.submit(new Callable<Bitmap>() {
             @Override
             public Bitmap call() throws Exception {
                 return BitmapUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);

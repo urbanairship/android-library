@@ -27,6 +27,8 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -39,6 +41,8 @@ import java.lang.annotation.RetentionPolicy;
 public class NotificationFactory {
 
     public static final String DEFAULT_NOTIFICATION_CHANNEL = "com.urbanairship.default";
+
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     private int titleId;
     private int smallIconId;
@@ -53,13 +57,14 @@ public class NotificationFactory {
      */
     public static final int TAG_NOTIFICATION_ID = 100;
 
+
     /**
      * A container for a NotificationFactory result, containing a nullable
      * Notification instance and a status code.
      */
     public static class Result {
 
-        @IntDef({OK, RETRY, CANCEL})
+        @IntDef({ OK, RETRY, CANCEL })
         @Retention(RetentionPolicy.SOURCE)
         public @interface Status {}
 
@@ -81,7 +86,8 @@ public class NotificationFactory {
         public static final int CANCEL = 2;
 
         private Notification notification;
-        private @Status int status;
+        private @Status
+        int status;
 
         /**
          * NotificationFactory.Result constructor.
@@ -129,15 +135,18 @@ public class NotificationFactory {
 
         /**
          * Gets the Notification.
+         *
          * @return The Notification.
          */
         public Notification getNotification() { return notification; }
 
         /**
          * Gets the status.
+         *
          * @return The status.
          */
-        public @Status int getStatus() { return status; }
+        public @Status
+        int getStatus() { return status; }
     }
 
     private final Context context;
@@ -326,7 +335,7 @@ public class NotificationFactory {
 
         if (getTitleId() == 0) {
             return getContext().getPackageManager().getApplicationLabel(getContext().getApplicationInfo()).toString();
-        } else  {
+        } else {
             return getContext().getString(getTitleId());
         }
     }
@@ -365,7 +374,23 @@ public class NotificationFactory {
         return builder.build();
     }
 
+    /**
+     * Creates a <code>Notification</code> for an incoming push message.
+     * <p/>
+     * In order to handle notification opens, the application should register a broadcast receiver
+     * that extends {@link AirshipReceiver}. When the notification is opened
+     * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
+     * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
+     * or {@code false} is returned, an open will be handled by either starting the launcher activity or
+     * by sending the notification's content intent if it is present.
+     *
+     * @param message The push message.
+     * @param notificationId The notification ID.
+     * @return The notification result.
+     * @deprecated Use {@link #createNotificationResult(PushMessage, int, boolean)}.
+     */
     @NonNull
+    @Deprecated
     public Result createNotificationResult(@NonNull final PushMessage message, final int notificationId) {
         Notification notification = createNotification(message, notificationId);
         if (notification == null) {
@@ -373,6 +398,34 @@ public class NotificationFactory {
         } else {
             return Result.notification(notification);
         }
+    }
+
+
+    /**
+     * Creates a <code>Notification</code> for an incoming push message.
+     * <p/>
+     * In order to handle notification opens, the application should register a broadcast receiver
+     * that extends {@link AirshipReceiver}. When the notification is opened
+     * it will call {@link AirshipReceiver#onNotificationOpened(Context, AirshipReceiver.NotificationInfo)}
+     * giving the application a chance to handle the notification open. If the broadcast receiver is not registered,
+     * or {@code false} is returned, an open will be handled by either starting the launcher activity or
+     * by sending the notification's content intent if it is present.
+     *
+     * @param message The push message.
+     * @param notificationId The notification ID.
+     * @param isLongRunningTask {@code true} if the factory is currently running using a job and has
+     * extended background time to create the notification result. {@code false} if the factory has
+     * limited background time and should create the notification within 10 seconds. Note, 10 seconds
+     * is for total background time. This includes Application start time and any time spent in the
+     * onReady callback during takeOff. The notification will be auto retried if the factory exceeds
+     * the amount of time to create the notification when running in limited background mode and
+     * {@link com.urbanairship.AirshipConfigOptions#autoRetrySlowNotificationFactoryBuilds} is enabled (enabled by default).
+     * @return The notification result.
+     */
+    @NonNull
+    public Result createNotificationResult(@NonNull final PushMessage message, final int notificationId, boolean isLongRunningTask) {
+        //noinspection deprecation
+        return this.createNotificationResult(message, notificationId);
     }
 
     /**
