@@ -78,6 +78,23 @@ public class Whitelist {
      */
     private static final Pattern VALID_PATTERN = Pattern.compile(PATTERN_REGEX, Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Interface that defines a callback that can be used to reject whitelisting of a URL.
+     */
+    public interface OnWhitelistCallback {
+        /**
+         * Called when the url has passed the isWhitelisted() check.
+         *
+         * @param url The URL.
+         * @param scope The scope.
+         * @return <code>true</code> to accept the whitelisting, <code>false</code> to reject the whitelisting.
+         */
+        boolean acceptWhitelisting(@NonNull String url, @Scope int scope);
+    }
+
+    @Nullable
+    private OnWhitelistCallback whitelistCallback;
+
     private final List<Entry> entries = new ArrayList<>();
     private boolean isOpenUrlWhitelistingEnabled = true;
 
@@ -217,22 +234,31 @@ public class Whitelist {
             return false;
         }
 
+        boolean match = false;
+
         if (scope == SCOPE_OPEN_URL && !isOpenUrlWhitelistingEnabled) {
-            return true;
-        }
+            match = true;
+        } else {
+            Uri uri = Uri.parse(url);
+            int matchedScope = 0;
 
-        Uri uri = Uri.parse(url);
-        int matchedScope = 0;
-
-        synchronized (entries) {
-            for (Entry entry : entries) {
-                if (entry.pattern.matches(uri)) {
-                    matchedScope |= entry.scope;
+            synchronized (entries) {
+                for (Entry entry : entries) {
+                    if (entry.pattern.matches(uri)) {
+                        matchedScope |= entry.scope;
+                    }
                 }
             }
+
+            match = ((matchedScope & scope) == scope);
         }
 
-        return ((matchedScope & scope) == scope);
+        // if the url is whitelisted, allow the app to reject the whitelisting
+        if (match && (whitelistCallback != null)) {
+            match = whitelistCallback.acceptWhitelisting(url, scope);
+        }
+
+        return match;
     }
 
     /**
@@ -294,6 +320,16 @@ public class Whitelist {
         whitelist.setOpenUrlWhitelistingEnabled(airshipConfigOptions.enableUrlWhitelisting);
 
         return whitelist;
+    }
+
+    /**
+     * Sets the whitelist callback.
+     *
+     * @param whitelistCallback The whitelist callback.
+     * @return The config options builder.
+     */
+    public void setWhitelistCallback(OnWhitelistCallback whitelistCallback) {
+        this.whitelistCallback = whitelistCallback;
     }
 
     /**

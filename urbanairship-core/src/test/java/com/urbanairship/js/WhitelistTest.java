@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 public class WhitelistTest extends BaseTestCase {
 
@@ -392,6 +393,65 @@ public class WhitelistTest extends BaseTestCase {
         assertTrue(whitelist.isWhitelisted("com.urbanairship.five:///", Whitelist.SCOPE_ALL));
 
         assertFalse(whitelist.isWhitelisted("com.urbanairship.five:/cool", Whitelist.SCOPE_ALL));
+    }
+
+    @Test
+    public void testCallback() {
+        // set up a simple whitelist
+        assertTrue(whitelist.addEntry("https://*.urbanairship.com"));
+        assertTrue(whitelist.addEntry("https://*.youtube.com", Whitelist.SCOPE_OPEN_URL));
+
+        // URLs to be checked
+        String matchingURLToReject = "https://www.youtube.com/watch?v=sYd_-pAfbBw";
+        String matchingURLToAccept = "https://device-api.urbanairship.com/api/user";
+        String nonMatchingURL = "https://maps.google.com";
+        int scope = Whitelist.SCOPE_OPEN_URL;
+
+        // test when callback has yet to be enabled
+        assertTrue(whitelist.isWhitelisted(matchingURLToAccept, scope));
+        assertTrue(whitelist.isWhitelisted(matchingURLToReject, scope));
+        assertFalse(whitelist.isWhitelisted(nonMatchingURL, scope));
+
+        // Enable whitelist callback
+        TestWhitelistCallback callback = new TestWhitelistCallback();
+        callback.matchingURLToAccept = matchingURLToAccept;
+        callback.matchingURLToReject = matchingURLToReject;
+        callback.nonMatchingURL = nonMatchingURL;
+        whitelist.setWhitelistCallback(callback);
+
+        // rejected URL should now fail whitelist test, others should be unchanged
+        assertTrue(whitelist.isWhitelisted(matchingURLToAccept, scope));
+        assertFalse(whitelist.isWhitelisted(matchingURLToReject, scope));
+        assertFalse(whitelist.isWhitelisted(nonMatchingURL, scope));
+
+        // Disable whitelist callbak
+        whitelist.setWhitelistCallback(null);
+
+        // Should go back to original state when callback was off
+        assertTrue(whitelist.isWhitelisted(matchingURLToAccept, scope));
+        assertTrue(whitelist.isWhitelisted(matchingURLToReject, scope));
+        assertFalse(whitelist.isWhitelisted(nonMatchingURL, scope));
+    }
+
+    private class TestWhitelistCallback implements Whitelist.OnWhitelistCallback {
+        public String matchingURLToAccept;
+        public String matchingURLToReject;
+        public String nonMatchingURL;
+
+        @Override
+        public boolean acceptWhitelisting(String url, @Whitelist.Scope int scope) {
+            if (url.equals(matchingURLToAccept)) {
+                return true;
+            } else if (url.equals(matchingURLToReject)) {
+                return false;
+            } else if (url.equals(nonMatchingURL)) {
+                fail("Callback should not be called when URL fails whitelisting");
+                return false;
+            } else {
+                fail("Unknown error");
+                return false;
+            }
+        }
     }
 }
 
