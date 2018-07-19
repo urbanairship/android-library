@@ -10,17 +10,17 @@ Minor release that adds new NotificationFactory APIs to better handle limited ba
 time when building notifications. This release also addresses ANRs from the GCM and ADM
 Broadcast Receiver that occur when notification building takes longer than 10 seconds when
 using a custom notification factory. To avoid the ANR, the braodcast will wait a max of 10
-seconds before finishing received broadcast instead of waiting for the notificaiton to
+seconds before finishing received broadcast instead of waiting for the notification to
 finish. This will prevent the ANR from occurring, but the OS might kill the app before it
 has time to display the notification and it will be lost. To avoid this issue, either use
 `NotificationFactory#createNotificationResult(PushMessage, int, boolean)` to retry later
-if the notification is taking too long, or if the notification requires more than 10 seconds
-use `NotificationFactory#requiresLongRunningTask(PushMessage)`.
+if the notification is taking too long, or use `NotificationFactory#requiresLongRunningTask(PushMessage)`
+if the notification requires more than 10 seconds.
 
 Changes
 -------
 - Deprecated `NotificationFactory#createNotificationResult(PushMessage, int)` in favor of `NotificationFactory#createNotificationResult(PushMessage, int, boolean)` that also tells the factory if it has longer than 10 seconds to build the notification.
-- Added listener to the WhiteListing class to reject URLs.
+- Added listener to the Whitelist class to reject URLs.
 - Added method to generate AirshipConfigOptions from a Properties instance.
 - Fixed ANRs caused by slow notification builds in custom factories when using GCM or ADM modules.
 - Fixed issue where HTML in-app automation messages were cancelled instead being displayed.
