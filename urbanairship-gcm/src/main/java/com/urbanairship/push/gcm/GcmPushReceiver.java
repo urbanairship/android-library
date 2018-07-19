@@ -25,6 +25,7 @@ import com.urbanairship.push.PushProviderBridge;
 @Deprecated
 public class GcmPushReceiver extends WakefulBroadcastReceiver {
 
+
     /**
      * This intent action indicates a push notification has been received from GCM.
      */
@@ -39,6 +40,12 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
      * This intent action indicates a registration change.
      */
     static final String ACTION_INSTANCE_ID = "com.google.android.gms.iid.InstanceID";
+
+    /**
+     * Amount of time in milliseconds a broadcast receiver has to process an intent.
+     */
+    private static final long BROADCAST_INTENT_TIME_MS = 10000;
+
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -73,6 +80,7 @@ public class GcmPushReceiver extends WakefulBroadcastReceiver {
                 final PendingResult result = goAsync();
                 PushProviderBridge.processPush(GcmPushProvider.class, new PushMessage(intent.getExtras()))
                                   .allowWakeLocks(true)
+                                  .setMaxCallbackWaitTime(BROADCAST_INTENT_TIME_MS)
                                   .execute(context, new Runnable() {
                                       @Override
                                       public void run() {

@@ -417,9 +417,7 @@ public class NotificationFactory {
      * extended background time to create the notification result. {@code false} if the factory has
      * limited background time and should create the notification within 10 seconds. Note, 10 seconds
      * is for total background time. This includes Application start time and any time spent in the
-     * onReady callback during takeOff. The notification will be auto retried if the factory exceeds
-     * the amount of time to create the notification when running in limited background mode and
-     * {@link com.urbanairship.AirshipConfigOptions#autoRetrySlowNotificationFactoryBuilds} is enabled (enabled by default).
+     * onReady callback during takeOff.
      * @return The notification result.
      */
     @NonNull

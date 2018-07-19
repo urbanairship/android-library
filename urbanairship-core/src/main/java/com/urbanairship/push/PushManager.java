@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -215,7 +216,7 @@ public class PushManager extends AirshipComponent {
      */
     private final String DEFAULT_TAG_GROUP = "device";
 
-    static final Executor PUSH_EXECUTOR = Executors.newCachedThreadPool();
+    static final ExecutorService PUSH_EXECUTOR = Executors.newCachedThreadPool();
 
     static final String KEY_PREFIX = "com.urbanairship.push";
     static final String PUSH_ENABLED_KEY = KEY_PREFIX + ".PUSH_ENABLED";

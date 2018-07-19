@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
@@ -15,6 +16,10 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -64,6 +69,7 @@ public abstract class PushProviderBridge {
         private final Class<? extends PushProvider> provider;
         private final PushMessage pushMessage;
         private boolean allowWakeLocks;
+        private long maxCallbackWaitTime;
 
 
         private ProcessPushRequest(@NonNull Class<? extends PushProvider> provider, @NonNull PushMessage pushMessage) {
@@ -83,6 +89,17 @@ public abstract class PushProviderBridge {
         }
 
         /**
+         * Sets the max callback wait time in milliseconds.
+         * @param milliseconds The max callback wait time. If <= 0, the callback will
+         * wait until the push request is completed.
+         * @return The process push request.
+         */
+        public ProcessPushRequest setMaxCallbackWaitTime(long milliseconds) {
+            this.maxCallbackWaitTime = milliseconds;
+            return this;
+        }
+
+        /**
          * Executes the request.
          *
          * @param context The application context.
@@ -97,7 +114,7 @@ public abstract class PushProviderBridge {
          * @param context The application context.
          * @param callback The callback.
          */
-        public void execute(@NonNull Context context, final Runnable callback) {
+        public void execute(@NonNull Context context, @Nullable final Runnable callback) {
             // If older than Android O or a high priority message try to start the push service
             if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
                 Intent intent = new Intent(context, PushService.class)
@@ -112,7 +129,10 @@ public abstract class PushProviderBridge {
                     } else {
                         context.startService(intent);
                     }
-                    callback.run();
+
+                    if (callback != null) {
+                        callback.run();
+                    }
                     return;
                 } catch (SecurityException | IllegalStateException e) {
                     Logger.error("Unable to run push in the push service.", e);
@@ -129,11 +149,24 @@ public abstract class PushProviderBridge {
                     .setMessage(pushMessage)
                     .setProviderClass(provider.toString());
 
-            if (callback != null) {
-                pushRunnableBuilder.setOnFinish(callback);
+            Future<?> future = PushManager.PUSH_EXECUTOR.submit(pushRunnableBuilder.build());
+
+            try {
+                if (maxCallbackWaitTime > 0) {
+                    future.get(maxCallbackWaitTime, TimeUnit.MILLISECONDS);
+                } else {
+                    future.get();
+                }
+            } catch (TimeoutException e) {
+                Logger.error("Application took too long to process push. App may get closed.");
+            } catch (Exception e) {
+                Logger.error("Failed to wait for notification", e);
             }
 
-            PushManager.PUSH_EXECUTOR.execute(pushRunnableBuilder.build());
+            if (callback != null) {
+                callback.run();
+            }
+
         }
 
         /**

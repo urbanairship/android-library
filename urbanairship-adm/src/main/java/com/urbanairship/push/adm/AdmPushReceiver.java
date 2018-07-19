@@ -19,6 +19,12 @@ import com.urbanairship.push.PushProviderBridge;
  */
 public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
+    /**
+     * Amount of time in milliseconds a broadcast receiver has to process an intent.
+     */
+    private static final long BROADCAST_INTENT_TIME_MS = 10000;
+
+
     @SuppressLint("NewApi")
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -39,6 +45,7 @@ public class AdmPushReceiver extends WakefulBroadcastReceiver {
 
         PushProviderBridge.processPush(AdmPushProvider.class, message)
                           .allowWakeLocks(true)
+                          .setMaxCallbackWaitTime(BROADCAST_INTENT_TIME_MS)
                           .execute(context, new Runnable() {
                               @Override
                               public void run() {

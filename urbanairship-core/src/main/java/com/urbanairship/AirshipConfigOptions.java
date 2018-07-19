@@ -291,15 +291,6 @@ public class AirshipConfigOptions {
      */
     public final Uri appStoreUri;
 
-
-    /**
-     * {@code true} to automatically retry processing a received push message when
-     * the notification factory takes too long to build the notification. This is used
-     * to prevent ANRs when a push is received and takes longer than the ~10 seconds to
-     * build the notification. {@code false} disables this behavior. Defaults to {@code true}.
-     */
-    public final boolean autoRetrySlowNotificationFactoryBuilds;
-
     private AirshipConfigOptions(Builder builder) {
         this.productionAppKey = builder.productionAppKey;
         this.productionAppSecret = builder.productionAppSecret;
@@ -331,7 +322,6 @@ public class AirshipConfigOptions {
         this.enableUrlWhitelisting = builder.enableUrlWhitelisting;
         this.customPushProvider = builder.customPushProvider;
         this.appStoreUri = builder.appStoreUri;
-        this.autoRetrySlowNotificationFactoryBuilds = builder.autoRetrySlowNotificationFactoryBuilds;
     }
 
     /**
@@ -442,7 +432,6 @@ public class AirshipConfigOptions {
         private static final String FIELD_ENABLE_URL_WHITELISTING = "enableUrlWhitelisting";
         private static final String FIELD_CUSTOM_PUSH_PROVIDER = "customPushProvider";
         private static final String FIELD_APP_STORE_URI = "appStoreUri";
-        private static final String FIELD_AUTO_RETRY_SLOW_NOTIFICATION_FACTORY_BUILDS = "autoRetrySlowNotificationFactoryBuilds";
 
         private String productionAppKey;
         private String productionAppSecret;
@@ -474,7 +463,6 @@ public class AirshipConfigOptions {
         private boolean enableUrlWhitelisting;
         private PushProvider customPushProvider;
         private Uri appStoreUri;
-        private boolean autoRetrySlowNotificationFactoryBuilds = true;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -716,10 +704,6 @@ public class AirshipConfigOptions {
 
                         case FIELD_APP_STORE_URI:
                             this.setAppStoreUri(Uri.parse(configParser.getString(i)));
-                            break;
-
-                        case FIELD_AUTO_RETRY_SLOW_NOTIFICATION_FACTORY_BUILDS:
-                            this.setAutoRetrySlowNotificationFactoryBuilds(configParser.getBoolean(i));
                             break;
                     }
                 } catch (Exception e) {
@@ -1106,18 +1090,6 @@ public class AirshipConfigOptions {
          */
         public Builder setAppStoreUri(Uri appStoreUri) {
             this.appStoreUri = appStoreUri;
-            return this;
-        }
-
-        /**
-         * Enables/disables auto retrying a notification that took too long to build when
-         * when the factory has limited background time.
-         *
-         * @param autoRetrySlowNotificationFactoryBuilds {@code true} to enable, {@code false} to disable.
-         * @return The config options builder.
-         */
-        public Builder setAutoRetrySlowNotificationFactoryBuilds(boolean autoRetrySlowNotificationFactoryBuilds) {
-            this.autoRetrySlowNotificationFactoryBuilds = autoRetrySlowNotificationFactoryBuilds;
             return this;
         }
 

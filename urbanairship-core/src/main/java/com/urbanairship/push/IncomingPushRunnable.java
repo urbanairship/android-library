@@ -49,11 +49,7 @@ import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
 class IncomingPushRunnable implements Runnable {
 
     private static final long AIRSHIP_WAIT_TIME_MS = 5000; // 5 seconds.
-
     private static final long LONG_AIRSHIP_WAIT_TIME_MS = 10000; // 10 seconds.
-
-    private static final long SHORT_TASK_RESULT_WAIT_TIME = 9500; // 9.5 seconds. Gives us a little extra time to post process notification
-
 
     private final Context context;
     private final PushMessage message;
@@ -61,10 +57,7 @@ class IncomingPushRunnable implements Runnable {
     private final NotificationManagerCompat notificationManager;
     private boolean isLongRunning;
     private boolean isProcessed;
-    private final Runnable onFinish;
     private final JobDispatcher jobDispatcher;
-
-    private long startTime = 0;
 
     /**
      * Default constructor.
@@ -77,23 +70,17 @@ class IncomingPushRunnable implements Runnable {
         this.providerClass = builder.providerClass;
         this.isLongRunning = builder.isLongRunning;
         this.isProcessed = builder.isProcessed;
-        this.onFinish = builder.onFinish;
         this.notificationManager = builder.notificationManager == null ? NotificationManagerCompat.from(context) : builder.notificationManager;
         this.jobDispatcher = builder.jobDispatcher == null ? JobDispatcher.shared(context) : builder.jobDispatcher;
     }
 
     @Override
     public void run() {
-        startTime = System.currentTimeMillis();
         long airshipWaitTime = isLongRunning ? LONG_AIRSHIP_WAIT_TIME_MS : AIRSHIP_WAIT_TIME_MS;
         UAirship airship = UAirship.waitForTakeOff(airshipWaitTime);
 
         if (airship == null) {
             Logger.error("Unable to process push, Airship is not ready. Make sure takeOff is called by either using autopilot or by calling takeOff in the application's onCreate method.");
-            if (onFinish != null) {
-                onFinish.run();
-            }
-
             return;
         }
 
@@ -104,10 +91,6 @@ class IncomingPushRunnable implements Runnable {
             } else {
                 processPush(airship);
             }
-        }
-
-        if (onFinish != null) {
-            onFinish.run();
         }
     }
 
@@ -193,37 +176,14 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        Future<FactoryResult> resultFuture = NotificationFactory.EXECUTOR.submit(new Callable<FactoryResult>() {
-            @Override
-            public FactoryResult call() {
-                int notificationId = factory.getNextId(message);
-                NotificationFactory.Result result = factory.createNotificationResult(message, notificationId, isLongRunning);
-                return new FactoryResult(notificationId, result);
-            }
-        });
-
         NotificationFactory.Result result;
         int notificationId = 0;
 
         try {
-            FactoryResult factoryResult;
-            if (isLongRunning || !airship.getAirshipConfigOptions().autoRetrySlowNotificationFactoryBuilds) {
-                factoryResult = resultFuture.get();
-            } else {
-                long remainingTime = SHORT_TASK_RESULT_WAIT_TIME - (System.currentTimeMillis() - startTime);
-                factoryResult = resultFuture.get(remainingTime, TimeUnit.MILLISECONDS);
-            }
-            result = factoryResult.notificationResult;
-            notificationId = factoryResult.notificationId;
-        } catch (TimeoutException e) {
-            Logger.error("Notification took too long to build, rescheduling for a later time.");
-            result = NotificationFactory.Result.retry();
-            resultFuture.cancel(true);
-        } catch (ExecutionException e) {
+            notificationId = factory.getNextId(message);
+            result = factory.createNotificationResult(message, notificationId, isLongRunning);
+        } catch (Exception e) {
             Logger.error("Cancelling notification display to create and display notification.", e);
-            result = NotificationFactory.Result.cancel();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             result = NotificationFactory.Result.cancel();
         }
 
@@ -295,7 +255,6 @@ class IncomingPushRunnable implements Runnable {
         Logger.info("Posting notification: " + notification + " id: " + notificationId + " tag: " + message.getNotificationTag());
         notificationManager.notify(message.getNotificationTag(), notificationId, notification);
     }
-
 
     /**
      * Sends the push broadcast with the notification result.
@@ -407,7 +366,6 @@ class IncomingPushRunnable implements Runnable {
         private String providerClass;
         private boolean isLongRunning;
         private boolean isProcessed;
-        private Runnable onFinish;
         private NotificationManagerCompat notificationManager;
         private JobDispatcher jobDispatcher;
 
@@ -467,17 +425,6 @@ class IncomingPushRunnable implements Runnable {
         }
 
         /**
-         * Sets a callback when the runnable is finished.
-         *
-         * @param runnable A runnable.
-         * @return The builder instance.
-         */
-        Builder setOnFinish(@NonNull Runnable runnable) {
-            this.onFinish = runnable;
-            return this;
-        }
-
-        /**
          * Sets the notification manager.
          *
          * @param notificationManager The notification manager.
@@ -512,16 +459,4 @@ class IncomingPushRunnable implements Runnable {
             return new IncomingPushRunnable(this);
         }
     }
-
-    private static class FactoryResult {
-        private final int notificationId;
-        private final NotificationFactory.Result notificationResult;
-
-        public FactoryResult(int notificationId, NotificationFactory.Result result) {
-            this.notificationId = notificationId;
-            this.notificationResult = result;
-        }
-    }
-
-
 }
