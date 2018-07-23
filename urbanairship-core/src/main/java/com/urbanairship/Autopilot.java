@@ -34,7 +34,7 @@ import android.util.Log;
  * in the Application AndroidManifest.xml:
  * <pre>{@code
  *  <meta-data android:name="com.urbanairship.autopilot"
- *           android:value="com.urbanairship.AutoPilot" /> }</pre>
+ *           android:value="com.urbanairship.Autopilot" /> }</pre>
  * <p>
  * <p/>
  * Autopilot can be customized in order to load config from a different source or to customize the Airship
