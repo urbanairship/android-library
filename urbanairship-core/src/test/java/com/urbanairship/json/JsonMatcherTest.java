@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
@@ -88,13 +89,13 @@ public class JsonMatcherTest extends BaseTestCase {
         JsonValue matcherJson = JsonMap.newBuilder()
                                        .put("key", "key")
                                        .put("value", valueJson)
-                                       .put("scope", new JsonList(Collections.singletonList(JsonValue.wrap("properties"))))
+                                       .put("scope", JsonValue.wrap(Arrays.asList("properties", "inner")))
                                        .build()
                                        .toJsonValue();
 
         JsonMatcher matcher = JsonMatcher.newBuilder()
                                          .setKey("key")
-                                         .setScope("properties")
+                                         .setScope(Arrays.asList("properties", "inner"))
                                          .setValueMatcher(valueMatcher)
                                          .build();
 

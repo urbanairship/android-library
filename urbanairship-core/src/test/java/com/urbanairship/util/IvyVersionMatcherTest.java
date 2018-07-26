@@ -57,6 +57,9 @@ public class IvyVersionMatcherTest extends BaseTestCase {
         assertTrue(matcher.apply("1.0 "));
         assertTrue(matcher.apply(" 1.0 "));
 
+        matcher = IvyVersionMatcher.newMatcher("1");
+        assertTrue(matcher.apply("1"));
+
         assertFalse(matcher.apply(" 0.9"));
         assertFalse(matcher.apply("1.1 "));
         assertFalse(matcher.apply(" 2.0"));
