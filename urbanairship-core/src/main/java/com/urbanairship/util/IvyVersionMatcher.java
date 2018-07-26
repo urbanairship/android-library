@@ -32,7 +32,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     private static final String START_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", START_INCLUSIVE, START_EXCLUSIVE, START_INFINITE);
     private static final String END_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", END_INCLUSIVE, END_EXCLUSIVE, END_INFINITE);
 
-    private static final String VERSION_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)";
+    private static final String VERSION_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?";
 
     private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^(%s(%s)?)%s((%s)?%s)", START_PATTERN, VERSION_PATTERN, RANGE_SEPARATOR, VERSION_PATTERN, END_PATTERN);
     private static final String SUB_VERSION_PATTERN = "^(.*)\\+$";

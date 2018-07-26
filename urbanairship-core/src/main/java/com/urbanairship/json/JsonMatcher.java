@@ -98,9 +98,13 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         if (scope.isString()) {
             builder.setScope(scope.getString());
         } else if (scope.isJsonList()) {
+            List<String> scopes = new ArrayList<>();
+
             for (JsonValue field : scope.optList().getList()) {
-                builder.setScope(field.getString());
+                scopes.add(field.getString());
             }
+
+            builder.setScope(scopes);
         }
 
         if (map.containsKey(IGNORE_CASE_KEY)) {
