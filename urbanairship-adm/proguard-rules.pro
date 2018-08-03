@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ADM is compile time only depedency
+-dontwarn com.amazon.device.messaging.**
+-dontnote com.urbanairship.push.adm.AdmPushProvider
