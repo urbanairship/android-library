@@ -3,6 +3,18 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+
+Version 9.4.1 - July 26, 2018
+=============================
+
+Minor release that fixes a bug in the json matcher that caused app version equality checks to malfunction.
+Apps that use in-app automation with version triggers or audience conditions should update.
+
+Changes
+-------
+- Fixed JsonMatcher scope parsing.
+
+
 Version 9.4.0 - July 19, 2018
 =============================
 
@@ -40,7 +52,7 @@ Changes
 Version 9.3.1 - June 15, 2018
 =============================
 
-Fixed issues with in-app automation not displaying due to the display being paused by default. App's
+Fixed issues with in-app automation not displaying due to the display being paused by default. Apps
 that use in-app automation should update.
 
 Changes
