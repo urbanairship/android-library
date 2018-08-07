@@ -9,6 +9,9 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Helper class that keeps track of the schedule's adapter, assets, and execution callback.
  *
@@ -18,11 +21,9 @@ import com.urbanairship.UAirship;
 final class AdapterWrapper {
     public final String scheduleId;
     public final InAppMessage message;
-    public volatile boolean isReady;
-    public volatile boolean skipDisplay;
-    public InAppMessageAdapter adapter;
-    public boolean displayed = false;
+    public final InAppMessageAdapter adapter;
 
+    public boolean displayed = false;
     private boolean prepareCalled = false;
 
     AdapterWrapper(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull InAppMessageAdapter adapter) {
@@ -33,22 +34,12 @@ final class AdapterWrapper {
 
     @InAppMessageAdapter.PrepareResult
     int prepare() {
-        if (!AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
-            skipDisplay = true;
-            Logger.debug("InAppMessageManager - Message audience conditions not met, skipping schedule: " + scheduleId);
-            return InAppMessageAdapter.OK;
-        }
-
         try {
             Logger.debug("InAppMessageManager - Preparing schedule: " + scheduleId);
 
             @InAppMessageAdapter.PrepareResult
             int result = adapter.onPrepare(UAirship.getApplicationContext());
             prepareCalled = true;
-
-            if (result == InAppMessageAdapter.OK) {
-                isReady = true;
-            }
             return result;
         } catch (Exception e) {
             Logger.error("InAppMessageManager - Failed to prepare in-app message.", e);

@@ -54,8 +54,110 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class AutomationEngine<T extends Schedule> {
+
+    /*
+     Standard schedule flow:
+         Add Schedule
+         => STATE_IDLE
+         => trigger goal is met
+         => If delay is set
+                => STATE_TIME_DELAYED
+                => STATE_PREPARING_SCHEDULE
+            else
+                => STATE_PREPARING_SCHEDULE
+         => STATE_WAITING_SCHEDULE_CONDITIONS
+         => STATE_EXECUTING
+         => If at limit or expired
+                => STATE_FINISH
+            else if execution interval
+                => STATE_PAUSED
+            else
+                => STATE_IDLE
+
+     STATE_IDLE:
+        Active schedule that is not yet expired or triggered.
+
+        Only standard triggers will be considered in this state.
+
+        When schedule is triggered, it will move to either (in order):
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_TIME_DELAYED: If the schedule defines a time delay.
+            - STATE_PREPARING_SCHEDULE: The driver has started preparing the schedule.
+
+     STATE_TIME_DELAYED:
+        The schedule is waiting for its time delay to expire.
+
+        Only cancellation triggers will be evaluated in this state.
+
+        After delay, it will move to either:
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_PREPARING_SCHEDULE
+
+     STATE_PREPARING_SCHEDULE:
+         Preparing the schedule for execution. The driver is responsible for this step.
+
+         Only cancellation triggers will be considered in this state.
+
+         After the callback, it will move to either (in order):
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_FINISHED: If the adapter's prepare results is RESULT_CANCEL.
+            - STATE_FINISHED: If the adapter's prepare result is RESULT_SKIP_PENALIZE and the schedule is at its limit.
+            - STATE_PAUSED: If the adapter's prepare result is RESULT_SKIP_PENALIZE and the schedule has an execution interval.
+            - STATE_IDLE: If the result is RESULT_SKIP_PENALIZE or RESULT_SKIP_IGNORE.
+            - STATE_WAITING_SCHEDULE_CONDITIONS: If the result is RESULT_CONTINUE.
+
+     STATE_WAITING_SCHEDULE_CONDITIONS:
+         The schedule is waiting for other state delay conditions. The conditions are evaluated on the main thread
+         and if all the conditions are met, it will check with the driver if it is ready to execute the schedule.
+         Once all the conditions are met and the driver is ready, the driver will start executing the schedule.
+
+         Only cancellation triggers will be considered in this state.
+
+         After the conditions are met, it will move to either (in order):
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_EXECUTING: If the schedule's conditions are met and the driver is ready to execute.
+
+     STATE_EXECUTING:
+        The schedule is executing. The adapter is responsible for this step.
+
+        After the adapter notifies that the schedule is finished, it will move to either (in order):
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_FINISHED: If the schedule's limit is reached.
+            - STATE_PAUSED: If the schedule defines an execution interval.
+            - STATE_IDLE
+
+     STATE_PAUSED:
+        After a schedule is executing and it defines an execution interval, it will be placed into
+        this state.
+
+         After the interval has expired, it will move to either (in order):
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_IDLE
+
+     STATE_FINISHED:
+         The schedule has either met its limit or it has expired. If the edit grace period is defined
+         it will stay in this state for at least that amount of time, otherwise the schedule is
+         immediately deleted. A schedule is only able to go back to STATE_IDLE if an edit changes
+         the schedule to no longer be expired and no longer at its execution limit.
+
+         Note: When moving a schedule to STATE_FINISHED, it will often be deleted immediately if the
+               schedule does not define an edit grace period.
+
+
+     Recovering schedules during App Init:
+
+         - Update schedule states:
+            - STATE_FINISHED: If the schedule has expired.
+            - STATE_PREPARING_SCHEDULE: If the schedule's state is STATE_WAITING_SCHEDULE_CONDITIONS.
+            - STATE_PREPARING_SCHEDULE: If the schedule's state is STATE_EXECUTING.
+         - Delete finished schedules if their edit grace period has expired.
+         - Schedule time delay alarms for schedules in the state STATE_TIME_DELAYED.
+         - Schedule execution interval alarms for schedules in the state STATE_FINISHED.
+         - Start preparing schedules in the state STATE_PREPARING_SCHEDULE.
+
+     **/
 
     private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION, Trigger.VERSION);
 
@@ -177,6 +279,7 @@ public class AutomationEngine<T extends Schedule> {
                 resetExecutingSchedules();
                 restoreDelayAlarms();
                 restoreIntervalAlarms();
+                prepareSchedules(dataManager.getScheduleEntries(ScheduleEntry.STATE_PREPARING_SCHEDULE));
             }
         });
 
@@ -247,8 +350,6 @@ public class AutomationEngine<T extends Schedule> {
                 List<T> result = convertEntries(entries);
                 Logger.verbose("AutomationEngine - Scheduled entries: " + result);
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
-
-
             }
         });
 
@@ -403,6 +504,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                cleanSchedules();
                 List<T> result = convertEntries(dataManager.getScheduleEntries(Collections.singleton(scheduleId)));
                 pendingResult.setResult(result.size() > 0 ? result.get(0) : null);
             }
@@ -424,6 +526,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                cleanSchedules();
                 pendingResult.setResult(convertEntries(dataManager.getScheduleEntries(scheduleIds)));
             }
         });
@@ -443,6 +546,7 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
+                cleanSchedules();
                 pendingResult.setResult(convertEntries(dataManager.getScheduleEntries(group)));
             }
         });
@@ -476,8 +580,8 @@ public class AutomationEngine<T extends Schedule> {
                 boolean subscribeForStateChanges = false;
                 long stateChangeTimeStamp = -1;
 
-                boolean isOverLimit = entry.getLimit() > 0 && entry.getCount() >= entry.getLimit();
-                boolean isExpired = entry.getEnd() >= 0 && entry.getEnd() < System.currentTimeMillis();
+                boolean isOverLimit = entry.isOverLimit();
+                boolean isExpired = entry.isExpired();
 
                 // Check if the schedule needs to be rehabilitated or finished due to the edits
                 if (entry.getExecutionState() == ScheduleEntry.STATE_FINISHED && !isOverLimit && !isExpired) {
@@ -488,7 +592,7 @@ public class AutomationEngine<T extends Schedule> {
                     entry.setExecutionState(ScheduleEntry.STATE_FINISHED);
                 }
 
-                dataManager.saveSchedules(Collections.singletonList(entry));
+                dataManager.saveSchedule(entry);
 
                 if (subscribeForStateChanges) {
                     subscribeStateObservables(entry, stateChangeTimeStamp);
@@ -671,11 +775,6 @@ public class AutomationEngine<T extends Schedule> {
      */
     @WorkerThread
     private void subscribeStateObservables(final ScheduleEntry entry, final long lastStateChangeTime) {
-        if (entry.getExecutionState() != ScheduleEntry.STATE_IDLE &&
-                entry.getExecutionState() != ScheduleEntry.STATE_PENDING_EXECUTION) {
-            return;
-        }
-
         Observable.from(COMPOUND_TRIGGER_TYPES)
                   .filter(new Predicate<Integer>() {
                       @Override
@@ -713,22 +812,25 @@ public class AutomationEngine<T extends Schedule> {
                   });
     }
 
+
     /**
      * Resets the schedules that were executing back to pending execution.
      */
     @WorkerThread
     private void resetExecutingSchedules() {
-        List<ScheduleEntry> entries = dataManager.getScheduleEntries(ScheduleEntry.STATE_EXECUTING);
+        List<ScheduleEntry> entries = dataManager.getScheduleEntries(ScheduleEntry.STATE_EXECUTING,
+                ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS);
+
         if (entries.isEmpty()) {
             return;
         }
 
         for (ScheduleEntry entry : entries) {
-            entry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
+            entry.setExecutionState(ScheduleEntry.STATE_PREPARING_SCHEDULE);
         }
 
         dataManager.saveSchedules(entries);
-        Logger.verbose("AutomationEngine: Schedules reset to pending execution: " + entries);
+        Logger.verbose("AutomationEngine: Schedules reset state to STATE_PREPARING_SCHEDULE: " + entries);
     }
 
     /**
@@ -740,34 +842,21 @@ public class AutomationEngine<T extends Schedule> {
         List<ScheduleEntry> expired = dataManager.getActiveExpiredScheduleEntries();
         List<ScheduleEntry> finished = dataManager.getScheduleEntries(ScheduleEntry.STATE_FINISHED);
 
-        Set<ScheduleEntry> update = new HashSet<>();
-        Set<String> delete = new HashSet<>();
-
-        for (ScheduleEntry entry : expired) {
-            if (entry.getEditGracePeriod() > 0) {
-                entry.setExecutionState(ScheduleEntry.STATE_FINISHED);
-                update.add(entry);
-            } else {
-                delete.add(entry.scheduleId);
-            }
+        if (expired.isEmpty()) {
+            handleExpiredEntries(expired);
         }
 
-        notifyExpiredSchedules(expired);
+        Set<String> schedulesToDelete = new HashSet<>();
 
         for (ScheduleEntry entry : finished) {
             if (System.currentTimeMillis() >= entry.getExecutionStateChangeDate() + entry.getEditGracePeriod()) {
-                delete.add(entry.scheduleId);
+                schedulesToDelete.add(entry.scheduleId);
             }
         }
 
-        if (!update.isEmpty()) {
-            Logger.verbose("AutomationEngine - Updating expired schedules to finished state: " + update);
-            dataManager.saveSchedules(update);
-        }
-
-        if (!delete.isEmpty()) {
-            Logger.verbose("AutomationEngine - Deleting finished schedules: " + delete);
-            dataManager.deleteSchedules(delete);
+        if (!schedulesToDelete.isEmpty()) {
+            Logger.verbose("AutomationEngine - Deleting finished schedules: " + schedulesToDelete);
+            dataManager.deleteSchedules(schedulesToDelete);
         }
     }
 
@@ -818,7 +907,7 @@ public class AutomationEngine<T extends Schedule> {
      */
     @WorkerThread
     private void restoreDelayAlarms() {
-        List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PENDING_EXECUTION);
+        List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_TIME_DELAYED);
         if (scheduleEntries.isEmpty()) {
             return;
         }
@@ -832,15 +921,17 @@ public class AutomationEngine<T extends Schedule> {
             }
 
             long delay = TimeUnit.SECONDS.toMillis(scheduleEntry.seconds);
-            long remainingDelay = scheduleEntry.getPendingExecutionDate() - System.currentTimeMillis();
+            long remainingDelay = scheduleEntry.getDelayFinishDate() - System.currentTimeMillis();
 
             if (remainingDelay <= 0) {
+                scheduleEntry.setExecutionState(ScheduleEntry.STATE_PREPARING_SCHEDULE);
+                schedulesToUpdate.add(scheduleEntry);
                 continue;
             }
 
             // If remaining delay is greater than the original delay, reset the delay.
             if (remainingDelay > delay) {
-                scheduleEntry.setPendingExecutionDate(System.currentTimeMillis() + delay);
+                scheduleEntry.setDelayFinishDate(System.currentTimeMillis() + delay);
                 schedulesToUpdate.add(scheduleEntry);
                 remainingDelay = delay;
             }
@@ -887,13 +978,15 @@ public class AutomationEngine<T extends Schedule> {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_PENDING_EXECUTION);
+                List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS);
                 if (scheduleEntries.isEmpty()) {
                     return;
                 }
 
-
-                handleTriggeredSchedules(scheduleEntries);
+                sortSchedulesByPriority(scheduleEntries);
+                for (ScheduleEntry entry : scheduleEntries) {
+                    attemptExecution(entry);
+                }
             }
         });
     }
@@ -939,18 +1032,14 @@ public class AutomationEngine<T extends Schedule> {
                 Set<String> triggeredSchedules = new HashSet<>();
                 Set<String> cancelledSchedules = new HashSet<>();
 
-                Map<String, List<TriggerEntry>> triggersToUpdate = new HashMap<>();
+                List<TriggerEntry> triggersToUpdate = new ArrayList<>();
 
                 for (TriggerEntry trigger : triggerEntries) {
                     if ((json != null && (trigger.jsonPredicate != null && !trigger.jsonPredicate.apply(json)))) {
                         continue;
                     }
 
-                    if (!triggersToUpdate.containsKey(trigger.scheduleId)) {
-                        triggersToUpdate.put(trigger.scheduleId, new ArrayList<TriggerEntry>());
-                    }
-
-                    triggersToUpdate.get(trigger.scheduleId).add(trigger);
+                    triggersToUpdate.add(trigger);
                     trigger.setProgress(trigger.getProgress() + value);
 
                     if (trigger.getProgress() >= trigger.goal) {
@@ -965,141 +1054,219 @@ public class AutomationEngine<T extends Schedule> {
                     }
                 }
 
-                if (!cancelledSchedules.isEmpty()) {
-                    triggeredSchedules.removeAll(cancelledSchedules);
-                    List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(cancelledSchedules);
-                    for (ScheduleEntry entry : scheduleEntries) {
-                        entry.setPendingExecutionDate(-1);
-                        entry.setExecutionState(ScheduleEntry.STATE_IDLE);
-                    }
+                dataManager.saveTriggers(triggersToUpdate);
 
-                    dataManager.saveSchedules(scheduleEntries);
+                if (!cancelledSchedules.isEmpty()) {
+                    handleCancelledSchedules(dataManager.getScheduleEntries(cancelledSchedules));
                 }
 
                 if (!triggeredSchedules.isEmpty()) {
-                    List<ScheduleEntry> scheduleEntries = dataManager.getScheduleEntries(triggeredSchedules);
-
-                    for (String deletedSchedule : handleTriggeredSchedules(scheduleEntries)) {
-                        triggersToUpdate.remove(deletedSchedule);
-                    }
+                    handleTriggeredSchedules(dataManager.getScheduleEntries(triggeredSchedules));
                 }
-
-                List<TriggerEntry> updatedTriggers = new ArrayList<>();
-                for (Map.Entry<String, List<TriggerEntry>> entry : triggersToUpdate.entrySet()) {
-                    updatedTriggers.addAll(entry.getValue());
-                }
-
-                dataManager.saveTriggers(updatedTriggers);
             }
         });
+    }
+
+
+    /**
+     * Processes a list of cancelled schedule entries.
+     *
+     * @param scheduleEntries A list of cancelled schedule entries.
+     */
+    @WorkerThread
+    private void handleCancelledSchedules(final List<ScheduleEntry> scheduleEntries) {
+        if (scheduleEntries.isEmpty()) {
+            return;
+        }
+
+        for (ScheduleEntry entry : scheduleEntries) {
+            entry.setExecutionState(ScheduleEntry.STATE_IDLE);
+        }
+
+        dataManager.saveSchedules(scheduleEntries);
     }
 
     /**
      * Processes a list of triggered schedule entries.
      *
      * @param scheduleEntries A list of triggered schedule entries.
-     * @return A set of deleted schedule IDs.
      */
     @WorkerThread
-    private Set<String> handleTriggeredSchedules(final List<ScheduleEntry> scheduleEntries) {
+    private void handleTriggeredSchedules(final List<ScheduleEntry> scheduleEntries) {
         if (isPaused.get() || scheduleEntries.isEmpty()) {
-            return new HashSet<>();
+            return;
         }
 
-        final HashSet<ScheduleEntry> expiredScheduleEntries = new HashSet<>();
-        final HashSet<String> schedulesToDelete = new HashSet<>();
         final HashSet<ScheduleEntry> schedulesToUpdate = new HashSet<>();
-
-        sortSchedulesByPriority(scheduleEntries);
+        final HashSet<ScheduleEntry> expiredSchedules = new HashSet<>();
+        final List<ScheduleEntry> schedulesToPrepare = new ArrayList<>();
 
         for (final ScheduleEntry scheduleEntry : scheduleEntries) {
-            // Expired schedules
-            if (scheduleEntry.getEnd() >= 0 && scheduleEntry.getEnd() < System.currentTimeMillis()) {
-                expiredScheduleEntries.add(scheduleEntry);
-                scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
-
-                if (scheduleEntry.getEditGracePeriod() <= 0) {
-                    schedulesToDelete.add(scheduleEntry.scheduleId);
-                } else {
-                    schedulesToUpdate.add(scheduleEntry);
-                }
-
+            if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_IDLE) {
                 continue;
             }
 
-            // Idle => Pending
-            if (scheduleEntry.getExecutionState() == ScheduleEntry.STATE_IDLE) {
-                schedulesToUpdate.add(scheduleEntry);
+            schedulesToUpdate.add(scheduleEntry);
 
-                for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
-                    if (triggerEntry.isCancellation) {
-                        triggerEntry.setProgress(0);
-                    }
-                }
+            // Expired schedules
+            if (scheduleEntry.isExpired()) {
+                expiredSchedules.add(scheduleEntry);
+                continue;
+            }
 
-                scheduleEntry.setExecutionState(ScheduleEntry.STATE_PENDING_EXECUTION);
-                if (scheduleEntry.seconds > 0) {
-                    scheduleEntry.setPendingExecutionDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
-                    scheduleDelayAlarm(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
-                    continue;
+            // Reset cancellation triggers
+            for (TriggerEntry triggerEntry : scheduleEntry.triggerEntries) {
+                if (triggerEntry.isCancellation) {
+                    triggerEntry.setProgress(0);
                 }
             }
 
-            final CountDownLatch latch = new CountDownLatch(1);
-            ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(scheduleEntry.scheduleId, scheduleEntry.group) {
-                @Override
-                public void run() {
-                    T schedule = null;
-                    result = false;
-
-                    if (isPaused.get()) {
-                        return;
-                    }
-
-                    if (isScheduleConditionsSatisfied(scheduleEntry)) {
-                        try {
-                            schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
-
-                            if (driver.isScheduleReadyToExecute(schedule)) {
-                                result = true;
-                            }
-                        } catch (ParseScheduleException e) {
-                            Logger.error("Unable to create schedule.", e);
-                            this.exception = e;
-                        }
-                    }
-                    latch.countDown();
-
-                    if (result && schedule != null) {
-                        driver.onExecuteTriggeredSchedule(schedule, new ScheduleExecutorCallback(scheduleEntry.scheduleId));
-                    }
-                }
-            };
-
-            this.mainHandler.post(runnable);
-
-            try {
-                latch.await();
-            } catch (InterruptedException ex) {
-                Logger.error("Failed to execute schedule. ", ex);
+            // Check for delays
+            if (scheduleEntry.seconds > 0) {
+                scheduleEntry.setExecutionState(ScheduleEntry.STATE_TIME_DELAYED);
+                scheduleEntry.setDelayFinishDate(TimeUnit.SECONDS.toMillis(scheduleEntry.seconds) + System.currentTimeMillis());
+                scheduleDelayAlarm(scheduleEntry, TimeUnit.SECONDS.toMillis(scheduleEntry.seconds));
+                continue;
             }
 
-            if (runnable.exception != null) {
-                schedulesToDelete.add(scheduleEntry.scheduleId);
-                schedulesToUpdate.remove(scheduleEntry);
-            } else if (runnable.result) {
-                scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
-                schedulesToUpdate.add(scheduleEntry);
-            }
+            // IDLE -> PREPARE
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_PREPARING_SCHEDULE);
+            schedulesToPrepare.add(scheduleEntry);
         }
 
-        notifyExpiredSchedules(expiredScheduleEntries);
-
         dataManager.saveSchedules(schedulesToUpdate);
-        dataManager.deleteSchedules(schedulesToDelete);
-
-        return schedulesToDelete;
+        prepareSchedules(schedulesToPrepare);
+        handleExpiredEntries(expiredSchedules);
     }
+
+    /**
+     * Called to prepare the schedules after they have been triggered.
+     *
+     * @param entries The entries to prepare.
+     */
+    @WorkerThread
+    private void prepareSchedules(@NonNull final List<ScheduleEntry> entries) {
+        if (entries.isEmpty()) {
+            return;
+        }
+        sortSchedulesByPriority(entries);
+        for (T schedule : convertEntries(entries)) {
+            final String scheduleId = schedule.getId();
+            driver.onPrepareSchedule(schedule, new AutomationDriver.PrepareScheduleCallback() {
+                @Override
+                public void onFinish(@AutomationDriver.PrepareResult final int result) {
+                    backgroundHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            // Grab the updated entry
+                            ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
+
+                            // Make sure we are still suppose to be preparing the schedule
+                            if (scheduleEntry == null || scheduleEntry.getExecutionState() != ScheduleEntry.STATE_PREPARING_SCHEDULE) {
+                                return;
+                            }
+
+                            // Verify the schedule is not expired
+                            if (scheduleEntry.isExpired()) {
+                                handleExpiredEntry(scheduleEntry);
+                                return;
+                            }
+
+                            switch (result) {
+                                case AutomationDriver.RESULT_CANCEL_SCHEDULE:
+                                    dataManager.deleteSchedule(scheduleId);
+                                    break;
+
+                                case AutomationDriver.RESULT_CONTINUE:
+                                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS);
+                                    dataManager.saveSchedule(scheduleEntry);
+                                    attemptExecution(scheduleEntry);
+                                    break;
+
+                                case AutomationDriver.RESULT_SKIP_IGNORE:
+                                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                                    dataManager.saveSchedule(scheduleEntry);
+                                    break;
+
+                                case AutomationDriver.RESULT_SKIP_PENALIZE:
+                                    onScheduleFinishedExecuting(scheduleEntry);
+                                    break;
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    /**
+     * Called to attempt executing a schedule entry.
+     *
+     * @param scheduleEntry The schedule entry.
+     */
+    @WorkerThread
+    private void attemptExecution(@NonNull final ScheduleEntry scheduleEntry) {
+        if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS) {
+            Logger.error("Unable to execute schedule when state is " + scheduleEntry.getExecutionState() + " scheduleID: " + scheduleEntry.scheduleId);
+            return;
+        }
+
+        // Verify the schedule is not expired
+        if (scheduleEntry.isExpired()) {
+            handleExpiredEntry(scheduleEntry);
+            return;
+        }
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        ScheduleRunnable<Boolean> runnable = new ScheduleRunnable<Boolean>(scheduleEntry.scheduleId, scheduleEntry.group) {
+            @Override
+            public void run() {
+                T schedule = null;
+                result = false;
+
+                if (isPaused.get()) {
+                    return;
+                }
+
+                if (isScheduleConditionsSatisfied(scheduleEntry)) {
+                    try {
+                        schedule = driver.createSchedule(scheduleEntry.scheduleId, scheduleEntry);
+
+                        if (driver.isScheduleReadyToExecute(schedule)) {
+                            result = true;
+                        }
+                    } catch (ParseScheduleException e) {
+                        Logger.error("Unable to create schedule.", e);
+                        this.exception = e;
+                    }
+                }
+                latch.countDown();
+
+                if (result && schedule != null) {
+                    driver.onExecuteTriggeredSchedule(schedule, new ScheduleExecutorCallback(scheduleEntry.scheduleId));
+                }
+            }
+        };
+
+        this.mainHandler.post(runnable);
+
+        try {
+            latch.await();
+        } catch (InterruptedException ex) {
+            Logger.error("Failed to execute schedule. ", ex);
+        }
+
+        if (runnable.exception != null) {
+            Logger.error("Failed to check conditions. Deleting schedule: " + scheduleEntry.scheduleId);
+            dataManager.deleteSchedule(scheduleEntry.scheduleId);
+        } else if (runnable.result) {
+            Logger.verbose("AutomationEngine - Schedule executing: " + scheduleEntry.scheduleId);
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_EXECUTING);
+            dataManager.saveSchedule(scheduleEntry);
+        }
+    }
+
 
     /**
      * Helper method to notify the expiry listener for expired schedule entries.
@@ -1130,46 +1297,48 @@ public class AutomationEngine<T extends Schedule> {
     /**
      * Called when a schedule is finished executing.
      *
-     * @param scheduleId The schedule ID.
+     * @param scheduleEntry The schedule entry.
      */
-    private void onScheduleFinishedExecuting(final String scheduleId) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
+    @WorkerThread
+    private void onScheduleFinishedExecuting(final ScheduleEntry scheduleEntry) {
+        if (scheduleEntry == null) {
+            return;
+        }
 
-                if (scheduleEntry == null) {
-                    return;
-                }
+        Logger.verbose("AutomationEngine - Schedule finished: " + scheduleEntry.scheduleId);
 
-                Logger.verbose("AutomationEngine - Schedule finished: " + scheduleId);
-                scheduleEntry.setPendingExecutionDate(-1);
-                scheduleEntry.setCount(scheduleEntry.getCount() + 1);
+        // Update the count
+        scheduleEntry.setCount(scheduleEntry.getCount() + 1);
 
-                boolean deleteSchedule = false;
+        boolean isOverLimit = scheduleEntry.isOverLimit();
 
-                if (scheduleEntry.getLimit() > 0 && scheduleEntry.getCount() >= scheduleEntry.getLimit()) {
-                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
-                    deleteSchedule = scheduleEntry.getEditGracePeriod() <= 0;
-                } else if (scheduleEntry.getExecutionState() != ScheduleEntry.STATE_FINISHED) {
-                    if (scheduleEntry.getInterval() > 0) {
-                        scheduleEntry.setExecutionState(ScheduleEntry.STATE_PAUSED);
-                        scheduleIntervalAlarm(scheduleEntry, scheduleEntry.getInterval());
-                    } else {
-                        scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
-                    }
-                }
+        // Expired
+        if (scheduleEntry.isExpired()) {
+            handleExpiredEntry(scheduleEntry);
+            return;
+        }
 
-                if (deleteSchedule) {
-                    Logger.verbose("AutomationEngine - Deleting schedule: " + scheduleId);
-                    dataManager.deleteSchedule(scheduleId);
-                } else {
-                    dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
-                }
+        if (isOverLimit) {
+            // At limit
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+
+            // Delete the schedule if its finished and no edit grace period is defined
+            if (scheduleEntry.getEditGracePeriod() <= 0) {
+                dataManager.deleteSchedule(scheduleEntry.scheduleId);
+                return;
             }
-        });
-    }
 
+        } else if (scheduleEntry.getInterval() > 0) {
+            // Execution interval
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_PAUSED);
+            scheduleIntervalAlarm(scheduleEntry, scheduleEntry.getInterval());
+        } else {
+            // Back to idle
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+        }
+
+        dataManager.saveSchedule(scheduleEntry);
+    }
 
     /**
      * Schedules a delay for a schedule entry.
@@ -1178,13 +1347,23 @@ public class AutomationEngine<T extends Schedule> {
      * @param delay The delay in milliseconds.
      */
     private void scheduleDelayAlarm(final ScheduleEntry scheduleEntry, long delay) {
-
         final ScheduleOperation operation = new ScheduleOperation(scheduleEntry.scheduleId, scheduleEntry.group) {
             @Override
             protected void onRun() {
                 ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
-                if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PENDING_EXECUTION) {
-                    handleTriggeredSchedules(Collections.singletonList(scheduleEntry));
+                if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_TIME_DELAYED) {
+
+                    // Expired
+                    if (scheduleEntry.isExpired()) {
+                        handleExpiredEntry(scheduleEntry);
+                        return;
+                    }
+
+                    // Delayed => Preparing
+                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_PREPARING_SCHEDULE);
+                    dataManager.saveSchedule(scheduleEntry);
+
+                    prepareSchedules(Collections.singletonList(scheduleEntry));
                 }
             }
         };
@@ -1211,14 +1390,23 @@ public class AutomationEngine<T extends Schedule> {
             @Override
             protected void onRun() {
                 ScheduleEntry scheduleEntry = dataManager.getScheduleEntry(scheduleId);
-                if (scheduleEntry != null && scheduleEntry.getExecutionState() == ScheduleEntry.STATE_PAUSED) {
-                    long pauseStartTime = scheduleEntry.getExecutionStateChangeDate();
-
-                    scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
-                    dataManager.saveSchedules(Collections.singletonList(scheduleEntry));
-
-                    subscribeStateObservables(scheduleEntry, pauseStartTime);
+                if (scheduleEntry == null || scheduleEntry.getExecutionState() != ScheduleEntry.STATE_PAUSED) {
+                    return;
                 }
+
+                // Expired
+                if (scheduleEntry.isExpired()) {
+                    handleExpiredEntry(scheduleEntry);
+                    return;
+                }
+
+                long pauseStartTime = scheduleEntry.getExecutionStateChangeDate();
+
+                // Paused => Idle
+                scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
+                dataManager.saveSchedule(scheduleEntry);
+
+                subscribeStateObservables(scheduleEntry, pauseStartTime);
             }
         };
 
@@ -1262,10 +1450,6 @@ public class AutomationEngine<T extends Schedule> {
      */
     @MainThread
     private boolean isScheduleConditionsSatisfied(ScheduleEntry scheduleEntry) {
-        if (scheduleEntry.getPendingExecutionDate() > System.currentTimeMillis()) {
-            return false;
-        }
-
         if (scheduleEntry.screens != null && !scheduleEntry.screens.isEmpty()) {
             if (!scheduleEntry.screens.contains(screen)) {
                 return false;
@@ -1296,6 +1480,40 @@ public class AutomationEngine<T extends Schedule> {
         return true;
     }
 
+    /**
+     * Sets the execution state, saves the schedule, and notifies any listeners of the
+     * expired schedule.
+     *
+     * @param scheduleEntry The expired schedule entry.
+     */
+    private void handleExpiredEntry(@NonNull ScheduleEntry scheduleEntry) {
+        handleExpiredEntries(Collections.singleton(scheduleEntry));
+    }
+
+    /**
+     * Sets the execution state, saves the schedule, and notifies any listeners of the
+     * expired schedules.
+     *
+     * @param entries The expired schedule entries.
+     */
+    private void handleExpiredEntries(@NonNull Collection<ScheduleEntry> entries) {
+        List<String> schedulesToDelete = new ArrayList<>();
+        List<ScheduleEntry> schedulesToUpdate = new ArrayList<>();
+
+        for (ScheduleEntry scheduleEntry : entries) {
+            scheduleEntry.setExecutionState(ScheduleEntry.STATE_FINISHED);
+            if (scheduleEntry.getEditGracePeriod() >= 0) {
+                schedulesToUpdate.add(scheduleEntry);
+            } else {
+                schedulesToDelete.add(scheduleEntry.scheduleId);
+            }
+        }
+
+        dataManager.saveSchedules(schedulesToUpdate);
+        dataManager.deleteSchedules(schedulesToDelete);
+        notifyExpiredSchedules(entries);
+    }
+
     private class ScheduleOperation extends CancelableOperation {
         final String scheduleId;
         final String group;
@@ -1319,7 +1537,7 @@ public class AutomationEngine<T extends Schedule> {
         }
     }
 
-    private class ScheduleExecutorCallback implements AutomationDriver.Callback {
+    private class ScheduleExecutorCallback implements AutomationDriver.ExecutionCallback {
 
         private final String scheduleId;
 
@@ -1329,7 +1547,12 @@ public class AutomationEngine<T extends Schedule> {
 
         @Override
         public void onFinish() {
-            onScheduleFinishedExecuting(scheduleId);
+            backgroundHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onScheduleFinishedExecuting(dataManager.getScheduleEntry(scheduleId));
+                }
+            });
         }
     }
 

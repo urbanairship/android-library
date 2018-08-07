@@ -9,6 +9,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.urbanairship.Logger;
@@ -58,8 +59,8 @@ public class AutomationDataManager extends DataManager {
     private static final String GET_ACTIVE_TRIGGERS = "SELECT * FROM " + TriggerEntry.TABLE_NAME + " t" +
             " LEFT OUTER JOIN " + ScheduleEntry.TABLE_NAME + " a ON a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " = t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID +
             " WHERE t." + TriggerEntry.COLUMN_NAME_TYPE + " = ? AND a." + ScheduleEntry.COLUMN_NAME_START + " < ?" +
-            " AND ((t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 1 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 1)" +
-            " OR (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = 0))" +
+            " AND ((t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 1 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " IN (" + ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS + "," + ScheduleEntry.STATE_TIME_DELAYED + "," + ScheduleEntry.STATE_PREPARING_SCHEDULE + "))" +
+            " OR (t." + TriggerEntry.COLUMN_NAME_IS_CANCELLATION + " = 0 AND a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " = " + ScheduleEntry.STATE_IDLE + "))" +
             " AND t." + TriggerEntry.COLUMN_NAME_SCHEDULE_ID + " LIKE ?";
 
     /**
@@ -89,7 +90,7 @@ public class AutomationDataManager extends DataManager {
                 + ScheduleEntry.COLUMN_NAME_PRIORITY + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " INTEGER,"
-                + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
+                + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + " DOUBLE,"
                 + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                 + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
                 + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
@@ -162,7 +163,7 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_LIMIT + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
                         + oldPendingExecutionColumn + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
+                        + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + " DOUBLE,"
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
                         + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
@@ -191,7 +192,7 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_PRIORITY + ", "
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
                         + oldPendingExecutionColumn + ", "
-                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + ", "
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
                         + ScheduleEntry.COLUMN_NAME_SCREEN + ", "
@@ -246,7 +247,7 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_PRIORITY + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_GROUP + " TEXT,"
                         + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " INTEGER,"
-                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + " DOUBLE,"
+                        + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + " DOUBLE,"
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + " INTEGER,"
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + " TEXT,"
                         + ScheduleEntry.COLUMN_NAME_SCREEN + " TEXT,"
@@ -275,7 +276,7 @@ public class AutomationDataManager extends DataManager {
                         + ScheduleEntry.COLUMN_NAME_PRIORITY + ", "
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
                         + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + ", "
-                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + ", "
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
                         + ScheduleEntry.COLUMN_NAME_SCREEN + ", "
@@ -291,7 +292,7 @@ public class AutomationDataManager extends DataManager {
                         + "0, " // Default priority
                         + ScheduleEntry.COLUMN_NAME_GROUP + ", "
                         + oldPendingExecutionColumn + ", "
-                        + ScheduleEntry.COLUMN_NAME_PENDING_EXECUTION_DATE + ", "
+                        + ScheduleEntry.COLUMN_NAME_DELAY_FINISH_DATE + ", "
                         + ScheduleEntry.COLUMN_NAME_APP_STATE + ", "
                         + ScheduleEntry.COLUMN_NAME_REGION_ID + ", "
                         + ScheduleEntry.COLUMN_NAME_SCREEN + ", "
@@ -329,6 +330,7 @@ public class AutomationDataManager extends DataManager {
                 db.execSQL("COMMIT;");
 
                 break;
+
             default:
                 // Kills the table and existing data
                 db.execSQL("DROP TABLE IF EXISTS " + ScheduleEntry.TABLE_NAME);
@@ -396,7 +398,7 @@ public class AutomationDataManager extends DataManager {
      *
      * @param scheduleEntries Collection of schedule entries.
      */
-    void saveSchedules(Collection<ScheduleEntry> scheduleEntries) {
+    void saveSchedules(@NonNull Collection<ScheduleEntry> scheduleEntries) {
         if (scheduleEntries.isEmpty()) {
             return;
         }
@@ -417,6 +419,24 @@ public class AutomationDataManager extends DataManager {
         }
 
         db.setTransactionSuccessful();
+        db.endTransaction();
+    }
+
+    /**
+     * Saves a single schedule entry.
+     * @param entry The entry to save.
+     */
+    void saveSchedule(@NonNull ScheduleEntry entry) {
+        final SQLiteDatabase db = getWritableDatabase();
+        if (db == null) {
+            Logger.error("AutomationDataManager - Unable to update automation rules.");
+            return;
+        }
+
+        db.beginTransaction();
+        if (entry.save(db)) {
+            db.setTransactionSuccessful();
+        }
         db.endTransaction();
     }
 
@@ -455,6 +475,10 @@ public class AutomationDataManager extends DataManager {
      * @param groups The list of groups.
      */
     void deleteGroups(@NonNull Collection<String> groups) {
+        if (groups.isEmpty()) {
+            return;
+        }
+
         performSubSetOperations(groups, MAX_ARG_COUNT, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
@@ -470,6 +494,10 @@ public class AutomationDataManager extends DataManager {
      * @param schedulesToDelete The list of schedule IDs.
      */
     void deleteSchedules(@NonNull Collection<String> schedulesToDelete) {
+        if (schedulesToDelete.isEmpty()) {
+            return;
+        }
+
         performSubSetOperations(schedulesToDelete, MAX_ARG_COUNT, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
@@ -520,6 +548,7 @@ public class AutomationDataManager extends DataManager {
      * @param scheduleId The schedule ID.
      * @return A schedule entry or null if the schedule is unavailable.
      */
+    @Nullable
     ScheduleEntry getScheduleEntry(String scheduleId) {
         Set<String> hashSet = new HashSet<>();
         hashSet.add(scheduleId);
@@ -572,6 +601,29 @@ public class AutomationDataManager extends DataManager {
         return entries;
     }
 
+    /**
+     * Gets schedules for a given state.
+     *
+     * @param executionStates The execution state.
+     * @return A list of schedules.
+     */
+    List<ScheduleEntry> getScheduleEntries(@ScheduleEntry.State int... executionStates) {
+        String[] states = new String[executionStates.length];
+        for (int i = 0; i < executionStates.length; i++) {
+            states[i] = String.valueOf(executionStates[i]);
+        }
+
+        String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_EXECUTION_STATE + " IN ( " + repeat("?", executionStates.length, ", ") + ")";
+        Cursor cursor = rawQuery(query, states);
+
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        List<ScheduleEntry> entries = generateSchedules(cursor);
+        cursor.close();
+        return entries;
+    }
 
     /**
      * Gets the active schedule entries that are expired.

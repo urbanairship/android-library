@@ -22,7 +22,9 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
     /**
      * Driver callback.
      */
-    interface Callbacks {
+    interface Listener {
+
+        void onPrepareMessage(@NonNull String scheduleId, @NonNull InAppMessage message);
 
         /**
          * Called to check if a schedule's message is ready to display.
@@ -43,34 +45,48 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
         void onDisplay(@NonNull String scheduleId);
     }
 
-    private Callbacks callbacks;
-    private Map<String, AutomationDriver.Callback> scheduleFinishCallbacks = new HashMap<>();
+
+    private Listener listener;
+    private final Map<String, AutomationDriver.ExecutionCallback> executionCallbacks = new HashMap<>();
+    private final Map<String, AutomationDriver.PrepareScheduleCallback> prepareCallbacks = new HashMap<>();
 
     /**
-     * Sets the callbacks for the driver.
+     * Sets the listener for the driver.
      *
-     * @param callbacks The driver callbacks.
+     * @param listener The driver listener.
      */
-    void setCallbacks(Callbacks callbacks) {
-        this.callbacks = callbacks;
+    void setListener(Listener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public void onPrepareSchedule(InAppMessageSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+        synchronized (prepareCallbacks) {
+            prepareCallbacks.put(schedule.getId(), callback);
+        }
+
+        if (listener != null) {
+            listener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+        }
     }
 
     @Override
     @MainThread
     public boolean isScheduleReadyToExecute(final InAppMessageSchedule schedule) {
-        if (callbacks == null) {
+        if (listener == null) {
             return false;
         }
 
-        return callbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage());
+        return listener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage());
     }
+
 
     @Override
     @MainThread
-    public void onExecuteTriggeredSchedule(@NonNull InAppMessageSchedule schedule, @NonNull Callback callback) {
-        scheduleFinishCallbacks.put(schedule.getId(), callback);
-        if (callbacks != null) {
-            callbacks.onDisplay(schedule.getId());
+    public void onExecuteTriggeredSchedule(@NonNull InAppMessageSchedule schedule, @NonNull ExecutionCallback callback) {
+        executionCallbacks.put(schedule.getId(), callback);
+        if (listener != null) {
+            listener.onDisplay(schedule.getId());
         }
     }
 
@@ -99,9 +115,20 @@ class InAppMessageDriver implements AutomationDriver<InAppMessageSchedule> {
      * @param scheduleId The schedule ID.
      */
     void displayFinished(final String scheduleId) {
-        final Callback callback = scheduleFinishCallbacks.remove(scheduleId);
-        if (callback != null) {
-            callback.onFinish();
+        synchronized (executionCallbacks) {
+            final ExecutionCallback callback = executionCallbacks.remove(scheduleId);
+            if (callback != null) {
+                callback.onFinish();
+            }
+        }
+    }
+
+    void messagePrepared(final String scheduleId, @AutomationDriver.PrepareResult int result) {
+        synchronized (prepareCallbacks) {
+            final PrepareScheduleCallback callback = prepareCallbacks.remove(scheduleId);
+            if (callback != null) {
+                callback.onFinish(result);
+            }
         }
     }
 

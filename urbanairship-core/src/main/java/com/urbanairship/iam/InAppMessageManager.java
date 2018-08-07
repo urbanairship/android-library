@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.support.annotation.IntRange;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
@@ -26,6 +25,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDataManager;
+import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.AlarmOperationScheduler;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
@@ -35,6 +35,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.util.ManifestUtils;
+import com.urbanairship.util.RetryingExecutor;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -52,11 +52,6 @@ import java.util.concurrent.TimeUnit;
  * In-app messaging manager.
  */
 public class InAppMessageManager extends AirshipComponent implements InAppMessageScheduler {
-
-    /**
-     * Prepare retry delay.
-     */
-    private static final long PREPARE_RETRY_DELAY_MS = 30000;
 
     /**
      * Display retry delay.
@@ -91,10 +86,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private Stack<String> carryOverScheduleIds = new Stack<>();
     private Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private boolean isDisplayedLocked = false;
-    private boolean isAirshipReady = false;
     private final InAppRemoteDataObserver remoteDataSubscriber;
 
-    private final Executor executor;
+    private final RetryingExecutor executor;
     private final ActionRunRequestFactory actionRunRequestFactory;
     private final ActivityMonitor activityMonitor;
     private final RemoteData remoteData;
@@ -102,6 +96,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private final PushManager pushManager;
     private final Handler mainHandler;
     private final InAppMessageDriver driver;
+
     private final AutomationEngine<InAppMessageSchedule> automationEngine;
     private final Map<String, InAppMessageAdapter.Factory> adapterFactories = new HashMap<>();
     private long displayInterval = DEFAULT_DISPLAY_INTERVAL_MS;
@@ -131,7 +126,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         }
     };
 
-
     /**
      * Default constructor.
      *
@@ -144,8 +138,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public InAppMessageManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions,
-                               Analytics analytics, ActivityMonitor activityMonitor, RemoteData remoteData, PushManager pushManager) {
+    public InAppMessageManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipConfigOptions configOptions,
+                               @NonNull Analytics analytics, @NonNull ActivityMonitor activityMonitor, @NonNull RemoteData remoteData,
+                               @NonNull PushManager pushManager) {
         super(preferenceDataStore);
 
         this.activityMonitor = activityMonitor;
@@ -154,7 +149,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         this.pushManager = pushManager;
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore);
         this.mainHandler = new Handler(Looper.getMainLooper());
-        this.executor = Executors.newSingleThreadExecutor();
+        this.executor = new RetryingExecutor(this.mainHandler, Executors.newSingleThreadExecutor());
         this.driver = new InAppMessageDriver();
         this.automationEngine = new AutomationEngine.Builder<InAppMessageSchedule>()
                 .setAnalytics(analytics)
@@ -175,7 +170,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
     @VisibleForTesting
     InAppMessageManager(PreferenceDataStore preferenceDataStore, Analytics analytics, ActivityMonitor activityMonitor,
-                        Executor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
+                        RetryingExecutor executor, InAppMessageDriver driver, AutomationEngine<InAppMessageSchedule> engine,
                         RemoteData remoteData, PushManager pushManager, ActionRunRequestFactory actionRunRequestFactory) {
         super(preferenceDataStore);
         this.analytics = analytics;
@@ -197,58 +192,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @Override
     protected void init() {
         super.init();
-
-        this.driver.setCallbacks(new InAppMessageDriver.Callbacks() {
-            @Override
-            @MainThread
-            public boolean isMessageReady(final @NonNull String scheduleId, final @NonNull InAppMessage message) {
-                if (!isAirshipReady) {
-                    return false;
-                }
-                AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-                if (adapterWrapper == null) {
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            prepareAdapter(scheduleId, message);
-                        }
-                    });
-                    return false;
-                }
-
-                if (adapterWrapper.skipDisplay) {
-                    return true;
-                }
-
-                if (!adapterWrapper.isReady) {
-                    return false;
-                }
-
-                // If we have a current schedule ID or carry over schedule IDs we want
-                // to finish displaying them before we display a new iam.
-                if (currentScheduleId != null || !carryOverScheduleIds.isEmpty()) {
-                    return false;
-                }
-
-                // Display may be locked to prevent back to back displays without a delay.
-                if (isDisplayedLocked) {
-                    return false;
-                }
-
-                // Prevent display on pause.
-                if (isPaused()) {
-                    return false;
-                }
-
-                // A resumed activity is required
-                return getResumedActivity() != null;
-            }
-
-            @Override
-            public void onDisplay(@NonNull String scheduleId) {
-                display(getResumedActivity(), scheduleId);
-            }
-        });
+        executor.setPaused(true);
 
         this.automationEngine.setScheduleExpiryListener(new AutomationEngine.ScheduleExpiryListener<InAppMessageSchedule>() {
             @Override
@@ -257,8 +201,28 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         });
 
+        driver.setListener(new InAppMessageDriver.Listener() {
+            @Override
+            @WorkerThread
+            public void onPrepareMessage(final @NonNull String scheduleId, final @NonNull InAppMessage message) {
+                prepareMessage(scheduleId, message);
+            }
+
+            @Override
+            @MainThread
+            public boolean isMessageReady(@NonNull String scheduleId, @NonNull InAppMessage message) {
+                return isDisplayReady();
+            }
+
+            @Override
+            @MainThread
+            public void onDisplay(@NonNull String scheduleId) {
+                display(getResumedActivity(), scheduleId);
+            }
+        });
 
         automationEngine.start();
+        automationEngine.setPaused(true);
         updateEnginePauseState();
 
         // New user cut off time
@@ -344,8 +308,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @Override
     public void onAirshipReady(UAirship airship) {
         super.onAirshipReady(airship);
-        isAirshipReady = true;
-        automationEngine.checkPendingSchedules();
+        executor.setPaused(false);
         remoteDataSubscriber.subscribe(remoteData, this);
     }
 
@@ -363,81 +326,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @Override
     protected void onComponentEnableChange(boolean isEnabled) {
         updateEnginePauseState();
-    }
-
-    @WorkerThread
-    private void prepareAdapter(final String scheduleId, InAppMessage message) {
-        if (adapterWrappers.containsKey(scheduleId)) {
-            return;
-        }
-
-        InAppMessageExtender extender = this.messageExtender;
-        if (extender != null) {
-            message = extender.extend(message);
-        }
-
-        try {
-            InAppMessageAdapter.Factory factory = adapterFactories.get(message.getType());
-            if (factory == null) {
-                Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
-                cancelSchedule(scheduleId);
-                return;
-            }
-
-            InAppMessageAdapter adapter = factory.createAdapter(message);
-            if (adapter == null) {
-                Logger.error("InAppMessageManager - Failed to create in-app message adapter.");
-                cancelSchedule(scheduleId);
-                return;
-            }
-
-            AdapterWrapper adapterWrapper = new AdapterWrapper(scheduleId, message, adapter);
-            adapterWrappers.put(scheduleId, adapterWrapper);
-        } catch (Exception e) {
-            Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
-            cancelSchedule(scheduleId);
-            return;
-        }
-
-        prepareMessage(scheduleId);
-    }
-
-    @WorkerThread
-    private void prepareMessage(final String scheduleId) {
-        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        if (adapterWrapper == null) {
-            return;
-        }
-
-        @InAppMessageAdapter.PrepareResult
-        int result = adapterWrapper.prepare();
-
-        switch (result) {
-            case InAppMessageAdapter.OK:
-                Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
-                automationEngine.checkPendingSchedules();
-                break;
-
-            case InAppMessageAdapter.RETRY:
-                Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
-                // Retry after a delay
-                mainHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        executor.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                prepareMessage(scheduleId);
-                            }
-                        });
-                    }
-                }, PREPARE_RETRY_DELAY_MS);
-                break;
-            case InAppMessageAdapter.CANCEL:
-                cancelSchedule(scheduleId);
-                adapterWrappers.remove(scheduleId);
-                break;
-        }
     }
 
     /**
@@ -483,6 +371,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     @Override
     public PendingResult<Collection<InAppMessageSchedule>> getSchedules(@NonNull final String messageId) {
         return automationEngine.getSchedules(messageId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PendingResult<Collection<InAppMessageSchedule>> getSchedules() {
+        return automationEngine.getSchedules();
     }
 
     /**
@@ -608,6 +504,108 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      */
     public boolean isEnabled() {
         return getDataStore().getBoolean(ENABLE_KEY, true);
+    }
+
+    private boolean isDisplayReady() {
+        // If we have a current schedule ID or carry over schedule IDs we want
+        // to finish displaying them before we display a new iam.
+        if (currentScheduleId != null || !carryOverScheduleIds.isEmpty()) {
+            return false;
+        }
+
+        // Display may be locked to prevent back to back displays without a delay.
+        if (isDisplayedLocked) {
+            return false;
+        }
+
+        // Prevent display on pause.
+        if (isPaused()) {
+            return false;
+        }
+
+        // A resumed activity is required
+        return getResumedActivity() != null;
+    }
+
+    private void prepareMessage(final String scheduleId, final InAppMessage originalMessage) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                InAppMessage message = originalMessage;
+
+                // Extend the message
+                InAppMessageExtender extender = InAppMessageManager.this.messageExtender;
+                if (extender != null) {
+                    message = extender.extend(originalMessage);
+                }
+
+                // Create the adapter
+                InAppMessageAdapter adapter = null;
+                try {
+                    InAppMessageAdapter.Factory factory;
+
+                    synchronized (adapterFactories) {
+                        factory = adapterFactories.get(message.getType());
+                    }
+
+                    if (factory == null) {
+                        Logger.debug("InAppMessageManager - No display adapter for message type: " + message.getType() + ". Unable to process schedule: " + scheduleId);
+                    } else {
+                        adapter = factory.createAdapter(message);
+                        if (adapter == null) {
+                            Logger.error("InAppMessageManager - Failed to create in-app message adapter.");
+                        }
+                    }
+                } catch (Exception e) {
+                    Logger.error("InAppMessageManager - Failed to create in-app message adapter.", e);
+                }
+
+                // Prepare the adapter if we were able to create it
+                if (adapter == null) {
+                    driver.messagePrepared(scheduleId, AutomationDriver.RESULT_SKIP_PENALIZE);
+                    return;
+                }
+
+                // Check audience
+                if (AudienceChecks.checkAudience(UAirship.getApplicationContext(), message.getAudience())) {
+                    // Prepare adapter
+                    prepareAdapter(scheduleId, new AdapterWrapper(scheduleId, message, adapter));
+                } else {
+                    driver.messagePrepared(scheduleId, AutomationDriver.RESULT_SKIP_PENALIZE);
+                }
+            }
+        });
+    }
+
+    private void prepareAdapter(final String scheduleId, final AdapterWrapper adapter) {
+        executor.execute(new RetryingExecutor.Operation() {
+            @Override
+            public int run() {
+                @InAppMessageAdapter.PrepareResult
+                int result = adapter.prepare();
+
+                switch (result) {
+
+                    case InAppMessageAdapter.OK:
+                        Logger.debug("InAppMessageManager - Scheduled message prepared for display: " + scheduleId);
+
+                        // Store the adapter
+                        adapterWrappers.put(scheduleId, adapter);
+
+                        driver.messagePrepared(scheduleId, AutomationDriver.RESULT_CONTINUE);
+                        return RetryingExecutor.RESULT_FINISHED;
+
+                    case InAppMessageAdapter.RETRY:
+                        Logger.debug("InAppMessageManager - Scheduled message failed to prepare for display: " + scheduleId);
+                        return RetryingExecutor.RESULT_RETRY;
+
+                    case InAppMessageAdapter.CANCEL:
+                    default:
+                        driver.messagePrepared(scheduleId, AutomationDriver.RESULT_CANCEL_SCHEDULE);
+                        return RetryingExecutor.RESULT_FINISHED;
+                }
+            }
+        });
     }
 
     /**
@@ -763,17 +761,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private void display(Activity activity, @NonNull String scheduleId) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
 
-        if (adapterWrapper == null || adapterWrapper.skipDisplay) {
-            if (adapterWrapper != null) {
-                adapterWrappers.remove(scheduleId);
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapterWrapper.finish();
-                    }
-                });
-            }
-
+        if (adapterWrapper == null) {
             driver.displayFinished(scheduleId);
             return;
         }

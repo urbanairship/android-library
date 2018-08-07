@@ -72,6 +72,14 @@ public interface InAppMessageScheduler {
      */
     PendingResult<InAppMessageSchedule> getSchedule(@NonNull String scheduleId);
 
+
+    /**
+     * Gets all the schedules.
+     *
+     * @return A pending result.
+     */
+    PendingResult<Collection<InAppMessageSchedule>> getSchedules();
+
     /**
      * Edits an in-app message schedule.
      *

@@ -22,9 +22,9 @@ import java.util.Map;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
 
-    @MainThread
     @Override
-    public void onExecuteTriggeredSchedule(ActionSchedule schedule, Callback finishCallback) {
+    @MainThread
+    public void onExecuteTriggeredSchedule(@NonNull ActionSchedule schedule, @NonNull ExecutionCallback finishCallback) {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.ACTION_SCHEDULE_METADATA, schedule);
 
@@ -37,6 +37,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
                             .run(actionCallback, Looper.getMainLooper());
         }
     }
+
 
     @NonNull
     @Override
@@ -55,17 +56,22 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
         return new ActionSchedule(scheduleId, scheduleInfo);
     }
 
+    @Override
+    public void onPrepareSchedule(ActionSchedule schedule, @NonNull PrepareScheduleCallback callback) {
+        callback.onFinish(RESULT_CONTINUE);
+    }
 
     @Override
     public boolean isScheduleReadyToExecute(ActionSchedule schedule) {
         return true;
     }
 
+
     /**
      * Helper class that calls the callback after all actions have run.
      */
     private static class ActionCallback implements ActionCompletionCallback {
-        private final Callback callback;
+        private final ExecutionCallback callback;
         private int pendingActionCallbacks;
 
         /**
@@ -74,7 +80,7 @@ class ActionAutomationDriver implements AutomationDriver<ActionSchedule> {
          * @param callback The completion callback.
          * @param pendingActionCallbacks Number of pending callbacks to expect.
          */
-        ActionCallback(Callback callback, int pendingActionCallbacks) {
+        ActionCallback(ExecutionCallback callback, int pendingActionCallbacks) {
             this.callback = callback;
             this.pendingActionCallbacks = pendingActionCallbacks;
         }

@@ -2,27 +2,82 @@
 
 package com.urbanairship.automation;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
+import android.support.annotation.WorkerThread;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Driver for AutomationEngine. Handles executing and converting generic ScheduleInfo into the proper
  * Schedule class.
  *
  * @param <T> The schedule type.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface AutomationDriver<T extends Schedule> {
 
+    @IntDef({ RESULT_CONTINUE, RESULT_CANCEL_SCHEDULE, RESULT_SKIP_PENALIZE, RESULT_SKIP_IGNORE })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface PrepareResult {}
+
     /**
-     * The finish callback.
+     * Indicates a successful result.
      */
-    interface Callback {
+    int RESULT_CONTINUE = 0;
+
+    /**
+     * Indicates that the schedule should be canceled.
+     */
+    int RESULT_CANCEL_SCHEDULE = 1;
+
+    /**
+     * Indicates that the schedule execution should be skipped but the schedule's execution
+     * count should be incremented and to handle any execution interval set on the schedule.
+     */
+    int RESULT_SKIP_PENALIZE = 2;
+
+    /**
+     * Indicates that the schedule execution should be skipped.
+     */
+    int RESULT_SKIP_IGNORE = 3;
+
+    /**
+     * The execution callback.
+     */
+    interface ExecutionCallback {
 
         /**
-         * Called when the schedule is finished executing.
+         * Call when the schedule is finished executing.
          */
         void onFinish();
     }
+
+    /**
+     * The prepare schedule callback.
+     */
+    interface PrepareScheduleCallback {
+
+        /**
+         * Call when the schedule is finished preparing the schedule.
+         */
+        void onFinish(@PrepareResult int result);
+    }
+
+    /**
+     * Called on a triggered schedule before execution. This is called on a worker
+     * thread but adapters should offload any long tasks onto another thread to
+     * avoid blocking other schedules from executing.
+     *
+     * @param schedule The schedule.
+     * @param callback The callback to continue execution.
+     */
+    @WorkerThread
+    void onPrepareSchedule(T schedule, @NonNull PrepareScheduleCallback callback);
 
     /**
      * Checks if the schedule is ready to execute. Will be called before executing the schedule
@@ -31,6 +86,7 @@ public interface AutomationDriver<T extends Schedule> {
      * @param schedule The schedule.
      * @return {@code true} if the schedule is ready, otherwise {@code false}.
      */
+    @MainThread
     boolean isScheduleReadyToExecute(T schedule);
 
 
@@ -41,7 +97,7 @@ public interface AutomationDriver<T extends Schedule> {
      * @param finishCallback The finish callback.
      */
     @MainThread
-    void onExecuteTriggeredSchedule(@NonNull T schedule, @NonNull Callback finishCallback);
+    void onExecuteTriggeredSchedule(@NonNull T schedule, @NonNull ExecutionCallback finishCallback);
 
     /**
      * Creates a typed schedule from a generic schedule info and ID.

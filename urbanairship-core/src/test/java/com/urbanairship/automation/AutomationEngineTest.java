@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -52,8 +53,17 @@ public class AutomationEngineTest extends BaseTestCase {
     private TestActivityMonitor activityMonitor;
     private ApplicationMetrics mockMetrics;
 
+    private ActionScheduleInfo scheduleInfo;
+
     @Before
     public void setUp() {
+        scheduleInfo = ActionScheduleInfo.newBuilder()
+                                         .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                             .setCountGoal(1)
+                                                             .setEventName("event")
+                                                             .build())
+                                         .addAction("test_action", JsonValue.wrap("action_value"))
+                                         .build();
         activityMonitor = new TestActivityMonitor();
         activityMonitor.register();
 
@@ -90,15 +100,6 @@ public class AutomationEngineTest extends BaseTestCase {
 
     @Test
     public void testSchedule() throws Exception {
-        ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
-                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                                                                                .setCountGoal(1)
-                                                                                .setEventName("event")
-                                                                                .build())
-                                                            .addAction("test_action", JsonValue.wrap("action_value"))
-                                                            .build();
-
-
         Future<ActionSchedule> pendingResult = automationEngine.schedule(scheduleInfo);
         runLooperTasks();
 
@@ -264,12 +265,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                            .setSeconds(1)
                                            .build();
 
-        verifyDelay(delay, new Runnable() {
-            @Override
-            public void run() {
-                advanceAutomationLooperScheduler(1000);
-            }
-        });
+        verifyDelay(delay, null);
     }
 
     @Test
@@ -364,10 +360,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                       .build();
 
             Assert.assertEquals(scheduleInfo.getPriority(), priority);
-
-            PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-            runLooperTasks();
-            schedules.add(future.get());
+            schedules.add(schedule(scheduleInfo));
         }
 
         // Trigger the schedules
@@ -382,7 +375,7 @@ public class AutomationEngineTest extends BaseTestCase {
     }
 
     @Test
-    public void testExpiryListener() throws Exception {
+    public void testExpiryListener() throws ExecutionException, InterruptedException {
         final Trigger trigger = Triggers.newCustomEventTriggerBuilder()
                                         .setCountGoal(1)
                                         .setEventName("name")
@@ -398,8 +391,7 @@ public class AutomationEngineTest extends BaseTestCase {
         automationEngine.setScheduleExpiryListener(expiryListener);
 
         // Schedule it
-        automationEngine.schedule(expiredScheduleInfo);
-        runLooperTasks();
+        schedule(expiredScheduleInfo);
 
         // Trigger the schedules
         CustomEvent.newBuilder("name")
@@ -418,18 +410,7 @@ public class AutomationEngineTest extends BaseTestCase {
         // Pause
         automationEngine.setPaused(true);
 
-        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
-                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
-                                                                                      .setCountGoal(1)
-                                                                                      .setEventName("event")
-                                                                                      .build())
-                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
-                                                                  .build();
-
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Verify it was saved
         ScheduleEntry entry = automationDataManager.getScheduleEntry(schedule.getId());
@@ -444,7 +425,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify it's still idle
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
-        assertFalse(driver.callbackMap.containsKey(schedule.getId()));
+        assertFalse(driver.executionCallbackMap.containsKey(schedule.getId()));
 
         // Resume
         automationEngine.setPaused(false);
@@ -452,7 +433,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
         // Verify it's still idle
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
-        assertFalse(driver.callbackMap.containsKey(schedule.getId()));
+        assertFalse(driver.executionCallbackMap.containsKey(schedule.getId()));
 
         // Actually trigger the schedule
         CustomEvent.newBuilder("event")
@@ -460,16 +441,8 @@ public class AutomationEngineTest extends BaseTestCase {
                    .track();
         runLooperTasks();
 
-        // Verify it started executing the schedule
-        assertTrue(driver.callbackMap.containsKey(schedule.getId()));
-        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
-
-        // Finish executing the schedule
-        driver.callbackMap.get(schedule.getId()).onFinish();
-        runLooperTasks();
-
-        // Schedule should be deleted
-        assertNull(automationDataManager.getScheduleEntry(schedule.getId()));
+        // Verify it started preparing the schedule
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
     }
 
     @Test
@@ -483,9 +456,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                   .setEditGracePeriod(100, TimeUnit.SECONDS)
                                                                   .build();
 
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
@@ -494,8 +465,10 @@ public class AutomationEngineTest extends BaseTestCase {
 
         runLooperTasks();
 
-        // Finish executing the schedule
-        driver.callbackMap.get(schedule.getId()).onFinish();
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        runLooperTasks();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
 
         // Verify it's finished
@@ -512,10 +485,9 @@ public class AutomationEngineTest extends BaseTestCase {
                                                              .setPriority(300)
                                                              .build();
 
-        future = automationEngine.editSchedule(schedule.getId(), edits);
+        Future<ActionSchedule> future = automationEngine.editSchedule(schedule.getId(), edits);
         runLooperTasks();
         ActionSchedule updated = future.get();
-
 
         // Verify it's now idle
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
@@ -539,9 +511,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                   .setEditGracePeriod(100, TimeUnit.SECONDS)
                                                                   .build();
 
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Verify its idle
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
@@ -552,7 +522,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                              .setEnd(0)
                                                              .build();
 
-        future = automationEngine.editSchedule(schedule.getId(), edits);
+        Future<ActionSchedule> future = automationEngine.editSchedule(schedule.getId(), edits);
         runLooperTasks();
         ActionSchedule updated = future.get();
 
@@ -576,9 +546,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                   .setLimit(2)
                                                                   .build();
 
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Trigger the schedule
         CustomEvent.newBuilder("event")
@@ -587,8 +555,10 @@ public class AutomationEngineTest extends BaseTestCase {
 
         runLooperTasks();
 
-        // Finish executing the schedule
-        driver.callbackMap.get(schedule.getId()).onFinish();
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        runLooperTasks();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
 
         // Verify it's paused
@@ -625,6 +595,79 @@ public class AutomationEngineTest extends BaseTestCase {
         automationEngine.checkPendingSchedules();
     }
 
+
+    @Test
+    public void testCancelPrepareResult() throws ExecutionException, InterruptedException {
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CANCEL_SCHEDULE);
+        runLooperTasks();
+
+        // Verify it's cancelled (Deleted)
+        assertNull(automationDataManager.getScheduleEntry(schedule.getId()));
+    }
+
+    @Test
+    public void testSkipIgnorePrepareResult() throws ExecutionException, InterruptedException {
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP_IGNORE);
+        runLooperTasks();
+
+        // Verify it's idle
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 0);
+    }
+
+    @Test
+    public void testSkipPenalizePrepareResult() throws ExecutionException, InterruptedException {
+        final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
+                                                                  .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                                      .setCountGoal(1)
+                                                                                      .setEventName("event")
+                                                                                      .build())
+                                                                  .addAction("test_action", JsonValue.wrap("action_value"))
+                                                                  .setInterval(10, TimeUnit.SECONDS)
+                                                                  .setLimit(2)
+                                                                  .build();
+
+        ActionSchedule schedule = schedule(scheduleInfo);
+
+        // Trigger the schedule
+        CustomEvent.newBuilder("event")
+                   .build()
+                   .track();
+
+        runLooperTasks();
+
+        // Finish preparing and executing the schedule
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP_PENALIZE);
+        runLooperTasks();
+
+        // Verify it's finished
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PAUSED);
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 1);
+
+    }
+
+
     private void verifyDelay(ScheduleDelay delay, Runnable resolveDelay) throws Exception {
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(Triggers.newCustomEventTriggerBuilder()
@@ -635,10 +678,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                   .setDelay(delay)
                                                                   .build();
 
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Verify it was saved
         ScheduleEntry entry = automationDataManager.getScheduleEntry(schedule.getId());
@@ -651,30 +691,45 @@ public class AutomationEngineTest extends BaseTestCase {
 
         runLooperTasks();
 
-        // Verify it's now pending execution
-        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PENDING_EXECUTION);
-        assertFalse(driver.callbackMap.containsKey(schedule.getId()));
-
+        // Resolve delay seconds
         if (delay.getSeconds() > 0) {
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_TIME_DELAYED);
+
             // Verify the pending date is set
             entry = automationDataManager.getScheduleEntry(schedule.getId());
-            assertTrue(entry.getPendingExecutionDate() > System.currentTimeMillis());
+            assertTrue(entry.getDelayFinishDate() > System.currentTimeMillis());
 
             // Set the pending date to now
-            entry.setPendingExecutionDate(System.currentTimeMillis());
+            entry.setDelayFinishDate(System.currentTimeMillis());
             automationDataManager.saveSchedules(Collections.singletonList(entry));
+
+            runLooperTasks();
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
         }
 
-        // Resolve delay
-        resolveDelay.run();
+        // Preparing schedule
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
         runLooperTasks();
 
+        // Waiting on conditions - the rest of the delay
+        if (resolveDelay != null) {
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_WAITING_SCHEDULE_CONDITIONS);
+
+            // Resolve delay
+            resolveDelay.run();
+            runLooperTasks();
+        } else {
+            // Straight to executing
+            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
+        }
+
         // Verify it started executing the schedule
-        assertTrue(driver.callbackMap.containsKey(schedule.getId()));
+        assertTrue(driver.executionCallbackMap.containsKey(schedule.getId()));
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
 
         // Finish executing the schedule
-        driver.callbackMap.get(schedule.getId()).onFinish();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
 
         // Schedule should be deleted
@@ -682,11 +737,6 @@ public class AutomationEngineTest extends BaseTestCase {
     }
 
     private void verifyTrigger(Trigger trigger, Runnable generateEvents) throws Exception {
-        generateEvents = generateEvents != null ? generateEvents : new Runnable() {
-            @Override
-            public void run() {}
-        };
-
         final ActionScheduleInfo scheduleInfo = ActionScheduleInfo.newBuilder()
                                                                   .addTrigger(trigger)
                                                                   .addAction("test_action", JsonValue.wrap("action_value"))
@@ -694,10 +744,7 @@ public class AutomationEngineTest extends BaseTestCase {
                                                                   .setLimit(2)
                                                                   .build();
 
-        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
-        runLooperTasks();
-
-        ActionSchedule schedule = future.get();
+        ActionSchedule schedule = schedule(scheduleInfo);
 
         // Verify it was saved
         ScheduleEntry entry = automationDataManager.getScheduleEntry(schedule.getId());
@@ -710,24 +757,22 @@ public class AutomationEngineTest extends BaseTestCase {
 
         runLooperTasks();
 
+        // Verify it started preparing the schedule
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_PREPARING_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CONTINUE);
+        runLooperTasks();
+
         // Verify it started executing the schedule
-        assertTrue(driver.callbackMap.containsKey(schedule.getId()));
+        assertTrue(driver.executionCallbackMap.containsKey(schedule.getId()));
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
 
         // Finish executing the schedule
-        driver.callbackMap.get(schedule.getId()).onFinish();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
 
         // Verify it's back to idle and progress is set
-        assertTrue(driver.callbackMap.containsKey(schedule.getId()));
-
-        if (generateEvents != null) {
-            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
-        } else {
-            // ASAP triggers should automatically re-execute if the count has not been met
-            assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_EXECUTING);
-        }
-
+        assertTrue(driver.executionCallbackMap.containsKey(schedule.getId()));
+        assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getExecutionState(), ScheduleEntry.STATE_IDLE);
         assertEquals(automationDataManager.getScheduleEntry(schedule.getId()).getCount(), 1);
 
         // Trigger it again
@@ -736,7 +781,7 @@ public class AutomationEngineTest extends BaseTestCase {
         }
 
         runLooperTasks();
-        driver.callbackMap.get(schedule.getId()).onFinish();
+        driver.executionCallbackMap.get(schedule.getId()).onFinish();
         runLooperTasks();
 
         // Schedule should be deleted
@@ -762,14 +807,27 @@ public class AutomationEngineTest extends BaseTestCase {
         automationLooper.getScheduler().advanceBy(millis, TimeUnit.MILLISECONDS);
     }
 
+    private ActionSchedule schedule(ActionScheduleInfo scheduleInfo) throws ExecutionException, InterruptedException {
+        PendingResult<ActionSchedule> future = automationEngine.schedule(scheduleInfo);
+        runLooperTasks();
+        return future.get();
+    }
+
     private static class TestActionScheduleDriver extends ActionAutomationDriver {
 
-        Map<String, Callback> callbackMap = new HashMap<>();
+        Map<String, ExecutionCallback> executionCallbackMap = new HashMap<>();
+        Map<String, PrepareScheduleCallback> prepareCallbackMap = new HashMap<>();
+
         ArrayList<Integer> priorityList = new ArrayList<>();
 
         @Override
-        public void onExecuteTriggeredSchedule(ActionSchedule schedule, Callback finishCallback) {
-            callbackMap.put(schedule.getId(), finishCallback);
+        public void onExecuteTriggeredSchedule(ActionSchedule schedule, ExecutionCallback finishCallback) {
+            executionCallbackMap.put(schedule.getId(), finishCallback);
+        }
+
+        @Override
+        public void onPrepareSchedule(ActionSchedule schedule, PrepareScheduleCallback prepareCallback) {
+            prepareCallbackMap.put(schedule.getId(), prepareCallback);
             priorityList.add(schedule.getInfo().getPriority());
         }
     }

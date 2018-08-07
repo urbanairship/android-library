@@ -24,17 +24,17 @@ import static org.mockito.Mockito.when;
 public class InAppMessageDriverTest extends BaseTestCase {
 
     private InAppMessageDriver driver;
-    private AutomationDriver.Callback resultCallback;
-    private InAppMessageDriver.Callbacks iamCallbacks;
+    private AutomationDriver.ExecutionCallback executionCallback;
+    private InAppMessageDriver.Listener listener;
     private InAppMessageSchedule schedule;
 
     @Before
     public void setup() {
-        iamCallbacks = mock(InAppMessageDriver.Callbacks.class);
-        resultCallback = mock(AutomationDriver.Callback.class);
+        listener = mock(InAppMessageDriver.Listener.class);
+        executionCallback = mock(AutomationDriver.ExecutionCallback.class);
 
         driver = new InAppMessageDriver();
-        driver.setCallbacks(iamCallbacks);
+        driver.setListener(listener);
 
         InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
                                                                         .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -50,7 +50,7 @@ public class InAppMessageDriverTest extends BaseTestCase {
     @Test
     public void testIsMessageReady() {
         assertFalse(driver.isScheduleReadyToExecute(schedule));
-        when(iamCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage())).thenReturn(true);
+        when(listener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage())).thenReturn(true);
         assertTrue(driver.isScheduleReadyToExecute(schedule));
     }
 
@@ -58,20 +58,20 @@ public class InAppMessageDriverTest extends BaseTestCase {
     @Test
     public void testExecuteTriggeredSchedule() {
         // Execute the triggered schedule
-        driver.onExecuteTriggeredSchedule(schedule, resultCallback);
+        driver.onExecuteTriggeredSchedule(schedule, executionCallback);
 
         // Result callback should be called in displayFinished
-        verifyZeroInteractions(resultCallback);
+        verifyZeroInteractions(executionCallback);
 
         // Verify the callback is called to display the in-app message
-        verify(iamCallbacks).onDisplay(schedule.getId());
+        verify(listener).onDisplay(schedule.getId());
     }
 
     @Test
     public void testDisplayFinished() {
         testExecuteTriggeredSchedule();
         driver.displayFinished(schedule.getId());
-        verify(resultCallback).onFinish();
+        verify(executionCallback).onFinish();
     }
 
     @Test
@@ -81,5 +81,4 @@ public class InAppMessageDriverTest extends BaseTestCase {
         assertEquals("some id", fromDriver.getId());
         assertEquals(schedule.getInfo().getInAppMessage(), fromDriver.getInfo().getInAppMessage());
     }
-
 }

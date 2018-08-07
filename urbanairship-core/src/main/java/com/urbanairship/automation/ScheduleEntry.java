@@ -27,14 +27,32 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class ScheduleEntry implements ScheduleInfo {
 
-    @IntDef({ STATE_IDLE, STATE_PENDING_EXECUTION, STATE_EXECUTING, STATE_PAUSED, STATE_FINISHED })
+    @IntDef({ STATE_IDLE, STATE_WAITING_SCHEDULE_CONDITIONS, STATE_EXECUTING, STATE_PAUSED,
+              STATE_FINISHED, STATE_PREPARING_SCHEDULE, STATE_TIME_DELAYED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface State {}
 
+    // The state values do not define the order.
+
+    // Schedule is active
     static final int STATE_IDLE = 0;
-    static final int STATE_PENDING_EXECUTION = 1;
+
+    // Schedule is waiting for its time delay to expire
+    static final int STATE_TIME_DELAYED = 5;
+
+    // Schedule is being prepared by the adapter
+    static final int STATE_PREPARING_SCHEDULE = 6;
+
+    // Schedule is waiting for app state conditions to be met
+    static final int STATE_WAITING_SCHEDULE_CONDITIONS = 1;
+
+    // Schedule is executing
     static final int STATE_EXECUTING = 2;
+
+    // Schedule finished executing and is now waiting for its execution interval to expire
     static final int STATE_PAUSED = 3;
+
+    // Schedule is either expired or at its execution limit
     static final int STATE_FINISHED = 4;
 
     static final String TABLE_NAME = "action_schedules";
@@ -60,7 +78,7 @@ class ScheduleEntry implements ScheduleInfo {
     // State
     static final String COLUMN_NAME_EXECUTION_STATE = "s_execution_state";
     static final String COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE = "s_execution_state_change_date";
-    static final String COLUMN_NAME_PENDING_EXECUTION_DATE = "s_pending_execution_date";
+    static final String COLUMN_NAME_DELAY_FINISH_DATE = "s_pending_execution_date";
     static final String COLUMN_NAME_COUNT = "s_count";
     static final String COLUMN_NAME_ID = "s_row_id";
 
@@ -86,7 +104,7 @@ class ScheduleEntry implements ScheduleInfo {
 
     private int count;
     private int executionState = STATE_IDLE;
-    private long pendingExecutionDate;
+    private long delayFinishDate;
     private long executionStateChangeDate;
     private boolean isDirty;
     private boolean isEdit;
@@ -146,7 +164,7 @@ class ScheduleEntry implements ScheduleInfo {
         this.start = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_START));
         this.executionState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE));
         this.executionStateChangeDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE));
-        this.pendingExecutionDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_PENDING_EXECUTION_DATE));
+        this.delayFinishDate = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_DELAY_FINISH_DATE));
         this.appState = cursor.getInt(cursor.getColumnIndex(COLUMN_NAME_APP_STATE));
         this.regionId = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_REGION_ID));
         this.interval = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_INTERVAL));
@@ -227,9 +245,9 @@ class ScheduleEntry implements ScheduleInfo {
      *
      * @param date The pending execution date in milliseconds.
      */
-    void setPendingExecutionDate(long date) {
-        if (this.pendingExecutionDate != date) {
-            this.pendingExecutionDate = date;
+    void setDelayFinishDate(long date) {
+        if (this.delayFinishDate != date) {
+            this.delayFinishDate = date;
             this.isDirty = true;
         }
     }
@@ -265,8 +283,26 @@ class ScheduleEntry implements ScheduleInfo {
      *
      * @return Pending execution date.
      */
-    long getPendingExecutionDate() {
-        return this.pendingExecutionDate;
+    long getDelayFinishDate() {
+        return this.delayFinishDate;
+    }
+
+    /**
+     * Checks if a schedule is expired.
+     *
+     * @return {@code true} if expired, otherwise {@code false}.
+     */
+    boolean isExpired() {
+        return getEnd() >= 0 && getEnd() < System.currentTimeMillis();
+    }
+
+    /**
+     * Checks whether the schedule has exceeded its limit.
+     *
+     * @return {@code true} if expired, otherwise {@code false}.
+     */
+    boolean isOverLimit() {
+        return getLimit() > 0 && getCount() >= getLimit();
     }
 
     /**
@@ -289,7 +325,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_END, end);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE, executionStateChangeDate);
-            contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
+            contentValues.put(COLUMN_NAME_DELAY_FINISH_DATE, delayFinishDate);
             contentValues.put(COLUMN_NAME_APP_STATE, appState);
             contentValues.put(COLUMN_NAME_REGION_ID, regionId);
             contentValues.put(COLUMN_NAME_SCREEN, JsonValue.wrapOpt(screens).optList().toString());
@@ -305,7 +341,7 @@ class ScheduleEntry implements ScheduleInfo {
             contentValues.put(COLUMN_NAME_COUNT, count);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE, executionState);
             contentValues.put(COLUMN_NAME_EXECUTION_STATE_CHANGE_DATE, executionStateChangeDate);
-            contentValues.put(COLUMN_NAME_PENDING_EXECUTION_DATE, pendingExecutionDate);
+            contentValues.put(COLUMN_NAME_DELAY_FINISH_DATE, delayFinishDate);
 
             if (isEdit) {
                 contentValues.put(COLUMN_NAME_DATA, data.toJsonValue().toString());
