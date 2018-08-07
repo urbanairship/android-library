@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
 
 import com.urbanairship.ActivityMonitor;
 import com.urbanairship.CoreReceiver;
@@ -19,7 +18,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
-import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
@@ -30,14 +28,8 @@ import com.urbanairship.util.Checks;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.util.UAStringUtil;
 
-import java.sql.Time;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PROVIDER_CLASS;
 import static com.urbanairship.push.PushProviderBridge.EXTRA_PUSH;
@@ -280,15 +272,6 @@ class IncomingPushRunnable implements Runnable {
     private void runActions() {
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, message);
-
-        if (Build.VERSION.SDK_INT <= 25 || ActivityMonitor.shared(context).isAppForegrounded()) {
-            try {
-                ActionService.runActions(context, message.getActions(), Action.SITUATION_PUSH_RECEIVED, metadata);
-                return;
-            } catch (IllegalStateException e) {
-                Logger.verbose("Unable to push actions in a service.");
-            }
-        }
 
         for (Map.Entry<String, ActionValue> action : message.getActions().entrySet()) {
 

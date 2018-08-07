@@ -16,7 +16,6 @@ import android.support.v4.app.RemoteInput;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
-import com.urbanairship.actions.ActionService;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
 import com.urbanairship.json.JsonException;
@@ -326,17 +325,6 @@ public class CoreReceiver extends BroadcastReceiver {
             return;
         }
 
-        if (ActivityMonitor.shared(context).isAppForegrounded() || situation == Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON || situation == Action.SITUATION_PUSH_OPENED) {
-            try {
-                ActionService.runActions(context, actions, situation, metadata);
-                callback.run();
-                return;
-            } catch (SecurityException | IllegalStateException e) {
-                Logger.error("Unable to start action service.", e);
-            }
-        }
-
-        // Fallback to running actions in the executor
         executor.execute(new Runnable() {
             @Override
             public void run() {
