@@ -41,7 +41,7 @@ public class RemoteDataApiClient  {
      * @param configOptions The config options.
      */
     RemoteDataApiClient(AirshipConfigOptions configOptions) {
-        this(configOptions, new RequestFactory());
+        this(configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     /**

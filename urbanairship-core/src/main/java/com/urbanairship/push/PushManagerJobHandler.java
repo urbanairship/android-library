@@ -85,6 +85,7 @@ class PushManagerJobHandler {
     private final NamedUser namedUser;
     private final Context context;
     private final PreferenceDataStore dataStore;
+    private final TagGroupRegistrar tagGroupRegistrar;
 
 
     /**
@@ -94,19 +95,20 @@ class PushManagerJobHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(context, airship, dataStore, new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+    PushManagerJobHandler(@NonNull Context context, @NonNull UAirship airship, @NonNull PreferenceDataStore dataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+        this(context, airship, dataStore, tagGroupRegistrar, new ChannelApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    PushManagerJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore,
-                          ChannelApiClient channelClient) {
+    PushManagerJobHandler(@NonNull Context context, @NonNull UAirship airship, @NonNull PreferenceDataStore dataStore,
+                          @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull ChannelApiClient channelClient) {
         this.context = context;
         this.dataStore = dataStore;
         this.channelClient = channelClient;
         this.airship = airship;
         this.pushManager = airship.getPushManager();
         this.namedUser = airship.getNamedUser();
+        this.tagGroupRegistrar = tagGroupRegistrar;
     }
 
     /**
@@ -503,7 +505,8 @@ class PushManagerJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        if (TagUtils.updateTagGroups(pushManager.getTagGroupStore(), channelClient, channelId)) {
+
+        if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.CHANNEL, channelId)) {
             return JobInfo.JOB_FINISHED;
         }
 

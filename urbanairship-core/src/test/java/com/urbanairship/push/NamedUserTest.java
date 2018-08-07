@@ -43,11 +43,14 @@ public class NamedUserTest extends BaseTestCase {
     private NamedUser namedUser;
     private TestRequest testRequest;
     private JobDispatcher mockDispatcher;
+    private TagGroupRegistrar mockTagGroupRegistrar;
 
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
         mockAirshipConfigOptions = mock(AirshipConfigOptions.class);
+        mockTagGroupRegistrar = mock(TagGroupRegistrar.class);
+
         testRequest = new TestRequest();
 
         RequestFactory mockRequestFactory = mock(RequestFactory.class);
@@ -58,7 +61,7 @@ public class NamedUserTest extends BaseTestCase {
 
         TestApplication.getApplication().setOptions(mockAirshipConfigOptions);
 
-        namedUser = new NamedUser(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore, mockDispatcher);
+        namedUser = new NamedUser(TestApplication.getApplication().preferenceDataStore, mockTagGroupRegistrar, mockDispatcher);
     }
 
     /**
@@ -67,15 +70,7 @@ public class NamedUserTest extends BaseTestCase {
     @Test
     public void testSetIDValid() {
         // Make sure we have a pending tag group change
-        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        namedUser.getTagGroupStore().add(Collections.singletonList(mutation));
-
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
-
         namedUser.setId(fakeNamedUserId);
-
-        assertTrue(namedUser.getTagGroupStore().getMutations().isEmpty());
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -104,17 +99,10 @@ public class NamedUserTest extends BaseTestCase {
      */
     @Test
     public void testSetIDNull() {
-        // Make sure we have a pending tag group change
-        TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
-        namedUser.getTagGroupStore().add(Collections.singletonList(mutation));
-
-        ShadowApplication application = Shadows.shadowOf(RuntimeEnvironment.application);
-        application.clearStartedServices();
-
         namedUser.setId(null);
 
         // Pending tag group changes should be cleared
-        assertTrue(namedUser.getTagGroupStore().getMutations().isEmpty());
+        verify(mockTagGroupRegistrar).clearMutations(TagGroupRegistrar.NAMED_USER);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override

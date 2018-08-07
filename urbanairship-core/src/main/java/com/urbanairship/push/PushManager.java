@@ -254,21 +254,6 @@ public class PushManager extends AirshipComponent {
     static final String REGISTRATION_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
     static final String REGISTRATION_TOKEN_MIGRATED_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_MIGRATED_KEY";
 
-    /**
-     * Key for storing the pending channel add tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_ADD_TAG_GROUPS";
-
-    /**
-     * Key for storing the pending channel remove tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.push.PENDING_REMOVE_TAG_GROUPS";
-
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS";
-
 
     //singleton stuff
     private final Context context;
@@ -281,9 +266,9 @@ public class PushManager extends AirshipComponent {
     private final NotificationManagerCompat notificationManagerCompat;
 
     private final JobDispatcher jobDispatcher;
-    private PushManagerJobHandler jobHandler;
+    private final TagGroupRegistrar tagGroupRegistrar;
     private final PushProvider pushProvider;
-    private TagGroupMutationStore tagGroupStore;
+    private PushManagerJobHandler jobHandler;
 
 
     private final Object tagLock = new Object();
@@ -299,20 +284,26 @@ public class PushManager extends AirshipComponent {
      * @param pushProvider The push provider.
      * @hide
      */
-    public PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider pushProvider) {
-        this(context, preferenceDataStore, configOptions, pushProvider, JobDispatcher.shared(context));
+    public PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                       @NonNull AirshipConfigOptions configOptions, @NonNull PushProvider pushProvider,
+                       @NonNull TagGroupRegistrar tagGroupRegistrar) {
+
+        this(context, preferenceDataStore, configOptions, pushProvider, tagGroupRegistrar, JobDispatcher.shared(context));
     }
 
     /**
      * @hide
      */
     @VisibleForTesting
-    PushManager(Context context, PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, PushProvider provider, JobDispatcher dispatcher) {
+    PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
+                @NonNull AirshipConfigOptions configOptions, PushProvider provider,
+                @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
         super(preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
         this.pushProvider = provider;
+        this.tagGroupRegistrar = tagGroupRegistrar;
         this.notificationFactory = DefaultNotificationFactory.newFactory(context, configOptions);
         this.configOptions = configOptions;
         this.notificationManagerCompat = NotificationManagerCompat.from(context);
@@ -321,8 +312,6 @@ public class PushManager extends AirshipComponent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
         }
-
-        this.tagGroupStore = new TagGroupMutationStore(preferenceDataStore, PENDING_TAG_GROUP_MUTATIONS_KEY);
     }
 
     @Override
@@ -331,8 +320,6 @@ public class PushManager extends AirshipComponent {
         if (Logger.logLevel < Log.ASSERT && !UAStringUtil.isEmpty(getChannelId())) {
             Log.d(UAirship.getAppName() + " Channel ID", getChannelId());
         }
-
-        this.tagGroupStore.migrateTagGroups(PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY);
 
         this.migratePushEnabledSettings();
         this.migrateQuietTimeSettings();
@@ -398,7 +385,7 @@ public class PushManager extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (jobHandler == null) {
-            jobHandler = new PushManagerJobHandler(context, airship, preferenceDataStore);
+            jobHandler = new PushManagerJobHandler(context, airship, preferenceDataStore, tagGroupRegistrar);
         }
 
         return jobHandler.performJob(jobInfo);
@@ -904,7 +891,7 @@ public class PushManager extends AirshipComponent {
                     return;
                 }
 
-                tagGroupStore.add(collapsedMutations);
+                tagGroupRegistrar.addMutations(TagGroupRegistrar.CHANNEL, collapsedMutations);
 
                 if (getChannelId() != null) {
                     dispatchUpdateTagGroupsJob();
@@ -1186,14 +1173,6 @@ public class PushManager extends AirshipComponent {
         return pushProvider;
     }
 
-    /**
-     * Gets the pending tag group store.
-     *
-     * @return The pending tag group store.
-     */
-    TagGroupMutationStore getTagGroupStore() {
-        return tagGroupStore;
-    }
 
     /**
      * Check to see if we've seen this ID before. If we have,

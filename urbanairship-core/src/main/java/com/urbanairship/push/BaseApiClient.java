@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
@@ -21,97 +22,14 @@ import java.net.URL;
  */
 abstract class BaseApiClient {
 
-    private static final String AUDIENCE_KEY = "audience";
-
     private final AirshipConfigOptions configOptions;
     private final RequestFactory requestFactory;
+    private final int platform;
 
-    BaseApiClient(@NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+    BaseApiClient(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
+        this.platform = platform;
         this.requestFactory = requestFactory;
         this.configOptions = configOptions;
-    }
-
-    /**
-     * Update the tag groups for the given identifier.
-     *
-     * @param audienceId The audienceId.
-     * @param mutation The tag group mutation.
-     *
-     * @return The response or null if an error occurred.
-     */
-    Response updateTagGroups(@NonNull String audienceId, @NonNull TagGroupsMutation mutation) {
-
-        URL tagUrl = getDeviceUrl(getTagGroupPath());
-        if (tagUrl == null) {
-            Logger.error("Invalid tag URL. Unable to update tagGroups.");
-            return null;
-        }
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .putAll(mutation.toJsonValue().optMap())
-                                 .put(AUDIENCE_KEY, JsonMap.newBuilder()
-                                                           .put(getTagGroupAudienceSelector(), audienceId)
-                                                           .build())
-                                 .build();
-
-
-
-        String tagPayload = payload.toString();
-        Logger.info("Updating tag groups with payload: " + tagPayload);
-
-        Response response = performRequest(getDeviceUrl(getTagGroupPath()), "POST", tagPayload);
-        logTagGroupResponseIssues(response);
-
-        return response;
-    }
-
-    /**
-     * Tag group audience selector.
-     *
-     * @return Tag group audience selector.
-     */
-    protected abstract String getTagGroupAudienceSelector();
-
-    /**
-     * Tag group path.
-     *
-     * @return The tag group API path.
-     */
-    protected abstract String getTagGroupPath();
-
-    /**
-     * Log the response warnings and errors if they exist in the response body.
-     *
-     * @param response The tag group response.
-     */
-    private void logTagGroupResponseIssues(Response response) {
-        if (response == null || response.getResponseBody() == null) {
-            return;
-        }
-
-        String responseBody = response.getResponseBody();
-
-        JsonValue responseJson;
-        try {
-            responseJson = JsonValue.parseString(responseBody);
-        } catch (JsonException e) {
-            Logger.error("Unable to parse tag group response", e);
-            return;
-        }
-
-        if (responseJson.isJsonMap()) {
-            // Check for any warnings in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("warnings")) {
-                for (JsonValue warning : responseJson.getMap().get("warnings").getList()) {
-                    Logger.warn("Tag Groups warnings: " + warning);
-                }
-            }
-
-            // Check for any errors in the response and log them if they exist.
-            if (responseJson.getMap().containsKey("error")) {
-                Logger.error("Tag Groups error: " + responseJson.getMap().get("error"));
-            }
-        }
     }
 
     /**
@@ -149,5 +67,9 @@ abstract class BaseApiClient {
             Logger.error("Invalid URL: " + path, e);
             return null;
         }
+    }
+
+    public int getPlatform() {
+        return platform;
     }
 }

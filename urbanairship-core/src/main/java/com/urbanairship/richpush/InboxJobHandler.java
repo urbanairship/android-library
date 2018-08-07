@@ -84,7 +84,7 @@ class InboxJobHandler {
     private final UAirship airship;
 
     InboxJobHandler(Context context, UAirship airship, PreferenceDataStore dataStore) {
-        this(airship, dataStore, new RequestFactory(), new RichPushResolver(context));
+        this(airship, dataStore, RequestFactory.DEFAULT_REQUEST_FACTORY, new RichPushResolver(context));
     }
 
     @VisibleForTesting

@@ -2,6 +2,7 @@
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.Logger;
@@ -40,6 +41,7 @@ class NamedUserJobHandler {
     private final NamedUser namedUser;
     private final PushManager pushManager;
     private final PreferenceDataStore dataStore;
+    private final TagGroupRegistrar tagGroupRegistrar;
 
     /**
      * Default constructor.
@@ -47,16 +49,17 @@ class NamedUserJobHandler {
      * @param airship The airship instance.
      * @param dataStore The preference data store.
      */
-    NamedUserJobHandler(UAirship airship, PreferenceDataStore dataStore) {
-        this(airship, dataStore, new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
+    NamedUserJobHandler(@NonNull UAirship airship, @NonNull PreferenceDataStore dataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+        this(airship, dataStore, tagGroupRegistrar, new NamedUserApiClient(airship.getPlatformType(), airship.getAirshipConfigOptions()));
     }
 
     @VisibleForTesting
-    NamedUserJobHandler(UAirship airship, PreferenceDataStore dataStore,  NamedUserApiClient client) {
+    NamedUserJobHandler(@NonNull UAirship airship, @NonNull PreferenceDataStore dataStore, @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull NamedUserApiClient client) {
         this.dataStore = dataStore;
         this.client = client;
         this.namedUser = airship.getNamedUser();
         this.pushManager = airship.getPushManager();
+        this.tagGroupRegistrar = tagGroupRegistrar;
     }
 
     /**
@@ -163,7 +166,7 @@ class NamedUserJobHandler {
             return JobInfo.JOB_FINISHED;
         }
 
-        if (TagUtils.updateTagGroups(namedUser.getTagGroupStore(), client, namedUserId)) {
+        if (tagGroupRegistrar.uploadMutations(TagGroupRegistrar.NAMED_USER, namedUserId)) {
             return JobInfo.JOB_FINISHED;
         }
 

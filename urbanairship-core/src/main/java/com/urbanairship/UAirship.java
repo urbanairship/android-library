@@ -34,6 +34,7 @@ import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.push.NamedUser;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.richpush.RichPushInbox;
@@ -657,10 +658,14 @@ public class UAirship {
         this.locationManager = new UALocationManager(application, preferenceDataStore, ActivityMonitor.shared(application));
         components.add(this.locationManager);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider);
+
+        TagGroupRegistrar tagGroupRegistrar = new TagGroupRegistrar(platform, airshipConfigOptions, preferenceDataStore);
+        tagGroupRegistrar.migrateKeys();
+
+        this.pushManager = new PushManager(application, preferenceDataStore, airshipConfigOptions, pushProvider, tagGroupRegistrar);
         components.add(this.pushManager);
 
-        this.namedUser = new NamedUser(application, preferenceDataStore);
+        this.namedUser = new NamedUser(application, preferenceDataStore, tagGroupRegistrar);
         components.add(this.namedUser);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, this.pushManager, preferenceDataStore, ActivityMonitor.shared(application));

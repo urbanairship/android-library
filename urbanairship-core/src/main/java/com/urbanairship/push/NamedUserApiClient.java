@@ -18,23 +18,20 @@ import java.net.URL;
  */
 class NamedUserApiClient extends BaseApiClient {
 
-    private static final String TAG_GROUP_PATH = "api/named_users/tags/";
     private static final String ASSOCIATE_PATH = "api/named_users/associate/";
     private static final String DISASSOCIATE_PATH = "api/named_users/disassociate/";
 
     static final String CHANNEL_KEY = "channel_id";
     static final String DEVICE_TYPE_KEY = "device_type";
     static final String NAMED_USER_ID_KEY = "named_user_id";
-    private final int platform;
 
     NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
-        this(platform, configOptions, new RequestFactory());
+        this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
     NamedUserApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(configOptions, requestFactory);
-        this.platform = platform;
+        super(platform, configOptions, requestFactory);
     }
 
     /**
@@ -77,7 +74,7 @@ class NamedUserApiClient extends BaseApiClient {
      * @return The device type string.
      */
     String getDeviceType() {
-        switch (platform) {
+        switch (getPlatform()) {
             case UAirship.AMAZON_PLATFORM:
                 return "amazon";
 
@@ -85,15 +82,5 @@ class NamedUserApiClient extends BaseApiClient {
             default:
                 return  "android";
         }
-    }
-
-    @Override
-    protected String getTagGroupAudienceSelector() {
-        return NAMED_USER_ID_KEY;
-    }
-
-    @Override
-    protected String getTagGroupPath() {
-        return TAG_GROUP_PATH;
     }
 }

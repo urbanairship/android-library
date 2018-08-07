@@ -19,20 +19,15 @@ import java.net.URL;
 class ChannelApiClient extends BaseApiClient {
 
     static final String CHANNEL_CREATION_PATH = "api/channels/";
-    private static final String CHANNEL_TAGS_PATH = "api/channels/tags/";
 
-    private static final String ANDROID_CHANNEL_KEY = "android_channel";
-    private static final String AMAZON_CHANNEL_KEY = "amazon_channel";
-    private final int platform;
 
     ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions) {
-        this(platform, configOptions, new RequestFactory());
+        this(platform, configOptions, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     @VisibleForTesting
     ChannelApiClient(@UAirship.Platform int platform, AirshipConfigOptions configOptions, @NonNull RequestFactory requestFactory) {
-        super(configOptions, requestFactory);
-        this.platform = platform;
+        super(platform, configOptions, requestFactory);
     }
 
     /**
@@ -58,22 +53,5 @@ class ChannelApiClient extends BaseApiClient {
         String payload = channelPayload.toJsonValue().toString();
         Logger.verbose("ChannelApiClient - Updating channel with payload: " + payload);
         return performRequest(channelLocation, "PUT", payload);
-    }
-
-    @Override
-    protected String getTagGroupAudienceSelector() {
-        switch (platform) {
-            case UAirship.AMAZON_PLATFORM:
-                return AMAZON_CHANNEL_KEY;
-
-            case UAirship.ANDROID_PLATFORM:
-            default:
-                return ANDROID_CHANNEL_KEY;
-        }
-    }
-
-    @Override
-    protected String getTagGroupPath() {
-        return CHANNEL_TAGS_PATH;
     }
 }

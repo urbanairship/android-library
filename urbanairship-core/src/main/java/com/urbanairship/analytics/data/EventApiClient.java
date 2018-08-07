@@ -52,7 +52,7 @@ public class EventApiClient {
      * @param context The application context.
      */
     public EventApiClient(@NonNull Context context) {
-        this(context, new RequestFactory());
+        this(context, RequestFactory.DEFAULT_REQUEST_FACTORY);
     }
 
     /**

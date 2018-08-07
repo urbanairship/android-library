@@ -12,6 +12,11 @@ import java.net.URL;
 public class RequestFactory {
 
     /**
+     * Default request factory.
+     */
+    public static RequestFactory DEFAULT_REQUEST_FACTORY = new RequestFactory();
+
+    /**
      * Creates the request.
      *
      * @param requestMethod The request method string.

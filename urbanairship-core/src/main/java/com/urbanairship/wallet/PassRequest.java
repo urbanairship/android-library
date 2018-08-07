@@ -84,7 +84,7 @@ public class PassRequest {
      * @param builder The pass request builder instance.
      */
     PassRequest(Builder builder) {
-        this(builder, new RequestFactory(), DEFAULT_REQUEST_EXECUTOR);
+        this(builder, RequestFactory.DEFAULT_REQUEST_FACTORY, DEFAULT_REQUEST_EXECUTOR);
     }
 
     /**

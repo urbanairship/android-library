@@ -38,31 +38,15 @@ public class NamedUser extends AirshipComponent {
     private static final String NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY";
 
     /**
-     * Key for storing the pending named user add tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_ADD_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_ADD_TAG_GROUPS_KEY";
-
-    /**
-     * Key for storing the pending named user remove tags changes in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_REMOVE_TAG_GROUPS_KEY = "com.urbanairship.nameduser.PENDING_REMOVE_TAG_GROUPS_KEY";
-
-    /**
-     * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
-     */
-    static final String PENDING_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY";
-
-    /**
      * The maximum length of the named user ID string.
      */
     private static final int MAX_NAMED_USER_ID_LENGTH = 128;
 
     private final PreferenceDataStore preferenceDataStore;
-    private final Context context;
     private final Object lock = new Object();
     private final JobDispatcher jobDispatcher;
+    private TagGroupRegistrar tagGroupRegistrar;
     private NamedUserJobHandler namedUserJobHandler;
-    private final TagGroupMutationStore tagGroupStore;
 
     /**
      * Creates a NamedUser.
@@ -70,26 +54,24 @@ public class NamedUser extends AirshipComponent {
      * @param context The application context.
      * @param preferenceDataStore The preferences data store.
      */
-    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {
-        this(context, preferenceDataStore, JobDispatcher.shared(context));
+    public NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar) {
+        this(preferenceDataStore, tagGroupRegistrar, JobDispatcher.shared(context));
     }
 
     /**
      * @hide
      */
     @VisibleForTesting
-    NamedUser(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, JobDispatcher dispatcher) {
+    NamedUser(@NonNull PreferenceDataStore preferenceDataStore, @NonNull TagGroupRegistrar tagGroupRegistrar, @NonNull JobDispatcher dispatcher) {
         super(preferenceDataStore);
-        this.context = context.getApplicationContext();
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = dispatcher;
-        this.tagGroupStore = new TagGroupMutationStore(preferenceDataStore, PENDING_TAG_GROUP_MUTATIONS_KEY);
+        this.tagGroupRegistrar = tagGroupRegistrar;
     }
 
     @Override
     protected void init() {
         super.init();
-        tagGroupStore.migrateTagGroups(PENDING_ADD_TAG_GROUPS_KEY, PENDING_REMOVE_TAG_GROUPS_KEY);
 
         // Start named user update
         dispatchNamedUserUpdateJob();
@@ -109,7 +91,7 @@ public class NamedUser extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
         if (namedUserJobHandler == null) {
-            namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore);
+            namedUserJobHandler = new NamedUserJobHandler(airship, preferenceDataStore, tagGroupRegistrar);
         }
 
         return namedUserJobHandler.performJob(jobInfo);
@@ -164,7 +146,7 @@ public class NamedUser extends AirshipComponent {
                 updateChangeToken();
 
                 // When named user ID change, clear pending named user tags.
-                tagGroupStore.clear();
+                tagGroupRegistrar.clearMutations(TagGroupRegistrar.NAMED_USER);
 
                 dispatchNamedUserUpdateJob();
             } else {
@@ -183,7 +165,7 @@ public class NamedUser extends AirshipComponent {
             @Override
             protected void onApply(List<TagGroupsMutation> collapsedMutations) {
                 if (!collapsedMutations.isEmpty()) {
-                    tagGroupStore.add(collapsedMutations);
+                    tagGroupRegistrar.addMutations(TagGroupRegistrar.NAMED_USER, collapsedMutations);
                     dispatchUpdateTagGroupsJob();
                 }
             }
@@ -244,14 +226,5 @@ public class NamedUser extends AirshipComponent {
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
-    }
-
-    /**
-     * Gets the pending tag group store.
-     *
-     * @return The pending tag group store.
-     */
-    TagGroupMutationStore getTagGroupStore() {
-        return tagGroupStore;
     }
 }
