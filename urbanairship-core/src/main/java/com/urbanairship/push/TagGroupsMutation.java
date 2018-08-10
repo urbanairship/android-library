@@ -53,7 +53,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to add.
      * @return Tag group mutation.
      */
-    static TagGroupsMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    public static TagGroupsMutation newAddTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
@@ -67,7 +67,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to remove.
      * @return Tag group mutation.
      */
-    static TagGroupsMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    public static TagGroupsMutation newRemoveTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
@@ -81,7 +81,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param tags Tags to set.
      * @return Tag group mutation.
      */
-    static TagGroupsMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
+    public static TagGroupsMutation newSetTagsMutation(@NonNull String group, @NonNull Set<String> tags) {
         HashMap<String, Set<String>> tagMap = new HashMap<>();
         tagMap.put(group, tags);
 
@@ -95,7 +95,7 @@ public class TagGroupsMutation implements JsonSerializable {
      * @param pendingRemoveTags Map of pending remove tags.
      * @return Tag group mutation.
      */
-    static TagGroupsMutation newAddRemoveMutation(Map<String, Set<String>> pendingAddTags, Map<String, Set<String>> pendingRemoveTags) {
+    public static TagGroupsMutation newAddRemoveMutation(Map<String, Set<String>> pendingAddTags, Map<String, Set<String>> pendingRemoveTags) {
         Map<String, Set<String>> normalizedPendingAddTags = new HashMap<>();
         Map<String, Set<String>> normalizedPendingRemoveTags = new HashMap<>();
 
@@ -335,5 +335,36 @@ public class TagGroupsMutation implements JsonSerializable {
         result = 31 * result + (removeTags != null ? removeTags.hashCode() : 0);
         result = 31 * result + (setTags != null ? setTags.hashCode() : 0);
         return result;
+    }
+
+    public void apply(Map<String, Set<String>> tagGroups) {
+        // Add tags
+        if (addTags != null) {
+            for (Map.Entry<String, Set<String>> entry : addTags.entrySet()) {
+                if (!tagGroups.containsKey(entry.getKey())) {
+                   tagGroups.put(entry.getKey(), new HashSet<String>());
+                }
+
+                tagGroups.get(entry.getKey()).addAll(entry.getValue());
+            }
+        }
+
+        // Remove tags
+        if (removeTags != null) {
+            for (Map.Entry<String, Set<String>> entry : removeTags.entrySet()) {
+                if (!tagGroups.containsKey(entry.getKey())) {
+                    continue;
+                }
+
+                tagGroups.get(entry.getKey()).removeAll(entry.getValue());
+            }
+        }
+
+        // Set tags
+        if (setTags != null) {
+            for (Map.Entry<String, Set<String>> entry : setTags.entrySet()) {
+                tagGroups.put(entry.getKey(), entry.getValue());
+            }
+        }
     }
 }

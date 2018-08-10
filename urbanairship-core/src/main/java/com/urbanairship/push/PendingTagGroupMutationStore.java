@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * Helper class to manage pending tag group mutations.
  */
-class TagGroupMutationStore {
+class PendingTagGroupMutationStore {
 
     private final PreferenceDataStore dataStore;
     private final String storeKey;
@@ -25,7 +25,7 @@ class TagGroupMutationStore {
      * @param dataStore The preference data store.
      * @param storeKey The store key.
      */
-    TagGroupMutationStore(PreferenceDataStore dataStore, String storeKey) {
+    PendingTagGroupMutationStore(PreferenceDataStore dataStore, String storeKey) {
         this.dataStore = dataStore;
         this.storeKey = storeKey;
     }
@@ -103,7 +103,7 @@ class TagGroupMutationStore {
     /**
      * Converts the old tag group store to tag mutations.
      *
-     * @param pendingAddTagsKey The old pending add tags key.
+     * @param pendingAddTagsKey The old pending addPending tags key.
      * @param pendingRemoveTagsKey The old pending remove tags key.
      */
     void migrateTagGroups(String pendingAddTagsKey, String pendingRemoveTagsKey) {

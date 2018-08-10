@@ -19,13 +19,13 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 
-public class TagGroupMutationStoreTest extends BaseTestCase {
+public class PendingTagGroupMutationStoreTest extends BaseTestCase {
 
-    TagGroupMutationStore store;
+    PendingTagGroupMutationStore store;
 
     @Before
     public void setup() {
-        store = new TagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "test");
+        store = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "test");
     }
 
     @Test

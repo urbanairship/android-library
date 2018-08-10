@@ -2,8 +2,10 @@
 
 package com.urbanairship.push;
 
+import android.nfc.Tag;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
@@ -13,15 +15,22 @@ import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.Response;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tag group registrar.
@@ -30,6 +39,19 @@ import java.util.Set;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class TagGroupRegistrar {
+
+    /**
+     * Tag group registrar listener.
+     */
+    public interface Listener {
+
+        /**
+         * Called when a mutation is uploaded.
+         *
+         * @param mutation The mutation.
+         */
+        void onMutationUploaded(@NonNull TagGroupsMutation mutation);
+    }
 
     /**
      * Key for storing the pending tag group mutations in the {@link PreferenceDataStore}.
@@ -62,23 +84,26 @@ public class TagGroupRegistrar {
     public @interface TagGroupType {}
 
     private final TagGroupApiClient client;
-    private final TagGroupMutationStore namedUserStore;
-    private final TagGroupMutationStore channelStore;
+    private final PendingTagGroupMutationStore namedUserStore;
+    private final PendingTagGroupMutationStore channelStore;
+
+    private final List<Listener> listeners = new ArrayList<>();
 
     /**
      * Default constructor.
+     *
      * @param platform The platform.
      * @param configOptions The config options.
      * @param dataStore The data store.
      */
     public TagGroupRegistrar(@UAirship.Platform int platform, @NonNull AirshipConfigOptions configOptions, @NonNull PreferenceDataStore dataStore) {
         this(new TagGroupApiClient(platform, configOptions),
-                new TagGroupMutationStore(dataStore, NAMED_USER_PENDING_TAG_GROUP_MUTATIONS_KEY),
-                new TagGroupMutationStore(dataStore, CHANNEL_PENDING_TAG_GROUP_MUTATIONS_KEY));
+                new PendingTagGroupMutationStore(dataStore, NAMED_USER_PENDING_TAG_GROUP_MUTATIONS_KEY),
+                new PendingTagGroupMutationStore(dataStore, CHANNEL_PENDING_TAG_GROUP_MUTATIONS_KEY));
     }
 
     @VisibleForTesting
-    TagGroupRegistrar(@NonNull TagGroupApiClient client, @NonNull TagGroupMutationStore channelStore, @NonNull TagGroupMutationStore namedUserStore) {
+    TagGroupRegistrar(@NonNull TagGroupApiClient client, @NonNull PendingTagGroupMutationStore channelStore, @NonNull PendingTagGroupMutationStore namedUserStore) {
         this.namedUserStore = namedUserStore;
         this.channelStore = channelStore;
         this.client = client;
@@ -112,7 +137,7 @@ public class TagGroupRegistrar {
      */
     @WorkerThread
     public boolean uploadMutations(@TagGroupType int type, @NonNull String identifier) {
-        TagGroupMutationStore mutationStore = getMutationStore(type);
+        PendingTagGroupMutationStore mutationStore = getMutationStore(type);
 
         while (true) {
             // Collapse mutations before we try to send any updates
@@ -131,12 +156,42 @@ public class TagGroupRegistrar {
                 return false;
             }
 
-            mutationStore.pop();
+            notifyListeners(mutationStore.pop());
             int status = response.getStatus();
             Logger.info("Update tag groups finished with status: " + status);
         }
 
         return true;
+    }
+
+    /**
+     * Adds a listener.
+     *
+     * @param listener The listener.
+     */
+    public void addListener(@NonNull Listener listener) {
+        synchronized (listeners) {
+            this.listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param listener The listener.
+     */
+    public void removeListener(@NonNull Listener listener) {
+        synchronized (listeners) {
+            this.listeners.remove(listener);
+        }
+    }
+
+    private void notifyListeners(TagGroupsMutation mutation) {
+        synchronized (listeners) {
+            for (Listener listener : new ArrayList<>(listeners)) {
+                listener.onMutationUploaded(mutation);
+            }
+        }
     }
 
     /**
@@ -148,12 +203,22 @@ public class TagGroupRegistrar {
     }
 
     /**
+     * Gets the pending tag groups mutations.
+     *
+     * @param type The tag group type.
+     * @return The pending tag groups mutations.
+     */
+    public List<TagGroupsMutation> getPendingMutations(@TagGroupType int type) {
+        return getMutationStore(type).getMutations();
+    }
+
+    /**
      * Helper method to get the mutation store for the specified type.
      *
      * @param type The type.
      * @return The mutation store for the type.
      */
-    private TagGroupMutationStore getMutationStore(@TagGroupType int type) {
+    private PendingTagGroupMutationStore getMutationStore(@TagGroupType int type) {
         switch (type) {
             case CHANNEL:
                 return channelStore;
@@ -162,6 +227,4 @@ public class TagGroupRegistrar {
         }
         throw new IllegalArgumentException("Invalid type");
     }
-
-
 }

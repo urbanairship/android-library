@@ -2,24 +2,21 @@
 
 package com.urbanairship.push;
 
+import android.support.annotation.NonNull;
+
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.http.Response;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -34,16 +31,16 @@ import static org.mockito.Mockito.when;
  */
 public class TagGroupRegistrarTests extends BaseTestCase {
 
-    private TagGroupMutationStore namedUserStore;
-    private TagGroupMutationStore channelStore;
+    private PendingTagGroupMutationStore namedUserStore;
+    private PendingTagGroupMutationStore channelStore;
     private TagGroupApiClient mockClient;
     private TagGroupRegistrar registrar;
 
     @Before
     public void setup() {
         mockClient = mock(TagGroupApiClient.class);
-        namedUserStore = new TagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.named-user");
-        channelStore = new TagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.channel");
+        namedUserStore = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.named-user");
+        channelStore = new PendingTagGroupMutationStore(TestApplication.getApplication().preferenceDataStore, "TagGroupRegistrarTests.channel");
 
         namedUserStore.clear();
         channelStore.clear();
@@ -150,7 +147,11 @@ public class TagGroupRegistrarTests extends BaseTestCase {
         verifyRequest(response, TagGroupRegistrar.CHANNEL, channelStore, true);
     }
 
-    private void verifyRequest(Response response, @TagGroupRegistrar.TagGroupType int type, TagGroupMutationStore store, boolean expectedResult) {
+    private void verifyRequest(Response response, @TagGroupRegistrar.TagGroupType int type, PendingTagGroupMutationStore store, boolean expectedResult) {
+
+        TestListener listener = new TestListener();
+        registrar.addListener(listener);
+
         TagGroupsMutation mutation = TagGroupsMutation.newAddTagsMutation("test", new HashSet<>(Lists.newArrayList("tag1", "tag2")));
         registrar.addMutations(type, Collections.singletonList(mutation));
         assertFalse(store.getMutations().isEmpty());
@@ -159,5 +160,20 @@ public class TagGroupRegistrarTests extends BaseTestCase {
 
         assertEquals(expectedResult, registrar.uploadMutations(type, "identifier"));
         assertEquals(expectedResult, store.getMutations().isEmpty());
+
+        if (expectedResult) {
+            assertEquals(1, listener.mutations.size());
+            assertEquals(mutation, listener.mutations.get(0));
+        }
+        registrar.removeListener(listener);
+    }
+
+    private static class TestListener implements TagGroupRegistrar.Listener {
+        List<TagGroupsMutation> mutations = new ArrayList<>();
+
+        @Override
+        public void onMutationUploaded(@NonNull TagGroupsMutation mutation) {
+            mutations.add(mutation);
+        }
     }
 }
