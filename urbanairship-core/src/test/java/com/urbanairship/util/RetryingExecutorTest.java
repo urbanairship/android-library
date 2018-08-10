@@ -56,6 +56,44 @@ public class RetryingExecutorTest extends BaseTestCase {
         assertEquals(1, operation.runCount);
     }
 
+
+    @Test
+    public void testExecuteChainedOperations() {
+        TestOperation fistOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+        TestOperation secondOperation = new TestOperation(RetryingExecutor.RESULT_RETRY);
+        TestOperation thirdOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+
+        executor.execute(fistOperation, secondOperation, thirdOperation);
+        assertEquals(1, fistOperation.runCount);
+        assertEquals(1, secondOperation.runCount);
+        assertEquals(0, thirdOperation.runCount);
+
+        secondOperation.result = RetryingExecutor.RESULT_FINISHED;
+        advanceLooper(30000);
+
+        assertEquals(1, fistOperation.runCount);
+        assertEquals(2, secondOperation.runCount);
+        assertEquals(1, thirdOperation.runCount);
+    }
+
+
+    @Test
+    public void testExecuteChainedOperationsCancel() {
+        TestOperation fistOperation = new TestOperation(RetryingExecutor.RESULT_CANCEL);
+        TestOperation secondOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+        TestOperation thirdOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+
+        executor.execute(fistOperation, secondOperation, thirdOperation);
+        assertEquals(1, fistOperation.runCount);
+        assertEquals(0, secondOperation.runCount);
+        assertEquals(0, thirdOperation.runCount);
+
+        advanceLooper(30000);
+        assertEquals(1, fistOperation.runCount);
+        assertEquals(0, secondOperation.runCount);
+        assertEquals(0, thirdOperation.runCount);
+    }
+
     @Test
     public void testExecuteOperationRetry() {
         TestOperation operation = new TestOperation(RetryingExecutor.RESULT_RETRY);

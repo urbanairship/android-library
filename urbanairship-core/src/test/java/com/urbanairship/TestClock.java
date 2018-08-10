@@ -5,7 +5,7 @@ import com.urbanairship.util.Clock;
 
 public class TestClock extends Clock {
 
-    public long currentTimeMillis = 0;
+    public long currentTimeMillis = System.currentTimeMillis();
 
     @Override
     public long currentTimeMillis() {

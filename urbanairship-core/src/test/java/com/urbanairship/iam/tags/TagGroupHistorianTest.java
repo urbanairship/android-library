@@ -62,7 +62,6 @@ public class TagGroupHistorianTest extends BaseTestCase {
 
 
         clock = new TestClock();
-        clock.currentTimeMillis = System.currentTimeMillis();
 
         historian = new TagGroupHistorian(mockRegistrar, TestApplication.getApplication().preferenceDataStore, clock);
         historian.init();

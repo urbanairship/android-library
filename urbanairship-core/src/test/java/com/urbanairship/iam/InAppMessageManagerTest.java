@@ -18,6 +18,8 @@ import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.AutomationEngine;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.custom.CustomDisplayContent;
+import com.urbanairship.iam.tags.TagGroupManager;
+import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.remotedata.RemoteData;
@@ -34,9 +36,12 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
+import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +54,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -73,6 +77,8 @@ public class InAppMessageManagerTest extends BaseTestCase {
     private ActionRunRequestFactory actionRunRequestFactory;
     private InAppMessageListener mockListener;
 
+    private TagGroupManager mockTagManager;
+
     @Before
     public void setup() {
         activityMonitor = new TestActivityMonitor();
@@ -82,6 +88,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         mockListener = mock(InAppMessageListener.class);
         mainLooper = Shadows.shadowOf(Looper.getMainLooper());
         actionRunRequestFactory = mock(ActionRunRequestFactory.class);
+        mockTagManager = mock(TagGroupManager.class);
 
         ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
@@ -108,7 +115,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         });
 
         manager = new InAppMessageManager(TestApplication.getApplication().preferenceDataStore, mockAnalytics, activityMonitor,
-                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory);
+                executor, mockDriver, mockEngine, mockRemoteData, UAirship.shared().getPushManager(), actionRunRequestFactory, mockTagManager);
 
         schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
                                                                                    .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
@@ -133,7 +140,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Finish init on the main thread
         mainLooper.runToEndOfTasks();
     }
-
 
     @Test
     public void testIsMessageReady() {
@@ -392,8 +398,6 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Advance the looper to make sure its not called again
         ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
         mainLooper.runToEndOfTasks();
-
-
     }
 
     @Test
@@ -417,12 +421,44 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Prepare the schedule
         driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
-        assertTrue(driverListener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
-        driverListener.onDisplay(schedule.getId());
 
-        // Verify the schedule is finished
-        verify(mockDriver).displayFinished("schedule id");
-        verifyZeroInteractions(mockAdapter);
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_SKIP_PENALIZE);
+    }
+
+    @Test
+    public void testAudienceConditionCheckWithTagGroups() {
+        when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
+
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+
+        Map<String, Set<String>> tagGroups = new HashMap<>();
+        tagGroups.put("expected group", tagSet("expected tag"));
+
+        Audience audience = Audience.newBuilder()
+                                    .setTagSelector(TagSelector.tag("expected tag", "expected group"))
+                                    .build();
+
+
+        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
+                                                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                   .setMessage(InAppMessage.newBuilder()
+                                                                                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                                           .setId("message id")
+                                                                                                           .setAudience(audience)
+                                                                                                           .build())
+                                                                                   .build());
+
+
+        when(mockTagManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
+
+        // Prepare the schedule
+        driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        // Verify its prepared
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_CONTINUE);
     }
 
     @Test

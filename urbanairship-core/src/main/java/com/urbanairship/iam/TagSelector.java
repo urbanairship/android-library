@@ -3,6 +3,8 @@
 package com.urbanairship.iam;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
@@ -18,12 +20,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Tag selector.
  */
 public class TagSelector implements JsonSerializable {
+
+    public static final Map<String, Set<String>> EMPTY_TAG_GROUPS = Collections.unmodifiableMap(new HashMap<String, Set<String>>());
 
     /*
      * <tag_selector>   := <tag> | <not> | <and> | <or>
@@ -36,13 +44,17 @@ public class TagSelector implements JsonSerializable {
     @StringDef({ OR, AND, NOT, TAG })
     @Retention(RetentionPolicy.SOURCE)
     private @interface Type {}
+
     private static final String OR = "or";
     private static final String AND = "and";
     private static final String NOT = "not";
     private static final String TAG = "tag";
+    private static final String GROUP = "group";
 
     private String type;
     private String tag;
+    private String group;
+
     private List<TagSelector> selectors;
 
     /**
@@ -50,9 +62,10 @@ public class TagSelector implements JsonSerializable {
      *
      * @param tag The tag.
      */
-    private TagSelector(String tag) {
+    private TagSelector(@NonNull String tag, @Nullable String group) {
         this.type = TAG;
         this.tag = tag;
+        this.group = group;
     }
 
     /**
@@ -86,7 +99,6 @@ public class TagSelector implements JsonSerializable {
         return new TagSelector(AND, Arrays.asList(selectors));
     }
 
-
     /**
      * Creates an OR tag selector.
      *
@@ -104,7 +116,7 @@ public class TagSelector implements JsonSerializable {
      * @return The OR tag selector.
      */
     public static TagSelector or(@Size(min = 1) TagSelector... selectors) {
-        return new TagSelector(OR,  Arrays.asList(selectors));
+        return new TagSelector(OR, Arrays.asList(selectors));
     }
 
     /**
@@ -124,7 +136,19 @@ public class TagSelector implements JsonSerializable {
      * @return A tag selector.
      */
     public static TagSelector tag(String tag) {
-        return new TagSelector(tag);
+        return new TagSelector(tag, (String) null);
+    }
+
+    /**
+     * Creates a tag selector that checks for tag in a group.
+     *
+     * @param tag The tag.
+     * @param group The group.
+     * @return A tag selector.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    static TagSelector tag(String tag, String group) {
+        return new TagSelector(tag, group);
     }
 
     /**
@@ -142,9 +166,10 @@ public class TagSelector implements JsonSerializable {
             if (tag == null) {
                 throw new JsonException("Tag selector expected a tag: " + jsonMap.opt(TAG));
             }
-            return tag(tag);
-        }
 
+            String group = jsonMap.opt(GROUP).getString();
+            return tag(tag, group);
+        }
 
         if (jsonMap.containsKey(OR)) {
             JsonList selectors = jsonMap.opt(OR).getList();
@@ -202,7 +227,8 @@ public class TagSelector implements JsonSerializable {
 
         switch (type) {
             case TAG:
-                builder.put(type, tag);
+                builder.put(type, tag)
+                       .putOpt(GROUP, group);
                 break;
 
             case NOT:
@@ -226,16 +252,36 @@ public class TagSelector implements JsonSerializable {
      * @return {@code true} if the tag selector matches the tags, otherwise {@code false}.
      */
     public boolean apply(@NonNull Collection<String> tags) {
+        return apply(tags, EMPTY_TAG_GROUPS);
+    }
+
+
+    /**
+     * Applies the tag selector to a collection of tags.
+     *
+     * @param tags The collection of tags.
+     * @param tagGroups The collection of tag groups.
+     * @return {@code true} if the tag selector matches the tags, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public boolean apply(@NonNull Collection<String> tags, @NonNull Map<String, Set<String>> tagGroups) {
         switch (type) {
             case TAG:
-                return tags.contains(tag);
+
+                if (group != null) {
+                    Set<String> groupTags = tagGroups.get(group);
+                    return groupTags != null && groupTags.contains(tag);
+                } else {
+                    return tags.contains(tag);
+                }
 
             case NOT:
-                return !selectors.get(0).apply(tags);
+                return !selectors.get(0).apply(tags, tagGroups);
 
             case AND:
                 for (TagSelector selector : selectors) {
-                    if (!selector.apply(tags)) {
+                    if (!selector.apply(tags, tagGroups)) {
                         return false;
                     }
                 }
@@ -245,12 +291,76 @@ public class TagSelector implements JsonSerializable {
             case OR:
             default:
                 for (TagSelector selector : selectors) {
-                    if (selector.apply(tags)) {
+                    if (selector.apply(tags, tagGroups)) {
                         return true;
                     }
                 }
 
                 return false;
+        }
+    }
+
+
+    /**
+     * Checks if the selector defines any tag groups.
+     *
+     * @return {@code true} if the selector defines a tag group, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public boolean containsTagGroups() {
+        if (group != null && tag != null) {
+            return true;
+        }
+
+        if (selectors != null) {
+            for (TagSelector selector : selectors) {
+                if (selector.containsTagGroups()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets any tag groups defined by the selector.
+     *
+     * @return The selector's tag groups.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @NonNull
+    public Map<String, Set<String>> getTagGroups() {
+        Map<String, Set<String>> tagGroups = new HashMap<>();
+
+        if (group != null && tag != null) {
+            HashSet<String> tags = new HashSet<>();
+            tags.add(tag);
+            tagGroups.put(group, tags);
+            return tagGroups;
+        }
+
+        if (selectors != null) {
+            for (TagSelector selector : selectors) {
+                merge(tagGroups, selector.getTagGroups());
+            }
+        }
+
+        return tagGroups;
+    }
+
+    private void merge(@NonNull Map<String, Set<String>> first, @NonNull Map<String, Set<String>> second) {
+        if (second.isEmpty()) {
+            return;
+        }
+
+        for (Map.Entry<String, Set<String>> entry : second.entrySet()) {
+            if (first.containsKey(entry.getKey())) {
+                first.get(entry.getKey()).addAll(entry.getValue());
+            } else {
+                first.put(entry.getKey(), entry.getValue());
+            }
         }
     }
 
@@ -263,21 +373,25 @@ public class TagSelector implements JsonSerializable {
             return false;
         }
 
-        TagSelector selector = (TagSelector) o;
+        TagSelector that = (TagSelector) o;
 
-        if (type != null ? !type.equals(selector.type) : selector.type != null) {
+        if (type != null ? !type.equals(that.type) : that.type != null) {
             return false;
         }
-        if (tag != null ? !tag.equals(selector.tag) : selector.tag != null) {
+        if (tag != null ? !tag.equals(that.tag) : that.tag != null) {
             return false;
         }
-        return selectors != null ? selectors.equals(selector.selectors) : selector.selectors == null;
+        if (group != null ? !group.equals(that.group) : that.group != null) {
+            return false;
+        }
+        return selectors != null ? selectors.equals(that.selectors) : that.selectors == null;
     }
 
     @Override
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
+        result = 31 * result + (group != null ? group.hashCode() : 0);
         result = 31 * result + (selectors != null ? selectors.hashCode() : 0);
         return result;
     }

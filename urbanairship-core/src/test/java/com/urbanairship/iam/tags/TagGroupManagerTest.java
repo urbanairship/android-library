@@ -60,7 +60,6 @@ public class TagGroupManagerTest extends BaseTestCase {
     @Before
     public void setup() {
         clock = new TestClock();
-        clock.currentTimeMillis = System.currentTimeMillis();
 
         requestTags = new HashMap<>();
         requestTags.put("some-group", tagSet("cool", "story"));

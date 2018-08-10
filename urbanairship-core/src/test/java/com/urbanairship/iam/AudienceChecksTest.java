@@ -21,9 +21,12 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import static com.urbanairship.iam.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -151,6 +154,30 @@ public class AudienceChecksTest extends BaseTestCase {
 
         tags.add("expected tag");
         assertTrue(AudienceChecks.checkAudience(context, audience));
+    }
+
+    @Test
+    public void testTagSelectorWithGroups() {
+        final Set<String> tags = new HashSet<>();
+        when(pushManager.getTags()).then(new Answer<Set<String>>() {
+            @Override
+            public Set<String> answer(InvocationOnMock invocation) throws Throwable {
+                return tags;
+            }
+        });
+
+
+        Audience audience = Audience.newBuilder()
+                                    .setTagSelector(TagSelector.tag("expected tag", "expected group"))
+                                    .build();
+
+
+        Map<String, Set<String>> tagGroups = new HashMap<>();
+
+        assertFalse(AudienceChecks.checkAudience(context, audience, tagGroups));
+
+        tagGroups.put("expected group", tagSet("expected tag"));
+        assertTrue(AudienceChecks.checkAudience(context, audience, tagGroups));
     }
 
     @Test

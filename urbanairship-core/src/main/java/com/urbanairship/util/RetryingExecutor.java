@@ -11,6 +11,7 @@ import android.support.annotation.RestrictTo;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -33,7 +34,7 @@ public class RetryingExecutor implements Executor {
      */
     private static final long MAX_BACKOFF_MILLIS = 300000; // 5 minutes
 
-    @IntDef({ RESULT_FINISHED, RESULT_RETRY })
+    @IntDef({ RESULT_FINISHED, RESULT_RETRY, RESULT_CANCEL })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Result {}
 
@@ -48,6 +49,12 @@ public class RetryingExecutor implements Executor {
      * needs to be retried.
      */
     public static final int RESULT_RETRY = 1;
+
+    /**
+     * When executing an {@link Operation}, it notifies the executor that the operation
+     * is finished and any dependent operations should be skipped.
+     */
+    public static final int RESULT_CANCEL = 2;
 
     private final Handler scheduler;
     private final Executor executor;
@@ -83,12 +90,21 @@ public class RetryingExecutor implements Executor {
     }
 
     /**
-     * Executes an operation.
+     * Executes a single operation.
      *
      * @param operation The operation to execute.
      */
     public void execute(@NonNull Operation operation) {
         execute(operation, INITIAL_BACKOFF_MILLIS);
+    }
+
+    /**
+     * Executes a list of operations in order.
+     *
+     * @param operations The operations to execute.
+     */
+    public void execute(Operation... operations) {
+        execute(new ChainedOperations(Arrays.asList(operations)));
     }
 
     /**
@@ -156,10 +172,46 @@ public class RetryingExecutor implements Executor {
 
         /**
          * Called to run the operation.
+         *
          * @return {@link #RESULT_RETRY} to retry or {@link #RESULT_FINISHED} to finish the operation.
          */
         @Result
         int run();
+    }
+
+    /**
+     * Operation that runs a list of operations in order. If any of the operations
+     * cancels, the rest of the operations will be cancelled.
+     */
+    private class ChainedOperations implements Operation {
+
+        private final List<? extends Operation> operations;
+
+        ChainedOperations(@NonNull List<? extends Operation> operations) {
+            this.operations = new ArrayList<>(operations);
+        }
+
+        @Override
+        public int run() {
+            if (operations.isEmpty()) {
+                return RESULT_FINISHED;
+            }
+
+            int result = operations.get(0).run();
+
+            switch (result) {
+                case RESULT_RETRY:
+                    return RESULT_RETRY;
+                case RESULT_CANCEL:
+                    return RESULT_CANCEL;
+                case RESULT_FINISHED:
+                default:
+                    operations.remove(0);
+                    execute(this);
+                    return RESULT_FINISHED;
+            }
+        }
+
     }
 }
 

@@ -28,7 +28,7 @@ public  class TagGroupResult {
     @NonNull
     public final Map<String, Set<String>> tagGroups;
 
-    TagGroupResult(boolean success, Map<String, Set<String>> tagGroups) {
+    public TagGroupResult(boolean success, Map<String, Set<String>> tagGroups) {
         this.success = success;
         this.tagGroups = tagGroups == null ? Collections.<String, Set<String>>emptyMap() : tagGroups;
     }

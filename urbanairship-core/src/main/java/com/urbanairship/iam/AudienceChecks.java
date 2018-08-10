@@ -3,6 +3,7 @@
 package com.urbanairship.iam;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.v4.os.ConfigurationCompat;
@@ -16,6 +17,8 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Audience checks.
@@ -71,7 +74,19 @@ public abstract class AudienceChecks {
      * @param audience The audience.
      * @return {@code true} if the audience conditions are met, otherwise {@code false}.
      */
-    public static boolean checkAudience(Context context, @Nullable Audience audience) {
+    public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience) {
+        return checkAudience(context, audience, TagSelector.EMPTY_TAG_GROUPS);
+    }
+
+    /**
+     * Checks the audience.
+     *
+     * @param context The application context.
+     * @param audience The audience.
+     * @param tagGroups The channel tag groups.
+     * @return {@code true} if the audience conditions are met, otherwise {@code false}.
+     */
+    public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience, @NonNull Map<String, Set<String>> tagGroups) {
         if (audience == null) {
             return true;
         }
@@ -79,7 +94,6 @@ public abstract class AudienceChecks {
         UAirship airship = UAirship.shared();
         UALocationManager locationManager = airship.getLocationManager();
         PushManager pushManager = airship.getPushManager();
-
 
         // Location opt-in
         if (audience.getLocationOptIn() != null && audience.getLocationOptIn() != locationManager.isOptIn()) {
@@ -98,7 +112,7 @@ public abstract class AudienceChecks {
         }
 
         // Tags
-        if (audience.getTagSelector() != null && !audience.getTagSelector().apply(airship.getPushManager().getTags())) {
+        if (audience.getTagSelector() != null && !audience.getTagSelector().apply(airship.getPushManager().getTags(), tagGroups)) {
             return false;
         }
 
@@ -116,7 +130,7 @@ public abstract class AudienceChecks {
      * @param audience The audience.
      * @return {@code true} if the app version conditions are met or are not defined, otherwise {@code false}.
      */
-    private static boolean isAppVersionConditionMet(Audience audience) {
+    private static boolean isAppVersionConditionMet(@NonNull Audience audience) {
         if (audience.getVersionPredicate() == null) {
             return true;
         }
@@ -132,7 +146,7 @@ public abstract class AudienceChecks {
      * @param audience The audience.
      * @return {@code true} if the locale conditions are met or are not defined, otherwise {@code false}.
      */
-    private static boolean isLocaleConditionMet(Context context, Audience audience) {
+    private static boolean isLocaleConditionMet(@NonNull Context context, @NonNull Audience audience) {
         if (audience.getLanguageTags().isEmpty()) {
             return true;
         }

@@ -684,7 +684,7 @@ public class UAirship {
         components.add(this.remoteConfigManager);
 
         this.inAppMessageManager = new InAppMessageManager(application, preferenceDataStore, airshipConfigOptions,
-                analytics, ActivityMonitor.shared(application), this.remoteData, this.pushManager);
+                analytics, ActivityMonitor.shared(application), this.remoteData, this.pushManager, tagGroupRegistrar);
         components.add(this.inAppMessageManager);
 
         this.legacyInAppMessageManager = new LegacyInAppMessageManager(preferenceDataStore, this.inAppMessageManager, this.analytics);

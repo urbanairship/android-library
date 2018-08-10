@@ -101,7 +101,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, airshipConfigOptions, ActivityMonitor.shared(getApplicationContext()));
         UAirship.sharedAirship.inAppMessageManager = new InAppMessageManager(this, preferenceDataStore,
                 airshipConfigOptions, UAirship.sharedAirship.analytics, ActivityMonitor.shared(getApplicationContext()),
-                UAirship.sharedAirship.remoteData, UAirship.sharedAirship.pushManager);
+                UAirship.sharedAirship.remoteData, UAirship.sharedAirship.pushManager, tagGroupRegistrar);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(preferenceDataStore, UAirship.sharedAirship.remoteData);
 
         ProviderInfo info = new ProviderInfo();
