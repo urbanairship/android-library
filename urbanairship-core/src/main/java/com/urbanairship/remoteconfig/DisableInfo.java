@@ -30,44 +30,6 @@ import java.util.concurrent.TimeUnit;
  */
 class DisableInfo implements JsonSerializable {
 
-    /**
-     * Push module.
-     */
-    public final static String PUSH_MODULE = "push";
-
-    /**
-     * Analytics module.
-     */
-    public final static String ANALYTICS_MODULE = "analytics";
-
-    /**
-     * Message center module.
-     */
-    public final static String MESSAGE_CENTER = "message_center";
-
-    /**
-     * In-app module.
-     */
-    public final static String IN_APP_MODULE = "in_app_v2";
-
-    /**
-     * Automation module.
-     */
-    public final static String AUTOMATION_MODULE = "automation";
-
-    /**
-     * Named user module.
-     */
-    public final static String NAMED_USER_MODULE = "named_user";
-
-    /**
-     * Location module
-     */
-    public final static String LOCATION_MODULE = "location";
-
-    final static List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE,
-            MESSAGE_CENTER, IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE);
-
     // JSON keys
     private static final String MODULES_KEY = "modules";
     private static final String SDK_VERSIONS_KEY = "sdk_versions";
@@ -188,7 +150,7 @@ class DisableInfo implements JsonSerializable {
             Collection<String> modules = new HashSet<>();
 
             if (MODULES_ALL_KEY.equals(jsonMap.opt(MODULES_KEY).getString())) {
-                modules.addAll(ALL_MODULES);
+                modules.addAll(Modules.ALL_MODULES);
             } else {
                 JsonList modulesList = jsonMap.opt(MODULES_KEY).getList();
                 if (modulesList == null) {
@@ -204,7 +166,7 @@ class DisableInfo implements JsonSerializable {
 
                     // Avoid throwing an exception in this case so the SDK does not break
                     // when we introduce new modules in the future
-                    if (ALL_MODULES.contains(module)) {
+                    if (Modules.ALL_MODULES.contains(module)) {
                         modules.add(moduleValue.getString());
                     }
                 }
@@ -353,7 +315,6 @@ class DisableInfo implements JsonSerializable {
             this.appVersionPredicate = predicate;
             return this;
         }
-
 
         /**
          * Builds the DisableInfo.

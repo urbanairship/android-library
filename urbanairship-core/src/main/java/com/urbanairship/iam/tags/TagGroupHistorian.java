@@ -217,6 +217,7 @@ class TagGroupHistorian {
                 for (JsonValue value : jsonList) {
                     try {
                         MutationRecord record = fromJsonValue(value);
+                        records.add(record);
                     } catch (JsonException e) {
                         Logger.error("Failed to parse tag group record.", e);
                     }

@@ -2,10 +2,9 @@
 
 package com.urbanairship.remoteconfig;
 
-import com.urbanairship.AirshipComponent;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
@@ -15,10 +14,15 @@ import com.urbanairship.remotedata.RemoteDataPayload;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -32,54 +36,52 @@ public class RemoteConfigManagerTest extends BaseTestCase {
     private RemoteConfigManager remoteConfigManager;
     private RemoteData remoteData;
     private Subject<Collection<RemoteDataPayload>> updates;
-    private UAirship airship;
+
+    private TestModuleAdapter testModuleAdapter;
 
     @Before
     public void setup() {
+        this.testModuleAdapter = new TestModuleAdapter();
         this.remoteData = mock(RemoteData.class);
         this.updates = Subject.create();
         when(remoteData.payloadsForTypes("app_config", "app_config:android")).thenReturn(updates);
 
-
-        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication().preferenceDataStore, remoteData);
+        this.remoteConfigManager = new RemoteConfigManager(TestApplication.getApplication().preferenceDataStore, remoteData, testModuleAdapter);
         this.remoteConfigManager.init();
-
-        this.airship = UAirship.shared();
     }
 
     @Test
     public void testDisableComponents() {
-        verifyEnabled(airship.getAnalytics(), airship.getAutomation(), airship.getPushManager(),
-                airship.getInAppMessagingManager(), airship.getMessageCenter(), airship.getInbox(),
-                airship.getLocationManager());
-
-        RemoteDataPayload common = createPayload("app_config:common", 0, DisableInfo.ALL_MODULES);
-        RemoteDataPayload platform = createPayload("app_config:android", 0, DisableInfo.PUSH_MODULE);
+        RemoteDataPayload common = createDisablePayload("app_config:common", 0, Modules.ALL_MODULES);
+        RemoteDataPayload platform = createDisablePayload("app_config:android", 0, Modules.PUSH_MODULE);
 
         // Notify the updates
         updates.onNext(Arrays.asList(common, platform));
 
         // Verify they are all disabled
-        verifyDisabled(airship.getAnalytics(), airship.getAutomation(), airship.getPushManager(),
-                airship.getInAppMessagingManager(), airship.getMessageCenter(), airship.getInbox(),
-                airship.getLocationManager());
+        assertTrue(testModuleAdapter.disabledModules.containsAll(Modules.ALL_MODULES));
 
         // Clear common
         common = new RemoteDataPayload("app_config:common", 0, JsonMap.EMPTY_MAP);
+        testModuleAdapter.reset();
 
         // Notify the updates
         updates.onNext(Arrays.asList(common, platform));
 
         // Verify only push is disabled
-        verifyEnabled(airship.getAnalytics(), airship.getAutomation(), airship.getInAppMessagingManager(),
-                airship.getMessageCenter(), airship.getInbox(), airship.getLocationManager());
-        verifyDisabled(airship.getPushManager());
+        List<String> modules = new ArrayList<>(Modules.ALL_MODULES);
+        modules.remove(Modules.PUSH_MODULE);
+
+        assertTrue(testModuleAdapter.enabledModules.containsAll(modules));
+        assertTrue(testModuleAdapter.disabledModules.contains(Modules.PUSH_MODULE));
+        assertTrue(testModuleAdapter.sentConfig.isEmpty());
+
     }
 
     @Test
     public void testRemoteDataForegroundRefreshInterval() {
-        RemoteDataPayload common = createPayload("app_config:common", 9, DisableInfo.ALL_MODULES);
-        RemoteDataPayload platform = createPayload("app_config:android", 10, DisableInfo.PUSH_MODULE);
+        RemoteDataPayload common = createDisablePayload("app_config:common", 9, Modules.ALL_MODULES);
+        RemoteDataPayload platform = createDisablePayload("app_config:android", 10, Modules.PUSH_MODULE);
 
         // Notify the updates
         updates.onNext(Arrays.asList(common, platform));
@@ -88,19 +90,36 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         verify(remoteData).setForegroundRefreshInterval(10000);
     }
 
-    static void verifyEnabled(AirshipComponent... components) {
-        for (AirshipComponent component : components) {
-            assertTrue(component.isComponentEnabled());
-        }
+    @Test
+    public void testRemoteConfig() {
+        JsonMap commonData = JsonMap.newBuilder()
+                                    .put("module_one", "some_config")
+                                    .put("module_two", "some_other_config")
+                                    .build();
+
+        JsonMap androidData = JsonMap.newBuilder()
+                                     .put("module_one", "android")
+                                     .build();
+
+        RemoteDataPayload common = new RemoteDataPayload("app_config:common", System.currentTimeMillis(), commonData);
+        RemoteDataPayload android = new RemoteDataPayload("app_config:android", System.currentTimeMillis(), androidData);
+
+
+        // Notify the updates
+        updates.onNext(Arrays.asList(common, android));
+
+        Map<String, JsonList> config = testModuleAdapter.sentConfig;
+
+        assertEquals(2, config.size());
+
+        JsonList expectedModuleOneConfig = JsonValue.wrapOpt(Arrays.asList("some_config", "android")).optList();
+        assertEquals(expectedModuleOneConfig, config.get("module_one"));
+
+        JsonList expectedModuleTwoConfig = JsonValue.wrapOpt(Arrays.asList("some_other_config")).optList();
+        assertEquals(expectedModuleTwoConfig, config.get("module_two"));
     }
 
-    static void verifyDisabled(AirshipComponent... components) {
-        for (AirshipComponent component : components) {
-            assertFalse("Component not disabled: " + component.getClass().getName(), component.isComponentEnabled());
-        }
-    }
-
-    static RemoteDataPayload createPayload(String type, long refreshInterval, Collection<String> modules) {
+    static RemoteDataPayload createDisablePayload(String type, long refreshInterval, Collection<String> modules) {
         JsonMap disable = JsonMap.newBuilder()
                                  .put("modules", JsonValue.wrapOpt(modules))
                                  .put("remote_data_refresh_interval", refreshInterval)
@@ -113,7 +132,40 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         return new RemoteDataPayload(type, System.currentTimeMillis(), data);
     }
 
-    static RemoteDataPayload createPayload(String type, long refreshInterval, String... modules) {
-        return createPayload(type, refreshInterval, Arrays.asList(modules));
+    static RemoteDataPayload createDisablePayload(String type, long refreshInterval, String... modules) {
+        return createDisablePayload(type, refreshInterval, Arrays.asList(modules));
+    }
+
+    /**
+     * Module adapter that just tracks calls from the data manager to the adapter.
+     */
+    public class TestModuleAdapter extends ModuleAdapter {
+        List<String> enabledModules = new ArrayList<>();
+        List<String> disabledModules = new ArrayList<>();
+        Map<String, JsonList> sentConfig = new HashMap<>();
+
+        @Override
+        public void setComponentEnabled(String module, boolean enabled) {
+            if (enabled) {
+                enabledModules.add(module);
+            } else {
+                disabledModules.add(module);
+            }
+        }
+
+        void reset() {
+            enabledModules.clear();
+            disabledModules.clear();
+            sentConfig.clear();
+        }
+
+        @Override
+        public void onNewConfig(String module, JsonList config) {
+            if (sentConfig.get(module) != null) {
+                throw new IllegalStateException("Make sure to reset test sender between checks");
+            }
+
+            sentConfig.put(module, config);
+        }
     }
 }

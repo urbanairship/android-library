@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IntRange;
@@ -33,6 +34,8 @@ import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
@@ -344,6 +347,21 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         super.tearDown();
         remoteDataSubscriber.cancel();
         automationEngine.stop();
+    }
+
+    @Override
+    public void onNewConfig(@NonNull JsonList configList) {
+        InAppRemoteConfig config = InAppRemoteConfig.fromJsonList(configList);
+        if (config == null) {
+            return;
+        }
+
+        if (config.tagGroupsConfig != null) {
+            tagGroupManager.setEnabled(config.tagGroupsConfig.isEnabled);
+            tagGroupManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
+            tagGroupManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
+            tagGroupManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
+        }
     }
 
     /**

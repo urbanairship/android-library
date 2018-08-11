@@ -4,12 +4,14 @@ package com.urbanairship.remoteconfig;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.VisibleForTesting;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.reactive.Subscription;
@@ -17,11 +19,11 @@ import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -41,6 +43,7 @@ public class RemoteConfigManager extends AirshipComponent {
     private static final String DISABLE_INFO_KEY = "disable_features";
 
     private final RemoteData remoteData;
+    private final ModuleAdapter moduleAdapter;
     private Subscription subscription;
 
     /**
@@ -50,9 +53,16 @@ public class RemoteConfigManager extends AirshipComponent {
      * @param remoteData The remote data manager.
      */
     public RemoteConfigManager(PreferenceDataStore dataStore, RemoteData remoteData) {
+        this(dataStore, remoteData, new ModuleAdapter());
+    }
+
+    @VisibleForTesting
+    public RemoteConfigManager(PreferenceDataStore dataStore, RemoteData remoteData, ModuleAdapter moduleAdapter) {
         super(dataStore);
         this.remoteData = remoteData;
+        this.moduleAdapter = moduleAdapter;
     }
+
 
     @Override
     protected void init() {
@@ -78,18 +88,43 @@ public class RemoteConfigManager extends AirshipComponent {
      * @param remoteDataPayloads The remote data payloads.
      */
     private void processRemoteData(Collection<RemoteDataPayload> remoteDataPayloads) {
+
         List<DisableInfo> disableInfos = new ArrayList<>();
+
+        Map<String, List<JsonValue>> config = new HashMap<>();
+
         for (RemoteDataPayload payload : remoteDataPayloads) {
-            for (JsonValue value : payload.getData().opt(DISABLE_INFO_KEY).optList()) {
-                try {
-                    disableInfos.add(DisableInfo.parseJson(value));
-                } catch (JsonException e) {
-                    Logger.error("Failed to parse remote config: " + payload, e);
+            for (String key : payload.getData().keySet()) {
+
+                JsonValue value = payload.getData().get(key);
+
+                if (DISABLE_INFO_KEY.equals(key)) {
+                    for (JsonValue disableInfoJson : value.optList()) {
+                        try {
+                            disableInfos.add(DisableInfo.parseJson(disableInfoJson));
+                        } catch (JsonException e) {
+                            Logger.error("Failed to parse remote config: " + payload, e);
+                        }
+                    }
+                    continue;
                 }
+
+
+                // Treat it like its config
+                if (!config.containsKey(key)) {
+                    config.put(key, new ArrayList<JsonValue>());
+                }
+                config.get(key).add(value);
             }
         }
 
         apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()));
+
+        // Notify new config
+        for (Map.Entry<String, List<JsonValue>> entry : config.entrySet()) {
+            String module = entry.getKey();
+            moduleAdapter.onNewConfig(module, new JsonList(entry.getValue()));
+        }
     }
 
     @Override
@@ -109,7 +144,7 @@ public class RemoteConfigManager extends AirshipComponent {
 
     private void apply(@NonNull List<DisableInfo> disableInfos) {
         Set<String> disableModules = new HashSet<>();
-        Set<String> enabledModules = new HashSet<>(DisableInfo.ALL_MODULES);
+        Set<String> enabledModules = new HashSet<>(Modules.ALL_MODULES);
 
         long remoteDataInterval = 0;
 
@@ -122,53 +157,16 @@ public class RemoteConfigManager extends AirshipComponent {
 
         // Disable
         for (String module : disableModules) {
-            for (AirshipComponent component : findAirshipComponents(module)) {
-                component.setComponentEnabled(false);
-            }
+            moduleAdapter.setComponentEnabled(module, false);
         }
 
         // Enable
         for (String module : enabledModules) {
-            for (AirshipComponent component : findAirshipComponents(module)) {
-                component.setComponentEnabled(true);
-            }
+            moduleAdapter.setComponentEnabled(module, true);
         }
 
         // Remote data refresh interval
         remoteData.setForegroundRefreshInterval(remoteDataInterval);
-    }
-
-    /**
-     * Maps the disable info module to airship components.
-     *
-     * @param module The module.
-     * @return The matching airship components.
-     */
-    static Collection<? extends AirshipComponent> findAirshipComponents(String module) {
-        switch (module) {
-            case DisableInfo.LOCATION_MODULE:
-                return Collections.singleton(UAirship.shared().getLocationManager());
-
-            case DisableInfo.ANALYTICS_MODULE:
-                return Collections.singleton(UAirship.shared().getAnalytics());
-
-            case DisableInfo.AUTOMATION_MODULE:
-                return Collections.singleton(UAirship.shared().getAutomation());
-
-            case DisableInfo.IN_APP_MODULE:
-                return Collections.singleton(UAirship.shared().getInAppMessagingManager());
-
-            case DisableInfo.MESSAGE_CENTER:
-                return Arrays.asList(UAirship.shared().getInbox(), UAirship.shared().getMessageCenter());
-
-            case DisableInfo.PUSH_MODULE:
-                return Collections.singletonList(UAirship.shared().getPushManager());
-
-            case DisableInfo.NAMED_USER_MODULE:
-                return Collections.singletonList(UAirship.shared().getNamedUser());
-        }
-
-        return Collections.emptySet();
     }
 
 }

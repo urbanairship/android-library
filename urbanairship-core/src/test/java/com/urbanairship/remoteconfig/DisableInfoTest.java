@@ -74,7 +74,7 @@ public class DisableInfoTest extends BaseTestCase {
 
         DisableInfo disableInfo = DisableInfo.parseJson(jsonMap.toJsonValue());
 
-        assertEquals(disableInfo.getDisabledModules(), new HashSet<>(DisableInfo.ALL_MODULES));
+        assertEquals(disableInfo.getDisabledModules(), new HashSet<>(Modules.ALL_MODULES));
         assertEquals(disableInfo.getRemoteDataRefreshInterval(), 0);
     }
 
@@ -92,13 +92,13 @@ public class DisableInfoTest extends BaseTestCase {
                                                .build();
 
         DisableInfo allModules = DisableInfo.newBuilder()
-                                            .setDisabledModules(DisableInfo.ALL_MODULES)
+                                            .setDisabledModules(Modules.ALL_MODULES)
                                             .setRemoteDataInterval(50000)
                                             .setSDKVersionConstraints(Collections.singleton("5.0.+"))
                                             .build();
 
         DisableInfo sdkVersion = DisableInfo.newBuilder()
-                                            .setDisabledModules(DisableInfo.ALL_MODULES)
+                                            .setDisabledModules(Modules.ALL_MODULES)
                                             .setAppVersionPredicate(VersionUtils.createVersionPredicate(ValueMatcher.newNumberRangeMatcher(5.0, 6.0)))
                                             .build();
 

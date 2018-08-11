@@ -8,6 +8,7 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.WorkerThread;
 
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonList;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -147,5 +148,16 @@ public abstract class AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected PreferenceDataStore getDataStore() {
         return dataStore;
+    }
+
+    /**
+     * Called when a component gets new remote config.
+     *
+     * @param value The config.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void onNewConfig(@NonNull JsonList value) {
+
     }
 }

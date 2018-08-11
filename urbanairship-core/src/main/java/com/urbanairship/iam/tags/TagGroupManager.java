@@ -51,17 +51,17 @@ public class TagGroupManager {
     /**
      * Default cache max age time.
      */
-    private static final long DEFAULT_CACHE_MAX_AGE_TIME_MS = 600000; // 10 minutes
+    public static final long DEFAULT_CACHE_MAX_AGE_TIME_MS = 600000; // 10 minutes
 
     /**
      * Default cache stale read time.
      */
-    private static final long DEFAULT_CACHE_STALE_READ_TIME_MS = 3600000; // 1 hour
+    public static final long DEFAULT_CACHE_STALE_READ_TIME_MS = 3600000; // 1 hour
 
     /**
      * Default prefer local data time.
      */
-    private static final long DEFAULT_PREFER_LOCAL_DATA_TIME_MS = 600000; // 10 minutes
+    public static final long DEFAULT_PREFER_LOCAL_DATA_TIME_MS = 600000; // 10 minutes
 
 
     /**
