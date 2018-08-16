@@ -74,4 +74,13 @@ final class AdapterWrapper {
             Logger.error("InAppMessageManager - Exception during onFinish().", e);
         }
     }
+
+    boolean isReady(Activity activity) {
+        try {
+            return adapter.isReady(activity);
+        } catch (Exception e) {
+            Logger.error("InAppMessageManager - Exception during isReady(Activity).", e);
+            return false;
+        }
+    }
 }

@@ -101,6 +101,11 @@ public abstract class MediaDisplayAdapter implements InAppMessageAdapter {
         return message;
     }
 
+    @Override
+    public boolean isReady(@NonNull Activity activity) {
+        return true;
+    }
+
     /**
      * Creates the cache.
      *

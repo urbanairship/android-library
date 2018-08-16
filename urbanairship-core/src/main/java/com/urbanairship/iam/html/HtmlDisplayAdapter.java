@@ -58,6 +58,11 @@ public class HtmlDisplayAdapter implements InAppMessageAdapter {
     }
 
     @Override
+    public boolean isReady(@NonNull Activity activity) {
+        return true;
+    }
+
+    @Override
     public boolean onDisplay(@NonNull Activity activity, boolean isRedisplay, DisplayHandler displayHandler) {
         if (!Network.isConnected()) {
             return false;

@@ -17,7 +17,6 @@ import java.lang.annotation.RetentionPolicy;
  */
 public interface InAppMessageAdapter {
 
-
     /**
      * Factory interface for InAppMessageAdapters.
      */
@@ -63,6 +62,14 @@ public interface InAppMessageAdapter {
     @WorkerThread
     @PrepareResult
     int onPrepare(@NonNull Context context);
+
+    /**
+     * Called before displaying but after the message is prepared.
+     *
+     * @param activity The current resumed activity.
+     * @return {@code true} if the message is ready to be displayed, otherwise {@code false}.
+     */
+    boolean isReady(@NonNull Activity activity);
 
     /**
      * Called to display an in-app message. The display handler's {@link DisplayHandler#requestDisplayLock(Activity)} must

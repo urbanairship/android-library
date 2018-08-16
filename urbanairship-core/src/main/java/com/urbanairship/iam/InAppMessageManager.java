@@ -5,7 +5,6 @@ package com.urbanairship.iam;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IntRange;
@@ -35,7 +34,6 @@ import com.urbanairship.iam.modal.ModalAdapterFactory;
 import com.urbanairship.iam.tags.TagGroupManager;
 import com.urbanairship.iam.tags.TagGroupResult;
 import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.TagGroupRegistrar;
 import com.urbanairship.remotedata.RemoteData;
@@ -123,9 +121,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             isDisplayedLocked = false;
 
             if (!carryOverScheduleIds.isEmpty()) {
-                Activity activity = getResumedActivity();
-                if (activity != null) {
-                    display(activity, carryOverScheduleIds.pop());
+                String scheduleId = carryOverScheduleIds.peek();
+                if (isDisplayReady(scheduleId)) {
+                    display(getResumedActivity(), scheduleId);
                 }
             }
 
@@ -223,7 +221,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             @Override
             @MainThread
             public boolean isMessageReady(@NonNull String scheduleId, @NonNull InAppMessage message) {
-                return isDisplayReady();
+                return isDisplayReady(scheduleId);
             }
 
             @Override
@@ -551,10 +549,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         return getDataStore().getBoolean(ENABLE_KEY, true);
     }
 
-    private boolean isDisplayReady() {
-        // If we have a current schedule ID or carry over schedule IDs we want
-        // to finish displaying them before we display a new iam.
-        if (currentScheduleId != null || !carryOverScheduleIds.isEmpty()) {
+    private boolean isDisplayReady(@NonNull String scheduleId) {
+        // If we have a current schedule ID, do not display the next schedule.
+        if (currentScheduleId != null) {
+            return false;
+        }
+
+        // If its not a carry over schedule ID and we have pending schedules return false.
+        if (!carryOverScheduleIds.isEmpty() && !carryOverScheduleIds.contains(scheduleId)) {
             return false;
         }
 
@@ -568,8 +570,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return false;
         }
 
-        // A resumed activity is required
-        return getResumedActivity() != null;
+        // Make sure we have a current activity
+        Activity currentActivity = getResumedActivity();
+        if (currentActivity == null) {
+            return false;
+        }
+
+        AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
+        return adapterWrapper != null && adapterWrapper.isReady(currentActivity);
     }
 
     /**
@@ -757,7 +765,6 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             }
         }
     }
-
 
     /**
      * Called by the display handler when an in-app message is finished.
