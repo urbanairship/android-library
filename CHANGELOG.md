@@ -3,6 +3,15 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.4.2 - August 7, 2018
+==============================
+
+Minor release to fix proguard warnings with ADM.
+
+Changes
+-------
+- Update proguard rules.
+
 
 Version 9.4.1 - July 26, 2018
 =============================
