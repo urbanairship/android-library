@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface AutomationDriver<T extends Schedule> {
 
-    @IntDef({ RESULT_CONTINUE, RESULT_CANCEL_SCHEDULE, RESULT_SKIP_PENALIZE, RESULT_SKIP_IGNORE })
+    @IntDef({ RESULT_CONTINUE, RESULT_CANCEL, RESULT_PENALIZE, RESULT_SKIP })
     @Retention(RetentionPolicy.SOURCE)
     @interface PrepareResult {}
 
@@ -33,18 +33,18 @@ public interface AutomationDriver<T extends Schedule> {
     /**
      * Indicates that the schedule should be canceled.
      */
-    int RESULT_CANCEL_SCHEDULE = 1;
+    int RESULT_CANCEL = 1;
 
     /**
      * Indicates that the schedule execution should be skipped but the schedule's execution
      * count should be incremented and to handle any execution interval set on the schedule.
      */
-    int RESULT_SKIP_PENALIZE = 2;
+    int RESULT_PENALIZE = 2;
 
     /**
      * Indicates that the schedule execution should be skipped.
      */
-    int RESULT_SKIP_IGNORE = 3;
+    int RESULT_SKIP = 3;
 
     /**
      * The execution callback.

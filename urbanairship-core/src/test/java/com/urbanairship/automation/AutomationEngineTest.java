@@ -608,7 +608,7 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CANCEL_SCHEDULE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_CANCEL);
         runLooperTasks();
 
         // Verify it's cancelled (Deleted)
@@ -628,7 +628,7 @@ public class AutomationEngineTest extends BaseTestCase {
 
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP_IGNORE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP);
         runLooperTasks();
 
         // Verify it's idle
@@ -658,7 +658,7 @@ public class AutomationEngineTest extends BaseTestCase {
         runLooperTasks();
 
         // Finish preparing and executing the schedule
-        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_SKIP_PENALIZE);
+        driver.prepareCallbackMap.get(schedule.getId()).onFinish(AutomationDriver.RESULT_PENALIZE);
         runLooperTasks();
 
         // Verify it's finished

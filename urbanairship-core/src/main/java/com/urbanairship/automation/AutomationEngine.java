@@ -39,10 +39,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -103,9 +101,9 @@ public class AutomationEngine<T extends Schedule> {
          After the callback, it will move to either (in order):
             - STATE_FINISHED: If the schedule has expired.
             - STATE_FINISHED: If the adapter's prepare results is RESULT_CANCEL.
-            - STATE_FINISHED: If the adapter's prepare result is RESULT_SKIP_PENALIZE and the schedule is at its limit.
-            - STATE_PAUSED: If the adapter's prepare result is RESULT_SKIP_PENALIZE and the schedule has an execution interval.
-            - STATE_IDLE: If the result is RESULT_SKIP_PENALIZE or RESULT_SKIP_IGNORE.
+            - STATE_FINISHED: If the adapter's prepare result is RESULT_PENALIZE and the schedule is at its limit.
+            - STATE_PAUSED: If the adapter's prepare result is RESULT_PENALIZE and the schedule has an execution interval.
+            - STATE_IDLE: If the result is RESULT_PENALIZE or RESULT_SKIP.
             - STATE_WAITING_SCHEDULE_CONDITIONS: If the result is RESULT_CONTINUE.
 
      STATE_WAITING_SCHEDULE_CONDITIONS:
@@ -1174,7 +1172,7 @@ public class AutomationEngine<T extends Schedule> {
                             }
 
                             switch (result) {
-                                case AutomationDriver.RESULT_CANCEL_SCHEDULE:
+                                case AutomationDriver.RESULT_CANCEL:
                                     dataManager.deleteSchedule(scheduleId);
                                     break;
 
@@ -1184,12 +1182,12 @@ public class AutomationEngine<T extends Schedule> {
                                     attemptExecution(scheduleEntry);
                                     break;
 
-                                case AutomationDriver.RESULT_SKIP_IGNORE:
+                                case AutomationDriver.RESULT_SKIP:
                                     scheduleEntry.setExecutionState(ScheduleEntry.STATE_IDLE);
                                     dataManager.saveSchedule(scheduleEntry);
                                     break;
 
-                                case AutomationDriver.RESULT_SKIP_PENALIZE:
+                                case AutomationDriver.RESULT_PENALIZE:
                                     onScheduleFinishedExecuting(scheduleEntry);
                                     break;
                             }

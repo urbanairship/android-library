@@ -434,7 +434,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         verifyNoMoreInteractions(mockAdapter);
 
         // Return cancel result
-        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL_SCHEDULE);
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL);
 
         // Advance the looper to make sure its not called again
         ShadowLooper mainLooper = Shadows.shadowOf(Looper.getMainLooper());
@@ -442,7 +442,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testAudienceConditionsCheck() {
+    public void testAudienceConditionsCheckDefaultMissBehavior() {
         Activity activity = new Activity();
         activityMonitor.startActivity(activity);
         activityMonitor.resumeActivity(activity);
@@ -463,7 +463,84 @@ public class InAppMessageManagerTest extends BaseTestCase {
         // Prepare the schedule
         driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
 
-        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_SKIP_PENALIZE);
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_PENALIZE);
+    }
+
+    @Test
+    public void testAudienceConditionsCheckMissBehaviorCancel() {
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+
+        // Schedule that requires notification opt-in to be true
+        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
+                                                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                   .setMessage(InAppMessage.newBuilder()
+                                                                                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                                           .setId("message id")
+                                                                                                           .setAudience(Audience.newBuilder()
+                                                                                                                                .setNotificationsOptIn(true)
+                                                                                                                                .setMissBehavior("cancel")
+                                                                                                                                .build())
+                                                                                                           .build())
+                                                                                   .build());
+
+        // Prepare the schedule
+        driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_CANCEL);
+    }
+
+    @Test
+    public void testAudienceConditionsCheckMissBehaviorSkip() {
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+
+        // Schedule that requires notification opt-in to be true
+        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
+                                                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                   .setMessage(InAppMessage.newBuilder()
+                                                                                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                                           .setId("message id")
+                                                                                                           .setAudience(Audience.newBuilder()
+                                                                                                                                .setNotificationsOptIn(true)
+                                                                                                                                .setMissBehavior("skip")
+                                                                                                                                .build())
+                                                                                                           .build())
+                                                                                   .build());
+
+        // Prepare the schedule
+        driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_SKIP);
+    }
+
+    public void testAudienceConditionsCheckMissBehaviorPenalize() {
+        Activity activity = new Activity();
+        activityMonitor.startActivity(activity);
+        activityMonitor.resumeActivity(activity);
+
+
+        // Schedule that requires notification opt-in to be true
+        schedule = new InAppMessageSchedule("schedule id", InAppMessageScheduleInfo.newBuilder()
+                                                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                                                   .setMessage(InAppMessage.newBuilder()
+                                                                                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                                                           .setId("message id")
+                                                                                                           .setAudience(Audience.newBuilder()
+                                                                                                                                .setNotificationsOptIn(true)
+                                                                                                                                .setMissBehavior("penalize")
+                                                                                                                                .build())
+                                                                                                           .build())
+                                                                                   .build());
+
+        // Prepare the schedule
+        driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        verify(mockDriver).messagePrepared(schedule.getId(), AutomationDriver.RESULT_PENALIZE);
     }
 
     @Test

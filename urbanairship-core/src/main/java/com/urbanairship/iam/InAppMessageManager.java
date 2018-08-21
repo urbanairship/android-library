@@ -596,7 +596,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                 // Skip if we were unable to create an adapter
                 if (adapter == null) {
-                    driver.messagePrepared(scheduleId, AutomationDriver.RESULT_SKIP_PENALIZE);
+                    driver.messagePrepared(scheduleId, AutomationDriver.RESULT_PENALIZE);
                     return RetryingExecutor.RESULT_CANCEL;
                 }
 
@@ -635,7 +635,19 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
-                driver.messagePrepared(scheduleId, AutomationDriver.RESULT_SKIP_PENALIZE);
+                @AutomationDriver.PrepareResult int result = AutomationDriver.RESULT_PENALIZE;
+                switch (message.getAudience().getMissBehavior()) {
+                    case Audience.MISS_BEHAVIOR_CANCEL:
+                        result = AutomationDriver.RESULT_CANCEL;
+                        break;
+                    case Audience.MISS_BEHAVIOR_SKIP:
+                        result = AutomationDriver.RESULT_SKIP;
+                        break;
+                    case Audience.MISS_BEHAVIOR_PENALIZE:
+                        result = AutomationDriver.RESULT_PENALIZE;
+                        break;
+                }
+                driver.messagePrepared(scheduleId, result);
                 return RetryingExecutor.RESULT_CANCEL;
             }
         };
@@ -667,7 +679,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
 
                     case InAppMessageAdapter.CANCEL:
                     default:
-                        driver.messagePrepared(scheduleId, AutomationDriver.RESULT_CANCEL_SCHEDULE);
+                        driver.messagePrepared(scheduleId, AutomationDriver.RESULT_CANCEL);
                         return RetryingExecutor.RESULT_CANCEL;
                 }
             }

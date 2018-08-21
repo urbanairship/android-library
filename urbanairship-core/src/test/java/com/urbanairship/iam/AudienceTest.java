@@ -10,7 +10,10 @@ import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMatcher;
 import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
+
+import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +44,7 @@ public class AudienceTest extends BaseTestCase {
                                     .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                                     .setTagSelector(TagSelector.tag("some tag"))
                                     .addTestDevice("cool story")
+                                    .setMissBehavior("cancel")
                                     .build();
 
         Audience fromJson = Audience.parseJson(original.toJsonValue());
@@ -82,5 +86,25 @@ public class AudienceTest extends BaseTestCase {
                                                .build();
 
         assertEquals(predicate, audience.getVersionPredicate());
+    }
+
+    @Test
+    public void testNotValidMissBehavior() throws JsonException {
+        Audience original = Audience.newBuilder()
+                                    .addLanguageTag("en-US")
+                                    .setNewUser(true)
+                                    .setLocationOptIn(false)
+                                    .setNotificationsOptIn(true)
+                                    .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
+                                    .setTagSelector(TagSelector.tag("some tag"))
+                                    .addTestDevice("cool story")
+                                    .setMissBehavior("bad behavior")
+                                    .build();
+
+        try {
+            Audience fromJson = Audience.parseJson(original.toJsonValue());
+            Assert.fail("parseJson() should throw an exception when miss_behavior is not valid.");
+        } catch (Exception e) {
+        }
     }
 }

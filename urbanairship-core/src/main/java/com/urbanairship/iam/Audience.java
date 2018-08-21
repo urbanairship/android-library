@@ -5,6 +5,7 @@ package com.urbanairship.iam;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.StringDef;
 
 import com.urbanairship.util.VersionUtils;
 import com.urbanairship.json.JsonException;
@@ -14,6 +15,8 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +34,26 @@ public class Audience implements JsonSerializable {
     private static final String APP_VERSION_KEY = "app_version";
     private static final String TAGS_KEY = "tags";
     private static final String TEST_DEVICES_KEY = "test_devices";
+    private static final String MISS_BEHAVIOR_KEY = "miss_behavior";
 
+    @StringDef({ MISS_BEHAVIOR_CANCEL, MISS_BEHAVIOR_SKIP, MISS_BEHAVIOR_PENALIZE })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface MissBehavior {}
+
+    /**
+     * Cancel the message's schedule when the audience check fails.
+     */
+    public static final String MISS_BEHAVIOR_CANCEL = "cancel";
+
+    /**
+     * Skip the message's schedule when the audience check fails.
+     */
+    public static final String MISS_BEHAVIOR_SKIP = "skip";
+
+    /**
+     * Skip and penalize the message's schedule when the audience check fails.
+     */
+    public static final String MISS_BEHAVIOR_PENALIZE = "penalize";
 
     private final Boolean newUser;
     private final Boolean notificationsOptIn;
@@ -40,6 +62,7 @@ public class Audience implements JsonSerializable {
     private final List<String> testDevices;
     private final TagSelector tagSelector;
     private final JsonPredicate versionPredicate;
+    private final String missBehavior;
 
     /***
      * Default constructor.
@@ -53,6 +76,7 @@ public class Audience implements JsonSerializable {
         this.tagSelector = builder.tagSelector;
         this.versionPredicate = builder.versionPredicate;
         this.testDevices = builder.testDevices;
+        this.missBehavior = builder.missBehavior;
     }
 
     @Override
@@ -65,6 +89,7 @@ public class Audience implements JsonSerializable {
                       .put(TEST_DEVICES_KEY, testDevices.isEmpty() ? null : JsonValue.wrapOpt(testDevices))
                       .put(TAGS_KEY, tagSelector)
                       .put(APP_VERSION_KEY, versionPredicate)
+                      .put(MISS_BEHAVIOR_KEY,missBehavior)
                       .build().toJsonValue();
     }
 
@@ -144,6 +169,29 @@ public class Audience implements JsonSerializable {
             }
         }
 
+        // Miss Behavior
+        if (content.containsKey(MISS_BEHAVIOR_KEY)) {
+            if (!content.get(MISS_BEHAVIOR_KEY).isString()) {
+                throw new JsonException("miss_behavior must be a string: " + content.get(MISS_BEHAVIOR_KEY));
+            }
+
+            String missBehavior = content.get(MISS_BEHAVIOR_KEY).getString();
+            switch (missBehavior) {
+                case MISS_BEHAVIOR_CANCEL:
+                    builder.setMissBehavior(MISS_BEHAVIOR_CANCEL);
+                    break;
+                case MISS_BEHAVIOR_SKIP:
+                    builder.setMissBehavior(MISS_BEHAVIOR_SKIP);
+                    break;
+                case MISS_BEHAVIOR_PENALIZE:
+                    builder.setMissBehavior(MISS_BEHAVIOR_PENALIZE);
+                    break;
+                default:
+                    throw new JsonException("Invalid miss behavior: " + missBehavior);
+            }
+
+        }
+
         return builder.build();
     }
 
@@ -221,6 +269,16 @@ public class Audience implements JsonSerializable {
         return versionPredicate;
     }
 
+    /**
+     * Gets the audience miss behavior.
+     *
+     * @return The audience miss behavior.
+     */
+    @NonNull
+    String getMissBehavior() {
+        return missBehavior;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -247,6 +305,9 @@ public class Audience implements JsonSerializable {
         if (tagSelector != null ? !tagSelector.equals(audience.tagSelector) : audience.tagSelector != null) {
             return false;
         }
+        if (missBehavior != null ? !missBehavior.equals(audience.missBehavior) : audience.missBehavior != null) {
+            return false;
+        }
         return versionPredicate != null ? versionPredicate.equals(audience.versionPredicate) : audience.versionPredicate == null;
     }
 
@@ -258,6 +319,7 @@ public class Audience implements JsonSerializable {
         result = 31 * result + (languageTags != null ? languageTags.hashCode() : 0);
         result = 31 * result + (tagSelector != null ? tagSelector.hashCode() : 0);
         result = 31 * result + (versionPredicate != null ? versionPredicate.hashCode() : 0);
+        result = 31 * result + (missBehavior != null ? missBehavior.hashCode() : 0);
         return result;
     }
 
@@ -280,6 +342,7 @@ public class Audience implements JsonSerializable {
         private Boolean locationOptIn;
         private final List<String> languageTags = new ArrayList<>();
         private final List<String> testDevices = new ArrayList<>();
+        private String missBehavior = MISS_BEHAVIOR_PENALIZE;
 
         private TagSelector tagSelector;
         private JsonPredicate versionPredicate;
@@ -377,6 +440,18 @@ public class Audience implements JsonSerializable {
          */
         public Builder setTagSelector(TagSelector tagSelector) {
             this.tagSelector = tagSelector;
+            return this;
+        }
+
+        /**
+         * Sets the audience miss behavior for the in-app message.
+         *
+         * @param missBehavior The audience miss behavior.
+         * @return The builder.
+         * @hide
+         */
+        public Builder setMissBehavior(@NonNull @MissBehavior String missBehavior) {
+            this.missBehavior = missBehavior;
             return this;
         }
 
