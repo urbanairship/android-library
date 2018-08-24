@@ -14,6 +14,7 @@
         android:fillViewport="true">
 
         <RelativeLayout
+            android:id="@+id/content_holder"
             style="@style/UrbanAirship.InAppFullscreen.Layout.HeaderMediaBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -67,11 +68,18 @@
 
     </ScrollView>
 
-    <ImageButton
-        android:id="@+id/dismiss"
-        style="@style/UrbanAirship.InAppFullscreen.DismissButton"
+    <FrameLayout
+        style="@style/UrbanAirship.InAppFullscreen.DismissButtonHolder"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/ua_cancel"/>
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/dismiss"
+            style="@style/UrbanAirship.InAppFullscreen.DismissButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/ua_cancel"/>
+
+    </FrameLayout>
 
 </FrameLayout>

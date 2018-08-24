@@ -51,10 +51,6 @@ public class ModalDisplayContent implements DisplayContent {
      */
     public static final String TEMPLATE_HEADER_BODY_MEDIA = "header_body_media";
 
-    /**
-     * JSON key for flag to allow the modal dialog to display fullscreen.
-     */
-    public static String ALLOW_FULLSCREEN_DISPLAY_KEY = "allow_fullscreen_display";
 
     private final TextInfo heading;
     private final TextInfo body;

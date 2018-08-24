@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
-    style="@style/UrbanAirship.InAppHtml.Layout"
+    style="@style/UrbanAirship.InAppHtml.Layout.Fullscreen"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent">
 
     <com.urbanairship.iam.view.BoundedFrameLayout
         android:id="@+id/content_holder"
-        style="@style/UrbanAirship.InAppHtml.Content"
+        style="@style/UrbanAirship.InAppHtml.Content.Fullscreen"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -25,13 +24,12 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/ua_cancel"/>
 
-        <ProgressBar
-            android:id="@+id/progress"
-            style="@style/UrbanAirship.InAppHtml.Progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
     </com.urbanairship.iam.view.BoundedFrameLayout>
 
-</FrameLayout>
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@style/UrbanAirship.InAppHtml.Progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
+</FrameLayout>

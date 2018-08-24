@@ -8,14 +8,15 @@ import android.os.Build;
 import android.support.annotation.MainThread;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 /**
- * LinearLayout that supports max width.
+ * FrameLayout that supports max width.
  *
  * @hide
  */
-public class BoundedLinearLayout extends LinearLayout {
+public class BoundedFrameLayout extends FrameLayout {
 
     private BoundedViewDelegate boundedViewDelegate;
     private ClippableViewDelegate clippableViewDelegate;
@@ -25,7 +26,7 @@ public class BoundedLinearLayout extends LinearLayout {
      *
      * @param context A Context object used to access application assets.
      */
-    public BoundedLinearLayout(Context context) {
+    public BoundedFrameLayout(Context context) {
         this(context, null);
     }
 
@@ -35,7 +36,7 @@ public class BoundedLinearLayout extends LinearLayout {
      * @param context A Context object used to access application assets.
      * @param attrs An AttributeSet passed to our parent.
      */
-    public BoundedLinearLayout(Context context, AttributeSet attrs) {
+    public BoundedFrameLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
@@ -46,7 +47,7 @@ public class BoundedLinearLayout extends LinearLayout {
      * @param attrs An AttributeSet passed to our parent.
      * @param defStyle The default style resource ID.
      */
-    public BoundedLinearLayout(Context context, AttributeSet attrs, int defStyle) {
+    public BoundedFrameLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         this.boundedViewDelegate = new BoundedViewDelegate(context, attrs, defStyle, 0);
         this.clippableViewDelegate = new ClippableViewDelegate();
@@ -63,7 +64,7 @@ public class BoundedLinearLayout extends LinearLayout {
      * look for defaults.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    public BoundedLinearLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
+    public BoundedFrameLayout(Context context, AttributeSet attrs, int defStyle, int defResStyle) {
         super(context, attrs, defStyle, defResStyle);
         this.boundedViewDelegate = new BoundedViewDelegate(context, attrs, defStyle, defResStyle);
         this.clippableViewDelegate = new ClippableViewDelegate();

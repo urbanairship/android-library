@@ -4,9 +4,11 @@ package com.urbanairship.iam.html;
 
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayContent;
+import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -21,6 +23,8 @@ public class HtmlDisplayContent implements DisplayContent {
     private final String url;
     private final int dismissButtonColor;
     private final int backgroundColor;
+    private final float borderRadius;
+    private final boolean isFullscreenDisplayAllowed;
 
     /**
      * Default factory method.
@@ -31,10 +35,13 @@ public class HtmlDisplayContent implements DisplayContent {
         this.url = builder.url;
         this.dismissButtonColor = builder.dismissButtonColor;
         this.backgroundColor = builder.backgroundColor;
+        this.borderRadius = builder.borderRadius;
+        this.isFullscreenDisplayAllowed = builder.isFullscreenDisplayAllowed;
     }
 
     /**
      * Parses HTML display JSON.
+     *
      *
      * @param json The json payload.
      * @return The parsed display content.
@@ -69,6 +76,24 @@ public class HtmlDisplayContent implements DisplayContent {
             }
         }
 
+        // Border radius
+        if (content.containsKey(BORDER_RADIUS_KEY)) {
+            if (!content.opt(BORDER_RADIUS_KEY).isNumber()) {
+                throw new JsonException("Border radius must be a number " + content.opt(BORDER_RADIUS_KEY));
+            }
+
+            builder.setBorderRadius(content.opt(BORDER_RADIUS_KEY).getNumber().floatValue());
+        }
+
+        // Allow Fullscreen display
+        if (content.containsKey(ALLOW_FULLSCREEN_DISPLAY_KEY)) {
+            if (!content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY).isBoolean()) {
+                throw new JsonException("Allow fullscreen display must be a boolean " + content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY));
+            }
+
+            builder.setAllowFullscreenDisplay(content.opt(ALLOW_FULLSCREEN_DISPLAY_KEY).getBoolean(false));
+        }
+
         try {
             return builder.build();
         } catch (IllegalArgumentException e) {
@@ -82,6 +107,8 @@ public class HtmlDisplayContent implements DisplayContent {
                       .put(DISMISS_BUTTON_COLOR_KEY, ColorUtils.convertToString(dismissButtonColor))
                       .put(URL_KEY, url)
                       .put(BACKGROUND_COLOR_KEY, ColorUtils.convertToString(backgroundColor))
+                      .put(BORDER_RADIUS_KEY, borderRadius)
+                      .put(ALLOW_FULLSCREEN_DISPLAY_KEY, isFullscreenDisplayAllowed)
                       .build()
                       .toJsonValue();
     }
@@ -137,19 +164,25 @@ public class HtmlDisplayContent implements DisplayContent {
         if (dismissButtonColor != that.dismissButtonColor) {
             return false;
         }
-
         if (backgroundColor != that.backgroundColor) {
             return false;
         }
-
-        return url != null ? url.equals(that.url) : that.url == null;
+        if (Float.compare(that.borderRadius, borderRadius) != 0) {
+            return false;
+        }
+        if (isFullscreenDisplayAllowed != that.isFullscreenDisplayAllowed) {
+            return false;
+        }
+        return url.equals(that.url);
     }
 
     @Override
     public int hashCode() {
-        int result = url != null ? url.hashCode() : 0;
+        int result = url.hashCode();
         result = 31 * result + dismissButtonColor;
         result = 31 * result + backgroundColor;
+        result = 31 * result + (borderRadius != +0.0f ? Float.floatToIntBits(borderRadius) : 0);
+        result = 31 * result + (isFullscreenDisplayAllowed ? 1 : 0);
         return result;
     }
 
@@ -173,13 +206,34 @@ public class HtmlDisplayContent implements DisplayContent {
     }
 
     /**
+     * Returns the border radius in dps.
+     *
+     * @return Border radius in dps.
+     */
+    public float getBorderRadius() {
+        return borderRadius;
+    }
+
+    /**
+     * Returns {@code true} if the html message is allowed to be displayed as fullscreen, otherwise
+     * {@code false}. See {@link Builder#setAllowFullscreenDisplay(boolean)}} for more details.
+     *
+     * @return {@code true} to allow the html message to display as full screen, otherwise {@code false}.
+     */
+    public boolean isFullscreenDisplayAllowed() {
+        return isFullscreenDisplayAllowed;
+    }
+
+    /**
      * Display Content Builder.
      */
     public static class Builder {
 
         private String url;
         private int dismissButtonColor = Color.BLACK;
-        private int backgroundColor = Color.WHITE;;
+        private int backgroundColor = Color.WHITE;
+        private float borderRadius;
+        private boolean isFullscreenDisplayAllowed;
 
         private Builder() {}
 
@@ -222,6 +276,33 @@ public class HtmlDisplayContent implements DisplayContent {
         @NonNull
         public Builder setBackgroundColor(@ColorInt int color) {
             this.backgroundColor = color;
+            return this;
+        }
+
+        /**
+         * Sets the border radius in dps. Defaults to 0.
+         *
+         * @param borderRadius The border radius.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setBorderRadius(@FloatRange(from = 0.0, to = 20.0) float borderRadius) {
+            this.borderRadius = borderRadius;
+            return this;
+        }
+
+        /**
+         * Enables the message to display as fullscreen. The message will display as fullscreen if
+         * enabled and and the bool resource `ua_iam_html_allow_fullscreen_display` is true.
+         * `ua_iam_html_allow_fullscreen_display` defaults to true  when the screen width is less than 480dps.
+         *
+         * @param isFullscreenDisplayAllowed {@code true} to allow displaying the iam as fullscreen,
+         * otherwise {@code false}.
+         * @return The builder instance.
+         */
+        @NonNull
+        public Builder setAllowFullscreenDisplay(boolean isFullscreenDisplayAllowed) {
+            this.isFullscreenDisplayAllowed = isFullscreenDisplayAllowed;
             return this;
         }
 

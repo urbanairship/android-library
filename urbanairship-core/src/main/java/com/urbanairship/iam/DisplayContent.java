@@ -47,4 +47,9 @@ public interface DisplayContent extends JsonSerializable {
     String TEMPLATE_KEY = "template";
     String FOOTER_KEY = "footer";
     String DURATION_KEY = "duration";
+
+    /**
+     * JSON key for flag to allow the message to display fullscreen.
+     */
+    String ALLOW_FULLSCREEN_DISPLAY_KEY = "allow_fullscreen_display";
 }

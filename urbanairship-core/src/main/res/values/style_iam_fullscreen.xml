@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Parent Style -->
     <style name="UrbanAirship.InAppFullscreen"/>
+
+    <!-- Default Activity -->
+    <style name="UrbanAirship.InAppFullscreen.Activity">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
+        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent</item>
+    </style>
 
     <!-- Scroll View - wraps the main layout -->
     <style name="UrbanAirship.InAppFullscreen.ScrollView">
@@ -12,6 +21,7 @@
 
     <!-- Main layout - contains the message content -->
     <style name="UrbanAirship.InAppFullscreen.Layout">
+        <item name="android:fitsSystemWindows">true</item>
         <item name="android:paddingTop">24dp</item>
     </style>
 
@@ -27,15 +37,20 @@
         <item name="android:paddingTop">0dp</item>
     </style>
 
+    <!-- Wraps the dismiss button -->
+    <style name="UrbanAirship.InAppFullscreen.DismissButtonHolder">
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:layout_gravity">top|end</item>
+    </style>
+
     <!-- Dismiss button, sits outside of the scroll view -->
     <style name="UrbanAirship.InAppFullscreen.DismissButton">
         <item name="android:background">@drawable/ua_iam_dismiss_background</item>
         <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
-        <item name="android:layout_marginRight">16dp</item>
-        <item name="android:layout_marginTop">16dp</item>
         <item name="android:layout_width">32dp</item>
         <item name="android:layout_height">32dp</item>
-        <item name="android:layout_gravity">top|end</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
     </style>
 
     <!-- Media -->

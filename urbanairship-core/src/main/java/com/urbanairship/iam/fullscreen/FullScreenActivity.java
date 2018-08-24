@@ -8,6 +8,9 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.OnApplyWindowInsetsListener;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.view.WindowInsetsCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -51,6 +54,7 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
         this.mediaView = findViewById(R.id.media);
         Button footer = findViewById(R.id.footer);
         ImageButton dismiss = findViewById(R.id.dismiss);
+        View contentHolder = findViewById(R.id.content_holder);
 
         // Heading
         if (displayContent.getHeading() != null) {
@@ -110,6 +114,18 @@ public class FullScreenActivity extends InAppMessageActivity implements InAppBut
 
         // Background color
         getWindow().getDecorView().setBackgroundColor(displayContent.getBackgroundColor());
+
+
+        // Apply the insets but do not consume them. Allows for the dismiss button to also receive the insets.
+        if (ViewCompat.getFitsSystemWindows(contentHolder)) {
+            ViewCompat.setOnApplyWindowInsetsListener(contentHolder, new OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                    ViewCompat.onApplyWindowInsets(v, insets);
+                    return insets;
+                }
+            });
+        }
     }
 
     @Override

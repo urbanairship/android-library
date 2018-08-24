@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -25,6 +26,9 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.iam.view.BackgroundDrawableBuilder;
+import com.urbanairship.iam.view.BorderRadius;
+import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.widget.UAWebView;
 import com.urbanairship.widget.UAWebViewClient;
@@ -40,7 +44,6 @@ public class HtmlActivity extends InAppMessageActivity {
     private Integer error = null;
     private Handler handler;
     private String url;
-
     private Runnable delayedLoadRunnable = new Runnable() {
         @Override
         public void run() {
@@ -57,11 +60,23 @@ public class HtmlActivity extends InAppMessageActivity {
             return;
         }
 
-        setContentView(R.layout.ua_iam_html);
-        hideActionBar();
-        
+        float borderRadius = 0;
+        if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_modal_allow_fullscreen_display)) {
+            setContentView(R.layout.ua_iam_html_fullscreen);
+        } else {
+            setContentView(R.layout.ua_iam_html);
+
+            // Drop the border radius on pre-kitkat devices since in order to do clipping, we need to use
+            // software rendering, but media require hardware acceleration.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                borderRadius = displayContent.getBorderRadius();
+            }
+        }
+
         final ProgressBar progressBar = findViewById(R.id.progress);
         final ImageButton dismiss = findViewById(R.id.dismiss);
+        final BoundedFrameLayout content = findViewById(R.id.content_holder);
+
         this.webView = findViewById(R.id.web_view);
         this.handler = new Handler(Looper.getMainLooper());
         this.url = displayContent.getUrl();
@@ -77,7 +92,6 @@ public class HtmlActivity extends InAppMessageActivity {
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-        webView.setAlpha(0);
         webView.setWebViewClient(new UAWebViewClient() {
             @Override
             public void onPageFinished(final WebView view, String url) {
@@ -109,6 +123,7 @@ public class HtmlActivity extends InAppMessageActivity {
             }
         });
 
+        webView.setAlpha(0);
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public Bitmap getDefaultVideoPoster() {
@@ -133,9 +148,14 @@ public class HtmlActivity extends InAppMessageActivity {
                 finish();
             }
         });
+
+        content.setBackgroundColor(displayContent.getBackgroundColor());
+
+        if (borderRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            content.setClipPathBorderRadius(borderRadius);
+        }
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onResume() {
         super.onResume();
@@ -144,7 +164,6 @@ public class HtmlActivity extends InAppMessageActivity {
         load();
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onPause() {
         super.onPause();
@@ -157,14 +176,12 @@ public class HtmlActivity extends InAppMessageActivity {
         handler.removeCallbacks(delayedLoadRunnable);
     }
 
-
     /**
      * Fades a view in while fading another view out.
      *
      * @param in The view to fade in
      * @param out The view to fade out
      */
-    @SuppressLint("NewApi")
     private void crossFade(final View in, final View out) {
         if (in != null) {
             in.animate().alpha(1f).setDuration(200);
@@ -197,7 +214,6 @@ public class HtmlActivity extends InAppMessageActivity {
      * @param delay Delay before loading the page.  Delay of 0 or less
      * will start loading the page immediately.
      */
-    @SuppressLint("NewApi")
     protected void load(long delay) {
         if (webView == null) {
             return;

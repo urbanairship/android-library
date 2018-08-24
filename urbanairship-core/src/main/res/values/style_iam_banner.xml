@@ -55,7 +55,6 @@
 
     <!-- Media overrides for RIGHT_MEDIA template -->
     <style name="UrbanAirship.InAppBanner.MediaView.Right">
-        <item name="android:background">@android:color/holo_green_dark</item>
         <item name="android:layout_marginLeft">16dp</item>
     </style>
 

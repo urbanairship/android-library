@@ -11,10 +11,9 @@
 
     <application>
 
-        <activity android:name="com.urbanairship.iam.html.HtmlActivity" />
-        <activity android:name="com.urbanairship.iam.fullscreen.FullScreenActivity" />
+        <activity android:name="com.urbanairship.iam.html.HtmlActivity" android:theme="@style/UrbanAirship.InAppHtml.Activity"/>
+        <activity android:name="com.urbanairship.iam.fullscreen.FullScreenActivity" android:theme="@style/UrbanAirship.InAppFullscreen.Activity"/>
         <activity android:name="com.urbanairship.iam.modal.ModalActivity" android:theme="@style/UrbanAirship.InAppModal.Activity"/>
-
 
         <activity android:name="com.urbanairship.CoreActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
@@ -36,11 +35,11 @@
         <activity
             android:name="com.urbanairship.actions.RateAppActivity"
             android:theme="@style/UrbanAirship.RateAppActivity">
-            
+
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
-            
+
             <intent-filter>
                 <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION"/>
                 <category android:name="android.intent.category.DEFAULT"/>
