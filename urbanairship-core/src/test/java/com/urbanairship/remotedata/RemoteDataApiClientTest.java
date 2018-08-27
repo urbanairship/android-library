@@ -2,9 +2,13 @@
 
 package com.urbanairship.remotedata;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestRequest;
+import com.urbanairship.UAirship;
+import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonList;
@@ -16,6 +20,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,10 +48,17 @@ public class RemoteDataApiClientTest extends BaseTestCase {
                 .build();
 
         testRequest = new TestRequest();
-        RequestFactory mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest(anyString(), any(URL.class))).thenReturn(testRequest);
+        RequestFactory requestFactory = new RequestFactory() {
+            @NonNull
+            @Override
+            public Request createRequest(String requestMethod, URL url) {
+                testRequest.setRequestMethod(requestMethod);
+                testRequest.setURL(url);
+                return testRequest;
+            }
+        };
 
-        client = new RemoteDataApiClient(configOptions, mockRequestFactory);
+        client = new RemoteDataApiClient(configOptions, requestFactory);
     }
 
     /**
@@ -72,6 +84,7 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         String requestTimestamp = DateUtils.createIso8601TimeStamp(0);
         Response response = client.fetchRemoteData(requestTimestamp);
 
+        assertEquals("https://remote-data.urbanairship.com/api/remote-data/app/appKey/android?sdk_version=" + UAirship.getVersion(), testRequest.getURL().toString());
         assertEquals("Headers should contain timestamp", testRequest.getRequestHeaders().get("If-Modified-Since"), requestTimestamp);
         assertNotNull("Response should not be null", response);
         assertEquals("Response status should be 200", HttpURLConnection.HTTP_OK, response.getStatus());
