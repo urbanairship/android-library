@@ -1430,7 +1430,7 @@ public class AutomationEngine<T extends Schedule> {
         for (ScheduleEntry entry : entries) {
             try {
                 schedules.add(driver.createSchedule(entry.scheduleId, entry));
-            } catch (ParseScheduleException e) {
+            } catch (Exception e) {
                 Logger.error("Unable to create schedule.", e);
                 cancel(Collections.singletonList(entry.scheduleId));
             }
