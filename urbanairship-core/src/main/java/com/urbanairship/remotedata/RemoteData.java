@@ -183,7 +183,7 @@ public class RemoteData extends AirshipComponent {
      * @return The foreground refresh interval.
      */
     public long getForegroundRefreshInterval() {
-        return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, 0l);
+        return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, 0);
     }
 
     /**

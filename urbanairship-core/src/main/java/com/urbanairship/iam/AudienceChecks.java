@@ -75,7 +75,7 @@ public abstract class AudienceChecks {
      * @return {@code true} if the audience conditions are met, otherwise {@code false}.
      */
     public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience) {
-        return checkAudience(context, audience, TagSelector.EMPTY_TAG_GROUPS);
+        return checkAudience(context, audience, null);
     }
 
     /**
@@ -86,9 +86,13 @@ public abstract class AudienceChecks {
      * @param tagGroups The channel tag groups.
      * @return {@code true} if the audience conditions are met, otherwise {@code false}.
      */
-    public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience, @NonNull Map<String, Set<String>> tagGroups) {
+    public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience, @Nullable Map<String, Set<String>> tagGroups) {
         if (audience == null) {
             return true;
+        }
+
+        if (tagGroups == null) {
+            tagGroups = TagSelector.EMPTY_TAG_GROUPS;
         }
 
         UAirship airship = UAirship.shared();

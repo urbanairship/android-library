@@ -234,7 +234,7 @@ public class Whitelist {
             return false;
         }
 
-        boolean match = false;
+        boolean match;
 
         if (scope == SCOPE_OPEN_URL && !isOpenUrlWhitelistingEnabled) {
             match = true;

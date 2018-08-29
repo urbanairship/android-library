@@ -93,6 +93,7 @@
         </receiver>
 
         <provider
+            android:exported="false"
             android:name="com.urbanairship.UrbanAirshipProvider"
             android:authorities="${applicationId}.urbanairship.provider" />
 

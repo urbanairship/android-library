@@ -514,7 +514,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         boolean storedPausedState = getDataStore().getBoolean(PAUSE_KEY, paused);
 
         // Only update when paused state transitions from paused to unpaused
-        if (storedPausedState == true && storedPausedState != paused) {
+        if (storedPausedState && storedPausedState != paused) {
             automationEngine.checkPendingSchedules();
         }
 

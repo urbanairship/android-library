@@ -20,7 +20,7 @@
         android:id="@+id/media"
         style="@style/UrbanAirship.InAppModal.MediaView.HeaderMediaBody"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="wrap_content"
         tools:src="@drawable/ua_ic_image_placeholder"/>
 
     <TextView

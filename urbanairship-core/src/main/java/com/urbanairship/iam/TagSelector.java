@@ -135,7 +135,7 @@ public class TagSelector implements JsonSerializable {
      * @param tag The tag.
      * @return A tag selector.
      */
-    public static TagSelector tag(String tag) {
+    public static TagSelector tag(@NonNull String tag) {
         return new TagSelector(tag, (String) null);
     }
 
@@ -147,7 +147,7 @@ public class TagSelector implements JsonSerializable {
      * @return A tag selector.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    static TagSelector tag(String tag, String group) {
+    public static TagSelector tag(@NonNull String tag, @Nullable String group) {
         return new TagSelector(tag, group);
     }
 

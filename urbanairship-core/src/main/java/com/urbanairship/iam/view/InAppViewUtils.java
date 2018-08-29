@@ -96,13 +96,16 @@ public class InAppViewUtils {
             textView.setTextColor(textInfo.getColor());
         }
 
+        Drawable drawable = null;
         if (textInfo.getDrawable() != 0) {
+            drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
+        }
 
+        if (drawable != null) {
             int size = Math.round(textView.getTextSize());
             int color = textView.getCurrentTextColor();
 
             try {
-                Drawable drawable = ContextCompat.getDrawable(textView.getContext(), textInfo.getDrawable());
                 Drawable wrappedDrawable = DrawableCompat.wrap(drawable).mutate();
                 wrappedDrawable.setBounds(0, 0, size, size);
                 wrappedDrawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY);

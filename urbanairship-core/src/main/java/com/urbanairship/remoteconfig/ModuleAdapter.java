@@ -1,6 +1,8 @@
 package com.urbanairship.remoteconfig;
 /* Copyright 2018 Urban Airship and Contributors */
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -21,7 +23,7 @@ class ModuleAdapter {
      * @param module The module name.
      * @param enabled {@code true} to enable, {@code false} to disable.
      */
-    public void setComponentEnabled(String module, boolean enabled) {
+    public void setComponentEnabled(@NonNull String module, boolean enabled) {
         for (AirshipComponent component : findAirshipComponents(module)) {
             component.setComponentEnabled(enabled);
         }
@@ -33,7 +35,7 @@ class ModuleAdapter {
      * @param module The module name.
      * @param config The config
      */
-    public void onNewConfig(String module, JsonList config) {
+    public void onNewConfig(@NonNull String module, @NonNull JsonList config) {
         for (AirshipComponent component : findAirshipComponents(module)) {
             if (component.isComponentEnabled()) {
                 component.onNewConfig(config);
@@ -47,7 +49,8 @@ class ModuleAdapter {
      * @param module The module.
      * @return The matching airship components.
      */
-    static Collection<? extends AirshipComponent> findAirshipComponents(String module) {
+    @NonNull
+    static Collection<? extends AirshipComponent> findAirshipComponents(@NonNull String module) {
         switch (module) {
             case Modules.LOCATION_MODULE:
                 return Collections.singleton(UAirship.shared().getLocationManager());
@@ -71,7 +74,7 @@ class ModuleAdapter {
                 return Collections.singletonList(UAirship.shared().getNamedUser());
         }
 
-        Logger.error("ModuleAdapter - Unknown module: " + module);
-        return null;
+        Logger.verbose("ModuleAdapter - Unknown module: " + module);
+        return Collections.emptyList();
     }
 }

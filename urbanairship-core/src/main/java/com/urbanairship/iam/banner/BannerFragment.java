@@ -94,7 +94,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         this.inAppMessage = getArguments().getParcelable(IN_APP_MESSAGE);
         this.cache = getArguments().getParcelable(CACHE);
 
-        if (displayHandler == null || inAppMessage == null || inAppMessage.getType() != InAppMessage.TYPE_BANNER) {
+        if (displayHandler == null || inAppMessage == null || !InAppMessage.TYPE_BANNER.equals(inAppMessage.getType())) {
             isDismissed = true;
             removeSelf(false);
             return;
@@ -139,7 +139,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
 
         if (displayContent.getBorderRadius() > 0) {
             @BorderRadius.BorderRadiusFlag
-            int borderRadiusFlag = displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP ? BorderRadius.BOTTOM : BorderRadius.TOP;
+            int borderRadiusFlag = BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement()) ? BorderRadius.BOTTOM : BorderRadius.TOP;
             BorderRadius.applyBorderRadiusPadding(bannerView, displayContent.getBorderRadius(), borderRadiusFlag);
         }
 
@@ -478,7 +478,7 @@ public class BannerFragment extends Fragment implements InAppButtonLayout.Button
         int pressedColor = ColorUtils.setAlphaComponent(displayContent.getDismissButtonColor(), Math.round(Color.alpha(displayContent.getDismissButtonColor()) * PRESSED_ALPHA_PERCENT));
 
         @BorderRadius.BorderRadiusFlag
-        int borderRadiusFlag = displayContent.getPlacement() == BannerDisplayContent.PLACEMENT_TOP ? BorderRadius.BOTTOM : BorderRadius.TOP;
+        int borderRadiusFlag = BannerDisplayContent.PLACEMENT_TOP.equals(displayContent.getPlacement()) ? BorderRadius.BOTTOM : BorderRadius.TOP;
 
         return BackgroundDrawableBuilder.newBuilder(getActivity())
                                         .setBackgroundColor(displayContent.getBackgroundColor())

@@ -260,7 +260,7 @@ public class TagGroupManager {
 
         // Refresh the cache
         try {
-            refreshCache();
+            refreshCache(cachedResponse);
             cachedResponse = getCachedResponse();
             cacheCreateDate = getCacheCreateDate();
         } catch (Exception e) {
@@ -352,12 +352,13 @@ public class TagGroupManager {
 
     /**
      * Refreshes the cache.
+     *
+     * @param cachedResponse The cached response.
      */
-    private void refreshCache() throws Exception {
+    private void refreshCache(TagGroupResponse cachedResponse) throws Exception {
         Map<String, Set<String>> tags = requestTagsCallback.getTags();
 
         // Only use the cached response if it the requested tags are the same
-        TagGroupResponse cachedResponse = getCachedResponse();
         if (cachedResponse != null && !tags.equals(getCachedRequestTags())) {
             cachedResponse = null;
         }

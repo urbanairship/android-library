@@ -28,8 +28,8 @@ class InAppRemoteConfig {
         this.tagGroupsConfig = tagGroupsConfig;
     }
 
-    @Nullable
-    private InAppRemoteConfig combine(InAppRemoteConfig config) {
+    @NonNull
+    private InAppRemoteConfig combine(@NonNull InAppRemoteConfig config) {
         TagGroupsConfig tagGroupsConfig;
         if (this.tagGroupsConfig != null && config.tagGroupsConfig != null) {
             tagGroupsConfig = this.tagGroupsConfig.combine(config.tagGroupsConfig);

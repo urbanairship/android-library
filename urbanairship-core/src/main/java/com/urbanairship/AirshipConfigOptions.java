@@ -177,7 +177,6 @@ public class AirshipConfigOptions {
      * <p>
      * Defaults to false.
      */
-    @Nullable
     public boolean enableUrlWhitelisting;
 
     /**

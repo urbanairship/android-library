@@ -76,8 +76,8 @@ class DisableInfo implements JsonSerializable {
                 for (String constraint : info.sdkVersionConstraints) {
                     if (IvyVersionMatcher.newMatcher(constraint).apply(sdkVersion)) {
                         isSdkVersionMatch = true;
+                        break;
                     }
-                    break;
                 }
 
                 if (!isSdkVersionMatch) {
