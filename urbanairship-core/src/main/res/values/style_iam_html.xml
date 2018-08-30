@@ -17,12 +17,6 @@
 
     <style name="UrbanAirship.InAppHtml.Layout">
         <item name="android:fitsSystemWindows">true</item>
-        <item name="urbanAirshipMaxWidth">420dp</item>
-        <item name="android:layout_marginLeft">24dp</item>
-        <item name="android:layout_marginRight">24dp</item>
-        <item name="android:layout_marginTop">48dp</item>
-        <item name="android:layout_marginBottom">48dp</item>
-        <item name="android:layout_centerInParent">true</item>
     </style>
 
     <style name="UrbanAirship.InAppHtml.Layout.Fullscreen">
@@ -32,6 +26,13 @@
 
     <style name="UrbanAirship.InAppHtml.Content">
         <item name="android:elevation" tools:ignore="NewApi">24dp</item>
+        <item name="urbanAirshipMaxWidth">420dp</item>
+        <item name="urbanAirshipMaxHeight">700dp</item>
+        <item name="android:layout_marginLeft">24dp</item>
+        <item name="android:layout_marginRight">24dp</item>
+        <item name="android:layout_marginTop">48dp</item>
+        <item name="android:layout_marginBottom">48dp</item>
+        <item name="android:layout_gravity">center</item>
     </style>
 
     <style name="UrbanAirship.InAppHtml.Content.Fullscreen">
