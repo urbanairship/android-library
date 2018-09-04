@@ -30,6 +30,7 @@ import com.urbanairship.messagecenter.ImageLoader;
 import com.urbanairship.util.ManifestUtils;
 
 import java.lang.ref.WeakReference;
+import java.util.Locale;
 
 /**
  * Media view.
@@ -39,6 +40,8 @@ import java.lang.ref.WeakReference;
 public class MediaView extends FrameLayout {
     private WebView webView;
     private WebChromeClient chromeClient;
+
+    private static final String VIDEO_HTML_FORMAT = "<body style=\"margin:0\"><video playsinline controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video></body>";
 
     /**
      * Default constructor.
@@ -146,9 +149,6 @@ public class MediaView extends FrameLayout {
                 break;
 
             case MediaInfo.TYPE_VIDEO:
-                loadWebView(mediaInfo);
-                break;
-
             case MediaInfo.TYPE_YOUTUBE:
                 loadWebView(mediaInfo);
                 break;
@@ -211,13 +211,19 @@ public class MediaView extends FrameLayout {
             }
         });
 
-        if (UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
-            webView.loadUrl(mediaInfo.getUrl());
-        } else {
+        addView(frameLayout);
+
+        if (!UAirship.shared().getWhitelist().isWhitelisted(mediaInfo.getUrl(), Whitelist.SCOPE_OPEN_URL)) {
             Logger.error("URL not whitelisted. Unable to load: " + mediaInfo.getUrl());
+            return;
         }
 
-        addView(frameLayout);
+        if (MediaInfo.TYPE_VIDEO.equals(mediaInfo.getType())) {
+            webView.loadData(String.format(Locale.ROOT, VIDEO_HTML_FORMAT, mediaInfo.getUrl()), "text/html", "UTF-8");
+        } else {
+            webView.loadUrl(mediaInfo.getUrl());
+        }
+
     }
 
     private static abstract class MediaWebViewClient extends WebViewClient {
@@ -256,6 +262,4 @@ public class MediaView extends FrameLayout {
 
         protected abstract void onPageFinished(WebView webView);
     }
-
-
 }
