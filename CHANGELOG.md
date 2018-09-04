@@ -3,10 +3,25 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.5.0 - September 4, 2018
+=================================
+
+Minor release thats adds support for tag group audiences, miss behaviors and resizable HTML messages in
+In-App Automation. HTML in-app messages are now displayed as dialogs by default, with an option
+to display fullscreen on smaller devices.
+
+Changes
+-------
+- Added support for tag group audience conditions for in-app messages.
+- Added `isReady` method to InAppMessageAdapter so that adapters can
+  wait for custom app conditions to be fulfilled before displaying
+- Fixed media layout in the modal in-app messages when using template HEADER_MEDIA_BODY.
+- Fixed videos autoplaying in an in-app message.
+
 Version 9.4.2 - August 7, 2018
 ==============================
 
-Minor release to fix proguard warnings with ADM.
+Patch release to fix proguard warnings with ADM.
 
 Changes
 -------
@@ -16,7 +31,7 @@ Changes
 Version 9.4.1 - July 26, 2018
 =============================
 
-Minor release that fixes a bug in the json matcher that caused app version equality checks to malfunction.
+Patch release that fixes a bug in the json matcher that caused app version equality checks to malfunction.
 Apps that use in-app automation with version triggers or audience conditions should update.
 
 Changes
