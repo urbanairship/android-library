@@ -356,15 +356,18 @@ public class InAppMessageManagerTest extends BaseTestCase {
 
         // Prepare the message
         when(mockAdapter.onPrepare(any(Context.class))).thenReturn(InAppMessageAdapter.OK);
-        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
-        assertTrue(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+        driverListener.onPrepareMessage(schedule.getId(), schedule.getInfo().getInAppMessage());
+
+        // Make sure its ready
+        when(mockAdapter.isReady(any(Activity.class))).thenReturn(true);
+        assertTrue(driverListener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
 
         ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
         when(actionRunRequestFactory.createActionRequest("action_name")).thenReturn(actionRunRequest);
 
         // Display it
         when(mockAdapter.onDisplay(any(Activity.class), anyBoolean(), any(DisplayHandler.class))).thenReturn(true);
-        driverCallbacks.onDisplay(schedule.getId());
+        driverListener.onDisplay(schedule.getId());
 
         activityMonitor.pauseActivity(activity);
         activityMonitor.stopActivity(activity);
@@ -373,7 +376,7 @@ public class InAppMessageManagerTest extends BaseTestCase {
         manager.continueOnNextActivity(schedule.getId());
 
         // Verify isScheduleReady returns false
-        assertFalse(driverCallbacks.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
+        assertFalse(driverListener.isMessageReady(schedule.getId(), schedule.getInfo().getInAppMessage()));
 
         // Resume a new activity
         Activity anotherActivity = new Activity();
