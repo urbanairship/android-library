@@ -286,7 +286,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
                 // Try to display any carry over schedule Ids if we do not have a
                 // current schedule Id
 
-                if (currentScheduleId != null && currentActivity != null && currentActivity.get() == activity && !activity.isChangingConfigurations()) {
+                if (currentScheduleId != null && currentActivity != null && getCurrentActivity() == activity && !activity.isChangingConfigurations()) {
                     currentScheduleId = null;
                     currentActivity = null;
 
@@ -749,7 +749,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     void continueOnNextActivity(String scheduleId) {
         Logger.verbose("InAppMessagingManager - Continue message on next activity. ScheduleID: " + scheduleId);
 
-        Activity previousActivity = currentActivity.get();
+        Activity previousActivity = getCurrentActivity();
 
         // If it's equal to the current schedule ID clear and post a runnable to remove the display lock
         if (scheduleId.equals(currentScheduleId)) {
@@ -928,6 +928,20 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private Activity getResumedActivity() {
         if (resumedActivity != null) {
             return resumedActivity.get();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the current in-app message activity.
+     *
+     * @return The current activity.
+     */
+    private Activity getCurrentActivity() {
+        Logger.verbose("IAM: InAppMessagingManager - getCurrentActivity()");
+        if (currentActivity != null) {
+            return currentActivity.get();
         }
 
         return null;
