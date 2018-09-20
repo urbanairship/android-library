@@ -3,20 +3,26 @@
   public static final android.os.Parcelable$Creator CREATOR;
 }
 
+## Descriptor classes
+-keep public class com.urbanairship.UAirship
+-keep public class com.urbanairship.AirshipConfigOptions
+-keep public class com.urbanairship.push.PushMessage
+
 ## Autopilot
--keep, includedescriptorclasses public class com.urbanairship.Autopilot
+-keep public class com.urbanairship.Autopilot
 -keep public class * extends com.urbanairship.Autopilot
 
 ## Push Providers
--keep, includedescriptorclasses public class * extends com.urbanairship.push.PushProvider
--keepclassmembernames, includedescriptorclasses class * extends com.urbanairship.push.PushProvider {
+-keep public class com.urbanairship.push.PushProvider
+-keep public class * extends com.urbanairship.push.PushProvider
+-keepclassmembernames class * extends com.urbanairship.push.PushProvider {
   public <methods>;
   public <fields>;
 }
 
 ## Airship Version Info
--keep public class * extends com.urbanairship.AirshipVersionInfo
--keepclassmembers class * extends com.urbanairship.AirshipVersionInfo {
+-keep public class com.urbanairship.AirshipVersionInfo
+-keepclassmembers class com.urbanairship.AirshipVersionInfo {
   public <methods>;
   public <fields>;
 }
@@ -31,7 +37,6 @@
 ## Views that contain descriptor classes
 -keep public class com.urbanairship.iam.banner.BannerDismissLayout$Listener
 -keep public class com.urbanairship.iam.view.InAppButtonLayout$ButtonClickListener
-
 
 ## Optional
 -dontwarn com.urbanairship.location.FusedLocationAdapter*
