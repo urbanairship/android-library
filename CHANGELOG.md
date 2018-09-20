@@ -3,6 +3,10 @@ Android ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/master/documentation/migration)
 
+Version 9.5.2 - September 20, 2018
+==================================
+Patch release to fix build errors when building with code shrinking enabled while proguard is disabled.
+
 Version 9.5.1 - September 11, 2018
 ==================================
 Patch release to fix a rare NPE with banner messages in In-App Automation. Apps supporting banner messages should update to this version.

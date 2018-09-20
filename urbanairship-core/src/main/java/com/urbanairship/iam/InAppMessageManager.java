@@ -283,10 +283,9 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         activityMonitor.addListener(new ActivityMonitor.SimpleListener() {
             @Override
             public void onActivityStopped(Activity activity) {
-                // Try to display any carry over schedule Ids if we do not have a
-                // current schedule Id
-
-                if (currentScheduleId != null && currentActivity != null && getCurrentActivity() == activity && !activity.isChangingConfigurations()) {
+                // If this is the current activity and its not changing configuration, then its
+                // either being dismissed or another activity is starting on top of it.
+                if (currentScheduleId != null && getCurrentActivity() == activity && !activity.isChangingConfigurations()) {
                     currentScheduleId = null;
                     currentActivity = null;
 
@@ -570,14 +569,14 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
             return false;
         }
 
-        // Make sure we have a current activity
-        Activity currentActivity = getResumedActivity();
-        if (currentActivity == null) {
+        // Make sure we have a resumed activity
+        Activity resumedActivity = getResumedActivity();
+        if (resumedActivity == null) {
             return false;
         }
 
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        return adapterWrapper != null && adapterWrapper.isReady(currentActivity);
+        return adapterWrapper != null && adapterWrapper.isReady(resumedActivity);
     }
 
     /**
@@ -938,8 +937,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
      *
      * @return The current activity.
      */
+    @Nullable
     private Activity getCurrentActivity() {
-        Logger.verbose("IAM: InAppMessagingManager - getCurrentActivity()");
         if (currentActivity != null) {
             return currentActivity.get();
         }
