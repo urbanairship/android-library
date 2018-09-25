@@ -75,9 +75,7 @@
 
 
         <service android:name="com.urbanairship.job.AirshipService" />
-        <service android:name="com.urbanairship.actions.ActionService" />
         <service android:name="com.urbanairship.location.LocationService" android:label="Segments Service" />
-        <service android:name="com.urbanairship.push.PushService" />
 
 
         <service android:name="com.urbanairship.job.AndroidJobService"

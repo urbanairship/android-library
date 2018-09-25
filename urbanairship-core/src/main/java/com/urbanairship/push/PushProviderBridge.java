@@ -115,36 +115,6 @@ public abstract class PushProviderBridge {
          * @param callback The callback.
          */
         public void execute(@NonNull Context context, @Nullable final Runnable callback) {
-            // If older than Android O or a high priority message try to start the push service
-            if (Build.VERSION.SDK_INT < 26 || PushMessage.PRIORITY_HIGH.equals(pushMessage.getExtra(PushMessage.EXTRA_DELIVERY_PRIORITY, null))) {
-                Intent intent = new Intent(context, PushService.class)
-                        .setAction(PushService.ACTION_PROCESS_PUSH)
-                        .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, pushMessage.getPushBundle())
-                        .putExtra(EXTRA_PROVIDER_CLASS, provider.toString());
-
-                try {
-                    if (allowWakeLocks) {
-                        //noinspection deprecation
-                        WakefulBroadcastReceiver.startWakefulService(context, intent);
-                    } else {
-                        context.startService(intent);
-                    }
-
-                    if (callback != null) {
-                        callback.run();
-                    }
-                    return;
-                } catch (SecurityException | IllegalStateException e) {
-                    Logger.error("Unable to run push in the push service.", e);
-
-                    if (allowWakeLocks) {
-                        //noinspection deprecation
-                        WakefulBroadcastReceiver.completeWakefulIntent(intent);
-                    }
-                }
-            }
-
-            // Otherwise fallback to running push in the executor
             IncomingPushRunnable.Builder pushRunnableBuilder = new IncomingPushRunnable.Builder(context)
                     .setMessage(pushMessage)
                     .setProviderClass(provider.toString());
