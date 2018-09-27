@@ -61,7 +61,7 @@ public class HtmlActivity extends InAppMessageActivity {
         }
 
         float borderRadius = 0;
-        if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_modal_allow_fullscreen_display)) {
+        if (displayContent.isFullscreenDisplayAllowed() && getResources().getBoolean(R.bool.ua_iam_html_allow_fullscreen_display)) {
             setContentView(R.layout.ua_iam_html_fullscreen);
         } else {
             setContentView(R.layout.ua_iam_html);

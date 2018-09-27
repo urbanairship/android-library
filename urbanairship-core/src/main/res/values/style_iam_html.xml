@@ -20,8 +20,6 @@
     </style>
 
     <style name="UrbanAirship.InAppHtml.Layout.Fullscreen">
-        <item name="urbanAirshipMaxWidth">0dp</item>
-        <item name="android:layout_margin">0dp</item>
     </style>
 
     <style name="UrbanAirship.InAppHtml.Content">
@@ -37,6 +35,12 @@
 
     <style name="UrbanAirship.InAppHtml.Content.Fullscreen">
         <item name="android:elevation" tools:ignore="NewApi">0dp</item>
+        <item name="urbanAirshipMaxWidth">0dp</item>
+        <item name="urbanAirshipMaxHeight">0dp</item>
+        <item name="android:layout_marginLeft">0dp</item>
+        <item name="android:layout_marginRight">0dp</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
     </style>
 
     <style name="UrbanAirship.InAppHtml.DismissButton">
