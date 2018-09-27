@@ -3,16 +3,13 @@
 package com.urbanairship.push.fcm;
 
 import android.content.Context;
-import android.os.Bundle;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
 
-import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
@@ -23,6 +20,11 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage message) {
         processMessageSync(getApplicationContext(), message);
+    }
+
+    @Override
+    public void onNewToken(String token) {
+        processNewToken(getApplicationContext());
     }
 
     /**
@@ -56,5 +58,14 @@ public class AirshipFirebaseMessagingService extends FirebaseMessagingService {
     public static void processMessageSync(Context context, RemoteMessage message) {
         PushProviderBridge.processPush(FcmPushProvider.class, new PushMessage(message.getData()))
                           .executeSync(context);
+    }
+
+    /**
+     * Called to handle new tokens.
+     *
+     * @param context The application context.
+     */
+    public static void processNewToken(Context context) {
+        PushProviderBridge.requestRegistrationUpdate(context);
     }
 }

@@ -1,15 +1,15 @@
 /* Copyright 2017-18 Urban Airship and Contributors */
 package com.urbanairship.push.fcm;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
@@ -37,6 +37,10 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return UAirship.ANDROID_PLATFORM;
     }
 
+
+    // Suppressing MissingFirebaseInstanceTokenRefresh, FirebaseInstanceIdService is deprecated
+    // but the lint warning does not seem to check for the new method.
+    @SuppressLint("MissingFirebaseInstanceTokenRefresh")
     @Override
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
 
@@ -127,11 +131,13 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return "FCM Push Provider";
     }
 
+    @NonNull
     @Override
     public String getAirshipVersion() {
         return BuildConfig.URBAN_AIRSHIP_VERSION;
     }
 
+    @NonNull
     @Override
     public String getPackageVersion() {
         return BuildConfig.SDK_VERSION;
