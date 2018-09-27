@@ -1,9 +1,0 @@
-description = "Urban Airship Android SDK with GCM plugin"
-
-apply from: "../common-build.gradle"
-
-dependencies {
-    api project(':urbanairship-core')
-    api project(':urbanairship-gcm')
-    api project(':urbanairship-adm')
-}
