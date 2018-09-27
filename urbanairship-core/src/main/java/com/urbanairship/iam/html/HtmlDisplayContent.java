@@ -8,7 +8,6 @@ import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.iam.DisplayContent;
-import com.urbanairship.iam.modal.ModalDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;

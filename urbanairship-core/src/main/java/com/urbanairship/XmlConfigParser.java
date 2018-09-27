@@ -23,7 +23,7 @@ class XmlConfigParser implements ConfigParser {
 
     private final Context context;
 
-    private XmlResourceParser parser;
+    private final XmlResourceParser parser;
     private AttributeSet attributeSet;
 
     /**

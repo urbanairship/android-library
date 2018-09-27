@@ -35,9 +35,7 @@ public class RemoteDataJobHandlerTest extends BaseTestCase {
         client = Mockito.mock(RemoteDataApiClient.class);
         remoteData = Mockito.mock(RemoteData.class);
 
-        TestApplication.getApplication().setRemoteData(remoteData);
-
-        jobHandler = new RemoteDataJobHandler(TestApplication.getApplication(), UAirship.shared(), client);
+        jobHandler = new RemoteDataJobHandler(remoteData, client);
 
         when(remoteData.getLastModified()).thenReturn("lastModifiedRequest");
 

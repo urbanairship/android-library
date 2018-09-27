@@ -2,6 +2,8 @@
 
 package com.urbanairship.js;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 
@@ -439,7 +441,7 @@ public class WhitelistTest extends BaseTestCase {
         public String nonMatchingURL;
 
         @Override
-        public boolean acceptWhitelisting(String url, @Whitelist.Scope int scope) {
+        public boolean acceptWhitelisting(@NonNull String url, @Whitelist.Scope int scope) {
             if (url.equals(matchingURLToAccept)) {
                 return true;
             } else if (url.equals(matchingURLToReject)) {

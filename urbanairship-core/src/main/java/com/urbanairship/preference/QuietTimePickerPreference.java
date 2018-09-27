@@ -21,7 +21,7 @@ import java.util.Calendar;
  */
 public abstract class QuietTimePickerPreference extends DialogPreference {
     private TimePicker timePicker = null;
-    private long currentTime = -1;
+    private long currentTime;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public QuietTimePickerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {

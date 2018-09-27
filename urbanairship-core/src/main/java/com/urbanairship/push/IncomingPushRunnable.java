@@ -11,7 +11,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.urbanairship.ActivityMonitor;
 import com.urbanairship.CoreReceiver;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -47,8 +46,8 @@ class IncomingPushRunnable implements Runnable {
     private final PushMessage message;
     private final String providerClass;
     private final NotificationManagerCompat notificationManager;
-    private boolean isLongRunning;
-    private boolean isProcessed;
+    private final boolean isLongRunning;
+    private final boolean isProcessed;
     private final JobDispatcher jobDispatcher;
 
     /**

@@ -19,7 +19,7 @@ interface Scheduler {
      * @param scheduleId The jobInfo's mapped ID.
      * @throws SchedulerException if the scheduler fails to cancel.
      */
-    void cancel(@NonNull Context context, @NonNull int scheduleId) throws SchedulerException;
+    void cancel(@NonNull Context context, int scheduleId) throws SchedulerException;
 
     /**
      * Schedules a jobInfo.

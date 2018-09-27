@@ -16,7 +16,6 @@ import com.urbanairship.util.IvyVersionMatcher;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +41,7 @@ class DisableInfo implements JsonSerializable {
     private final long remoteDataInterval;
     private final Set<String> sdkVersionConstraints;
 
-    private JsonPredicate appVersionPredicate;
+    private final JsonPredicate appVersionPredicate;
 
     /***
      * Default constructor.
@@ -263,7 +262,7 @@ class DisableInfo implements JsonSerializable {
      */
     public static class Builder {
 
-        private Set<String> disabledModules = new HashSet<>();
+        private final Set<String> disabledModules = new HashSet<>();
         private long remoteDataInterval;
         private Set<String> sdkVersionConstraints;
         private JsonPredicate appVersionPredicate;

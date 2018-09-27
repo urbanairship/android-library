@@ -16,11 +16,13 @@ public class ColorUtils {
      * @return The color string.
      */
     public static String convertToString(@ColorInt int color) {
-        String hex = Integer.toHexString(color);
-        while (hex.length() < 8) {
-            hex = hex + "0";
+        StringBuilder hex = new StringBuilder("#");
+        hex.append(Integer.toHexString(color));
+
+        while (hex.length() < 9) {
+            hex.append("0");
         }
 
-        return "#" + hex;
+        return hex.toString();
     }
 }

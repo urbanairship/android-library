@@ -27,7 +27,7 @@
         <!-- Match elevation of the rest of the layout -->
         <item name="android:elevation" tools:targetApi="lollipop">24dp</item>
         <item name="android:background">@drawable/ua_iam_dismiss_background</item>
-        <item name="android:src">@drawable/ua_ic_close_white_18dp</item>
+        <item name="android:src">@drawable/ua_ic_close_white</item>
         <item name="android:layout_marginRight">16dp</item>
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:layout_width">32dp</item>

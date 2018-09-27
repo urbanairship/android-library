@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.messagecenter.ThemedActivity;
 
 /**

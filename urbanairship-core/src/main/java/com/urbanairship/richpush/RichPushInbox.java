@@ -746,7 +746,7 @@ public class RichPushInbox extends AirshipComponent {
 
     static class PendingFetchMessagesCallback extends CancelableOperation {
 
-        private FetchMessagesCallback callback;
+        private final FetchMessagesCallback callback;
         boolean result;
 
         public PendingFetchMessagesCallback(FetchMessagesCallback callback, Looper looper) {

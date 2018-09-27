@@ -132,7 +132,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Get the error code and retrieve the appropriate dialog
-            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            int errorCode = getArguments() != null ? this.getArguments().getInt(DIALOG_ERROR) : 0;
             return GoogleApiAvailability.getInstance().getErrorDialog(this.getActivity(), errorCode,
                     REQUEST_RESOLVE_ERROR);
         }

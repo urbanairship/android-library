@@ -29,8 +29,8 @@ public class PendingResult<T> implements Cancelable, Future<T> {
     @Nullable
     private T result;
 
-    private List<Cancelable> cancelables = new ArrayList<>();
-    private List<CancelableOperation> resultCallbacks = new ArrayList<>();
+    private final List<Cancelable> cancelables = new ArrayList<>();
+    private final List<CancelableOperation> resultCallbacks = new ArrayList<>();
 
     @Override
     public final boolean cancel() {

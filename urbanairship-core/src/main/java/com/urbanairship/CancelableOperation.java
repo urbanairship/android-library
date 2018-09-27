@@ -20,8 +20,8 @@ public abstract class CancelableOperation implements Cancelable, Runnable {
     private final Handler handler;
     private final Runnable internalRunnable;
 
-    private List<Cancelable> cancelables = new ArrayList<>();
-    private List<Runnable> runnables = new ArrayList<>();
+    private final List<Cancelable> cancelables = new ArrayList<>();
+    private final List<Runnable> runnables = new ArrayList<>();
 
     /**
      * CancelableOperation constructor.

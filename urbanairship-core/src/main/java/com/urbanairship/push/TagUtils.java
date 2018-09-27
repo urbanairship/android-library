@@ -5,10 +5,7 @@ package com.urbanairship.push;
 import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
-import com.urbanairship.http.Response;
-import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;

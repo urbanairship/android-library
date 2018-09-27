@@ -11,7 +11,6 @@ import com.urbanairship.push.PushProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Loads push providers.
@@ -22,8 +21,8 @@ class PushProviders {
     private static final String FCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.fcm.FcmPushProvider";
     private static final String ADM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.adm.AdmPushProvider";
 
-    private List<PushProvider> supportedProviders = new ArrayList<>();
-    private List<PushProvider> availableProviders = new ArrayList<>();
+    private final List<PushProvider> supportedProviders = new ArrayList<>();
+    private final List<PushProvider> availableProviders = new ArrayList<>();
 
     private PushProviders() {}
 

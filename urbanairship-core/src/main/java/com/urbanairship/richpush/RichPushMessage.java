@@ -297,7 +297,7 @@ public class RichPushMessage implements Comparable<RichPushMessage> {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof RichPushMessage)) {
+        if (!(o instanceof RichPushMessage)) {
             return false;
         }
 

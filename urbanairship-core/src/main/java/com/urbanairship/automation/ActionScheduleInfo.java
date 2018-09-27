@@ -268,8 +268,8 @@ public class ActionScheduleInfo implements ScheduleInfo, Parcelable {
      * Builder class.
      */
     public static class Builder {
-        private List<Trigger> triggers = new ArrayList<>();
-        private Map<String, JsonValue> actions = new HashMap<>();
+        private final List<Trigger> triggers = new ArrayList<>();
+        private final Map<String, JsonValue> actions = new HashMap<>();
         private String group;
         private long start = -1;
         private long end = -1;

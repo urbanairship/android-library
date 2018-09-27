@@ -4,9 +4,6 @@ package com.urbanairship.iam.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Path;
-import android.graphics.RectF;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 

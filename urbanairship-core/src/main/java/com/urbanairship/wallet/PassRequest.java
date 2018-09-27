@@ -230,8 +230,8 @@ public class PassRequest {
     public static class Builder {
         private String apiKey;
         private String templateId;
-        private List<Field> fields = new ArrayList<>();
-        private List<Field> headers = new ArrayList<>();
+        private final List<Field> fields = new ArrayList<>();
+        private final List<Field> headers = new ArrayList<>();
         private String tag;
         private String externalId;
         public String userName;

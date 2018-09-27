@@ -85,8 +85,9 @@ public class NotificationFactory {
          */
         public static final int CANCEL = 2;
 
-        private Notification notification;
+        private final Notification notification;
         private @Status
+        final
         int status;
 
         /**

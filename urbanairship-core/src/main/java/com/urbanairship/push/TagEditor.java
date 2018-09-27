@@ -11,8 +11,8 @@ import java.util.Set;
 public abstract class TagEditor {
 
     private boolean clear = false;
-    private Set<String> tagsToAdd = new HashSet<>();
-    private Set<String> tagsToRemove = new HashSet<>();
+    private final Set<String> tagsToAdd = new HashSet<>();
+    private final Set<String> tagsToRemove = new HashSet<>();
 
     TagEditor() {}
 

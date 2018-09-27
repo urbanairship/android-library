@@ -68,13 +68,12 @@ public class RemoteData extends AirshipComponent {
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
 
-    private Context context;
-    private AirshipConfigOptions configOptions;
-    private JobDispatcher jobDispatcher;
+    private final Context context;
+    private final JobDispatcher jobDispatcher;
     private RemoteDataJobHandler jobHandler;
-    private PreferenceDataStore preferenceDataStore;
+    private final PreferenceDataStore preferenceDataStore;
     private Handler backgroundHandler;
-    private ActivityMonitor activityMonitor;
+    private final ActivityMonitor activityMonitor;
 
     private final ActivityMonitor.Listener activityListener = new ActivityMonitor.SimpleListener() {
         @Override
@@ -84,12 +83,15 @@ public class RemoteData extends AirshipComponent {
     };
 
     @VisibleForTesting
+    final
     Subject<Set<RemoteDataPayload>> payloadUpdates;
 
     @VisibleForTesting
+    final
     HandlerThread backgroundThread;
 
     @VisibleForTesting
+    final
     RemoteDataStore dataStore;
 
     /**
@@ -109,7 +111,6 @@ public class RemoteData extends AirshipComponent {
      *
      * @param context The application context.
      * @param preferenceDataStore The preference data store
-     * @param configOptions The config options.
      * @param activityMonitor The activity monitor.
      * @param dispatcher A job dispatcher.
      */
@@ -117,7 +118,6 @@ public class RemoteData extends AirshipComponent {
     RemoteData(Context context, @NonNull PreferenceDataStore preferenceDataStore, AirshipConfigOptions configOptions, ActivityMonitor activityMonitor, JobDispatcher dispatcher) {
         super(preferenceDataStore);
         this.context = context;
-        this.configOptions = configOptions;
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getAppKey(), DATABASE_NAME);
         this.preferenceDataStore = preferenceDataStore;
@@ -151,7 +151,7 @@ public class RemoteData extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (jobHandler == null) {
-            jobHandler = new RemoteDataJobHandler(context, airship);
+            jobHandler = new RemoteDataJobHandler(airship);
         }
 
 

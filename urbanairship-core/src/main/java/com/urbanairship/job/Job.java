@@ -125,7 +125,7 @@ class Job implements Runnable {
      */
     public static class Builder {
 
-        private JobInfo jobInfo;
+        private final JobInfo jobInfo;
         private Callback callback;
 
         /**

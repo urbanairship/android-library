@@ -166,7 +166,7 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
      */
     public static class Builder {
         private String type = OR_PREDICATE_TYPE;
-        private List<Predicate<JsonSerializable>> items = new ArrayList<>();
+        private final List<Predicate<JsonSerializable>> items = new ArrayList<>();
 
         /**
          * Sets the predicate type. If type NOT, only one matcher or predicate is

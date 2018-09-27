@@ -274,6 +274,7 @@ public class BannerDismissLayout extends FrameLayout {
     }
 
     @Override
+    @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
         dragHelper.processTouchEvent(event);
 
@@ -306,17 +307,17 @@ public class BannerDismissLayout extends FrameLayout {
         private boolean isDismissed = false;
 
         @Override
-        public boolean tryCaptureView(View view, int i) {
+        public boolean tryCaptureView(@NonNull View view, int i) {
             return capturedView == null;
         }
 
         @Override
-        public int clampViewPositionHorizontal(View child, int left, int dx) {
+        public int clampViewPositionHorizontal(@NonNull View child, int left, int dx) {
             return child.getLeft();
         }
 
         @Override
-        public int clampViewPositionVertical(View child, int top, int dy) {
+        public int clampViewPositionVertical(@NonNull View child, int top, int dy) {
             switch (placement) {
                 case BannerDisplayContent.PLACEMENT_TOP:
                     return Math.round(Math.min(top, startTop + overDragAmount));
@@ -328,7 +329,7 @@ public class BannerDismissLayout extends FrameLayout {
         }
 
         @Override
-        public void onViewCaptured(View view, int activePointerId) {
+        public void onViewCaptured(@NonNull View view, int activePointerId) {
             capturedView = view;
             startTop = view.getTop();
             startLeft = view.getLeft();
@@ -338,7 +339,7 @@ public class BannerDismissLayout extends FrameLayout {
 
         @Override
         @SuppressLint("NewApi")
-        public void onViewPositionChanged(View view, int left, int top, int dx, int dy) {
+        public void onViewPositionChanged(@NonNull View view, int left, int top, int dx, int dy) {
             int range = getHeight();
             int moved = Math.abs(top - startTop);
 
@@ -375,7 +376,7 @@ public class BannerDismissLayout extends FrameLayout {
         }
 
         @Override
-        public void onViewReleased(final View view, float xv, float yv) {
+        public void onViewReleased(@NonNull final View view, float xv, float yv) {
 
             float absYv = Math.abs(yv);
             if (BannerDisplayContent.PLACEMENT_TOP.equals(placement) ?  startTop >= view.getTop() : startTop <= view.getTop()) {

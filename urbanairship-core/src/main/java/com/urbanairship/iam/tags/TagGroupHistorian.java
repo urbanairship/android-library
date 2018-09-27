@@ -3,8 +3,6 @@
 package com.urbanairship.iam.tags;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -57,7 +55,7 @@ class TagGroupHistorian {
     void init() {
         tagGroupRegistrar.addListener(new TagGroupRegistrar.Listener() {
             @Override
-            public void onMutationUploaded(TagGroupsMutation mutation) {
+            public void onMutationUploaded(@NonNull TagGroupsMutation mutation) {
                 recordMutation(mutation);
             }
         });

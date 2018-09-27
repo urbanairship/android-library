@@ -2,39 +2,21 @@ package com.urbanairship.actions;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
-import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.messagecenter.ThemedActivity;
-
-import com.urbanairship.util.ManifestUtils;
-
-import static com.urbanairship.UAirship.getPackageName;
 
 /**
  * An activity that displays a Rate App prompt that links to an app store.
@@ -52,7 +34,6 @@ public class RateAppActivity extends ThemedActivity {
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
             Logger.error("RateAppActivity - unable to create activity, takeOff not called.");
             finish();
-            return;
         }
     }
 
@@ -196,8 +177,7 @@ public class RateAppActivity extends ThemedActivity {
 
         try {
             ApplicationInfo info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            String appName = (String)packageManager.getApplicationLabel(info);
-            return appName;
+            return (String)packageManager.getApplicationLabel(info);
         } catch (PackageManager.NameNotFoundException e) {
             return "";
         }

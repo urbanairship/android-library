@@ -146,7 +146,7 @@ class PushManagerJobHandler {
         PushMessage message = PushMessage.fromJsonValue(jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PUSH));
         String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
 
-        if (message == null || providerClass == null) {
+        if (providerClass == null) {
             return JobInfo.JOB_FINISHED;
         }
 
@@ -167,7 +167,7 @@ class PushManagerJobHandler {
         PushMessage message = PushMessage.fromJsonValue(jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PUSH));
         String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
 
-        if (message == null || providerClass == null) {
+        if (providerClass == null) {
             return JobInfo.JOB_FINISHED;
         }
 

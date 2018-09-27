@@ -10,8 +10,6 @@ import android.support.annotation.NonNull;
 
 import com.urbanairship.Logger;
 
-import java.lang.reflect.Modifier;
-
 /**
  * A utility class to help verify and resolve Google Play services issues.
  */

@@ -342,7 +342,7 @@ public class Triggers {
      */
     public static class VersionTriggerBuilder {
         private double goal = 1;
-        private ValueMatcher versionMatcher;
+        private final ValueMatcher versionMatcher;
 
         private VersionTriggerBuilder(ValueMatcher versionMatcher) { this.versionMatcher = versionMatcher; }
 

@@ -3,6 +3,7 @@
 package com.urbanairship.analytics.data;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -236,6 +237,7 @@ public class EventApiClient {
      *
      * @return <code>true</code> if Bluetooth is enabled, otherwise <code>false</code>.
      */
+    @SuppressLint("MissingPermission")
     boolean isBluetoothEnabled() {
         if (!ManifestUtils.isPermissionGranted(Manifest.permission.BLUETOOTH)) {
             // Manifest missing Bluetooth permissions

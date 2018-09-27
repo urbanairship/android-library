@@ -9,9 +9,6 @@ import android.support.annotation.RestrictTo;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  * Helper class that keeps track of the schedule's adapter, assets, and execution callback.
  *

@@ -33,7 +33,7 @@ public class InAppMessageScheduleInfo implements ScheduleInfo {
     public static final long TRIGGER_LIMIT = 10;
 
     // JSON key
-    static String MESSAGE_KEY = "message";
+    static final String MESSAGE_KEY = "message";
 
     private final int limit;
     private final long start;

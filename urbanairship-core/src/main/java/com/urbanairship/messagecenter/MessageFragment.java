@@ -7,11 +7,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
@@ -96,7 +96,7 @@ public class MessageFragment extends Fragment {
      * @return Return the View for the fragment's UI, or null.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message, container, false);
         ensureView(view);
         return view;
@@ -104,7 +104,7 @@ public class MessageFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureView(view);
     }
@@ -347,6 +347,9 @@ public class MessageFragment extends Fragment {
      * @return The {@link RichPushMessage} ID.
      */
     public String getMessageId() {
+        if (getArguments() == null) {
+            return null;
+        }
         return getArguments().getString(MESSAGE_ID_KEY);
     }
 

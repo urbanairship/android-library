@@ -2,6 +2,8 @@
 
 package com.urbanairship.remoteconfig;
 
+import android.support.annotation.NonNull;
+
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonList;
@@ -145,7 +147,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         Map<String, JsonList> sentConfig = new HashMap<>();
 
         @Override
-        public void setComponentEnabled(String module, boolean enabled) {
+        public void setComponentEnabled(@NonNull String module, boolean enabled) {
             if (enabled) {
                 enabledModules.add(module);
             } else {
@@ -160,7 +162,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
         }
 
         @Override
-        public void onNewConfig(String module, JsonList config) {
+        public void onNewConfig(@NonNull String module, @NonNull JsonList config) {
             if (sentConfig.get(module) != null) {
                 throw new IllegalStateException("Make sure to reset test sender between checks");
             }

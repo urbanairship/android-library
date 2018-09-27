@@ -80,7 +80,7 @@ public class EnableFeatureAction extends Action {
             @NonNull
             @Override
             public int[] requestPermissions(@NonNull Context context, @NonNull List<String> permissions) {
-                return HelperActivity.requestPermissions(context, permissions.toArray(new String[permissions.size()]));
+                return HelperActivity.requestPermissions(context, permissions.toArray(new String[0]));
             }
         });
     }

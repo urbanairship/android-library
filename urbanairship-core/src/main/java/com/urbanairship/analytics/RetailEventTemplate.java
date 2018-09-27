@@ -79,7 +79,7 @@ public class RetailEventTemplate {
      */
     private static final String MEDIUM = "medium";
 
-    private String eventName;
+    private final String eventName;
 
     // optional
     private BigDecimal value;

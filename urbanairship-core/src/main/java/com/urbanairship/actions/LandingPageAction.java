@@ -109,7 +109,7 @@ public class LandingPageAction extends Action {
         // Parse width
         if (arguments.getValue().getMap() != null) {
             int widthPoints = arguments.getValue().getMap().opt(WIDTH_KEY).getInt(0);
-            width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());;
+            width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthPoints, context.getResources().getDisplayMetrics());
         }
 
         // Parse height

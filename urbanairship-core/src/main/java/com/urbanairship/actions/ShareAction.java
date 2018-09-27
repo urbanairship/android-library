@@ -106,7 +106,7 @@ public class ShareAction extends Action {
                                   .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         } else {
             chooserIntent = Intent.createChooser(intents.remove(intents.size() - 1), context.getString(R.string.ua_share_dialog_title))
-                                  .putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Intent[intents.size()]))
+                                  .putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Intent[0]))
                                   .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
 

@@ -9,7 +9,6 @@ import android.support.annotation.MainThread;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 
 /**
  * FrameLayout that supports max width.
@@ -18,8 +17,8 @@ import android.widget.LinearLayout;
  */
 public class BoundedFrameLayout extends FrameLayout {
 
-    private BoundedViewDelegate boundedViewDelegate;
-    private ClippableViewDelegate clippableViewDelegate;
+    private final BoundedViewDelegate boundedViewDelegate;
+    private final ClippableViewDelegate clippableViewDelegate;
 
     /**
      * Default constructor.

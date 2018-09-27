@@ -104,7 +104,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     private final JsonSerializable content;
     private final Audience audience;
     private final Map<String, JsonValue> actions;
-    private JsonValue campaigns;
+    private final JsonValue campaigns;
 
     @Source
     private final String source;
@@ -380,7 +380,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
         if (type != null ? !type.equals(message.type) : message.type != null) {
             return false;
         }
-        if (extras != null ? !extras.equals(message.extras) : message.extras != null) {
+        if (!extras.equals(message.extras)) {
             return false;
         }
         if (id != null ? !id.equals(message.id) : message.id != null) {
@@ -404,7 +404,7 @@ public class InAppMessage implements Parcelable, JsonSerializable {
     @Override
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + (extras != null ? extras.hashCode() : 0);
+        result = 31 * result + extras.hashCode();
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (content != null ? content.hashCode() : 0);
         result = 31 * result + (audience != null ? audience.hashCode() : 0);

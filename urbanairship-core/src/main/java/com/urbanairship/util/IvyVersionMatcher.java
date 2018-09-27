@@ -43,7 +43,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     private static final Pattern SUB_VERSION = Pattern.compile(SUB_VERSION_PATTERN);
 
     private final Predicate<String> predicate;
-    private String constraint;
+    private final String constraint;
 
     private IvyVersionMatcher(Predicate<String> predicate, String constraint) {
         this.predicate = predicate;
@@ -242,8 +242,8 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * Helper class to compare version strings.
      */
     private static class Version implements Comparable<Version> {
-        int[] versionComponent = new int[] { 0, 0, 0 };
-        String version;
+        final int[] versionComponent = new int[] { 0, 0, 0 };
+        final String version;
 
         public Version(String version) {
             this.version = version;

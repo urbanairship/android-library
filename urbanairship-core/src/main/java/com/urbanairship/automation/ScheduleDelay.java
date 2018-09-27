@@ -13,7 +13,7 @@ import com.urbanairship.json.JsonValue;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -246,7 +246,7 @@ public class ScheduleDelay implements Parcelable {
         private List<String> screens = new ArrayList<>();
         private int appState = APP_STATE_ANY;
         private String regionId = null;
-        private List<Trigger> cancellationTriggers = new ArrayList<>();
+        private final List<Trigger> cancellationTriggers = new ArrayList<>();
 
         /**
          * Sets the delay in seconds.
@@ -266,7 +266,7 @@ public class ScheduleDelay implements Parcelable {
          * @return The Builder instance.
          */
         public Builder setScreen(String screen) {
-            this.screens = Arrays.asList(screen);
+            this.screens = Collections.singletonList(screen);
             return this;
         }
 

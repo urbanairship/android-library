@@ -23,7 +23,7 @@ public class MessageActivity extends ThemedActivity {
 
     private String messageId;
 
-    private RichPushInbox.Listener updateMessageListener = new RichPushInbox.Listener() {
+    private final RichPushInbox.Listener updateMessageListener = new RichPushInbox.Listener() {
         @Override
         public void onInboxUpdated() {
             if (messageId != null) {

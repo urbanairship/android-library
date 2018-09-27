@@ -99,7 +99,7 @@ public class MessageItemView extends FrameLayout {
 
         View contentView = View.inflate(context, contentLayout, this);
 
-        titleView = (TextView) contentView.findViewById(R.id.title);
+        titleView = contentView.findViewById(R.id.title);
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance, titleFont);
         if (titleView.getTypeface() != null) {
             titleReadTypeface = titleView.getTypeface();
@@ -111,10 +111,10 @@ public class MessageItemView extends FrameLayout {
             titleTypeface = Typeface.DEFAULT_BOLD;
         }
 
-        dateView = (TextView) contentView.findViewById(R.id.date);
+        dateView = contentView.findViewById(R.id.date);
         ViewUtils.applyTextStyle(context, dateView, dateTextAppearance, dateFont);
 
-        iconView = (ImageView) contentView.findViewById(R.id.image);
+        iconView = contentView.findViewById(R.id.image);
         if (iconView != null) {
             iconView.setOnClickListener(new OnClickListener() {
                 @Override
@@ -126,7 +126,7 @@ public class MessageItemView extends FrameLayout {
             });
         }
 
-        checkBox = (CheckBox) contentView.findViewById(R.id.checkbox);
+        checkBox = contentView.findViewById(R.id.checkbox);
         if (checkBox != null) {
             checkBox.setOnClickListener(new OnClickListener() {
                 @Override

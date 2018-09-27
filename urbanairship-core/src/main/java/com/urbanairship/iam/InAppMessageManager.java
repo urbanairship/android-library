@@ -88,8 +88,8 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
     private String currentScheduleId;
     private WeakReference<Activity> resumedActivity;
     private WeakReference<Activity> currentActivity;
-    private Stack<String> carryOverScheduleIds = new Stack<>();
-    private Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
+    private final Stack<String> carryOverScheduleIds = new Stack<>();
+    private final Map<String, AdapterWrapper> adapterWrappers = new HashMap<>();
     private boolean isDisplayedLocked = false;
     private final InAppRemoteDataObserver remoteDataSubscriber;
 
@@ -232,6 +232,7 @@ public class InAppMessageManager extends AirshipComponent implements InAppMessag
         });
 
         tagGroupManager.setRequestTagsCallback(new TagGroupManager.RequestTagsCallback() {
+            @NonNull
             @Override
             public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
                 Map<String, Set<String>> tags = new HashMap<>();

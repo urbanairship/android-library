@@ -7,12 +7,13 @@ import android.location.Location;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+
+import com.google.android.gms.common.ConnectionResult;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
@@ -28,7 +29,7 @@ import com.urbanairship.google.GooglePlayServicesUtilWrapper;
 class FusedLocationAdapter implements LocationAdapter {
 
     private static final int REQUEST_CODE = 1;
-    private FusedLocationProviderClient client;
+    private final FusedLocationProviderClient client;
 
 
     public FusedLocationAdapter(Context context) {

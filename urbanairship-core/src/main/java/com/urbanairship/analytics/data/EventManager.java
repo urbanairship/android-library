@@ -149,8 +149,7 @@ public class EventManager {
                     long currentTime = System.currentTimeMillis();
                     long lastSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0);
                     long sendDelta = currentTime - lastSendTime;
-                    long throttleDelta = backgroundReportingIntervalMS;
-                    long minimumWait = Math.max(throttleDelta - sendDelta, getNextSendDelay());
+                    long minimumWait = Math.max(backgroundReportingIntervalMS - sendDelta, getNextSendDelay());
                     scheduleEventUpload(Math.max(minimumWait, LOW_PRIORITY_BATCH_DELAY), TimeUnit.MILLISECONDS);
                 }
                 break;

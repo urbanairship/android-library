@@ -33,7 +33,7 @@ public class Automation extends AirshipComponent {
      */
     private static final String DATABASE_NAME = "ua_automation.db";
 
-    private AutomationEngine<ActionSchedule> automationEngine;
+    private final AutomationEngine<ActionSchedule> automationEngine;
 
     /**
      * Automation schedules limit.

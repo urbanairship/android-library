@@ -2,7 +2,6 @@
 
 package com.urbanairship;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -36,12 +35,6 @@ public class ChannelCaptureActivity extends ThemedActivity {
     private static final String USER_NOTIFICATION_ENABLED_HEADER = "User Notifications Enabled";
     private static final String NAMED_USER_HEADER = "Named User";
 
-    private TextView channelID;
-    private Button shareButton;
-    private Button copyButton;
-    private Button urlButton;
-    private ListView channelData;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,9 +53,9 @@ public class ChannelCaptureActivity extends ThemedActivity {
         final String channelString = intent.getStringExtra(ChannelCapture.CHANNEL);
         final String urlString = intent.getStringExtra(ChannelCapture.URL);
 
-        channelID = (TextView) findViewById(R.id.channel_id);
+        TextView channelID = findViewById(R.id.channel_id);
         channelID.setText(channelString);
-        shareButton = (Button) findViewById(R.id.share_button);
+        Button shareButton = findViewById(R.id.share_button);
         shareButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,7 +65,7 @@ public class ChannelCaptureActivity extends ThemedActivity {
             }
         });
 
-        copyButton = (Button) findViewById(R.id.copy_button);
+        Button copyButton = findViewById(R.id.copy_button);
         copyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,14 +74,14 @@ public class ChannelCaptureActivity extends ThemedActivity {
                                 .run(new ActionCompletionCallback() {
                                     @Override
                                     public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
-                                        Toast.makeText(getApplicationContext(), "copied", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), getString(R.string.ua_channel_copy_toast), Toast.LENGTH_SHORT).show();
                                     }
                                 });
             }
         });
 
 
-        urlButton = (Button) findViewById(R.id.open_button);
+        Button urlButton = findViewById(R.id.open_button);
         if (urlString != null) {
             urlButton.setEnabled(true);
             urlButton.setOnClickListener(new View.OnClickListener() {
@@ -101,7 +94,7 @@ public class ChannelCaptureActivity extends ThemedActivity {
             });
         }
 
-        channelData = (ListView) findViewById(R.id.channel_information);
+        ListView channelData = findViewById(R.id.channel_information);
         SimpleAdapter channelAdapter = new SimpleAdapter(
                 this,
                 getChannelData(),

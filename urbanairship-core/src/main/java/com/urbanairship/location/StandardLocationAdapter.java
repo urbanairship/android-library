@@ -170,11 +170,11 @@ class StandardLocationAdapter implements LocationAdapter {
         private final Criteria criteria;
         private final LocationRequestOptions options;
         private String currentProvider = null;
-        private Context context;
+        private final Context context;
 
         private final AndroidLocationListener currentProviderListener;
         private final AndroidLocationListener providerEnabledListeners;
-        private LocationManager locationManager;
+        private final LocationManager locationManager;
 
         /**
          * SingleLocationRequest constructor.
@@ -233,6 +233,7 @@ class StandardLocationAdapter implements LocationAdapter {
             listenForLocationChanges(context);
         }
 
+        @SuppressLint("MissingPermission")
         private void listenForLocationChanges(@NonNull Context context) {
             if (currentProvider != null) {
                 //noinspection MissingPermission
@@ -254,6 +255,7 @@ class StandardLocationAdapter implements LocationAdapter {
          * Adds a listener to every provider to be notified when providers
          * are enabled/disabled.
          */
+        @SuppressLint("MissingPermission")
         private void listenForProvidersEnabled() {
             List<String> providers = locationManager.getProviders(criteria, false);
             if (providers != null) {
@@ -279,6 +281,7 @@ class StandardLocationAdapter implements LocationAdapter {
         /**
          * Stop listening for updates.
          */
+        @SuppressLint("MissingPermission")
         private void stopUpdates() {
             //noinspection MissingPermission
             locationManager.removeUpdates(currentProviderListener);

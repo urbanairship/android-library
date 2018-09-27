@@ -110,11 +110,13 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         return "Adm Push Provider";
     }
 
+    @NonNull
     @Override
     public String getAirshipVersion() {
         return BuildConfig.URBAN_AIRSHIP_VERSION;
     }
 
+    @NonNull
     @Override
     public String getPackageVersion() {
         return BuildConfig.SDK_VERSION;

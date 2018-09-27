@@ -36,7 +36,7 @@ public class ActivityMonitor {
     private boolean isForeground;
     private WeakReference<Activity> resumedActivityReference;
 
-    protected Application.ActivityLifecycleCallbacks activityLifecycleCallbacks = new Application.ActivityLifecycleCallbacks() {
+    protected final Application.ActivityLifecycleCallbacks activityLifecycleCallbacks = new Application.ActivityLifecycleCallbacks() {
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
             for (Listener listener : new ArrayList<>(listeners)) {

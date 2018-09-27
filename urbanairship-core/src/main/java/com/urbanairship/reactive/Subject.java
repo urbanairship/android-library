@@ -15,7 +15,7 @@ import java.util.ArrayList;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Subject<T> extends Observable<T> implements Observer<T> {
 
-    private ArrayList<Observer<T>> observers;
+    private final ArrayList<Observer<T>> observers;
     private boolean completed = false;
     private Exception error;
 

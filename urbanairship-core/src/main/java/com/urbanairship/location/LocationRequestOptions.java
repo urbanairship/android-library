@@ -48,7 +48,7 @@ public class LocationRequestOptions implements JsonSerializable, Parcelable {
     public static final float DEFAULT_UPDATE_INTERVAL_METERS = 800;
 
     /**
-     * Default minTime in milliseconds - 5 mins.
+     * Default minTime in milliseconds - 5 minutes.
      */
     public static final long DEFAULT_UPDATE_INTERVAL_MILLISECONDS = 5 * 60 * 1000;
 

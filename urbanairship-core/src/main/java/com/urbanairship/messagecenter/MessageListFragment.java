@@ -106,7 +106,7 @@ public class MessageListFragment extends Fragment {
      * @return Return the View for the fragment's UI, or null.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_message_list, container, false);
         ensureList(view);
 
@@ -132,7 +132,7 @@ public class MessageListFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ensureList(view);
 
@@ -155,7 +155,7 @@ public class MessageListFragment extends Fragment {
         if (view instanceof AbsListView) {
             absListView = (AbsListView) view;
         } else {
-            absListView = (AbsListView) view.findViewById(android.R.id.list);
+            absListView = view.findViewById(android.R.id.list);
         }
 
         if (absListView == null) {
@@ -165,7 +165,7 @@ public class MessageListFragment extends Fragment {
         absListView.setAdapter(adapter);
 
         // Pull to refresh
-        refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+        refreshLayout = view.findViewById(R.id.swipe_container);
         if (refreshLayout != null) {
             refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -182,7 +182,7 @@ public class MessageListFragment extends Fragment {
                 .getTheme()
                 .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
 
-        if (emptyListView != null && emptyListView instanceof TextView) {
+        if (emptyListView instanceof TextView) {
             TextView textView = (TextView) emptyListView;
             int textAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterEmptyMessageTextAppearance, -1);
             Typeface typeface = ViewUtils.createTypeface(getContext(), textAppearance);

@@ -227,21 +227,21 @@ public class JsonMatcher implements JsonSerializable, Predicate<JsonSerializable
         if (key != null ? !key.equals(matcher.key) : matcher.key != null) {
             return false;
         }
-        if (scopeList != null ? !scopeList.equals(matcher.scopeList) : matcher.scopeList != null) {
+        if (!scopeList.equals(matcher.scopeList)) {
             return false;
         }
         if (ignoreCase != null ? !ignoreCase.equals(matcher.ignoreCase) : matcher.ignoreCase != null) {
             return false;
         }
 
-        return value != null ? value.equals(matcher.value) : matcher.value == null;
+        return value.equals(matcher.value);
     }
 
     @Override
     public int hashCode() {
         int result = key != null ? key.hashCode() : 0;
-        result = 31 * result + (scopeList != null ? scopeList.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + scopeList.hashCode();
+        result = 31 * result + value.hashCode();
         result = 31 * result + (ignoreCase != null ? ignoreCase.hashCode() : 0);
         return result;
     }

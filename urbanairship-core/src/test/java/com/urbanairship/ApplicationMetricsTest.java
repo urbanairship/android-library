@@ -21,7 +21,7 @@ public class ApplicationMetricsTest extends BaseTestCase {
         activityMonitor = new TestActivityMonitor();
         activityMonitor.register();
 
-        metrics = new ApplicationMetrics(TestApplication.getApplication(), preferenceDataStore, activityMonitor);
+        metrics = new ApplicationMetrics(preferenceDataStore, activityMonitor);
         metrics.init();
     }
 

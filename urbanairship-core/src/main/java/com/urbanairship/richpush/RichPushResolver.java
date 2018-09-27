@@ -173,7 +173,7 @@ class RichPushResolver extends UrbanAirshipResolver {
      */
     int deleteMessages(@NonNull Set<String> messageIds) {
         String query = RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )";
-        return this.delete(this.uri,query, messageIds.toArray(new String[messageIds.size()]));
+        return this.delete(this.uri,query, messageIds.toArray(new String[0]));
     }
 
 
@@ -200,7 +200,7 @@ class RichPushResolver extends UrbanAirshipResolver {
         }
 
         return this.bulkInsert(this.uri,
-                contentValues.toArray(new ContentValues[contentValues.size()]));
+                contentValues.toArray(new ContentValues[0]));
     }
 
     /**
@@ -230,7 +230,7 @@ class RichPushResolver extends UrbanAirshipResolver {
         return this.update(this.uri,
                 values,
                 RichPushTable.COLUMN_NAME_MESSAGE_ID + " IN ( " + UAStringUtil.repeat("?", messageIds.size(), ", ") + " )",
-                messageIds.toArray(new String[messageIds.size()]));
+                messageIds.toArray(new String[0]));
     }
 
 

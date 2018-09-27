@@ -39,7 +39,7 @@ public abstract class AirshipComponent {
     /**
      * Default job executor.
      */
-    private Executor jobExecutor = Executors.newSingleThreadExecutor();
+    private final Executor jobExecutor = Executors.newSingleThreadExecutor();
 
     /**
      * Initialize the manager.

@@ -48,7 +48,7 @@ public class Schedulers {
      */
     public static class LooperScheduler implements Scheduler {
 
-        private Looper looper;
+        private final Looper looper;
 
         /**
          * Run loop Scheduler constructor.

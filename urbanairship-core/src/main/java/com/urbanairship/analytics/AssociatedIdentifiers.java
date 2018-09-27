@@ -106,14 +106,8 @@ public class AssociatedIdentifiers implements JsonSerializable {
     public static abstract class Editor {
 
         private boolean clear = false;
-        private Map<String, String> idsToAdd = new HashMap<>();
-        private List<String> idsToRemove = new ArrayList<>();
-
-        /**
-         * Editor constructor
-         */
-        Editor() {
-        }
+        private final Map<String, String> idsToAdd = new HashMap<>();
+        private final List<String> idsToRemove = new ArrayList<>();
 
         /**
          * Sets the Android advertising ID and the limit ad tracking enabled value.

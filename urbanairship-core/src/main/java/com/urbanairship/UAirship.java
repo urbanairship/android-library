@@ -106,7 +106,7 @@ public class UAirship {
     private static final List<CancelableOperation> pendingAirshipRequests = new ArrayList<>();
     private static boolean queuePendingAirshipRequests = true;
 
-    List<AirshipComponent> components = new ArrayList<>();
+    final List<AirshipComponent> components = new ArrayList<>();
     ActionRegistry actionRegistry;
     AirshipConfigOptions airshipConfigOptions;
     Analytics analytics;
@@ -649,7 +649,7 @@ public class UAirship {
                 .build();
         components.add(this.analytics);
 
-        this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, ActivityMonitor.shared(application));
+        this.applicationMetrics = new ApplicationMetrics(preferenceDataStore, ActivityMonitor.shared(application));
         components.add(this.applicationMetrics);
 
         this.inbox = new RichPushInbox(application, preferenceDataStore, ActivityMonitor.shared(application));

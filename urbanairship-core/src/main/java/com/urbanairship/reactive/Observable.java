@@ -623,14 +623,14 @@ public class Observable<T> {
     private static class Holder<T> {
         private T value;
 
-        Holder() {};
+        Holder() {}
 
         Holder(T initial) {
             this.value = initial;
         }
 
-        T getValue() { return value; };
-        void setValue(T v) { value = v; };
+        T getValue() { return value; }
+        void setValue(T v) { value = v; }
     }
 
     /**
@@ -639,9 +639,9 @@ public class Observable<T> {
      * @param <T> The underlying type of the Observables
      */
     private static class ObservableTracker<T> {
-        private Observer<T> observer;
-        private CompoundSubscription compoundSubscription;
-        private AtomicInteger observableCount = new AtomicInteger(1);
+        private final Observer<T> observer;
+        private final CompoundSubscription compoundSubscription;
+        private final AtomicInteger observableCount = new AtomicInteger(1);
 
         ObservableTracker(Observer<T> observer, CompoundSubscription compoundSubscription) {
             this.observer = observer;

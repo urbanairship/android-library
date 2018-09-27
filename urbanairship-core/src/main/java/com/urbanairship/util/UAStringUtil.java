@@ -69,7 +69,7 @@ public abstract class UAStringUtil {
         if (c == null || delimiter == null) {
             throw new IllegalArgumentException("Collections and delimiters given to join cannot be null!");
         }
-        StringBuilder builder = new StringBuilder("");
+        StringBuilder builder = new StringBuilder();
         Iterator<String> iter = c.iterator();
         while (iter.hasNext()) {
             builder.append(iter.next());

@@ -60,7 +60,7 @@ public class UriUtils {
      * is not able to be parsed to a Uri.
      */
     public static Uri parse(Object value) {
-        if (value == null || !(value instanceof String || value instanceof Uri || value instanceof URL)) {
+        if (!(value instanceof String || value instanceof Uri || value instanceof URL)) {
             return null;
         }
 

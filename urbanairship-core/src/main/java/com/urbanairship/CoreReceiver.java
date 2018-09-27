@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CoreReceiver extends BroadcastReceiver {
 
-    private Executor executor;
+    private final Executor executor;
 
     private static final long ACTION_TIMEOUT_SECONDS = 10; // 10 seconds
 

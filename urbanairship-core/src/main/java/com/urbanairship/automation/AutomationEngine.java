@@ -167,15 +167,15 @@ public class AutomationEngine<T extends Schedule> {
     private final OperationScheduler scheduler;
     private boolean isStarted;
     private Handler backgroundHandler;
-    private Handler mainHandler;
+    private final Handler mainHandler;
     private ScheduleExpiryListener<T> expiryListener;
-    private AtomicBoolean isPaused = new AtomicBoolean(false);
+    private final AtomicBoolean isPaused = new AtomicBoolean(false);
 
     private long startTime;
-    private SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
+    private final SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
 
     @VisibleForTesting
-    HandlerThread backgroundThread;
+    final HandlerThread backgroundThread;
     private final List<ScheduleOperation> pendingAlarmOperations = new ArrayList<>();
 
     private String screen;

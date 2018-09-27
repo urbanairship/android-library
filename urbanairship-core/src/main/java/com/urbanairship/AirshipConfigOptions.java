@@ -177,7 +177,7 @@ public class AirshipConfigOptions {
      * <p>
      * Defaults to false.
      */
-    public boolean enableUrlWhitelisting;
+    public final boolean enableUrlWhitelisting;
 
     /**
      * Flag indicating whether the application is in production or development.

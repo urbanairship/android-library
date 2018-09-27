@@ -131,7 +131,7 @@ public abstract class FileUtils {
                 inputStream.close();
             }
 
-            if (conn != null && conn instanceof HttpURLConnection) {
+            if (conn instanceof HttpURLConnection) {
                 ((HttpURLConnection) conn).disconnect();
             }
         }

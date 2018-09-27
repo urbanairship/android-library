@@ -15,7 +15,7 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CompoundSubscription extends Subscription {
 
-    private List<Subscription> subscriptions;
+    private final List<Subscription> subscriptions;
 
     /**
      * Default constructor

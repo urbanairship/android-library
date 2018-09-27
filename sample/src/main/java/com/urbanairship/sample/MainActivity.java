@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (getIntent().getData() != null && getIntent().getData().getScheme().equalsIgnoreCase(RichPushInbox.MESSAGE_DATA_SCHEME)) {
                 String messageId = getIntent().getData().getSchemeSpecificPart();
-                if (fragment != null && fragment instanceof MessageCenterFragment) {
+                if (fragment instanceof MessageCenterFragment) {
                     ((MessageCenterFragment) fragment).setMessageID(messageId);
                 }
             }
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if (currentNavPosition != R.id.nav_home) {

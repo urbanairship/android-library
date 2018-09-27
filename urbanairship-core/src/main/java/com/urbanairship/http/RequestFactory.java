@@ -14,7 +14,7 @@ public class RequestFactory {
     /**
      * Default request factory.
      */
-    public static RequestFactory DEFAULT_REQUEST_FACTORY = new RequestFactory();
+    public static final RequestFactory DEFAULT_REQUEST_FACTORY = new RequestFactory();
 
     /**
      * Creates the request.

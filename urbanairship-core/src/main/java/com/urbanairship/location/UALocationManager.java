@@ -276,8 +276,10 @@ public class UALocationManager extends AirshipComponent {
         pendingResult.addResultCallback(Looper.getMainLooper(), new ResultCallback<Location>() {
             @Override
             public void onResult(@Nullable Location result) {
-                Logger.info("Received single location update: " + result);
-                UAirship.shared().getAnalytics().recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
+                if (result != null) {
+                    Logger.info("Received single location update: " + result);
+                    UAirship.shared().getAnalytics().recordLocation(result, requestOptions, LocationEvent.UPDATE_TYPE_SINGLE);
+                }
             }
         });
 

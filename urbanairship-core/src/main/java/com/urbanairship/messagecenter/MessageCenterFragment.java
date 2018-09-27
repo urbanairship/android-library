@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
@@ -99,7 +100,7 @@ public class MessageCenterFragment extends Fragment {
      * @return Return the View for the fragment's UI, or null.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ua_fragment_mc, container, false);
         configureView(view);
         return view;
@@ -107,7 +108,7 @@ public class MessageCenterFragment extends Fragment {
 
     @CallSuper
     @Override
-    public void onViewCreated(View view, final Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         configureView(view);
 
@@ -183,7 +184,7 @@ public class MessageCenterFragment extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
         savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
         savedInstanceState.putString(STATE_PENDING_MESSAGE_ID, pendingMessageId);
@@ -355,13 +356,12 @@ public class MessageCenterFragment extends Fragment {
     public static class NoMessageSelectedFragment extends Fragment {
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.ua_fragment_no_message_selected, container, false);
             View emptyListView = view.findViewById(android.R.id.empty);
 
 
-            if (emptyListView != null && emptyListView instanceof TextView) {
-
+            if (emptyListView instanceof TextView) {
                 TypedArray attributes = getContext()
                         .getTheme()
                         .obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);

@@ -15,9 +15,9 @@ import com.urbanairship.push.PushMessage;
  */
 public class ActionsNotificationExtender implements NotificationCompat.Extender {
 
-    private PushMessage message;
-    private Context context;
-    private int notificationId;
+    private final PushMessage message;
+    private final Context context;
+    private final int notificationId;
 
     /**
      * ActionsNotificationExtender default constructor.

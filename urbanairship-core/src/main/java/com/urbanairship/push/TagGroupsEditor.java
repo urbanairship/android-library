@@ -156,6 +156,6 @@ public class TagGroupsEditor {
         return true;
     }
 
-    protected void onApply(List<TagGroupsMutation> collapsedMutations) {};
+    protected void onApply(List<TagGroupsMutation> collapsedMutations) {}
 
 }

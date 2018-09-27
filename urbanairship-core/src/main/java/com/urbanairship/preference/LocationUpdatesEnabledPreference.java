@@ -81,7 +81,7 @@ public class LocationUpdatesEnabledPreference extends UACheckBoxPreference {
 
         @SuppressLint("StaticFieldLeak")
         private final Context context;
-        private WeakReference<LocationUpdatesEnabledPreference> weakReference;
+        private final WeakReference<LocationUpdatesEnabledPreference> weakReference;
 
         RequestPermissionsTask(Context context, LocationUpdatesEnabledPreference preference) {
             this.context = context.getApplicationContext();

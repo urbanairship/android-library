@@ -294,6 +294,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @NonNull
             @Override
             public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
                 return NotificationFactory.Result.cancel();
@@ -322,6 +323,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @NonNull
             @Override
             public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
                 return NotificationFactory.Result.retry();
@@ -353,6 +355,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         final Notification notification = notificationFactory.createNotification(new PushMessage(pushBundle), notificationId);
 
         notificationFactory = new NotificationFactory(TestApplication.getApplication()) {
+            @NonNull
             @Override
             public NotificationFactory.Result createNotificationResult(@NonNull PushMessage pushMessage, int notificationId) {
                 return NotificationFactory.Result.notification(notification);

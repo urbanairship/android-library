@@ -26,7 +26,7 @@ class AlarmScheduler implements Scheduler {
     /**
      * The default max back off time for retries in milliseconds.
      */
-    private static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 mins.
+    private static final long DEFAULT_MAX_BACK_OFF_TIME_MS = 5120000; // About 85 minutes.
 
     /**
      * Extra to track back off in seconds.
@@ -34,7 +34,7 @@ class AlarmScheduler implements Scheduler {
     static final String EXTRA_BACKOFF_DELAY = "EXTRA_BACKOFF_DELAY";
 
     @Override
-    public void cancel(@NonNull Context context, @NonNull int scheduleId) {
+    public void cancel(@NonNull Context context, int scheduleId) {
         Intent intent = AirshipService.createIntent(context, null, null);
 
         PendingIntent pendingIntent = PendingIntent.getService(context, scheduleId, intent, PendingIntent.FLAG_NO_CREATE);

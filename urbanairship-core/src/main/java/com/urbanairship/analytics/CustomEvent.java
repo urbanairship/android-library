@@ -359,7 +359,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      */
     public static class Builder {
 
-        private String eventName;
+        private final String eventName;
         private BigDecimal value;
         private String transactionId;
         private String interactionType;
@@ -367,7 +367,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         private String pushSendId;
         private String pushMetadata;
         private String templateType;
-        private Map<String, Object> properties = new HashMap<>();
+        private final Map<String, Object> properties = new HashMap<>();
 
         /**
          * Creates a new custom event builder

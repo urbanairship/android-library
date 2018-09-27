@@ -5,7 +5,6 @@ package com.urbanairship.widget;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
@@ -158,20 +157,6 @@ public class UAWebView extends WebView {
      * Called after initializeView.
      */
     protected void populateCustomJavascriptInterfaces() {}
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        // Android JB bug where it logs errors incorrectly in a view pager
-        // http://stackoverflow.com/questions/12090899/android-webview-jellybean-should-not-happen-no-rect-based-test-nodes-found
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            int y = this.getScrollY();
-            int x = this.getScrollX();
-            this.onScrollChanged(x, y, x, y);
-        }
-
-        return super.onTouchEvent(event);
-    }
 
     @Override
     public void loadData(String data, String mimeType, String encoding) {

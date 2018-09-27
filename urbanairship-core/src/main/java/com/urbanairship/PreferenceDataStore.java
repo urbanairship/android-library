@@ -347,7 +347,7 @@ public final class PreferenceDataStore {
      */
     private class Preference {
 
-        private ContentObserver observer = new ContentObserver(null) {
+        private final ContentObserver observer = new ContentObserver(null) {
 
             @Override
             public boolean deliverSelfNotifications() {
@@ -368,7 +368,7 @@ public final class PreferenceDataStore {
 
         private final String key;
         private String value;
-        private Uri uri;
+        private final Uri uri;
 
         Preference(String key, String value) {
             this.key = key;

@@ -22,9 +22,9 @@ import java.util.Set;
  */
 public class Fonts {
 
-    private static String[] JELLY_BEAN_SYSTEM_FONT_FAMILIES = new String[] { "serif", "sans-serif", "sans-serif-light", "sans-serif-condensed", "sans-serif-thin", "sans-serif-medium" };
-    private static String[] LOLLIPOP_SYSTEM_FONT_FAMILIES = new String[] { "sans-serif-medium", "sans-serif-black", "cursive", "casual" };
-    private static String[] MARSHMALLOW_SYSTEM_FONT_FAMILIES = new String[] { "sans-serif-smallcaps", "serif-monospace", "monospace" };
+    private static final String[] JELLY_BEAN_SYSTEM_FONT_FAMILIES = new String[] { "serif", "sans-serif", "sans-serif-light", "sans-serif-condensed", "sans-serif-thin", "sans-serif-medium" };
+    private static final String[] LOLLIPOP_SYSTEM_FONT_FAMILIES = new String[] { "sans-serif-medium", "sans-serif-black", "cursive", "casual" };
+    private static final String[] MARSHMALLOW_SYSTEM_FONT_FAMILIES = new String[] { "sans-serif-smallcaps", "serif-monospace", "monospace" };
 
     private final Set<String> systemFonts = new HashSet<>();
     private final Map<String, Typeface> fontCache = new HashMap<>();

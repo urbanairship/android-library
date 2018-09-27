@@ -51,7 +51,7 @@ public class TagSelector implements JsonSerializable {
     private static final String TAG = "tag";
     private static final String GROUP = "group";
 
-    private String type;
+    private final String type;
     private String tag;
     private String group;
 
@@ -375,7 +375,7 @@ public class TagSelector implements JsonSerializable {
 
         TagSelector that = (TagSelector) o;
 
-        if (type != null ? !type.equals(that.type) : that.type != null) {
+        if (!type.equals(that.type)) {
             return false;
         }
         if (tag != null ? !tag.equals(that.tag) : that.tag != null) {
@@ -389,7 +389,7 @@ public class TagSelector implements JsonSerializable {
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
+        int result = type.hashCode();
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         result = 31 * result + (group != null ? group.hashCode() : 0);
         result = 31 * result + (selectors != null ? selectors.hashCode() : 0);

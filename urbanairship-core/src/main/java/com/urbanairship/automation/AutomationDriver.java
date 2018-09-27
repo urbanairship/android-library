@@ -105,7 +105,7 @@ public interface AutomationDriver<T extends Schedule> {
      * @param scheduleId The schedule ID.
      * @param info The generic schedule info.
      * @return A typed schedule.
-     * @throws ParseScheduleException If the scheduleInfo is unparsable. The automation engine will delete
+     * @throws ParseScheduleException If the scheduleInfo failed to be parsed. The automation engine will delete
      * the schedule.
      */
     @NonNull

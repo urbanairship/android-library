@@ -142,12 +142,12 @@ public class Analytics extends AirshipComponent {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JobInfo.JobResult
-    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfob) {
+    public int onPerformJob(@NonNull UAirship airship, JobInfo jobInfo) {
         if (analyticsJobHandler == null) {
             analyticsJobHandler = new AnalyticsJobHandler(context, airship, eventManager);
         }
 
-        return analyticsJobHandler.performJob(jobInfob);
+        return analyticsJobHandler.performJob(jobInfo);
     }
 
     /**
@@ -309,7 +309,7 @@ public class Analytics extends AirshipComponent {
     /**
      * Called when the app is backgrounded.
      *
-     * @param timeMS Time of backgrounding.
+     * @param timeMS Time when backgrounded.
      */
     void onBackground(long timeMS) {
         // Stop tracking screen
@@ -536,7 +536,7 @@ public class Analytics extends AirshipComponent {
     public static class Builder {
 
         private PreferenceDataStore preferenceDataStore;
-        private Context context;
+        private final Context context;
         private JobDispatcher jobDispatcher;
         private ActivityMonitor activityMonitor;
         private EventManager eventManager;

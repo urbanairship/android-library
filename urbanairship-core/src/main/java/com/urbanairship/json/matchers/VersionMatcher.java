@@ -20,7 +20,7 @@ public class VersionMatcher extends ValueMatcher {
     public static final String VERSION_KEY = "version_matches";
     public static final String ALTERNATE_VERSION_KEY = "version";
 
-    private IvyVersionMatcher versionMatcher;
+    private final IvyVersionMatcher versionMatcher;
 
     /**
      * Default constructor.
@@ -54,11 +54,11 @@ public class VersionMatcher extends ValueMatcher {
 
         VersionMatcher that = (VersionMatcher) o;
 
-        return versionMatcher != null ? versionMatcher.equals(that.versionMatcher) : that.versionMatcher == null;
+        return versionMatcher.equals(that.versionMatcher);
     }
 
     @Override
     public int hashCode() {
-        return versionMatcher != null ? versionMatcher.hashCode() : 0;
+        return versionMatcher.hashCode();
     }
 }

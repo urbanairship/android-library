@@ -15,10 +15,14 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.internal.ManifestFactory;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(shadows = { ShadowNotificationManagerExtension.class },
+
+
+// Current robolectric does not support API 28
+@Config(sdk = 27,
+        shadows = { ShadowNotificationManagerExtension.class },
         application = TestApplication.class
 )
+@RunWith(RobolectricTestRunner.class)
 public abstract class BaseTestCase {
 
 
@@ -37,11 +41,11 @@ public abstract class BaseTestCase {
             return actual == null;
         }
 
-        if(expected.size() != actual.size()) {
+        if (expected.size() != actual.size()) {
             return false;
         }
 
-        for(String key : expected.keySet()) {
+        for (String key : expected.keySet()) {
             if (!actual.containsKey(key)) {
                 return false;
             }

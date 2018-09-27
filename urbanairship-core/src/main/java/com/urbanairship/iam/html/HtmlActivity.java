@@ -4,7 +4,6 @@ package com.urbanairship.iam.html;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -13,7 +12,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -26,8 +24,6 @@ import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.InAppMessageActivity;
 import com.urbanairship.iam.ResolutionInfo;
-import com.urbanairship.iam.view.BackgroundDrawableBuilder;
-import com.urbanairship.iam.view.BorderRadius;
 import com.urbanairship.iam.view.BoundedFrameLayout;
 import com.urbanairship.js.Whitelist;
 import com.urbanairship.widget.UAWebView;
@@ -44,7 +40,7 @@ public class HtmlActivity extends InAppMessageActivity {
     private Integer error = null;
     private Handler handler;
     private String url;
-    private Runnable delayedLoadRunnable = new Runnable() {
+    private final Runnable delayedLoadRunnable = new Runnable() {
         @Override
         public void run() {
             load();

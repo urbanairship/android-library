@@ -45,7 +45,7 @@ public class NamedUser extends AirshipComponent {
     private final PreferenceDataStore preferenceDataStore;
     private final Object lock = new Object();
     private final JobDispatcher jobDispatcher;
-    private TagGroupRegistrar tagGroupRegistrar;
+    private final TagGroupRegistrar tagGroupRegistrar;
     private NamedUserJobHandler namedUserJobHandler;
 
     /**

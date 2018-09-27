@@ -36,7 +36,7 @@ public class BackgroundDrawableBuilder {
     private float borderRadiusDps = 0;
     @BorderRadius.BorderRadiusFlag
     private int borderRadiusFlag;
-    private Context context;
+    private final Context context;
 
     /**
      * Create a new builder.

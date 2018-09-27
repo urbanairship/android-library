@@ -124,7 +124,7 @@ public class RemoteDataStore extends DataManager {
             String where = RemoteDataPayloadEntry.COLUMN_NAME_TYPE + " IN ( " + UAStringUtil.repeat("?", types.size(), ", ") + " )";
 
             cursor = this.query(RemoteDataPayloadEntry.TABLE_NAME, null,
-                    where, types.toArray(new String[types.size()]), null);
+                    where, types.toArray(new String[0]), null);
 
         }
         if (cursor == null) {

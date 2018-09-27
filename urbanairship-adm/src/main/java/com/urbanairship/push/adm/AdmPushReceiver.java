@@ -4,6 +4,7 @@ package com.urbanairship.push.adm;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -17,7 +18,7 @@ import com.urbanairship.push.PushProviderBridge;
 /**
  * AdmPushReceiver listens for incoming ADM registration responses and messages.
  */
-public class AdmPushReceiver extends WakefulBroadcastReceiver {
+public class AdmPushReceiver extends BroadcastReceiver {
 
     /**
      * Amount of time in milliseconds a broadcast receiver has to process an intent.

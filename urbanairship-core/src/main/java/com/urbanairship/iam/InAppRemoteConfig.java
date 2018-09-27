@@ -24,7 +24,7 @@ class InAppRemoteConfig {
     @Nullable
     public final TagGroupsConfig tagGroupsConfig;
 
-    private InAppRemoteConfig(TagGroupsConfig tagGroupsConfig) {
+    private InAppRemoteConfig(@Nullable TagGroupsConfig tagGroupsConfig) {
         this.tagGroupsConfig = tagGroupsConfig;
     }
 

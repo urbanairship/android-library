@@ -289,7 +289,7 @@ public class ButtonInfo implements JsonSerializable {
         if (behavior != null ? !behavior.equals(that.behavior) : that.behavior != null) {
             return false;
         }
-        if (borderRadius != null ? !borderRadius.equals(that.borderRadius) : that.borderRadius != null) {
+        if (!borderRadius.equals(that.borderRadius)) {
             return false;
         }
         if (backgroundColor != null ? !backgroundColor.equals(that.backgroundColor) : that.backgroundColor != null) {
@@ -306,7 +306,7 @@ public class ButtonInfo implements JsonSerializable {
         int result = label != null ? label.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (behavior != null ? behavior.hashCode() : 0);
-        result = 31 * result + (borderRadius != null ? borderRadius.hashCode() : 0);
+        result = 31 * result + borderRadius.hashCode();
         result = 31 * result + (backgroundColor != null ? backgroundColor.hashCode() : 0);
         result = 31 * result + (borderColor != null ? borderColor.hashCode() : 0);
         result = 31 * result + (actions != null ? actions.hashCode() : 0);

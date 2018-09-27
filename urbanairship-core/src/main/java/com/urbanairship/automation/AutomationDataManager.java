@@ -479,11 +479,11 @@ public class AutomationDataManager extends DataManager {
             return;
         }
 
-        performSubSetOperations(groups, MAX_ARG_COUNT, new SetOperation<String>() {
+        performSubSetOperations(groups, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
                 String inStatement = repeat("?", subset.size(), ", ");
-                delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " IN ( " + inStatement + " )", subset.toArray(new String[subset.size()]));
+                delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_GROUP + " IN ( " + inStatement + " )", subset.toArray(new String[0]));
             }
         });
     }
@@ -498,11 +498,11 @@ public class AutomationDataManager extends DataManager {
             return;
         }
 
-        performSubSetOperations(schedulesToDelete, MAX_ARG_COUNT, new SetOperation<String>() {
+        performSubSetOperations(schedulesToDelete, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
                 String inStatement = repeat("?", subset.size(), ", ");
-                delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + inStatement + " )", subset.toArray(new String[subset.size()]));
+                delete(ScheduleEntry.TABLE_NAME, ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + inStatement + " )", subset.toArray(new String[0]));
             }
         });
     }
@@ -565,12 +565,12 @@ public class AutomationDataManager extends DataManager {
     List<ScheduleEntry> getScheduleEntries(Set<String> ids) {
         final List<ScheduleEntry> schedules = new ArrayList<>(ids.size());
 
-        performSubSetOperations(ids, MAX_ARG_COUNT, new SetOperation<String>() {
+        performSubSetOperations(ids, new SetOperation<String>() {
             @Override
             public void perform(List<String> subset) {
                 String query = GET_SCHEDULES_QUERY + " WHERE a." + ScheduleEntry.COLUMN_NAME_SCHEDULE_ID + " IN ( " + repeat("?", subset.size(), ", ") + ")" + ORDER_SCHEDULES_STATEMENT;
 
-                Cursor cursor = rawQuery(query, subset.toArray(new String[subset.size()]));
+                Cursor cursor = rawQuery(query, subset.toArray(new String[0]));
                 if (cursor != null) {
                     schedules.addAll(generateSchedules(cursor));
                     cursor.close();
@@ -733,18 +733,17 @@ public class AutomationDataManager extends DataManager {
     /**
      * Performs an operation on a list of elements.
      *
-     * @param ids The list of IDs.
-     * @param subSetCount The subset size to batch in an operation.
-     * @param operation The operation to perform.
      * @param <T> The list element type.
+     * @param ids The list of IDs.
+     * @param operation The operation to perform.
      */
-    private static <T> void performSubSetOperations(Collection<T> ids, int subSetCount, SetOperation<T> operation) {
+    private static <T> void performSubSetOperations(Collection<T> ids, SetOperation<T> operation) {
         List<T> remaining = new ArrayList<>(ids);
 
         while (!remaining.isEmpty()) {
-            if (remaining.size() > subSetCount) {
-                operation.perform(remaining.subList(0, subSetCount));
-                remaining = remaining.subList(subSetCount, remaining.size());
+            if (remaining.size() > AutomationDataManager.MAX_ARG_COUNT) {
+                operation.perform(remaining.subList(0, AutomationDataManager.MAX_ARG_COUNT));
+                remaining = remaining.subList(AutomationDataManager.MAX_ARG_COUNT, remaining.size());
             } else {
                 operation.perform(remaining);
                 remaining.clear();

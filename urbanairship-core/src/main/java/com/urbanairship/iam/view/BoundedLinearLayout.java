@@ -17,8 +17,8 @@ import android.widget.LinearLayout;
  */
 public class BoundedLinearLayout extends LinearLayout {
 
-    private BoundedViewDelegate boundedViewDelegate;
-    private ClippableViewDelegate clippableViewDelegate;
+    private final BoundedViewDelegate boundedViewDelegate;
+    private final ClippableViewDelegate clippableViewDelegate;
 
     /**
      * Default constructor.

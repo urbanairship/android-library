@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AlarmOperationScheduler implements OperationScheduler {
 
     private final Context context;
-    private InternalScheduler scheduler;
+    private final InternalScheduler scheduler;
+
     @SuppressLint("StaticFieldLeak")
     private static AlarmOperationScheduler shared;
 

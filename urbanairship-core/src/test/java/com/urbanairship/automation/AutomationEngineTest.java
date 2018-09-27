@@ -3,6 +3,7 @@
 package com.urbanairship.automation;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.BaseTestCase;
@@ -821,12 +822,12 @@ public class AutomationEngineTest extends BaseTestCase {
         ArrayList<Integer> priorityList = new ArrayList<>();
 
         @Override
-        public void onExecuteTriggeredSchedule(ActionSchedule schedule, ExecutionCallback finishCallback) {
+        public void onExecuteTriggeredSchedule(@NonNull ActionSchedule schedule, @NonNull ExecutionCallback finishCallback) {
             executionCallbackMap.put(schedule.getId(), finishCallback);
         }
 
         @Override
-        public void onPrepareSchedule(ActionSchedule schedule, PrepareScheduleCallback prepareCallback) {
+        public void onPrepareSchedule(ActionSchedule schedule, @NonNull PrepareScheduleCallback prepareCallback) {
             prepareCallbackMap.put(schedule.getId(), prepareCallback);
             priorityList.add(schedule.getInfo().getPriority());
         }

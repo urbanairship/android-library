@@ -39,7 +39,6 @@ public class BitmapUtils {
         boolean deleteFile = false;
         File imageFile = null;
         if (URLUtil.isFileUrl(url.toString())) {
-            deleteFile = false;
             try {
                 imageFile = new File(url.toURI());
             } catch (URISyntaxException e) {

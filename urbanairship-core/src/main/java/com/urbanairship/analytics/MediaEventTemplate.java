@@ -84,7 +84,7 @@ public class MediaEventTemplate {
      */
     private static final String MEDIUM = "medium";
 
-    private String eventName;
+    private final String eventName;
 
     // CONSUMED_CONTENT_EVENT optional
     private BigDecimal value;

@@ -10,9 +10,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -3,7 +3,6 @@
 package com.urbanairship.widget;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.view.Gravity;
@@ -21,7 +20,7 @@ import java.lang.ref.WeakReference;
  */
 public class UAWebChromeClient extends WebChromeClient {
 
-    private WeakReference<Activity> weakActivity;
+    private final WeakReference<Activity> weakActivity;
     private View customView;
 
     /**

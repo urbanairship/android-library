@@ -307,10 +307,10 @@ public class TextInfo implements JsonSerializable {
         if (alignment != null ? !alignment.equals(textInfo.alignment) : textInfo.alignment != null) {
             return false;
         }
-        if (styles != null ? !styles.equals(textInfo.styles) : textInfo.styles != null) {
+        if (!styles.equals(textInfo.styles)) {
             return false;
         }
-        return fontFamilies != null ? fontFamilies.equals(textInfo.fontFamilies) : textInfo.fontFamilies == null;
+        return fontFamilies.equals(textInfo.fontFamilies);
     }
 
     @Override
@@ -319,8 +319,8 @@ public class TextInfo implements JsonSerializable {
         result = 31 * result + (color != null ? color.hashCode() : 0);
         result = 31 * result + (size != null ? size.hashCode() : 0);
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
-        result = 31 * result + (styles != null ? styles.hashCode() : 0);
-        result = 31 * result + (fontFamilies != null ? fontFamilies.hashCode() : 0);
+        result = 31 * result + styles.hashCode();
+        result = 31 * result + fontFamilies.hashCode();
         result = 31 * result + drawable;
         return result;
     }

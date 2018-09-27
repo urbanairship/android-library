@@ -4,8 +4,6 @@ package com.urbanairship.reactive;
 
 import android.support.annotation.RestrictTo;
 
-import com.urbanairship.Cancelable;
-
 /**
  * Interface for scheduling runnables for use with Observable
  *

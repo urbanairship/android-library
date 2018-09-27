@@ -4,19 +4,15 @@ package com.urbanairship.push;
 
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.urbanairship.Logger;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;

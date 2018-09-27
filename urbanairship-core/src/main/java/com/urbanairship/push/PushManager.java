@@ -285,7 +285,7 @@ public class PushManager extends AirshipComponent {
      * @hide
      */
     public PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
-                       @NonNull AirshipConfigOptions configOptions, @NonNull PushProvider pushProvider,
+                       @NonNull AirshipConfigOptions configOptions, @Nullable PushProvider pushProvider,
                        @NonNull TagGroupRegistrar tagGroupRegistrar) {
 
         this(context, preferenceDataStore, configOptions, pushProvider, tagGroupRegistrar, JobDispatcher.shared(context));
