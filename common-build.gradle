@@ -10,16 +10,11 @@ apply plugin: 'jacoco'
 
 
 android {
-    compileSdkVersion 27
-
-    lintOptions {
-        abortOnError false
-        disable 'MissingTranslation'
-    }
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 27
+        targetSdkVersion 28
 
         buildConfigField "String", "URBAN_AIRSHIP_VERSION", "\"${getMavenVersion()}\""
         buildConfigField "String", "SDK_VERSION", "\"${getSdkVersionString()}\""

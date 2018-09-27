@@ -6,7 +6,7 @@ repositories {
 }
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     lintOptions {
         disable 'MissingTranslation', 'AppCompatResource'
@@ -16,7 +16,7 @@ android {
     defaultConfig {
         applicationId "com.urbanairship.sample"
         minSdkVersion 16
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -44,8 +44,8 @@ dependencies {
 
     // Urban Airship - FCM
     implementation project(':urbanairship-fcm')
-    implementation 'com.google.firebase:firebase-core:16.0.1'
-
+    implementation 'com.google.firebase:firebase-core:16.0.3'
+    implementation 'com.google.firebase:firebase-iid:17.0.2'
 
     // Allows Urban Airship location services to use Fused Location
     implementation "com.google.android.gms:play-services-location:${airshipProperties.playServicesLocationVersion}"
@@ -69,7 +69,7 @@ dependencies {
     androidTestImplementation "com.squareup.retrofit2:retrofit:2.3.0"
 
     // Retrofit JSON Parsing
-    androidTestImplementation 'com.google.code.gson:gson:2.8.0'
+    androidTestImplementation 'com.google.code.gson:gson:2.8.2'
     androidTestImplementation 'com.squareup.retrofit2:converter-gson:2.1.0'
 
     // Retrofit logging

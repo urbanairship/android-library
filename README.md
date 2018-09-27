@@ -29,7 +29,6 @@ One of our engineers will verify receipt of the agreement before approving your 
 
      // Urban Airship SDK - FCM
      implementation 'com.urbanairship.android:urbanairship-fcm:9.5.1'
-     implementation 'com.google.firebase:firebase-core:16.0.1'
    }
 ```
 
