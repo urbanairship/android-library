@@ -15,6 +15,8 @@ import android.support.v4.app.RemoteInput;
 
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
+import com.urbanairship.actions.ActionCompletionCallback;
+import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.analytics.InteractiveNotificationEvent;
@@ -27,9 +29,10 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is the core Broadcast Receiver for the Urban Airship library.
@@ -37,6 +40,9 @@ import java.util.concurrent.Executors;
 public class CoreReceiver extends BroadcastReceiver {
 
     private Executor executor;
+
+    private static final long ACTION_TIMEOUT_SECONDS = 10; // 10 seconds
+
 
     public CoreReceiver() {
         this(Executors.newSingleThreadExecutor());
@@ -328,12 +334,27 @@ public class CoreReceiver extends BroadcastReceiver {
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                final CountDownLatch countDownLatch = new CountDownLatch(actions.size());
+
                 for (Map.Entry<String, ActionValue> entry : actions.entrySet()) {
                     ActionRunRequest.createRequest(entry.getKey())
                             .setMetadata(metadata)
                             .setSituation(situation)
                             .setValue(entry.getValue())
-                            .runSync();
+                            .run(new ActionCompletionCallback() {
+                                @Override
+                                public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
+                                    countDownLatch.countDown();
+                                }
+                            });
+                }
+
+                try {
+                    if (!countDownLatch.await(ACTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                        Logger.error("Application took too long to run push actions. App may get closed.");
+                    }
+                } catch (InterruptedException e) {
+                    Logger.error("Failed to wait for actions", e);
                 }
 
                 callback.run();
