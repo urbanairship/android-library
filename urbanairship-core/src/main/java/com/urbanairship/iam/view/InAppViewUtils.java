@@ -240,7 +240,7 @@ public class InAppViewUtils {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void loadMediaInfo(MediaView mediaView, final MediaInfo mediaInfo, final InAppMessageCache cache) {
+    public static void loadMediaInfo(@NonNull MediaView mediaView, @NonNull final MediaInfo mediaInfo, @Nullable final InAppMessageCache cache) {
         if (mediaView.getWidth() == 0) {
             final WeakReference<MediaView> weakReference = new WeakReference<>(mediaView);
             mediaView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {

@@ -124,7 +124,7 @@ public class MediaView extends FrameLayout {
      * @param mediaInfo The media info.
      * @param cachedMediaUrl The cached media URL.
      */
-    public void setMediaInfo(final MediaInfo mediaInfo, final String cachedMediaUrl) {
+    public void setMediaInfo(@NonNull final MediaInfo mediaInfo, @Nullable final String cachedMediaUrl) {
         removeAllViewsInLayout();
 
         // If we had a web view previously clear it

@@ -1,8 +1,15 @@
 package com.urbanairship.iam.banner;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.support.annotation.NonNull;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.widget.FrameLayout;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
@@ -10,6 +17,8 @@ import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.MediaDisplayAdapter;
 import com.urbanairship.util.ManifestUtils;
+
+import java.lang.ref.WeakReference;
 
 /**
  * Banner display adapter.
@@ -21,6 +30,8 @@ public class BannerAdapter extends MediaDisplayAdapter {
      */
     public final static String BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID";
     private final BannerDisplayContent displayContent;
+
+    private WeakReference<Activity> lastActivity;
 
     /**
      * Default constructor.
@@ -35,6 +46,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
 
     /**
      * Creates a new banner adapter.
+     *
      * @param message The in-app message.
      * @return The banner adapter.
      */
@@ -55,44 +67,33 @@ public class BannerAdapter extends MediaDisplayAdapter {
         }
 
         int id = getContainerId(activity);
-        if (id == 0 || activity.findViewById(id) == null) {
+        if (id == 0 || activity.findViewById(id) == null || !(activity.findViewById(id) instanceof ViewGroup)) {
             Logger.info("BannerAdapter - Unable to display in-app message. Missing view with id: " + id);
             return false;
         }
 
-        int enter, exit;
-        switch (displayContent.getPlacement()) {
-            case BannerDisplayContent.PLACEMENT_TOP:
-                enter = R.animator.ua_iam_slide_in_top;
-                exit = R.animator.ua_iam_slide_out_top;
-                break;
-            case BannerDisplayContent.PLACEMENT_BOTTOM:
-            default:
-                enter = R.animator.ua_iam_slide_in_bottom;
-                exit = R.animator.ua_iam_slide_out_bottom;
-                break;
-        }
-
-        BannerFragment fragment = BannerFragment.newBuilder()
-                                                .setDisplayHandler(displayHandler)
-                                                .setExitAnimation(exit)
-                                                .setInAppMessage(getMessage())
-                                                .setCache(getCache())
-                                                .build();
-
         Logger.info("BannerAdapter - Displaying in-app message.");
 
-        activity.getFragmentManager().beginTransaction()
-                .setCustomAnimations(enter, 0)
-                .add(id, fragment)
-                .commit();
 
+
+        BannerView view = new BannerView(activity, displayHandler, displayContent, getCache());
+        if (lastActivity == null || lastActivity.get() != activity) {
+            if (BannerDisplayContent.PLACEMENT_BOTTOM.equals(displayContent.getPlacement())) {
+                view.setAnimations(R.animator.ua_iam_slide_in_bottom, R.animator.ua_iam_slide_out_bottom);
+            } else {
+                view.setAnimations(R.animator.ua_iam_slide_in_top, R.animator.ua_iam_slide_out_top);
+            }
+        }
+
+        ViewGroup viewGroup = activity.getWindow().getDecorView().findViewById(id);
+        viewGroup.addView(view);
+        lastActivity = new WeakReference<>(activity);
         return true;
     }
 
     /**
      * Gets the Banner fragment's container ID.
-     *
+     * <p>
      * The default implementation checks the activities metadata for {@link #BANNER_CONTAINER_ID}
      * and falls back to `android.R.id.content`.
      *

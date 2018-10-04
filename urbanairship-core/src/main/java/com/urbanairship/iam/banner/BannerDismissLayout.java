@@ -54,7 +54,7 @@ public class BannerDismissLayout extends FrameLayout {
          * Called when a child view was dismissed from a swipe. It is up to the listener to remove
          * or hide the view from the parent.
          */
-        void onDismissed(View view);
+        void onDismissed(@NonNull View view);
 
         /**
          * Called when a child view's drag state changes.
@@ -62,7 +62,7 @@ public class BannerDismissLayout extends FrameLayout {
          * @param state The drag state will be either {@code ViewDragHelper.STATE_IDLE},
          * {@code ViewDragHelper.STATE_DRAGGING}, or {@code ViewDragHelper.STATE_SETTLING}.
          */
-        void onDragStateChanged(View view, int state);
+        void onDragStateChanged(@NonNull View view, int state);
     }
 
     private ViewDragHelper dragHelper;
